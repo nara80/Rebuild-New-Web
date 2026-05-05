@@ -1,0 +1,36 @@
+/* MildMate Main Stylesheet */
+/* Phase 3 will fill this with the full design system */
+/* Brand tokens are defined in :root for global access */
+
+:root {
+  --color-primary: #2c96f4;
+  --color-primary-dark: #1a7fd4;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-bg: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-border: #e5e7eb;
+  --color-gold: #f5a623;
+  --color-success: #22c55e;
+  --font-main: 'Prompt', sans-serif;
+  --radius: 8px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --header-height: 83px;
+  --header-height-scroll: 60px;
+  --max-width: 1200px;
+  --section-padding: 80px;
+  --section-padding-mobile: 48px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-main);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Phase 3 will add header, footer, and all component styles here */

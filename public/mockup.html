@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MildMate Homepage Mockup — Design Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #2c96f4;
+      --color-primary-dark: #1a7fd4;
+      --color-text: #333333;
+      --color-text-light: #666666;
+      --color-bg: #ffffff;
+      --color-surface: #f8f9fa;
+      --color-border: #e5e7eb;
+      --color-gold: #f5a623;
+      --color-success: #22c55e;
+      --font-main: 'Prompt', sans-serif;
+      --radius: 8px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --header-height: 83px;
+      --header-height-scroll: 60px;
+      --max-width: 1200px;
+      --section-padding: 80px;
+      --section-padding-mobile: 48px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-main);
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      transition: height 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .header.scrolled {
+      height: var(--header-height-scroll);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .header-inner {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-placeholder {
+      width: 160px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .nav-desktop { display: flex; gap: 32px; align-items: center; }
+
+    .nav-item {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      position: relative;
+      padding: 8px 0;
+    }
+
+    .nav-item:hover { color: var(--color-primary); }
+
+    .nav-item .dropdown-arrow { font-size: 0.7rem; margin-left: 4px; }
+
+    .header-actions { display: flex; gap: 16px; align-items: center; }
+
+    .lang-toggle {
+      display: flex;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .lang-toggle span { cursor: pointer; opacity: 0.5; }
+    .lang-toggle span.active { opacity: 1; color: var(--color-primary); font-weight: 600; }
+
+    .cart-icon {
+      position: relative;
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: var(--color-primary);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-menu-btn { display: none; font-size: 1.5rem; cursor: pointer; }
+
+    /* ===== MOBILE HEADER ===== */
+    @media (max-width: 768px) {
+      .nav-desktop { display: none; }
+      .mobile-menu-btn { display: block; }
+      .header-inner { padding: 0 16px; }
+      .logo-placeholder { width: 130px; height: 40px; font-size: 0.95rem; }
+    }
+
+    /* ===== MOBILE DRAWER ===== */
+    .mobile-drawer {
+      position: fixed;
+      top: 0; right: -100%;
+      width: 80%; max-width: 320px;
+      height: 100vh;
+      background: var(--color-bg);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+      z-index: 2000;
+      transition: right 0.3s ease;
+      padding: 24px;
+    }
+
+    .mobile-drawer.open { right: 0; }
+
+    .drawer-close { font-size: 1.5rem; cursor: pointer; margin-bottom: 24px; }
+
+    .drawer-nav { display: flex; flex-direction: column; gap: 20px; }
+
+    .drawer-nav a { font-size: 1.1rem; font-weight: 500; }
+
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 1500;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #e8f4fd 0%, #d0e8f9 50%, var(--color-primary) 100%);
+      overflow: hidden;
+    }
+
+    .hero-bg-placeholder {
+      position: absolute;
+      inset: 0;
+      opacity: 0.15;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.3) 40px,
+        rgba(255,255,255,0.3) 80px
+      );
+    }
+
+    .hero-img-label {
+      position: absolute;
+      right: 5%; top: 50%; transform: translateY(-50%);
+      width: 40%; max-width: 500px;
+      aspect-ratio: 4/3;
+      background: rgba(0,0,0,0.08);
+      border: 3px dashed rgba(255,255,255,0.5);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(0,0,0,0.3);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hero h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--color-text);
+      max-width: 560px;
+      margin-bottom: 16px;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--color-text-light);
+      max-width: 480px;
+      margin-bottom: 32px;
+    }
+
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 14px 32px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      font-family: var(--font-main);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--color-primary);
+      border: 2px solid var(--color-primary);
+    }
+
+    .btn-outline:hover { background: var(--color-primary); color: white; }
+
+    @media (max-width: 768px) {
+      .hero { min-height: auto; padding: 80px 0 60px; }
+      .hero h1 { font-size: 2rem; }
+      .hero-sub { font-size: 1rem; }
+      .hero-img-label { display: none; }
+      .hero-ctas { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+    }
+
+    /* ===== SECTION COMMON ===== */
+    .section {
+      padding: var(--section-padding) 24px;
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--color-text-light);
+      margin-top: -36px;
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .section { padding: var(--section-padding-mobile) 16px; }
+      .section-title { font-size: 1.4rem; margin-bottom: 32px; }
+    }
+
+    /* ===== TRUST BAR ===== */
+    .trust-bar {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      padding: 32px 24px;
+    }
+
+    .trust-bar-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      text-align: center;
+    }
+
+    .trust-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .trust-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .trust-icon.oe { background: #e8f5e9; }
+    .trust-icon.si { background: #fff3e0; }
+    .trust-icon.st { background: #fff8e1; }
+    .trust-icon.sh { background: #e3f2fd; }
+
+    .trust-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .trust-sublabel {
+      font-size: 0.75rem;
+      color: var(--color-text-light);
+    }
+
+    @media (max-width: 768px) {
+      .trust-bar-inner { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    }
+
+    /* ===== SHOP BY NICHE ===== */
+    .niche-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .niche-card {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      background: var(--color-bg);
+    }
+
+    .niche-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
+    .niche-img {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 16px;
+    }
+
+    .niche-marine { background: linear-gradient(135deg, #4a90e2, #357abd); }
+    .niche-family { background: linear-gradient(135deg, #f5a623, #e8941a); }
+    .niche-duvet { background: linear-gradient(135deg, #7ed321, #6bc21a); }
+    .niche-protect { background: linear-gradient(135deg, #bd10e0, #a00dc7); }
+
+    .niche-label {
+      padding: 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .niche-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .niche-img { height: 160px; }
+    }
+
+    /* ===== TOP PRODUCTS ===== */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .product-card {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: var(--color-bg);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    .product-img {
+      height: 220px;
+      background: var(--color-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      color: var(--color-text-light);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .product-info { padding: 20px; }
+
+    .product-title { font-weight: 600; font-size: 1rem; margin-bottom: 8px; }
+
+    .product-price {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 12px;
+    }
+
+    .product-btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .product-btn:hover { background: var(--color-primary-dark); }
+
+    @media (max-width: 768px) {
+      .products-grid {
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        scroll-snap-type: x mandatory;
+      }
+      .product-card {
+        min-width: 260px;
+        flex-shrink: 0;
+        scroll-snap-align: start;
+      }
+    }
+
+    /* ===== CONFIGURATOR ===== */
+    .configurator-section {
+      background: linear-gradient(180deg, var(--color-surface) 0%, #eef5fb 100%);
+      padding: var(--section-padding) 24px;
+    }
+
+    .configurator-section .section { max-width: 800px; }
+
+    .configurator-box {
+      background: var(--color-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      padding: 40px;
+    }
+
+    .configurator-title {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .configurator-sub {
+      text-align: center;
+      color: var(--color-text-light);
+      margin-bottom: 32px;
+      font-size: 1rem;
+    }
+
+    .dim-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .dim-field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--color-text-light);
+    }
+
+    .dim-field input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .dim-field input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .fabric-selector {
+      margin-bottom: 24px;
+    }
+
+    .fabric-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: var(--color-text-light);
+    }
+
+    .fabric-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .fabric-opt {
+      padding: 14px 8px;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius);
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .fabric-opt:hover { border-color: var(--color-primary); }
+
+    .fabric-opt.active {
+      border-color: var(--color-primary);
+      background: #e8f4fd;
+      color: var(--color-primary);
+    }
+
+    .price-display {
+      text-align: center;
+      padding: 24px;
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+    }
+
+    .price-label {
+      font-size: 0.85rem;
+      color: var(--color-text-light);
+      margin-bottom: 4px;
+    }
+
+    .price-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .price-note {
+      font-size: 0.8rem;
+      color: var(--color-text-light);
+      margin-top: 4px;
+    }
+
+    .configurator-cta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+      .configurator-box { padding: 24px; }
+      .dim-row { grid-template-columns: 1fr; }
+      .fabric-options { grid-template-columns: repeat(2, 1fr); }
+      .configurator-cta { flex-direction: column; }
+      .price-value { font-size: 1.6rem; }
+    }
+
+    /* ===== FABRIC SHOWCASE ===== */
+    .fabric-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 0;
+      border-bottom: 2px solid var(--color-border);
+    }
+
+    .fabric-tab {
+      flex: 1;
+      padding: 16px;
+      text-align: center;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-family: var(--font-main);
+      font-size: 1rem;
+    }
+
+    .fabric-tab:hover { color: var(--color-primary); }
+
+    .fabric-tab.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      background: #f0f8ff;
+    }
+
+    .fabric-panel {
+      display: none;
+      padding: 40px 0;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .fabric-panel.active { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .fabric-visual {
+      height: 300px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .fabric-breeze { background: linear-gradient(135deg, #4fc3f7, #29b6f6); }
+    .fabric-cloud { background: linear-gradient(135deg, #e0e0e0, #bdbdbd); }
+    .fabric-prema { background: linear-gradient(135deg, #a5d6a7, #81c784); }
+    .fabric-eco { background: linear-gradient(135deg, #bcaaa4, #a1887f); }
+
+    .fabric-details h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .fabric-tagline {
+      color: var(--color-primary);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+
+    .fabric-desc { color: var(--color-text-light); margin-bottom: 20px; }
+
+    .fabric-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .fabric-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+
+    .fabric-features li::before {
+      content: "✓";
+      color: var(--color-success);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .fabric-tab { font-size: 0.85rem; padding: 12px 8px; }
+      .fabric-panel.active { grid-template-columns: 1fr; }
+      .fabric-visual { height: 200px; }
+    }
+
+    /* ===== SOCIAL PROOF ===== */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .review-card {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .review-stars {
+      color: var(--color-gold);
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+    }
+
+    .review-text {
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .review-author {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .review-country {
+      font-size: 0.8rem;
+      color: var(--color-text-light);
+    }
+
+    .overall-rating {
+      text-align: center;
+      margin-top: 32px;
+    }
+
+    .rating-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-surface);
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 768px) {
+      .reviews-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== EMAIL SIGNUP ===== */
+    .email-section {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      color: white;
+      text-align: center;
+      padding: var(--section-padding) 24px;
+    }
+
+    .email-section h2 { color: white; margin-bottom: 12px; }
+
+    .email-section p { opacity: 0.9; margin-bottom: 28px; font-size: 1.05rem; }
+
+    .email-form {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .email-form input {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-size: 1rem;
+    }
+
+    .email-form .btn { padding: 14px 28px; background: white; color: var(--color-primary); }
+
+    .email-form .btn:hover { background: #f0f0f0; }
+
+    @media (max-width: 768px) {
+      .email-form { flex-direction: column; }
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: #1a1a2e;
+      color: rgba(255,255,255,0.7);
+      padding: 60px 24px 0;
+    }
+
+    .footer-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-col h4 {
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-col a:hover { color: var(--color-primary); }
+
+    .footer-logo {
+      width: 140px; height: 44px;
+      background: rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+
+    .footer-tagline {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .footer-bottom {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    @media (max-width: 768px) {
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+    }
+
+    /* ===== LINE WIDGET ===== */
+    .line-widget {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #06c755;
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      z-index: 900;
+      display: none;
+    }
+
+    .line-widget svg { width: 24px; height: 24px; fill: white; }
+
+    @media (max-width: 768px) {
+      .line-widget { display: flex; }
+      body { padding-bottom: 56px; }
+    }
+
+    /* ===== MOCKUP LABELS ===== */
+    .mockup-label {
+      position: fixed;
+      top: 100px;
+      right: 16px;
+      background: #ff4757;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      z-index: 3000;
+      box-shadow: 0 4px 12px rgba(255,71,87,0.4);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* ===== LOGO ===== */
+    .logo-img { height: 50px; width: auto; display: block; object-fit: contain; }
+    .footer-logo-img { height: 44px; width: auto; display: block; margin-bottom: 16px; filter: brightness(0) invert(1); opacity: 0.85; }
+
+    /* ===== CONFIGURATOR REDESIGN ===== */
+    .config-wrapper { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    .config-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+    }
+
+    .config-type-tabs {
+      display: flex; background: var(--color-surface);
+      border-radius: 10px; padding: 4px; gap: 4px;
+      border: 1px solid var(--color-border);
+    }
+
+    .config-type-tab {
+      padding: 10px 22px; border: none; background: none;
+      border-radius: 8px; font-family: var(--font-main);
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      color: var(--color-text-light); transition: all 0.2s;
+    }
+
+    .config-type-tab.active {
+      background: var(--color-bg); color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .config-unit-toggle {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--color-surface); padding: 8px 14px;
+      border-radius: 8px; border: 1px solid var(--color-border);
+    }
+
+    .unit-lbl { font-size: 0.85rem; font-weight: 600; color: var(--color-text-light); cursor: pointer; transition: color 0.2s; }
+    .unit-lbl.active { color: var(--color-primary); }
+
+    .toggle-sw { position: relative; width: 40px; height: 22px; display: inline-block; }
+    .toggle-sw input { display: none; }
+    .toggle-slider {
+      position: absolute; inset: 0; background: #cbd5e1;
+      border-radius: 11px; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute; left: 3px; top: 3px;
+      width: 16px; height: 16px; background: white; border-radius: 50%;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-sw input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-sw input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .config-body {
+      display: grid; grid-template-columns: 1fr 1.15fr;
+      gap: 32px; align-items: start;
+    }
+
+    .config-diagram-wrap { }
+    .config-diagram { display: none; }
+    .config-diagram.active { display: block; }
+
+    .diagram-box {
+      background: var(--color-surface); border: 2px dashed var(--color-border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+
+    .diagram-legend {
+      padding: 10px 14px; background: white;
+      border-top: 1px solid var(--color-border);
+      font-size: 0.75rem; color: #64748b; text-align: center; line-height: 1.6;
+    }
+
+    .config-inputs-wrap { }
+    .config-inputs-panel { display: none; }
+    .config-inputs-panel.active { display: block; }
+
+    .dim-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .dim-grid-2x2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
+
+    .dim-field-v2 label {
+      display: block; font-size: 0.72rem; font-weight: 700;
+      color: var(--color-text-light); margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dim-field-v2 label small {
+      font-size: 0.7rem; font-weight: 400; text-transform: none;
+      opacity: 0.8; display: block; letter-spacing: 0; margin-top: 1px;
+    }
+
+    .input-unit-wrap { position: relative; }
+    .input-unit-wrap input {
+      width: 100%; padding: 11px 34px 11px 10px;
+      border: 2px solid var(--color-border); border-radius: var(--radius);
+      font-family: var(--font-main); font-size: 1rem; text-align: center;
+      background: var(--color-bg); transition: border-color 0.2s;
+    }
+    .input-unit-wrap input:focus { outline: none; border-color: var(--color-primary); }
+    .input-unit {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      font-size: 0.75rem; color: var(--color-text-light); pointer-events: none; font-weight: 600;
+    }
+
+    .fabric-selector-v2 { margin-bottom: 16px; }
+    .fabric-label-v2 {
+      font-size: 0.72rem; font-weight: 700; color: var(--color-text-light);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .fabric-grid-v2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .fabric-btn-v2 {
+      padding: 9px 8px; border: 2px solid var(--color-border); border-radius: var(--radius);
+      text-align: center; cursor: pointer; font-weight: 600; font-size: 0.82rem;
+      transition: all 0.2s; background: var(--color-bg); font-family: var(--font-main);
+    }
+    .fabric-btn-v2:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .fabric-btn-v2.active { border-color: var(--color-primary); background: #e8f4fd; color: var(--color-primary); }
+
+    .price-box-v2 {
+      background: linear-gradient(135deg, #f0f9ff, #e8f4fd);
+      border: 2px solid #bfdbfe; border-radius: var(--radius);
+      padding: 16px 20px; text-align: center; margin-bottom: 14px;
+    }
+    .price-box-label-v2 {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--color-text-light); margin-bottom: 4px;
+    }
+    .price-box-value-v2 { font-size: 1.7rem; font-weight: 700; color: var(--color-primary); margin-bottom: 3px; }
+    .price-box-usd { font-size: 1rem; font-weight: 500; opacity: 0.65; }
+    .price-box-note { font-size: 0.72rem; color: #64748b; }
+
+    .config-ctas-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    @media (max-width: 768px) {
+      .config-header { flex-direction: column; align-items: stretch; }
+      .config-type-tabs { justify-content: center; }
+      .config-body { grid-template-columns: 1fr; }
+      .config-ctas-v2 { grid-template-columns: 1fr; }
+    }
+
+    /* ===== SCROLL BAR ===== */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-surface); }
+    ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-text-light); }
+  </style>
+</head>
+<body>
+
+  <!-- MOCKUP LABEL — Remove for production -->
+  <div class="mockup-label">MOCKUP — Design Review</div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <img src="/images/logo.png" alt="MildMate" class="logo-img">
+      <nav class="nav-desktop">
+        <a href="#" class="nav-item">Home</a>
+        <a href="#" class="nav-item">Shop <span class="dropdown-arrow">▼</span></a>
+        <a href="#" class="nav-item">Fabrics <span class="dropdown-arrow">▼</span></a>
+        <a href="#" class="nav-item">Size Guide</a>
+        <a href="#" class="nav-item">About</a>
+        <a href="#" class="nav-item">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang-toggle">
+          <span class="active">EN</span>
+          <span>TH</span>
+        </div>
+        <div class="cart-icon">
+          🛒
+          <span class="cart-badge">0</span>
+        </div>
+        <div class="mobile-menu-btn" id="menuBtn">☰</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MOBILE DRAWER ===== -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="mobile-drawer" id="mobileDrawer">
+    <div class="drawer-close" id="drawerClose">✕</div>
+    <nav class="drawer-nav">
+      <a href="#">Home</a>
+      <a href="#">Shop</a>
+      <a href="#">Fabrics</a>
+      <a href="#">Size Guide</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+      <hr style="border:none;border-top:1px solid var(--color-border);margin:8px 0;">
+      <div class="lang-toggle" style="justify-content:flex-start;">
+        <span class="active">EN</span>
+        <span>TH</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-bg-placeholder"></div>
+    <div class="hero-img-label">[Hero Photo]<br>Boat interior with<br>V-Berth fitted sheet<br>OR family bed scene</div>
+    <div class="hero-content">
+      <h1>Bedding Made Easy Again:<br>Custom Sizes, Perfect Fits.</h1>
+      <p class="hero-sub">Handcrafted bedding tailored to your exact mattress dimensions. From V-Berth boat beds to family co-sleep mega-beds.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary">Shop Custom Bedding</button>
+        <button class="btn btn-outline">Measure My Mattress</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TRUST BAR ===== -->
+  <section class="trust-bar">
+    <div class="trust-bar-inner">
+      <div class="trust-item">
+        <div class="trust-icon oe">🌿</div>
+        <div class="trust-label">OEKO-TEX Certified</div>
+        <div class="trust-sublabel">Safe for sensitive skin</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon si">🏥</div>
+        <div class="trust-label">Siriraj Certified</div>
+        <div class="trust-sublabel">Dust-mite resistant</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon st">★</div>
+        <div class="trust-label">5.0 Star Rating</div>
+        <div class="trust-sublabel">From real customers</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon sh">🌍</div>
+        <div class="trust-label">Ships Worldwide</div>
+        <div class="trust-sublabel">From Thailand to you</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SHOP BY NICHE ===== -->
+  <section class="section">
+    <h2 class="section-title">Shop by Niche</h2>
+    <p class="section-subtitle">Custom bedding solutions for every lifestyle</p>
+    <div class="niche-grid">
+      <div class="niche-card">
+        <div class="niche-img niche-marine">[Photo]<br>Marine & Yacht<br>V-Berth sheets on boat</div>
+        <div class="niche-label">Marine & Yacht</div>
+      </div>
+      <div class="niche-card">
+        <div class="niche-img niche-family">[Photo]<br>Family & Co-Sleep<br>Parents + child in bed</div>
+        <div class="niche-label">Family & Co-Sleep</div>
+      </div>
+      <div class="niche-card">
+        <div class="niche-img niche-duvet">[Photo]<br>Easy-Change Duvet<br>3-sided zipper open</div>
+        <div class="niche-label">Easy-Change Duvet</div>
+      </div>
+      <div class="niche-card">
+        <div class="niche-img niche-protect">[Photo]<br>Protection<br>Waterproof / pet-proof</div>
+        <div class="niche-label">Protection</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TOP PRODUCTS ===== -->
+  <section class="section" style="background:var(--color-surface);">
+    <h2 class="section-title">Top Products</h2>
+    <p class="section-subtitle">Our best sellers based on real customer demand</p>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-img">[Product Photo]<br>3-Sided Zipper<br>Duvet Cover</div>
+        <div class="product-info">
+          <div class="product-title">3-Sided Zipper Duvet Cover</div>
+          <div class="product-price">฿5,200 / $145</div>
+          <button class="product-btn">Customize</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">[Product Photo]<br>Custom Family<br>Fitted Sheet</div>
+        <div class="product-info">
+          <div class="product-title">Custom Family Fitted Sheet</div>
+          <div class="product-price">฿6,800 / $195</div>
+          <button class="product-btn">Customize</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">[Product Photo]<br>Marine V-Berth<br>Fitted Sheet</div>
+        <div class="product-info">
+          <div class="product-title">Marine V-Berth Fitted Sheet</div>
+          <div class="product-price">฿4,800 / $135</div>
+          <button class="product-btn">Customize</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">[Product Photo]<br>RV & Van<br>Mattress Encasement</div>
+        <div class="product-info">
+          <div class="product-title">RV & Van Mattress Encasement</div>
+          <div class="product-price">฿3,900 / $110</div>
+          <button class="product-btn">Customize</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">[Product Photo]<br>BedBridge<br>Connector</div>
+        <div class="product-info">
+          <div class="product-title">BedBridge Connector</div>
+          <div class="product-price">฿2,500 / $72</div>
+          <button class="product-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONFIGURATOR ===== -->
+  <section class="configurator-section">
+    <div class="config-wrapper">
+      <h2 class="section-title" style="text-align:center;margin-bottom:8px;">Get Your Custom Price</h2>
+      <p class="section-subtitle">Enter your exact dimensions for an instant estimate</p>
+
+      <div class="configurator-box" style="padding:32px 36px;">
+
+        <!-- Row 1: Type tabs + Unit toggle -->
+        <div class="config-header">
+          <div class="config-type-tabs">
+            <button class="config-type-tab active" id="tabBedsheet">🛏 Fitted Bed Sheet</button>
+            <button class="config-type-tab" id="tabVberth">⚓ V-Berth Boat Sheet</button>
+          </div>
+          <div class="config-unit-toggle">
+            <span class="unit-lbl active" id="unitCm">cm</span>
+            <label class="toggle-sw">
+              <input type="checkbox" id="unitToggle">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="unit-lbl" id="unitInch">inch</span>
+          </div>
+        </div>
+
+        <!-- Row 2: Diagram + Form -->
+        <div class="config-body">
+
+          <!-- LEFT: Measurement diagram -->
+          <div class="config-diagram-wrap">
+
+            <!-- Bed Sheet Diagram -->
+            <div class="config-diagram active" id="diagramBedsheet">
+              <div class="diagram-box">
+                <svg viewBox="0 0 300 210" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+                  <defs>
+                    <marker id="bsArrR" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 5,2.5" fill="#2c96f4"/></marker>
+                    <marker id="bsArrL" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto-start-reverse"><polygon points="0,0 0,5 5,2.5" fill="#2c96f4"/></marker>
+                    <marker id="bsArrD" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 5,2.5" fill="#f59e0b"/></marker>
+                  </defs>
+                  <!-- bg -->
+                  <rect width="300" height="210" fill="#f0f8ff" rx="10"/>
+                  <!-- title -->
+                  <text x="150" y="18" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Arial,sans-serif" font-weight="600" letter-spacing="1.5">FITTED BED SHEET — TOP VIEW</text>
+                  <!-- mattress dashed -->
+                  <rect x="54" y="34" width="166" height="132" fill="white" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" rx="2"/>
+                  <text x="137" y="103" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="Arial,sans-serif">mattress</text>
+                  <!-- sheet outline -->
+                  <rect x="38" y="22" width="198" height="156" fill="none" stroke="#2c96f4" stroke-width="2.5" rx="4"/>
+                  <!-- corner pockets -->
+                  <rect x="38" y="22" width="18" height="18" fill="#bfdbfe" stroke="#2c96f4" stroke-width="1.5" rx="2"/>
+                  <rect x="218" y="22" width="18" height="18" fill="#bfdbfe" stroke="#2c96f4" stroke-width="1.5" rx="2"/>
+                  <rect x="38" y="160" width="18" height="18" fill="#bfdbfe" stroke="#2c96f4" stroke-width="1.5" rx="2"/>
+                  <rect x="218" y="160" width="18" height="18" fill="#bfdbfe" stroke="#2c96f4" stroke-width="1.5" rx="2"/>
+                  <!-- width arrow -->
+                  <line x1="38" y1="11" x2="236" y2="11" stroke="#2c96f4" stroke-width="1.5" marker-start="url(#bsArrL)" marker-end="url(#bsArrR)"/>
+                  <rect x="110" y="4" width="54" height="13" fill="#f0f8ff"/>
+                  <text x="137" y="14" text-anchor="middle" fill="#2c96f4" font-size="10" font-weight="700" font-family="Arial,sans-serif">Width (W)</text>
+                  <!-- length arrow -->
+                  <line x1="250" y1="22" x2="250" y2="178" stroke="#2c96f4" stroke-width="1.5" marker-start="url(#bsArrL)" marker-end="url(#bsArrR)"/>
+                  <text x="268" y="100" text-anchor="middle" fill="#2c96f4" font-size="10" font-weight="700" font-family="Arial,sans-serif" transform="rotate(-90 268 100)">Length (L)</text>
+                  <!-- depth bracket -->
+                  <line x1="38" y1="185" x2="56" y2="185" stroke="#f59e0b" stroke-width="2" marker-start="url(#bsArrD)" marker-end="url(#bsArrD)"/>
+                  <text x="150" y="204" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Arial,sans-serif">Depth (D) — elastic pocket height on all 4 sides</text>
+                </svg>
+                <div class="diagram-legend">
+                  <span style="color:#2c96f4;font-weight:700;">Blue border</span> = sheet &nbsp;·&nbsp;
+                  <span style="color:#94a3b8;">Dashed</span> = mattress &nbsp;·&nbsp;
+                  <span style="color:#93c5fd;font-weight:700;">Blue corners</span> = elastic pockets
+                </div>
+              </div>
+            </div>
+
+            <!-- V-Berth Diagram -->
+            <div class="config-diagram" id="diagramVberth">
+              <div class="diagram-box">
+                <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+                  <defs>
+                    <marker id="vbArrR" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 5,2.5" fill="#2c96f4"/></marker>
+                    <marker id="vbArrL" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto-start-reverse"><polygon points="0,0 0,5 5,2.5" fill="#2c96f4"/></marker>
+                    <marker id="vbArrD" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><polygon points="0,0 0,5 5,2.5" fill="#f59e0b"/></marker>
+                  </defs>
+                  <!-- bg -->
+                  <rect width="300" height="240" fill="#f0f8ff" rx="10"/>
+                  <!-- title -->
+                  <text x="150" y="18" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="Arial,sans-serif" font-weight="600" letter-spacing="1">V-BERTH BOAT SHEET — TOP VIEW</text>
+                  <!-- trapezoid: Head(narrow)=top, Foot(wide)=bottom -->
+                  <!-- Head: x=99 to x=201 at y=30 (width=102) -->
+                  <!-- Foot: x=47 to x=253 at y=185 (width=206) -->
+                  <polygon points="99,30 201,30 253,185 47,185" fill="#dbeafe" stroke="#2c96f4" stroke-width="2.5"/>
+                  <!-- center label -->
+                  <text x="150" y="115" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="Arial,sans-serif">Sheet area</text>
+                  <!-- BOW label -->
+                  <text x="150" y="26" text-anchor="middle" fill="#64748b" font-size="8" font-family="Arial,sans-serif" font-weight="600">▲ BOW (front of boat)</text>
+                  <!-- CABIN label -->
+                  <text x="150" y="200" text-anchor="middle" fill="#64748b" font-size="8" font-family="Arial,sans-serif" font-weight="600">▼ CABIN ENTRY</text>
+                  <!-- Head Width arrow -->
+                  <line x1="99" y1="19" x2="201" y2="19" stroke="#2c96f4" stroke-width="1.5" marker-start="url(#vbArrL)" marker-end="url(#vbArrR)"/>
+                  <rect x="118" y="10" width="64" height="13" fill="#f0f8ff"/>
+                  <text x="150" y="20" text-anchor="middle" fill="#2c96f4" font-size="9" font-weight="700" font-family="Arial,sans-serif">Head Width</text>
+                  <!-- Foot Width arrow -->
+                  <line x1="47" y1="207" x2="253" y2="207" stroke="#2c96f4" stroke-width="1.5" marker-start="url(#vbArrL)" marker-end="url(#vbArrR)"/>
+                  <rect x="113" y="208" width="74" height="13" fill="#f0f8ff"/>
+                  <text x="150" y="219" text-anchor="middle" fill="#2c96f4" font-size="9" font-weight="700" font-family="Arial,sans-serif">Foot Width</text>
+                  <!-- Length arrow (right side) -->
+                  <line x1="270" y1="30" x2="270" y2="185" stroke="#2c96f4" stroke-width="1.5" marker-start="url(#vbArrL)" marker-end="url(#vbArrR)"/>
+                  <text x="287" y="108" text-anchor="middle" fill="#2c96f4" font-size="9" font-weight="700" font-family="Arial,sans-serif" transform="rotate(-90 287 108)">Length (L)</text>
+                  <!-- Depth -->
+                  <text x="150" y="235" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Arial,sans-serif">Depth (D) — pocket drop on all sides</text>
+                </svg>
+                <div class="diagram-legend">
+                  <span style="color:#2c96f4;font-weight:700;">Head</span> = bow (narrow) &nbsp;·&nbsp;
+                  <span style="color:#2c96f4;font-weight:700;">Foot</span> = cabin entry (wide) &nbsp;·&nbsp;
+                  Price = trapezoid area × fabric rate
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /config-diagram-wrap -->
+
+          <!-- RIGHT: Inputs + fabric + price -->
+          <div class="config-inputs-wrap">
+
+            <!-- Bed Sheet inputs -->
+            <div class="config-inputs-panel active" id="inputsBedsheet">
+              <div class="dim-grid-3">
+                <div class="dim-field-v2">
+                  <label>Width</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="160" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+                <div class="dim-field-v2">
+                  <label>Length</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="200" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+                <div class="dim-field-v2">
+                  <label>Depth</label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="25" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- V-Berth inputs -->
+            <div class="config-inputs-panel" id="inputsVberth">
+              <div class="dim-grid-2x2">
+                <div class="dim-field-v2">
+                  <label>Head Width<small>Bow (narrow end)</small></label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="120" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+                <div class="dim-field-v2">
+                  <label>Foot Width<small>Cabin entry (wide end)</small></label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="160" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+                <div class="dim-field-v2">
+                  <label>Length<small>Bow to stern</small></label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="190" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+                <div class="dim-field-v2">
+                  <label>Depth<small>Mattress thickness</small></label>
+                  <div class="input-unit-wrap">
+                    <input type="number" value="20" min="1">
+                    <span class="input-unit unit-display">cm</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fabric selector (shared) -->
+            <div class="fabric-selector-v2">
+              <div class="fabric-label-v2">Select Fabric</div>
+              <div class="fabric-grid-v2">
+                <button class="fabric-btn-v2 active">BreezePlus</button>
+                <button class="fabric-btn-v2">CloudSoft</button>
+                <button class="fabric-btn-v2">PremaCotton</button>
+                <button class="fabric-btn-v2">EcoLuxe</button>
+              </div>
+            </div>
+
+            <!-- Price display -->
+            <div class="price-box-v2">
+              <div class="price-box-label-v2">Estimated Price</div>
+              <div class="price-box-value-v2">฿4,850 <span class="price-box-usd">/ $138</span></div>
+              <div class="price-box-note">Price updates automatically · Excludes shipping &amp; import tariff</div>
+            </div>
+
+            <!-- CTAs -->
+            <div class="config-ctas-v2">
+              <button class="btn btn-primary">Add to Cart</button>
+              <button class="btn btn-outline">How to Measure</button>
+            </div>
+
+          </div><!-- /config-inputs-wrap -->
+
+        </div><!-- /config-body -->
+
+      </div><!-- /configurator-box -->
+    </div><!-- /config-wrapper -->
+  </section>
+
+  <!-- ===== FABRIC SHOWCASE ===== -->
+  <section class="section">
+    <h2 class="section-title">Our Fabrics</h2>
+    <p class="section-subtitle">Four premium options, each designed for a specific sleep need</p>
+
+    <div class="fabric-tabs">
+      <button class="fabric-tab active" data-tab="0">BreezePlus</button>
+      <button class="fabric-tab" data-tab="1">CloudSoft</button>
+      <button class="fabric-tab" data-tab="2">PremaCotton</button>
+      <button class="fabric-tab" data-tab="3">EcoLuxe</button>
+    </div>
+
+    <div class="fabric-panel active" data-panel="0">
+      <div class="fabric-visual fabric-breeze">[Fabric Photo]<br>BreezePlus texture<br>Cool & breathable</div>
+      <div class="fabric-details">
+        <h3>BreezePlus</h3>
+        <div class="fabric-tagline">Cool, breathable microfiber for hot sleepers</div>
+        <p class="fabric-desc">Engineered with advanced microfiber technology that wicks moisture and allows airflow. Ideal for Thailand's tropical climate and anyone who sleeps warm.</p>
+        <ul class="fabric-features">
+          <li>Moisture-wicking technology</li>
+          <li>Quick-dry after washing</li>
+          <li>Hypoallergenic & dust-mite resistant</li>
+          <li>Available in 12 colors</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fabric-panel" data-panel="1">
+      <div class="fabric-visual fabric-cloud">[Fabric Photo]<br>CloudSoft texture<br>Ultra-soft & cozy</div>
+      <div class="fabric-details">
+        <h3>CloudSoft</h3>
+        <div class="fabric-tagline">Ultra-soft brushed microfiber for cozy comfort</div>
+        <p class="fabric-desc">Our softest fabric with a brushed finish that feels like a gentle hug. Perfect for sensitive skin and those who prioritize comfort above all else.</p>
+        <ul class="fabric-features">
+          <li>Brushed finish for cloud-like softness</li>
+          <li>Wrinkle-resistant</li>
+          <li>Pet-friendly durability</li>
+          <li>Available in 10 colors</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fabric-panel" data-panel="2">
+      <div class="fabric-visual fabric-prema">[Fabric Photo]<br>PremaCotton texture<br>Natural & pure</div>
+      <div class="fabric-details">
+        <h3>PremaCotton</h3>
+        <div class="fabric-tagline">100% natural cotton for pure comfort</div>
+        <p class="fabric-desc">Premium long-staple cotton with a tight percale weave. Breathable, durable, and gets softer with every wash. The classic choice for natural fiber lovers.</p>
+        <ul class="fabric-features">
+          <li>100% natural cotton</li>
+          <li>Percale weave — crisp & cool</li>
+          <li>Gets softer with every wash</li>
+          <li>Available in 8 colors</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="fabric-panel" data-panel="3">
+      <div class="fabric-visual fabric-eco">[Fabric Photo]<br>EcoLuxe texture<br>Sustainable luxury</div>
+      <div class="fabric-details">
+        <h3>EcoLuxe</h3>
+        <div class="fabric-tagline">Sustainable bamboo blend for eco-conscious sleep</div>
+        <p class="fabric-desc">A luxurious blend of bamboo-derived viscose and microfiber. Naturally antibacterial, temperature-regulating, and silky smooth against your skin.</p>
+        <ul class="fabric-features">
+          <li>Bamboo-derived sustainable fiber</li>
+          <li>Natural antibacterial properties</li>
+          <li>Temperature-regulating</li>
+          <li>Available in 6 earth-tone colors</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SOCIAL PROOF ===== -->
+  <section class="section" style="background:var(--color-surface);">
+    <h2 class="section-title">What Customers Say</h2>
+    <p class="section-subtitle">Real reviews from Etsy and our direct customers</p>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Absolutely perfect fit for our V-Berth! I was worried about the odd shape but the blueprint process made it so easy. Best sheets we've ever had on the boat."</p>
+        <div class="review-author">Wanda</div>
+        <div class="review-country">United States</div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"The 3-sided zipper is a game changer. My elderly mother can change the duvet cover by herself now. Fabric quality is excellent and washes beautifully."</p>
+        <div class="review-author">Sarah</div>
+        <div class="review-country">Australia</div>
+      </div>
+    </div>
+    <div class="overall-rating">
+      <div class="rating-badge">
+        <span style="color:var(--color-gold);font-size:1.3rem;">★</span>
+        <span>5.0 out of 5</span>
+        <span style="color:var(--color-text-light);font-weight:400;">— 47 verified reviews</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== EMAIL SIGNUP ===== -->
+  <section class="email-section">
+    <h2 style="color:white;">Get 10% Off Your First Order</h2>
+    <p>Join our newsletter for exclusive offers, new product announcements, and bedding care tips.</p>
+    <form class="email-form" onsubmit="event.preventDefault(); alert('This is a mockup — no real submission.');">
+      <input type="email" placeholder="Enter your email address">
+      <button type="submit" class="btn">Subscribe</button>
+    </form>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <img src="/images/logo.png" alt="MildMate" class="footer-logo-img">
+        <p class="footer-tagline">Custom bedding made in Thailand. Perfect fit, guaranteed — for every mattress shape, from V-Berths to family mega-beds.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="#">Marine & Yacht</a></li>
+          <li><a href="#">Family & Co-Sleep</a></li>
+          <li><a href="#">Easy-Change Duvet</a></li>
+          <li><a href="#">Protection</a></li>
+          <li><a href="#">All Products</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Size Guide</a></li>
+          <li><a href="#">Fabric Guide</a></li>
+          <li><a href="#">Shipping Policy</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <ul style="margin-bottom:16px;">
+          <li><a href="#" style="display:flex;align-items:center;gap:8px;"><span style="background:#06c755;color:white;border-radius:4px;padding:2px 6px;font-size:0.72rem;font-weight:700;">LINE</span> LINE Official</a></li>
+          <li><a href="#" style="display:flex;align-items:center;gap:8px;"><span style="background:#25d366;color:white;border-radius:4px;padding:2px 6px;font-size:0.72rem;font-weight:700;">WA</span> WhatsApp</a></li>
+          <li><a href="#" style="display:flex;align-items:center;gap:8px;"><span style="background:#1877f2;color:white;border-radius:4px;padding:2px 6px;font-size:0.72rem;font-weight:700;">FB</span> Facebook</a></li>
+        </ul>
+        <h4 style="margin-bottom:12px;">Our Shops</h4>
+        <ul>
+          <li><a href="#">🛍️ Etsy</a></li>
+          <li><a href="#">🛒 eBay</a></li>
+          <li><a href="#">🛍️ Shopee</a></li>
+          <li><a href="#">📦 Lazada</a></li>
+          <li><a href="#">🎵 TikTok Shop</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MildMate. All rights reserved.</span>
+      <span>Custom bedding handcrafted in Thailand</span>
+    </div>
+  </footer>
+
+  <!-- ===== LINE WIDGET (Mobile Only) ===== -->
+  <div class="line-widget">
+    <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.435.57-.064.015-.133.023-.199.023h-1.725c-.345 0-.629-.282-.629-.629V8.108c0-.345.283-.63.63-.63.348 0 .629.285.629.63v4.141h1.089c.345 0 .629.283.629.63zm-2.466-2.099c0-.348.283-.63.63-.63.346 0 .627.282.627.63v2.1c0 .346-.281.629-.627.629-.347 0-.63-.283-.63-.629v-2.1zm0-2.982c0-.346.283-.629.63-.629.346 0 .627.283.627.63v1.051c0 .346-.281.628-.627.628-.347 0-.63-.282-.63-.628V7.798zm-1.688 5.08c-.346 0-.629-.282-.629-.629V8.108c0-.345.283-.63.63-.63.348 0 .628.285.628.63v4.141h1.091c.344 0 .629.283.629.63 0 .344-.285.629-.629.629h-1.72zm-2.465-1.125c-.346 0-.627-.282-.627-.629v-.472h-.502c-.345 0-.629-.283-.629-.63 0-.346.284-.629.63-.629h.5V8.108c0-.345.282-.63.63-.63.345 0 .627.285.627.63v4.141c0 .347-.282.629-.629.629z"/></svg>
+    Chat with us on LINE
+  </div>
+
+  <script>
+    // Header scroll shrink
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Mobile drawer
+    const menuBtn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('mobileDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerClose = document.getElementById('drawerClose');
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    menuBtn.addEventListener('click', openDrawer);
+    drawerClose.addEventListener('click', closeDrawer);
+    overlay.addEventListener('click', closeDrawer);
+
+    // Fabric tabs
+    const tabs = document.querySelectorAll('.fabric-tab');
+    const panels = document.querySelectorAll('.fabric-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const idx = tab.dataset.tab;
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelector(`.fabric-panel[data-panel="${idx}"]`).classList.add('active');
+      });
+    });
+
+    // Fabric selector in configurator (v2)
+    const fabricBtns = document.querySelectorAll('.fabric-btn-v2');
+    fabricBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        fabricBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Configurator type tabs (Bed Sheet / V-Berth)
+    const tabBedsheet = document.getElementById('tabBedsheet');
+    const tabVberth = document.getElementById('tabVberth');
+    const diagramBedsheet = document.getElementById('diagramBedsheet');
+    const diagramVberth = document.getElementById('diagramVberth');
+    const inputsBedsheet = document.getElementById('inputsBedsheet');
+    const inputsVberth = document.getElementById('inputsVberth');
+
+    function switchConfigTab(active) {
+      if (active === 'bedsheet') {
+        tabBedsheet.classList.add('active');
+        tabVberth.classList.remove('active');
+        diagramBedsheet.classList.add('active');
+        diagramVberth.classList.remove('active');
+        inputsBedsheet.classList.add('active');
+        inputsVberth.classList.remove('active');
+      } else {
+        tabVberth.classList.add('active');
+        tabBedsheet.classList.remove('active');
+        diagramVberth.classList.add('active');
+        diagramBedsheet.classList.remove('active');
+        inputsVberth.classList.add('active');
+        inputsBedsheet.classList.remove('active');
+      }
+    }
+
+    tabBedsheet.addEventListener('click', () => switchConfigTab('bedsheet'));
+    tabVberth.addEventListener('click', () => switchConfigTab('vberth'));
+
+    // Unit toggle (cm / inch)
+    const unitToggle = document.getElementById('unitToggle');
+    const unitCm = document.getElementById('unitCm');
+    const unitInch = document.getElementById('unitInch');
+    const unitDisplays = document.querySelectorAll('.unit-display');
+
+    unitToggle.addEventListener('change', () => {
+      const isInch = unitToggle.checked;
+      unitCm.classList.toggle('active', !isInch);
+      unitInch.classList.toggle('active', isInch);
+      unitDisplays.forEach(el => { el.textContent = isInch ? 'in' : 'cm'; });
+      // Convert displayed values
+      document.querySelectorAll('.input-unit-wrap input').forEach(input => {
+        const val = parseFloat(input.value);
+        if (!val) return;
+        input.value = isInch ? (val / 2.54).toFixed(1) : (val * 2.54).toFixed(0);
+      });
+    });
+  </script>
+</body>
+</html>

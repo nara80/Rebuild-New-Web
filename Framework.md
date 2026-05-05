@@ -1,0 +1,655 @@
+# MildMate Web Rebuild — Full Framework Plan
+
+## Stack Confirmed
+- **Frontend:** Vanilla HTML + CSS + minimal JS
+- **Backend:** Cloudflare Workers (TypeScript)
+- **Database:** Cloudflare D1 + Storage R2
+- **Deploy:** `mildmate-new.pages.dev` → cutover to `www.mildmate.com` when 100% done
+- **Email:** MailChannels (free, built into Workers — no signup needed)
+- **Payments:** Stripe (USD + PromptPay THB natively)
+- **Admin auth:** Cloudflare Access (Google login)
+
+---
+
+## Frontend Design System
+
+### Brand Tokens (CSS Variables)
+```css
+--color-primary: #2c96f4;       /* CI Blue */
+--color-primary-dark: #1a7fd4;
+--color-text: #333333;
+--color-bg: #ffffff;
+--color-surface: #f8f9fa;
+--color-border: #e5e7eb;
+--font-main: 'Prompt', sans-serif;
+--radius: 8px;
+--shadow: 0 2px 12px rgba(0,0,0,0.08);
+```
+
+### Typography Scale
+| Element | Size | Weight |
+|---|---|---|
+| H1 (Hero) | 2.5rem | 700 |
+| H2 (Section) | 1.75rem | 700 |
+| H3 (Card title) | 1.25rem | 600 |
+| Body | 1rem | 400 |
+| Small/Caption | 0.875rem | 400 |
+
+---
+
+## Complete Site Pages Overview
+
+### Static Pages (manually authored HTML)
+| Page | URL | Notes |
+|---|---|---|
+| Homepage EN | `/` | 8 sections, full content |
+| Homepage TH | `/th/` | Thai language version |
+| About Us | `/about/` | Company story, certifications |
+| Contact | `/contact/` | Form + multi-channel links |
+| Fabric Collections | `/fabric-collections/` | 4 fabric tabs, expanded detail |
+| Size Guide | `/mattress-size/` | TH/US/UK/EU/AU size tables |
+| Size Guide TH (#1 SEO) | `/mattress-size-th/` | Thai SEO hub — highest traffic |
+| How to Measure | `/how-to-measure-mattress-size/` | Credit card method diagram |
+| Bed Sheet Size | `/bed-sheets-size/` | Sheet sizing guide |
+| Shipping Policy | `/shipping-policy/` | Rates, regions, transit times |
+| Privacy Policy | `/privacy-policy/` | GDPR-compatible policy |
+| Customer Reviews | `/customer-reviews/` | Curated reviews + rating badge |
+| Checkout | `/checkout/` | 3-step guest checkout |
+| Order Confirmed | `/order-confirmed/` | Post-payment confirmation |
+| All 258 WordPress URLs | various | Preserved from Phase 2 |
+
+### Blog Pages (static HTML, managed manually)
+| Page | URL | Notes |
+|---|---|---|
+| Blog Index | `/blogs/` | 20 posts per page, paginated |
+| Blog Index Page 2+ | `/blogs/page/2/` etc. | Pagination pages |
+| Individual Blog Post | `/blogs/[post-slug]/` | One file per article |
+
+### Dynamic Pages (data from Cloudflare D1)
+| Page | URL | Notes |
+|---|---|---|
+| Product Category | `/marine/`, `/family/`, `/duvet/`, `/protection/` | Filtered product grid, pulled from D1 |
+| All Products | `/all-products/` | Full product listing, filter bar |
+| Product Detail | `/product/[slug]/` | 83 product pages, configurator |
+
+### Admin Pages (Google login required)
+| Page | URL | Notes |
+|---|---|---|
+| Admin Dashboard | `/admin/` | Summary cards |
+| Orders | `/admin/orders.html` | Manufacturing view |
+| Products | `/admin/products.html` | CRUD product catalog |
+| Image Uploader | `/admin/upload.html` | Drag & drop → R2 |
+| Subscribers | `/admin/subscribers.html` | Email list + CSV export |
+
+---
+
+## Site Layout Blueprint
+
+### Header (Sticky)
+```
+┌─────────────────────────────────────────────────────┐
+│ [Logo]   [Nav Menu]              [TH/EN] [🛒 Cart]  │
+└─────────────────────────────────────────────────────┘
+```
+- Logo left, nav center, language toggle + cart icon right
+- Sticky on scroll (shrinks from 83px → 60px)
+- Mobile: hamburger menu → slide-in drawer
+
+### Navigation Menu
+```
+Home | Shop ▾ | Fabrics ▾ | Blog | Size Guide | About | Contact
+```
+
+**Shop Mega-Dropdown:**
+```
+┌─────────────────────────────────────────────────┐
+│ Marine & Yacht    │ Family & Co-Sleep            │
+│ • V-Berth Sheets  │ • Family Fitted Sheets       │
+│ • Marine Pillows  │ • BedBridge Connector        │
+│ • Boat Duvets     │ • Co-Sleep Duvets            │
+├───────────────────┼──────────────────────────────┤
+│ Easy-Change Duvet │ Protection                   │
+│ • 3-Sided Zipper  │ • TPU Waterproof             │
+│ • Dorm/College    │ • Pet-Proof Sheets           │
+│ • Weighted Cover  │ • Mattress Encasement        │
+└─────────────────────────────────────────────────┘
+```
+
+**Fabrics Dropdown:**
+```
+BreezePlus | CloudSoft | PremaCotton | EcoLuxe
+```
+
+---
+
+## Custom Configurator Specification
+
+The configurator appears in two places: the **Homepage** (conversion preview) and every **Product Detail page** (full purchase flow). It has two modes selectable by tab.
+
+### Mode A — Fitted Bed Sheet (rectangular)
+| Input | Label | Unit Toggle |
+|---|---|---|
+| Width | W | cm / inch |
+| Length | L | cm / inch |
+| Depth | D (pocket height) | cm / inch |
+
+### Mode B — V-Berth Boat Sheet (trapezoidal)
+| Input | Label | Description | Unit Toggle |
+|---|---|---|---|
+| Head Width | Head | Narrow end (bow) | cm / inch |
+| Foot Width | Foot | Wide end (cabin entry) | cm / inch |
+| Length | L | Bow to stern (center line) | cm / inch |
+| Depth | D | Mattress thickness | cm / inch |
+
+**V-Berth pricing formula:** `((Head + Foot) / 2) × Length` = trapezoid area → × fabric rate per cm²
+
+### Shared Configurator Features
+- **Unit toggle:** cm / inch switch (converts values in place)
+- **Fabric selector:** 4 options (BreezePlus, CloudSoft, PremaCotton, EcoLuxe)
+- **Live price display:** Updates automatically as inputs change
+- **Pricing note on all displays:** *"Price excludes shipping & import tariff"*
+- **Measurement diagram:** Labeled SVG diagram shown beside inputs (rectangle for bed sheet, trapezoid for V-Berth)
+
+---
+
+## Blog Template Specifications
+
+### Image Sizes — Quick Reference
+| Image | Used Where | Required Size | Format | Max Size |
+|---|---|---|---|---|
+| Hero / Banner | Top of blog post | 1200 × 500 px (2.4:1) | JPG/WebP | 400 KB |
+| Card Thumbnail | Blog index cards + Related posts | 800 × 534 px (3:2) | JPG/WebP | 200 KB |
+| Inline Post Image | Inside article body | 1200 × 675 px (16:9) | JPG/WebP | 300 KB |
+| Author Avatar | Bio box + post meta | 160 × 160 px (1:1) | JPG/WebP | 50 KB |
+
+### Blog Index Layout
+- 3-column grid desktop, 2-column tablet, 1-column mobile
+- 20 posts per page
+- Pagination: First ← | Prev | 1 2 3 … N | Next | Last →
+- Category filter bar: All · Marine & Yacht · Family Bedding · Care Tips · Size Guides · News
+- Each card: Thumbnail (800×534) + Category tag + Title + Excerpt (3 lines) + Date + Read Time
+
+### Blog Post Layout
+- Breadcrumb: Home › Blog › Category › Title
+- Hero banner (1200×500) — full width
+- Two-column: Article body (left) + Sidebar (right)
+- Sidebar: Recent Posts + Categories + CTA widget (configure your sheet)
+- Related Posts: 3 cards at bottom (reuse card thumbnail)
+- Post navigation: ← Previous Post | Next Post →
+
+### Per-Post Content Required
+| Field | Required | Spec |
+|---|---|---|
+| Title | Yes | Max 100 characters (under 60 for SEO) |
+| Hero / Banner Image | Yes | 1200 × 500 px |
+| Card Thumbnail | Yes | 800 × 534 px (reused for index, related posts) |
+| Category | Yes | One of the 5 category options |
+| Excerpt / Meta description | Yes | 120–160 characters |
+| Body Content | Yes | Min 400 words, supports H2, p, ul, blockquote |
+| Publish Date | Yes | YYYY-MM-DD |
+| URL Slug | Yes | /blogs/[lowercase-hyphenated-english]/ |
+| Inline Images | Optional | 1200 × 675 px, max 3 per post |
+| Tags | Optional | 3–6 short keywords |
+| Author Name | Optional | Default: "MildMate Team" |
+
+---
+
+## Page-by-Page Layout
+
+### 1. Homepage (`/index.html`)
+
+```
+[HERO]
+  Headline: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
+  Sub: Brand CI Blue strip with 3 value props
+  CTA: "Shop Custom Bedding" + "Measure My Mattress"
+  Background: lifestyle image (boat/family bed)
+
+[TRUST BAR]  ← single row, 4 icons
+  OEKO-TEX Certified | Siriraj Dust-Mite Certified | 5★ Reviews | Ships Worldwide
+
+[SHOP BY NICHE]  ← 4 cards, image + label
+  Marine & Yacht | Family Co-Sleep | Easy-Change Duvet | Protection
+
+[TOP PRODUCTS]  ← horizontal scroll on mobile, 3-col grid desktop
+  Based on Etsy top 5 performers
+
+[CUSTOM CONFIGURATOR PREVIEW]  ← conversion focus
+  Tab: [🛏 Fitted Bed Sheet] [⚓ V-Berth Boat Sheet]
+  Unit toggle: cm / inch
+  Bed Sheet mode: Width / Length / Depth + Fabric selector
+  V-Berth mode: Head Width / Foot Width / Length / Depth + Fabric selector
+  Measurement diagram shown beside inputs
+  Live price display — note: "Excludes shipping & import tariff"
+
+[FABRIC SHOWCASE]  ← 4 tabs (BreezePlus / CloudSoft / PremaCotton / EcoLuxe)
+
+[SOCIAL PROOF]  ← 2 Etsy reviews + 5★ badge
+
+[EMAIL SIGNUP]  ← abandoned cart recovery hook
+  "Get 10% off your first order"
+
+[FOOTER]
+```
+
+### 2. Blog Index (`/blogs/`)
+
+```
+[PAGE HERO]  "The MildMate Blog" + short tagline
+
+[FILTER BAR]  All | Marine & Yacht | Family Bedding | Care Tips | Size Guides | News
+
+[POST GRID]  3-col desktop, 2-col tablet, 1-col mobile
+  Card: Thumbnail (800×534) | Category tag | Title | Excerpt | Date | Read time | Read →
+
+[PAGINATION]
+  ⟵ First | ← Prev | 1  2  3  …  N | Next → | Last ⟶
+  "Showing posts X–Y of Z total"
+```
+
+### 3. Blog Post (`/blogs/[slug]/`)
+
+```
+[HEADER + BREADCRUMB]  Home › Blog › Category › Post Title
+
+[HERO BANNER]  1200 × 500 px — full width
+
+[TWO-COLUMN LAYOUT]
+  Left (main):
+    Category tag | H1 Title
+    Author | Date | Read Time | Share icons
+    Article body (H2, paragraphs, inline images 1200×675, blockquotes, lists)
+    Tags
+    Author bio box (avatar 160×160 + name + bio)
+  
+  Right (sidebar, sticky):
+    Recent Posts widget
+    Categories widget
+    CTA widget: "Get a Custom Quote" → configurator
+
+[RELATED POSTS]  3 cards (same thumbnail spec as index)
+
+[PREV / NEXT POST NAVIGATION]
+```
+
+### 4. Product Listing (`/all-products/`, category pages)
+
+```
+[FILTER BAR]  Category | Fabric | Size Region (TH/US/UK/EU/AU)
+[PRODUCT GRID]  3-col desktop, 2-col mobile — data pulled from D1
+  Card: Image | Title | Price (THB or USD) | "Customize" CTA
+```
+> Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) render the same grid pre-filtered by category. All data is dynamic from D1.
+
+### 5. Product Detail (`/product/[slug]/`)
+
+```
+[IMAGE GALLERY]  main image + thumbnails
+
+[PRODUCT INFO]
+  Title (TH/EN toggle)
+  Fabric badge + short description
+  ★★★★★ (Siriraj certified badge if BreezePlus/TPU)
+
+[CUSTOM CONFIGURATOR]  ← full version
+  Tab: [🛏 Fitted Bed Sheet] [⚓ V-Berth Boat Sheet]
+  Unit toggle: cm / inch
+  Measurement diagram beside inputs
+  Fabric swatches (4 options)
+  Color selector
+  Live price (via Worker API)
+  Note: "Price excludes shipping & import tariff"
+  [Add to Cart]
+
+[MEASUREMENT GUIDE]  ← inline collapsible
+  Credit card method diagram
+
+[PRODUCT TABS]  Description | Fabric Details | Size Guide | Care
+
+[RELATED PRODUCTS]
+```
+
+### 6. About Us (`/about/`)
+
+```
+[HERO]  Brand story headline + lifestyle photo
+
+[OUR STORY]  Founding, mission, handcraft in Thailand
+
+[CERTIFICATIONS]  OEKO-TEX + Siriraj certified badges with descriptions
+
+[THE TEAM]  Brief team introduction
+
+[CTA]  → Shop Custom Bedding
+```
+
+### 7. Contact (`/contact/`)
+
+```
+[CONTACT FORM]  Name | Email | Subject | Message | Send
+
+[CONTACT CHANNELS]
+  💬 LINE Official    — [LINE link]
+  📱 WhatsApp         — [WhatsApp link]
+  📘 Facebook         — [Facebook page link]
+
+[MARKETPLACE LINKS]  ← Icon row
+  🛍️ Etsy  |  🛒 eBay  |  🛍️ Shopee  |  📦 Lazada  |  🎵 TikTok Shop
+
+[LOCATION / ABOUT]  Made in Thailand — brief note
+```
+
+### 8. Fabric Collections (`/fabric-collections/`)
+
+```
+[PAGE HERO]  "Our Fabrics" headline
+
+[4 FABRIC TABS]  BreezePlus | CloudSoft | PremaCotton | EcoLuxe
+  Each tab panel:
+    Full-width fabric visual
+    Name + tagline
+    Extended description
+    Feature list (5–6 items)
+    Color options grid
+    Certifications (OEKO-TEX, Siriraj where applicable)
+    CTA → Shop [Fabric Name] products
+
+[FABRIC COMPARISON TABLE]  Side-by-side spec comparison of all 4
+```
+
+### 9. Size Guide Pages (SEO Hub)
+
+```
+/mattress-size-th/             ← #1 traffic page, fully preserved in Thai
+/how-to-measure-mattress-size/
+/mattress-size/
+/bed-sheets-size/
+```
+Each page: comparison table (TH/US/UK/EU/AU/JP sizes) + credit card measurement diagram + CTA to configurator.
+
+### 10. Shipping Policy (`/shipping-policy/`)
+
+```
+[HERO]  Shipping & Delivery
+[CONTENT]  Processing time | Shipping regions | Rates (USD/THB) | Transit times | Customs note
+[FAQ]  Common shipping questions
+```
+> Note: All product prices displayed on the site are *product price only* and exclude shipping costs and any import tariffs applicable in the destination country.
+
+### 11. Privacy Policy (`/privacy-policy/`)
+
+```
+Standard GDPR-compatible privacy policy
+Covers: data collected, usage, cookies, third parties (Stripe, MailChannels), rights
+```
+
+### 12. Customer Reviews (`/customer-reviews/`)
+
+```
+[HERO]  "What Our Customers Say"
+
+[RATING BADGE]  5.0 ★★★★★ — verified reviews
+
+[REVIEW GRID]  3-col desktop — curated reviews with star rating, text, name, country
+
+[ETSY BADGE]  Link to Etsy shop reviews
+```
+
+### 13. Checkout (`/checkout/`)
+
+```
+[STEP 1: CART REVIEW]
+  Items, dimensions, fabric, price
+  Currency toggle (THB / USD)
+  Note: "Prices shown exclude shipping — rates calculated at payment"
+
+[STEP 2: GUEST DETAILS]  ← email captured HERE for abandoned cart
+  Name | Email | Phone | Shipping Address
+  Custom notes (special shape description)
+
+[STEP 3: PAYMENT]
+  → Stripe Checkout (hosted, redirects to Stripe)
+  TH visitors: PromptPay QR via Stripe
+  Global: Card / Apple Pay / Google Pay
+```
+
+### 14. Admin Dashboard (`/admin/`) — protected by Cloudflare Access
+
+```
+Sidebar: Dashboard | Products | Orders | Images | Subscribers
+
+[ORDERS PAGE]  ← manufacturing team view
+  Table: Date | Customer | Product | Sheet Type | Dimensions | Fabric | Color | Status
+  Sheet Type: Fitted Bed Sheet → shows W × L × D
+             V-Berth → shows Head × Foot × L × D
+  Filter by: pending / in-production / shipped
+
+[PRODUCTS PAGE]
+  Card grid: product name | price USD/THB | active toggle | Edit button
+  Edit modal: title TH / title EN / prices / fabric options
+
+[IMAGE UPLOADER]
+  Drag & drop zone → uploads to R2 → returns CDN URL
+
+[SUBSCRIBERS]
+  Email list table + "Export CSV" button
+```
+
+### Footer Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [Logo + tagline]  │ Shop         │ Info       │ Contact     │
+│                   │ Marine       │ About      │ 💬 LINE     │
+│ [Email signup]    │ Family       │ Fabric     │ 📱 WhatsApp │
+│                   │ Duvet        │ Size Guide │ 📘 Facebook │
+│                   │ Protection   │ Blog       │             │
+│                   │ All Products │ Shipping   │ Marketplaces│
+│                   │              │ Privacy    │ 🛍️ Etsy    │
+│                   │              │ Reviews    │ 🛒 eBay    │
+│                   │              │ FAQ        │ 🛍️ Shopee  │
+│                   │              │            │ 📦 Lazada  │
+│                   │              │            │ 🎵 TikTok  │
+├─────────────────────────────────────────────────────────────┤
+│ © MildMate 2026 | TH | EN | Privacy Policy | Shipping      │
+│ [LINE green sticky bar — mobile only]                       │
+└─────────────────────────────────────────────────────────────┘
+```
+> LINE sticky widget (mobile only) matches current site behavior.
+
+---
+
+## Project Folder Structure
+
+```
+mildmate-web/
+├── AGENTS.md
+├── Framework.md
+├── wrangler.toml
+├── package.json
+├── blog-mockup.html           ← Blog template design reference
+├── mockup.html                ← Homepage design reference
+│
+├── public/                          ← Cloudflare Pages static files
+│   ├── index.html                   ← Homepage EN
+│   ├── th/index.html                ← Homepage TH
+│   │
+│   ├── about/index.html
+│   ├── contact/index.html
+│   ├── fabric-collections/index.html
+│   ├── shipping-policy/index.html
+│   ├── privacy-policy/index.html
+│   ├── customer-reviews/index.html
+│   ├── checkout/index.html
+│   ├── order-confirmed/index.html
+│   ├── all-products/index.html
+│   ├── marine/index.html            ← Category page (dynamic from D1)
+│   ├── family/index.html
+│   ├── duvet/index.html
+│   ├── protection/index.html
+│   │
+│   ├── blogs/index.html             ← Blog index page 1
+│   ├── blogs/page/[n]/index.html    ← Blog index pagination
+│   ├── blogs/[slug]/index.html      ← Individual blog post pages
+│   │
+│   ├── product/[slug]/index.html    ← 83 product detail pages
+│   │
+│   ├── mattress-size-th/index.html  ← #1 SEO page
+│   ├── mattress-size/index.html
+│   ├── how-to-measure-mattress-size/index.html
+│   ├── bed-sheets-size/index.html
+│   ├── [all-other-258-slugs]/index.html   ← Phase 2 URL preservation
+│   │
+│   ├── css/
+│   │   ├── main.css                 ← All public styles
+│   │   └── admin.css                ← Admin dashboard styles
+│   ├── js/
+│   │   ├── cart.js                  ← localStorage cart logic
+│   │   ├── configurator.js          ← Price calculator (both modes)
+│   │   └── geo.js                   ← Currency toggle
+│   ├── images/
+│   │   ├── logo.png                 ← Main logo (transparent PNG)
+│   │   ├── hero-bg.jpg
+│   │   ├── og-image.jpg             ← Social share preview (1200×630)
+│   │   ├── categories/
+│   │   └── products/
+│   ├── _redirects                   ← 301s for WordPress legacy URLs
+│   ├── _headers                     ← Security headers (CSP, HSTS)
+│   ├── sitemap.xml
+│   └── robots.txt
+│
+├── workers/
+│   ├── api/
+│   │   ├── products.ts
+│   │   ├── pricing.ts               ← Handles both bed sheet + V-Berth formulas
+│   │   ├── geo-currency.ts
+│   │   ├── cart.ts
+│   │   ├── checkout.ts
+│   │   ├── webhook.ts
+│   │   ├── email.ts
+│   │   └── subscribers.ts
+│   ├── admin/
+│   │   ├── products.ts
+│   │   ├── orders.ts
+│   │   ├── upload.ts
+│   │   └── subscribers.ts
+│   └── cron.ts                      ← Abandoned cart cron (Phase 6)
+│
+├── admin/
+│   ├── index.html
+│   ├── products.html
+│   ├── orders.html
+│   ├── upload.html
+│   └── subscribers.html
+│
+└── migrations/
+    └── 001_initial.sql
+```
+
+---
+
+## SEO URL Strategy
+
+| Type | Count | Action |
+|---|---|---|
+| Clean EN slugs | ~80 | Preserve exact — create matching `/slug/index.html` |
+| Clean TH slugs | ~15 | Preserve exact — UTF-8 folder names supported by CF Pages |
+| `/th/` prefixed pages | ~20 | Preserve exact |
+| `/product/[slug]/` | 83 | Preserve exact |
+| Duplicate/junk slugs | ~60 | `_redirects` 301 → canonical |
+
+---
+
+## D1 Database Schema
+
+```sql
+-- Products
+CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  slug TEXT UNIQUE NOT NULL,
+  title_th TEXT, title_en TEXT,
+  description_th TEXT, description_en TEXT,
+  category TEXT,                  -- 'marine', 'family', 'duvet', 'protection'
+  base_price_usd REAL, base_price_thb REAL,
+  price_per_sqcm_usd REAL, price_per_sqcm_thb REAL,
+  fabric_options TEXT,            -- JSON array
+  image_r2_key TEXT,
+  active INTEGER DEFAULT 1
+);
+
+-- Orders
+CREATE TABLE orders (
+  id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL,
+  customer_name TEXT, phone TEXT,
+  address TEXT,                   -- JSON {line1, city, country}
+  product_id INTEGER REFERENCES products(id),
+  sheet_type TEXT DEFAULT 'fitted_bed',   -- 'fitted_bed' | 'vberth'
+  -- Fitted Bed Sheet dimensions
+  custom_width_cm REAL,
+  custom_length_cm REAL,
+  custom_depth_cm REAL,
+  -- V-Berth additional dimensions (NULL for fitted bed sheet orders)
+  custom_head_width_cm REAL,      -- Bow (narrow end)
+  custom_foot_width_cm REAL,      -- Cabin entry (wide end)
+  fabric TEXT, color TEXT,
+  amount REAL, currency TEXT,     -- 'USD' | 'THB'
+  payment_id TEXT,                -- Stripe session ID
+  payment_status TEXT DEFAULT 'pending',
+  order_status TEXT DEFAULT 'pending',    -- 'pending' | 'in-production' | 'shipped' | 'cancelled'
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Abandoned Carts
+CREATE TABLE abandoned_carts (
+  id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL,
+  cart_json TEXT,                 -- Full cart with sheet_type + all dimensions
+  recovered INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Email Subscribers
+CREATE TABLE subscribers (
+  id INTEGER PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  source TEXT,                    -- 'footer', 'checkout'
+  created_at TEXT DEFAULT (datetime('now'))
+);
+```
+
+---
+
+## Build Phases
+
+| Phase | Scope | Key Output |
+|---|---|---|
+| **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold |
+| **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` |
+| **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav |
+| **4** | All Content Pages | Homepage, Blog, About, Contact, Fabric Collections, Policy pages, Reviews, Product pages, Configurator (both modes) |
+| **5** | Checkout + Stripe | Guest form → Stripe → order saved → confirmation email |
+| **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels |
+| **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export |
+| **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` |
+
+> **Note:** Phase 2 (SEO URL Preservation) is intentionally deferred — it will run pre-launch after Phase 7 is complete.
+
+---
+
+## Pricing Rules
+
+- All product prices displayed on the site are **product price only**
+- All configurator estimates are **product price only**
+- Shipping costs are calculated separately at checkout based on destination country
+- Import tariffs are the customer's responsibility and are NOT included in any displayed price
+- This note appears on every price display: *"Price excludes shipping & import tariff"*
+
+---
+
+## What Is NOT Being Built (Deferred or Out of Scope)
+- Customer login / account pages
+- Blog CMS editor (static HTML only — blog posts are manually authored HTML files)
+- Inventory management
+- Auto-translation (manual TH/EN per page)
+- Shopee/Lazada direct API integration (links only — orders managed on those platforms directly)
