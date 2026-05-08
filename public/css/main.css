@@ -496,12 +496,12 @@ main {
   flex-shrink: 0;
 }
 
-/* Font Awesome icons in footer (email, phone) */
-.footer-col .fas {
+/* Inline SVG icons in footer (email, phone) — white stroke */
+.footer-icon-svg {
   width: 24px;
-  text-align: center;
+  height: 24px;
+  flex-shrink: 0;
   color: #ffffff;
-  font-size: 18px;
 }
 
 /* Logo — PNG is white-on-transparent, no filter needed */
@@ -530,40 +530,30 @@ main {
   display: block;
 }
 
-/* Marketplace section */
+/* Marketplace section — plain links, no rectangle frames */
 .marketplace-box {
   margin-top: 30px;
 }
 
 .marketplace-grid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
   margin-top: 15px;
 }
 
-.marketplace-link {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 5px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
-  text-decoration: none;
+.marketplace-grid a {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: background 0.3s;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-.marketplace-link:hover {
-  background: rgba(255, 255, 255, 0.15);
+.marketplace-grid a:hover {
+  color: #ffffff;
   opacity: 1;
-}
-
-.marketplace-link .footer-icon-img {
-  width: 16px;
-  height: 16px;
 }
 
 /* ── 12. Footer Bottom Bar ────────────────── */
