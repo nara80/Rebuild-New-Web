@@ -488,13 +488,12 @@ main {
   opacity: 0.7;
 }
 
-/* Footer icon images */
+/* Footer icon images — PNGs are white-on-transparent, no filter needed */
 .footer-icon-img {
   width: 24px;
   height: 24px;
   object-fit: contain;
   flex-shrink: 0;
-  filter: brightness(0) invert(1);
 }
 
 /* Font Awesome icons in footer (email, phone) */
@@ -505,9 +504,8 @@ main {
   font-size: 18px;
 }
 
-/* Logo */
+/* Logo — PNG is white-on-transparent, no filter needed */
 .footer-logo {
-  filter: brightness(0) invert(1);
   margin-bottom: 15px;
   display: block;
   max-height: 45px;
