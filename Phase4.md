@@ -46,7 +46,7 @@ The homepage hero is the first thing visitors see. You need one decision: the ba
 **Hero text is already decided (from your knowledge base):**
 - Headline EN: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
 - Headline TH: "ผ้านอนที่พอดี สั่งตัดตามขนาดของคุณ"
-- CTA Button 1: "Shop Custom Bedding" → `/all-products/`
+- CTA Button 1: "Shop Custom Bedding" → `/products/`
 - CTA Button 2: "Measure My Mattress" → `/how-to-measure-mattress-size/`
 
 **Write down:** Option A (file ready) or Option B (use placeholder).
@@ -242,11 +242,11 @@ Provide your channel URLs:
 - [ ] TikTok shop URL
 - [ ] Contact form email destination: `[email to receive form submissions]`
 
-**10C — Fabric Collections (`/fabric-collections/`)**
+**10C — Fabric Collections (`/fabric/`)**
 - [ ] Confirm Droid can use `MildMateDataBase/01_Fabric_Intelligence_Guide_V2.md` as source
 - [ ] Provide color list for each fabric (or confirm Droid uses defaults from knowledge base)
 
-**10D — Shipping Policy (`/shipping-policy/`)**
+**10D — Shipping Policy (`/shipping/`)**
 Write and provide:
 - [ ] Regions you ship to (e.g., Thailand, worldwide, specific countries)
 - [ ] Estimated processing time (e.g., "5–7 business days to produce")
@@ -255,7 +255,7 @@ Write and provide:
 - [ ] Shipping cost structure (free over X, or flat rate per region)
 - [ ] Note that product prices exclude shipping and import tariffs
 
-**10E — Customer Reviews (`/customer-reviews/`)**
+**10E — Customer Reviews (`/reviews/`)**
 Supplement your Phase 4 Requirement 6 (Etsy reviews) with:
 - [ ] 6–10 total reviews (more than the 2–3 on the homepage)
 - [ ] At least 1 review mentioning V-Berth / boat bedding
@@ -295,10 +295,10 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 | `public/th/index.html` | Homepage (TH) — Thai language version |
 | `public/about/index.html` | About Us — company story, certifications, team |
 | `public/contact/index.html` | Contact — form + LINE/WhatsApp/Facebook + marketplace icons |
-| `public/fabric-collections/index.html` | Fabric Collections — 4-tab deep-dive with comparison table |
-| `public/shipping-policy/index.html` | Shipping Policy — regions, rates, transit times |
-| `public/privacy-policy/index.html` | Privacy Policy — GDPR-compatible |
-| `public/customer-reviews/index.html` | Customer Reviews — grid + Etsy badge |
+| `public/fabric/index.html` | Fabric Collections — 4-tab deep-dive with comparison table |
+| `public/shipping/index.html` | Shipping Policy — regions, rates, transit times |
+| `public/policy/index.html` | Privacy Policy — GDPR-compatible |
+| `public/reviews/index.html` | Customer Reviews — grid + Etsy badge |
 
 ### Blog Pages (static HTML templates)
 | Page / File | What It Is |
@@ -309,7 +309,7 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 ### Product & SEO Pages
 | Page / File | What It Is |
 |---|---|
-| `public/all-products/index.html` | Full product listing with filter bar (data from D1) |
+| `public/products/index.html` | Full product listing with filter bar (data from D1) |
 | `public/marine/index.html` | Marine & Yacht category page (dynamic from D1) |
 | `public/family/index.html` | Family & Co-Sleep category page (dynamic from D1) |
 | `public/duvet/index.html` | Easy-Change Duvet category page (dynamic from D1) |
@@ -615,7 +615,7 @@ After Droid finishes, open `http://localhost:8788` and review each section top t
 
 ### Step 4.8 — Review the Product Listing Page
 
-Go to `http://localhost:8788/all-products/`
+Go to `http://localhost:8788/products/`
 
 | Check | Expected |
 |---|---|
@@ -724,11 +724,11 @@ Go through this checklist before moving to Phase 5:
 - [ ] Email signup form visible in section 8
 - [ ] About Us page (`/about/`) loads with company story
 - [ ] Contact page (`/contact/`) shows form + LINE/WhatsApp/Facebook links + marketplace icons
-- [ ] Fabric Collections page (`/fabric-collections/`) shows 4 fabric tabs
-- [ ] Shipping Policy page (`/shipping-policy/`) loads with content
-- [ ] Customer Reviews page (`/customer-reviews/`) shows review grid
+- [ ] Fabric Collections page (`/fabric/`) shows 4 fabric tabs
+- [ ] Shipping Policy page (`/shipping/`) loads with content
+- [ ] Customer Reviews page (`/reviews/`) shows review grid
 - [ ] Blog index (`/blogs/`) shows 3 sample posts with thumbnails + pagination
-- [ ] Product listing page (`/all-products/`) shows product grid (data from D1)
+- [ ] Product listing page (`/products/`) shows product grid (data from D1)
 - [ ] Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) show filtered grid
 - [ ] Filter bar on product listing works
 - [ ] Product detail page shows two-mode configurator with live price update
@@ -753,7 +753,7 @@ Go through this checklist before moving to Phase 5:
 | Pricing table left blank | Use your current Etsy listing prices as a starting point. Tell Droid: "Use placeholder prices of $45 USD / ฿1,500 THB for all categories until I update them later." |
 | Fabric guide file missing | Tell Droid: "The file MildMateDataBase/01_Fabric_Intelligence_Guide_V2.md is missing — use this fabric summary instead: [paste fabric names and short descriptions]." |
 | Configurator price doesn't update | Tell Droid: "The configurator price is not updating when I enter dimensions." |
-| Product listing page is empty | Tell Droid: "The /all-products/ page shows no products." — usually means the Worker API is not running. |
+| Product listing page is empty | Tell Droid: "The /products/ page shows no products." — usually means the Worker API is not running. |
 | Cart count not updating | Tell Droid: "The cart icon count does not update after clicking Add to Cart." |
 | Cart lost after browser refresh | Tell Droid: "Cart items disappear after page refresh — localStorage is not saving correctly." |
 | Size guide page shows wrong title | Tell Droid: "The /mattress-size-th/ page title should say [correct title]." |

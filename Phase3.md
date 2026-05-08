@@ -115,7 +115,7 @@ The header navigation has 6 items by default. Confirm or adjust the order and na
 | 1 | Home | หน้าแรก | `/` |
 | 2 | Shop ▾ | ช้อป ▾ | Mega-dropdown |
 | 3 | Fabrics ▾ | ผ้า ▾ | Dropdown |
-| 4 | Size Guide | คู่มือขนาด | `/mattress-size/` |
+| 4 | Size Guide | คู่มือขนาด | `/sizeguide/` |
 | 5 | About | เกี่ยวกับเรา | `/about/` |
 | 6 | Contact | ติดต่อเรา | `/contact/` |
 
@@ -149,7 +149,7 @@ The footer bottom bar has links to your policy pages. Confirm which policy pages
 
 | Label | Links To |
 |---|---|
-| Privacy Policy | `/privacy-policy/` |
+| Privacy Policy | `/policy/` |
 | Shipping Policy | `/policy-en/` |
 | Return Policy | (add if needed) |
 
@@ -325,7 +325,7 @@ Requirement 5 — Navigation:
   1. Home / หน้าแรก → /
   2. Shop / ช้อป → mega-dropdown
   3. Fabrics / ผ้า → dropdown
-  4. Size Guide / คู่มือขนาด → /mattress-size/
+  4. Size Guide / คู่มือขนาด → /sizeguide/
   5. About / เกี่ยวกับเรา → /about/
   6. Contact / ติดต่อเรา → /contact/
   [add/remove/rename if needed]
@@ -333,8 +333,8 @@ Requirement 6 — Footer tagline:
   EN: [your tagline]
   TH: [your tagline]
 Requirement 7 — Footer policy links:
-  Privacy Policy → /privacy-policy/
-  Shipping Policy → /policy-en/
+  Privacy Policy → /policy/
+  Shipping Policy → /shipping/
   [add others if needed]
 ```
 
@@ -386,7 +386,7 @@ Once all 7 requirements are collected and the logo is placed, hand off to Droid.
 > **Requirement 6 — Footer tagline:**
 > - EN: [your tagline]
 > - TH: [your tagline]
-> **Requirement 7 — Policy links:** Privacy Policy → /privacy-policy/ | Shipping Policy → /policy-en/ [add others if needed]
+> **Requirement 7 — Policy links:** Privacy Policy → /policy/ | Shipping Policy → /shipping/ [add others if needed]
 >
 > Build main.css, admin.css, nav.js, the sticky header with mega-menu, the footer with LINE widget and all contact/marketplace links (LINE, WhatsApp, Facebook, Etsy, eBay, Shopee, Lazada, TikTok), mobile hamburger drawer, and inject header + footer into all 258 pages."
 

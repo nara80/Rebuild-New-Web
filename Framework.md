@@ -46,14 +46,14 @@
 | Homepage TH | `/th/` | Thai language version |
 | About Us | `/about/` | Company story, certifications |
 | Contact | `/contact/` | Form + multi-channel links |
-| Fabric Collections | `/fabric-collections/` | 4 fabric tabs, expanded detail |
-| Size Guide | `/mattress-size/` | TH/US/UK/EU/AU size tables |
+| Fabric Collections | `/fabric/` | 4 fabric tabs, expanded detail |
+| Size Guide | `/sizeguide/` | TH/US/UK/EU/AU size tables |
 | Size Guide TH (#1 SEO) | `/mattress-size-th/` | Thai SEO hub — highest traffic |
 | How to Measure | `/how-to-measure-mattress-size/` | Credit card method diagram |
 | Bed Sheet Size | `/bed-sheets-size/` | Sheet sizing guide |
-| Shipping Policy | `/shipping-policy/` | Rates, regions, transit times |
-| Privacy Policy | `/privacy-policy/` | GDPR-compatible policy |
-| Customer Reviews | `/customer-reviews/` | Curated reviews + rating badge |
+| Shipping Policy | `/shipping/` | Rates, regions, transit times |
+| Privacy Policy | `/policy/` | GDPR-compatible policy |
+| Customer Reviews | `/reviews/` | Curated reviews + rating badge |
 | Checkout | `/checkout/` | 3-step guest checkout |
 | Order Confirmed | `/order-confirmed/` | Post-payment confirmation |
 | All 258 WordPress URLs | various | Preserved from Phase 2 |
@@ -69,7 +69,7 @@
 | Page | URL | Notes |
 |---|---|---|
 | Product Category | `/marine/`, `/family/`, `/duvet/`, `/protection/` | Filtered product grid, pulled from D1 |
-| All Products | `/all-products/` | Full product listing, filter bar |
+| All Products | `/products/` | Full product listing, filter bar |
 | Product Detail | `/product/[slug]/` | 83 product pages, configurator |
 
 ### Admin Pages (Google login required)
@@ -272,7 +272,7 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 [PREV / NEXT POST NAVIGATION]
 ```
 
-### 4. Product Listing (`/all-products/`, category pages)
+### 4. Product Listing (`/products/`, category pages)
 
 ```
 [FILTER BAR]  Category | Fabric | Size Region (TH/US/UK/EU/AU)
@@ -339,7 +339,7 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 [LOCATION / ABOUT]  Made in Thailand — brief note
 ```
 
-### 8. Fabric Collections (`/fabric-collections/`)
+### 8. Fabric Collections (`/fabric/`)
 
 ```
 [PAGE HERO]  "Our Fabrics" headline
@@ -367,7 +367,7 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 ```
 Each page: comparison table (TH/US/UK/EU/AU/JP sizes) + credit card measurement diagram + CTA to configurator.
 
-### 10. Shipping Policy (`/shipping-policy/`)
+### 10. Shipping Policy (`/shipping/`)
 
 ```
 [HERO]  Shipping & Delivery
@@ -376,14 +376,14 @@ Each page: comparison table (TH/US/UK/EU/AU/JP sizes) + credit card measurement 
 ```
 > Note: All product prices displayed on the site are *product price only* and exclude shipping costs and any import tariffs applicable in the destination country.
 
-### 11. Privacy Policy (`/privacy-policy/`)
+### 11. Privacy Policy (`/policy/`)
 
 ```
 Standard GDPR-compatible privacy policy
 Covers: data collected, usage, cookies, third parties (Stripe, MailChannels), rights
 ```
 
-### 12. Customer Reviews (`/customer-reviews/`)
+### 12. Customer Reviews (`/reviews/`)
 
 ```
 [HERO]  "What Our Customers Say"
@@ -476,13 +476,13 @@ mildmate-web/
 │   │
 │   ├── about/index.html
 │   ├── contact/index.html
-│   ├── fabric-collections/index.html
-│   ├── shipping-policy/index.html
-│   ├── privacy-policy/index.html
-│   ├── customer-reviews/index.html
+│   ├── fabric/index.html
+│   ├── shipping/index.html
+│   ├── policy/index.html
+│   ├── reviews/index.html
 │   ├── checkout/index.html
 │   ├── order-confirmed/index.html
-│   ├── all-products/index.html
+│   ├── products/index.html
 │   ├── marine/index.html            ← Category page (dynamic from D1)
 │   ├── family/index.html
 │   ├── duvet/index.html
