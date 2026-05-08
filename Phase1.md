@@ -316,24 +316,24 @@ The current `wrangler.toml` is configured for the old Next.js project (`pages_bu
 Go through this checklist. Every item must be ticked before moving to Phase 2.
 
 **Initial Requirements:**
-- [ ] Cloudflare account exists and email noted
-- [ ] GitHub account exists and `mildmate-web` private repository created
-- [ ] Cloudflare Pages project name decided (`mildmate-new` recommended)
-- [ ] Node.js version confirmed or installed
-- [ ] Wrangler version confirmed or installed
-- [ ] D1 database `mildmate-db` confirmed in Cloudflare dashboard
-- [ ] R2 bucket `mildmate-assets` confirmed in Cloudflare dashboard
+- [x] Cloudflare account exists and email noted
+- [x] GitHub account exists and `Rebuild-New-Web` private repository created
+- [x] Cloudflare Pages project name decided (`mildmate-new`)
+- [x] Node.js version confirmed or installed
+- [x] Wrangler version confirmed or installed
+- [x] D1 database `mildmate-db` confirmed in Cloudflare dashboard
+- [x] R2 bucket `mildmate-assets` confirmed in Cloudflare dashboard
 
 **Build Steps:**
-- [ ] Logged into Cloudflare (`npx wrangler login` completed)
-- [ ] `AGENTS.md` file exists in `D:\00_MildMate\Re-Bulit_Web\`
-- [ ] `public/` folder exists with `css/`, `js/`, `images/` subfolders
-- [ ] `workers/` folder exists with `api/` and `admin/` subfolders
-- [ ] `admin/` folder exists with 5 HTML files
-- [ ] `migrations/001_initial.sql` exists
-- [ ] Database migration ran successfully (4 tables confirmed)
-- [ ] `wrangler.toml` updated (build dir = `public`)
-- [ ] Local server starts at `http://localhost:8788`
+- [x] Logged into Cloudflare (`npx wrangler login` completed)
+- [x] `AGENTS.md` file exists in `D:\00_MildMate\Re-Build_Web\`
+- [x] `public/` folder exists with `css/`, `js/`, `images/` subfolders
+- [x] `workers/` folder exists with `api/` and `admin/` subfolders
+- [x] `admin/` folder exists with 5 HTML files
+- [x] `migrations/001_initial.sql` exists
+- [x] Database migration ran successfully (4 tables confirmed)
+- [x] `wrangler.toml` updated (build dir = `public`)
+- [x] Local server starts at `http://localhost:8788`
 
 ---
 
@@ -356,8 +356,8 @@ Go through this checklist. Every item must be ticked before moving to Phase 2.
 
 ## What Happens Next
 
-Once Phase 1 is complete, move to **Phase 2 — SEO URL Preservation**.
+Phase 1 is **complete**. Phase 2 (SEO URL Preservation) is **intentionally deferred** — it will run pre-launch after Phase 7 is complete.
 
-Phase 2 creates 258 HTML placeholder pages — one for every URL on your existing WordPress site — so Google never loses your rankings when the new site goes live.
+Move directly to **Phase 3 — Design System + Shared Components**.
 
-**Tell Droid:** "Phase 1 is complete. All checklist items are done. Please start Phase 2."
+**Tell Droid:** "Phase 1 is complete. All checklist items are done. Phase 2 is deferred. Please start Phase 3."

@@ -69,9 +69,9 @@ This file is read by Droid at the start of every session. It contains all critic
 | Phase | Status | Notes |
 |---|---|---|
 | 0 — Mockup | ✅ Approved | `mockup.html` created |
-| 1 — Foundation | 🔄 In Progress | Building scaffold now |
+| 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
-| 3 — Design System | ⏸️ Pending | Header, footer, CSS, nav.js |
+| 3 — Design System | 🔄 In Progress | Header, footer, CSS, nav.js |
 | 4 — Homepage + Products | ⏸️ Pending | Real content, configurator, cart |
 | 5 — Checkout + Stripe | ⏸️ Pending | 3-step checkout, webhooks, emails |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |

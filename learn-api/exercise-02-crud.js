@@ -42,9 +42,10 @@ function readBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  const url = req.url;
+  const url = req.url.split("?")[0]; // strip query string for route matching
+  const fullUrl = req.url; // keep full URL for query parameter parsing
   const method = req.method;
-  console.log(`${method} ${url}`);
+  console.log(`${method} ${req.url}`);
 
   // ── Route: GET / — Welcome ──────────────────────────
   if (url === "/" && method === "GET") {
@@ -66,7 +67,7 @@ const server = http.createServer(async (req, res) => {
     let products = readProducts();
 
     // Simple query filter: /api/products?category=Bedding
-    const category = new URL(req.url, `http://localhost:${PORT}`).searchParams.get("category");
+    const category = new URL(fullUrl, `http://localhost:${PORT}`).searchParams.get("category");
     if (category) {
       products = products.filter((p) => p.category === category);
     }

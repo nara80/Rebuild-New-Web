@@ -13,16 +13,20 @@ Collect all of the following before telling Droid to build. These are the only a
 
 ---
 
-### Requirement 1 — Confirm Phase 2 Is Complete
+### Requirement 1 — Confirm Phase 1 Is Complete
 
-Phase 3 injects the header and footer into all 258 HTML files created in Phase 2. If Phase 2 is not complete, there are no pages to inject into.
+Phase 3 builds the design system (CSS, header, footer, navigation) and injects it into all pages. Phase 1 must be complete first.
+
+> **Note:** Phase 2 (SEO URL Preservation) is **intentionally deferred** — it will run pre-launch after Phase 7. Phase 3 injects components into the existing `public/index.html` placeholder and all new pages created in this phase.
 
 **Confirm before starting:**
-- [ ] `public/` folder contains 258+ subfolders (each with an `index.html` file)
-- [ ] `public/_redirects` file exists and contains 301 rules
-- [ ] `http://localhost:8788/mattress-size-th/` loads without a 404 error
+- [ ] `public/` folder exists with `css/`, `js/`, `images/` subfolders
+- [ ] `public/index.html` exists (placeholder from Phase 1)
+- [ ] `wrangler.toml` has `pages_build_output_dir = "public"`
+- [ ] D1 database `mildmate-db` has 4 tables confirmed
+- [ ] `http://localhost:8788/` loads the placeholder page without error
 
-**If any item is missing:** Go back and complete Phase 2 before continuing.
+**If any item is missing:** Go back and complete Phase 1 before continuing.
 
 ---
 
@@ -305,7 +309,7 @@ Go through Requirements 1–7 above and collect every item. Fill in this summary
 ```
 PHASE 3 REQUIREMENTS SUMMARY
 
-Requirement 1 — Phase 2 complete: Yes / No
+Requirement 1 — Phase 1 complete (Phase 2 deferred): Yes / No
 Requirement 2 — Logo file: placed at public/images/logo.png / [describe format]
 Requirement 3 — LINE link: [your LINE URL]
 Requirement 4 — Contact & Marketplace links:

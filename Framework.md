@@ -624,16 +624,16 @@ CREATE TABLE subscribers (
 
 | Phase | Scope | Key Output |
 |---|---|---|
-| **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold |
-| **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` |
-| **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav |
-| **4** | All Content Pages | Homepage, Blog, About, Contact, Fabric Collections, Policy pages, Reviews, Product pages, Configurator (both modes) |
-| **5** | Checkout + Stripe | Guest form → Stripe → order saved → confirmation email |
-| **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels |
-| **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export |
-| **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` |
+| **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
+| **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` | ⏸️ Deferred — runs pre-launch after Phase 7 |
+| **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | 🔄 In Progress |
+| **4** | All Content Pages | Homepage, Blog, About, Contact, Fabric Collections, Policy pages, Reviews, Product pages, Configurator (both modes) | ⏸️ Pending |
+| **5** | Checkout + Stripe | Guest form → Stripe → order saved → confirmation email | ⏸️ Pending |
+| **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels | ⏸️ Pending |
+| **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export | ⏸️ Pending |
+| **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
 
-> **Note:** Phase 2 (SEO URL Preservation) is intentionally deferred — it will run pre-launch after Phase 7 is complete.
+> **Note:** Phase 2 (SEO URL Preservation) is intentionally deferred — it will run pre-launch after Phase 7 is complete. All other phases proceed in normal order.
 
 ---
 
