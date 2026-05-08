@@ -70,7 +70,7 @@ This file is read by Droid at the start of every session. It contains all critic
 |---|---|---|
 | 0 — Mockup | ✅ Approved | `mockup.html` created |
 | 1 — Foundation | 🔄 In Progress | Building scaffold now |
-| 2 — SEO URLs | ⏸️ Deferred | Will run pre-launch after Phase 7 |
+| 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ⏸️ Pending | Header, footer, CSS, nav.js |
 | 4 — Homepage + Products | ⏸️ Pending | Real content, configurator, cart |
 | 5 — Checkout + Stripe | ⏸️ Pending | 3-step checkout, webhooks, emails |
@@ -145,9 +145,10 @@ D:\00_MildMate\Re-Bulit_Web\
 
 ## Notes for Future Droid Sessions
 
+- **ALWAYS read `Framework.md` at the start of every session** — it contains the full site blueprint, page layouts, design system, database schema, and build phases. AGENTS.md is summary memory; Framework.md is the complete specification.
 - Always check `wrangler.toml` before running `npx wrangler` commands
 - Database ID is hardcoded in `wrangler.toml` — do not change without confirming
 - R2 bucket name is `mildmate-assets` — consistent everywhere
 - Admin pages are in `/admin/` path, protected by Cloudflare Access
 - All customer-facing pages go in `public/`
-- Phase 2 (SEO URLs) is intentionally skipped until pre-launch
+- **Phase 2 (SEO URLs) is intentionally deferred** — it will run pre-launch after Phase 7 is complete. Do not start Phase 2 early.
