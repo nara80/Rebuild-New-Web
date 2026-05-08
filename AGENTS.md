@@ -41,9 +41,10 @@ This file is read by Droid at the start of every session. It contains all critic
 
 ## GitHub
 
-- **Account:** `mildmateshop@gmail.com`
-- **Repo:** `mildmate-web` (private)
-- **Repo URL:** [USER TO PROVIDE AFTER CREATING]
+- **Account:** `nara80` (email: `nara19080@gmail.com`)
+- **Repo:** `Rebuild-New-Web` (private)
+- **Repo URL:** `https://github.com/nara80/Rebuild-New-Web`
+- **Auth method:** HTTPS with Personal Access Token (credential helper cached 1 year)
 
 ---
 
