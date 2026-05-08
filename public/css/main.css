@@ -481,11 +481,15 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: opacity 0.3s;
+  transition: color 0.3s;
 }
 
 .footer-col a:hover {
-  opacity: 0.7;
+  color: var(--color-primary);
+}
+
+.footer-col a:hover .footer-icon-svg {
+  color: var(--color-primary);
 }
 
 /* Footer icon images — PNGs are white-on-transparent, no filter needed */
@@ -552,8 +556,7 @@ main {
 }
 
 .marketplace-grid a:hover {
-  color: #ffffff;
-  opacity: 1;
+  color: var(--color-primary);
 }
 
 /* ── 12. Footer Bottom Bar ────────────────── */
@@ -587,7 +590,7 @@ main {
 }
 
 .footer-bottom-links a:hover {
-  color: #ffffff;
+  color: var(--color-primary);
 }
 
 /* ── 13. LINE Sticky Bar (Mobile) ─────────── */
