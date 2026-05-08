@@ -3,12 +3,233 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MildMate — Custom Bedding</title>
+  <meta name="description" content="MildMate — Custom bedding made in Thailand. Perfect fit for every mattress, from V-Berth boats to family mega-beds.">
+  <title>MildMate — Custom Bedding Made in Thailand</title>
+
+  <!-- Google Fonts: Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 — kept only for cart icon & hamburger -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-  <h1>MildMate</h1>
-  <p>Scaffold is up. Content coming in Phase 4.</p>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+
+      <!-- Logo -->
+      <a href="/" class="logo-link" aria-label="MildMate Home">
+        <img src="/images/logo.png" alt="MildMate" width="180" height="50">
+      </a>
+
+      <!-- Desktop Navigation — Simplified, no dropdowns -->
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="/" class="nav-link">Home</a>
+          </li>
+          <li class="nav-item">
+            <a href="/all-products/" class="nav-link">Shop</a>
+          </li>
+          <li class="nav-item">
+            <a href="/fabric-collections/" class="nav-link">Fabrics</a>
+          </li>
+          <li class="nav-item">
+            <a href="/mattress-size/" class="nav-link">Size Guide</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <div class="lang-toggle" role="group" aria-label="Language switch">
+          <span data-lang="en" class="active">EN</span>
+          <span>/</span>
+          <span data-lang="th">TH</span>
+        </div>
+        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count">0</span>
+        </a>
+        <button class="hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer — Simplified, no submenus -->
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="Mobile menu">
+      <ul class="mobile-nav-list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/all-products/">Shop</a></li>
+        <li><a href="/fabric-collections/">Fabrics</a></li>
+        <li><a href="/mattress-size/">Size Guide</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT (Placeholder) ===== -->
+  <main>
+    <section class="section text-center" style="padding-top: 120px;">
+      <div class="container">
+        <h1 style="margin-bottom: 16px;">MildMate</h1>
+        <p style="font-size: 1.125rem; color: var(--color-muted);">Scaffold is up. Content coming in Phase 4.</p>
+        <div style="margin-top: 32px;">
+          <a href="/all-products/" class="btn btn-primary">Shop Custom Bedding</a>
+          <a href="/mattress-size/" class="btn btn-outline" style="margin-left: 12px;">Measure My Mattress</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <!-- Column 1: MildMate (Intro) -->
+        <div class="footer-brand footer-col">
+          <img src="/images/logo.png" alt="MildMate" class="footer-logo" width="150" height="42">
+          <p>Custom bedding made in Thailand. Perfect fit for every mattress — from V-Berth boats to family mega-beds.</p>
+          <div class="footer-email-signup">
+            <input type="email" placeholder="Enter your email" aria-label="Email for newsletter">
+            <button type="button">Subscribe</button>
+          </div>
+        </div>
+
+        <!-- Column 2: Quick Links -->
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#">Marine &amp; Yacht</a></li>
+            <li><a href="#">Family &amp; Co-Sleep</a></li>
+            <li><a href="#">Easy-Change Duvet</a></li>
+            <li><a href="#">Protection</a></li>
+            <li><a href="/all-products/">All Products</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Customer Service -->
+        <div class="footer-col">
+          <h4>Customer Service</h4>
+          <ul>
+            <li><a href="/about/">About Us</a></li>
+            <li><a href="/fabric-collections/">Fabric Collections</a></li>
+            <li><a href="/mattress-size/">Size Guide</a></li>
+            <li><a href="/blogs/">Blog</a></li>
+            <li><a href="/customer-reviews/">Customer Reviews</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4: Contact Us -->
+        <div class="footer-col">
+          <h4>Contact Us</h4>
+          <ul>
+            <li>
+              <a href="mailto:contact@mildmate.com">
+                <i class="fas fa-envelope icon-fa" style="color: var(--color-primary);"></i> contact@mildmate.com
+              </a>
+            </li>
+            <li>
+              <a href="tel:+66872362364">
+                <i class="fas fa-phone icon-fa" style="color: var(--color-primary);"></i> +66 (0)87 236 2364
+              </a>
+            </li>
+            <li>
+              <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-whatsapp icon-fa" style="color: #25D366;"></i> WhatsApp
+              </a>
+            </li>
+            <li>
+              <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/LineOA.png" alt="" class="footer-icon-img" aria-hidden="true"> LINE Official
+              </a>
+            </li>
+          </ul>
+
+          <h4 style="margin-top: 20px;">Follow Us</h4>
+          <ul>
+            <li>
+              <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/Facebook.png" alt="" class="footer-icon-img" aria-hidden="true"> Facebook
+              </a>
+            </li>
+            <li>
+              <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/Instagram.png" alt="" class="footer-icon-img" aria-hidden="true"> Instagram
+              </a>
+            </li>
+            <li>
+              <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/YouTube.png" alt="" class="footer-icon-img" aria-hidden="true"> YouTube
+              </a>
+            </li>
+            <li>
+              <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/Pinterest.png" alt="" class="footer-icon-img" aria-hidden="true"> Pinterest
+              </a>
+            </li>
+            <li>
+              <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/TikTok.png" alt="" class="footer-icon-img" aria-hidden="true"> TikTok
+              </a>
+            </li>
+          </ul>
+
+          <h4 style="margin-top: 20px;">Marketplaces</h4>
+          <ul>
+            <li>
+              <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/eBay.png" alt="" class="footer-icon-img" aria-hidden="true"> eBay
+              </a>
+            </li>
+            <li>
+              <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-etsy icon-fa" style="color: var(--color-primary);"></i> Etsy
+              </a>
+            </li>
+            <li>
+              <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/Lazada.png" alt="" class="footer-icon-img" aria-hidden="true"> Lazada
+              </a>
+            </li>
+            <li>
+              <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer">
+                <img src="/images/Logo/Shopee.png" alt="" class="footer-icon-img" aria-hidden="true"> Shopee
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Bottom Bar -->
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/privacy-policy/">Privacy Policy</a>
+          <a href="/shipping-policy/">Shipping Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- LINE Sticky Bar (Mobile Only) -->
+  <a href="https://page.line.me/507abyoy" class="line-sticky" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on LINE">
+    <img src="/images/Logo/LineOA.png" alt="" style="width:24px;height:24px;object-fit:contain;" aria-hidden="true">
+    Chat with us on LINE
+  </a>
+
+  <!-- Scripts -->
+  <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/configurator.js"></script>
   <script src="/js/geo.js"></script>
