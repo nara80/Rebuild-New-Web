@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="MildMate — Custom bedding made in Thailand. Perfect fit for every mattress, from V-Berth boats to family mega-beds.">
-  <title>MildMate — Custom Bedding Made in Thailand</title>
+  <meta name="description" content="MildMate — ผ้าปูที่นอนสั่งตัดจากประเทศไทย พอดีทุกที่นอน จากเรือยอชท์จนถึงเตียงครอบครัวใหญ่">
+  <title>MildMate — ผ้าปูที่นอนสั่งตัดจากประเทศไทย</title>
 
   <!-- Google Fonts: Quicksand -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,14 +24,14 @@
     <div class="container header-inner">
 
       <!-- Mobile Hamburger (hidden on desktop) -->
-      <button class="hamburger" aria-label="Open menu" aria-expanded="false">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false">
         <span></span>
         <span></span>
         <span></span>
       </button>
 
       <!-- Logo -->
-      <a href="/" class="logo-link" aria-label="MildMate Home">
+      <a href="/th/" class="logo-link" aria-label="MildMate Home">
         <img src="/images/logo.png" alt="MildMate" width="180" height="50">
       </a>
 
@@ -39,60 +39,58 @@
       <nav class="main-nav" aria-label="Main navigation">
         <ul class="nav-list">
           <li class="nav-item">
-            <a href="/" class="nav-link">Home</a>
+            <a href="/th/" class="nav-link">หน้าแรก</a>
           </li>
           <li class="nav-item">
-            <a href="/products/" class="nav-link">Shop</a>
+            <a href="/products/" class="nav-link">ร้านค้า</a>
           </li>
           <li class="nav-item">
-            <a href="/fabric/" class="nav-link">Fabrics</a>
+            <a href="/fabric/" class="nav-link">ผ้า</a>
           </li>
           <li class="nav-item">
-            <a href="/sizeguide/" class="nav-link">Size Guide</a>
+            <a href="/sizeguide/" class="nav-link">คู่มือขนาด</a>
           </li>
         </ul>
       </nav>
 
       <!-- Header Actions -->
       <div class="header-actions">
-        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </button>
-        <a href="/account/" class="account-btn" aria-label="My account">
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </a>
-        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span class="cart-count">0</span>
         </a>
-        <div class="lang-toggle" role="group" aria-label="Language switch">
-          <span data-lang="en" class="active">EN</span>
-          <span>/</span>
-          <span data-lang="th">TH</span>
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา">
+          <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
         </div>
       </div>
     </div>
 
     <!-- Mobile Drawer — Simplified, no submenus -->
     <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu">
+    <div class="mobile-drawer" aria-label="เมนูมือถือ">
       <ul class="mobile-nav-list">
-        <li><a href="/">Home</a></li>
-        <li><a href="/products/">Shop</a></li>
-        <li><a href="/fabric/">Fabrics</a></li>
-        <li><a href="/sizeguide/">Size Guide</a></li>
+        <li><a href="/th/">หน้าแรก</a></li>
+        <li><a href="/products/">ร้านค้า</a></li>
+        <li><a href="/fabric/">ผ้า</a></li>
+        <li><a href="/sizeguide/">คู่มือขนาด</a></li>
       </ul>
     </div>
 
     <!-- Search Overlay -->
     <div class="search-overlay" aria-hidden="true">
       <div class="search-overlay-inner">
-        <button class="search-close" aria-label="Close search">
+        <button class="search-close" aria-label="ปิดการค้นหา">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
         <form action="/products/" method="get" class="search-form">
-          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off">
-          <button type="submit" aria-label="Submit search">
+          <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหา" autocomplete="off">
+          <button type="submit" aria-label="ส่งการค้นหา">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </button>
         </form>
@@ -106,11 +104,11 @@
     <!-- 1. HERO -->
     <section class="hero">
       <div class="hero-content">
-        <h1>Bedding Made Easy Again: Custom Sizes, Perfect Fits.</h1>
-        <p class="hero-sub">Precision-engineered bedding for every mattress — from V-Berth yachts to family mega-beds. Handcrafted in Thailand, shipped worldwide.</p>
+        <h1>ผ้านอนที่พอดี สั่งตัดตามขนาดของคุณ</h1>
+        <p class="hero-sub">ผ้าปูที่นอนสั่งตัดสำหรับทุกที่นอน — จากเรือยอชท์จนถึงเตียงครอบครัวใหญ่ ผลิตด้วยฝีมือจากประเทศไทย จัดส่งทั่วโลก</p>
         <div class="hero-actions">
-          <a href="/products/" class="btn btn-primary">Shop Custom Bedding</a>
-          <a href="/how-to-measure-mattress-size/" class="btn btn-outline">Measure My Mattress</a>
+          <a href="/products/" class="btn btn-primary">เลือกซื้อผ้าปู</a>
+          <a href="/how-to-measure-mattress-size/" class="btn btn-outline">วัดขนาดที่นอน</a>
         </div>
       </div>
     </section>
@@ -121,19 +119,19 @@
         <div class="trust-grid">
           <div class="trust-item">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>OEKO-TEX Certified</span>
+            <span>ผ่านมาตรฐาน OEKO-TEX</span>
           </div>
           <div class="trust-item">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            <span>Siriraj Dust-Mite Certified</span>
+            <span>รับรองกันไรฝุ่นโรงพยาบาลศิริราช</span>
           </div>
           <div class="trust-item">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span>5&#9733; Reviews on Etsy</span>
+            <span>คะแนน 5 ดาวบน Etsy</span>
           </div>
           <div class="trust-item">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <span>Ships Worldwide</span>
+            <span>จัดส่งทั่วโลก</span>
           </div>
         </div>
       </div>
@@ -143,33 +141,33 @@
     <section class="section">
       <div class="container">
         <div class="section-header">
-          <h2>Shop by Niche</h2>
-          <p>Bedding tailored to your lifestyle — not the other way around.</p>
+          <h2>เลือกตามไลฟ์สไตล์</h2>
+          <p>ผ้าปูที่ออกแบบมาเพื่อคุณ — ไม่ใช่ให้คุณมาปรับตัวเอง</p>
         </div>
         <div class="category-grid">
           <a href="/marine/" class="category-card">
             <div class="category-image">
               <div class="placeholder marine">Marine & Yacht</div>
             </div>
-            <div class="category-label">Marine & Yacht</div>
+            <div class="category-label">เรือยอชท์</div>
           </a>
           <a href="/family/" class="category-card">
             <div class="category-image">
               <div class="placeholder family">Family & Co-Sleep</div>
             </div>
-            <div class="category-label">Family & Co-Sleep</div>
+            <div class="category-label">ครอบครัว</div>
           </a>
           <a href="/duvet/" class="category-card">
             <div class="category-image">
               <div class="placeholder duvet">Easy-Change Duvet</div>
             </div>
-            <div class="category-label">Easy-Change Duvet</div>
+            <div class="category-label">ผ้านวมซิป 3 ด้าน</div>
           </a>
           <a href="/protection/" class="category-card">
             <div class="category-image">
               <div class="placeholder protection">Protection</div>
             </div>
-            <div class="category-label">Protection</div>
+            <div class="category-label">กันน้ำกันไรฝุ่น</div>
           </a>
         </div>
       </div>
@@ -179,8 +177,8 @@
     <section class="section section-alt">
       <div class="container">
         <div class="section-header">
-          <h2>Top Products</h2>
-          <p>Our best-selling custom bedding, loved by customers worldwide.</p>
+          <h2>สินค้ายอดนิยม</h2>
+          <p>ผ้าปูสั่งตัดขายดีที่ได้รับความนิยมจากลูกค้าทั่วโลก</p>
         </div>
         <div class="product-grid scroll-row">
           <article class="product-card">
@@ -188,9 +186,9 @@
               <div class="placeholder">3-Sided Zipper Duvet Cover<br><small>BreezePlus</small></div>
             </div>
             <div class="product-info">
-              <h3 class="product-title">3-Sided Zipper Duvet Cover</h3>
+              <h3 class="product-title">ผ้านวมซิป 3 ด้าน</h3>
               <div class="product-price" data-usd="65" data-thb="2295">$65.00</div>
-              <a href="/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/" class="btn btn-primary">Customize</a>
+              <a href="/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/" class="btn btn-primary">กำหนดเอง</a>
             </div>
           </article>
           <article class="product-card">
@@ -198,9 +196,9 @@
               <div class="placeholder">Custom Family Fitted Sheet<br><small>BreezePlus</small></div>
             </div>
             <div class="product-info">
-              <h3 class="product-title">Custom Family Fitted Sheet</h3>
+              <h3 class="product-title">ผ้าปูที่นอนครอบครัวสั่งตัด</h3>
               <div class="product-price" data-usd="45" data-thb="1590">$45.00</div>
-              <a href="/product/family-co-sleeping-solutions-th-size/" class="btn btn-primary">Customize</a>
+              <a href="/product/family-co-sleeping-solutions-th-size/" class="btn btn-primary">กำหนดเอง</a>
             </div>
           </article>
           <article class="product-card">
@@ -208,9 +206,9 @@
               <div class="placeholder">Marine Fitted Sheet<br><small>V-Berth / Any Shape</small></div>
             </div>
             <div class="product-info">
-              <h3 class="product-title">Marine Fitted Sheet (V-Berth)</h3>
+              <h3 class="product-title">ผ้าปูที่นอนเรือยอชท์ (V-Berth)</h3>
               <div class="product-price" data-usd="55" data-thb="1945">From $55.00</div>
-              <a href="/product/product-boat-bedding-fitted-sheet-microfiber/" class="btn btn-primary">Customize</a>
+              <a href="/product/product-boat-bedding-fitted-sheet-microfiber/" class="btn btn-primary">กำหนดเอง</a>
             </div>
           </article>
           <article class="product-card">
@@ -218,9 +216,9 @@
               <div class="placeholder">RV & Van Mattress Encasement</div>
             </div>
             <div class="product-info">
-              <h3 class="product-title">RV & Van Mattress Encasement</h3>
+              <h3 class="product-title">ผ้าคลุมที่นอน RV & Van</h3>
               <div class="product-price" data-usd="55" data-thb="1945">From $55.00</div>
-              <a href="/product/sheet-protectors/" class="btn btn-primary">Customize</a>
+              <a href="/product/sheet-protectors/" class="btn btn-primary">กำหนดเอง</a>
             </div>
           </article>
           <article class="product-card">
@@ -228,9 +226,9 @@
               <div class="placeholder">MildMate BedBridge Connector</div>
             </div>
             <div class="product-info">
-              <h3 class="product-title">BedBridge Connector</h3>
+              <h3 class="product-title">ตัวเชื่อมที่นอน BedBridge</h3>
               <div class="product-price" data-usd="35" data-thb="1235">$35.00</div>
-              <a href="/product/tbar/" class="btn btn-primary">Add to Cart</a>
+              <a href="/product/tbar/" class="btn btn-primary">เพิ่มลงตะกร้า</a>
             </div>
           </article>
         </div>
@@ -241,34 +239,34 @@
     <section class="section configurator-section">
       <div class="container">
         <div class="section-header">
-          <h2>Get Your Custom Quote</h2>
-          <p>Enter your mattress dimensions and see your price instantly.</p>
+          <h2>คำนวณราคาเบื้องต้น</h2>
+          <p>กรอกขนาดที่นอนของคุณแล้วดูราคาทันที</p>
         </div>
         <div class="configurator-box" id="configurator">
           <div class="configurator-header">
             <div class="configurator-tabs">
-              <button class="configurator-tab active" data-mode="sheet">&#128719; Fitted Bed Sheet</button>
-              <button class="configurator-tab" data-mode="vberth">&#9875; V-Berth Boat Sheet</button>
+              <button class="configurator-tab active" data-mode="sheet">&#128719; ผ้าปูที่นอน</button>
+              <button class="configurator-tab" data-mode="vberth">&#9875; ผ้าปูเรือยอชท์ V-Berth</button>
             </div>
             <div class="unit-toggle">
-              <button class="active" data-unit="cm">cm</button>
-              <button data-unit="inch">inch</button>
+              <button class="active" data-unit="cm">ซม.</button>
+              <button data-unit="inch">นิ้ว</button>
             </div>
           </div>
           <div class="configurator-body">
             <div class="configurator-inputs" id="configurator-inputs">
               <!-- Inputs injected by JS -->
               <div class="input-group">
-                <label for="cfg-width">Width (W)</label>
-                <input type="number" id="cfg-width" placeholder="e.g. 160" min="1" step="0.1">
+                <label for="cfg-width">ความกว้าง (W)</label>
+                <input type="number" id="cfg-width" placeholder="เช่น 160" min="1" step="0.1">
               </div>
               <div class="input-group">
-                <label for="cfg-length">Length (L)</label>
-                <input type="number" id="cfg-length" placeholder="e.g. 200" min="1" step="0.1">
+                <label for="cfg-length">ความยาว (L)</label>
+                <input type="number" id="cfg-length" placeholder="เช่น 200" min="1" step="0.1">
               </div>
               <div class="input-group">
-                <label for="cfg-depth">Depth / Pocket (D)</label>
-                <input type="number" id="cfg-depth" placeholder="e.g. 30" min="1" step="0.1">
+                <label for="cfg-depth">ความสูง / ขอบผ้าปู (D)</label>
+                <input type="number" id="cfg-depth" placeholder="เช่น 30" min="1" step="0.1">
               </div>
             </div>
             <div class="configurator-diagram" id="configurator-diagram">
@@ -277,12 +275,12 @@
                 <rect x="20" y="20" width="160" height="100" fill="none" stroke="#2c96f4" stroke-width="2" rx="4"/>
                 <text x="100" y="15" text-anchor="middle" font-size="10" fill="#333">W</text>
                 <text x="10" y="72" text-anchor="middle" font-size="10" fill="#333">L</text>
-                <text x="100" y="135" text-anchor="middle" font-size="10" fill="#333">D = Pocket Depth</text>
+                <text x="100" y="135" text-anchor="middle" font-size="10" fill="#333">D = ความสูงขอบผ้าปู</text>
               </svg>
             </div>
           </div>
           <div class="fabric-selector">
-            <h4>Select Fabric</h4>
+            <h4>เลือกผ้า</h4>
             <div class="fabric-options">
               <button class="fabric-chip active" data-fabric="breezeplus">BreezePlus</button>
               <button class="fabric-chip" data-fabric="cloudsoft">CloudSoft</button>
@@ -291,13 +289,13 @@
             </div>
           </div>
           <div class="configurator-price">
-            <div class="price-label">Estimated Price</div>
+            <div class="price-label">ราคาโดยประมาณ</div>
             <div class="price-value" id="configurator-price">$0.00</div>
-            <div class="price-note">Price excludes shipping &amp; import tariff</div>
+            <div class="price-note">ราคายังไม่รวมค่าจัดส่งและภาษีนำเข้า</div>
           </div>
           <div class="configurator-actions">
-            <button class="btn btn-primary" id="cfg-add-to-cart">Add to Cart</button>
-            <a href="/how-to-measure-mattress-size/" class="btn btn-outline">How to Measure</a>
+            <button class="btn btn-primary" id="cfg-add-to-cart">เพิ่มลงตะกร้า</button>
+            <a href="/how-to-measure-mattress-size/" class="btn btn-outline">วิธีวัดขนาด</a>
           </div>
         </div>
       </div>
@@ -307,8 +305,8 @@
     <section class="section">
       <div class="container">
         <div class="section-header">
-          <h2>Our Fabrics</h2>
-          <p>Four premium collections. One perfect match for your sleep.</p>
+          <h2>ผ้าของเรา</h2>
+          <p>คอลเลกชันพรีเมียม 4 แบบ เลือกผ้าที่ใช่สำหรับการนอนของคุณ</p>
         </div>
         <div class="fabric-tabs">
           <button class="fabric-tab active" data-fabric="breezeplus">BreezePlus</button>
@@ -321,16 +319,16 @@
             <div class="fabric-panel-grid">
               <div class="fabric-panel-visual">BreezePlus Fabric Visual</div>
               <div class="fabric-panel-info">
-                <h3>BreezePlus Collection</h3>
-                <p class="tagline">Advanced Cooling Cotton Blend</p>
-                <p>A high-performance fusion of 50% Long-Staple Cotton and 50% Specialized Microfiber. Clinically shown to be 3-5&deg;C cooler than standard cotton.</p>
+                <h3>คอลเลกชัน BreezePlus</h3>
+                <p class="tagline">ผ้าฝ้ายผสมเย็นสบายระดับสูง</p>
+                <p>การผสมผสานประสิทธิภาพสูงระหว่างฝ้ายเส้นใยยาว 50% และไมโครไฟเบอร์พิเศษ 50% พิสูจน์ทางคลินิกแล้วว่าเย็นกว่าฝ้ายทั่วไป 3-5 องศาเซลเซียส</p>
                 <ul>
-                  <li>Active heat drawing (not trapping)</li>
-                  <li>Pet hair resistant</li>
-                  <li>100% chemical-free</li>
-                  <li>Ideal for hot sleepers &amp; tropical climates</li>
+                  <li>ระบายความร้อนได้ดี (ไม่กักเก็บความร้อน)</li>
+                  <li>ทนขนสัตว์เลี้ยง</li>
+                  <li>ปลอดสารเคมี 100%</li>
+                  <li>เหมาะสำหรับคนนอนร้อนและภูมิอากาศเขตร้อน</li>
                 </ul>
-                <p><strong>Colors:</strong> 9 Cooling Colors</p>
+                <p><strong>สี:</strong> 9 สีเย็นสบาย</p>
                 <div class="fabric-colors">
                   <span class="color-swatch" style="background:#e8dcc5;" title="Sand"></span>
                   <span class="color-swatch" style="background:#c0c0c0;" title="Silver"></span>
@@ -346,16 +344,16 @@
             <div class="fabric-panel-grid">
               <div class="fabric-panel-visual">CloudSoft Fabric Visual</div>
               <div class="fabric-panel-info">
-                <h3>CloudSoft Collection</h3>
-                <p class="tagline">Premium Microfiber Excellence</p>
-                <p>Highly engineered 120 GSM double-brushed microfiber with a signature embossed pattern. Resists salt air and ambient humidity.</p>
+                <h3>คอลเลกชัน CloudSoft</h3>
+                <p class="tagline">ไมโครไฟเบอร์พรีเมียมระดับสูง</p>
+                <p>ไมโครไฟเบอร์แปรรูป 120 GSM แบบ double-brushed พร้อมลวดลาย embossed ทนต่อความชื้นและอากาศเค็มจากทะเล</p>
                 <ul>
-                  <li>Moisture &amp; salt-air resistant</li>
-                  <li>Quick-drying, no ironing</li>
-                  <li>Soft &amp; stain-resistant</li>
-                  <li>Ideal for marine, yacht, and RV cabins</li>
+                  <li>ทนความชื้นและอากาศเค็ม</li>
+                  <li>แห้งเร็ว ไม่ต้องรีด</li>
+                  <li>นุ่มและทนต่อรอยเปื้อน</li>
+                  <li>เหมาะสำหรับเรือยอชท์ และห้อง RV</li>
                 </ul>
-                <p><strong>Colors:</strong> 12 Sophisticated Colors</p>
+                <p><strong>สี:</strong> 12 สีหรูหรา</p>
                 <div class="fabric-colors">
                   <span class="color-swatch" style="background:#36454f;" title="Charcoal"></span>
                   <span class="color-swatch" style="background:#98ff98;" title="Mint"></span>
@@ -371,16 +369,16 @@
             <div class="fabric-panel-grid">
               <div class="fabric-panel-visual">PremaCotton Fabric Visual</div>
               <div class="fabric-panel-info">
-                <h3>PremaCotton Collection</h3>
-                <p class="tagline">The Purest Natural Choice</p>
-                <p>100% Pure Long-Staple Natural Cotton. Becomes softer with every wash and offers the traditional &ldquo;crisp&rdquo; feel of luxury hotel linens.</p>
+                <h3>คอลเลกชัน PremaCotton</h3>
+                <p class="tagline">ทางเลือกธรรมชาติที่บริสุทธิ์ที่สุด</p>
+                <p>ฝ้ายธรรมชาติเส้นใยยาวบริสุทธิ์ 100% นุ่มขึ้นทุกครั้งที่ซัก และให้สัมผัส "กระชับ" แบบผ้าปูโรงแรมหรู</p>
                 <ul>
-                  <li>OEKO-TEX Standard 100 Certified</li>
-                  <li>Chemical-free purity</li>
-                  <li>Ideal for sensitive skin &amp; infants</li>
-                  <li>Luxury hotel crispness</li>
+                  <li>ผ่านมาตรฐาน OEKO-TEX Standard 100</li>
+                  <li>บริสุทธิ์ปลอดสารเคมี</li>
+                  <li>เหมาะสำหรับผิวบอบบางและทารก</li>
+                  <li>สัมผัสหรูเหมือนโรงแรม 5 ดาว</li>
                 </ul>
-                <p><strong>Colors:</strong> Pristine Snow White Only</p>
+                <p><strong>สี:</strong> ขาวสะอาด Snow White เท่านั้น</p>
                 <div class="fabric-colors">
                   <span class="color-swatch" style="background:#ffffff; border-color:#ccc;" title="Snow White"></span>
                 </div>
@@ -391,16 +389,16 @@
             <div class="fabric-panel-grid">
               <div class="fabric-panel-visual">EcoLuxe Fabric Visual</div>
               <div class="fabric-panel-info">
-                <h3>EcoLuxe Collection</h3>
-                <p class="tagline">Sustainable Organic Luxury</p>
-                <p>100% GOTS-Certified Organic Cotton in a durable calico weave. Sustainable farming practices with no harsh chemical processing.</p>
+                <h3>คอลเลกชัน EcoLuxe</h3>
+                <p class="tagline">หรูหราออร์แกนิกยั่งยืน</p>
+                <p>ฝ้ายออร์แกนิกผ่านมาตรฐาน GOTS 100% ทอด้วยลวดลายแคลิโคทนทาน การเกษตรยั่งยืนโดยไม่ใช้สารเคมีรุนแรง</p>
                 <ul>
-                  <li>GOTS-Certified Organic</li>
-                  <li>No harsh chemical processing</li>
-                  <li>Environmentally responsible</li>
-                  <li>Ideal for eco-conscious families</li>
+                  <li>ผ่านมาตรฐาน GOTS ออร์แกนิก</li>
+                  <li>ไม่ใช้สารเคมีรุนแรงในกระบวนการผลิต</li>
+                  <li>เป็นมิตรต่อสิ่งแวดล้อม</li>
+                  <li>เหมาะสำหรับครอบครัวที่ใส่ใจสิ่งแวดล้อม</li>
                 </ul>
-                <p><strong>Colors:</strong> Natural Vanilla Linen</p>
+                <p><strong>สี:</strong> Natural Vanilla Linen</p>
                 <div class="fabric-colors">
                   <span class="color-swatch" style="background:#f3e5ab;" title="Vanilla Linen"></span>
                 </div>
@@ -415,18 +413,18 @@
     <section class="section section-alt">
       <div class="container">
         <div class="section-header">
-          <h2>What Customers Say</h2>
-          <p>Real reviews from Etsy shoppers around the world.</p>
+          <h2>เสียงจากลูกค้า</h2>
+          <p>รีวิวจริงจากลูกค้า Etsy ทั่วโลก</p>
         </div>
         <div class="reviews-grid">
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;Absolutely perfect fit for our V-Berth! I was worried about the odd shape but the blueprint process made it so easy. Best sheets we've ever had on the boat.&rdquo;</p>
+            <p class="review-text">&ldquo;พอดีกับ V-Berth ของเราอย่างสมบูรณ์แบบ! ฉันกังวลเรื่องรูปทรงประหลาด แต่กระบวนการส่งแบบทำให้ง่ายมาก ผ้าปูที่ดีที่สุดที่เคยมีบนเรือ&rdquo;</p>
             <div class="review-author">&mdash; Wanda, United States</div>
           </div>
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;The 3-sided zipper is a game changer. My elderly mother can change the duvet cover by herself now. Fabric quality is excellent and the custom size was spot on.&rdquo;</p>
+            <p class="review-text">&ldquo;ซิป 3 ด้านเปลี่ยนชีวิต แม่ของฉันที่สูงวัยสามารถเปลี่ยนผ้านวมเองได้แล้ว คุณภาพผ้าดีเยี่ยมและขนาดสั่งตัดตรงเป๊ะ&rdquo;</p>
             <div class="review-author">&mdash; Sarah, Australia</div>
           </div>
         </div>
@@ -434,8 +432,8 @@
           <div class="badge-box">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div>
-              <strong>5.0 out of 5 stars</strong> on Etsy<br>
-              <span class="small">Based on verified customer reviews</span>
+              <strong>5.0 จาก 5 ดาว</strong> บน Etsy<br>
+              <span class="small">จากรีวิวลูกค้าที่ยืนยันแล้ว</span>
             </div>
           </div>
         </div>
@@ -445,11 +443,11 @@
     <!-- 8. EMAIL SIGNUP -->
     <section class="email-signup">
       <div class="container">
-        <h2>Get 10% Off Your First Order</h2>
-        <p>Join our newsletter for exclusive offers, new product alerts, and bedding tips.</p>
+        <h2>ลด 10% สำหรับคำสั่งซื้อแรก</h2>
+        <p>สมัครรับจดหมายข่าวเพื่อรับข้อเสนอพิเศษ แจ้งเตือนสินค้าใหม่ และเคล็ดลับเรื่องผ้าปู</p>
         <form class="email-form" action="/api/subscribe" method="post">
-          <input type="email" name="email" placeholder="Enter your email" required aria-label="Email address">
-          <button type="submit">Subscribe</button>
+          <input type="email" name="email" placeholder="กรอกอีเมลของคุณ" required aria-label="ที่อยู่อีเมล">
+          <button type="submit">สมัครรับจดหมายข่าว</button>
         </form>
       </div>
     </section>
@@ -463,27 +461,27 @@
 
         <!-- Column 1: Quick Links -->
         <div class="footer-col">
-          <h4>Quick Links</h4>
+          <h4>ลิงก์ด่วน</h4>
           <ul>
-            <li><a href="/about/">About Us</a></li>
-            <li><a href="/contact/">Contact Us</a></li>
-            <li><a href="/reviews/">Reviews</a></li>
+            <li><a href="/about/">เกี่ยวกับเรา</a></li>
+            <li><a href="/contact/">ติดต่อเรา</a></li>
+            <li><a href="/reviews/">รีวิว</a></li>
           </ul>
         </div>
 
         <!-- Column 2: Customer Service -->
         <div class="footer-col">
-          <h4>Customer Service</h4>
+          <h4>บริการลูกค้า</h4>
           <ul>
-            <li><a href="/faq/">FAQ</a></li>
-            <li><a href="/sizeguide/">Size Guide</a></li>
-            <li><a href="/blogs/">Blog</a></li>
+            <li><a href="/faq/">คำถามที่พบบ่อย</a></li>
+            <li><a href="/sizeguide/">คู่มือขนาด</a></li>
+            <li><a href="/blogs/">บล็อก</a></li>
           </ul>
         </div>
 
         <!-- Column 3: Shop With Us (icon only) -->
         <div class="footer-col">
-          <h4>Shop With Us</h4>
+          <h4>ช้อปกับเรา</h4>
           <div class="footer-icons-grid">
             <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
               <img src="/images/Logo/Etsy.png" alt="">
@@ -502,7 +500,7 @@
 
         <!-- Column 4: Contact -->
         <div class="footer-col">
-          <h4>Contact</h4>
+          <h4>ติดต่อ</h4>
           <ul>
             <li>
               <a href="mailto:contact@mildmate.com">
@@ -551,8 +549,8 @@
       <div class="footer-bottom">
         <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">
-          <a href="/policy/">Privacy Policy</a>
-          <a href="/shipping/">Shipping &amp; Return Policy</a>
+          <a href="/policy/">นโยบายความเป็นส่วนตัว</a>
+          <a href="/shipping/">นโยบายการจัดส่งและคืนสินค้า</a>
         </div>
       </div>
     </div>

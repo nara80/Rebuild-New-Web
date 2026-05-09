@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Marine and yacht bedding by MildMate. Custom V-Berth sheets and boat bedding made to fit any shape.">
+  <title>Marine & Yacht Bedding — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
+          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="My account">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="Language switch">
+          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="Mobile menu">
+      <ul class="mobile-nav-list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products/">Shop</a></li>
+        <li><a href="/fabric/">Fabrics</a></li>
+        <li><a href="/sizeguide/">Size Guide</a></li>
+      </ul>
+    </div>
+    <div class="search-overlay" aria-hidden="true">
+      <div class="search-overlay-inner">
+        <button class="search-close" aria-label="Close search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <form action="/products/" method="get" class="search-form">
+          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off">
+          <button type="submit" aria-label="Submit search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Marine & Yacht</h1>
+        <p>Custom boat bedding engineered for life at sea. V-Berth, aft cabins, and any shape you need.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:32px; padding:16px; background:var(--color-surface); border-radius:var(--radius);">
+          <div class="filter-group">
+            <label for="filter-category" style="font-weight:600; margin-right:8px;">Category:</label>
+            <select id="filter-category" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+              <option value="all">All</option>
+              <option value="marine" selected>Marine</option>
+              <option value="family">Family</option>
+              <option value="duvet">Duvet</option>
+              <option value="protection">Protection</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-fabric" style="font-weight:600; margin-right:8px;">Fabric:</label>
+            <select id="filter-fabric" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+              <option value="all">All</option>
+              <option value="breezeplus">BreezePlus</option>
+              <option value="cloudsoft">CloudSoft</option>
+              <option value="premacotton">PremaCotton</option>
+              <option value="ecoluxe">EcoLuxe</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;">
+          <article class="product-card">
+            <div class="product-image">
+              <div class="placeholder">Marine Fitted Sheet<br><small>V-Berth / Any Shape</small></div>
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">Marine Fitted Sheet (V-Berth)</h3>
+              <div class="product-price" data-usd="55" data-thb="1945">From $55.00</div>
+              <a href="/product/product-boat-bedding-fitted-sheet-microfiber/" class="btn btn-primary">Customize</a>
+            </div>
+          </article>
+          <article class="product-card">
+            <div class="product-image">
+              <div class="placeholder">RV & Van Mattress Encasement</div>
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">RV & Van Mattress Encasement</h3>
+              <div class="product-price" data-usd="55" data-thb="1945">From $55.00</div>
+              <a href="/product/sheet-protectors/" class="btn btn-primary">Customize</a>
+            </div>
+          </article>
+          <article class="product-card">
+            <div class="product-image">
+              <div class="placeholder">3-Sided Zipper Duvet Cover<br><small>BreezePlus</small></div>
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">3-Sided Zipper Duvet Cover</h3>
+              <div class="product-price" data-usd="65" data-thb="2295">$65.00</div>
+              <a href="/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/" class="btn btn-primary">Customize</a>
+            </div>
+          </article>
+          <article class="product-card">
+            <div class="product-image">
+              <div class="placeholder">Pillow Protector<br><small>Waterproof / Dust-mite</small></div>
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">Pillow Protector</h3>
+              <div class="product-price" data-usd="18" data-thb="635">From $18.00</div>
+              <a href="/product/pillow-protector/" class="btn btn-primary">Customize</a>
+            </div>
+          </article>
+        </div>
+
+        <p class="small" style="text-align:center; margin-top:24px; color:#666;">All prices are estimates. Final price calculated in configurator.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="/about/">About Us</a></li>
+            <li><a href="/contact/">Contact Us</a></li>
+            <li><a href="/reviews/">Reviews</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Customer Service</h4>
+          <ul>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><a href="/sizeguide/">Size Guide</a></li>
+            <li><a href="/blogs/">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Shop With Us</h4>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">Privacy Policy</a>
+          <a href="/shipping/">Shipping &amp; Return Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+</body>
+</html>

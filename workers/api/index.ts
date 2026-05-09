@@ -1,5 +1,10 @@
 // MildMate Public API Worker
-// Phase 4+ will add: products.ts, pricing.ts, geo-currency.ts, checkout.ts, webhook.ts, email.ts, subscribers.ts
+// Phase 4: products, pricing, geo-currency
+// Phase 5+: checkout, webhook, email, subscribers
+
+import { handleProducts } from "./products";
+import { handlePricing } from "./pricing";
+import { handleGeo } from "./geo-currency";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -11,6 +16,21 @@ export default {
       return new Response(JSON.stringify({ status: "ok", project: "mildmate-new" }), {
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Products API
+    if (path.startsWith("/api/products")) {
+      return handleProducts(request, env);
+    }
+
+    // Pricing API
+    if (path.startsWith("/api/pricing")) {
+      return handlePricing(request, env);
+    }
+
+    // Geo / Currency API
+    if (path === "/api/geo") {
+      return handleGeo(request, env);
     }
 
     return new Response(JSON.stringify({ error: "Not Found" }), {

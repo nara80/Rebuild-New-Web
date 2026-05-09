@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MildMate Fabric Collections — BreezePlus, CloudSoft, PremaCotton, and EcoLuxe. Find the perfect fabric for your custom bedding.">
+  <title>Our Fabrics — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
+          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="My account">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="Language switch">
+          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="Mobile menu">
+      <ul class="mobile-nav-list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products/">Shop</a></li>
+        <li><a href="/fabric/">Fabrics</a></li>
+        <li><a href="/sizeguide/">Size Guide</a></li>
+      </ul>
+    </div>
+    <div class="search-overlay" aria-hidden="true">
+      <div class="search-overlay-inner">
+        <button class="search-close" aria-label="Close search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <form action="/products/" method="get" class="search-form">
+          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off">
+          <button type="submit" aria-label="Submit search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>Our Fabrics</h1>
+        <p>Four premium collections engineered for every lifestyle — from tropical cooling to marine durability.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="fabric-tabs">
+          <button class="fabric-tab active" data-fabric="breezeplus">BreezePlus</button>
+          <button class="fabric-tab" data-fabric="cloudsoft">CloudSoft</button>
+          <button class="fabric-tab" data-fabric="premacotton">PremaCotton</button>
+          <button class="fabric-tab" data-fabric="ecoluxe">EcoLuxe</button>
+        </div>
+        <div class="fabric-panels">
+          <div class="fabric-panel active" data-fabric="breezeplus">
+            <div class="fabric-panel-grid">
+              <div class="fabric-panel-visual">BreezePlus Fabric Visual</div>
+              <div class="fabric-panel-info">
+                <h3>BreezePlus Collection</h3>
+                <p class="tagline">Advanced Cooling Cotton Blend</p>
+                <p>A high-performance fusion of 50% Long-Staple Cotton and 50% Specialized Microfiber. Clinically shown to be 3-5&deg;C cooler than standard cotton. It actively draws heat away from the body rather than trapping it.</p>
+                <ul>
+                  <li>Pet hair resistant surface</li>
+                  <li>100% chemical-free</li>
+                  <li>Ideal for hot sleepers &amp; tropical climates</li>
+                  <li>Night-sweat &amp; allergy friendly</li>
+                </ul>
+                <p><strong>Colors:</strong> 9 Cooling Colors (Sand, Silver, Dark Gray, Emerald, Baby Pink, Sea, and more)</p>
+                <div class="fabric-colors">
+                  <span class="color-swatch" style="background:#e8dcc5;" title="Sand"></span>
+                  <span class="color-swatch" style="background:#c0c0c0;" title="Silver"></span>
+                  <span class="color-swatch" style="background:#4a4a4a;" title="Dark Gray"></span>
+                  <span class="color-swatch" style="background:#2ecc71;" title="Emerald"></span>
+                  <span class="color-swatch" style="background:#ffb6c1;" title="Baby Pink"></span>
+                  <span class="color-swatch" style="background:#5dade2;" title="Sea"></span>
+                </div>
+                <a href="/products/?fabric=breezeplus" class="btn btn-primary" style="margin-top:20px;">Shop BreezePlus</a>
+              </div>
+            </div>
+          </div>
+          <div class="fabric-panel" data-fabric="cloudsoft">
+            <div class="fabric-panel-grid">
+              <div class="fabric-panel-visual">CloudSoft Fabric Visual</div>
+              <div class="fabric-panel-info">
+                <h3>CloudSoft Collection</h3>
+                <p class="tagline">Premium Microfiber Excellence</p>
+                <p>Highly engineered 120 GSM double-brushed microfiber with a signature embossed pattern. Resists salt air and ambient humidity. Quick-drying and requires no ironing.</p>
+                <ul>
+                  <li>Moisture &amp; salt-air resistant</li>
+                  <li>Quick-drying, wrinkle-free</li>
+                  <li>Soft &amp; stain-resistant</li>
+                  <li>Ideal for marine, yacht, and RV cabins</li>
+                </ul>
+                <p><strong>Colors:</strong> 12 Sophisticated Colors (Charcoal, Mint, Grey, Beige, Olive, Denim, Rose Gold, Lavender, and more)</p>
+                <div class="fabric-colors">
+                  <span class="color-swatch" style="background:#36454f;" title="Charcoal"></span>
+                  <span class="color-swatch" style="background:#98ff98;" title="Mint"></span>
+                  <span class="color-swatch" style="background:#808080;" title="Grey"></span>
+                  <span class="color-swatch" style="background:#f5f5dc;" title="Beige"></span>
+                  <span class="color-swatch" style="background:#808000;" title="Olive"></span>
+                  <span class="color-swatch" style="background:#6f8faf;" title="Denim"></span>
+                </div>
+                <a href="/products/?fabric=cloudsoft" class="btn btn-primary" style="margin-top:20px;">Shop CloudSoft</a>
+              </div>
+            </div>
+          </div>
+          <div class="fabric-panel" data-fabric="premacotton">
+            <div class="fabric-panel-grid">
+              <div class="fabric-panel-visual">PremaCotton Fabric Visual</div>
+              <div class="fabric-panel-info">
+                <h3>PremaCotton Collection</h3>
+                <p class="tagline">The Purest Natural Choice</p>
+                <p>100% Pure Long-Staple Natural Cotton. Becomes softer with every wash and offers the traditional &ldquo;crisp&rdquo; feel of luxury hotel linens. OEKO-TEX Standard 100 Certified.</p>
+                <ul>
+                  <li>OEKO-TEX Standard 100 Certified</li>
+                  <li>Chemical-free purity</li>
+                  <li>Ideal for sensitive skin &amp; infants (0-6 months)</li>
+                  <li>Luxury hotel crispness</li>
+                </ul>
+                <p><strong>Colors:</strong> Pristine Snow White Only</p>
+                <div class="fabric-colors">
+                  <span class="color-swatch" style="background:#ffffff; border-color:#ccc;" title="Snow White"></span>
+                </div>
+                <a href="/products/?fabric=premacotton" class="btn btn-primary" style="margin-top:20px;">Shop PremaCotton</a>
+              </div>
+            </div>
+          </div>
+          <div class="fabric-panel" data-fabric="ecoluxe">
+            <div class="fabric-panel-grid">
+              <div class="fabric-panel-visual">EcoLuxe Fabric Visual</div>
+              <div class="fabric-panel-info">
+                <h3>EcoLuxe Collection</h3>
+                <p class="tagline">Sustainable Organic Luxury</p>
+                <p>100% GOTS-Certified Organic Cotton in a durable calico weave. Sustainable farming practices with no harsh chemical processing.</p>
+                <ul>
+                  <li>GOTS-Certified Organic</li>
+                  <li>No harsh chemical processing</li>
+                  <li>Environmentally responsible</li>
+                  <li>Ideal for eco-conscious families</li>
+                </ul>
+                <p><strong>Colors:</strong> Natural Vanilla Linen</p>
+                <div class="fabric-colors">
+                  <span class="color-swatch" style="background:#f3e5ab;" title="Vanilla Linen"></span>
+                </div>
+                <a href="/products/?fabric=ecoluxe" class="btn btn-primary" style="margin-top:20px;">Shop EcoLuxe</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:60px;">
+          <h2 style="text-align:center; margin-bottom:24px;">Fabric Comparison</h2>
+          <div style="overflow-x:auto;">
+            <table class="size-table">
+              <thead>
+                <tr><th>Feature</th><th>BreezePlus</th><th>CloudSoft</th><th>PremaCotton</th><th>EcoLuxe</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Material</td><td>50% Cotton + 50% Microfiber</td><td>120 GSM Microfiber</td><td>100% Long-Staple Cotton</td><td>100% GOTS Organic Cotton</td></tr>
+                <tr><td>Key Benefit</td><td>Cooling (3-5&deg;C cooler)</td><td>Moisture &amp; salt resistant</td><td>Chemical-free purity</td><td>Sustainable organic</td></tr>
+                <tr><td>Best For</td><td>Hot sleepers, pets, tropics</td><td>Marine, yacht, RV</td><td>Sensitive skin, infants</td><td>Eco-conscious families</td></tr>
+                <tr><td>Certification</td><td>&mdash;</td><td>&mdash;</td><td>OEKO-TEX 100</td><td>GOTS Organic</td></tr>
+                <tr><td>Colors</td><td>9 colors</td><td>12 colors</td><td>White only</td><td>Vanilla Linen</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="/about/">About Us</a></li>
+            <li><a href="/contact/">Contact Us</a></li>
+            <li><a href="/reviews/">Reviews</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Customer Service</h4>
+          <ul>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><a href="/sizeguide/">Size Guide</a></li>
+            <li><a href="/blogs/">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Shop With Us</h4>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">Privacy Policy</a>
+          <a href="/shipping/">Shipping &amp; Return Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/configurator.js"></script>
+  <script src="/js/cart.js"></script>
+</body>
+</html>

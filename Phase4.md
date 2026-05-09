@@ -783,3 +783,48 @@ Once Phase 4 is complete and the shopping experience works end-to-end (browse �
 Phase 5 connects the cart to Stripe so customers can actually complete a purchase. Thai visitors will see a PromptPay QR code. International visitors will see card/Apple Pay/Google Pay.
 
 **Tell Droid:** "Phase 4 is complete. All checklist items are done. Please start Phase 5."
+
+---
+
+## Phase 4 Completion Summary (2026-05-09)
+
+### Built & Delivered
+
+| Item | Status | Notes |
+|---|---|---|
+| Homepage EN (`/`) | ✅ | 8 sections: Hero, Trust, Categories, Top Products, Configurator, Fabric Tabs, Reviews, Email Signup |
+| Homepage TH (`/th/`) | ✅ | Full Thai translation of all 8 sections |
+| About Us (`/about/`) | ✅ | Company story, mission, certifications (OEKO-TEX + Siriraj) |
+| Contact (`/contact/`) | ✅ | Form + LINE/WhatsApp/Facebook + marketplace icons |
+| Fabric Collections (`/fabric/`) | ✅ | 4-tab showcase + comparison table, content from `01_Fabric_Intelligence_Guide_V2.md` |
+| Shipping Policy (`/shipping/`) | ✅ | Regions, carriers, transit times, customs note |
+| Privacy Policy (`/policy/`) | ✅ | GDPR-compatible policy |
+| Customer Reviews (`/reviews/`) | ✅ | 6 review cards + Etsy 5-star badge |
+| Size Guide Landing (`/sizeguide/`) | ✅ | 4-card landing page linking to specific guides |
+| Thai Size Guide (`/mattress-size-th/`) | ✅ | #1 SEO page — Thai + international size tables |
+| EN Size Guide (`/mattress-size/`) | ✅ | International size comparison tables |
+| How to Measure (`/how-to-measure-mattress-size/`) | ✅ | Credit-card method with SVG diagram |
+| Bed Sheet Sizes (`/bed-sheets-size/`) | ✅ | Pocket depth + duvet cover sizing |
+| Product Listing (`/products/`) | ✅ | Filter bar + 6 product cards with placeholders |
+| Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) | ✅ | Pre-filtered product grids |
+| Configurator JS (`/js/configurator.js`) | ✅ | Two-mode (Sheet + V-Berth), unit toggle cm/inch, live price, fabric selector |
+| Cart JS (`/js/cart.js`) | ✅ | localStorage-based cart with add/remove/updateQty/clear |
+| Geo JS (`/js/geo.js`) | ✅ | Detects location via `/api/geo`, updates price display |
+| Products API Worker (`workers/api/products.ts`) | ✅ | D1 product listing + category filtering + search |
+| Pricing API Worker (`workers/api/pricing.ts`) | ✅ | Calculates price for Sheet and V-Berth modes, USD + THB |
+| Geo API Worker (`workers/api/geo-currency.ts`) | ✅ | CF-IPCountry detection, returns THB for Thailand |
+| CSS updates (`main.css`) | ✅ | All homepage section styles, responsive rules, cards, tables |
+
+### Placeholder Content (To Be Replaced Later)
+
+| Item | Current State | How to Update |
+|---|---|---|
+| Hero background image | CI blue gradient placeholder | Replace `hero-bg.jpg` in `public/images/` |
+| Category images | CSS gradient placeholders | Add `category-marine.jpg`, `category-family.jpg`, etc. to `public/images/categories/` |
+| Product photos | CSS placeholders with text labels | Add product images to `public/images/products/` matching slugs |
+| Pricing | Placeholder prices (base $45-65 USD) | Adjust in Admin dashboard (Phase 7) or edit `configurator.js` rates |
+| Customer reviews | 2 real Etsy reviews + 4 placeholders | Replace placeholder text with real Etsy reviews |
+| Blog | Not built in this pass | Will be Phase 6+ or manual static posts |
+
+### Next Step
+Move to **Phase 5 — Checkout + Stripe Payments** when ready.

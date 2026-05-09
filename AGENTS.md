@@ -71,8 +71,8 @@ This file is read by Droid at the start of every session. It contains all critic
 | 0 — Mockup | ✅ Approved | `mockup.html` created |
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
-| 3 — Design System | 🔄 In Progress | Header, footer, CSS, nav.js |
-| 4 — Homepage + Products | ⏸️ Pending | Real content, configurator, cart |
+| 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH, configurator, cart.js, geo.js, static pages, size guides, product/category skeletons, workers (products, pricing, geo) |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
