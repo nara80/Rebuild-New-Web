@@ -90,6 +90,14 @@ This file is read by Droid at the start of every session. It contains all critic
 | Dev domain | `mildmate-new.pages.dev` |
 | Cutover trigger | 100% completion, not before |
 | Language | Bilingual Thai/English, EN primary |
+| Font | Quicksand (replaced Prompt) |
+| Header desktop | Logo left, nav center, actions right |
+| Header mobile | Hamburger left, logo center, actions right |
+| Mobile drawer | Slides in from left |
+| Footer style | Minimal, icon-only marketplace/social, no logo block |
+| LINE sticky bar | Removed (international positioning) |
+| Checkout | Guest checkout default, social login optional |
+| Search | Overlay triggered by magnifying glass icon |
 
 ---
 

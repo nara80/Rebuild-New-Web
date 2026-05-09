@@ -1,5 +1,5 @@
 # Phase 3 — Design System + Shared Components
-**Goal:** Build the visual identity of the entire website — the brand colors, typography, sticky header with mega-menu, footer with LINE widget, and mobile navigation. These components are then injected into all 258 pages at once.
+**Goal:** Build the visual identity of the entire website — the brand colors, typography, sticky header with simplified navigation, minimal premium footer, and mobile navigation. These components are then injected into all pages at once.
 
 **End Result:** Every page on the site suddenly looks like a real MildMate website. Open any HTML file in your browser and you will see the blue brand header, navigation, and footer — even though the page content is still a placeholder.
 
@@ -61,7 +61,7 @@ The header needs your MildMate logo. This is the most important visual asset in 
 
 ### Requirement 3 — Your LINE Official Account Link
 
-The footer and the green LINE sticky widget (mobile only) need your LINE contact link.
+The footer contact column and mobile hamburger drawer need your LINE contact link.
 
 **How to find your LINE link:**
 1. Open the **LINE Official Account Manager** app or website
@@ -173,7 +173,7 @@ Think of Phase 3 as building the **frame of a house** before putting in the furn
 | `public/css/admin.css` | Styles for the admin dashboard (separate from public site) |
 | `public/js/nav.js` | Mega-menu open/close, mobile hamburger drawer, sticky header shrink on scroll |
 | Header HTML component | Sticky bar: logo + navigation + TH/EN toggle + cart icon |
-| Footer HTML component | 4-column footer + email signup + LINE sticky widget (mobile only) |
+| Footer HTML component | 4-column minimal footer + icon-only marketplace/social + search overlay |
 | Injected into all 258 pages | Header and footer added to every `public/[slug]/index.html` file |
 
 ---
@@ -214,57 +214,42 @@ These are the visual rules Droid will code into `main.css`. No decisions needed 
 ### Desktop Header
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  [MildMate Logo]  Home  Shop▾  Fabrics▾  Size Guide      │
-│                   About  Contact       [TH/EN]  [🛒 0]  │
+│  [MildMate Logo]  Home  Shop  Fabrics  Size Guide          │
+│                                    [🔍][👤][🛒][EN/TH]  │
 └─────────────────────────────────────────────────────────┘
 ```
-- Height: 83px normal → shrinks to 60px when you scroll down
+- Height: 80px normal → shrinks to 60px when you scroll down
 - Background: white with a subtle bottom border
-- Logo: left-aligned, max-height 83px
+- Logo: left-aligned, max-height 64px (shrinks to 50px on scroll)
+- Nav text: 1.2rem, weight 600, Quicksand
+- Actions right: Search → Account → Cart → EN/TH
+- Icons: 20px inline SVGs, blue hover
 
-### Shop Mega-Dropdown (opens on hover)
+### Mobile Header (screen width ≤ 1024px)
 ```
-┌─────────────────────────────────────────────────────┐
-│  Marine & Yacht      │  Family & Co-Sleep           │
-│  › V-Berth Sheets    │  › Family Fitted Sheets      │
-│  › Marine Pillows    │  › BedBridge Connector       │
-│  › Boat Duvets       │  › Co-Sleep Duvets           │
-├──────────────────────┼──────────────────────────────┤
-│  Easy-Change Duvet   │  Protection                  │
-│  › 3-Sided Zipper    │  › TPU Waterproof            │
-│  › Dorm/College      │  › Pet-Proof Sheets          │
-│  › Weighted Cover    │  › Mattress Encasement       │
-└─────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────┐
+│  [☰]        [   Logo (centered)   ]   [🔍][👤][🛒][EN/TH]  │
+└────────────────────────────────────────────┘
 ```
-
-### Fabrics Dropdown (opens on hover)
-```
-┌──────────────────────────────────────────────────────┐
-│  BreezePlus  │  CloudSoft  │  PremaCotton  │  EcoLuxe │
-└──────────────────────────────────────────────────────┘
-```
-
-### Mobile Header (screen width < 768px)
-```
-┌──────────────────────────────────────┐
-│  [Logo]                   [🛒] [☰]  │
-└──────────────────────────────────────┘
-```
-- Tapping `☰` (hamburger icon) opens a full-screen slide-in drawer from the right
+- Hamburger far left, logo centered, actions right
+- Nav hidden — replaced by hamburger drawer
+- Icons: 18px default, 16px on smallest screens (≤480px)
+- Drawer slides in from **left** (matches hamburger position)
 - Drawer contains all navigation links in a vertical list
 - Tapping anywhere outside the drawer closes it
 
 ### TH / EN Language Toggle
-- Shown in header top-right (desktop) and inside mobile drawer
+- Shown in header top-right (desktop and mobile)
+- Not duplicated inside mobile drawer
 - Clicking TH → goes to `/th/` version of the current page
 - Clicking EN → goes to the English version
 - Current language is highlighted in blue
 
 ### Cart Icon
-- Shows item count badge: `🛒 2` when cart has 2 items
-- Clicking opens a mini cart drawer from the right side
-- Shows item names, quantities, and total price
-- "Checkout" button at the bottom
+- Shows item count badge (blue circle, white text) when cart has items
+- Clicking links to `/checkout/` (cart drawer built in Phase 4)
+- Account icon links to `/account/` (placeholder for Phase 5)
+- Search icon opens full-screen search overlay
 
 ---
 
@@ -272,31 +257,19 @@ These are the visual rules Droid will code into `main.css`. No decisions needed 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│  [MildMate Logo]     Shop          Info        Contact      │
-│  Custom bedding      Marine        About       💬 LINE      │
-│  made in Thailand    Family        Fabric      📱 WhatsApp  │
-│                      Duvet         Size Guide  📘 Facebook  │
-│  [Email input]       Protection    Blog                     │
-│  [Subscribe btn]     All Products  Shipping    Marketplaces │
-│                                    Privacy     🛍️ Etsy      │
-│                                    Reviews     🛒 eBay      │
-│                                    FAQ         🛍️ Shopee    │
-│                                                📦 Lazada    │
-│                                                🎵 TikTok    │
-│                                                             │
+│  Quick Links   Customer Service   Shop With Us     Contact  │
+│  ─────────────────────────────────────────────────────────  │
+│  About Us      FAQ                [Etsy][eBay]     ✉ email │
+│  Contact Us    Size Guide         [Shopee][Lazada] ☎ phone │
+│  Reviews       Blog                                     [WA][LINE] │
 ├─────────────────────────────────────────────────────────────┤
-│  © 2026 MildMate. All rights reserved.  |  TH  |  EN       │
-│  Privacy Policy  |  Shipping Policy                        │
+│           [FB] [IG] [TikTok] [Pinterest] [YouTube]         │
+├─────────────────────────────────────────────────────────────┤
+│  © MildMate 2026          Privacy Policy | Shipping        │
 └─────────────────────────────────────────────────────────────┘
-
-[LINE green sticky bar — visible on mobile only]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  💬 Chat with us on LINE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-> The green LINE sticky bar at the bottom is preserved from your existing site. It only shows on mobile screens (under 768px wide), matching the current behavior.
+> **Footer style:** Minimal, modern, premium. No logo or description block. Icon-only marketplace links (Etsy, eBay, Shopee, Lazada) with circular hover buttons. Social icons centered in their own row. LINE/WhatsApp icon-only buttons under phone number. Deep navy #001d3d background.
 
 ---
 
@@ -518,16 +491,17 @@ Go through this checklist before moving to Phase 4:
 - [ ] Mega-menu opens when hovering "Shop" on desktop
 - [ ] Fabrics dropdown opens when hovering "Fabrics" on desktop
 - [ ] Header shrinks when scrolling down the page
-- [ ] Mobile view shows hamburger icon `☰`
-- [ ] Tapping `☰` opens the slide-in navigation drawer
-- [ ] TH/EN toggle visible in header
-- [ ] Cart icon visible in header
+- [ ] Mobile view shows hamburger icon `☰` on far left
+- [ ] Tapping `☰` opens slide-in drawer from the **left**
+- [ ] TH/EN toggle visible in header (desktop and mobile)
+- [ ] Account, search, and cart icons visible in header
 - [ ] Footer shows all 4 columns with correct links
-- [ ] Email subscribe input box in footer visible (backend in Phase 5)
-- [ ] LINE sticky widget appears at bottom on mobile view only
-- [ ] Header and footer appear on `http://localhost:8788/mattress-size-th/`
+- [ ] Footer marketplace icons are icon-only (no text labels)
+- [ ] Social icons centered in footer row
+- [ ] No LINE sticky widget (removed for international positioning)
+- [ ] Header and footer appear on `http://localhost:8788/`
 - [ ] Brand color `#2c96f4` used on buttons and hover states
-- [ ] Prompt font loads correctly (text looks rounded and clean)
+- [ ] Quicksand font loads correctly (text looks rounded and clean)
 
 ---
 
@@ -543,13 +517,14 @@ Go through this checklist before moving to Phase 4:
 | Contact link not in footer | Tell Droid: "The [LINE/WhatsApp/Facebook] link is not appearing in the footer Contact column." |
 | Marketplace link not in footer | Tell Droid: "The [Etsy/eBay/Shopee/Lazada/TikTok] link is not appearing in the footer Marketplaces column." |
 | Navigation label in wrong language | Tell Droid: "The navigation item '[label]' should say '[correct label]' in [TH/EN]." |
-| Footer tagline missing | Tell Droid: "The footer tagline is not showing under the logo." |
-| Mega-menu doesn't open | Tell Droid: "The Shop dropdown is not opening on hover." |
-| Mobile drawer doesn't slide in | Tell Droid: "The hamburger menu is not working on mobile." |
-| Prompt font not loading | The font loads from Google Fonts and requires internet. Check your internet connection and refresh. |
-| LINE widget shows on desktop | Tell Droid: "The LINE widget is showing on desktop — it should only show on screens under 768px wide." |
+| Footer logo/description showing | Tell Droid: "The footer still shows a logo or description block — it should be minimal with only 4 columns of links." |
+| Marketplace icons showing text labels | Tell Droid: "Marketplace links in the footer are showing text labels — they should be icon-only circles." |
+| Mobile drawer slides from right | Tell Droid: "The hamburger drawer is sliding in from the right — it should slide from the left to match the hamburger position." |
+| LINE widget showing | LINE sticky bar was removed for international positioning. It should not appear on any screen size. |
+| Quicksand font not loading | The font loads from Google Fonts and requires internet. Check your internet connection and refresh. |
 | Footer columns stacked on desktop | Tell Droid: "Footer columns are not in a row on desktop — they are stacking vertically." |
 | Header not shrinking on scroll | Tell Droid: "The sticky header is not shrinking when I scroll down." |
+| Account/cart icons not visible | Tell Droid: "The account and cart icons are not showing in the header." |
 
 ---
 
@@ -563,7 +538,7 @@ These are not locked in until you approve them:
 | Footer column links | As shown in footer layout above | Tell Droid which links to add/remove |
 | Header height | 83px → 60px on scroll | Tell Droid a different size |
 | Cart icon style | Simple bag icon with count badge | Tell Droid if you prefer a different style |
-| Mobile drawer direction | Slides in from right | Tell Droid "slide from left" if preferred |
+| Mobile drawer direction | Slides in from left (matches hamburger position) | Tell Droid "slide from right" if preferred |
 
 ---
 

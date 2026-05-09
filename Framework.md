@@ -87,21 +87,36 @@
 ## Site Layout Blueprint
 
 ### Header (Sticky)
+
+**Desktop (≥1025px):**
 ```
-┌─────────────────────────────────────────────────────┐
-│ [Logo]   [Nav Menu]              [TH/EN] [🛒 Cart]  │
-└─────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│ [Logo 64px]   [Home] [Shop] [Fabrics] [Size Guide]   [🔍][👤][🛒][EN/TH] │
+└────────────────────────────────────────────────────────────┘
 ```
-- Logo left, nav center, language toggle + cart icon right
-- Sticky on scroll (shrinks from 83px → 60px)
-- Mobile: hamburger menu → slide-in drawer
+- Logo left, nav center, actions right
+- Sticky on scroll (shrinks from 80px → 60px)
+- Nav text: 1.2rem, weight 600, Quicksand
+- Actions: Search → Account → Cart → EN/TH
+- Icons: 20px inline SVGs, blue hover
+
+**Mobile (≤1024px):**
+```
+┌──────────────────────────────────────────┐
+│ [☰]        [   Logo (centered)   ]   [🔍][👤][🛒][EN/TH] │
+└──────────────────────────────────────────┘
+```
+- Hamburger far left, logo centered, actions right
+- Nav hidden — replaced by hamburger drawer
+- Icons: 18px default, 16px on ≤480px
+- Drawer slides in from **left**
 
 ### Navigation Menu
 ```
-Home | Shop ▾ | Fabrics ▾ | Blog | Size Guide | About | Contact
+Home | Shop | Fabrics | Size Guide
 ```
 
-**Shop Mega-Dropdown:**
+**Simplified nav (no dropdowns in current build):**
 ```
 ┌─────────────────────────────────────────────────┐
 │ Marine & Yacht    │ Family & Co-Sleep            │
@@ -447,25 +462,22 @@ Sidebar: Dashboard | Products | Orders | Images | Subscribers
 
 ### Footer Layout
 
+**Minimal, modern, premium style — deep navy #001d3d background**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ [Logo + tagline]  │ Shop         │ Info       │ Contact     │
-│                   │ Marine       │ About      │ 💬 LINE     │
-│ [Email signup]    │ Family       │ Fabric     │ 📱 WhatsApp │
-│                   │ Duvet        │ Size Guide │ 📘 Facebook │
-│                   │ Protection   │ Blog       │             │
-│                   │ All Products │ Shipping   │ Marketplaces│
-│                   │              │ Privacy    │ 🛍️ Etsy    │
-│                   │              │ Reviews    │ 🛒 eBay    │
-│                   │              │ FAQ        │ 🛍️ Shopee  │
-│                   │              │            │ 📦 Lazada  │
-│                   │              │            │ 🎵 TikTok  │
+│  Quick Links   Customer Service   Shop With Us     Contact  │
+│  ─────────────────────────────────────────────────────────  │
+│  About Us      FAQ                [Etsy][eBay]     ✉ email │
+│  Contact Us    Size Guide         [Shopee][Lazada] ☎ phone │
+│  Reviews       Blog                                     [WA][LINE] │
 ├─────────────────────────────────────────────────────────────┤
-│ © MildMate 2026 | TH | EN | Privacy Policy | Shipping      │
-│ [LINE green sticky bar — mobile only]                       │
+│           [FB] [IG] [TikTok] [Pinterest] [YouTube]         │
+├─────────────────────────────────────────────────────────────┤
+│  © MildMate 2026          Privacy Policy | Shipping        │
 └─────────────────────────────────────────────────────────────┘
 ```
-> LINE sticky widget (mobile only) matches current site behavior.
+> **Design rules:** No logo or description block. Icon-only marketplace links (44px circles, 22px icons, blue hover). Social icons centered in their own row (same circular style). LINE/WhatsApp icon-only buttons under phone number. No LINE sticky bar (removed for international positioning).
 
 ---
 
