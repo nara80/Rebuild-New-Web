@@ -81,4 +81,43 @@
   } catch (e) {
     updateCartCount(0);
   }
+
+  /* ── 5. Search overlay toggle ────────────── */
+  const searchBtn = document.querySelector('.search-btn');
+  const searchOverlay = document.querySelector('.search-overlay');
+  const searchClose = document.querySelector('.search-close');
+
+  function openSearch() {
+    if (searchOverlay) {
+      searchOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      const input = searchOverlay.querySelector('input');
+      if (input) input.focus();
+    }
+  }
+
+  function closeSearch() {
+    if (searchOverlay) {
+      searchOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  if (searchBtn) {
+    searchBtn.addEventListener('click', openSearch);
+  }
+
+  if (searchClose) {
+    searchClose.addEventListener('click', closeSearch);
+  }
+
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', function (e) {
+      if (e.target === searchOverlay) closeSearch();
+    });
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeSearch();
+  });
 })();

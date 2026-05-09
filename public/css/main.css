@@ -291,23 +291,29 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 }
 
 .cart-btn,
-.account-btn {
+.account-btn,
+.search-btn {
   position: relative;
   color: var(--color-text);
   padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .cart-btn svg,
-.account-btn svg {
+.account-btn svg,
+.search-btn svg {
   width: 20px;
   height: 20px;
 }
 
 .cart-btn:hover,
-.account-btn:hover {
+.account-btn:hover,
+.search-btn:hover {
   color: var(--color-primary);
 }
 
@@ -456,6 +462,85 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 
 .mobile-submenu li a:hover {
   color: var(--color-primary);
+}
+
+/* ── 9.5 Search Overlay ──────────────────── */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.98);
+  z-index: 1003;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 120px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.search-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.search-overlay-inner {
+  width: 100%;
+  max-width: 640px;
+  padding: 0 24px;
+  position: relative;
+}
+
+.search-close {
+  position: absolute;
+  top: -56px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-close:hover {
+  color: var(--color-primary);
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.search-form input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 1.25rem;
+  font-family: var(--font-main);
+  color: var(--color-text);
+  outline: none;
+}
+
+.search-form input::placeholder {
+  color: var(--color-muted);
+}
+
+.search-form button {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
 }
 
 /* ── 10. Main Content ────────────────────── */
