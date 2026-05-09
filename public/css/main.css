@@ -293,9 +293,17 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 .cart-btn,
 .account-btn {
   position: relative;
-  font-size: 1.25rem;
   color: var(--color-text);
   padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-btn svg,
+.account-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .cart-btn:hover,
