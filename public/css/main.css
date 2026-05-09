@@ -761,10 +761,23 @@ main {
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: #fff;
   padding: 80px 24px;
   overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/images/Hero01.png') center center / cover no-repeat;
+  z-index: 0;
+}
+
+.hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 150, 244, 0.72);
 }
 
 .hero-content {
@@ -783,9 +796,10 @@ main {
 
 .hero-sub {
   font-size: 1.125rem;
+  font-weight: 400;
   opacity: 0.95;
   margin-bottom: 32px;
-  max-width: 560px;
+  max-width: 640px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -803,8 +817,8 @@ main {
 }
 
 .hero-actions .btn-primary:hover {
-  background: #f0f7ff;
-  color: var(--color-primary-dark);
+  background: #fff;
+  color: var(--color-primary);
 }
 
 .hero-actions .btn-outline {
