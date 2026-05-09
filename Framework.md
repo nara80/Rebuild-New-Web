@@ -21,7 +21,7 @@
 --color-bg: #ffffff;
 --color-surface: #f8f9fa;
 --color-border: #e5e7eb;
---font-main: 'Prompt', sans-serif;
+--font-main: 'Quicksand', sans-serif;
 --radius: 8px;
 --shadow: 0 2px 12px rgba(0,0,0,0.08);
 ```

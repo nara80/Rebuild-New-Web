@@ -12,7 +12,7 @@
   --color-border: #e5e7eb;
   --color-muted: #6b7280;
   --color-line: #00b900;
-  --font-main: 'Prompt', sans-serif;
+  --font-main: 'Quicksand', sans-serif;
   --radius: 8px;
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
@@ -116,13 +116,13 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 }
 
 .logo-link img {
-  max-height: 50px;
+  max-height: 64px;
   width: auto;
   transition: max-height var(--transition);
 }
 
 .site-header.scrolled .logo-link img {
-  max-height: 40px;
+  max-height: 50px;
 }
 
 /* ── 6. Navigation ─────────────────────────── */
@@ -143,13 +143,14 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 }
 
 .nav-link {
-  font-size: 0.9375rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: var(--color-text);
   padding: 8px 0;
   display: flex;
   align-items: center;
   gap: 4px;
+  text-decoration: none;
 }
 
 .nav-link:hover {
@@ -387,12 +388,10 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 }
 
 .mobile-nav-list li a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 0;
-  font-size: 1rem;
-  font-weight: 500;
+  display: block;
+  padding: 10px 0;
+  font-size: 1.35rem;
+  font-weight: 600;
   color: var(--color-text);
 }
 
@@ -434,6 +433,7 @@ main {
 }
 
 /* ── 11. Footer ────────────────────────────── */
+/* ── 11. Footer ────────────────────────────── */
 .site-footer {
   background: #001d3d;
   color: #ffffff;
@@ -445,23 +445,16 @@ main {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 40px;
-  margin-bottom: 40px;
+  margin-bottom: 0;
 }
 
 .footer-col h4 {
   color: #ffffff;
   font-weight: 600;
   text-transform: uppercase;
-  margin-bottom: 25px;
-  letter-spacing: 1px;
-  font-size: 16px;
-}
-
-.footer-col p {
-  line-height: 1.6;
-  font-weight: 400;
   margin-bottom: 20px;
-  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 1px;
+  font-size: 14px;
 }
 
 .footer-col ul {
@@ -471,97 +464,102 @@ main {
 }
 
 .footer-col ul li {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.footer-col a {
-  color: #ffffff;
+.footer-col ul li a {
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   font-weight: 500;
-  display: flex;
+  font-size: 0.9375rem;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   transition: color 0.3s;
 }
 
-.footer-col a:hover {
+.footer-col ul li a:hover {
   color: var(--color-primary);
 }
 
-.footer-col a:hover .footer-icon-svg {
+.footer-col ul li a:hover .footer-icon-svg {
   color: var(--color-primary);
-}
-
-/* Footer icon images — PNGs are white-on-transparent, no filter needed */
-.footer-icon-img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
 }
 
 /* Inline SVG icons in footer (email, phone) — white stroke */
 .footer-icon-svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   color: #ffffff;
 }
 
-/* Logo — PNG is white-on-transparent, no filter needed */
-.footer-logo {
-  margin-bottom: 15px;
-  display: block;
-  max-height: 45px;
-  width: auto;
-}
-
-.tagline {
-  font-size: 13px;
-  font-weight: 400;
-  margin-bottom: 20px;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* Social icons row */
-.social-row {
+/* Icon-only grid (marketplaces + contact apps) */
+.footer-icons-grid {
   display: flex;
-  gap: 15px;
-  margin-top: 15px;
-}
-
-.social-row a {
-  display: block;
-}
-
-/* Marketplace section — plain links, no rectangle frames */
-.marketplace-box {
-  margin-top: 30px;
-}
-
-.marketplace-grid {
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 12px;
-  margin-top: 15px;
 }
 
-.marketplace-grid a {
-  display: inline-flex;
+.footer-icons-grid.contact-icons {
+  margin-top: 20px;
+}
+
+.footer-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
   align-items: center;
-  gap: 10px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.875rem;
-  font-weight: 500;
+  justify-content: center;
+  transition: transform 0.25s ease, background 0.25s ease;
 }
 
-.marketplace-grid a:hover {
-  color: var(--color-primary);
+.footer-icon-circle:hover {
+  transform: scale(1.12);
+  background: var(--color-primary);
+}
+
+.footer-icon-circle img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* Centered social row */
+.footer-social-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin: 40px 0 30px;
+}
+
+.footer-social-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.footer-social-icon:hover {
+  transform: scale(1.12);
+  background: var(--color-primary);
+}
+
+.footer-social-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
 }
 
 /* ── 12. Footer Bottom Bar ────────────────── */
 .footer-bottom {
-  margin-top: 50px;
   padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
@@ -717,6 +715,14 @@ main {
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 32px;
+  }
+
+  .footer-icons-grid {
+    justify-content: center;
+  }
+
+  .footer-icons-grid.contact-icons {
+    justify-content: flex-start;
   }
 
   .footer-bottom {

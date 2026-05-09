@@ -200,7 +200,7 @@ These are the visual rules Droid will code into `main.css`. No decisions needed 
 | H3 | 1.25rem | Semi-bold (600) | Card titles |
 | Body | 1rem | Regular (400) | All paragraph text |
 | Small | 0.875rem | Regular (400) | Labels, captions, meta |
-| Font Family | `Prompt` (Google Fonts) | — | All text, matching existing site |
+| Font Family | `Quicksand` (Google Fonts) | — | All text, matching existing site |
 
 ### Spacing & Shapes
 - Border radius: `8px` on cards and buttons
