@@ -758,11 +758,12 @@ main {
   position: relative;
   min-height: 560px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   text-align: center;
   color: #fff;
   padding: 80px 24px;
+  padding-bottom: 120px;
   overflow: hidden;
 }
 
@@ -1633,6 +1634,7 @@ main {
   .hero {
     min-height: 420px;
     padding: 60px 16px;
+    padding-bottom: 80px;
   }
 
   .hero h1 {
