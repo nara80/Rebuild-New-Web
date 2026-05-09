@@ -340,6 +340,8 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
   gap: 5px;
   padding: 8px;
   z-index: 1002;
+  order: 99;
+  margin-left: auto;
 }
 
 .hamburger span {
@@ -876,5 +878,21 @@ main {
 @media (max-width: 480px) {
   .container {
     padding: 0 16px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .cart-btn svg,
+  .account-btn svg,
+  .search-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .lang-toggle {
+    font-size: 0.6875rem;
+    padding: 2px 4px;
   }
 }
