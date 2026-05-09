@@ -290,14 +290,16 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
   color: var(--color-primary);
 }
 
-.cart-btn {
+.cart-btn,
+.account-btn {
   position: relative;
   font-size: 1.25rem;
   color: var(--color-text);
   padding: 6px;
 }
 
-.cart-btn:hover {
+.cart-btn:hover,
+.account-btn:hover {
   color: var(--color-primary);
 }
 

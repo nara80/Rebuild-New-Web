@@ -54,8 +54,9 @@
 | Shipping Policy | `/shipping/` | Rates, regions, transit times |
 | Privacy Policy | `/policy/` | GDPR-compatible policy |
 | Customer Reviews | `/reviews/` | Curated reviews + rating badge |
-| Checkout | `/checkout/` | 3-step guest checkout |
+| Checkout | `/checkout/` | 3-step guest checkout (guest or logged-in) |
 | Order Confirmed | `/order-confirmed/` | Post-payment confirmation |
+| My Account | `/account/` | Order history, saved addresses, social login |
 | All 258 WordPress URLs | various | Preserved from Phase 2 |
 
 ### Blog Pages (static HTML, managed manually)
@@ -402,16 +403,25 @@ Covers: data collected, usage, cookies, third parties (Stripe, MailChannels), ri
   Items, dimensions, fabric, price
   Currency toggle (THB / USD)
   Note: "Prices shown exclude shipping — rates calculated at payment"
+  Optional: "Sign in for faster checkout" (social login buttons)
 
-[STEP 2: GUEST DETAILS]  ← email captured HERE for abandoned cart
+[STEP 2: SHIPPING DETAILS]  ← email captured HERE for abandoned cart
   Name | Email | Phone | Shipping Address
   Custom notes (special shape description)
+  Post-checkout prompt: "Create account to save your measurements"
 
 [STEP 3: PAYMENT]
   → Stripe Checkout (hosted, redirects to Stripe)
   TH visitors: PromptPay QR via Stripe
   Global: Card / Apple Pay / Google Pay
 ```
+
+**Social Login (Optional — No Forced Login):**
+- Customers can check out as guests without any login
+- Social login buttons shown at checkout and in header for convenience
+- Supported providers: Google, Facebook, LINE (Thailand essential), Apple
+- Logging in pre-fills shipping details and saves order history
+- Account creation is encouraged *after* purchase, not required before
 
 ### 14. Admin Dashboard (`/admin/`) — protected by Cloudflare Access
 
@@ -482,6 +492,7 @@ mildmate-web/
 │   ├── reviews/index.html
 │   ├── checkout/index.html
 │   ├── order-confirmed/index.html
+│   ├── account/index.html          ← My Account (order history, social login)
 │   ├── products/index.html
 │   ├── marine/index.html            ← Category page (dynamic from D1)
 │   ├── family/index.html
@@ -527,7 +538,9 @@ mildmate-web/
 │   │   ├── checkout.ts
 │   │   ├── webhook.ts
 │   │   ├── email.ts
-│   │   └── subscribers.ts
+│   │   ├── subscribers.ts
+│   │   ├── auth.ts                  ← Social login (Google, Facebook, LINE, Apple)
+│   │   └── customers.ts             ← Customer profile, order history, saved addresses
 │   ├── admin/
 │   │   ├── products.ts
 │   │   ├── orders.ts
@@ -616,6 +629,18 @@ CREATE TABLE subscribers (
   source TEXT,                    -- 'footer', 'checkout'
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- Customers (social login accounts — optional)
+CREATE TABLE customers (
+  id INTEGER PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  phone TEXT,
+  auth_provider TEXT,             -- 'google', 'facebook', 'line', 'apple'
+  auth_provider_id TEXT,          -- ID from provider
+  addresses TEXT,                 -- JSON array of saved addresses
+  created_at TEXT DEFAULT (datetime('now'))
+);
 ```
 
 ---
@@ -628,7 +653,7 @@ CREATE TABLE subscribers (
 | **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` | ⏸️ Deferred — runs pre-launch after Phase 7 |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | 🔄 In Progress |
 | **4** | All Content Pages | Homepage, Blog, About, Contact, Fabric Collections, Policy pages, Reviews, Product pages, Configurator (both modes) | ⏸️ Pending |
-| **5** | Checkout + Stripe | Guest form → Stripe → order saved → confirmation email | ⏸️ Pending |
+| **5** | Checkout + Stripe + Social Login | Guest checkout + Stripe payments + optional social login (Google, Facebook, LINE, Apple) + My Account page | ⏸️ Pending |
 | **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels | ⏸️ Pending |
 | **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export | ⏸️ Pending |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
@@ -648,7 +673,6 @@ CREATE TABLE subscribers (
 ---
 
 ## What Is NOT Being Built (Deferred or Out of Scope)
-- Customer login / account pages
 - Blog CMS editor (static HTML only — blog posts are manually authored HTML files)
 - Inventory management
 - Auto-translation (manual TH/EN per page)

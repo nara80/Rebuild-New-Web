@@ -1,7 +1,7 @@
-# Phase 5 — Checkout + Stripe Payments
-**Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase. Thai visitors pay via PromptPay QR code. International visitors pay by card, Apple Pay, or Google Pay. Every successful payment automatically saves the order to your database and sends confirmation emails.
+# Phase 5 — Checkout + Stripe Payments + Social Login
+**Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase. Thai visitors pay via PromptPay QR code. International visitors pay by card, Apple Pay, or Google Pay. Every successful payment automatically saves the order to your database and sends confirmation emails. Customers can check out as guests or log in via social accounts (Google, Facebook, LINE, Apple) to save their order history and shipping addresses.
 
-**End Result:** A complete 3-step guest checkout. You can do a real test purchase and see the order appear in your database, receive a "New Order" notification email, and the customer receives an order confirmation — all automatically.
+**End Result:** A complete 3-step guest checkout with optional social login. You can do a real test purchase and see the order appear in your database, receive a "New Order" notification email, and the customer receives an order confirmation — all automatically. Logged-in customers can view their order history and re-order custom sizes quickly.
 
 **Time Estimate:** 45–60 minutes (most of your time is in Stripe dashboard setup — Droid handles all the code)
 
@@ -106,6 +106,24 @@ MailChannels sends emails on behalf of your domain. The "From" field in all cust
 
 ---
 
+### Requirement 7 — Social Login Provider Credentials (Optional but Recommended)
+
+Customers can check out as guests without logging in. Social login is optional — it lets returning customers save their shipping addresses and view order history.
+
+**Supported providers:**
+| Provider | Why | What You Need |
+|---|---|---|
+| **Google** | Universal, most customers have it | Google Cloud Console → OAuth 2.0 Client ID |
+| **Facebook** | Very popular in Thailand | Facebook Developers → App ID + App Secret |
+| **LINE** | **Essential** — #1 app in Thailand | LINE Developers → Channel ID + Channel Secret |
+| **Apple** | Nice-to-have for iPhone users | Apple Developer → Services ID + Key ID |
+
+**You do NOT need all four.** Start with Google + LINE (covers most Thai and international customers). Facebook and Apple can be added later without rebuilding.
+
+**If you want to skip social login for now:** Tell Droid "Skip social login — build guest checkout only." The checkout works perfectly without it. Social login can be added in a future update.
+
+---
+
 ## How the Payment Flow Works (Plain English)
 
 Understanding this flow helps you know what to check during testing:
@@ -142,12 +160,16 @@ Shows: "Order Confirmed" page
 
 | File | What It Is |
 |---|---|
-| `public/checkout/index.html` | 3-step checkout page (Cart Review → Guest Details → Payment) |
+| `public/checkout/index.html` | 3-step checkout page (Cart Review → Shipping Details → Payment) with optional social login |
 | `public/order-confirmed/index.html` | Success page shown after payment |
+| `public/account/index.html` | My Account page — order history, saved addresses, social login buttons |
 | `workers/api/checkout.ts` | Creates a Stripe payment session |
 | `workers/api/webhook.ts` | Receives Stripe payment confirmation → saves order → sends emails |
 | `workers/api/email.ts` | MailChannels email helper (customer receipt + team notification) |
 | `workers/api/subscribers.ts` | Saves email signups to D1 subscribers table |
+| `workers/api/auth.ts` | Social login handler (Google, Facebook, LINE, Apple OAuth) |
+| `workers/api/customers.ts` | Customer profile API — order history, saved addresses, re-order |
+| `public/js/auth.js` | Client-side auth state, login buttons, account menu toggle |
 
 ---
 
@@ -305,10 +327,10 @@ MailChannels sends emails on your behalf. You need to decide what the "From" fie
 
 ### Step 5.8 — Tell Droid to Build Phase 5
 
-Once all 6 requirements are ready and your Stripe keys are stored as Cloudflare secrets (Step 5.5), hand off to Droid.
+Once all requirements are ready and your Stripe keys are stored as Cloudflare secrets (Step 5.5), hand off to Droid.
 
 **Tell Droid:**
-> "Phase 4 is complete. Please build Phase 5 — the checkout and Stripe payment integration.
+> "Phase 4 is complete. Please build Phase 5 — the checkout, Stripe payment integration, and social login.
 >
 > **Requirement 1:** Phase 4 confirmed complete — configurator works and cart is functional.
 > **Requirement 2:** Stripe account is [already set up / just created in Step 5.1].
@@ -319,16 +341,20 @@ Once all 6 requirements are ready and your Stripe keys are stored as Cloudflare 
 > - STRIPE_WEBHOOK_SECRET ✓
 > **Requirement 5 — Order notification email:** [your email]
 > **Requirement 6 — Email sender:** [Sender Name] <[sender address]>
+> **Requirement 7 — Social login:** [Build with Google + LINE / Skip for now — add later]
 >
-> Build the 3-step checkout page, Stripe session Worker, webhook Worker, MailChannels email system, and the Order Confirmed page."
+> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, MailChannels email system, My Account page, and the Order Confirmed page."
 
 **What Droid builds:**
-1. `public/checkout/index.html` — 3-step checkout UI
-2. `workers/api/checkout.ts` — Stripe session creator
-3. `workers/api/webhook.ts` — payment confirmation handler
-4. `workers/api/email.ts` — MailChannels email sender
-5. `public/order-confirmed/index.html` — success page
-6. Email templates for customer receipt and team notification
+1. `public/checkout/index.html` — 3-step checkout UI with optional social login buttons
+2. `public/account/index.html` — My Account page (order history, saved addresses)
+3. `workers/api/checkout.ts` — Stripe session creator
+4. `workers/api/webhook.ts` — payment confirmation handler
+5. `workers/api/email.ts` — MailChannels email sender
+6. `workers/api/auth.ts` — Social login handler (Google, Facebook, LINE, Apple)
+7. `workers/api/customers.ts` — Customer profile and order history API
+8. `public/order-confirmed/index.html` — success page
+9. Email templates for customer receipt and team notification
 
 ---
 

@@ -73,7 +73,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | 🔄 In Progress | Header, footer, CSS, nav.js |
 | 4 — Homepage + Products | ⏸️ Pending | Real content, configurator, cart |
-| 5 — Checkout + Stripe | ⏸️ Pending | 3-step checkout, webhooks, emails |
+| 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
 | 8 — Launch | ⏸️ Pending | DNS cutover, testing, sitemap |
