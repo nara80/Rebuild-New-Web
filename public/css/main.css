@@ -790,7 +790,7 @@ main {
 .hero h1 {
   font-size: 2.75rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-primary);
   margin-bottom: 16px;
   line-height: 1.15;
 }
