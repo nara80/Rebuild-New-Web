@@ -383,13 +383,13 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 .mobile-drawer {
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
   width: 320px;
   max-width: 85vw;
   height: 100vh;
   background: var(--color-bg);
   z-index: 999;
-  transform: translateX(100%);
+  transform: translateX(-100%);
   transition: transform 0.3s ease;
   overflow-y: auto;
   padding: 24px;
