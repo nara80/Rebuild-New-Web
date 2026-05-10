@@ -16,25 +16,25 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ## Homepage EN (`/`) — Section by Section
 
-### 1. Hero Section
-- [ ] Headline reads: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
-- [ ] Sub-headline visible underneath
-- [ ] Two CTA buttons visible: "Shop Custom Bedding" + "Measure My Mattress"
-- [ ] Hero background is CI blue gradient (placeholder — **replace with your photo**)
-- [ ] Buttons are clickable and link to correct pages
-- [ ] **Mobile:** Text readable, buttons stack vertically
-- [ ] **Mobile:** No horizontal scroll
+### 1. Hero Section ✅ Verified
+- [x] Headline reads: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
+- [x] Sub-headline visible underneath
+- [x] Two CTA buttons visible: "Shop Custom Bedding" + "Measure My Mattress"
+- [x] Hero background is CI blue gradient (placeholder — **replace with your photo**)
+- [x] Buttons are clickable and link to correct pages
+- [x] **Mobile:** Text readable, buttons stack vertically
+- [x] **Mobile:** No horizontal scroll
 
 > **Action needed:** Provide hero lifestyle photo (1200px+ wide) → rename to `hero-bg.jpg` → place at `public/images/hero-bg.jpg`
 
 ---
 
-### 2. Trust Bar
-- [ ] 4 trust items in a row on desktop
-- [ ] Icons visible (compass, plane, award, leaf)
-- [ ] Labels read: Precision Fit Guarantee, Global Express Delivery, Top-Rated Etsy Boutique, Sensitive Skin Friendly
-- [ ] **Mobile:** stacks 2×2 grid
-- [ ] **Tablet:** 4 items in a row or 2×2
+### 2. Trust Bar ✅ Verified
+- [x] 4 trust items in a row on desktop
+- [x] Icons visible (compass, plane, award, leaf)
+- [x] Labels read: Precision Fit Guarantee, Global Express Delivery, Top-Rated Etsy Boutique, Sensitive Skin Friendly
+- [x] **Mobile:** stacks 2×2 grid
+- [x] **Tablet:** 4 items in a row or 2×2
 
 ---
 
@@ -53,44 +53,44 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 4. Top Products
-- [ ] 5 product cards visible in horizontal scroll row
-- [ ] Each card has: placeholder image + title + price + "Customize" button
-- [ ] Prices show in USD (or THB if you're browsing from Thailand)
-- [ ] "Customize" buttons link to correct product detail paths
-- [ ] Horizontal scroll works on mobile (swipe left/right)
-- [ ] **Mobile:** cards are swipeable, not squished
+### 4. Top Products ✅ Verified
+- [x] 5 product cards visible in horizontal scroll row
+- [x] Each card has: real product image + title + price + "Customize" button
+- [x] Prices show in USD (or THB if you're browsing from Thailand)
+- [x] "Customize" buttons link to correct product detail paths
+- [x] Horizontal scroll works on mobile (swipe left/right)
+- [x] **Mobile:** cards are swipeable, not squished
 
 > **Action needed:** Download product photos from Etsy → rename to match slugs → place in `public/images/products/`
 > Priority 5: 3-Sided Zipper Duvet, Family Sheet, Marine V-Berth, RV Encasement, BedBridge
 
 ---
 
-### 5. Choose Your Solution (Router Section) ✅ Replaced Configurator
-- [ ] Headline reads: "Built for Your Unique Space."
-- [ ] 4 router cards visible: Marine & Yacht, Family Beds, Duvet Covers, Specialized Protection
-- [ ] Each card shows placeholder visual + title + description + CTA button
-- [ ] Each card links to the correct product category page
-- [ ] Card hover effect works (lift + shadow)
-- [ ] **Mobile:** cards stack vertically (1 column)
+### 5. Choose Your Solution (Router Section) ✅ Verified
+- [x] Headline reads: "Built for Your Unique Space"
+- [x] 4 router cards visible: Marine & Yacht, Family Beds, Duvet Covers, Specialized Protection
+- [x] Each card shows placeholder visual + title + description + CTA button
+- [x] Each card links to the correct product category page
+- [x] Card hover effect works (lift + shadow)
+- [x] **Mobile:** cards stack vertically (1 column)
 
 #### Measurement Blueprint Trust Block
-- [ ] Icon visible (ruler/blueprint)
-- [ ] Text reads: "Worried about measuring? Don't be..."
-- [ ] Block has left blue border accent
-- [ ] Centered below the router cards
+- [x] Icon visible (ruler/blueprint)
+- [x] Text reads: "Worried about measuring? Don't be..."
+- [x] Block has left blue border accent
+- [x] Centered below the router cards
 
 > **Note:** Configurator removed from homepage. Each product page now has its own specific formula (Sheet: W/L/D, Duvet: W/L, Marine: Head/Bottom/Width/Depth, etc.).
 
 ---
 
-### 6. Fabric Showcase
-- [ ] 4 tabs: BreezePlus, CloudSoft, PremaCotton, EcoLuxe
-- [ ] Clicking each tab switches content panel
-- [ ] Each panel shows: fabric name, tagline, description, feature list, colors
-- [ ] Color swatches visible as circles
-- [ ] "Shop [Fabric]" button in each panel
-- [ ] **Mobile:** tabs wrap to 2 rows, panel stacks vertically
+### 6. Fabric Showcase ✅ Verified
+- [x] 4 tabs: BreezePlus, CloudSoft, PremaCotton, EcoLuxe
+- [x] Clicking each tab switches content panel
+- [x] Each panel shows: fabric name, tagline, description, feature list, colors
+- [x] Color swatches visible as circles
+- [x] "Shop [Fabric]" button in each panel
+- [x] **Mobile:** tabs horizontally scrollable, panel stacks vertically
 
 ---
 
@@ -262,13 +262,13 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-## Footer (All Pages)
-- [ ] 4 columns: Quick Links, Customer Service, Shop With Us, Contact
-- [ ] Marketplace icons (Etsy, eBay, Shopee, Lazada) in circles
-- [ ] Social row centered: Facebook, Instagram, TikTok, Pinterest, YouTube
-- [ ] Contact: email + phone + WhatsApp + LINE icons
-- [ ] Bottom bar: copyright + Privacy Policy + Shipping links
-- [ ] **Mobile:** columns stack vertically, icons center-aligned
+## Footer (All Pages) ✅ Verified
+- [x] 4 columns: Quick Links, Customer Service, Shop With Us, Contact
+- [x] Marketplace icons (Etsy, eBay, Shopee, Lazada) in circles
+- [x] Social row centered: Facebook, Instagram, TikTok, Pinterest, YouTube
+- [x] Contact: email + phone + WhatsApp + LINE icons
+- [x] Bottom bar: copyright + Privacy Policy + Shipping links
+- [x] **Mobile:** columns stack vertically, icons left-aligned
 
 ---
 
