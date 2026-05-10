@@ -1850,18 +1850,21 @@ main {
   .hero {
     min-height: 420px;
     justify-content: flex-start;
+    align-items: center;
     padding: 260px 16px 40px;
   }
 
   .hero h1 {
     font-size: 1.75rem;
     line-height: 1.2;
+    text-align: center;
     margin-bottom: 0;
   }
 
   .hero h1 span {
     font-size: 0.7em !important;
     display: block;
+    text-align: center;
     margin-top: 12px;
   }
 
@@ -1873,7 +1876,7 @@ main {
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    margin-top: 32px;
+    margin: 32px auto 0;
   }
 
   .hero-actions .btn {
