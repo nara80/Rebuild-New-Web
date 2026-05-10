@@ -1533,8 +1533,8 @@ main {
 }
 
 .fabric-colors {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, 32px);
   gap: 8px;
   margin-top: 12px;
 }

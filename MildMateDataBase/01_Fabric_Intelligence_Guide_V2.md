@@ -22,7 +22,7 @@ MildMate utilizes four premium fabric collections for Group 1 (Custom Bedding) a
 * **The Science**: Highly engineered 120 GSM double-brushed microfiber with a signature embossed pattern.
 * **Key Benefit**: **Moisture Resistance & Durability.** Resists salt air and ambient humidity. It is quick-drying and requires no ironing.
 * **Best For**: Marine, Yacht, and RV cabins; families with children seeking soft, stain-resistant bedding.
-* **Colors**: 12 Sophisticated Colors (Charcoal, Mint, Grey, Beige, Olive, Denim, Rose Gold, Lavender, etc.).
+* **Colors**: 12 Sophisticated Colors — Mint (#67E4D3), Charcoal (#5E5E5E), Grey (#A5A9B4), Sapphire (#385E9D), Forest (#486C6A), Denim (#1E4477), RoseGold (#D48C98), Beige (#E1D1B1), Ovaltine (#B99F87), White (#FFFFFF), Lavender (#9581B1), Olive (#93B09D).
 
 ### 3. PremaCotton Collection (The Purest Natural Choice)
 * **The Science**: 100% Pure Long-Staple Natural Cotton.
