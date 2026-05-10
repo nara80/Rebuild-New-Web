@@ -299,11 +299,11 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 | Family category | `public/images/categories/category-family.jpg` | ⬜ Need from you |
 | Duvet category | `public/images/categories/category-duvet.jpg` | ⬜ Need from you |
 | Protection category | `public/images/categories/category-protection.jpg` | ⬜ Need from you |
-| 3-Sided Zipper Duvet | `public/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg` | ⬜ Need from you |
-| Custom Family Sheet | `public/images/products/family-co-sleeping-solutions-th-size.jpg` | ⬜ Need from you |
-| Marine V-Berth | `public/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg` | ⬜ Need from you |
-| RV Encasement | `public/images/products/sheet-protectors.jpg` | ⬜ Need from you |
-| BedBridge | `public/images/products/tbar.jpg` | ⬜ Need from you |
+| 3-Sided Zipper Duvet | `public/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.png` | ✅ |
+| Custom Family Sheet | `public/images/products/family-co-sleeping-solutions-th-size.png` | ✅ |
+| Marine V-Berth | `public/images/products/product-boat-bedding-fitted-sheet-microfiber.png` | ✅ |
+| RV Encasement | `public/images/products/sheet-protectors.png` | ✅ |
+| BedBridge | `public/images/products/tbar.png` | ✅ |
 
 ---
 
