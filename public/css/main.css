@@ -1924,7 +1924,16 @@ main {
   }
 
   .hero h1 {
-    font-size: 1.625rem;
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .hero h1 span {
+    font-size: 0.7em !important;
+  }
+
+  .hero-sub {
+    display: none;
   }
 
   .hero-actions .btn {
