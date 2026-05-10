@@ -1310,6 +1310,112 @@ main {
   flex-wrap: wrap;
 }
 
+/* Router Section */
+.router-section {
+  background: var(--color-surface);
+}
+
+.router-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.router-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.router-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.router-visual {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.router-visual.marine { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; }
+.router-visual.family { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #9d174d; }
+.router-visual.duvet { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; }
+.router-visual.protection { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); color: #6b21a8; }
+
+.router-info {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.router-info h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.router-desc {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.router-info .btn {
+  width: 100%;
+  margin-top: auto;
+}
+
+/* Measurement Blueprint Trust Block */
+.blueprint-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  max-width: 720px;
+  margin: 0 auto;
+  border-left: 4px solid var(--color-primary);
+}
+
+.blueprint-block svg {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.blueprint-block p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.blueprint-block strong {
+  color: var(--color-primary);
+}
+
 /* Fabric Showcase Tabs */
 .fabric-tabs {
   display: flex;
@@ -1640,6 +1746,10 @@ main {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .router-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .configurator-body {
     grid-template-columns: 1fr;
   }
@@ -1804,6 +1914,10 @@ main {
   }
 
   .category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .router-grid {
     grid-template-columns: 1fr;
   }
 

@@ -66,41 +66,21 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 5. Custom Configurator (Most Important — Test Thoroughly)
-- [ ] Two tabs visible: "Fitted Bed Sheet" and "V-Berth Boat Sheet"
-- [ ] Clicking tabs switches the active tab (blue highlight)
+### 5. Choose Your Solution (Router Section) ✅ Replaced Configurator
+- [ ] Headline reads: "Built for Your Unique Space."
+- [ ] 4 router cards visible: Marine & Yacht, Family Beds, Duvet Covers, Specialized Protection
+- [ ] Each card shows placeholder visual + title + description + CTA button
+- [ ] Each card links to the correct product category page
+- [ ] Card hover effect works (lift + shadow)
+- [ ] **Mobile:** cards stack vertically (1 column)
 
-#### Fitted Bed Sheet Mode
-- [ ] 3 inputs visible: Width, Length, Depth
-- [ ] Enter numbers → price updates instantly below
-- [ ] Price note visible: "Price excludes shipping & import tariff"
+#### Measurement Blueprint Trust Block
+- [ ] Icon visible (ruler/blueprint)
+- [ ] Text reads: "Worried about measuring? Don't be..."
+- [ ] Block has left blue border accent
+- [ ] Centered below the router cards
 
-#### V-Berth Boat Sheet Mode
-- [ ] 4 inputs visible: Head Width, Foot Width, Length, Depth
-- [ ] Enter numbers → price updates instantly
-- [ ] SVG diagram changes from rectangle to trapezoid when switching tabs
-
-#### Unit Toggle
-- [ ] "cm" and "inch" buttons visible top-right
-- [ ] Click "inch" → all input values convert
-- [ ] Click "cm" → values convert back
-- [ ] Price still calculates correctly after unit switch
-
-#### Fabric Selector
-- [ ] 4 fabric chips: BreezePlus, CloudSoft, PremaCotton, EcoLuxe
-- [ ] Clicking a chip changes active state (blue)
-- [ ] Changing fabric updates the price
-
-#### Add to Cart
-- [ ] "Add to Cart" button visible
-- [ ] Clicking it updates cart count in header (top right)
-- [ ] Cart count persists after page refresh
-
-#### Responsive
-- [ ] **Mobile:** configurator stacks vertically (inputs above diagram)
-- [ ] **Mobile:** tabs fit without wrapping awkwardly
-
-> **Action needed:** Adjust placeholder prices in `configurator.js` or Admin dashboard later
+> **Note:** Configurator removed from homepage. Each product page now has its own specific formula (Sheet: W/L/D, Duvet: W/L, Marine: Head/Bottom/Width/Depth, etc.).
 
 ---
 

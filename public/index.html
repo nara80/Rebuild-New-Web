@@ -253,68 +253,52 @@
       </div>
     </section>
 
-    <!-- 5. CUSTOM CONFIGURATOR -->
-    <section class="section configurator-section">
+    <!-- 5. CHOOSE YOUR SOLUTION -->
+    <section class="section router-section">
       <div class="container">
         <div class="section-header">
-          <h2>Get Your Custom Quote</h2>
-          <p>Enter your mattress dimensions and see your price instantly.</p>
+          <h2>Built for Your Unique Space.</h2>
+          <p>Every product has its own measurement formula. Choose your solution to get the right configurator.</p>
         </div>
-        <div class="configurator-box" id="configurator">
-          <div class="configurator-header">
-            <div class="configurator-tabs">
-              <button class="configurator-tab active" data-mode="sheet">&#128719; Fitted Bed Sheet</button>
-              <button class="configurator-tab" data-mode="vberth">&#9875; V-Berth Boat Sheet</button>
+        <div class="router-grid">
+          <a href="/marine/" class="router-card">
+            <div class="router-visual marine">Marine & Yacht Visual</div>
+            <div class="router-info">
+              <h3>Marine & Yacht</h3>
+              <p class="router-desc">Custom V-Berth sheets for boats and yachts. Inputs: Head, Bottom, Width, Depth.</p>
+              <span class="btn btn-primary">Shop Marine</span>
             </div>
-            <div class="unit-toggle">
-              <button class="active" data-unit="cm">cm</button>
-              <button data-unit="inch">inch</button>
+          </a>
+          <a href="/family/" class="router-card">
+            <div class="router-visual family">Family Bed Visual</div>
+            <div class="router-info">
+              <h3>Family Beds</h3>
+              <p class="router-desc">Oversized fitted sheets for co-sleeping. Inputs: Width, Length, Depth.</p>
+              <span class="btn btn-primary">Shop Family</span>
             </div>
-          </div>
-          <div class="configurator-body">
-            <div class="configurator-inputs" id="configurator-inputs">
-              <!-- Inputs injected by JS -->
-              <div class="input-group">
-                <label for="cfg-width">Width (W)</label>
-                <input type="number" id="cfg-width" placeholder="e.g. 160" min="1" step="0.1">
-              </div>
-              <div class="input-group">
-                <label for="cfg-length">Length (L)</label>
-                <input type="number" id="cfg-length" placeholder="e.g. 200" min="1" step="0.1">
-              </div>
-              <div class="input-group">
-                <label for="cfg-depth">Depth / Pocket (D)</label>
-                <input type="number" id="cfg-depth" placeholder="e.g. 30" min="1" step="0.1">
-              </div>
+          </a>
+          <a href="/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/" class="router-card">
+            <div class="router-visual duvet">Duvet Visual</div>
+            <div class="router-info">
+              <h3>Duvet Covers</h3>
+              <p class="router-desc">Easy-Change 3-Sided Zipper system. Inputs: Width, Length.</p>
+              <span class="btn btn-primary">Shop Duvets</span>
             </div>
-            <div class="configurator-diagram" id="configurator-diagram">
-              <!-- SVG injected by JS -->
-              <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
-                <rect x="20" y="20" width="160" height="100" fill="none" stroke="#2c96f4" stroke-width="2" rx="4"/>
-                <text x="100" y="15" text-anchor="middle" font-size="10" fill="#333">W</text>
-                <text x="10" y="72" text-anchor="middle" font-size="10" fill="#333">L</text>
-                <text x="100" y="135" text-anchor="middle" font-size="10" fill="#333">D = Pocket Depth</text>
-              </svg>
+          </a>
+          <a href="/protection/" class="router-card">
+            <div class="router-visual protection">Protection Visual</div>
+            <div class="router-info">
+              <h3>Specialized Protection</h3>
+              <p class="router-desc">TPU waterproof protectors and 6-side encasement zippers. Inputs: Width, Length, Depth.</p>
+              <span class="btn btn-primary">Shop Protection</span>
             </div>
-          </div>
-          <div class="fabric-selector">
-            <h4>Select Fabric</h4>
-            <div class="fabric-options">
-              <button class="fabric-chip active" data-fabric="breezeplus">BreezePlus</button>
-              <button class="fabric-chip" data-fabric="cloudsoft">CloudSoft</button>
-              <button class="fabric-chip" data-fabric="premacotton">PremaCotton</button>
-              <button class="fabric-chip" data-fabric="ecoluxe">EcoLuxe</button>
-            </div>
-          </div>
-          <div class="configurator-price">
-            <div class="price-label">Estimated Price</div>
-            <div class="price-value" id="configurator-price">$0.00</div>
-            <div class="price-note">Price excludes shipping &amp; import tariff</div>
-          </div>
-          <div class="configurator-actions">
-            <button class="btn btn-primary" id="cfg-add-to-cart">Add to Cart</button>
-            <a href="/how-to-measure-mattress-size/" class="btn btn-outline">How to Measure</a>
-          </div>
+          </a>
+        </div>
+
+        <!-- Measurement Blueprint Trust Block -->
+        <div class="blueprint-block">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="m12 12 8-8"/><path d="m16 4 4 4"/><path d="M12 5v.01"/><path d="M12 9v.01"/><path d="M12 13v.01"/><path d="M12 17v.01"/></svg>
+          <p><strong>Worried about measuring?</strong> Don't be. Pick your product, and our Engineering Team will verify your dimensions with a digital blueprint before we sew a single stitch.</p>
         </div>
       </div>
     </section>
