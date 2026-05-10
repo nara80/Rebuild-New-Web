@@ -5,7 +5,7 @@
 
 (function () {
   const cfg = document.getElementById('configurator');
-  if (!cfg) return;
+  if (cfg) {
 
   let state = {
     mode: 'sheet',
@@ -178,9 +178,10 @@
     });
   }
 
-  renderInputs();
-  renderDiagram();
-  calculatePrice();
+    renderInputs();
+    renderDiagram();
+    calculatePrice();
+  }
 
   /* ── Fabric Showcase Tabs (Homepage) ─────── */
   document.querySelectorAll('.fabric-tabs').forEach(function (tabContainer) {
