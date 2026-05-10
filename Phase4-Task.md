@@ -31,8 +31,8 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ### 2. Trust Bar
 - [ ] 4 trust items in a row on desktop
-- [ ] Icons visible (shield, wrench, star, globe)
-- [ ] Labels read: OEKO-TEX Certified, Siriraj Dust-Mite Certified, 5★ Reviews on Etsy, Ships Worldwide
+- [ ] Icons visible (compass, plane, award, leaf)
+- [ ] Labels read: Precision Fit Guarantee, Global Express Delivery, Top-Rated Etsy Boutique, Sensitive Skin Friendly
 - [ ] **Mobile:** stacks 2×2 grid
 - [ ] **Tablet:** 4 items in a row or 2×2
 
