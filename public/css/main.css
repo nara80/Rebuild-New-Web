@@ -1802,7 +1802,7 @@ main {
   .fabric-tabs {
     flex-wrap: nowrap;
     overflow-x: auto;
-    justify-content: flex-start;
+    justify-content: center;
     padding-bottom: 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
