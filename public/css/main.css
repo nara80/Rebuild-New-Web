@@ -953,35 +953,45 @@ main {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
 .carousel-arrow {
-  width: 40px;
-  height: 40px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  color: #333;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   transition: all var(--transition);
-  z-index: 2;
+  z-index: 3;
 }
 
 .carousel-arrow:hover {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
+  background: #fff;
+  color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .carousel-arrow svg {
   width: 20px;
   height: 20px;
+  stroke-width: 2.5;
+}
+
+.carousel-prev {
+  left: 12px;
+}
+
+.carousel-next {
+  right: 12px;
 }
 
 .product-grid.scroll-row {
@@ -993,6 +1003,7 @@ main {
   scrollbar-width: none;
   -ms-overflow-style: none;
   flex: 1;
+  padding: 4px 0;
 }
 
 .product-grid.scroll-row::-webkit-scrollbar {
@@ -1003,6 +1014,31 @@ main {
   min-width: 260px;
   flex-shrink: 0;
   scroll-snap-align: start;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-border);
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--transition);
+}
+
+.carousel-dot.active {
+  background: var(--color-primary);
+  width: 24px;
+  border-radius: 4px;
 }
 
 .product-card {
@@ -1798,7 +1834,7 @@ main {
   }
 
   .product-grid.scroll-row .product-card {
-    min-width: 220px;
+    min-width: calc(100vw - 80px);
   }
 
   .carousel-arrow {

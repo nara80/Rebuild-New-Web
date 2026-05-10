@@ -121,10 +121,28 @@
     if (e.key === 'Escape') closeSearch();
   });
 
-  /* ── 6. Product carousel arrows ──────────── */
+  /* ── 6. Product carousel arrows + dots ──── */
   const carouselPrev = document.querySelector('.carousel-prev');
   const carouselNext = document.querySelector('.carousel-next');
   const scrollRow = document.querySelector('.product-grid.scroll-row');
+  const dots = document.querySelectorAll('.carousel-dot');
+  const cards = scrollRow ? scrollRow.querySelectorAll('.product-card') : [];
+
+  function updateActiveDot() {
+    if (!scrollRow || !cards.length) return;
+    const scrollLeft = scrollRow.scrollLeft;
+    const cardWidth = cards[0].offsetWidth + 16; // width + gap
+    const activeIndex = Math.round(scrollLeft / cardWidth);
+    dots.forEach(function (dot, i) {
+      dot.classList.toggle('active', i === activeIndex);
+    });
+  }
+
+  if (scrollRow) {
+    scrollRow.addEventListener('scroll', function () {
+      window.requestAnimationFrame(updateActiveDot);
+    }, { passive: true });
+  }
 
   if (carouselPrev && scrollRow) {
     carouselPrev.addEventListener('click', function () {
@@ -137,4 +155,14 @@
       scrollRow.scrollBy({ left: 280, behavior: 'smooth' });
     });
   }
+
+  dots.forEach(function (dot) {
+    dot.addEventListener('click', function () {
+      const index = parseInt(dot.dataset.index, 10);
+      if (scrollRow && cards[index]) {
+        const cardWidth = cards[0].offsetWidth + 16;
+        scrollRow.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+      }
+    });
+  });
 })();
