@@ -949,12 +949,54 @@ main {
   gap: 24px;
 }
 
+.product-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carousel-arrow {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+  transition: all var(--transition);
+  z-index: 2;
+}
+
+.carousel-arrow:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.carousel-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
 .product-grid.scroll-row {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
+}
+
+.product-grid.scroll-row::-webkit-scrollbar {
+  display: none;
 }
 
 .product-grid.scroll-row .product-card {
@@ -1641,6 +1683,16 @@ main {
     display: flex;
   }
 
+  .carousel-arrow {
+    width: 36px;
+    height: 36px;
+  }
+
+  .carousel-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
   .configurator-box {
     padding: 20px;
   }
@@ -1747,5 +1799,9 @@ main {
 
   .product-grid.scroll-row .product-card {
     min-width: 220px;
+  }
+
+  .carousel-arrow {
+    display: none;
   }
 }

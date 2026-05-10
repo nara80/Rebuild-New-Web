@@ -120,4 +120,21 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeSearch();
   });
+
+  /* ── 6. Product carousel arrows ──────────── */
+  const carouselPrev = document.querySelector('.carousel-prev');
+  const carouselNext = document.querySelector('.carousel-next');
+  const scrollRow = document.querySelector('.product-grid.scroll-row');
+
+  if (carouselPrev && scrollRow) {
+    carouselPrev.addEventListener('click', function () {
+      scrollRow.scrollBy({ left: -280, behavior: 'smooth' });
+    });
+  }
+
+  if (carouselNext && scrollRow) {
+    carouselNext.addEventListener('click', function () {
+      scrollRow.scrollBy({ left: 280, behavior: 'smooth' });
+    });
+  }
 })();
