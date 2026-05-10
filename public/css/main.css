@@ -1797,10 +1797,6 @@ main {
   }
 
   .footer-icons-grid {
-    justify-content: center;
-  }
-
-  .footer-icons-grid.contact-icons {
     justify-content: flex-start;
   }
 
