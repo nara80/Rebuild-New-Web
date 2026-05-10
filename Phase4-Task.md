@@ -69,7 +69,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 ### 5. Choose Your Solution (Router Section) ✅ Verified
 - [x] Headline reads: "Built for Your Unique Space"
 - [x] 4 router cards visible: Marine & Yacht, Family Beds, Duvet Covers, Specialized Protection
-- [x] Each card shows placeholder visual + title + description + CTA button
+- [x] Each card shows real photo + title + description + CTA button
 - [x] Each card links to the correct product category page
 - [x] Card hover effect works (lift + shadow)
 - [x] **Mobile:** cards stack vertically (1 column)
@@ -304,6 +304,10 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 | Marine V-Berth | `public/images/products/product-boat-bedding-fitted-sheet-microfiber.png` | ✅ |
 | RV Encasement | `public/images/products/sheet-protectors.png` | ✅ |
 | BedBridge | `public/images/products/tbar.png` | ✅ |
+| Router — Marine & Yacht | `public/images/router/router-marine.jpg` | ✅ |
+| Router — Family Beds | `public/images/router/router-family.jpg` | ✅ |
+| Router — Duvet Covers | `public/images/router/router-duvet.jpg` | ✅ |
+| Router — Protection | `public/images/router/router-protection.jpg` | ✅ |
 
 ---
 
