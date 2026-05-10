@@ -758,11 +758,12 @@ main {
   position: relative;
   min-height: 560px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   text-align: center;
   color: #fff;
-  padding: 80px 24px;
+  padding: 80px 24px 100px;
   overflow: hidden;
 }
 
@@ -786,10 +787,16 @@ main {
   max-width: 720px;
 }
 
+.hero h1,
+.hero h1 span {
+  text-align: center;
+  width: 100%;
+  color: #fff;
+}
+
 .hero h1 {
   font-size: 2.75rem;
   font-weight: 800;
-  color: #fff;
   margin-bottom: 16px;
   line-height: 1.15;
 }
@@ -799,6 +806,7 @@ main {
 }
 
 .hero-sub {
+  text-align: center;
   font-size: 1.125rem;
   font-weight: 500;
   opacity: 0.9;
