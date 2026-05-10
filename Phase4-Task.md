@@ -38,12 +38,12 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 3. Shop by Niche (Category Cards)
-- [ ] 4 cards visible: Marine & Yacht, Family & Co-Sleep, Easy-Change Duvet, Protection
-- [ ] Each card shows colored placeholder (no image yet)
-- [ ] Each card is clickable and links to correct category page
-- [ ] Card hover effect works (lift + shadow)
-- [ ] **Mobile:** 2 columns then 1 column at narrow width
+### 3. Shop by Niche (Category Cards) ✅ Done
+- [x] 4 cards visible: Marine & Yacht, Family & Co-Sleep, Easy-Change Duvet, Protection
+- [x] Each card shows real photo (not placeholder)
+- [x] Each card is clickable and links to correct category page
+- [x] Card hover effect works (lift + shadow)
+- [x] **Mobile:** 2 columns then 1 column at narrow width
 
 > **Action needed:** Provide 4 category photos → place in `public/images/categories/`
 > - `category-marine.jpg` (V-Berth on boat) ✅
