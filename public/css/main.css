@@ -1073,6 +1073,7 @@ main {
 .product-image {
   width: 100%;
   aspect-ratio: 1 / 1;
+  max-height: 350px;
   background: var(--color-surface);
   display: flex;
   align-items: center;
@@ -1856,6 +1857,10 @@ main {
   .product-grid.scroll-row .product-card {
     min-width: calc(85vw - 32px);
     max-width: calc(85vw - 32px);
+  }
+
+  .product-image {
+    max-height: 280px;
   }
 
   .carousel-arrow {
