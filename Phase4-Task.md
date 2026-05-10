@@ -46,10 +46,10 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [ ] **Mobile:** 2 columns then 1 column at narrow width
 
 > **Action needed:** Provide 4 category photos → place in `public/images/categories/`
-> - `category-marine.jpg` (V-Berth on boat)
-> - `category-family.jpg` (family bed)
-> - `category-duvet.jpg` (3-sided zipper duvet)
-> - `category-protection.jpg` (waterproof protector)
+> - `category-marine.jpg` (V-Berth on boat) ✅
+> - `category-family.jpg` (family bed) ✅
+> - `category-duvet.jpg` (3-sided zipper duvet) ✅
+> - `category-protection.jpg` (waterproof protector) ✅
 
 ---
 
