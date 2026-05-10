@@ -1798,6 +1798,26 @@ main {
   .hero h1 {
     font-size: 2.25rem;
   }
+
+  .fabric-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 4px;
+  }
+
+  .fabric-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fabric-tab {
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+  }
 }
 
 @media (max-width: 768px) {
