@@ -778,7 +778,7 @@ main {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
 .hero-content {
@@ -789,8 +789,8 @@ main {
 
 .hero h1 {
   font-size: 2.75rem;
-  font-weight: 700;
-  color: var(--color-primary);
+  font-weight: 800;
+  color: #1a1a1a;
   margin-bottom: 16px;
   line-height: 1.15;
 }
@@ -801,7 +801,7 @@ main {
 
 .hero-sub {
   font-size: 1.125rem;
-  font-weight: 400;
+  font-weight: 500;
   opacity: 0.95;
   margin-bottom: 32px;
   max-width: 640px;
