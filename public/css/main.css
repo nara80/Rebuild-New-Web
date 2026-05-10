@@ -1849,23 +1849,34 @@ main {
 
   .hero {
     min-height: 420px;
-    padding: 60px 16px;
+    justify-content: flex-start;
+    padding: 260px 16px 40px;
   }
 
   .hero h1 {
     font-size: 1.75rem;
     line-height: 1.2;
+    margin-bottom: 0;
   }
 
   .hero h1 span {
     font-size: 0.7em !important;
+    display: block;
+    margin-top: 12px;
   }
 
   .hero-sub {
     display: none;
   }
 
+  .hero-actions {
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 32px;
+  }
+
   .hero-actions .btn {
+    width: 100%;
     padding: 10px 20px;
     font-size: 0.875rem;
   }
@@ -1930,15 +1941,6 @@ main {
 
   .hero h1 {
     font-size: 1.5rem;
-    line-height: 1.2;
-  }
-
-  .hero h1 span {
-    font-size: 0.7em !important;
-  }
-
-  .hero-sub {
-    display: none;
   }
 
   .hero-actions .btn {
