@@ -1859,10 +1859,6 @@ main {
     max-width: calc(85vw - 32px);
   }
 
-  .product-image {
-    max-height: 280px;
-  }
-
   .carousel-arrow {
     width: 36px;
     height: 36px;
