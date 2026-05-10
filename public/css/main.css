@@ -1945,6 +1945,7 @@ main {
     padding-bottom: 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    gap: 4px;
   }
 
   .fabric-tabs::-webkit-scrollbar {
@@ -1952,8 +1953,9 @@ main {
   }
 
   .fabric-tab {
-    padding: 10px 16px;
-    font-size: 0.875rem;
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+    flex-shrink: 0;
   }
 
   .configurator-tab {
