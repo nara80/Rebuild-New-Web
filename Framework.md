@@ -370,6 +370,11 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
     Certifications (OEKO-TEX, Siriraj where applicable)
     CTA → Shop [Fabric Name] products
 
+**BreezePlus Color Palette (9 swatches):**
+Dark Grey #4D545B | Silver #B7BEC8 | Sand #D9D1C1 | Sky #9CCAE1 | Emerald #618283 | Sea #5A7DA2 | Pure White #FFFFFF | Baby Pink #E9B7BF | Ivory #F1EFE1
+
+**EcoLuxe Note:** Calico / Greige cotton — natural unbleached, minimal processing. Not GOTS-certified.
+
 [FABRIC COMPARISON TABLE]  Side-by-side spec comparison of all 4
 ```
 

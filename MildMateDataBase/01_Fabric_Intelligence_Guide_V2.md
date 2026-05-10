@@ -16,7 +16,7 @@ MildMate utilizes four premium fabric collections for Group 1 (Custom Bedding) a
 * **Best For**: 
     * Hot sleepers, night sweats, families with allergies, and tropical climates.
     * Pet owners seeking a durable, hair-resistant sleeping surface.
-* **Colors**: 9 Cooling Colors (Sand, Silver, Dark Gray, Emerald, Baby Pink, Sea, etc.).
+* **Colors**: 9 Cooling Colors — Dark Grey (#4D545B), Silver (#B7BEC8), Sand (#D9D1C1), Sky (#9CCAE1), Emerald (#618283), Sea (#5A7DA2), Pure White (#FFFFFF), Baby Pink (#E9B7BF), Ivory (#F1EFE1).
 
 ### 2. CloudSoft Collection (Premium Microfiber Excellence)
 * **The Science**: Highly engineered 120 GSM double-brushed microfiber with a signature embossed pattern.
@@ -31,9 +31,9 @@ MildMate utilizes four premium fabric collections for Group 1 (Custom Bedding) a
 * **Best For**: Individuals with sensitive skin, infants (0-6 months), and pure cotton enthusiasts.
 * **Colors**: Pristine Snow White Only.
 
-### 4. EcoLuxe Collection (Sustainable Organic Luxury)
-* **The Science**: 100% GOTS-Certified Organic Cotton in a durable calico weave.
-* **Key Benefit**: **Environmental Responsibility.** Sustainable farming practices with no harsh chemical processing.
+### 4. EcoLuxe Collection (Natural Calico Comfort)
+* **The Science**: Premium Calico (Greige) cotton in its natural, unbleached state. Woven in a durable plain-weave pattern that softens with every wash while maintaining its raw, earthy character.
+* **Key Benefit**: **Minimal Processing — Closer to Nature.** No harsh chemical processing or bleaching.
 * **Best For**: Eco-conscious consumers and parents seeking a natural sanctuary.
 * **Colors**: Natural Vanilla Linen.
 

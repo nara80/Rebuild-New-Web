@@ -819,12 +819,28 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 
 | Item | Current State | How to Update |
 |---|---|---|
-| Hero background image | CI blue gradient placeholder | Replace `hero-bg.jpg` in `public/images/` |
-| Category images | CSS gradient placeholders | Add `category-marine.jpg`, `category-family.jpg`, etc. to `public/images/categories/` |
-| Product photos | CSS placeholders with text labels | Add product images to `public/images/products/` matching slugs |
+| Hero background image | `Hero01.png` in use | Replace with `hero-bg.jpg` in `public/images/` if desired |
+| Category images | ✅ Real photos placed | Done |
+| Product photos | ✅ Top 5 real photos placed | Add more to `public/images/products/` matching slugs |
+| Fabric images | ✅ 4 real fabric photos placed | Done |
 | Pricing | Placeholder prices (base $45-65 USD) | Adjust in Admin dashboard (Phase 7) or edit `configurator.js` rates |
 | Customer reviews | 2 real Etsy reviews + 4 placeholders | Replace placeholder text with real Etsy reviews |
 | Blog | Not built in this pass | Will be Phase 6+ or manual static posts |
+
+**BreezePlus Color Palette (9 swatches):**
+| Color | Hex |
+|---|---|
+| Dark Grey | #4D545B |
+| Silver | #B7BEC8 |
+| Sand | #D9D1C1 |
+| Sky | #9CCAE1 |
+| Emerald | #618283 |
+| Sea | #5A7DA2 |
+| Pure White | #FFFFFF |
+| Baby Pink | #E9B7BF |
+| Ivory | #F1EFE1 |
+
+**EcoLuxe Correction:** EcoLuxe is Calico / Greige cotton (natural unbleached, minimal processing). It is NOT GOTS-certified organic cotton.
 
 ### Next Step
 Move to **Phase 5 — Checkout + Stripe Payments** when ready.

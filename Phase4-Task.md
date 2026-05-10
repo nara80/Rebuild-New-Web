@@ -290,15 +290,15 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-## Image Checklist (Your Action Items)
+## Image Checklist
 
 | Image | Path | Status |
 |---|---|---|
-| Hero background | `public/images/hero-bg.jpg` | ⬜ Need from you |
-| Marine category | `public/images/categories/category-marine.jpg` | ⬜ Need from you |
-| Family category | `public/images/categories/category-family.jpg` | ⬜ Need from you |
-| Duvet category | `public/images/categories/category-duvet.jpg` | ⬜ Need from you |
-| Protection category | `public/images/categories/category-protection.jpg` | ⬜ Need from you |
+| Hero background | `public/images/Hero01.png` (used by CSS) | ✅ |
+| Marine category | `public/images/categories/category-marine.jpg` | ✅ |
+| Family category | `public/images/categories/category-family.jpg` | ✅ |
+| Duvet category | `public/images/categories/category-duvet.jpg` | ✅ |
+| Protection category | `public/images/categories/category-protection.jpg` | ✅ |
 | 3-Sided Zipper Duvet | `public/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.png` | ✅ |
 | Custom Family Sheet | `public/images/products/family-co-sleeping-solutions-th-size.png` | ✅ |
 | Marine V-Berth | `public/images/products/product-boat-bedding-fitted-sheet-microfiber.png` | ✅ |
@@ -308,6 +308,10 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 | Router — Family Beds | `public/images/router/router-family.jpg` | ✅ |
 | Router — Duvet Covers | `public/images/router/router-duvet.jpg` | ✅ |
 | Router — Protection | `public/images/router/router-protection.jpg` | ✅ |
+| BreezePlus fabric | `public/images/fabrics/fabric-breezeplus.png` | ✅ |
+| CloudSoft fabric | `public/images/fabrics/fabric-cloudsoft.png` | ✅ |
+| PremaCotton fabric | `public/images/fabrics/fabric-premacotton.png` | ✅ |
+| EcoLuxe fabric | `public/images/fabrics/fabric-ecoluxe.png` | ✅ |
 
 ---
 
@@ -335,7 +339,8 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ## Notes
 
-- All placeholder text is marked with "Placeholder" or "Visual" labels
 - All placeholder prices are estimates — update via Admin dashboard in Phase 7
+- EcoLuxe fabric is Calico / Greige (natural unbleached cotton), NOT GOTS-certified organic
+- BreezePlus color palette (9 swatches): Dark Grey #4D545B, Silver #B7BEC8, Sand #D9D1C1, Sky #9CCAE1, Emerald #618283, Sea #5A7DA2, Pure White #FFFFFF, Baby Pink #E9B7BF, Ivory #F1EFE1
 - If any page shows 404, confirm the folder exists in `public/` (e.g., `public/about/index.html`)
 - If styles look broken, hard-refresh or check that `main.css` loaded in DevTools Network tab
