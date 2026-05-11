@@ -7,6 +7,7 @@ import { handlePricing } from "./pricing";
 import { handleGeo } from "./geo-currency";
 import { handleSubscribe } from "./subscribe";
 import handleUnsubscribe from "./unsubscribe";
+import { handleContact } from "./contact";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -43,6 +44,11 @@ export default {
     // Unsubscribe API
     if (path === "/api/unsubscribe" || path === "/api/unsubscribe/") {
       return handleUnsubscribe(request, env);
+    }
+
+    // Contact form API
+    if (path === "/api/contact" || path === "/api/contact/") {
+      return handleContact(request, env);
     }
 
     return new Response(JSON.stringify({ error: "Not Found" }), {
