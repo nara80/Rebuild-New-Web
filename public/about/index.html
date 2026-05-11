@@ -433,18 +433,24 @@
 
   <main>
 
-    <!-- 1. HERO -->
-    <section class="about-hero">
-      <div class="about-hero-inner">
+    <!-- 1. THE TECHNICAL HERO -->
+    <section class="about-hero" style="position:relative;">
+      <!-- Blueprint Grid Overlay -->
+      <div style="position:absolute; inset:0; pointer-events:none; opacity:0.05;
+        background-image: linear-gradient(var(--color-primary) 1px, transparent 1px),
+          linear-gradient(90deg, var(--color-primary) 1px, transparent 1px);
+        background-size: 40px 40px;">
+      </div>
+      <div class="about-hero-inner" style="position:relative; z-index:1;">
         <div class="about-hero-text">
-          <h1>The Architecture of Better Sleep.</h1>
-          <p class="hero-sub">From custom-tailored yacht bedding to medical-grade protection, we eliminate the "math friction" of the perfect bed.</p>
+          <h1>Bedding Without Boundaries: Precision Engineering for Every Shape of Sleep.</h1>
+          <p class="hero-sub">From custom yacht V-Berths to 12ft family beds, MildMate eliminates "math friction" through technical textile innovation and zero-compromise safety.</p>
           <div class="about-hero-cta">
             <a href="/fabric/" class="btn btn-primary">Explore the Fabric Intelligence Guide</a>
           </div>
         </div>
         <div class="about-hero-visual">
-          <img src="https://placehold.co/600x450/f0f0f0/333?text=Signature+Shot:+Family+Bed+or+V-Berth" alt="MildMate Signature Shot — placeholder for family bed or V-Berth image" width="600" height="450" loading="eager">
+          <img src="https://placehold.co/600x450/f0f0f0/333?text=Engineering+Hero:+V-Berth+or+Family+Bed" alt="MildMate Engineering Hero — V-Berth or family bed technical shot" width="600" height="450" loading="eager">
           <div class="tech-specs-overlay">
             <strong>Technical Specs</strong>
             <span>GSM: 180–220</span>
@@ -455,65 +461,96 @@
       </div>
     </section>
 
-    <!-- 2. BLUEPRINT: Measure → Engineered → Ship -->
-    <section class="blueprint-section">
+    <!-- 2. THE EVOLUTION (2022 → 2026) -->
+    <section class="blueprint-section" style="background:#fff;">
       <div class="blueprint-header">
-        <h2>The Blueprint</h2>
-        <p>Every MildMate product follows a precision-engineered workflow from your first measurement to your doorstep.</p>
+        <h2>From Local Workshop to Global Precision.</h2>
+        <p style="max-width:720px; margin-left:auto; margin-right:auto;">In 2022, we set out to solve a simple problem: sheets that don't fit. By 2026, MildMate has evolved into a global leader in custom sleep surfaces. We've shipped to 11+ major cities across 2 continents, maintaining a 5.0-star average by treating every bed not as a piece of furniture, but as a technical asset to be protected.</p>
       </div>
-      <div class="blueprint-grid">
-        <div class="blueprint-step">
+      <div class="evolution-data" style="display:flex; justify-content:center; gap:48px; flex-wrap:wrap; margin-top:40px; padding:0 24px;">
+        <div style="text-align:center;">
+          <div style="width:64px; height:64px; border-radius:50%; background:var(--color-surface); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <strong style="font-size:1.5rem; color:var(--color-primary);">$195</strong>
+          <p style="font-size:0.8125rem; color:var(--color-muted); margin:4px 0 0;">Average Order Value<br><span style="font-size:0.6875rem;">High-ticket precision</span></p>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px; height:64px; border-radius:50%; background:var(--color-surface); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <strong style="font-size:1.5rem; color:var(--color-primary);">11+ Cities</strong>
+          <p style="font-size:0.8125rem; color:var(--color-muted); margin:4px 0 0;">Global Footprint<br><span style="font-size:0.6875rem;">& Growing</span></p>
+        </div>
+        <div style="text-align:center;">
+          <div style="width:64px; height:64px; border-radius:50%; background:var(--color-surface); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <strong style="font-size:1.5rem; color:var(--color-primary);">5.0 / 5.0</strong>
+          <p style="font-size:0.8125rem; color:var(--color-muted); margin:4px 0 0;">Customer Satisfaction<br><span style="font-size:0.6875rem;">Verified reviews</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. THE MEASUREMENT LAB (Process) -->
+    <section class="blueprint-section" style="background:#f9f9f9;">
+      <div class="blueprint-header">
+        <h2>The Zero-Friction Protocol.</h2>
+        <p style="max-width:720px; margin-left:auto; margin-right:auto;">Measuring complex, asymmetrical mattresses (V-Berths, RVs, Clipped Corners) is prone to human error. Our proprietary "Photo-Measurement" system uses a standard credit card as a universal scale reference. We convert your photos into digital blueprints with a 1-2cm tolerance before a single stitch is made.</p>
+      </div>
+      <div class="blueprint-grid" style="background:#f9f9f9;">
+        <div class="blueprint-step" style="background:#fff;">
           <div class="step-num">1</div>
-          <h3>Measure</h3>
-          <p>Submit your dimensions — W, L, D — or upload a photo of your V-Berth. Our engineers validate every number before cutting.</p>
+          <h3>Photo</h3>
+          <p>Snap a photo of your mattress with a credit card placed on top. The 85.60mm card acts as a universal scale reference.</p>
         </div>
-        <div class="blueprint-step">
+        <div class="blueprint-step" style="background:#fff;">
           <div class="step-num">2</div>
-          <h3>Engineered</h3>
-          <p>We draft a digital blueprint, adjust for seam allowance, and run a fabric simulation to confirm the fit.</p>
+          <h3>Digital Blueprint</h3>
+          <p>Our engineers convert your photo into a parametric CAD model, adjusting for seam allowance and fabric stretch.</p>
         </div>
-        <div class="blueprint-step">
+        <div class="blueprint-step" style="background:#fff;">
           <div class="step-num">3</div>
-          <h3>Ship</h3>
-          <p>Cut, sewn, and inspected in our Bangkok workshop. Dispatched within 3–5 business days with full tracking.</p>
+          <h3>Precision Fit</h3>
+          <p>Cut, sewn, and validated against the blueprint. Final tolerance: ±1cm. Dispatched within 3–5 business days.</p>
         </div>
       </div>
     </section>
 
-    <!-- 3. FOUNDING STORY -->
-    <section class="story-section">
-      <div class="story-kicker">The Origin</div>
-      <h2>How We Solved the First V-Berth Math Problem</h2>
-      <p>In 2022, a yacht owner in Florida sent us a hand-drawn sketch of his V-berth — a trapezoid with angles no standard sheet could cover. Standard bedding assumes rectangles. V-berths are triangles with depth. The math doesn't exist in retail.</p>
-      <p>We built the first parametric formula for boat bedding: Head Width × Bottom Width × Length × Depth, with a taper correction. That single order became the foundation of our Marine Configurator. Today, we ship custom V-berth sheets to boat owners in 11 countries.</p>
-
-      <div style="margin-top:48px;">
-        <div class="story-kicker">The Mission</div>
-        <h2>Crafting Comfort, Delivering Dreams</h2>
-        <p><strong>Your Perfect Fit, Faster.</strong> At MildMate, we believe that true comfort comes from a perfect fit. That's why we specialize in custom-made bedding, tailored to your unique needs.</p>
-        <ul style="list-style:disc; padding-left:24px; margin-bottom:24px;">
-          <li><strong>3-Day Turnaround</strong> — from order to ship</li>
-          <li><strong>Expert Craftsmanship</strong> — skilled artisans in Thailand</li>
-          <li><strong>Custom Solutions</strong> — every mattress, every shape</li>
-        </ul>
-      </div>
-
-      <div style="margin-top:48px;">
-        <div class="story-kicker">Workshop</div>
-        <h2>Crafted with Care in Thailand</h2>
-        <p>Every MildMate product is crafted with care by our team of skilled artisans in Thailand. From reinforced stitching to final inspection, we take pride in creating products that are built to last.</p>
-        <p>By keeping our production in-house, we ensure the highest standards of quality and provide our employees with a safe, supportive work environment.</p>
+    <!-- 4. THE FABRIC INTELLIGENCE (The Lab) -->
+    <section style="padding:64px 0; background:#fff; border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border);">
+      <div style="max-width: var(--container-max); margin:0 auto; padding:0 24px;">
+        <h2 style="text-align:center; font-size:1.5rem; font-weight:700; margin-bottom:8px;">Advanced Thermal &amp; Hygienic Science.</h2>
+        <p style="text-align:center; color:var(--color-muted); margin-bottom:48px; max-width:560px; margin-left:auto; margin-right:auto;">Engineered layers for specific sleep environments. Not just fabric — thermal systems.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
+          <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+            <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Thermal Layer</div>
+            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">BreezePlus®</h3>
+            <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">"Clinically 3-5°C cooler than traditional cotton. High thermal conductivity for tropical and marine climates."</p>
+          </div>
+          <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+            <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Hygienic Layer</div>
+            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">PremaCotton™</h3>
+            <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">"100% Human-Safe, OEKO-TEX certified. Specifically engineered for co-sleeping families and sensitive skin."</p>
+          </div>
+          <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+            <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Clinical Validation</div>
+            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">Siriraj Hospital</h3>
+            <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">"Certified anti-dust mite technology validated by the Faculty of Medicine at Siriraj Hospital, Thailand's leading medical research institution."</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 4. YOUTUBE SHORT -->
+    <!-- 5. THE FUNCTIONAL DEMO (YouTube) -->
     <section class="youtube-section">
-      <h2>See the Craft</h2>
+      <h2>Engineered for Efficiency.</h2>
+      <p style="text-align:center; color:var(--color-muted); margin-bottom:32px; max-width:480px; margin-left:auto; margin-right:auto;">See the 60-second solo change in action. No shaking, no lifting, just precision zippers.</p>
       <div class="youtube-container">
         <div class="youtube-wrapper">
           <iframe
             src="https://www.youtube.com/embed/Ooqvv3SVll8"
-            title="MildMate YouTube Short"
+            title="MildMate YouTube Short — Engineered for Efficiency"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen
             loading="lazy">
@@ -522,60 +559,7 @@
       </div>
     </section>
 
-    <!-- 5. GLOBAL TRUST MAP -->
-    <section class="trust-map-section">
-      <h2>Global Authority</h2>
-      <p class="section-sub">Custom bedding shipped from Bangkok to bedrooms worldwide.</p>
-      <div class="trust-map-grid">
-        <span class="trust-map-pill">New York</span>
-        <span class="trust-map-pill">Chicago</span>
-        <span class="trust-map-pill">Melbourne</span>
-        <span class="trust-map-pill">London</span>
-        <span class="trust-map-pill">Berlin</span>
-        <span class="trust-map-pill">Toronto</span>
-        <span class="trust-map-pill">Singapore</span>
-        <span class="trust-map-pill">Dubai</span>
-        <span class="trust-map-pill">Auckland</span>
-        <span class="trust-map-pill">Cape Town</span>
-        <span class="trust-map-pill">Bangkok</span>
-      </div>
-      <p class="trust-map-note">11+ cities and counting. <em>Provide your full Etsy shipping list to replace these placeholders.</em></p>
-    </section>
-
-    <!-- 6. CERTIFICATION TRUST RIBBON -->
-    <section class="cert-ribbon">
-      <div class="cert-ribbon-inner">
-        <div class="cert-item">
-          <div class="cert-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          </div>
-          <div class="cert-text">
-            <strong>OEKO-TEX Standard 100</strong>
-            <span>Independently tested. Free from harmful substances.</span>
-          </div>
-        </div>
-        <div class="cert-item">
-          <div class="cert-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <div class="cert-text">
-            <strong>Siriraj Hospital Certified</strong>
-            <span>Dust-mite resistant. Allergy-protection validated.</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7. MACRO TEXTURE PLACEHOLDER -->
-    <section style="padding:64px 0; text-align:center;">
-      <div style="max-width: var(--container-max); margin:0 auto; padding:0 24px;">
-        <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px;">Fabric Intelligence</h2>
-        <p style="color:var(--color-muted); margin-bottom:32px;">Microscopic precision. Macro comfort.</p>
-        <img src="https://placehold.co/800x300/f0f0f0/333?text=Macro_BreezePlus_Texture:+180gsm+Cooling+Cotton+Blend" alt="Macro texture shot placeholder — BreezePlus fabric weave" width="800" height="300" loading="lazy" style="border-radius:var(--radius); box-shadow:var(--shadow); max-width:100%; height:auto;">
-      </div>
-    </section>
-
-    <!-- 8. CTA -->
+    <!-- 6. CTA -->
     <section class="about-cta">
       <h2>Ready for Your Perfect Fit?</h2>
       <p>Explore our Fabric Intelligence Guide to find the material engineered for your sleep environment.</p>
