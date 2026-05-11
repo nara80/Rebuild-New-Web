@@ -144,6 +144,10 @@
       margin: 0 0 16px;
     }
     .genesis-quote p:last-child { margin-bottom: 0; }
+    .genesis-quote strong {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
 
     /* ── Section 3: Authority Timeline ──────────── */
     .timeline-section {
@@ -303,6 +307,31 @@
       line-height: 1.6;
       margin: 0;
     }
+    .spec-tag {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      background: rgba(44,150,244,0.06);
+      padding: 4px 10px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .cert-logos {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0 16px;
+      flex-wrap: wrap;
+    }
+    .cert-logos img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.9;
+    }
     .materials-cta {
       text-align: center;
       margin-top: 8px;
@@ -358,6 +387,58 @@
       border: none;
     }
 
+    /* ── Section 6: Global Reach ───────────────── */
+    .global-reach-section {
+      background: #f9f9f9;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+    }
+    .global-reach-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      text-align: center;
+    }
+    .global-reach-inner h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .global-reach-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+    .global-cities-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      text-align: left;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .city-col h4 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-primary);
+    }
+    .city-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .city-col li {
+      font-size: 1rem;
+      color: var(--color-text);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .city-col li:last-child { border-bottom: none; }
+
     /* ── Buttons reuse ─────────────────────────── */
     .about-hero-cta .btn-primary {
       background: var(--color-primary);
@@ -393,6 +474,8 @@
       .genesis-inner { grid-template-columns: 1fr; gap: 32px; }
       .genesis-image { order: -1; }
       .materials-grid { grid-template-columns: 1fr; }
+      .global-cities-grid { grid-template-columns: 1fr; gap: 24px; }
+      .cert-logos img { height: 34px; }
       .timeline-container { padding-left: 32px; }
       .timeline-container::before { left: 7px; }
       .timeline-dot { left: -41px; width: 14px; height: 14px; }
@@ -503,7 +586,7 @@
           <div class="genesis-kicker">The 2019 Problem</div>
           <h2>Solving the "Mattress Gap" Paradox.</h2>
           <div class="genesis-quote">
-            <p>MildMate was founded in 2019 to solve a geometric failure: the "lumpy" transition of joined mattresses in co-sleeping environments. Standard retail bedding could not maintain the structural tension required for a unified surface.</p>
+            <p>MildMate was founded in 2019 to solve a <strong>geometric failure</strong>: the "lumpy" transition of joined mattresses in co-sleeping environments. Standard retail bedding could not maintain the structural tension required for a <strong>unified family sleep surface</strong>.</p>
             <p>We transitioned from a family home in Thailand to a specialized engineering lab by treating every bed not as furniture, but as a technical asset. We replaced DIY "guessing" with a rigorous measurement protocol.</p>
           </div>
         </div>
@@ -578,11 +661,12 @@
           <div class="material-card-body">
             <div class="kicker">Fabric 01 — Hygienic Layer</div>
             <h3>PremaCotton</h3>
-            <span class="cert-badge">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              OEKO-TEX® Standard 100
-            </span>
-            <p>OEKO-TEX® Standard 100 Certified (Since 2022). Zero-toxin safety for infants and sensitive skin. The benchmark for clinically validated material safety.</p>
+            <div class="spec-tag">Spec: 100% Human-Safe | OEKO-TEX® Std 100</div>
+            <div class="cert-logos">
+              <img src="/images/about/cert-oekotex.png" alt="OEKO-TEX Standard 100 Certified" height="40" loading="lazy">
+              <img src="/images/about/cert-siriraj.png" alt="Siriraj Hospital Faculty of Medicine validated" height="40" loading="lazy">
+            </div>
+            <p>OEKO-TEX® Standard 100 Certified (Since 2022). Zero-toxin safety for infants and sensitive skin. Anti-dust mite technology validated by the Faculty of Medicine, Siriraj Hospital.</p>
           </div>
         </div>
 
@@ -591,6 +675,7 @@
           <div class="material-card-body">
             <div class="kicker">Fabric 02 — Thermal Layer</div>
             <h3>BreezePlus</h3>
+            <div class="spec-tag">Spec: 50/50 Long-Staple | Active 3–5°C Regulation</div>
             <p>50/50 Long-Staple Fusion. Active 3–5°C thermal regulation. Engineered for tropical, marine, and high-humidity sleep environments.</p>
           </div>
         </div>
@@ -600,6 +685,7 @@
           <div class="material-card-body">
             <div class="kicker">Fabric 03 — Comfort Layer</div>
             <h3>CloudSoft</h3>
+            <div class="spec-tag">Spec: 120 GSM | Double-Brushed Microfiber</div>
             <p>120 GSM Double-Brushed Microfiber. Marine-grade moisture resistance with a durable, pill-resistant weave for everyday luxury.</p>
           </div>
         </div>
@@ -609,6 +695,7 @@
           <div class="material-card-body">
             <div class="kicker">Fabric 04 — Sustainable Layer</div>
             <h3>EcoLuxe</h3>
+            <div class="spec-tag">Spec: Raw Unbleached Fiber | Biodegradable</div>
             <p>Raw, unbleached sustainable fibers for biophilic sleep. Minimal processing, maximum breathability, fully biodegradable end-of-life.</p>
           </div>
         </div>
@@ -635,6 +722,45 @@
           referrerpolicy="strict-origin-when-cross-origin"
           allowfullscreen>
         </iframe>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 6. GLOBAL REACH                                 -->
+    <!-- ============================================== -->
+    <section class="global-reach-section">
+      <div class="global-reach-inner">
+        <h2>Global Reach.</h2>
+        <p>Precision-fit bedding engineered in Thailand, delivered to 11+ cities across 2 continents.</p>
+        <div class="global-cities-grid">
+          <div class="city-col">
+            <h4>North America</h4>
+            <ul>
+              <li>New York</li>
+              <li>Los Angeles</li>
+              <li>Chicago</li>
+              <li>San Francisco</li>
+            </ul>
+          </div>
+          <div class="city-col">
+            <h4>Europe &amp; Middle East</h4>
+            <ul>
+              <li>London</li>
+              <li>Paris</li>
+              <li>Frankfurt</li>
+              <li>Dubai</li>
+            </ul>
+          </div>
+          <div class="city-col">
+            <h4>Asia-Pacific</h4>
+            <ul>
+              <li>Singapore</li>
+              <li>Tokyo</li>
+              <li>Sydney</li>
+              <li>Bangkok</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </section>
 
