@@ -9,6 +9,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .business-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .contact-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .business-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -83,7 +105,7 @@
 
     <section class="section">
       <div class="container" style="max-width:900px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px;">
+        <div class="contact-layout">
           <div>
             <h2>Send a Message</h2>
             <form id="contact-form" action="/api/contact" method="post" style="margin-top:20px;">
@@ -160,7 +182,7 @@
         <div style="margin-top:64px;">
           <h2>Business Solutions</h2>
           <p style="color:var(--color-muted); margin-top:8px; margin-bottom:28px;">MildMate is a trusted manufacturing partner for commercial clients worldwide.</p>
-          <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px;">
+          <div class="business-grid">
             <div class="card" style="padding:24px;">
               <h3 style="font-size:1.125rem; margin-bottom:8px; color:var(--color-primary);">Custom Bedding for Unique Needs</h3>
               <p style="color:var(--color-muted); font-size:0.9375rem; margin:0;">Unusual mattress sizes? RV, boat, or family co-sleeping arrangements? We engineer precision-fit bedding for any shape.</p>
