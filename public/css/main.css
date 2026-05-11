@@ -2078,6 +2078,8 @@ main {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding: 4px 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .reviews-track::-webkit-scrollbar {
@@ -2167,6 +2169,7 @@ main {
   flex: 1;
   padding: 0 56px;
   overflow: visible;
+  min-width: 0;
 }
 
 .reviews-track .review-card {
@@ -2197,6 +2200,7 @@ main {
   .reviews-carousel {
     padding: 0 0 32px;
     overflow: visible;
+    min-width: 0;
   }
 
   .reviews-track .review-card {
