@@ -435,18 +435,27 @@
           <h2>What Customers Say</h2>
           <p>Real reviews from Etsy shoppers around the world.</p>
         </div>
-        <div class="reviews-carousel">
-          <div class="reviews-track scroll-row">
-            <!-- REVIEWS-START -->
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;My parents have a larger mattress cover and I’m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! It’s a joy to know they are sleeping in a chemically safe environment 🤍&rdquo;</p>
-            <div class="review-author">&mdash; Clayton, United States</div>
-          </div>
+        <div class="reviews-carousel-wrapper">
+          <button class="carousel-arrow carousel-prev reviews-prev" aria-label="Previous review">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="reviews-carousel">
+            <div class="reviews-track scroll-row">
+              <!-- REVIEWS-START -->
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
             <p class="review-text">&ldquo;I had a custom 160×50 cm dakimakura waterproof encasement made, and the experience was excellent from start to finish. The seller was very responsive and handled detailed technical requirements without any issues. We went over specifications like zipper length and placement, fabric behavior, and overall construction, and they even created a prototype with measurements before final production to ensure the fit was correct. The final product is a 2-layer system (TPU liner + outer cover), and the fit is exactly as intended — snug, smooth, and well-balanced with no bunching. The zipper is properly concealed, and the overall construction feels durable and well thought out. What stood out most was their understanding of materials and willingness to explain design decisions clearly, especially regarding fit and long-term durability.&rdquo;</p>
             <div class="review-author">&mdash; William, United States</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I bought this easy duvet cover for my son at college. The customer service at MildMate is amazing! The staff went out of their way to make sure I got the product I wanted. If you have any special questions or requests, do not hesitate to reach out to them. It is not easy to find 3-Sided Zip Duvet Covers, so I am glad to have found MildMate.&rdquo;</p>
+            <div class="review-author">&mdash; amymccreedy</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;My parents have a larger mattress cover and I’m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! It’s a joy to know they are sleeping in a chemically safe environment 🤍&rdquo;</p>
+            <div class="review-author">&mdash; Clayton, United States</div>
           </div>
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
@@ -458,30 +467,31 @@
             <p class="review-text">&ldquo;I have always battled with duvets. This was exactly what I was looking for. When they arrived, I was pleasantly surprised with the quality of the cotton. I am in love with these duvet covers.&rdquo;</p>
             <div class="review-author">&mdash; John Van, South Africa</div>
           </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;Schneller Versand, netter Kontakt, gute Qualität wie beschrieben.&rdquo;</p>
-            <div class="review-author">&mdash; Frank, Germany</div>
-          </div>
 <!-- REVIEWS-END -->
           </div>
           <div class="reviews-dots">
             <!-- DOTS-START -->
-            <button class="reviews-dot active" data-index="0" aria-label="Reviews page 1"></button>
-            <button class="reviews-dot" data-index="1" aria-label="Reviews page 2"></button>
-            <button class="reviews-dot" data-index="2" aria-label="Reviews page 3"></button>
+            <button class="reviews-dot active" data-index="0" aria-label="Review 1"></button>
+            <button class="reviews-dot" data-index="1" aria-label="Review 2"></button>
+            <button class="reviews-dot" data-index="2" aria-label="Review 3"></button>
+            <button class="reviews-dot" data-index="3" aria-label="Review 4"></button>
+            <button class="reviews-dot" data-index="4" aria-label="Review 5"></button>
 <!-- DOTS-END -->
           </div>
-        </div>
-        <div class="review-badge">
-          <div class="badge-box">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            <div>
-              <strong>5.0 out of 5 stars</strong> on Etsy<br>
-              <span class="small">Based on verified customer reviews</span>
+          <div class="review-badge">
+            <div class="badge-box">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <div>
+                <strong>5.0 out of 5 stars</strong> on Etsy<br>
+                <span class="small">Based on verified customer reviews</span>
+              </div>
             </div>
           </div>
         </div>
+        <button class="carousel-arrow carousel-next reviews-next" aria-label="Next review">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
       </div>
     </section>
 

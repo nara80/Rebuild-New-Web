@@ -5,7 +5,7 @@
  *   - public/reviews/index.html (reviews page: all reviews)
  *
  * Usage: node scripts/update-reviews.js
- * Then:  npx wrangler pages deploy public --commit-dirty=true
+ * Then deploy manually when ready.
  */
 
 const fs = require('fs');
@@ -120,8 +120,7 @@ function main() {
     allCards
   );
 
-  console.log('\nDone! Next step:');
-  console.log('  npx wrangler pages deploy public --commit-dirty=true');
+  console.log('\nDone! Deploy manually when ready.');
 }
 
 main();

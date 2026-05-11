@@ -1593,7 +1593,8 @@ main {
 
 .review-badge {
   text-align: center;
-  margin-top: 32px;
+  margin-top: 48px;
+  clear: both;
 }
 
 .review-badge .badge-box {
@@ -2107,24 +2108,103 @@ main {
   transition: all 0.2s ease;
 }
 
-.reviews-dot.active {
-  background: var(--color-primary);
-  transform: scale(1.2);
+.reviews-dots .reviews-dot.active {
+  background: var(--color-primary) !important;
+  transform: scale(1.25);
 }
 
 .reviews-dot:hover {
   background: var(--color-primary-dark);
 }
 
-.reviews-carousel .review-text {
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.reviews-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.reviews-carousel-wrapper .carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all var(--transition);
+  z-index: 3;
+}
+
+.reviews-carousel-wrapper .carousel-arrow:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.reviews-carousel-wrapper .carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.reviews-carousel-wrapper .carousel-prev {
+  left: 12px;
+}
+
+.reviews-carousel-wrapper .carousel-next {
+  right: 12px;
+}
+
+.reviews-carousel {
+  flex: 1;
+  padding: 0 56px;
+  overflow: visible;
+}
+
+.reviews-track .review-card {
+  min-width: calc(50% - 12px);
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-text {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 50ch;
+}
+
+.reviews-track .review-text {
+  flex: 1;
 }
 
 @media (max-width: 640px) {
+  .reviews-carousel-wrapper .carousel-arrow {
+    display: none;
+  }
+
+  .reviews-carousel {
+    padding: 0 0 32px;
+    overflow: visible;
+  }
+
   .reviews-track .review-card {
     min-width: calc(100% - 48px);
+  }
+
+  .review-badge {
+    margin-top: 32px;
+    position: relative;
+    z-index: 2;
   }
 }

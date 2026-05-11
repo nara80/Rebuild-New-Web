@@ -4,7 +4,7 @@
  * then injects formatted cards into public/index.html and public/reviews/index.html.
  *
  * Usage: node scripts/build-reviews.js
- * Then:  npx wrangler pages deploy public --commit-dirty=true
+ * Then deploy manually when ready.
  */
 
 const fs = require('fs');
@@ -16,13 +16,14 @@ const ORDERS_2026 = path.join(__dirname, '..', 'data', 'EtsySoldOrders2026.csv')
 const HOMEPAGE = path.join(__dirname, '..', 'public', 'index.html');
 const REVIEWS_PAGE = path.join(__dirname, '..', 'public', 'reviews', 'index.html');
 
-/* Order IDs to feature on the homepage carousel (5 max) */
+/* Order IDs to feature on the homepage carousel (5 max)
+   Priority: long-context reviews with real product/sensory detail */
 const FEATURED_ORDER_IDS = [
-  '4016607099', // SimpliciteeNYC / Clayton Jones — emotional, health-focused
-  '4021138290', // White Wall / William Sam — detailed technical
-  '3826057194', // Tariq / Tariq Bacchus — concise quality
-  '3746581690', // John / John Van Coller — duvet product love
-  '3911090197', // Gummels / Frank Koden — international (German)
+  '4021138290', // William — detailed technical (prototype, 2-layer system, fit)
+  '3427586586', // amymccreedy — customer service + product hunt story
+  '4016607099', // Clayton — emotional health/safety angle
+  '3826057194', // Tariq — quality + seller responsiveness
+  '3746581690', // John Van — product love, cotton quality surprise
 ];
 
 /* ── CSV parser (handles quoted fields) ────────────────── */
@@ -205,11 +206,11 @@ function main() {
   /* Generate cards */
   const homepageCards = featured.map(renderReviewCard).join('\n');
 
-  /* Generate dots (3 dots for 5 cards at 2-per-page) */
-  const dotCount = Math.ceil(featured.length / 2);
+  /* Generate 1 dot per review (5 dots for 5 reviews) */
+  const dotCount = featured.length;
   const homepageDots = Array.from({ length: dotCount }, (_, i) => {
     const activeClass = i === 0 ? ' active' : '';
-    return `            <button class="reviews-dot${activeClass}" data-index="${i}" aria-label="Reviews page ${i + 1}"></button>`;
+    return `            <button class="reviews-dot${activeClass}" data-index="${i}" aria-label="Review ${i + 1}"></button>`;
   }).join('\n');
 
   /* 4. Build reviews page (all reviews) */
@@ -240,8 +241,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log('\nDone! Next step:');
-  console.log('  npx wrangler pages deploy public --commit-dirty=true');
+  console.log('\nDone! Review HTML updated. Deploy manually when ready.');
 }
 
 main();
