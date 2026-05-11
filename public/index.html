@@ -435,19 +435,43 @@
           <h2>What Customers Say</h2>
           <p>Real reviews from Etsy shoppers around the world.</p>
         </div>
-        <div class="reviews-grid">
-          <!-- REVIEWS-START -->
+        <div class="reviews-carousel">
+          <div class="reviews-track scroll-row">
+            <!-- REVIEWS-START -->
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;Absolutely perfect fit for our V-Berth! I was worried about the odd shape but the blueprint process made it so easy. Best sheets we've ever had on the boat.&rdquo;</p>
-            <div class="review-author">&mdash; Wanda, United States</div>
+            <p class="review-text">&ldquo;My parents have a larger mattress cover and I’m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! It’s a joy to know they are sleeping in a chemically safe environment 🤍&rdquo;</p>
+            <div class="review-author">&mdash; Clayton, United States</div>
           </div>
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;The 3-sided zipper is a game changer. My elderly mother can change the duvet cover by herself now. Fabric quality is excellent and the custom size was spot on.&rdquo;</p>
-            <div class="review-author">&mdash; Sarah, Australia</div>
+            <p class="review-text">&ldquo;I had a custom 160×50 cm dakimakura waterproof encasement made, and the experience was excellent from start to finish. The seller was very responsive and handled detailed technical requirements without any issues. We went over specifications like zipper length and placement, fabric behavior, and overall construction, and they even created a prototype with measurements before final production to ensure the fit was correct. The final product is a 2-layer system (TPU liner + outer cover), and the fit is exactly as intended — snug, smooth, and well-balanced with no bunching. The zipper is properly concealed, and the overall construction feels durable and well thought out. What stood out most was their understanding of materials and willingness to explain design decisions clearly, especially regarding fit and long-term durability.&rdquo;</p>
+            <div class="review-author">&mdash; William, United States</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I was very happy to receive my mattress protector! Everything was as described; custom size worked great, the material is high quality, and I love that it has all around protection. The seller was very responsive to my questions and helped me through a minor shipping fiasco. Highly recommended!&rdquo;</p>
+            <div class="review-author">&mdash; Tariq, Canada</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;I have always battled with duvets. This was exactly what I was looking for. When they arrived, I was pleasantly surprised with the quality of the cotton. I am in love with these duvet covers.&rdquo;</p>
+            <div class="review-author">&mdash; John Van, South Africa</div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            <p class="review-text">&ldquo;Schneller Versand, netter Kontakt, gute Qualität wie beschrieben.&rdquo;</p>
+            <div class="review-author">&mdash; Frank, Germany</div>
           </div>
 <!-- REVIEWS-END -->
+          </div>
+          <div class="reviews-dots">
+            <!-- DOTS-START -->
+            <button class="reviews-dot active" data-index="0" aria-label="Reviews page 1"></button>
+            <button class="reviews-dot" data-index="1" aria-label="Reviews page 2"></button>
+            <button class="reviews-dot" data-index="2" aria-label="Reviews page 3"></button>
+<!-- DOTS-END -->
+          </div>
         </div>
         <div class="review-badge">
           <div class="badge-box">
@@ -629,5 +653,6 @@
       });
     })();
   </script>
+  <script src="/js/reviews-carousel.js"></script>
 </body>
 </html>

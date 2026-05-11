@@ -6,9 +6,15 @@
   <meta name="description" content="MildMate — ผ้าปูที่นอนสั่งตัดจากประเทศไทย พอดีทุกที่นอน จากเรือยอชท์จนถึงเตียงครอบครัวใหญ่">
   <title>MildMate — ผ้าปูที่นอนสั่งตัดจากประเทศไทย</title>
 
-  <!-- Google Fonts: Quicksand -->
+  <!-- Preconnect to external origins for faster connection setup -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+  <!-- Preload hero image (LCP element) so browser discovers it immediately -->
+  <link rel="preload" as="image" href="/images/Hero01.jpg" fetchpriority="high">
+
+  <!-- Google Fonts: Quicksand -->
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- Font Awesome 6 — cart icon & hamburger -->
@@ -103,6 +109,8 @@
 
     <!-- 1. HERO -->
     <section class="hero">
+      <img src="/images/Hero01.jpg" alt="" class="hero-bg" fetchpriority="high" decoding="async" width="1500" height="930">
+      <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1>ผ้านอนที่พอดี สั่งตัดตามขนาดของคุณ</h1>
         <p class="hero-sub">ผ้าปูที่นอนสั่งตัดสำหรับทุกที่นอน — จากเรือยอชท์จนถึงเตียงครอบครัวใหญ่ ผลิตด้วยฝีมือจากประเทศไทย จัดส่งทั่วโลก</p>
@@ -147,25 +155,25 @@
         <div class="category-grid">
           <a href="/marine/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-marine.jpg" alt="ผ้าปูเรือยอชท์" loading="lazy">
+              <img src="/images/Categories/category-marine.jpg" alt="ผ้าปูเรือยอชท์" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">เรือยอชท์</div>
           </a>
           <a href="/family/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-family.jpg" alt="ผ้าปูครอบครัว" loading="lazy">
+              <img src="/images/Categories/category-family.jpg" alt="ผ้าปูครอบครัว" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">ครอบครัว</div>
           </a>
           <a href="/duvet/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-duvet.jpg" alt="ผ้านวมซิป 3 ด้าน" loading="lazy">
+              <img src="/images/Categories/category-duvet.jpg" alt="ผ้านวมซิป 3 ด้าน" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">ผ้านวมซิป 3 ด้าน</div>
           </a>
           <a href="/protection/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-protection.jpg" alt="กันน้ำกันไรฝุ่น" loading="lazy">
+              <img src="/images/Categories/category-protection.jpg" alt="กันน้ำกันไรฝุ่น" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">กันน้ำกันไรฝุ่น</div>
           </a>
@@ -187,7 +195,7 @@
           <div class="product-grid scroll-row">
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg" alt="ผ้านวมซิป 3 ด้าน" loading="lazy">
+                <img src="/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg" alt="ผ้านวมซิป 3 ด้าน" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">ผ้านวมซิป 3 ด้าน</h3>
@@ -197,7 +205,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="ผ้าปูที่นอนครอบครัวสั่งตัด" loading="lazy">
+                <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="ผ้าปูที่นอนครอบครัวสั่งตัด" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">ผ้าปูที่นอนครอบครัวสั่งตัด</h3>
@@ -207,7 +215,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="ผ้าปูที่นอนเรือยอชท์ V-Berth" loading="lazy">
+                <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="ผ้าปูที่นอนเรือยอชท์ V-Berth" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">ผ้าปูที่นอนเรือยอชท์</h3>
@@ -217,7 +225,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/sheet-protectors.jpg" alt="ผ้าคลุมที่นอน RV & Van" loading="lazy">
+                <img src="/images/products/sheet-protectors.jpg" alt="ผ้าคลุมที่นอน RV & Van" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">ผ้าคลุมที่นอน RV & Van</h3>
@@ -227,7 +235,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/tbar.jpg" alt="ตัวเชื่อมที่นอน BedBridge" loading="lazy">
+                <img src="/images/products/tbar.jpg" alt="ตัวเชื่อมที่นอน BedBridge" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">ตัวเชื่อมที่นอน BedBridge</h3>
@@ -259,7 +267,7 @@
         </div>
         <div class="router-grid">
           <a href="/marine/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-marine.jpg" alt="ผ้าปูเรือยอชท์" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-marine.jpg" alt="ผ้าปูเรือยอชท์" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>เรือยอชท์</h3>
               <p class="router-desc">ผ้าปู V-Berth สั่งตัดสำหรับเรือและยอชท์ กรอก: Head, Bottom, Width, Depth</p>
@@ -267,7 +275,7 @@
             </div>
           </a>
           <a href="/family/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-family.jpg" alt="เตียงครอบครัว" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-family.jpg" alt="เตียงครอบครัว" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>เตียงครอบครัว</h3>
               <p class="router-desc">ผ้าปูขนาดใหญ่สำหรับนอนร่วม กรอก: ความกว้าง, ความยาว, ความสูง</p>
@@ -275,7 +283,7 @@
             </div>
           </a>
           <a href="/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-duvet.jpg" alt="ผ้านวมซิป 3 ด้าน" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-duvet.jpg" alt="ผ้านวมซิป 3 ด้าน" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>ผ้านวม</h3>
               <p class="router-desc">ระบบซิป 3 ด้าน Easy-Change กรอก: ความกว้าง, ความยาว</p>
@@ -283,7 +291,7 @@
             </div>
           </a>
           <a href="/protection/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-protection.jpg" alt="ผ้าคลุมกันน้ำกันไรฝุ่น" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-protection.jpg" alt="ผ้าคลุมกันน้ำกันไรฝุ่น" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>กันน้ำกันไรฝุ่น</h3>
               <p class="router-desc">ผ้าคลุมกันน้ำ TPU และซิปรอบ 6 ด้าน กรอก: ความกว้าง, ความยาว, ความสูง</p>
@@ -316,7 +324,7 @@
         <div class="fabric-panels">
           <div class="fabric-panel active" data-fabric="breezeplus">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-breezeplus.jpg" alt="BreezePlus fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-breezeplus.jpg" alt="BreezePlus fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>คอลเลกชัน BreezePlus</h3>
                 <p class="tagline">ผ้าฝ้ายผสมเย็นสบายระดับสูง</p>
@@ -344,7 +352,7 @@
           </div>
           <div class="fabric-panel" data-fabric="cloudsoft">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-cloudsoft.jpg" alt="CloudSoft fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-cloudsoft.jpg" alt="CloudSoft fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>คอลเลกชัน CloudSoft</h3>
                 <p class="tagline">ไมโครไฟเบอร์พรีเมียมระดับสูง</p>
@@ -375,7 +383,7 @@
           </div>
           <div class="fabric-panel" data-fabric="premacotton">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-premacotton.jpg" alt="PremaCotton fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-premacotton.jpg" alt="PremaCotton fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>คอลเลกชัน PremaCotton</h3>
                 <p class="tagline">ทางเลือกธรรมชาติที่บริสุทธิ์ที่สุด</p>
@@ -395,7 +403,7 @@
           </div>
           <div class="fabric-panel" data-fabric="ecoluxe">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-ecoluxe.jpg" alt="EcoLuxe fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-ecoluxe.jpg" alt="EcoLuxe fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>คอลเลกชัน EcoLuxe</h3>
                 <p class="tagline">ผ้าคาลิโกธรรมชาติ</p>
@@ -493,16 +501,16 @@
           <h4>ช้อปกับเรา</h4>
           <div class="footer-icons-grid">
             <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
-              <img src="/images/Logo/Etsy.png" alt="">
+              <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
-              <img src="/images/Logo/eBay.png" alt="">
+              <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
-              <img src="/images/Logo/Shopee.png" alt="">
+              <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
-              <img src="/images/Logo/Lazada.png" alt="">
+              <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
             </a>
           </div>
         </div>
@@ -526,10 +534,10 @@
           </ul>
           <div class="footer-icons-grid contact-icons">
             <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle">
-              <img src="/images/Logo/WhatsAPP.png" alt="">
+              <img src="/images/Logo/WhatsAPP.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle">
-              <img src="/images/Logo/LineOA.png" alt="">
+              <img src="/images/Logo/LineOA.png" alt="" width="100" height="100" decoding="async">
             </a>
           </div>
         </div>
@@ -538,19 +546,19 @@
       <!-- Social Media Center Row -->
       <div class="footer-social-center">
         <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon">
-          <img src="/images/Logo/Facebook.png" alt="">
+          <img src="/images/Logo/Facebook.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon">
-          <img src="/images/Logo/Instagram.png" alt="">
+          <img src="/images/Logo/Instagram.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon">
-          <img src="/images/Logo/TikTok.png" alt="">
+          <img src="/images/Logo/TikTok.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon">
-          <img src="/images/Logo/Pinterest.png" alt="">
+          <img src="/images/Logo/Pinterest.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon">
-          <img src="/images/Logo/YouTube.png" alt="">
+          <img src="/images/Logo/YouTube.png" alt="" width="100" height="100" decoding="async">
         </a>
       </div>
 
