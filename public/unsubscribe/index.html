@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Unsubscribe from MildMate marketing emails.">
+  <title>Unsubscribe — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .unsubscribe-page {
+      min-height: 60vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+    }
+    .unsubscribe-card {
+      max-width: 480px;
+      width: 100%;
+      background: var(--color-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 40px 32px;
+      text-align: center;
+    }
+    .unsubscribe-card h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .unsubscribe-card p {
+      color: var(--color-muted);
+      margin-bottom: 24px;
+    }
+    .unsubscribe-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .unsubscribe-form input[type="email"] {
+      padding: 12px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .unsubscribe-form input[type="email"]:focus {
+      border-color: var(--color-primary);
+    }
+    .unsubscribe-form button {
+      padding: 14px 24px;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .unsubscribe-form button:hover {
+      background: var(--color-primary-dark);
+    }
+    .unsubscribe-form button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .unsubscribe-msg {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      display: none;
+    }
+    .unsubscribe-msg.success {
+      display: block;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .unsubscribe-msg.error {
+      display: block;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .unsubscribe-note {
+      margin-top: 24px;
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+    }
+    .unsubscribe-note a {
+      color: var(--color-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header" style="position:static;">
+    <div class="container header-inner">
+      <a href="/" class="logo-link" aria-label="MildMate Home" style="margin:0 auto;">
+        <img src="/images/logo.png" alt="MildMate" width="180" height="50">
+      </a>
+    </div>
+  </header>
+
+  <main class="unsubscribe-page">
+    <div class="unsubscribe-card">
+      <h1>Unsubscribe from Emails</h1>
+      <p>We're sorry to see you go. Enter your email below to stop receiving marketing emails from MildMate.</p>
+
+      <form class="unsubscribe-form" id="unsubscribe-form">
+        <input type="email" name="email" id="unsubscribe-email" placeholder="Enter your email address" required aria-label="Email address">
+        <button type="submit" id="unsubscribe-btn">Unsubscribe Me</button>
+      </form>
+
+      <p class="unsubscribe-msg" id="unsubscribe-msg" aria-live="polite"></p>
+
+      <p class="unsubscribe-note">
+        Note: You will continue to receive order confirmations and shipping updates for any active orders.<br>
+        Changed your mind? <a href="/">Resubscribe anytime</a> on our homepage.
+      </p>
+    </div>
+  </main>
+
+  <footer class="site-footer" style="padding:24px 0;">
+    <div class="container" style="text-align:center;">
+      <p style="font-size:0.8125rem; color:var(--color-muted);">&copy; MildMate 2026 — <a href="/policy/" style="color:var(--color-muted);">Privacy Policy</a></p>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const form = document.getElementById('unsubscribe-form');
+      const btn = document.getElementById('unsubscribe-btn');
+      const msg = document.getElementById('unsubscribe-msg');
+      const emailInput = document.getElementById('unsubscribe-email');
+
+      // Pre-fill email from URL query param
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get('email');
+      if (emailParam) {
+        emailInput.value = decodeURIComponent(emailParam);
+      }
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = emailInput.value.trim();
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          msg.className = 'unsubscribe-msg error';
+          msg.textContent = 'Please enter a valid email address.';
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+        msg.className = 'unsubscribe-msg';
+        msg.textContent = '';
+
+        try {
+          const res = await fetch('/api/unsubscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            msg.className = 'unsubscribe-msg success';
+            msg.textContent = data.message || 'You have been unsubscribed. You will no longer receive marketing emails from MildMate.';
+            form.style.display = 'none';
+          } else {
+            msg.className = 'unsubscribe-msg error';
+            msg.textContent = data.message || 'Something went wrong. Please try again or contact us.';
+          }
+        } catch (err) {
+          msg.className = 'unsubscribe-msg error';
+          msg.textContent = 'Network error. Please check your connection and try again.';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Unsubscribe Me';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
