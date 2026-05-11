@@ -159,4 +159,5 @@ D:\00_MildMate\Re-Bulit_Web\
 - R2 bucket name is `mildmate-assets` — consistent everywhere
 - Admin pages are in `/admin/` path, protected by Cloudflare Access
 - All customer-facing pages go in `public/`
+- **NEVER auto-deploy.** The user controls all deployments manually. Do NOT run `wrangler pages deploy` or any deploy command unless the user explicitly asks. Always say "Deploy when you're ready" instead.
 - **Phase 2 (SEO URLs) is intentionally deferred** — it will run pre-launch after Phase 7 is complete. Do not start Phase 2 early.
