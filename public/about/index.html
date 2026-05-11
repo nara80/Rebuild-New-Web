@@ -211,7 +211,8 @@
     .youtube-wrapper {
       position: relative;
       width: 100%;
-      aspect-ratio: 9 / 16;
+      height: 0;
+      padding-bottom: 177.78%; /* 9:16 aspect ratio via padding trick */
       border-radius: var(--radius);
       overflow: hidden;
       box-shadow: var(--shadow);
@@ -219,7 +220,8 @@
     }
     .youtube-wrapper iframe {
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       border: none;
@@ -549,11 +551,10 @@
       <div class="youtube-container">
         <div class="youtube-wrapper">
           <iframe
-            src="https://www.youtube.com/embed/Ooqvv3SVll8"
+            src="https://www.youtube.com/embed/Ooqvv3SVll8?rel=0"
             title="MildMate YouTube Short — Engineered for Efficiency"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-            loading="lazy">
+            allowfullscreen>
           </iframe>
         </div>
       </div>
