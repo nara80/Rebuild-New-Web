@@ -6,9 +6,15 @@
   <meta name="description" content="MildMate — Custom bedding made in Thailand. Perfect fit for every mattress, from V-Berth boats to family mega-beds.">
   <title>MildMate — Custom Bedding Made in Thailand</title>
 
-  <!-- Google Fonts: Quicksand -->
+  <!-- Preconnect to external origins for faster connection setup -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+
+  <!-- Preload hero image (LCP element) so browser discovers it immediately -->
+  <link rel="preload" as="image" href="/images/Hero01.jpg" fetchpriority="high">
+
+  <!-- Google Fonts: Quicksand -->
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- Font Awesome 6 — cart icon & hamburger -->
@@ -105,7 +111,8 @@
 
     <!-- 1. HERO -->
     <section class="hero">
-      <div class="hero-bg"></div>
+      <img src="/images/Hero01.jpg" alt="" class="hero-bg" fetchpriority="high" decoding="async" width="1500" height="930">
+      <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1>Bedding Made Easy Again<br><span style="font-size: 0.85em; font-weight: 600;">Any Size, Any Shape</span></h1>
         <p class="hero-sub">Custom-engineered linens for Family Beds, RVs, and Yachts. Hand-crafted and a guaranteed &ldquo;Perfect Lock&rdquo; fit.</p>
@@ -150,25 +157,25 @@
         <div class="category-grid">
           <a href="/marine/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-marine.jpg" alt="Marine & Yacht bedding on boat" loading="lazy">
+              <img src="/images/Categories/category-marine.jpg" alt="Marine & Yacht bedding on boat" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">Marine & Yacht</div>
           </a>
           <a href="/family/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-family.jpg" alt="Family co-sleep bedding" loading="lazy">
+              <img src="/images/Categories/category-family.jpg" alt="Family co-sleep bedding" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">Family & Co-Sleep</div>
           </a>
           <a href="/duvet/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-duvet.jpg" alt="Easy-Change 3-sided zipper duvet" loading="lazy">
+              <img src="/images/Categories/category-duvet.jpg" alt="Easy-Change 3-sided zipper duvet" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">Easy-Change Duvet</div>
           </a>
           <a href="/protection/" class="category-card">
             <div class="category-image">
-              <img src="/images/categories/category-protection.jpg" alt="Waterproof mattress protection" loading="lazy">
+              <img src="/images/Categories/category-protection.jpg" alt="Waterproof mattress protection" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="category-label">Protection</div>
           </a>
@@ -190,7 +197,7 @@
           <div class="product-grid scroll-row">
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg" alt="3-Sided Zipper Duvet Cover" loading="lazy">
+                <img src="/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg" alt="3-Sided Zipper Duvet Cover" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">3-Sided Zipper Duvet Cover</h3>
@@ -200,7 +207,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="Custom Family Fitted Sheet" loading="lazy">
+                <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="Custom Family Fitted Sheet" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">Custom Family Fitted Sheet</h3>
@@ -210,7 +217,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="Marine Fitted Sheet (V-Berth)" loading="lazy">
+                <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="Marine Fitted Sheet (V-Berth)" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">Marine Fitted Sheet</h3>
@@ -220,7 +227,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/sheet-protectors.jpg" alt="RV & Van Mattress Encasement" loading="lazy">
+                <img src="/images/products/sheet-protectors.jpg" alt="RV & Van Mattress Encasement" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">RV & Van Mattress Encasement</h3>
@@ -230,7 +237,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/tbar.jpg" alt="MildMate BedBridge Connector" loading="lazy">
+                <img src="/images/products/tbar.jpg" alt="MildMate BedBridge Connector" width="800" height="800" loading="lazy" decoding="async">
               </div>
               <div class="product-info">
                 <h3 class="product-title">BedBridge Connector</h3>
@@ -262,7 +269,7 @@
         </div>
         <div class="router-grid">
           <a href="/marine/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-marine.jpg" alt="Marine & Yacht bedding" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-marine.jpg" alt="Marine & Yacht bedding" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>Marine & Yacht</h3>
               <p class="router-desc">Custom V-Berth sheets for boats and yachts. Inputs: Head, Bottom, Width, Depth.</p>
@@ -270,7 +277,7 @@
             </div>
           </a>
           <a href="/family/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-family.jpg" alt="Family bed co-sleeping bedding" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-family.jpg" alt="Family bed co-sleeping bedding" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>Family Beds</h3>
               <p class="router-desc">Oversized fitted sheets for co-sleeping. Inputs: Width, Length, Depth.</p>
@@ -278,7 +285,7 @@
             </div>
           </a>
           <a href="/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-duvet.jpg" alt="3-sided zipper duvet cover" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-duvet.jpg" alt="3-sided zipper duvet cover" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>Duvet Covers</h3>
               <p class="router-desc">Easy-Change 3-Sided Zipper system. Inputs: Width, Length.</p>
@@ -286,7 +293,7 @@
             </div>
           </a>
           <a href="/protection/" class="router-card">
-            <div class="router-visual"><img src="/images/router/router-protection.jpg" alt="Waterproof mattress protector" loading="lazy"></div>
+            <div class="router-visual"><img src="/images/router/router-protection.jpg" alt="Waterproof mattress protector" width="800" height="600" loading="lazy" decoding="async"></div>
             <div class="router-info">
               <h3>Specialized Protection</h3>
               <p class="router-desc">TPU waterproof protectors and 6-side encasement zippers. Inputs: Width, Length, Depth.</p>
@@ -319,7 +326,7 @@
         <div class="fabric-panels">
           <div class="fabric-panel active" data-fabric="breezeplus">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-breezeplus.jpg" alt="BreezePlus fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-breezeplus.jpg" alt="BreezePlus fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>BreezePlus Collection</h3>
                 <p class="tagline">Advanced Cooling Cotton Blend</p>
@@ -347,7 +354,7 @@
           </div>
           <div class="fabric-panel" data-fabric="cloudsoft">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-cloudsoft.jpg" alt="CloudSoft fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-cloudsoft.jpg" alt="CloudSoft fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>CloudSoft Collection</h3>
                 <p class="tagline">Premium Microfiber Excellence</p>
@@ -378,7 +385,7 @@
           </div>
           <div class="fabric-panel" data-fabric="premacotton">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-premacotton.jpg" alt="PremaCotton fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-premacotton.jpg" alt="PremaCotton fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>PremaCotton Collection</h3>
                 <p class="tagline">The Purest Natural Choice</p>
@@ -398,7 +405,7 @@
           </div>
           <div class="fabric-panel" data-fabric="ecoluxe">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-ecoluxe.jpg" alt="EcoLuxe fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-ecoluxe.jpg" alt="EcoLuxe fabric texture" width="800" height="600" loading="lazy" decoding="async"></div>
               <div class="fabric-panel-info">
                 <h3>EcoLuxe Collection</h3>
                 <p class="tagline">Natural Calico Comfort</p>
@@ -429,6 +436,7 @@
           <p>Real reviews from Etsy shoppers around the world.</p>
         </div>
         <div class="reviews-grid">
+          <!-- REVIEWS-START -->
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
             <p class="review-text">&ldquo;Absolutely perfect fit for our V-Berth! I was worried about the odd shape but the blueprint process made it so easy. Best sheets we've ever had on the boat.&rdquo;</p>
@@ -439,6 +447,7 @@
             <p class="review-text">&ldquo;The 3-sided zipper is a game changer. My elderly mother can change the duvet cover by herself now. Fabric quality is excellent and the custom size was spot on.&rdquo;</p>
             <div class="review-author">&mdash; Sarah, Australia</div>
           </div>
+<!-- REVIEWS-END -->
         </div>
         <div class="review-badge">
           <div class="badge-box">
@@ -497,16 +506,16 @@
           <h4>Shop With Us</h4>
           <div class="footer-icons-grid">
             <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
-              <img src="/images/Logo/Etsy.png" alt="">
+              <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
-              <img src="/images/Logo/eBay.png" alt="">
+              <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
-              <img src="/images/Logo/Shopee.png" alt="">
+              <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
-              <img src="/images/Logo/Lazada.png" alt="">
+              <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
             </a>
           </div>
         </div>
@@ -530,10 +539,10 @@
           </ul>
           <div class="footer-icons-grid contact-icons">
             <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle">
-              <img src="/images/Logo/WhatsAPP.png" alt="">
+              <img src="/images/Logo/WhatsAPP.png" alt="" width="100" height="100" decoding="async">
             </a>
             <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle">
-              <img src="/images/Logo/LineOA.png" alt="">
+              <img src="/images/Logo/LineOA.png" alt="" width="100" height="100" decoding="async">
             </a>
           </div>
         </div>
@@ -542,19 +551,19 @@
       <!-- Social Media Center Row -->
       <div class="footer-social-center">
         <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon">
-          <img src="/images/Logo/Facebook.png" alt="">
+          <img src="/images/Logo/Facebook.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon">
-          <img src="/images/Logo/Instagram.png" alt="">
+          <img src="/images/Logo/Instagram.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon">
-          <img src="/images/Logo/TikTok.png" alt="">
+          <img src="/images/Logo/TikTok.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon">
-          <img src="/images/Logo/Pinterest.png" alt="">
+          <img src="/images/Logo/Pinterest.png" alt="" width="100" height="100" decoding="async">
         </a>
         <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon">
-          <img src="/images/Logo/YouTube.png" alt="">
+          <img src="/images/Logo/YouTube.png" alt="" width="100" height="100" decoding="async">
         </a>
       </div>
 
