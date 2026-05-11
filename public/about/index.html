@@ -100,8 +100,22 @@
       border-bottom: 1px solid var(--color-border);
     }
     .genesis-inner {
-      max-width: 760px;
+      max-width: 960px;
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .genesis-image {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .genesis-image img {
+      width: 100%;
+      height: auto;
+      display: block;
     }
     .genesis-kicker {
       font-size: 0.75rem;
@@ -239,10 +253,23 @@
     .material-card {
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
-      padding: 28px 26px;
+      overflow: hidden;
       background: #f9f9f9;
       display: flex;
       flex-direction: column;
+    }
+    .material-card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .material-card-body {
+      padding: 24px 26px 28px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
     .material-card .kicker {
       font-size: 0.75rem;
@@ -363,6 +390,8 @@
       .timeline-header h2,
       .materials-header h2,
       .video-demo-section h2 { font-size: 1.5rem; }
+      .genesis-inner { grid-template-columns: 1fr; gap: 32px; }
+      .genesis-image { order: -1; }
       .materials-grid { grid-template-columns: 1fr; }
       .timeline-container { padding-left: 32px; }
       .timeline-container::before { left: 7px; }
@@ -454,7 +483,7 @@
           </div>
         </div>
         <div class="about-hero-visual">
-          <img src="https://placehold.co/600x450/f0f0f0/333?text=Precision+Engineering+Lab" alt="MildMate precision engineering — custom bedding lab" width="600" height="450" loading="eager">
+          <img src="https://placehold.co/600x450/f0f0f0/333?text=Hero:+Custom+Bedding+Engineering+Lab" alt="MildMate precision engineering — custom bedding lab" width="600" height="450" loading="eager">
           <div class="tech-specs-overlay">
             <strong>Technical Specs</strong>
             <span>Tolerance: ±1–2cm</span>
@@ -470,11 +499,16 @@
     <!-- ============================================== -->
     <section class="genesis-section">
       <div class="genesis-inner">
-        <div class="genesis-kicker">The 2019 Problem</div>
-        <h2>Solving the "Mattress Gap" Paradox.</h2>
-        <div class="genesis-quote">
-          <p>MildMate was founded in 2019 to solve a geometric failure: the "lumpy" transition of joined mattresses in co-sleeping environments. Standard retail bedding could not maintain the structural tension required for a unified surface.</p>
-          <p>We transitioned from a family home in Thailand to a specialized engineering lab by treating every bed not as furniture, but as a technical asset. We replaced DIY "guessing" with a rigorous measurement protocol.</p>
+        <div class="genesis-text">
+          <div class="genesis-kicker">The 2019 Problem</div>
+          <h2>Solving the "Mattress Gap" Paradox.</h2>
+          <div class="genesis-quote">
+            <p>MildMate was founded in 2019 to solve a geometric failure: the "lumpy" transition of joined mattresses in co-sleeping environments. Standard retail bedding could not maintain the structural tension required for a unified surface.</p>
+            <p>We transitioned from a family home in Thailand to a specialized engineering lab by treating every bed not as furniture, but as a technical asset. We replaced DIY "guessing" with a rigorous measurement protocol.</p>
+          </div>
+        </div>
+        <div class="genesis-image">
+          <img src="https://placehold.co/500x380/f5f5f5/333?text=Mattress+Gap+Problem+Visual" alt="Mattress gap paradox — joined mattresses creating lumpy transition" width="500" height="380" loading="lazy">
         </div>
       </div>
     </section>
@@ -540,31 +574,43 @@
       <div class="materials-grid">
 
         <div class="material-card">
-          <div class="kicker">Fabric 01 — Hygienic Layer</div>
-          <h3>PremaCotton</h3>
-          <span class="cert-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            OEKO-TEX® Standard 100
-          </span>
-          <p>OEKO-TEX® Standard 100 Certified (Since 2022). Zero-toxin safety for infants and sensitive skin. The benchmark for clinically validated material safety.</p>
+          <img src="https://placehold.co/440x160/e8f4fd/1a7fd4?text=PremaCotton+Swatch" alt="PremaCotton fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">Fabric 01 — Hygienic Layer</div>
+            <h3>PremaCotton</h3>
+            <span class="cert-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              OEKO-TEX® Standard 100
+            </span>
+            <p>OEKO-TEX® Standard 100 Certified (Since 2022). Zero-toxin safety for infants and sensitive skin. The benchmark for clinically validated material safety.</p>
+          </div>
         </div>
 
         <div class="material-card">
-          <div class="kicker">Fabric 02 — Thermal Layer</div>
-          <h3>BreezePlus</h3>
-          <p>50/50 Long-Staple Fusion. Active 3–5°C thermal regulation. Engineered for tropical, marine, and high-humidity sleep environments.</p>
+          <img src="https://placehold.co/440x160/e8f4fd/1a7fd4?text=BreezePlus+Swatch" alt="BreezePlus fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">Fabric 02 — Thermal Layer</div>
+            <h3>BreezePlus</h3>
+            <p>50/50 Long-Staple Fusion. Active 3–5°C thermal regulation. Engineered for tropical, marine, and high-humidity sleep environments.</p>
+          </div>
         </div>
 
         <div class="material-card">
-          <div class="kicker">Fabric 03 — Comfort Layer</div>
-          <h3>CloudSoft</h3>
-          <p>120 GSM Double-Brushed Microfiber. Marine-grade moisture resistance with a durable, pill-resistant weave for everyday luxury.</p>
+          <img src="https://placehold.co/440x160/e8f4fd/1a7fd4?text=CloudSoft+Swatch" alt="CloudSoft fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">Fabric 03 — Comfort Layer</div>
+            <h3>CloudSoft</h3>
+            <p>120 GSM Double-Brushed Microfiber. Marine-grade moisture resistance with a durable, pill-resistant weave for everyday luxury.</p>
+          </div>
         </div>
 
         <div class="material-card">
-          <div class="kicker">Fabric 04 — Sustainable Layer</div>
-          <h3>EcoLuxe</h3>
-          <p>Raw, unbleached sustainable fibers for biophilic sleep. Minimal processing, maximum breathability, fully biodegradable end-of-life.</p>
+          <img src="https://placehold.co/440x160/e8f4fd/1a7fd4?text=EcoLuxe+Swatch" alt="EcoLuxe fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">Fabric 04 — Sustainable Layer</div>
+            <h3>EcoLuxe</h3>
+            <p>Raw, unbleached sustainable fibers for biophilic sleep. Minimal processing, maximum breathability, fully biodegradable end-of-life.</p>
+          </div>
         </div>
 
       </div>
