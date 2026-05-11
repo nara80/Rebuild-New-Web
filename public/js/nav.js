@@ -50,19 +50,32 @@
     mobileOverlay.addEventListener('click', closeDrawer);
   }
 
-  /* ── 3. Language toggle (Phase 4 hook) ───── */
+  /* ── 3. Language toggle — actual navigation ── */
+  // Pages known to have both EN and TH versions (expand as TH pages are built)
+  const BILINGUAL_PAGES = ['/'];
   const langToggle = document.querySelector('.lang-toggle');
   if (langToggle) {
     langToggle.addEventListener('click', function (e) {
-      if (e.target.tagName === 'SPAN') {
-        const lang = e.target.dataset.lang;
-        if (lang) {
-          document.querySelectorAll('.lang-toggle span').forEach(function (s) {
-            s.classList.toggle('active', s.dataset.lang === lang);
-          });
-          console.log('Language switched to:', lang);
-        }
+      if (e.target.tagName !== 'SPAN') return;
+      const targetLang = e.target.dataset.lang;
+      if (!targetLang) return;
+
+      const path = window.location.pathname;
+      const isTh = path.startsWith('/th/');
+      const enPath = isTh ? path.replace(/^\/th/, '') || '/' : path;
+      let newPath;
+
+      if (targetLang === 'th' && !isTh) {
+        // EN → TH: if page has TH version, go there; else go to TH homepage
+        newPath = BILINGUAL_PAGES.includes(enPath) ? '/th' + enPath : '/th/';
+      } else if (targetLang === 'en' && isTh) {
+        // TH → EN: strip /th/ prefix
+        newPath = enPath;
+      } else {
+        return; // Already on target language
       }
+
+      window.location.href = newPath;
     });
   }
 
