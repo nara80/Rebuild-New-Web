@@ -121,6 +121,14 @@
     if (e.key === 'Escape') closeSearch();
   });
 
+  /* ── 5b. Close drawer on search submit ───── */
+  const drawerSearchForm = document.querySelector('.drawer-search-form');
+  if (drawerSearchForm) {
+    drawerSearchForm.addEventListener('submit', function () {
+      closeDrawer();
+    });
+  }
+
   /* ── 6. Product carousel arrows + dots ──── */
   const carouselPrev = document.querySelector('.carousel-prev');
   const carouselNext = document.querySelector('.carousel-next');

@@ -436,6 +436,62 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
   color: var(--color-primary);
 }
 
+/* ── 9.4 Drawer Search ───────────────────── */
+.mobile-drawer-search {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.drawer-search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+.drawer-search-form input[type="search"] {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-main);
+  font-size: 1rem;
+  color: var(--color-text);
+  outline: none;
+}
+
+.drawer-search-form input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.drawer-search-form input[type="search"]::placeholder {
+  color: var(--color-muted);
+}
+
+.drawer-search-form button[type="submit"] {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.drawer-search-form button[type="submit"]:hover {
+  color: var(--color-primary);
+}
+
+.drawer-search-form button[type="submit"] svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* ── 9.5 Search Overlay ──────────────────── */
 .search-overlay {
   position: fixed;
@@ -1868,6 +1924,10 @@ main {
 
   .header-actions {
     gap: 12px;
+  }
+
+  .header-actions .search-btn {
+    display: none;
   }
 
   .header-actions .lang-toggle {
