@@ -343,6 +343,99 @@
       background: var(--color-primary-dark);
     }
 
+    /* ── Evolution Timeline ────────────────────── */
+    .timeline-section {
+      padding: 64px 24px;
+      background: #fff;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .timeline-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .timeline-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .timeline-container {
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+      padding-left: 40px;
+    }
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--color-primary);
+      opacity: 0.25;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -33px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px var(--color-primary);
+    }
+    .timeline-year-badge {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .timeline-content h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-content p {
+      color: var(--color-muted);
+      font-size: 0.9375rem;
+      margin: 0;
+    }
+
+    /* ── Fabric Lab Watermark ──────────────────── */
+    .fabric-lab-section {
+      position: relative;
+      overflow: hidden;
+    }
+    .fabric-watermark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .fabric-watermark span {
+      font-size: clamp(4rem, 10vw, 8rem);
+      font-weight: 700;
+      color: var(--color-text);
+      opacity: 0.04;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      user-select: none;
+    }
+
     /* ── Mobile ──────────────────────────────── */
     @media (max-width: 768px) {
       .about-hero-inner {
@@ -368,6 +461,17 @@
         max-width: 280px;
         border-width: 6px;
         border-radius: 16px;
+      }
+      .timeline-container {
+        padding-left: 32px;
+      }
+      .timeline-container::before {
+        left: 7px;
+      }
+      .timeline-dot {
+        left: -41px;
+        width: 14px;
+        height: 14px;
       }
       .cert-ribbon-inner {
         flex-direction: column;
@@ -469,33 +573,36 @@
       </div>
     </section>
 
-    <!-- 2. THE EVOLUTION (2022 → 2026) -->
-    <section class="blueprint-section" style="background:#fff;">
-      <div class="blueprint-header">
-        <h2>From Local Workshop to Global Precision.</h2>
-        <p style="max-width:720px; margin-left:auto; margin-right:auto;">In 2022, we set out to solve a simple problem: sheets that don't fit. By 2026, MildMate has evolved into a global leader in custom sleep surfaces. We've shipped to 11+ major cities across 2 continents, maintaining a 5.0-star average by treating every bed not as a piece of furniture, but as a technical asset to be protected.</p>
+    <!-- 2. EVOLUTION OF ENGINEERING (Timeline) -->
+    <section class="timeline-section">
+      <div class="timeline-header">
+        <h2>Evolution of Engineering</h2>
+        <p style="color:var(--color-muted); max-width:560px; margin:8px auto 0;">From a single V-Berth sketch to a global precision platform.</p>
       </div>
-      <div class="evolution-data" style="display:flex; justify-content:center; gap:48px; flex-wrap:wrap; margin-top:40px; padding:0 24px;">
-        <div style="text-align:center;">
-          <div style="width:64px; height:64px; border-radius:50%; background:var(--color-surface); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <div class="timeline-container">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2022</span>
+            <h3>The First Parametric Formula</h3>
+            <p>A yacht owner in Florida sends a hand-drawn V-Berth sketch. We build the first parametric boat-bedding formula: Head Width × Bottom Width × Length × Depth, with taper correction.</p>
           </div>
-          <strong style="font-size:1.5rem; color:var(--color-primary);">$195</strong>
-          <p style="font-size:0.8125rem; color:var(--color-muted); margin:4px 0 0;">Average Order Value<br><span style="font-size:0.6875rem;">High-ticket precision</span></p>
         </div>
-        <div style="text-align:center;">
-          <div style="width:64px; height:64px; border-radius:50%; background:var(--color-surface); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2024</span>
+            <h3>Photo-Measurement Protocol</h3>
+            <p>We introduce the credit-card-scale photo system. Customers snap one photo and we convert it into a CAD-ready blueprint with ±1cm tolerance.</p>
           </div>
-          <strong style="font-size:1.5rem; color:var(--color-primary);">11+ Cities</strong>
-          <p style="font-size:0.8125rem; color:var(--color-muted); margin:4px 0 0;">Global Footprint<br><span style="font-size:0.6875rem;">& Growing</span></p>
         </div>
-        <div style="text-align:center;">
-          <div style="width:64px; height:64px; border-radius:50%; background:var(--color-surface); display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2026</span>
+            <h3>Global Precision Platform</h3>
+            <p>11+ cities across 2 continents. A 5.0-star average maintained by treating every bed not as furniture, but as a technical asset to be protected.</p>
           </div>
-          <strong style="font-size:1.5rem; color:var(--color-primary);">5.0 / 5.0</strong>
-          <p style="font-size:0.8125rem; color:var(--color-muted); margin:4px 0 0;">Customer Satisfaction<br><span style="font-size:0.6875rem;">Verified reviews</span></p>
         </div>
       </div>
     </section>
@@ -526,25 +633,35 @@
     </section>
 
     <!-- 4. THE FABRIC INTELLIGENCE (The Lab) -->
-    <section style="padding:64px 0; background:#fff; border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border);">
-      <div style="max-width: var(--container-max); margin:0 auto; padding:0 24px;">
+    <section class="fabric-lab-section" style="padding:64px 0; background:#fff; border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border);">
+      <div class="fabric-watermark">
+        <span>TECHNICAL BLUEPRINT</span>
+      </div>
+      <div style="position:relative; z-index:1; max-width: var(--container-max); margin:0 auto; padding:0 24px;">
         <h2 style="text-align:center; font-size:1.5rem; font-weight:700; margin-bottom:8px;">Advanced Thermal &amp; Hygienic Science.</h2>
         <p style="text-align:center; color:var(--color-muted); margin-bottom:48px; max-width:560px; margin-left:auto; margin-right:auto;">Engineered layers for specific sleep environments. Not just fabric — thermal systems.</p>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
-          <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-            <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Thermal Layer</div>
-            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">BreezePlus®</h3>
-            <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">"Clinically 3-5°C cooler than traditional cotton. High thermal conductivity for tropical and marine climates."</p>
-          </div>
-          <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-            <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Hygienic Layer</div>
-            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">PremaCotton™</h3>
-            <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">"100% Human-Safe, OEKO-TEX certified. Specifically engineered for co-sleeping families and sensitive skin."</p>
-          </div>
-          <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-            <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Clinical Validation</div>
-            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">Siriraj Hospital</h3>
-            <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">"Certified anti-dust mite technology validated by the Faculty of Medicine at Siriraj Hospital, Thailand's leading medical research institution."</p>
+        <div style="max-width:800px; margin:0 auto;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
+            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Thermal Layer</div>
+              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">BreezePlus®</h3>
+              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">50/50 Long-Staple Fusion. Clinically 3-5°C cooler than traditional cotton. High thermal conductivity for tropical and marine climates.</p>
+            </div>
+            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Comfort Layer</div>
+              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">CloudSoft™</h3>
+              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">120 GSM Double-Brushed Microfiber. Ultra-soft touch with durable, pill-resistant weave for everyday luxury.</p>
+            </div>
+            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Hygienic Layer</div>
+              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">PremaCotton™</h3>
+              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">100% Human-Safe, OEKO-TEX certified. Specifically engineered for co-sleeping families and sensitive skin.</p>
+            </div>
+            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
+              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Clinical Validation</div>
+              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">Siriraj Hospital</h3>
+              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">Certified anti-dust mite technology validated by the Faculty of Medicine at Siriraj Hospital, Thailand's leading medical research institution.</p>
+            </div>
           </div>
         </div>
       </div>
