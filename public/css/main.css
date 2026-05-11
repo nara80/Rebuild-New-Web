@@ -2181,7 +2181,7 @@ main {
   overflow-wrap: break-word;
   word-wrap: break-word;
   hyphens: auto;
-  max-width: 30ch;
+  max-width: 100ch;
   font-size: 0.8125rem;
 }
 
@@ -2201,6 +2201,10 @@ main {
 
   .reviews-track .review-card {
     min-width: calc(100% - 48px);
+  }
+
+  .review-text {
+    max-width: 80ch;
   }
 
   .review-badge {
