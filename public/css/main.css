@@ -2181,7 +2181,7 @@ main {
   overflow-wrap: break-word;
   word-wrap: break-word;
   hyphens: auto;
-  max-width: 100ch;
+  max-width: 80ch;
   font-size: 0.8125rem;
 }
 
@@ -2204,7 +2204,7 @@ main {
   }
 
   .review-text {
-    max-width: 80ch;
+    max-width: 60ch;
   }
 
   .review-badge {
