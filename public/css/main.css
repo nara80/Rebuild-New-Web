@@ -280,7 +280,9 @@ p  { font-size: 1rem; font-weight: 400; margin-bottom: 1rem; }
 }
 
 .lang-toggle .active {
-  color: var(--color-primary);
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 1px;
 }
 
 .lang-toggle span {
@@ -600,7 +602,7 @@ main {
   margin-bottom: 0;
 }
 
-.footer-col h4 {
+.footer-col h3 {
   color: #ffffff;
   font-weight: 600;
   text-transform: uppercase;
