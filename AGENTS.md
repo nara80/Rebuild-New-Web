@@ -151,6 +151,20 @@ D:\00_MildMate\Re-Bulit_Web\
 
 ---
 
+## Deployment Protocol
+
+**The user controls all deployments manually. Droid NEVER deploys automatically.**
+
+| Rule | Instruction |
+|---|---|
+| **Never auto-deploy** | Do NOT run `wrangler pages deploy`, `wrangler deploy`, `git push`, or any command that modifies the live site or remote repository without explicit user instruction. |
+| **User-triggered only** | Only deploy when the user explicitly says: "Deploy now", "Push to GitHub", "Deploy to Cloudflare", or a similar direct command. |
+| **Default phrase** | When work is complete and ready for deployment, say: **"Deploy when you're ready."** Provide the exact manual command the user should run. |
+| **GitHub push blocked** | If Droid-Shield blocks `git push` due to false positives (e.g., base64 images in markdown), inform the user and offer 3 options: (1) push manually outside Droid, (2) disable Droid-Shield in settings, (3) replace the flagged content. |
+| **No deploy-on-commit** | Local `git commit` is fine. Remote push and Cloudflare deploy are user-controlled only. |
+
+---
+
 ## Notes for Future Droid Sessions
 
 - **ALWAYS read `Framework.md` at the start of every session** — it contains the full site blueprint, page layouts, design system, database schema, and build phases. AGENTS.md is summary memory; Framework.md is the complete specification.
@@ -159,5 +173,4 @@ D:\00_MildMate\Re-Bulit_Web\
 - R2 bucket name is `mildmate-assets` — consistent everywhere
 - Admin pages are in `/admin/` path, protected by Cloudflare Access
 - All customer-facing pages go in `public/`
-- **NEVER auto-deploy.** The user controls all deployments manually. Do NOT run `wrangler pages deploy` or any deploy command unless the user explicitly asks. Always say "Deploy when you're ready" instead.
 - **Phase 2 (SEO URLs) is intentionally deferred** — it will run pre-launch after Phase 7 is complete. Do not start Phase 2 early.
