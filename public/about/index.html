@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="About MildMate — The architecture of better sleep. Custom bedding engineered in Thailand since 2019.">
-  <title>About — MildMate</title>
+  <meta name="description" content="MildMate — Precision bedding engineered for every shape of sleep. Photo-Measurement, digital blueprinting, and OEKO-TEX certified textiles since 2019.">
+  <title>About — Precision Bedding Engineering | MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
@@ -12,10 +12,22 @@
   <style>
     .about-page { background: #f9f9f9; }
 
-    /* ── Hero ──────────────────────────────────── */
+    /* ── Section 1: Technical Hero ─────────────── */
     .about-hero {
       background: #f9f9f9;
-      padding: 60px 0 40px;
+      padding: 72px 0 56px;
+      position: relative;
+      overflow: hidden;
+    }
+    .blueprint-grid-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image:
+        linear-gradient(var(--color-primary) 1px, transparent 1px),
+        linear-gradient(90deg, var(--color-primary) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
     .about-hero-inner {
       display: grid;
@@ -25,35 +37,23 @@
       max-width: var(--container-max);
       margin: 0 auto;
       padding: 0 24px;
+      position: relative;
+      z-index: 1;
     }
     .about-hero-text h1 {
-      font-size: 2.25rem;
+      font-size: 2.5rem;
       font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 16px;
+      line-height: 1.15;
+      margin-bottom: 18px;
       color: var(--color-text);
     }
     .about-hero-text .hero-sub {
-      font-size: 1.125rem;
+      font-size: 1.0625rem;
       color: var(--color-muted);
       margin-bottom: 28px;
-      max-width: 480px;
+      max-width: 500px;
+      line-height: 1.6;
     }
-    .about-hero-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .about-hero-cta .btn-primary {
-      background: var(--color-primary);
-      color: #fff;
-      border-color: var(--color-primary);
-    }
-    .about-hero-cta .btn-primary:hover {
-      background: var(--color-primary-dark);
-    }
-
     .about-hero-visual {
       position: relative;
       border-radius: var(--radius);
@@ -76,7 +76,7 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.1);
       font-size: 0.8125rem;
       line-height: 1.6;
-      min-width: 160px;
+      min-width: 170px;
     }
     .tech-specs-overlay strong {
       display: block;
@@ -92,122 +92,224 @@
       font-weight: 600;
     }
 
-    /* ── Blueprint Section ─────────────────────── */
-    .blueprint-section {
+    /* ── Section 2: Engineering Genesis ─────────── */
+    .genesis-section {
       background: #fff;
-      padding: 64px 0;
+      padding: 72px 24px;
       border-top: 1px solid var(--color-border);
       border-bottom: 1px solid var(--color-border);
     }
-    .blueprint-header {
-      text-align: center;
-      margin-bottom: 40px;
+    .genesis-inner {
+      max-width: 760px;
+      margin: 0 auto;
     }
-    .blueprint-header h2 {
-      font-size: 1.5rem;
+    .genesis-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .genesis-section h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 24px;
+    }
+    .genesis-quote {
+      border-left: 3px solid var(--color-primary);
+      padding: 4px 0 4px 24px;
+      margin: 24px 0;
+      font-size: 1.0625rem;
+      line-height: 1.7;
+      color: var(--color-text);
+      font-style: normal;
+    }
+    .genesis-quote p {
+      margin: 0 0 16px;
+    }
+    .genesis-quote p:last-child { margin-bottom: 0; }
+
+    /* ── Section 3: Authority Timeline ──────────── */
+    .timeline-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+    }
+    .timeline-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .timeline-header h2 {
+      font-size: 1.875rem;
       font-weight: 700;
       margin-bottom: 8px;
     }
-    .blueprint-header p {
+    .timeline-header p {
       color: var(--color-muted);
-      font-size: 1rem;
-      max-width: 560px;
+      max-width: 540px;
       margin: 0 auto;
     }
-    .blueprint-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-      max-width: var(--container-max);
+    .timeline-container {
+      max-width: 760px;
       margin: 0 auto;
-      padding: 0 24px;
-    }
-    .blueprint-step {
-      text-align: center;
-      padding: 32px 24px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      background: #f9f9f9;
       position: relative;
+      padding-left: 40px;
     }
-    .blueprint-step::after {
-      content: "→";
+    .timeline-container::before {
+      content: '';
       position: absolute;
-      top: 50%;
-      right: -20px;
-      transform: translateY(-50%);
-      color: var(--color-primary);
-      font-size: 1.25rem;
-      font-weight: 700;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--color-primary);
+      opacity: 0.25;
     }
-    .blueprint-step:last-child::after { display: none; }
-    .blueprint-step .step-num {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
+    .timeline-item {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -33px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
+      background: var(--color-primary);
+      border: 3px solid #f9f9f9;
+      box-shadow: 0 0 0 2px var(--color-primary);
+    }
+    .timeline-year-badge {
+      display: inline-block;
       background: var(--color-primary);
       color: #fff;
       font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 16px;
+      font-size: 0.8125rem;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
     }
-    .blueprint-step h3 {
-      font-size: 1.125rem;
+    .timeline-content h3 {
+      font-size: 1.1875rem;
       font-weight: 700;
       margin-bottom: 8px;
     }
-    .blueprint-step p {
-      font-size: 0.875rem;
+    .timeline-content p {
       color: var(--color-muted);
+      font-size: 0.9375rem;
+      line-height: 1.65;
       margin: 0;
     }
 
-    /* ── Story ─────────────────────────────────── */
-    .story-section {
-      padding: 64px 0;
+    /* ── Section 4: Material Standards ──────────── */
+    .materials-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .materials-header {
+      text-align: center;
+      margin-bottom: 48px;
       max-width: 720px;
-      margin: 0 auto;
-      padding-left: 24px;
-      padding-right: 24px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .story-section h2 {
-      font-size: 1.5rem;
+    .materials-header h2 {
+      font-size: 1.875rem;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
-    .story-section p {
-      color: var(--color-text);
-      margin-bottom: 16px;
+    .materials-header p {
+      color: var(--color-muted);
+      font-size: 1rem;
+      line-height: 1.6;
     }
-    .story-kicker {
-      font-size: 0.875rem;
-      font-weight: 600;
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 880px;
+      margin: 0 auto 40px;
+    }
+    .material-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 28px 26px;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+    }
+    .material-card .kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
       color: var(--color-primary);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .material-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .material-card .cert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(44,150,244,0.1);
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+    .material-card p {
+      font-size: 0.9375rem;
+      color: var(--color-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .materials-cta {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .materials-cta .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      padding: 14px 32px;
+      font-size: 1rem;
+    }
+    .materials-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
     }
 
-    /* ── Video Story / Product Lab ─────────────── */
+    /* ── Section 5: Video ──────────────────────── */
     .video-demo-section {
-      padding: 64px 24px;
+      padding: 72px 24px;
       background: #f9f9f9;
       text-align: center;
     }
-    .video-demo-section h3 {
-      font-size: 1.5rem;
+    .video-demo-section h2 {
+      font-size: 1.875rem;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
-    .video-demo-section p {
+    .video-demo-section .video-sub {
       color: var(--color-muted);
-      margin-bottom: 32px;
-      max-width: 480px;
+      margin-bottom: 36px;
+      max-width: 500px;
       margin-left: auto;
       margin-right: auto;
+      font-size: 1rem;
+      line-height: 1.6;
     }
     .iframe-wrapper {
       position: relative;
@@ -229,253 +331,46 @@
       border: none;
     }
 
-    /* ── Global Trust Map ──────────────────────── */
-    .trust-map-section {
-      padding: 64px 0;
-      background: #f9f9f9;
-    }
-    .trust-map-section h2 {
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .trust-map-section .section-sub {
-      text-align: center;
-      color: var(--color-muted);
-      margin-bottom: 32px;
-    }
-    .trust-map-grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      max-width: var(--container-max);
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-    .trust-map-pill {
-      background: var(--color-primary);
-      color: #fff;
-      padding: 8px 18px;
-      border-radius: 999px;
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-    .trust-map-note {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 0.8125rem;
-      color: var(--color-muted);
-    }
-
-    /* ── Certification Ribbon ────────────────── */
-    .cert-ribbon {
-      background: #fff;
-      padding: 48px 0;
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .cert-ribbon-inner {
-      max-width: var(--container-max);
-      margin: 0 auto;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 48px;
-      flex-wrap: wrap;
-    }
-    .cert-item {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .cert-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--color-surface);
-      flex-shrink: 0;
-    }
-    .cert-icon svg {
-      width: 28px;
-      height: 28px;
-      color: var(--color-primary);
-    }
-    .cert-text strong {
-      display: block;
-      font-size: 1rem;
-      font-weight: 700;
-    }
-    .cert-text span {
-      font-size: 0.8125rem;
-      color: var(--color-muted);
-    }
-
-    /* ── CTA ─────────────────────────────────── */
-    .about-cta {
-      padding: 64px 24px;
-      text-align: center;
-      background: #f9f9f9;
-    }
-    .about-cta h2 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-    .about-cta p {
-      color: var(--color-muted);
-      margin-bottom: 28px;
-      max-width: 520px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .about-cta .btn-primary {
+    /* ── Buttons reuse ─────────────────────────── */
+    .about-hero-cta .btn-primary {
       background: var(--color-primary);
       color: #fff;
       border-color: var(--color-primary);
-    }
-    .about-cta .btn-primary:hover {
-      background: var(--color-primary-dark);
-    }
-
-    /* ── Evolution Timeline ────────────────────── */
-    .timeline-section {
-      padding: 64px 24px;
-      background: #fff;
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .timeline-header {
-      text-align: center;
-      margin-bottom: 48px;
-    }
-    .timeline-header h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    .timeline-container {
-      max-width: 720px;
-      margin: 0 auto;
-      position: relative;
-      padding-left: 40px;
-    }
-    .timeline-container::before {
-      content: '';
-      position: absolute;
-      left: 15px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--color-primary);
-      opacity: 0.25;
-    }
-    .timeline-item {
-      position: relative;
-      margin-bottom: 40px;
-    }
-    .timeline-item:last-child { margin-bottom: 0; }
-    .timeline-dot {
-      position: absolute;
-      left: -33px;
-      top: 4px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--color-primary);
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 2px var(--color-primary);
-    }
-    .timeline-year-badge {
-      display: inline-block;
-      background: var(--color-primary);
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.8125rem;
-      padding: 4px 14px;
-      border-radius: 999px;
-      margin-bottom: 12px;
-    }
-    .timeline-content h3 {
-      font-size: 1.125rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .timeline-content p {
-      color: var(--color-muted);
+      padding: 13px 28px;
       font-size: 0.9375rem;
-      margin: 0;
     }
-
-    /* ── Fabric Lab Watermark ──────────────────── */
-    .fabric-lab-section {
-      position: relative;
-      overflow: hidden;
-    }
-    .fabric-watermark {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .fabric-watermark span {
-      font-size: clamp(4rem, 10vw, 8rem);
-      font-weight: 700;
-      color: var(--color-text);
-      opacity: 0.04;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      white-space: nowrap;
-      user-select: none;
+    .about-hero-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
     }
 
     /* ── Mobile ──────────────────────────────── */
     @media (max-width: 768px) {
-      .about-hero-inner {
-        grid-template-columns: 1fr;
-      }
-      .about-hero-text h1 {
-        font-size: 1.75rem;
-      }
-      .blueprint-grid {
-        grid-template-columns: 1fr;
-      }
-      .blueprint-step::after { display: none; }
+      .about-hero { padding: 48px 0 32px; }
+      .about-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .about-hero-text h1 { font-size: 1.875rem; }
       .tech-specs-overlay {
         position: relative;
         bottom: auto;
         right: auto;
         margin-top: 12px;
+        min-width: 0;
       }
-      .video-demo-section {
-        padding: 48px 16px;
-      }
+      .genesis-section,
+      .timeline-section,
+      .materials-section,
+      .video-demo-section { padding: 56px 20px; }
+      .genesis-section h2,
+      .timeline-header h2,
+      .materials-header h2,
+      .video-demo-section h2 { font-size: 1.5rem; }
+      .materials-grid { grid-template-columns: 1fr; }
+      .timeline-container { padding-left: 32px; }
+      .timeline-container::before { left: 7px; }
+      .timeline-dot { left: -41px; width: 14px; height: 14px; }
       .iframe-wrapper {
         max-width: 280px;
         border-width: 6px;
         border-radius: 16px;
-      }
-      .timeline-container {
-        padding-left: 32px;
-      }
-      .timeline-container::before {
-        left: 7px;
-      }
-      .timeline-dot {
-        left: -41px;
-        width: 14px;
-        height: 14px;
-      }
-      .cert-ribbon-inner {
-        flex-direction: column;
-        gap: 32px;
       }
     }
   </style>
@@ -545,151 +440,156 @@
 
   <main>
 
-    <!-- 1. THE TECHNICAL HERO -->
-    <section class="about-hero" style="position:relative;">
-      <!-- Blueprint Grid Overlay -->
-      <div style="position:absolute; inset:0; pointer-events:none; opacity:0.05;
-        background-image: linear-gradient(var(--color-primary) 1px, transparent 1px),
-          linear-gradient(90deg, var(--color-primary) 1px, transparent 1px);
-        background-size: 40px 40px;">
-      </div>
-      <div class="about-hero-inner" style="position:relative; z-index:1;">
+    <!-- ============================================== -->
+    <!-- 1. THE HERO (The Mission)                       -->
+    <!-- ============================================== -->
+    <section class="about-hero">
+      <div class="blueprint-grid-overlay"></div>
+      <div class="about-hero-inner">
         <div class="about-hero-text">
-          <h1>Bedding Without Boundaries: Precision Engineering for Every Shape of Sleep.</h1>
-          <p class="hero-sub">From custom yacht V-Berths to 12ft family beds, MildMate eliminates "math friction" through technical textile innovation and zero-compromise safety.</p>
+          <h1>Precision Bedding. Engineered for Every Shape of Sleep.</h1>
+          <p class="hero-sub">Since 2019, MildMate has eliminated "math friction" for non-standard sleep surfaces. From oversized family beds to nomadic RVs, we provide digital blueprinting and clinically validated textile performance.</p>
           <div class="about-hero-cta">
-            <a href="/fabric/" class="btn btn-primary">Explore the Fabric Intelligence Guide</a>
+            <a href="/fabric/" class="btn btn-primary">Explore the Intelligence Guide</a>
           </div>
         </div>
         <div class="about-hero-visual">
-          <img src="https://placehold.co/600x450/f0f0f0/333?text=Engineering+Hero:+V-Berth+or+Family+Bed" alt="MildMate Engineering Hero — V-Berth or family bed technical shot" width="600" height="450" loading="eager">
+          <img src="https://placehold.co/600x450/f0f0f0/333?text=Precision+Engineering+Lab" alt="MildMate precision engineering — custom bedding lab" width="600" height="450" loading="eager">
           <div class="tech-specs-overlay">
             <strong>Technical Specs</strong>
-            <span>GSM: 180–220</span>
-            <span>Thread Count: 400</span>
-            <span>Blend: BreezePlus®</span>
+            <span>Tolerance: ±1–2cm</span>
+            <span>GSM: 120–220</span>
+            <span>OEKO-TEX® Certified</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. EVOLUTION OF ENGINEERING (Timeline) -->
+    <!-- ============================================== -->
+    <!-- 2. THE ENGINEERING GENESIS (The 2019 Problem)  -->
+    <!-- ============================================== -->
+    <section class="genesis-section">
+      <div class="genesis-inner">
+        <div class="genesis-kicker">The 2019 Problem</div>
+        <h2>Solving the "Mattress Gap" Paradox.</h2>
+        <div class="genesis-quote">
+          <p>MildMate was founded in 2019 to solve a geometric failure: the "lumpy" transition of joined mattresses in co-sleeping environments. Standard retail bedding could not maintain the structural tension required for a unified surface.</p>
+          <p>We transitioned from a family home in Thailand to a specialized engineering lab by treating every bed not as furniture, but as a technical asset. We replaced DIY "guessing" with a rigorous measurement protocol.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 3. THE AUTHORITY TIMELINE                       -->
+    <!-- ============================================== -->
     <section class="timeline-section">
       <div class="timeline-header">
-        <h2>Evolution of Engineering</h2>
-        <p style="color:var(--color-muted); max-width:560px; margin:8px auto 0;">From a single V-Berth sketch to a global precision platform.</p>
+        <h2>From Founding Protocol to Global Precision.</h2>
+        <p>Seven years of compounding engineering discipline.</p>
       </div>
       <div class="timeline-container">
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2019</span>
+            <h3>The Founding Protocol</h3>
+            <p>Launched in Thailand to solve co-sleeping geometry and the "Mattress Gap" problem. The first parametric measurement system replaces guesswork for joined family beds.</p>
+          </div>
+        </div>
+
         <div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-content">
             <span class="timeline-year-badge">2022</span>
-            <h3>The First Parametric Formula</h3>
-            <p>A yacht owner in Florida sends a hand-drawn V-Berth sketch. We build the first parametric boat-bedding formula: Head Width × Bottom Width × Length × Depth, with taper correction.</p>
+            <h3>Material Safety Standard</h3>
+            <p>Secured OEKO-TEX® Standard 100 certification for our PremaCotton collection, ensuring 100% human-safe fibers for infants and sensitive skin.</p>
           </div>
         </div>
+
         <div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-content">
             <span class="timeline-year-badge">2024</span>
-            <h3>Photo-Measurement Protocol</h3>
-            <p>We introduce the credit-card-scale photo system. Customers snap one photo and we convert it into a CAD-ready blueprint with ±1cm tolerance.</p>
+            <h3>Global Infrastructure</h3>
+            <p>Launched international operations via Etsy, scaling our "Photo-Measurement" system to ship precision-fit bedding to 11+ global cities.</p>
           </div>
         </div>
+
         <div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-content">
             <span class="timeline-year-badge">2026</span>
-            <h3>Global Precision Platform</h3>
-            <p>11+ cities across 2 continents. A 5.0-star average maintained by treating every bed not as furniture, but as a technical asset to be protected.</p>
+            <h3>The Engineering Lab</h3>
+            <p>Today, MildMate operates as a bespoke textile firm with a 1–2cm geometric tolerance standard for any mattress shape on Earth.</p>
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- 3. THE MEASUREMENT LAB (Process) -->
-    <section class="blueprint-section" style="background:#f9f9f9;">
-      <div class="blueprint-header">
-        <h2>The Zero-Friction Protocol.</h2>
-        <p style="max-width:720px; margin-left:auto; margin-right:auto;">Measuring complex, asymmetrical mattresses (V-Berths, RVs, Clipped Corners) is prone to human error. Our proprietary "Photo-Measurement" system uses a standard credit card as a universal scale reference. We convert your photos into digital blueprints with a 1-2cm tolerance before a single stitch is made.</p>
+    <!-- ============================================== -->
+    <!-- 4. THE MATERIAL STANDARDS                       -->
+    <!-- ============================================== -->
+    <section class="materials-section">
+      <div class="materials-header">
+        <h2>The MildMate Material Standard.</h2>
+        <p>We don't use "off-the-shelf" linens. We select and engineer textiles based on thermal conductivity, mechanical durability, and human safety.</p>
       </div>
-      <div class="blueprint-grid" style="background:#f9f9f9;">
-        <div class="blueprint-step" style="background:#fff;">
-          <div class="step-num">1</div>
-          <h3>Photo</h3>
-          <p>Snap a photo of your mattress with a credit card placed on top. The 85.60mm card acts as a universal scale reference.</p>
+
+      <div class="materials-grid">
+
+        <div class="material-card">
+          <div class="kicker">Fabric 01 — Hygienic Layer</div>
+          <h3>PremaCotton</h3>
+          <span class="cert-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            OEKO-TEX® Standard 100
+          </span>
+          <p>OEKO-TEX® Standard 100 Certified (Since 2022). Zero-toxin safety for infants and sensitive skin. The benchmark for clinically validated material safety.</p>
         </div>
-        <div class="blueprint-step" style="background:#fff;">
-          <div class="step-num">2</div>
-          <h3>Digital Blueprint</h3>
-          <p>Our engineers convert your photo into a parametric CAD model, adjusting for seam allowance and fabric stretch.</p>
+
+        <div class="material-card">
+          <div class="kicker">Fabric 02 — Thermal Layer</div>
+          <h3>BreezePlus</h3>
+          <p>50/50 Long-Staple Fusion. Active 3–5°C thermal regulation. Engineered for tropical, marine, and high-humidity sleep environments.</p>
         </div>
-        <div class="blueprint-step" style="background:#fff;">
-          <div class="step-num">3</div>
-          <h3>Precision Fit</h3>
-          <p>Cut, sewn, and validated against the blueprint. Final tolerance: ±1cm. Dispatched within 3–5 business days.</p>
+
+        <div class="material-card">
+          <div class="kicker">Fabric 03 — Comfort Layer</div>
+          <h3>CloudSoft</h3>
+          <p>120 GSM Double-Brushed Microfiber. Marine-grade moisture resistance with a durable, pill-resistant weave for everyday luxury.</p>
         </div>
+
+        <div class="material-card">
+          <div class="kicker">Fabric 04 — Sustainable Layer</div>
+          <h3>EcoLuxe</h3>
+          <p>Raw, unbleached sustainable fibers for biophilic sleep. Minimal processing, maximum breathability, fully biodegradable end-of-life.</p>
+        </div>
+
+      </div>
+
+      <div class="materials-cta">
+        <a href="/fabric/" class="btn btn-primary">Explore the Intelligence Guide</a>
       </div>
     </section>
 
-    <!-- 4. THE FABRIC INTELLIGENCE (The Lab) -->
-    <section class="fabric-lab-section" style="padding:64px 0; background:#fff; border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border);">
-      <div class="fabric-watermark">
-        <span>TECHNICAL BLUEPRINT</span>
-      </div>
-      <div style="position:relative; z-index:1; max-width: var(--container-max); margin:0 auto; padding:0 24px;">
-        <h2 style="text-align:center; font-size:1.5rem; font-weight:700; margin-bottom:8px;">Advanced Thermal &amp; Hygienic Science.</h2>
-        <p style="text-align:center; color:var(--color-muted); margin-bottom:48px; max-width:560px; margin-left:auto; margin-right:auto;">Engineered layers for specific sleep environments. Not just fabric — thermal systems.</p>
-        <div style="max-width:800px; margin:0 auto;">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">
-            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Thermal Layer</div>
-              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">BreezePlus®</h3>
-              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">50/50 Long-Staple Fusion. Clinically 3-5°C cooler than traditional cotton. High thermal conductivity for tropical and marine climates.</p>
-            </div>
-            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Comfort Layer</div>
-              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">CloudSoft™</h3>
-              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">120 GSM Double-Brushed Microfiber. Ultra-soft touch with durable, pill-resistant weave for everyday luxury.</p>
-            </div>
-            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Hygienic Layer</div>
-              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">PremaCotton™</h3>
-              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">100% Human-Safe, OEKO-TEX certified. Specifically engineered for co-sleeping families and sensitive skin.</p>
-            </div>
-            <div style="border:1px solid var(--color-border); border-radius:var(--radius); padding:32px 28px; background:#f9f9f9;">
-              <div style="font-size:0.8125rem; font-weight:600; color:var(--color-primary); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Clinical Validation</div>
-              <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:12px;">Siriraj Hospital</h3>
-              <p style="font-size:0.9375rem; color:var(--color-muted); margin:0;">Certified anti-dust mite technology validated by the Faculty of Medicine at Siriraj Hospital, Thailand's leading medical research institution.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. THE VIDEO STORY (Product Lab) -->
+    <!-- ============================================== -->
+    <!-- 5. THE VIDEO (The Result)                       -->
+    <!-- ============================================== -->
     <section class="video-demo-section">
-      <div class="video-container">
-        <h3>The 60-Second Change</h3>
-        <p>Engineering efficiency into every zipper. Watch our 3-sided system in action.</p>
-        <div class="iframe-wrapper">
-          <iframe
-            src="https://www.youtube.com/embed/Ooqvv3SVll8?si=ODaYtzXlYuDhXjyC&rel=0"
-            title="MildMate Technical Demo"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen>
-          </iframe>
-        </div>
+      <h2>Engineering, Simplified.</h2>
+      <p class="video-sub">See how digital blueprinting and precision-cut textiles eliminate friction at the customer's bedside — in under 60 seconds.</p>
+      <div class="iframe-wrapper">
+        <iframe
+          src="https://www.youtube.com/embed/Ooqvv3SVll8?si=ODaYtzXlYuDhXjyC&rel=0"
+          title="MildMate Engineering Demo"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
       </div>
-    </section>
-
-    <!-- 6. CTA -->
-    <section class="about-cta">
-      <h2>Ready for Your Perfect Fit?</h2>
-      <p>Explore our Fabric Intelligence Guide to find the material engineered for your sleep environment.</p>
-      <a href="/fabric/" class="btn btn-primary" style="padding:14px 32px; font-size:1rem;">Explore the Fabric Intelligence Guide</a>
     </section>
 
   </main>
