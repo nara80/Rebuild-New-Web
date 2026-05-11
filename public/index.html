@@ -190,7 +190,7 @@
           <div class="product-grid scroll-row">
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.png" alt="3-Sided Zipper Duvet Cover" loading="lazy">
+                <img src="/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg" alt="3-Sided Zipper Duvet Cover" loading="lazy">
               </div>
               <div class="product-info">
                 <h3 class="product-title">3-Sided Zipper Duvet Cover</h3>
@@ -200,7 +200,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/family-co-sleeping-solutions-th-size.png" alt="Custom Family Fitted Sheet" loading="lazy">
+                <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="Custom Family Fitted Sheet" loading="lazy">
               </div>
               <div class="product-info">
                 <h3 class="product-title">Custom Family Fitted Sheet</h3>
@@ -210,7 +210,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.png" alt="Marine Fitted Sheet (V-Berth)" loading="lazy">
+                <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="Marine Fitted Sheet (V-Berth)" loading="lazy">
               </div>
               <div class="product-info">
                 <h3 class="product-title">Marine Fitted Sheet</h3>
@@ -220,7 +220,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/sheet-protectors.png" alt="RV & Van Mattress Encasement" loading="lazy">
+                <img src="/images/products/sheet-protectors.jpg" alt="RV & Van Mattress Encasement" loading="lazy">
               </div>
               <div class="product-info">
                 <h3 class="product-title">RV & Van Mattress Encasement</h3>
@@ -230,7 +230,7 @@
             </article>
             <article class="product-card">
               <div class="product-image">
-                <img src="/images/products/tbar.png" alt="MildMate BedBridge Connector" loading="lazy">
+                <img src="/images/products/tbar.jpg" alt="MildMate BedBridge Connector" loading="lazy">
               </div>
               <div class="product-info">
                 <h3 class="product-title">BedBridge Connector</h3>
@@ -319,7 +319,7 @@
         <div class="fabric-panels">
           <div class="fabric-panel active" data-fabric="breezeplus">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-breezeplus.png" alt="BreezePlus fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-breezeplus.jpg" alt="BreezePlus fabric texture" loading="lazy"></div>
               <div class="fabric-panel-info">
                 <h3>BreezePlus Collection</h3>
                 <p class="tagline">Advanced Cooling Cotton Blend</p>
@@ -347,7 +347,7 @@
           </div>
           <div class="fabric-panel" data-fabric="cloudsoft">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-cloudsoft.png" alt="CloudSoft fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-cloudsoft.jpg" alt="CloudSoft fabric texture" loading="lazy"></div>
               <div class="fabric-panel-info">
                 <h3>CloudSoft Collection</h3>
                 <p class="tagline">Premium Microfiber Excellence</p>
@@ -378,7 +378,7 @@
           </div>
           <div class="fabric-panel" data-fabric="premacotton">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-premacotton.png" alt="PremaCotton fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-premacotton.jpg" alt="PremaCotton fabric texture" loading="lazy"></div>
               <div class="fabric-panel-info">
                 <h3>PremaCotton Collection</h3>
                 <p class="tagline">The Purest Natural Choice</p>
@@ -398,7 +398,7 @@
           </div>
           <div class="fabric-panel" data-fabric="ecoluxe">
             <div class="fabric-panel-grid">
-              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-ecoluxe.png" alt="EcoLuxe fabric texture" loading="lazy"></div>
+              <div class="fabric-panel-visual"><img src="/images/fabrics/fabric-ecoluxe.jpg" alt="EcoLuxe fabric texture" loading="lazy"></div>
               <div class="fabric-panel-info">
                 <h3>EcoLuxe Collection</h3>
                 <p class="tagline">Natural Calico Comfort</p>
@@ -457,10 +457,11 @@
       <div class="container">
         <h2>Get 15% Off Your First Order</h2>
         <p>Join our newsletter for exclusive offers, new product alerts, and bedding tips.</p>
-        <form class="email-form" action="/api/subscribe" method="post">
-          <input type="email" name="email" placeholder="Enter your email" required aria-label="Email address">
-          <button type="submit">Subscribe</button>
+        <form class="email-form" id="email-signup-form" action="/api/subscribe" method="post">
+          <input type="email" name="email" placeholder="Enter your email" required aria-label="Email address" id="email-signup-input">
+          <button type="submit" id="email-signup-btn">Subscribe</button>
         </form>
+        <p class="email-form-msg" id="email-signup-msg" aria-live="polite"></p>
       </div>
     </section>
 
@@ -573,5 +574,51 @@
   <script src="/js/cart.js"></script>
   <script src="/js/configurator.js"></script>
   <script src="/js/geo.js"></script>
+
+  <!-- Email Signup AJAX Handler -->
+  <script>
+    (function() {
+      const form = document.getElementById('email-signup-form');
+      const input = document.getElementById('email-signup-input');
+      const btn = document.getElementById('email-signup-btn');
+      const msg = document.getElementById('email-signup-msg');
+      if (!form || !input || !btn || !msg) return;
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        btn.disabled = true;
+        btn.textContent = 'Subscribing…';
+        msg.textContent = '';
+        msg.style.color = '';
+
+        const email = input.value.trim();
+        const lang = document.documentElement.lang || 'en';
+
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'homepage', language: lang }),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            msg.textContent = data.message;
+            msg.style.color = '#22c55e'; // success green
+            input.value = '';
+          } else {
+            msg.textContent = data.error || 'Something went wrong. Please try again.';
+            msg.style.color = '#ef4444'; // error red
+          }
+        } catch (err) {
+          msg.textContent = 'Network error. Please try again.';
+          msg.style.color = '#ef4444';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Subscribe';
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

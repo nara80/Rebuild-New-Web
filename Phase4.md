@@ -842,5 +842,17 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 
 **EcoLuxe Correction:** EcoLuxe is Calico / Greige cotton (natural unbleached, minimal processing). It is NOT GOTS-certified organic cotton.
 
+### Additional Updates (2026-05-11 Session)
+
+| Item | Status | Notes |
+|---|---|---|
+| `/api/subscribe` endpoint | ✅ Built | `workers/api/subscribe.ts` — email validation, D1 insert with `INSERT OR IGNORE` |
+| Homepage EN email signup | ✅ AJAX wired | Inline success/error messages, loading states, no page reload |
+| Homepage TH email signup | ✅ Fixed | "10%" → "15%", AJAX handler with Thai text |
+| Image compression | ✅ Done | All 10 PNG photos → JPEGs (8.4MB → 624KB, 92.5% saved) |
+| `discount_claims` migration | ✅ Created | `migrations/002_discount_claims.sql` — address-based 15% off tracking for Phase 5 |
+| `wrangler.toml` | ✅ Fixed | Removed `[triggers]` and `[build]` (Pages-incompatible), removed `[[env.production]]` |
+| SKILL.md | ✅ Updated | Added UX/UI Analysis, Copywriting, Strategic Guidelines sections |
+
 ### Next Step
 Move to **Phase 5 — Checkout + Stripe Payments** when ready.

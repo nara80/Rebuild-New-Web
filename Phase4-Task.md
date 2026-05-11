@@ -94,86 +94,88 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 7. Social Proof (Reviews)
-- [ ] 2 review cards visible
-- [ ] 5-star rating shown on each card
-- [ ] Review text and author name visible
-- [ ] Etsy badge at bottom: "5.0 out of 5 stars on Etsy"
-- [ ] **Mobile:** cards stack vertically
+### 7. Social Proof (Reviews) ✅ Verified
+- [x] 2 review cards visible
+- [x] 5-star rating shown on each card
+- [x] Review text and author name visible
+- [x] Etsy badge at bottom: "5.0 out of 5 stars on Etsy"
+- [x] **Mobile:** cards stack vertically
 
 > **Action needed:** Replace 4 placeholder reviews with real Etsy reviews on `/reviews/` page
 
 ---
 
-### 8. Email Signup
-- [ ] "Get 10% Off Your First Order" headline visible
-- [ ] Email input + Subscribe button
-- [ ] Section has blue gradient background
-- [ ] **Mobile:** input and button stack vertically
+### 8. Email Signup ✅ Verified
+- [x] "Get 15% Off Your First Order" headline visible
+- [x] Email input + Subscribe button with AJAX (no page reload)
+- [x] Section has blue gradient background
+- [x] Inline success/error message feedback
+- [x] **Mobile:** input and button stack vertically
 
 ---
 
-## Homepage TH (`/th/`)
-- [ ] Page loads at `http://127.0.0.1:8788/th/`
-- [ ] All 8 sections visible with Thai text
-- [ ] Configurator labels in Thai
-- [ ] Fabric tabs in Thai
-- [ ] All links work correctly (same URLs as EN version)
-- [ ] **Mobile:** same responsive behavior as EN homepage
+## Homepage TH (`/th/`) ✅ Verified
+- [x] Page loads at `http://127.0.0.1:8788/th/`
+- [x] All 8 sections visible with Thai text
+- [x] Configurator labels in Thai
+- [x] Fabric tabs in Thai
+- [x] All links work correctly (same URLs as EN version)
+- [x] **Mobile:** same responsive behavior as EN homepage
+- [x] Email signup AJAX works with Thai UI text (loading: "กำลังสมัคร…")
 
 ---
 
-## Static Pages
+## Static Pages ✅ Verified
 
-### About Us (`/about/`)
-- [ ] Page loads at `/about/`
-- [ ] Company story text visible
-- [ ] Mission statement visible
-- [ ] Two certification cards: OEKO-TEX + Siriraj
-- [ ] "Shop Custom Bedding" CTA at bottom
-- [ ] Header and footer present
+### About Us (`/about/`) ✅
+- [x] Page loads at `/about/`
+- [x] Company story text visible
+- [x] Mission statement visible
+- [x] Two certification cards: OEKO-TEX + Siriraj
+- [x] "Shop Custom Bedding" CTA at bottom
+- [x] Header and footer present
 
-### Contact (`/contact/`)
-- [ ] Page loads at `/contact/`
-- [ ] Contact form: Name, Email, Subject, Message
-- [ ] LINE Official card with icon
-- [ ] WhatsApp card with icon
-- [ ] Facebook card with icon
-- [ ] Email + Phone cards
-- [ ] Marketplace buttons row: Etsy, eBay, Shopee, Lazada, TikTok Shop
-- [ ] Header and footer present
+### Contact (`/contact/`) ✅
+- [x] Page loads at `/contact/`
+- [x] Contact form: Name, Email, Subject, Message
+- [x] LINE Official card with icon
+- [x] WhatsApp card with icon
+- [x] Facebook card with icon
+- [x] Email + Phone cards
+- [x] Marketplace buttons row: Etsy, eBay, Shopee, Lazada, TikTok Shop
+- [x] Header and footer present
 
-### Fabric Collections (`/fabric/`)
-- [ ] Page loads at `/fabric/`
-- [ ] 4 fabric tabs work (same as homepage but full page)
-- [ ] Each panel has "Shop [Fabric]" button
-- [ ] Comparison table at bottom with all 4 fabrics
-- [ ] Header and footer present
+### Fabric Collections (`/fabric/`) ✅
+- [x] Page loads at `/fabric/`
+- [x] 4 fabric tabs work (same as homepage but full page)
+- [x] Each panel has "Shop [Fabric]" button
+- [x] Comparison table at bottom with all 4 fabrics
+- [x] Header and footer present
 
-### Shipping Policy (`/shipping/`)
-- [ ] Page loads at `/shipping/`
-- [ ] Processing time: 3-5 business days
-- [ ] Shipping regions table visible
-- [ ] Carriers listed: Thailand Post, DHL, FedEx
-- [ ] Free shipping note for Thailand over ฿2,500
-- [ ] Customs & import tariff disclaimer
-- [ ] Returns policy text
-- [ ] Header and footer present
+### Shipping Policy (`/shipping/`) ✅
+- [x] Page loads at `/shipping/`
+- [x] Processing time: 3-5 business days
+- [x] Shipping regions table visible
+- [x] Carriers listed: Thailand Post, DHL, FedEx
+- [x] Free shipping note for Thailand over ฿2,500
+- [x] Customs & import tariff disclaimer
+- [x] Returns policy text
+- [x] Header and footer present
 
-### Privacy Policy (`/policy/`)
-- [ ] Page loads at `/policy/`
-- [ ] 10 sections visible
-- [ ] Third-party services listed: Stripe, MailChannels, shipping carriers, Cloudflare
-- [ ] Data retention: 7 years
-- [ ] User rights section
-- [ ] Header and footer present
+### Privacy Policy (`/policy/`) ✅
+- [x] Page loads at `/policy/`
+- [x] 10 sections visible
+- [x] Third-party services listed: Stripe, MailChannels, shipping carriers, Cloudflare
+- [x] Data retention: 7 years
+- [x] User rights section
+- [x] Header and footer present
 
-### Reviews (`/reviews/`)
-- [ ] Page loads at `/reviews/`
-- [ ] 6 review cards visible
-- [ ] Etsy badge at bottom
-- [ ] "Write a Review on Etsy" button
-- [ ] Header and footer present
+### Reviews (`/reviews/`) ✅
+- [x] Page loads at `/reviews/`
+- [x] 6 review cards visible
+- [x] Etsy badge at bottom
+- [x] "Write a Review on Etsy" button
+- [x] Header and footer present
 
 > **Action needed:** Replace placeholder reviews with real ones from Etsy
 

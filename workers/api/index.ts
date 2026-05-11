@@ -1,10 +1,11 @@
 // MildMate Public API Worker
-// Phase 4: products, pricing, geo-currency
-// Phase 5+: checkout, webhook, email, subscribers
+// Phase 4: products, pricing, geo-currency, subscribe
+// Phase 5+: checkout, webhook, email, discount-claims
 
 import { handleProducts } from "./products";
 import { handlePricing } from "./pricing";
 import { handleGeo } from "./geo-currency";
+import { handleSubscribe } from "./subscribe";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -31,6 +32,11 @@ export default {
     // Geo / Currency API
     if (path === "/api/geo") {
       return handleGeo(request, env);
+    }
+
+    // Subscribe / Email signup API
+    if (path === "/api/subscribe" || path === "/api/subscribe/") {
+      return handleSubscribe(request, env);
     }
 
     return new Response(JSON.stringify({ error: "Not Found" }), {

@@ -5,10 +5,6 @@ name = "mildmate-new"
 compatibility_date = "2024-04-29"
 pages_build_output_dir = "public"
 
-# Main public site worker
-[[env.production]]
-name = "mildmate-new"
-
 # D1 Database — product catalog, orders, abandoned carts, subscribers
 [[d1_databases]]
 binding = "DB"
@@ -19,14 +15,6 @@ database_id = "85ce2f41-463a-43fa-8485-181e983b8fd4"
 [[r2_buckets]]
 binding = "MILDMATE_ASSETS"
 bucket_name = "mildmate-assets"
-
-# Cron trigger for abandoned cart recovery (Phase 6)
-[triggers]
-crons = []
-
-# Build command for Pages
-[build]
-command = ""
 
 # NOTE ON SECRETS:
 # Stripe API keys (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)

@@ -668,8 +668,8 @@ CREATE TABLE customers (
 |---|---|---|
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
 | **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` | ⏸️ Deferred — runs pre-launch after Phase 7 |
-| **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | 🔄 In Progress |
-| **4** | All Content Pages | Homepage, Blog, About, Contact, Fabric Collections, Policy pages, Reviews, Product pages, Configurator (both modes) | ⏸️ Pending |
+| **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint | ✅ Complete |
 | **5** | Checkout + Stripe + Social Login | Guest checkout + Stripe payments + optional social login (Google, Facebook, LINE, Apple) + My Account page | ⏸️ Pending |
 | **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels | ⏸️ Pending |
 | **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export | ⏸️ Pending |

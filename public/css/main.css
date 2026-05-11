@@ -770,7 +770,7 @@ main {
 .hero-bg {
   position: absolute;
   inset: 0;
-  background: url('/images/Hero01.png') center center / cover no-repeat;
+  background: url('/images/Hero01.jpg') center center / cover no-repeat;
   z-index: 0;
 }
 
@@ -1666,6 +1666,12 @@ main {
 
 .email-form button:hover {
   background: #f0f7ff;
+}
+
+.email-form-msg {
+  margin-top: 12px;
+  font-size: 0.95rem;
+  min-height: 1.4em;
 }
 
 /* Section headings */
