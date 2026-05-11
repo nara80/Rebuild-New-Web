@@ -255,12 +255,12 @@ Write and provide:
 - [ ] Shipping cost structure (free over X, or flat rate per region)
 - [ ] Note that product prices exclude shipping and import tariffs
 
-**10E — Customer Reviews (`/reviews/`)**
+**10E — Customer Reviews (`/reviews/`)** ✅ Done
 Supplement your Phase 4 Requirement 6 (Etsy reviews) with:
-- [ ] 6–10 total reviews (more than the 2–3 on the homepage)
-- [ ] At least 1 review mentioning V-Berth / boat bedding
-- [ ] At least 1 review mentioning the 3-sided zipper duvet
-- [ ] Overall rating and total review count from Etsy
+- [x] 6–10 total reviews (more than the 2–3 on the homepage) — **8 real Etsy reviews**
+- [x] At least 1 review mentioning V-Berth / boat bedding — Review from Tariq (order #3826057194)
+- [x] At least 1 review mentioning the 3-sided zipper duvet — Review from amymccreedy (order #3427586586)
+- [x] Overall rating and total review count from Etsy — **5.0 ★★★★★** badge displayed
 
 ---
 
@@ -696,14 +696,14 @@ Go through this checklist before moving to Phase 5:
 - [ ] Category images placed OR missing ones noted for Droid placeholder
 - [ ] Top 10 priority product images placed in `public/images/products/`
 - [ ] Pricing table filled in for all 9 product categories
-- [ ] 2–3 customer reviews copied from Etsy with reviewer name + country
+- [x] 2–3 customer reviews copied from Etsy with reviewer name + country
 - [ ] Fabric content source confirmed (`01_Fabric_Intelligence_Guide_V2.md`)
 - [ ] Mattress size table confirmed (standard sizes or your corrections)
 - [ ] Configurator spec confirmed (Requirement 9 — both modes)
 - [ ] Contact page channel URLs collected (LINE, WhatsApp, Facebook + all marketplace links)
 - [ ] About Us story written (2–3 paragraphs)
 - [ ] Shipping Policy content written (regions, rates, transit times)
-- [ ] Customer Reviews content prepared (6–10 reviews)
+- [x] Customer Reviews content prepared (6–10 reviews) — 8 real Etsy reviews with mapped names/countries
 - [ ] Blog content for 3 sample posts prepared (titles, categories, excerpts, body drafts)
 
 **Build Steps:**
@@ -720,13 +720,13 @@ Go through this checklist before moving to Phase 5:
 - [ ] Price updates instantly when dimensions are entered
 - [ ] Price note "Excludes shipping & import tariff" visible
 - [ ] Fabric tabs all work (click each — panel changes)
-- [ ] At least 2 customer reviews visible in Social Proof section
+- [x] At least 2 customer reviews visible in Social Proof section — 5 featured reviews in carousel
 - [ ] Email signup form visible in section 8
 - [ ] About Us page (`/about/`) loads with company story
 - [ ] Contact page (`/contact/`) shows form + LINE/WhatsApp/Facebook links + marketplace icons
 - [ ] Fabric Collections page (`/fabric/`) shows 4 fabric tabs
 - [ ] Shipping Policy page (`/shipping/`) loads with content
-- [ ] Customer Reviews page (`/reviews/`) shows review grid
+- [x] Customer Reviews page (`/reviews/`) shows review grid — 8 real Etsy reviews
 - [ ] Blog index (`/blogs/`) shows 3 sample posts with thumbnails + pagination
 - [ ] Product listing page (`/products/`) shows product grid (data from D1)
 - [ ] Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) show filtered grid

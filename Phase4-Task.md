@@ -101,7 +101,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Etsy badge at bottom: "5.0 out of 5 stars on Etsy"
 - [x] **Mobile:** cards stack vertically
 
-> **Action needed:** Replace 4 placeholder reviews with real Etsy reviews on `/reviews/` page
+> ~~Action needed: Replace 4 placeholder reviews with real Etsy reviews on `/reviews/` page~~ ✅ Done — 8 real Etsy reviews injected via `scripts/build-reviews.js`
 
 ---
 
@@ -177,7 +177,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] "Write a Review on Etsy" button
 - [x] Header and footer present
 
-> **Action needed:** Replace placeholder reviews with real ones from Etsy
+> ~~Action needed: Replace placeholder reviews with real ones from Etsy~~ ✅ Done — 8 real Etsy reviews mapped with buyer names/countries via `scripts/build-reviews.js`
 
 ---
 
