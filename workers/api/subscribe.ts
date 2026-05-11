@@ -72,12 +72,18 @@ export async function handleSubscribe(request: Request, env: any): Promise<Respo
 
     const isNew = existing !== null;
 
+    const msgNew = language === 'th'
+      ? "ขอบคุณที่สมัคร! ตรวจสอบอีเมลต้อนรับในกล่องจดหมายของคุณ ยกเลิกการสมัครได้ตลอดเวลาที่ mildmate.com/unsubscribe/"
+      : "Thanks for subscribing! Check your inbox for a welcome email. You can unsubscribe anytime at mildmate.com/unsubscribe/.";
+
+    const msgExisting = language === 'th'
+      ? "คุณอยู่ในรายชื่ออยู่แล้ว — ยินดีต้อนรับกลับ! ยกเลิกการสมัครได้ตลอดเวลาที่ mildmate.com/unsubscribe/"
+      : "You're already on our list — welcome back! Unsubscribe anytime at mildmate.com/unsubscribe/.";
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: isNew
-          ? "Thanks for subscribing! Check your inbox for a welcome email."
-          : "You're already on our list — welcome back!",
+        message: isNew ? msgNew : msgExisting,
         email,
         new_subscriber: isNew,
       }),
