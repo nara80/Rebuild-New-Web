@@ -2185,7 +2185,7 @@ main {
   word-wrap: break-word;
   hyphens: auto;
   max-width: 80ch;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
 }
 
 .reviews-track .review-text {
