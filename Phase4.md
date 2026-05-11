@@ -296,9 +296,11 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 | `public/about/index.html` | About Us — company story, certifications, team |
 | `public/contact/index.html` | Contact — form + LINE/WhatsApp/Facebook + marketplace icons |
 | `public/fabric/index.html` | Fabric Collections — 4-tab deep-dive with comparison table |
-| `public/shipping/index.html` | Shipping Policy — regions, rates, transit times |
-| `public/policy/index.html` | Privacy Policy — GDPR-compatible |
-| `public/reviews/index.html` | Customer Reviews — grid + Etsy badge |
+| `public/shipping/index.html` | Returns & Delivery — 30-day returns, shipping regions, carriers, customs |
+| `public/policy/index.html` | Privacy Policy — 14-section GDPR/CCPA-compliant with cookie inventory |
+| `public/reviews/index.html` | Customer Reviews — 8 real Etsy reviews with mapped buyer names/countries |
+| `public/unsubscribe/index.html` | Unsubscribe — email form + D1 deletion + privacy-safe API |
+| `public/js/cookie-consent.js` | GDPR Cookie Consent Banner — Essential + Analytics toggles, GA4 conditional load |
 
 ### Blog Pages (static HTML templates)
 | Page / File | What It Is |
@@ -326,8 +328,11 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 | `workers/api/products.ts` | Serves product data + category filtering from D1 |
 | `workers/api/pricing.ts` | Calculates price for Fitted Bed Sheet AND V-Berth modes |
 | `workers/api/geo-currency.ts` | Detects Thai visitors, returns THB prices |
+| `workers/api/subscribe.ts` | Email signup: validation + D1 INSERT OR IGNORE + localized messages |
+| `workers/api/unsubscribe.ts` | Email removal: D1 DELETE + privacy-safe response (always 200) |
 | `public/js/configurator.js` | Frontend: two-mode live price calculator (Bed Sheet + V-Berth) |
 | `public/js/cart.js` | Frontend: add to cart, localStorage (stores sheet_type + dimensions) |
+| `public/js/cookie-consent.js` | Frontend: consent banner + modal + conditional GA4 load |
 | `public/js/geo.js` | Frontend: currency display toggle |
 
 ---
@@ -797,9 +802,11 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 | About Us (`/about/`) | ✅ | Company story, mission, certifications (OEKO-TEX + Siriraj) |
 | Contact (`/contact/`) | ✅ | Form + LINE/WhatsApp/Facebook + marketplace icons |
 | Fabric Collections (`/fabric/`) | ✅ | 4-tab showcase + comparison table, content from `01_Fabric_Intelligence_Guide_V2.md` |
-| Shipping Policy (`/shipping/`) | ✅ | Regions, carriers, transit times, customs note |
-| Privacy Policy (`/policy/`) | ✅ | GDPR-compatible policy |
-| Customer Reviews (`/reviews/`) | ✅ | 6 review cards + Etsy 5-star badge |
+| Returns & Delivery (`/shipping/`) | ✅ | 30-day returns policy, shipping regions, carriers, customs note |
+| Privacy Policy (`/policy/`) | ✅ | 14-section GDPR/CCPA-compliant with cookie inventory, breach notification, account deletion |
+| Customer Reviews (`/reviews/`) | ✅ | 8 real Etsy reviews with mapped buyer names/countries + Etsy 5-star badge |
+| Unsubscribe (`/unsubscribe/`) | ✅ | Email form + D1 deletion API + privacy-safe responses |
+| Cookie Consent Banner | ✅ | GDPR banner + settings modal, conditional GA4 load (ID: G-0GWVSPJLVJ) |
 | Size Guide Landing (`/sizeguide/`) | ✅ | 4-card landing page linking to specific guides |
 | Thai Size Guide (`/mattress-size-th/`) | ✅ | #1 SEO page — Thai + international size tables |
 | EN Size Guide (`/mattress-size/`) | ✅ | International size comparison tables |

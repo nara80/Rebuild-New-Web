@@ -152,22 +152,26 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Comparison table at bottom with all 4 fabrics
 - [x] Header and footer present
 
-### Shipping Policy (`/shipping/`) ✅
-- [x] Page loads at `/shipping/`
+### Returns & Delivery (`/shipping/`) ✅
+- [x] Page loads at `/shipping/` (URL kept for SEO continuity)
+- [x] Title: "Returns & Delivery"
+- [x] Returns section at top: 30-day returns, buyer pays return shipping, original condition required
 - [x] Processing time: 3-5 business days
 - [x] Shipping regions table visible
 - [x] Carriers listed: Thailand Post, DHL, FedEx
 - [x] Free shipping note for Thailand over ฿2,500
 - [x] Customs & import tariff disclaimer
-- [x] Returns policy text
 - [x] Header and footer present
 
 ### Privacy Policy (`/policy/`) ✅
 - [x] Page loads at `/policy/`
-- [x] 10 sections visible
-- [x] Third-party services listed: Stripe, MailChannels, shipping carriers, Cloudflare
-- [x] Data retention: 7 years
-- [x] User rights section
+- [x] 14 sections: Introduction, Data Collection, Usage, Marketing & Communications, Third Parties, Cookies & Tracking, Data Retention, Your Rights, California CCPA, Security, Children's Privacy, Data Breach Notification, Account Deletion, International Transfers, Changes, Contact
+- [x] Cookie inventory table: Essential / Analytics (GA4) / Advertising (disabled until Pixel added)
+- [x] Unsubscribe mechanism linked: `/unsubscribe/` page + API endpoint
+- [x] Third-party services listed: Stripe, MailChannels, shipping carriers, Cloudflare, Google Analytics 4, Meta (placeholder)
+- [x] Data retention: 7 years for orders, 14 months for analytics, 30 days for abandoned carts
+- [x] CCPA section for California buyers
+- [x] 72-hour data breach notification commitment
 - [x] Header and footer present
 
 ### Reviews (`/reviews/`) ✅
@@ -269,8 +273,31 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Marketplace icons (Etsy, eBay, Shopee, Lazada) in circles
 - [x] Social row centered: Facebook, Instagram, TikTok, Pinterest, YouTube
 - [x] Contact: email + phone + WhatsApp + LINE icons
-- [x] Bottom bar: copyright + Privacy Policy + Shipping links
+- [x] Bottom bar: copyright + Privacy Policy + Returns & Delivery links
 - [x] **Mobile:** columns stack vertically, icons left-aligned
+
+---
+
+## New Features Added (Post-Initial Build)
+
+### Cookie Consent Banner ✅
+- [x] GDPR-compliant banner slides up from bottom on first visit
+- [x] Three buttons: Settings, Reject All, Accept All Cookies
+- [x] Settings modal with toggle switches: Essential (locked), Analytics (GA4)
+- [x] Advertising category disabled until Facebook Pixel is added
+- [x] Conditionally loads Google Analytics 4 script (ID: G-0GWVSPJLVJ) only after consent
+- [x] localStorage persistence: `mildmate-cookie-consent` key
+- [x] Batch-injected into all 19 HTML pages via script tag
+
+### Unsubscribe Page (`/unsubscribe/`) ✅
+- [x] Standalone page with email form
+- [x] Pre-fills email from URL query parameter (`?email=`)
+- [x] AJAX submission to `/api/unsubscribe`
+- [x] Deletes email from D1 `subscribers` table
+- [x] Privacy-safe: always returns success, never reveals subscriber status
+- [x] Linked from privacy policy Section 3A and subscribe API success messages
+
+---
 
 ---
 
