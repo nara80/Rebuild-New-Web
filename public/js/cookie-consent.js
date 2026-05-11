@@ -12,7 +12,6 @@
   const defaultConsent = {
     essential: true,
     analytics: false,
-    advertising: false,
     timestamp: 0,
   };
 
@@ -82,19 +81,6 @@
           </div>
         </div>
 
-        <div class="cookie-category">
-          <div class="cookie-category-header">
-            <div>
-              <h3>Advertising</h3>
-              <p class="cookie-category-desc">Used to measure advertising effectiveness (Facebook Pixel).</p>
-            </div>
-            <label class="cookie-toggle">
-              <input type="checkbox" id="cookie-toggle-advertising">
-              <span class="cookie-toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-
         <div class="cookie-modal-actions">
           <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-modal-save">Save Preferences</button>
           <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-modal-accept-all">Accept All</button>
@@ -138,9 +124,7 @@
 
       // Set toggles to current consent state
       const analyticsToggle = document.getElementById('cookie-toggle-analytics');
-      const advertisingToggle = document.getElementById('cookie-toggle-advertising');
       if (analyticsToggle) analyticsToggle.checked = consent.analytics;
-      if (advertisingToggle) advertisingToggle.checked = consent.advertising;
     }
   }
 
@@ -174,29 +158,16 @@
     // Analytics: Google Analytics 4
     if (consent.analytics) {
       if (!window.gtag) {
-        loadScript('https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX', true);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=G-0GWVSPJLVJ', true);
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { window.dataLayer.push(arguments); };
         window.gtag('js', new Date());
-        window.gtag('config', 'G-XXXXXXXXXX'); // Replace with real GA4 ID
+        window.gtag('config', 'G-0GWVSPJLVJ');
       }
     }
 
-    // Advertising: Facebook Pixel
-    if (consent.advertising) {
-      if (!window.fbq) {
-        !function(f,b,e,v,n,t,s){
-          if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          s.parentNode.insertBefore(t,s)}(window,document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
-        window.fbq('init', 'XXXXXXXXXXXXXXX'); // Replace with real Pixel ID
-        window.fbq('track', 'PageView');
-      }
-    }
+    // Advertising: Facebook Pixel — disabled until needed
+    // if (consent.advertising) { ... }
 
     // If consent withdrawn, we can't unload scripts that are already injected,
     // but we can prevent future events by checking consent before tracking calls.
@@ -224,12 +195,12 @@
     }
     if (btnReject) {
       btnReject.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: false, advertising: false });
+        saveConsent({ essential: true, analytics: false });
       });
     }
     if (btnAccept) {
       btnAccept.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: true, advertising: true });
+        saveConsent({ essential: true, analytics: true });
       });
     }
 
@@ -244,17 +215,15 @@
     if (modalSave) {
       modalSave.addEventListener('click', () => {
         const analytics = document.getElementById('cookie-toggle-analytics');
-        const advertising = document.getElementById('cookie-toggle-advertising');
         saveConsent({
           essential: true,
           analytics: analytics ? analytics.checked : false,
-          advertising: advertising ? advertising.checked : false,
         });
       });
     }
     if (modalAcceptAll) {
       modalAcceptAll.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: true, advertising: true });
+        saveConsent({ essential: true, analytics: true });
       });
     }
 
