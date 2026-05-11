@@ -799,7 +799,7 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 |---|---|---|
 | Homepage EN (`/`) | ✅ | 8 sections: Hero, Trust, Categories, Top Products, Configurator, Fabric Tabs, Reviews, Email Signup |
 | Homepage TH (`/th/`) | ✅ | Full Thai translation of all 8 sections |
-| About Us (`/about/`) | ✅ | Company story, mission, certifications (OEKO-TEX + Siriraj) |
+| About Us (`/about/`) | ✅ | Engineering Authority 5-section rebuild: Technical Hero + Blueprint Grid, Engineering Genesis (2019 Mattress Gap Paradox), Authority Timeline (2019/2022/2024/2026), Material Standards (PremaCotton/BreezePlus/CloudSoft/EcoLuxe with spec tags), YouTube video, Global Reach 3-column city grid. 8 real images deployed. |
 | Contact (`/contact/`) | ✅ | Form + LINE/WhatsApp/Facebook + marketplace icons |
 | Fabric Collections (`/fabric/`) | ✅ | 4-tab showcase + comparison table, content from `01_Fabric_Intelligence_Guide_V2.md` |
 | Returns & Delivery (`/shipping/`) | ✅ | 30-day returns policy, shipping regions, carriers, customs note |

@@ -127,12 +127,15 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ## Static Pages ✅ Verified
 
-### About Us (`/about/`) ✅
+### About Us (`/about/`) ✅ Rebuilt — Engineering Authority Framework
 - [x] Page loads at `/about/`
-- [x] Company story text visible
-- [x] Mission statement visible
-- [x] Two certification cards: OEKO-TEX + Siriraj
-- [x] "Shop Custom Bedding" CTA at bottom
+- [x] **Section 1 — Technical Hero:** H1 "Precision Bedding. Engineered for Every Shape of Sleep." + Blueprint Grid overlay + Tech Specs overlay (Tolerance ±1–2cm, OEKO-TEX®)
+- [x] **Section 2 — Engineering Genesis:** "Solving the Mattress Gap Paradox" with bold pull quotes (geometric failure, unified family sleep surface) + genesis image
+- [x] **Section 3 — Authority Timeline:** 4 milestones (2019 Founding, 2022 OEKO-TEX, 2024 Etsy+eBay Global, 2026 Engineering Lab) + EngineeringLab.jpg
+- [x] **Section 4 — Material Standards:** 4 fabric cards (PremaCotton/BreezePlus/CloudSoft/EcoLuxe) with spec tags, swatch images, "Explore the Fabric Collections" CTA
+- [x] **Section 5 — Video:** "The MildMate Standard" heading + YouTube Short embed
+- [x] **Section 6 — Global Reach:** 3-column city grid (11+ cities across 3 regions)
+- [x] All 8 real images loaded (hero, genesis, 4 swatches, EngineeringLab)
 - [x] Header and footer present
 
 ### Contact (`/contact/`) ✅
