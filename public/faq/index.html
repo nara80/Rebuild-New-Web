@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MildMate Engineering Reference — Technical specifications and answers to common questions about custom marine bedding, family co-sleeping sheets, waterproof protectors, and international shipping.">
+  <title>FAQ — Engineering Reference & Technical Specifications | MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .faq-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .faq-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .faq-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .faq-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .faq-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .faq-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+    .hero-specs-bar {
+      display: inline-flex;
+      gap: 32px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(4px);
+      border-radius: 999px;
+      padding: 10px 28px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .hero-specs-bar span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-specs-bar svg {
+      width: 16px; height: 16px;
+      stroke: #fff; stroke-width: 2.5;
+    }
+
+    /* ── Category Nav ──────────────────────── */
+    .cat-nav-section {
+      background: #fff;
+      padding: 24px;
+      border-bottom: 1px solid #d0e6fa;
+      position: sticky;
+      top: 60px;
+      z-index: 10;
+    }
+    .cat-nav-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1.5px solid #d0e6fa;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--color-text);
+      font-weight: 600;
+      font-size: 0.8125rem;
+      transition: all 0.2s;
+      background: #f8fbff;
+    }
+    .cat-pill:hover, .cat-pill:focus {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(44,150,244,0.10);
+    }
+    .cat-pill svg {
+      width: 16px; height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    /* ── FAQ Sections ───────────────────────── */
+    .faq-section {
+      background: transparent;
+      padding: 56px 24px;
+      border-bottom: 1px solid #d0e6fa;
+    }
+    .faq-section:nth-child(even) { background: transparent; }
+    .faq-section:last-of-type { border-bottom: none; }
+    .faq-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .faq-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 20px;
+    }
+    .faq-card {
+      background: #f8fbff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .faq-section:nth-child(even) .faq-card { background: #fff; }
+    .faq-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 20px rgba(44,150,244,0.08);
+    }
+    .faq-card:last-child { margin-bottom: 0; }
+    .faq-q {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin: 0 0 14px;
+      line-height: 1.4;
+    }
+    .faq-a {
+      font-size: 0.9375rem;
+      color: var(--color-muted);
+      line-height: 1.7;
+      margin: 0 0 16px;
+    }
+    .faq-a:last-child { margin-bottom: 0; }
+    .faq-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 16px;
+    }
+    .faq-list li {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 10px;
+      font-size: 0.9375rem;
+      color: var(--color-muted);
+      line-height: 1.6;
+    }
+    .faq-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      opacity: 0.5;
+    }
+    .faq-list li strong {
+      color: var(--color-text);
+      font-weight: 700;
+    }
+    .faq-quote {
+      border-left: 3px solid var(--color-primary);
+      padding: 4px 0 4px 20px;
+      margin: 16px 0;
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      color: var(--color-text);
+    }
+    .faq-quote p { margin: 0 0 12px; }
+    .faq-quote p:last-child { margin-bottom: 0; }
+    .faq-quote strong { color: var(--color-primary); font-weight: 700; }
+    .faq-related {
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+      margin: 0;
+    }
+    .faq-related a {
+      color: var(--color-primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .faq-related a:hover { text-decoration: underline; }
+
+    /* ── Mobile ──────────────────────────────── */
+    @media (max-width: 768px) {
+      .faq-hero { padding: 48px 20px 36px; }
+      .faq-hero-inner h1 { font-size: 1.875rem; }
+      .hero-specs-bar { flex-direction: column; gap: 8px; border-radius: var(--radius); }
+      .cat-nav-section { top: 52px; padding: 16px; }
+      .cat-nav-inner { gap: 8px; }
+      .cat-pill { padding: 6px 12px; font-size: 0.75rem; }
+      .faq-section { padding: 40px 20px; }
+      .faq-card { padding: 20px; }
+    }
+  </style>
+</head>
+<body class="faq-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
+          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="My account">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="Language switch">
+          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="Mobile menu">
+      <div class="mobile-drawer-search">
+        <form action="/products/" method="get" class="drawer-search-form">
+          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search products" autocomplete="off">
+          <button type="submit" aria-label="Submit search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+      <ul class="mobile-nav-list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products/">Shop</a></li>
+        <li><a href="/fabric/">Fabrics</a></li>
+        <li><a href="/sizeguide/">Size Guide</a></li>
+      </ul>
+    </div>
+    <div class="search-overlay" aria-hidden="true">
+      <div class="search-overlay-inner">
+        <button class="search-close" aria-label="Close search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <form action="/products/" method="get" class="search-form">
+          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off">
+          <button type="submit" aria-label="Submit search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="faq-hero">
+      <div class="faq-hero-inner">
+        <h1>Engineering Reference & Technical Specifications</h1>
+        <p class="hero-sub">Real customer questions answered with manufacturing precision. Every specification verified against production standards.</p>
+        <div class="hero-specs-bar">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> 6 Categories</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 12 Spec Sheets</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Updated May 2026</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CATEGORY NAV ===== -->
+    <section class="cat-nav-section">
+      <div class="cat-nav-inner">
+        <a href="#marine" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M2 12c0-5.5 4.5-10 10-10s10 4.5 10 10"/><path d="M2 12c0 5.5 4.5 10 10 10"/></svg>Marine & Yacht</a>
+        <a href="#family" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Family & Co-Sleep</a>
+        <a href="#protection" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Protection</a>
+        <a href="#dakimakura" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Dakimakura</a>
+        <a href="#duvet" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>Duvet & BedBridge</a>
+        <a href="#logistics" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 20 16 16 16 16 8"/></svg>Logistics</a>
+      </div>
+    </section>
+
+    <!-- ===== MARINE ===== -->
+    <section class="faq-section" id="marine">
+      <div class="faq-inner">
+        <div class="faq-kicker">Custom Marine & V-Berth Bedding</div>
+        <div class="faq-card">
+          <p class="faq-q">I have a specific boat model (e.g., Beneteau Antares 11, Apreamare Cabinato 11, or SS7 Bayliner). Do you have templates or fitments for these?</p>
+          <p class="faq-a">We specialize in bespoke fitments for these specific hull designs. While we maintain a library of common shapes, we treat every cabin bed as a unique project to ensure a "Built-In" appearance.</p>
+          <ul class="faq-list">
+
+            <li><strong>Blueprint Verification:</strong> Before production, we generate a digital blueprint of your hull's geometry for your approval to confirm orientation (head vs. foot) and taper.</li>
+            <li><strong>Heavy-Motion Fitment:</strong> Sheets are custom-tailored to the exact taper of the hull, featuring a heavy-duty 360-degree elastic perimeter to stay anchored during heavy seas or when lifting mattresses for storage access.</li>
+          </ul>
+          <p class="faq-related">Related: <a href="/marine/">Marine & Yacht Collection &rarr;</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FAMILY ===== -->
+    <section class="faq-section" id="family">
+      <div class="faq-inner">
+        <div class="faq-kicker">Family Co-Sleeping & "Mega-Bed" Systems</div>
+        <div class="faq-card">
+          <p class="faq-q">Can you create a single fitted sheet and protector for combined beds (e.g., 290 cm total width)?</p>
+          <p class="faq-a">Yes. We manufacture "Unified Surface" conversions for any combined footprint, including massive setups up to 290 cm x 183 cm.</p>
+          <ul class="faq-list">
+            <li><strong>Seamless Architecture:</strong> For large-format setups, we use a single, 100% seamless piece of fabric to eliminate the uncomfortable center ridge found in standard joined sheets.</li>
+            <li><strong>The Bridge-Buffer Layer:</strong> We recommend our quilted protector to act as a mechanical leveling layer, using its loft to flatten convex bumps and make the transition across a BedBridge imperceptible.</li>
+            <li><strong>The Mechanical Pinch Anchor:</strong> We include a 2-inch secure tuck-under beyond your pocket depth. This uses the mattresses' own weight to "pinch" the fabric in place, preventing it from sliding.</li>
+            <li><strong>Multi-Sheet Discounts:</strong> We offer a 20% discount for customers ordering two or more custom family sheets.</li>
+          </ul>
+          <p class="faq-related">Related: <a href="/family/">Family & Co-Sleep Collection &rarr;</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PROTECTION ===== -->
+    <section class="faq-section" id="protection">
+      <div class="faq-inner">
+        <div class="faq-kicker">Specialized Waterproof Protection</div>
+        <div class="faq-card">
+          <p class="faq-q">Can you make custom waterproof protectors for pets (e.g., 132" x 80")?</p>
+          <p class="faq-a">Yes. We build "Asset-Shield" protectors to any dimensions to preserve luxury mattress foam from pet accidents.</p>
+          <ul class="faq-list">
+            <li><strong>Stability Fit:</strong> We tailor the pocket depth (customizable up to 24"+) to ensure sidewalls stay locked during the lateral force of pets jumping on the bed.</li>
+            <li><strong>6-Sided Low-Lift Design:</strong> For RVs or tight spaces, our 6-sided encasements feature top-perimeter zippers so they can be installed without fully lifting heavy mattresses.</li>
+          </ul>
+          <p class="faq-related">Related: <a href="/protection/">Protection Collection &rarr;</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DAKIMAKURA ===== -->
+    <section class="faq-section" id="dakimakura">
+      <div class="faq-inner">
+        <div class="faq-kicker">Dakimakura (Body Pillow) Modular System</div>
+        <div class="faq-card">
+          <p class="faq-q">Why do you recommend a 2-layer system instead of a single-layer sewn TPU unit?</p>
+          <p class="faq-a">Our Professional 2-Layer System is superior for three reasons:</p>
+          <ul class="faq-list">
+            <li><strong>Durability:</strong> Frequent washing can cause TPU membranes to delaminate if sewn directly to outer fabric. Our system lets you wash the outer cover (PremaCotton or BreezePlus) while the TPU liner remains protected.</li>
+            <li><strong>Waterproof Integrity:</strong> Sewing TPU directly creates needle holes that can leak. A separate inner liner provides 100% spill-proof protection.</li>
+            <li><strong>Acoustics & Feel:</strong> Separate layers ensure the pillow stays soft and quiet; bonding them creates a "crinkly" or stiff feel.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DUVET ===== -->
+    <section class="faq-section" id="duvet">
+      <div class="faq-inner">
+        <div class="faq-kicker">Duvet Covers & BedBridge Connector</div>
+        <div class="faq-card">
+          <p class="faq-q">What makes the 3-sided zipper better for heavy duvets?</p>
+          <p class="faq-a">The "Suitcase-Style" load allows the top layer to flip back completely. You simply lay the heavy insert flat and zip it closed, cutting bed-making time by ~90% and eliminating heavy lifting.</p>
+          <div class="faq-quote">
+            <p><strong>BedBridge Mechanics:</strong> This is a mechanical component sold separately from sheets. It requires mattresses to stay at the same height; independent adjustment of split beds will dislodge the bridge.</p>
+          </div>
+          <p class="faq-related">Related: <a href="/duvet/">Duvet Collection &rarr;</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LOGISTICS ===== -->
+    <section class="faq-section" id="logistics">
+      <div class="faq-inner">
+        <div class="faq-kicker">Logistics & International Shipping</div>
+        <div class="faq-card">
+          <p class="faq-q">What is the lead time and do you ship to Australia?</p>
+          <ul class="faq-list">
+            <li><strong>Production:</strong> Most custom orders are prepared for shipping within 48 hours to a few days depending on complexity.</li>
+            <li><strong>International:</strong> We ship globally, including to Australia and the UK. Arrival times vary based on regional courier performance.</li>
+          </ul>
+          <p class="faq-related">For full details see <a href="/shipping/">Returns & Delivery &rarr;</a></p>
+        </div>
+      </div>
+    </section>
+
+
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/about/">About Us</a></li>
+            <li><a href="/contact/">Contact Us</a></li>
+            <li><a href="/reviews/">Reviews</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Customer Service</h3>
+          <ul>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><a href="/sizeguide/">Size Guide</a></li>
+            <li><a href="/blogs/">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Shop With Us</h3>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>Contact</h3>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">Privacy Policy</a>
+          <a href="/shipping/">Returns &amp; Delivery</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

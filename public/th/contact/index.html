@@ -3,38 +3,401 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ติดต่อ MildMate — สอบถามผ้าปูที่นอนสั่งตัด สนับสนุนลูกค้า และสั่งซื้อจำนวนมาก">
-  <title>ติดต่อเรา — MildMate</title>
+  <meta name="description" content="ติดต่อ MildMate — สนับสนุนทางเทคนิค คำปรึกษาขนาดสั่งตัด และสอบถามการผลิต ตอบกลับภายใน 4 ชั่วโมง">
+  <title>ติดต่อเรา — สนับสนุนทางเทคนิคและคำปรึกษาการผลิต | MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <style>
-    .contact-layout {
+    .contact-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .contact-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .contact-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .contact-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .contact-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .contact-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+    /* ── Main Layout ────────────────────────── */
+    .contact-main {
+      background: #f0f7ff;
+      padding: 56px 24px;
+    }
+    .contact-main-inner {
+      max-width: 960px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 40px;
+      align-items: start;
     }
-    .business-grid {
+
+    .form-section, .channels-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+    }
+
+    /* ── Form ───────────────────────────────── */
+    .form-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+    .form-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .input-group {
+      margin-bottom: 18px;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .input-group input,
+    .input-group textarea,
+    .input-group select {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-size: 0.9375rem;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--color-text);
+    }
+    .input-group input:focus,
+    .input-group textarea:focus,
+    .input-group select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(44,150,244,0.18);
+    }
+    .input-group textarea { resize: vertical; min-height: 120px; }
+    .btn-submit {
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      padding: 13px 28px;
+      border-radius: var(--radius);
+      font-family: var(--font-main);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-submit:hover { background: var(--color-primary-dark); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-feedback {
+      display: none;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+    }
+    .form-feedback.success {
+      display: block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+    }
+    .form-feedback.error {
+      display: block;
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+    }
+
+    /* ── Direct Channels ────────────────────── */
+    .channels-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+    .channels-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .channel-card {
+      background: #f8fbff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .channel-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 2px 12px rgba(44,150,244,0.10);
+    }
+    .channel-icon-wrap {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(44,150,244,0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .channel-icon-wrap svg {
+      width: 22px; height: 22px;
+      color: var(--color-primary);
+    }
+    .channel-info strong {
+      display: block;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 2px;
+    }
+    .channel-info .spec-tag {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(44,150,244,0.10);
+      padding: 3px 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .channel-info .channel-detail {
+      font-size: 0.8125rem;
+      color: var(--color-muted);
+      margin: 4px 0 0;
+    }
+
+    /* ── Marketplaces ───────────────────────── */
+    .marketplace-section {
+      background: #f5faff;
+      padding: 56px 24px;
+      border-top: 1px solid #d0e6fa;
+    }
+    .marketplace-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .marketplace-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .marketplace-inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .marketplace-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 24px;
+      font-size: 0.9375rem;
+    }
+    .marketplace-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .marketplace-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      border: 1.5px solid #d0e6fa;
+      border-radius: var(--radius);
+      text-decoration: none;
+      color: var(--color-text);
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+      background: #f8fbff;
+    }
+    .marketplace-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(44,150,244,0.10);
+    }
+    .marketplace-btn img {
+      width: 20px; height: 20px;
+      object-fit: contain;
+    }
+
+    /* ── B2B Section ─────────────────────────── */
+    .b2b-section {
+      background: #f0f7ff;
+      padding: 56px 24px;
+      border-top: 1px solid #d0e6fa;
+    }
+    .b2b-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .b2b-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .b2b-inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .b2b-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 28px;
+      font-size: 0.9375rem;
+    }
+    .b2b-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 20px;
     }
+    .b2b-card {
+      background: #f8fbff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .b2b-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 2px 12px rgba(44,150,244,0.10);
+    }
+    .b2b-card h3 {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--color-text);
+    }
+    .b2b-card p {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin: 0;
+      line-height: 1.55;
+    }
+    .b2b-accent-bar {
+      width: 32px;
+      height: 3px;
+      background: var(--color-primary);
+      border-radius: 2px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Trust Bar ──────────────────────────── */
+    .trust-section {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 40px 24px;
+      color: #fff;
+    }
+    .trust-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      text-align: center;
+    }
+    .trust-item svg {
+      width: 28px; height: 28px;
+      stroke: #fff;
+      stroke-width: 2;
+      margin: 0 auto 10px;
+      display: block;
+    }
+    .trust-item strong {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .trust-item span {
+      font-size: 0.75rem;
+      opacity: 0.92;
+    }
+
+    /* ── Mobile ──────────────────────────────── */
     @media (max-width: 768px) {
-      .contact-layout {
-        grid-template-columns: 1fr;
-        gap: 32px;
-      }
-      .business-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
+      .contact-hero { padding: 48px 20px 36px; }
+      .contact-hero-inner h1 { font-size: 1.875rem; }
+      .contact-main-inner { grid-template-columns: 1fr; gap: 32px; }
+      .b2b-grid { grid-template-columns: 1fr; }
+      .trust-inner { grid-template-columns: 1fr; gap: 20px; }
+      .router-section,
+      .contact-main,
+      .marketplace-section,
+      .b2b-section { padding: 40px 20px; }
+    }
+    @media (max-width: 480px) {
     }
   </style>
 </head>
-<body>
+<body class="contact-page">
 
-  <!-- ===== HEADER ===== -->
   <header class="site-header">
     <div class="container header-inner">
       <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -58,7 +421,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span class="cart-count">0</span>
         </a>
-        <div class="lang-toggle" role="group" aria-label="สลับภาษา">
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา">
           <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
         </div>
       </div>
@@ -96,116 +459,177 @@
   </header>
 
   <main>
-    <section class="page-hero">
-      <div class="container">
-        <h1>ติดต่อเรา</h1>
-        <p>เราพร้อมช่วยเหลือคุณในเรื่องขนาดสั่งตัด คำถามเกี่ยวกับผ้า และการสนับสนุนคำสั่งซื้อ</p>
+
+    <!-- ===== HERO ===== -->
+    <section class="contact-hero">
+      <div class="contact-hero-inner">
+        <h1>สนับสนุนทางเทคนิคและคำปรึกษาการผลิต</h1>
+        <p class="hero-sub">พูดคุยโดยตรงกับทีมวิศวกรของเราเกี่ยวกับขนาดสั่งตัด การยึดเกาะลำเรือ สเปคผ้า และโลจิสติกส์การจัดส่ง</p>
       </div>
     </section>
 
-    <section class="section">
-      <div class="container" style="max-width:900px;">
-        <div class="contact-layout">
-          <div>
-            <h2>ส่งข้อความ</h2>
-            <form id="contact-form" action="/api/contact" method="post" style="margin-top:20px;">
-              <div id="form-feedback" style="display:none; margin-bottom:16px; padding:12px 16px; border-radius:var(--radius); font-size:0.9375rem;"></div>
-              <div class="input-group" style="margin-bottom:16px;">
-                <label for="name">ชื่อ</label>
-                <input type="text" id="name" name="name" required style="width:100%; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+    <!-- ===== FORM + CHANNELS ===== -->
+    <section class="contact-main">
+      <div class="contact-main-inner">
+        <div class="form-section">
+          <div class="form-kicker">ส่งข้อความถึงวิศวกร</div>
+          <h2>ส่งข้อความ</h2>
+          <form id="contact-form" action="/api/contact" method="post">
+            <div id="form-feedback" class="form-feedback"></div>
+            <div class="input-group">
+              <label for="name">ชื่อ</label>
+              <input type="text" id="name" name="name" required placeholder="ชื่อของคุณ">
+            </div>
+            <div class="input-group">
+              <label for="email">อีเมล</label>
+              <input type="email" id="email" name="email" required placeholder="your@email.com">
+            </div>
+            <div class="input-group">
+              <label for="inquiry-type">ประเภทการสอบถาม</label>
+              <select id="inquiry-type" name="inquiry_type">
+                <option value="custom-quote">ขอใบเสนอราคาสั่งตัด</option>
+                <option value="order-status">สถานะคำสั่งซื้อ</option>
+                <option value="fabric-specs">สเปคผ้าเทคนิค</option>
+                <option value="wholesale">ขายส่ง / B2B</option>
+                <option value="general">สอบถามทั่วไป</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="message">ข้อความ</label>
+              <textarea id="message" name="message" rows="5" required placeholder="อธิบายรูปทรงที่นอน รุ่นเรือ หรือคำถามของคุณ..."></textarea>
+            </div>
+            <button type="submit" id="contact-submit" class="btn-submit">ส่งถึงทีมวิศวกร</button>
+          </form>
+        </div>
+        <div class="channels-section">
+          <div class="channels-kicker">ช่องทางติดต่อโดยตรง</div>
+          <h2>ติดต่อเราโดยตรง</h2>
+          <div class="channel-list">
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" class="channel-card">
+              <div class="channel-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               </div>
-              <div class="input-group" style="margin-bottom:16px;">
-                <label for="email">อีเมล</label>
-                <input type="email" id="email" name="email" required style="width:100%; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+              <div class="channel-info">
+                <strong>LINE Official</strong>
+                <span class="spec-tag">ลูกค้าไทย</span>
+                <p class="channel-detail">แชทภาษาไทย ตอบกลับในเวลาทำการ</p>
               </div>
-              <div class="input-group" style="margin-bottom:16px;">
-                <label for="subject">หัวข้อ</label>
-                <input type="text" id="subject" name="subject" required style="width:100%; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+            </a>
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" class="channel-card">
+              <div class="channel-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               </div>
-              <div class="input-group" style="margin-bottom:16px;">
-                <label for="message">ข้อความ</label>
-                <textarea id="message" name="message" rows="5" required style="width:100%; padding:12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); resize:vertical;"></textarea>
+              <div class="channel-info">
+                <strong>WhatsApp</strong>
+                <span class="spec-tag">ทั่วโลก</span>
+                <p class="channel-detail">คำสั่งซื้อระหว่างประเทศและช่วยเหลือขนาด</p>
               </div>
-              <button type="submit" id="contact-submit" class="btn btn-primary">ส่งข้อความ</button>
-            </form>
-          </div>
-          <div>
-            <h2>ช่องทางติดต่อโดยตรง</h2>
-            <div style="margin-top:20px; display:flex; flex-direction:column; gap:16px;">
-              <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" class="card" style="padding:20px; display:flex; align-items:center; gap:16px; text-decoration:none;">
-                <img src="/images/Logo/LineOA.png" alt="LINE" width="40" height="40" style="border-radius:50%;">
-                <div>
-                  <strong style="color:var(--color-text);">LINE Official</strong>
-                  <p class="small" style="color:var(--color-muted); margin:0;">ตอบเร็วที่สุดสำหรับลูกค้าไทย</p>
-                </div>
-              </a>
-              <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" class="card" style="padding:20px; display:flex; align-items:center; gap:16px; text-decoration:none;">
-                <img src="/images/Logo/WhatsAPP.png" alt="WhatsApp" width="40" height="40" style="border-radius:50%;">
-                <div>
-                  <strong style="color:var(--color-text);">WhatsApp</strong>
-                  <p class="small" style="color:var(--color-muted); margin:0;">คำสั่งซื้อระหว่างประเทศและช่วยเหลือเรื่องขนาด</p>
-                </div>
-              </a>
-              <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" class="card" style="padding:20px; display:flex; align-items:center; gap:16px; text-decoration:none;">
-                <img src="/images/Logo/Facebook.png" alt="Facebook" width="40" height="40" style="border-radius:50%;">
-                <div>
-                  <strong style="color:var(--color-text);">Facebook</strong>
-                  <p class="small" style="color:var(--color-muted); margin:0;">ชุมชน อัปเดต และส่งข้อความ</p>
-                </div>
-              </a>
-              <div class="card" style="padding:20px;">
+            </a>
+            <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" class="channel-card">
+              <div class="channel-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              </div>
+              <div class="channel-info">
+                <strong>Facebook</strong>
+                <span class="spec-tag">ชุมชน</span>
+                <p class="channel-detail">อัปเดต รีวิว และข้อความ</p>
+              </div>
+            </a>
+            <div class="channel-card">
+              <div class="channel-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div class="channel-info">
                 <strong>อีเมล</strong>
-                <p style="margin:4px 0 0;"><a href="mailto:contact@mildmate.com">contact@mildmate.com</a></p>
-                <p class="small" style="color:var(--color-muted); margin:4px 0 0;">มักตอบกลับภายใน 24 ชั่วโมง</p>
+                <span class="spec-tag">สเปคละเอียด</span>
+                <p class="channel-detail"><a href="mailto:contact@mildmate.com">contact@mildmate.com</a> — ตอบกลับภายใน 24 ชม.</p>
               </div>
-              <div class="card" style="padding:20px;">
+            </div>
+            <div class="channel-card">
+              <div class="channel-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div class="channel-info">
                 <strong>โทรศัพท์</strong>
-                <p style="margin:4px 0 0;"><a href="tel:+66872362364">+66 (0)87 236 2364</a></p>
-                <p class="small" style="color:var(--color-muted); margin:4px 0 0;">จันทร์–ศุกร์ 9:00–18:00 (เวลาไทย)</p>
+                <span class="spec-tag">ด่วน</span>
+                <p class="channel-detail"><a href="tel:+66872362364">+66 (0)87 236 2364</a> — จ.–ศ. 9:00–18:00 น.</p>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:48px;">
-          <h2>ช้อปบนแพลตฟอร์ม</h2>
-          <div style="display:flex; flex-wrap:wrap; gap:16px; margin-top:16px;">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"><img src="/images/Logo/Etsy.png" alt="" width="20" height="20">Etsy</a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"><img src="/images/Logo/eBay.png" alt="" width="20" height="20">eBay</a>
-            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"><img src="/images/Logo/Shopee.png" alt="" width="20" height="20">Shopee</a>
-            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"><img src="/images/Logo/Lazada.png" alt="" width="20" height="20">Lazada</a>
-            <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"><img src="/images/Logo/TikTok.png" alt="" width="20" height="20">TikTok Shop</a>
-          </div>
-        </div>
-
-        <!-- ===== BUSINESS SOLUTIONS ===== -->
-        <div style="margin-top:64px;">
-          <h2>โซลูชันสำหรับธุรกิจ</h2>
-          <p style="color:var(--color-muted); margin-top:8px; margin-bottom:28px;">MildMate เป็นพันธมิตรการผลิตที่เชื่อถือได้สำหรับลูกค้าธุรกิจทั่วโลก</p>
-          <div class="business-grid">
-            <div class="card" style="padding:24px;">
-              <h3 style="font-size:1.125rem; margin-bottom:8px; color:var(--color-primary);">ผ้าปูสั่งตัดสำหรับความต้องการพิเศษ</h3>
-              <p style="color:var(--color-muted); font-size:0.9375rem; margin:0;">ที่นอนขนาดพิเศษ? RV, เรือ หรือเตียงนอนรวมครอบครัว? เราออกแบบผ้าปูพอดีทุกรูปทรง</p>
-            </div>
-            <div class="card" style="padding:24px;">
-              <h3 style="font-size:1.125rem; margin-bottom:8px; color:var(--color-primary);">ปักและสกรีน</h3>
-              <p style="color:var(--color-muted); font-size:0.9375rem; margin:0;">เพิ่มชื่อ โลโก้ วันสำคัญ หรือลายออกแบบบนผ้าปู ปลอกหมอน และผ้านวม สำหรับของขวัญหรือแบรนด์</p>
-            </div>
-            <div class="card" style="padding:24px;">
-              <h3 style="font-size:1.125rem; margin-bottom:8px; color:var(--color-primary);">ชุดผ้าปูสำหรับธุรกิจ</h3>
-              <p style="color:var(--color-muted); font-size:0.9375rem; margin:0;">โรงพยาบาล สปา คลินิกความงาม และศูนย์ดูแลผู้สูงอายุ ผ้าปูทนทาน สบาย พร้อมปักโลโก้ได้</p>
-            </div>
-            <div class="card" style="padding:24px;">
-              <h3 style="font-size:1.125rem; margin-bottom:8px; color:var(--color-primary);">บริการ OEM</h3>
-              <p style="color:var(--color-muted); font-size:0.9375rem; margin:0;">รับผลิตตามคำสั่งซื้อของคุณ ให้คำปรึกษาโครงการพิเศษ และโปรแกรมพันธมิตร</p>
             </div>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- ===== MARKETPLACES ===== -->
+    <section class="marketplace-section">
+      <div class="marketplace-inner">
+        <div class="marketplace-kicker">แพลตฟอร์มที่ได้รับการยืนยัน</div>
+        <h2>ช้อปบน Marketplace</h2>
+        <p>ต้องการซื้อผ่านแพลตฟอร์มที่คุณไว้วางใจ? เรามีร้านค้าที่ใช้งานอยู่บนทุกช่องทางหลัก</p>
+        <div class="marketplace-grid">
+          <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" class="marketplace-btn"><img src="/images/Logo/Etsy.png" alt="">Etsy</a>
+          <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" class="marketplace-btn"><img src="/images/Logo/eBay.png" alt="">eBay</a>
+          <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" class="marketplace-btn"><img src="/images/Logo/Shopee.png" alt="">Shopee</a>
+          <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" class="marketplace-btn"><img src="/images/Logo/Lazada.png" alt="">Lazada</a>
+          <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" class="marketplace-btn"><img src="/images/Logo/TikTok.png" alt="">TikTok Shop</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== B2B ===== -->
+    <section class="b2b-section">
+      <div class="b2b-inner">
+        <div class="b2b-kicker">พันธมิตรการผลิต</div>
+        <h2>โซลูชันสำหรับธุรกิจ</h2>
+        <p>MildMate เป็นพันธมิตรการผลิตที่ได้รับความไว้วางใจจากลูกค้าธุรกิจทั่วโลก — โรงพยาบาล สปา ท่าเรือ และกลุ่มโรงแรม</p>
+        <div class="b2b-grid">
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>ผ้าปูสั่งตัดสำหรับความต้องการพิเศษ</h3>
+            <p>ขนาดที่นอนที่ไม่ปกติ? RV, เรือ หรือการนอนรวมกันของครอบครัว? เราวิศวกรรมผ้าปูที่พอดีพอดีสำหรับทุกรูปทรง</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>ปักและสกรีน</h3>
+            <p>เพิ่มชื่อ ชื่อย่อ วันที่พิเศษ หรือดีไซน์ที่กำหนดเองลงบนผ้าปู ปลอกหมอน และผ้านวมสำหรับของขวัญหรือแบรนด์</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>ชุดผ้าปูสำหรับธุรกิจ</h3>
+            <p>โรงพยาบาล สปา คลินิกความงาม และศูนย์ดูแล ผ้าปูทนทานสบายตัวพร้อมตัวเลือกปักโลโก้</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>การผลิต OEM</h3>
+            <p>บริการผู้ผลิตอุปกรณ์ดั้งเดิม คำสั่งซื้อสินค้าที่กำหนดเอง ปรึกษาแบรนด์ลูกค้า และโปรแกรมพันธมิตร</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TRUST BAR ===== -->
+    <section class="trust-section">
+      <div class="trust-inner">
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <strong>รับรอง OEKO-TEX</strong>
+          <span>ตั้งแต่ปี 2022</span>
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <strong>จัดส่งทั่วโลก</strong>
+          <span>ส่งทุกประเทศ</span>
+        </div>
+        <div class="trust-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 20 16 16 16 16 8"/></svg>
+          <strong>ผลิต 48 ชั่วโมง</strong>
+          <span>คำสั่งซื้อสั่งตัด</span>
+        </div>
+      </div>
+    </section>
+
   </main>
 
-  <!-- ===== FOOTER ===== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -213,7 +637,7 @@
           <h3>ลิงก์ด่วน</h3>
           <ul>
             <li><a href="/about/">เกี่ยวกับเรา</a></li>
-            <li><a href="/th/contact/">ติดต่อเรา</a></li>
+            <li><a href="/contact/">ติดต่อเรา</a></li>
             <li><a href="/reviews/">รีวิว</a></li>
           </ul>
         </div>
@@ -257,7 +681,7 @@
         <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">
           <a href="/policy/">นโยบายความเป็นส่วนตัว</a>
-          <a href="/shipping/">การคืนสินค้าและจัดส่ง</a>
+          <a href="/shipping/">การจัดส่งและคืนสินค้า</a>
         </div>
       </div>
     </div>
@@ -276,14 +700,14 @@
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
         submitBtn.disabled = true;
-        submitBtn.textContent = 'กำลังส่ง…';
-        feedback.style.display = 'none';
-        feedback.className = '';
+        submitBtn.textContent = 'กำลังส่ง...';
+        feedback.className = 'form-feedback';
+        feedback.textContent = '';
 
         const payload = {
           name: form.name.value.trim(),
           email: form.email.value.trim(),
-          subject: form.subject.value.trim(),
+          inquiry_type: form.inquiry_type.value,
           message: form.message.value.trim(),
         };
 
@@ -296,19 +720,19 @@
           const data = await res.json();
 
           if (res.ok && data.success) {
-            feedback.textContent = data.message;
-            feedback.style.cssText = 'display:block; margin-bottom:16px; padding:12px 16px; border-radius:var(--radius); font-size:0.9375rem; background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7;';
+            feedback.className = 'form-feedback success';
+            feedback.textContent = data.message || 'ส่งข้อความแล้ว ทีมวิศวกรจะตอบกลับภายใน 4 ชั่วโมง';
             form.reset();
           } else {
+            feedback.className = 'form-feedback error';
             feedback.textContent = data.error || 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง';
-            feedback.style.cssText = 'display:block; margin-bottom:16px; padding:12px 16px; border-radius:var(--radius); font-size:0.9375rem; background:#ffebee; color:#c62828; border:1px solid #ef9a9a;';
           }
         } catch (err) {
+          feedback.className = 'form-feedback error';
           feedback.textContent = 'ข้อผิดพลาดเครือข่าย กรุณาตรวจสอบการเชื่อมต่อและลองอีกครั้ง';
-          feedback.style.cssText = 'display:block; margin-bottom:16px; padding:12px 16px; border-radius:var(--radius); font-size:0.9375rem; background:#ffebee; color:#c62828; border:1px solid #ef9a9a;';
         } finally {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'ส่งข้อความ';
+          submitBtn.textContent = 'ส่งถึงทีมวิศวกร';
         }
       });
     })();
