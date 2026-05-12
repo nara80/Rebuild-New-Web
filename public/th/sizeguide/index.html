@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Mattress and bedding size guides by MildMate. Thai sizes, international sizes, measurement tips, and sheet fitting advice.">
-  <title>Size Guide — MildMate</title>
+  <meta name="description" content="ค้นหาขนาดที่นอนที่เหมาะกับเตียงของคุณ ตารางขนาดที่นอนทุกประเทศพร้อมแปลง cm และนิ้ว">
+  <title>คู่มือขนาด — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
@@ -12,37 +12,36 @@
 </head>
 <body>
 
-  <!-- ===== HEADER ===== -->
   <header class="site-header">
     <div class="container header-inner">
-      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
-      <nav class="main-nav" aria-label="Main navigation">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/th/" class="logo-link" aria-label="MildMate หน้าหลัก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="เมนูหลัก">
         <ul class="nav-list">
-          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
-          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
-          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
+          <li class="nav-item"><a href="/th/" class="nav-link">หน้าหลัก</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">สินค้า</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">ผ้า</a></li>
+          <li class="nav-item"><a href="/sizeguide/" class="nav-link">คู่มือขนาด</a></li>
         </ul>
       </nav>
       <div class="header-actions">
-        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </button>
-        <a href="/account/" class="account-btn" aria-label="My account">
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </a>
-        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span class="cart-count">0</span>
         </a>
-        <div class="lang-toggle" role="group" aria-label="Language switch">
-          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา">
+          <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
         </div>
       </div>
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu">
+    <div class="mobile-drawer" aria-label="เมนูมือถือ">
       <div class="mobile-drawer-search">
         <form action="/products/" method="get" class="drawer-search-form">
           <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off">
@@ -52,20 +51,20 @@
         </form>
       </div>
       <ul class="mobile-nav-list">
-        <li><a href="/">Home</a></li>
-        <li><a href="/products/">Shop</a></li>
-        <li><a href="/fabric/">Fabrics</a></li>
-        <li><a href="/sizeguide/">Size Guide</a></li>
+        <li><a href="/th/">หน้าหลัก</a></li>
+        <li><a href="/products/">สินค้า</a></li>
+        <li><a href="/fabric/">ผ้า</a></li>
+        <li><a href="/sizeguide/">คู่มือขนาด</a></li>
       </ul>
     </div>
     <div class="search-overlay" aria-hidden="true">
       <div class="search-overlay-inner">
-        <button class="search-close" aria-label="Close search">
+        <button class="search-close" aria-label="ปิดการค้นหา">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
         <form action="/products/" method="get" class="search-form">
-          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off">
-          <button type="submit" aria-label="Submit search">
+          <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหา" autocomplete="off">
+          <button type="submit" aria-label="ส่งการค้นหา">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </button>
         </form>
@@ -76,110 +75,105 @@
   <main>
     <section class="page-hero">
       <div class="container">
-        <h1>Find Your Perfect Size</h1>
-        <p>Select your country to see mattress sizes that match your bed. Every measurement shown in both centimetres and inches.</p>
+        <h1>ค้นหาขนาดที่พอดี</h1>
+        <p>เลือกประเทศของคุณเพื่อดูขนาดที่นอนที่ตรงกับเตียง ทุกขนาดแสดงทั้งเซนติเมตรและนิ้ว</p>
       </div>
     </section>
 
-    <!-- Country Selector -->
     <section class="section" style="background:#f0f7ff;">
       <div class="container">
         <div style="text-align:center; margin-bottom:32px;">
-          <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:8px;">Step 1: Where is your bed?</h2>
-          <p class="small" style="color:var(--color-muted);">Showing sizes for 13 top markets where MildMate ships.</p>
+          <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:8px;">ขั้นตอน 1: เตียงของคุณอยู่ที่ไหน?</h2>
+          <p class="small" style="color:var(--color-muted);">แสดงขนาดสำหรับ 13 ตลาดหลักที่ MildMate จัดส่ง</p>
         </div>
         <div id="country-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; max-width:960px; margin:0 auto;">
-          <button class="country-btn active" data-country="us" data-label="US / Canada">
+          <button class="country-btn active" data-country="us" data-label="สหรัฐ / แคนาดา">
             <span class="flag">🇺🇸</span>
-            <span class="label">US / Canada</span>
+            <span class="label">สหรัฐ / แคนาดา</span>
           </button>
-          <button class="country-btn" data-country="uk" data-label="UK">
+          <button class="country-btn" data-country="uk" data-label="อังกฤษ">
             <span class="flag">🇬🇧</span>
-            <span class="label">UK</span>
+            <span class="label">อังกฤษ</span>
           </button>
-          <button class="country-btn" data-country="eu" data-label="EU">
+          <button class="country-btn" data-country="eu" data-label="ยุโรป">
             <span class="flag">🇪🇺</span>
-            <span class="label">EU</span>
+            <span class="label">ยุโรป</span>
           </button>
-          <button class="country-btn" data-country="au" data-label="Australia">
+          <button class="country-btn" data-country="au" data-label="ออสเตรเลีย">
             <span class="flag">🇦🇺</span>
-            <span class="label">Australia</span>
+            <span class="label">ออสเตรเลีย</span>
           </button>
-          <button class="country-btn" data-country="th" data-label="Thailand">
+          <button class="country-btn" data-country="th" data-label="ไทย">
             <span class="flag">🇹🇭</span>
-            <span class="label">Thailand</span>
+            <span class="label">ไทย</span>
           </button>
-          <button class="country-btn" data-country="my" data-label="MY / SG">
+          <button class="country-btn" data-country="my" data-label="มาเลเซีย / สิงคโปร์">
             <span class="flag">🇲🇾</span>
-            <span class="label">MY / SG</span>
+            <span class="label">มาเลเซีย / สิงคโปร์</span>
           </button>
-          <button class="country-btn" data-country="in" data-label="India">
+          <button class="country-btn" data-country="in" data-label="อินเดีย">
             <span class="flag">🇮🇳</span>
-            <span class="label">India</span>
+            <span class="label">อินเดีย</span>
           </button>
-          <button class="country-btn" data-country="jp" data-label="Japan">
+          <button class="country-btn" data-country="jp" data-label="ญี่ปุ่น">
             <span class="flag">🇯🇵</span>
-            <span class="label">Japan</span>
+            <span class="label">ญี่ปุ่น</span>
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Mattress Type Tabs -->
     <section class="section">
       <div class="container">
         <div style="text-align:center; margin-bottom:24px;">
-          <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:8px;">Step 2: What type of bed?</h2>
+          <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:8px;">ขั้นตอน 2: ประเภทเตียง?</h2>
         </div>
         <div id="type-tabs" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:32px;">
-          <button class="type-btn active" data-type="standard">Standard Mattress</button>
-          <button class="type-btn" data-type="family">Family / Co-Sleep</button>
-          <button class="type-btn" data-type="marine">Marine / Yacht</button>
-          <button class="type-btn" data-type="truck">Truck Cab</button>
-          <button class="type-btn" data-type="rv">RV / Camper</button>
+          <button class="type-btn active" data-type="standard">ที่นอนมาตรฐาน</button>
+          <button class="type-btn" data-type="family">ครอบครัว / Co-Sleep</button>
+          <button class="type-btn" data-type="marine">เรือ / ยอชท์</button>
+          <button class="type-btn" data-type="truck">ห้องนอนรถบรรทุก</button>
+          <button class="type-btn" data-type="rv">รถบ้าน / RV</button>
         </div>
 
-        <!-- Size Table -->
         <div id="size-table-wrap" style="max-width:800px; margin:0 auto;">
           <div id="size-table-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h3 id="table-title" style="font-size:1.125rem; font-weight:700;">US / Canada — Standard Mattress Sizes</h3>
-            <span class="small" style="color:var(--color-muted);">All sizes: cm / inch</span>
+            <h3 id="table-title" style="font-size:1.125rem; font-weight:700;">สหรัฐ / แคนาดา — ขนาดที่นอนมาตรฐาน</h3>
+            <span class="small" style="color:var(--color-muted);">ทุกขนาด: เซนติเมตร / นิ้ว</span>
           </div>
           <div id="size-table" style="background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius); overflow:hidden;">
             <!-- injected by JS -->
           </div>
         </div>
 
-        <!-- CTAs -->
         <div style="text-align:center; margin-top:32px; display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
           <a href="/products/" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; padding:13px 28px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            Shop Standard Sizes
+            ช้อปขนาดมาตรฐาน
           </a>
           <a href="/how-to-measure-mattress-size/" class="btn-outline" style="display:inline-flex; align-items:center; gap:8px; background:#f0f7ff; color:var(--color-primary); border:1.5px solid var(--color-primary); padding:12px 26px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M2 12c0-5.5 4.5-10 10-10s10 4.5 10 10"/><path d="M2 12c0 5.5 4.5 10 10 10s10-4.5 10-10"/></svg>
-            Need Custom? Measure →
+            ต้องการสั่งตัด? วัดขนาด →
           </a>
         </div>
       </div>
     </section>
 
-    <!-- Related Guides -->
     <section class="section" style="background:#f5faff;">
       <div class="container">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">More Guides</h2>
+        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">คู่มือเพิ่มเติม</h2>
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:24px;">
           <a href="/how-to-measure-mattress-size/" class="card" style="display:block; padding:32px; text-decoration:none; color:inherit; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="margin-bottom:12px; color:var(--color-primary);">How to Measure</h3>
-            <p class="small">The credit-card measurement method — no tape measure needed.</p>
+            <h3 style="margin-bottom:12px; color:var(--color-primary);">วิธีวัดขนาด</h3>
+            <p class="small">วิธีวัดด้วยบัตรเครดิต — ไม่ต้องใช้สายวัด</p>
           </a>
           <a href="/bed-sheets-size/" class="card" style="display:block; padding:32px; text-decoration:none; color:inherit; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="margin-bottom:12px; color:var(--color-primary);">Bed Sheet &amp; Duvet Sizes</h3>
-            <p class="small">Fitted sheet pocket depths and duvet cover sizing guide.</p>
+            <h3 style="margin-bottom:12px; color:var(--color-primary);">ขนาดผ้าปูและผ้านวม</h3>
+            <p class="small">ความลึกกระเป๋าผ้าปูและคู่มือขนาดผ้านวม</p>
           </a>
           <a href="/mattress-size-th/" class="card" style="display:block; padding:32px; text-decoration:none; color:inherit; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="margin-bottom:12px; color:var(--color-primary);">Thai SEO Hub</h3>
-            <p class="small">ตารางขนาดที่นอนไทย — highest-traffic page, fully in Thai.</p>
+            <h3 style="margin-bottom:12px; color:var(--color-primary);">ศูนย์กลาง SEO ไทย</h3>
+            <p class="small">ตารางขนาดที่นอนไทย — หน้าที่มีการเข้าชมสูงสุด</p>
           </a>
         </div>
       </div>
@@ -204,9 +198,7 @@
       border-color: var(--color-primary);
       box-shadow: 0 2px 12px rgba(44,150,244,0.10);
     }
-    .country-btn.active {
-      background: #f8fbff;
-    }
+    .country-btn.active { background: #f8fbff; }
     .country-btn .flag { font-size: 1.5rem; line-height: 1; }
     .country-btn .label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
 
@@ -271,7 +263,7 @@
     (function() {
       const data = {
         us: {
-          label: 'US / Canada',
+          label: 'สหรัฐ / แคนาดา',
           standard: [
             { name: 'Twin / Single', cm: '99 × 191', in: '39 × 75', price: '$35' },
             { name: 'Twin XL', cm: '99 × 203', in: '39 × 80', price: '$38' },
@@ -281,19 +273,19 @@
             { name: 'Cal King', cm: '183 × 213', in: '72 × 84', price: '$58' },
           ],
           family: [
-            { name: 'Split King (2× Twin XL)', cm: '2× 99 × 203', in: '2× 39 × 80', price: 'Quote' },
-            { name: 'Family Queen + Twin', cm: '252 × 203', in: '99 × 80', price: 'Quote' },
-            { name: 'Mega King (2× Queen)', cm: '306 × 203', in: '120 × 80', price: 'Quote' },
+            { name: 'Split King (2× Twin XL)', cm: '2× 99 × 203', in: '2× 39 × 80', price: 'ขอใบเสนอราคา' },
+            { name: 'Queen + Twin', cm: '252 × 203', in: '99 × 80', price: 'ขอใบเสนอราคา' },
+            { name: '2× Queen → Mega', cm: '306 × 203', in: '120 × 80', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'Quote' },
-            { name: 'Apreamare Cabinato 11', cm: '~175 × 190', in: '~69 × 75', price: 'Quote' },
-            { name: 'Bayliner SS7', cm: '~168 × 185', in: '~66 × 73', price: 'Quote' },
+            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
+            { name: 'Apreamare Cabinato 11', cm: '~175 × 190', in: '~69 × 75', price: 'ขอใบเสนอราคา' },
+            { name: 'Bayliner SS7', cm: '~168 × 185', in: '~66 × 73', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'Volvo VNL Sleeper', cm: '81 × 203', in: '32 × 80', price: 'Quote' },
-            { name: 'Freightliner Cascadia', cm: '81 × 203', in: '32 × 80', price: 'Quote' },
-            { name: 'Kenworth T680', cm: '81 × 203', in: '32 × 80', price: 'Quote' },
+            { name: 'Volvo VNL Sleeper', cm: '81 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
+            { name: 'Freightliner Cascadia', cm: '81 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
+            { name: 'Kenworth T680', cm: '81 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'RV Short Queen', cm: '153 × 191', in: '60 × 75', price: '$47' },
@@ -302,7 +294,7 @@
           ],
         },
         uk: {
-          label: 'UK',
+          label: 'อังกฤษ',
           standard: [
             { name: 'Single', cm: '90 × 190', in: '35 × 75', price: '$35' },
             { name: 'Small Double', cm: '120 × 190', in: '47 × 75', price: '$40' },
@@ -311,16 +303,16 @@
             { name: 'Super King', cm: '180 × 200', in: '71 × 79', price: '$55' },
           ],
           family: [
-            { name: '2× Single → Family', cm: '180 × 190', in: '71 × 75', price: 'Quote' },
-            { name: '2× Double → Mega', cm: '270 × 190', in: '106 × 75', price: 'Quote' },
+            { name: '2× Single', cm: '180 × 190', in: '71 × 75', price: 'ขอใบเสนอราคา' },
+            { name: '2× Double → Mega', cm: '270 × 190', in: '106 × 75', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'Quote' },
-            { name: 'Jeanneau Merry Fisher', cm: '~170 × 185', in: '~67 × 73', price: 'Quote' },
+            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
+            { name: 'Jeanneau Merry Fisher', cm: '~170 × 185', in: '~67 × 73', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'DAF XF Sleeper', cm: '80 × 200', in: '31 × 79', price: 'Quote' },
-            { name: 'Scania R-Series', cm: '80 × 200', in: '31 × 79', price: 'Quote' },
+            { name: 'DAF XF Sleeper', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
+            { name: 'Scania R-Series', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'UK RV Single', cm: '90 × 190', in: '35 × 75', price: '$35' },
@@ -328,7 +320,7 @@
           ],
         },
         eu: {
-          label: 'EU',
+          label: 'ยุโรป',
           standard: [
             { name: 'Single (90)', cm: '90 × 200', in: '35 × 79', price: '$35' },
             { name: 'Small Double (120)', cm: '120 × 200', in: '47 × 79', price: '$40' },
@@ -338,16 +330,16 @@
             { name: 'Super King (200)', cm: '200 × 200', in: '79 × 79', price: '$60' },
           ],
           family: [
-            { name: '2× Single → Family', cm: '180 × 200', in: '71 × 79', price: 'Quote' },
-            { name: '2× Queen → Mega', cm: '320 × 200', in: '126 × 79', price: 'Quote' },
+            { name: '2× Single', cm: '180 × 200', in: '71 × 79', price: 'ขอใบเสนอราคา' },
+            { name: '2× Queen → Mega', cm: '320 × 200', in: '126 × 79', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'Quote' },
-            { name: 'Bavaria Cruiser', cm: '~160 × 200', in: '~63 × 79', price: 'Quote' },
+            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
+            { name: 'Bavaria Cruiser', cm: '~160 × 200', in: '~63 × 79', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'MAN TGX Sleeper', cm: '80 × 200', in: '31 × 79', price: 'Quote' },
-            { name: 'Iveco S-Way', cm: '80 × 200', in: '31 × 79', price: 'Quote' },
+            { name: 'MAN TGX Sleeper', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
+            { name: 'Iveco S-Way', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'EU RV Single', cm: '90 × 200', in: '35 × 79', price: '$35' },
@@ -355,7 +347,7 @@
           ],
         },
         au: {
-          label: 'Australia',
+          label: 'ออสเตรเลีย',
           standard: [
             { name: 'Single', cm: '92 × 188', in: '36 × 74', price: '$35' },
             { name: 'King Single', cm: '107 × 203', in: '42 × 80', price: '$38' },
@@ -365,16 +357,16 @@
             { name: 'Super King', cm: '204 × 203', in: '80 × 80', price: '$62' },
           ],
           family: [
-            { name: '2× King Single → Family', cm: '214 × 203', in: '84 × 80', price: 'Quote' },
-            { name: '2× Queen → Mega', cm: '306 × 203', in: '120 × 80', price: 'Quote' },
+            { name: '2× King Single', cm: '214 × 203', in: '84 × 80', price: 'ขอใบเสนอราคา' },
+            { name: '2× Queen → Mega', cm: '306 × 203', in: '120 × 80', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'Quote' },
-            { name: 'Riviera 39', cm: '~170 × 190', in: '~67 × 75', price: 'Quote' },
+            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
+            { name: 'Riviera 39', cm: '~170 × 190', in: '~67 × 75', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'Kenworth T610 Sleeper', cm: '82 × 203', in: '32 × 80', price: 'Quote' },
-            { name: 'Mack Super-Liner', cm: '82 × 203', in: '32 × 80', price: 'Quote' },
+            { name: 'Kenworth T610 Sleeper', cm: '82 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
+            { name: 'Mack Super-Liner', cm: '82 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'AU RV Queen', cm: '153 × 203', in: '60 × 80', price: '$49' },
@@ -382,25 +374,25 @@
           ],
         },
         th: {
-          label: 'Thailand',
+          label: 'ไทย',
           standard: [
             { name: '3.5 ฟุต (Single)', cm: '107 × 198', in: '42 × 78', price: '$35' },
-            { name: '4 ฟุต (Small Double)', cm: '122 × 198', in: '48 × 78', price: '$40' },
+            { name: '4 ฟุต', cm: '122 × 198', in: '48 × 78', price: '$40' },
             { name: '5 ฟุต (Queen)', cm: '152 × 198', in: '60 × 78', price: '$49' },
             { name: '6 ฟุต (King)', cm: '183 × 198', in: '72 × 78', price: '$55' },
             { name: '6.5 ฟุต', cm: '198 × 198', in: '78 × 78', price: '$58' },
             { name: '7 ฟุต (Super King)', cm: '213 × 198', in: '84 × 78', price: '$62' },
           ],
           family: [
-            { name: '2× 3.5ft → Family', cm: '214 × 198', in: '84 × 78', price: 'Quote' },
-            { name: '2× 5ft → Mega', cm: '304 × 198', in: '120 × 78', price: 'Quote' },
+            { name: '2× 3.5ft', cm: '214 × 198', in: '84 × 78', price: 'ขอใบเสนอราคา' },
+            { name: '2× 5ft → Mega', cm: '304 × 198', in: '120 × 78', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'เรือไทยทั่วไป', cm: 'ขนาดสั่งตัด', in: 'Custom', price: 'Quote' },
+            { name: 'เรือไทยทั่วไป', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'ISUZU ELF Sleeper', cm: '80 × 190', in: '31 × 75', price: 'Quote' },
-            { name: 'Hino 500 Series', cm: '80 × 190', in: '31 × 75', price: 'Quote' },
+            { name: 'ISUZU ELF Sleeper', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
+            { name: 'Hino 500 Series', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'TH RV 5ft', cm: '152 × 198', in: '60 × 78', price: '$49' },
@@ -408,22 +400,22 @@
           ],
         },
         my: {
-          label: 'Malaysia / Singapore',
+          label: 'มาเลเซีย / สิงคโปร์',
           standard: [
             { name: 'Super Single', cm: '107 × 190', in: '42 × 75', price: '$36' },
             { name: 'Queen', cm: '152 × 190', in: '60 × 75', price: '$48' },
             { name: 'King', cm: '183 × 191', in: '72 × 75', price: '$55' },
           ],
           family: [
-            { name: '2× Super Single', cm: '214 × 190', in: '84 × 75', price: 'Quote' },
-            { name: '2× Queen → Mega', cm: '304 × 190', in: '120 × 75', price: 'Quote' },
+            { name: '2× Super Single', cm: '214 × 190', in: '84 × 75', price: 'ขอใบเสนอราคา' },
+            { name: '2× Queen → Mega', cm: '304 × 190', in: '120 × 75', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Local Cruiser', cm: 'Custom', in: 'Custom', price: 'Quote' },
+            { name: 'Local Cruiser', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'UD Quester Sleeper', cm: '80 × 190', in: '31 × 75', price: 'Quote' },
-            { name: 'Fuso Fighter', cm: '80 × 190', in: '31 × 75', price: 'Quote' },
+            { name: 'UD Quester Sleeper', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
+            { name: 'Fuso Fighter', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'MY/SG RV Queen', cm: '152 × 190', in: '60 × 75', price: '$48' },
@@ -431,7 +423,7 @@
           ],
         },
         in: {
-          label: 'India',
+          label: 'อินเดีย',
           standard: [
             { name: 'Single', cm: '91 × 183', in: '36 × 72', price: '$35' },
             { name: 'Double', cm: '122 × 183', in: '48 × 72', price: '$40' },
@@ -439,15 +431,15 @@
             { name: 'King', cm: '183 × 198', in: '72 × 78', price: '$55' },
           ],
           family: [
-            { name: '2× Single → Family', cm: '182 × 183', in: '72 × 72', price: 'Quote' },
-            { name: '2× Queen → Mega', cm: '304 × 183', in: '120 × 72', price: 'Quote' },
+            { name: '2× Single', cm: '182 × 183', in: '72 × 72', price: 'ขอใบเสนอราคา' },
+            { name: '2× Queen → Mega', cm: '304 × 183', in: '120 × 72', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Indian Yacht', cm: 'Custom', in: 'Custom', price: 'Quote' },
+            { name: 'Indian Yacht', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'Tata Prima Sleeper', cm: '80 × 190', in: '31 × 75', price: 'Quote' },
-            { name: 'Ashok Leyland Captain', cm: '80 × 190', in: '31 × 75', price: 'Quote' },
+            { name: 'Tata Prima Sleeper', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
+            { name: 'Ashok Leyland Captain', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'IN RV Queen', cm: '152 × 183', in: '60 × 72', price: '$48' },
@@ -455,7 +447,7 @@
           ],
         },
         jp: {
-          label: 'Japan',
+          label: 'ญี่ปุ่น',
           standard: [
             { name: 'Semi-Single', cm: '85 × 195', in: '33 × 77', price: '$34' },
             { name: 'Single', cm: '97 × 195', in: '38 × 77', price: '$35' },
@@ -466,15 +458,15 @@
             { name: 'Wide-Double', cm: '200 × 195', in: '79 × 77', price: '$60' },
           ],
           family: [
-            { name: '2× Single → Family', cm: '194 × 195', in: '76 × 77', price: 'Quote' },
-            { name: '2× Queen → Mega', cm: '320 × 195', in: '126 × 77', price: 'Quote' },
+            { name: '2× Single', cm: '194 × 195', in: '76 × 77', price: 'ขอใบเสนอราคา' },
+            { name: '2× Queen → Mega', cm: '320 × 195', in: '126 × 77', price: 'ขอใบเสนอราคา' },
           ],
           marine: [
-            { name: 'Yanmar Cruiser', cm: 'Custom', in: 'Custom', price: 'Quote' },
+            { name: 'Yanmar Cruiser', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
           ],
           truck: [
-            { name: 'Hino Profia Sleeper', cm: '80 × 195', in: '31 × 77', price: 'Quote' },
-            { name: 'Isuzu Giga', cm: '80 × 195', in: '31 × 77', price: 'Quote' },
+            { name: 'Hino Profia Sleeper', cm: '80 × 195', in: '31 × 77', price: 'ขอใบเสนอราคา' },
+            { name: 'Isuzu Giga', cm: '80 × 195', in: '31 × 77', price: 'ขอใบเสนอราคา' },
           ],
           rv: [
             { name: 'JP RV Double', cm: '140 × 195', in: '55 × 77', price: '$44' },
@@ -489,14 +481,15 @@
       function render() {
         const country = data[currentCountry];
         const rows = country[currentType] || [];
-        const title = country.label + ' — ' + document.querySelector('.type-btn.active').textContent + ' Sizes';
+        const typeLabel = document.querySelector('.type-btn.active').textContent;
+        const title = country.label + ' — ' + typeLabel;
         document.getElementById('table-title').textContent = title;
 
         const html = [
           '<div class="size-table-row header">',
-            '<div>Size Name</div>',
-            '<div>Dimensions</div>',
-            '<div style="text-align:right">From</div>',
+            '<div>ชื่อขนาด</div>',
+            '<div>ขนาด</div>',
+            '<div style="text-align:right">เริ่มต้น</div>',
           '</div>'
         ];
         rows.forEach(r => {
@@ -533,28 +526,27 @@
     })();
   </script>
 
-  <!-- ===== FOOTER ===== -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-col">
-          <h3>Quick Links</h3>
+          <h3>ลิงก์ด่วน</h3>
           <ul>
-            <li><a href="/about/">About Us</a></li>
-            <li><a href="/contact/">Contact Us</a></li>
-            <li><a href="/reviews/">Reviews</a></li>
+            <li><a href="/about/">เกี่ยวกับเรา</a></li>
+            <li><a href="/contact/">ติดต่อเรา</a></li>
+            <li><a href="/reviews/">รีวิว</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h3>Customer Service</h3>
+          <h3>บริการลูกค้า</h3>
           <ul>
-            <li><a href="/faq/">FAQ</a></li>
-            <li><a href="/sizeguide/">Size Guide</a></li>
-            <li><a href="/blogs/">Blog</a></li>
+            <li><a href="/faq/">คำถามที่พบบ่อย</a></li>
+            <li><a href="/sizeguide/">คู่มือขนาด</a></li>
+            <li><a href="/blogs/">บล็อก</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h3>Shop With Us</h3>
+          <h3>ช้อปกับเรา</h3>
           <div class="footer-icons-grid">
             <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
             <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
@@ -563,7 +555,7 @@
           </div>
         </div>
         <div class="footer-col">
-          <h3>Contact</h3>
+          <h3>ติดต่อ</h3>
           <ul>
             <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
             <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
@@ -584,8 +576,8 @@
       <div class="footer-bottom">
         <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">
-          <a href="/policy/">Privacy Policy</a>
-          <a href="/shipping/">Returns &amp; Delivery</a>
+          <a href="/policy/">นโยบายความเป็นส่วนตัว</a>
+          <a href="/shipping/">การจัดส่งและคืนสินค้า</a>
         </div>
       </div>
     </div>

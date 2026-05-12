@@ -156,6 +156,38 @@ Shows: "Order Confirmed" page
 
 ---
 
+## Custom Quote Checkout Flow (Extension)
+
+Custom-size orders (marine, truck cab, family co-sleep, RV) follow a **quote-first, pay-later** path that merges into the standard checkout above.
+
+```
+Customer receives magic link email:
+  "Your quote QT-250512-001 is ready — $89.00"
+       ↓
+Clicks /quote/QT-250512-001
+       ↓
+Sees locked quote with full dimensions + fabric + extras
+       ↓
+Clicks "Add to Cart — $89.00 (Locked)"
+       ↓
+Quote item added to cart as type='custom_quote'
+  { quote_id, product_name, dimensions, fabric, locked_price: 8900 }
+       ↓
+Proceeds to standard checkout (same 3-step flow above)
+       ↓
+Stripe payment — same PromptPay / card / Apple Pay / Google Pay
+       ↓
+Webhook saves order with quote_id reference
+       ↓
+Order confirmation email sent
+```
+
+**Quote item in cart:** Price is frozen at the admin-approved amount. Customer cannot change dimensions or fabric at checkout — only shipping address and payment method.
+
+**Why this works:** The configurator (Phase 4) collected dimensions. The quote (between Phase 4 and 5) locked the price. The checkout (Phase 5) only handles payment — no pricing logic needed.
+
+---
+
 ## What Phase 5 Builds
 
 | File | What It Is |
@@ -169,6 +201,9 @@ Shows: "Order Confirmed" page
 | `workers/api/subscribers.ts` | Saves email signups to D1 subscribers table |
 | `workers/api/auth.ts` | Social login handler (Google, Facebook, LINE, Apple OAuth) |
 | `workers/api/customers.ts` | Customer profile API — order history, saved addresses, re-order |
+| `workers/api/quote.ts` | Custom quote API — submit quote, admin approve/reject, fetch by ID |
+| `public/quote/[id]/index.html` | Magic link page — shows locked custom quote, "Add to Cart" button |
+| `public/js/quote.js` | Client-side quote fetch + locked-price add-to-cart logic |
 | `public/js/auth.js` | Client-side auth state, login buttons, account menu toggle |
 
 ---
@@ -483,6 +518,7 @@ Go through this checklist before moving to Phase 6:
 - [ ] All 3 Stripe keys collected (Publishable, Secret, Webhook Secret)
 - [ ] Order notification email address decided and written down
 - [ ] Email sender name and address decided and written down
+- [ ] Custom quote workflow confirmed: admin pricing → magic link → locked-price add to cart
 
 **Build Steps:**
 - [ ] All 3 Stripe keys stored as Cloudflare secrets (`npx wrangler secret list` confirms all 3)
@@ -496,6 +532,9 @@ Go through this checklist before moving to Phase 6:
 - [ ] Test order visible in D1 database with correct dimensions
 - [ ] Checkout has 3 clear steps (Cart Review → Guest Details → Payment)
 - [ ] Email field in Step 2 is required before proceeding
+- [ ] Custom quote magic link page (`/quote/QT-XXXXX/`) shows locked price and "Add to Cart" button
+- [ ] Custom quote item in cart shows correct dimensions, fabric, and locked price (uneditable)
+- [ ] Custom quote order stores `quote_id` reference in D1 `orders` table
 - [ ] PromptPay option visible on Stripe payment page
 
 ---

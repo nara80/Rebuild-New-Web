@@ -161,61 +161,67 @@ The Fabric Showcase section has 4 tabs, one per fabric. Each tab shows the fabri
 
 ---
 
-### Requirement 8 — Size Guide Table Data
+### Requirement 8 — Size Guide Table Data (Country-First Architecture)
 
-The `/mattress-size-th/` and `/mattress-size/` pages need accurate mattress size tables. Droid will use standard industry sizes — confirm you are happy with these defaults or provide corrections.
+The size guide now uses a **country-first progressive disclosure** model. Instead of one massive table, customers select their country first, then see only 4–6 relevant sizes.
 
-**Standard sizes Droid will use:**
+**Countries supported (mapped to your GA4 top markets):**
 
-| Size Name (EN) | Size Name (TH) | Width × Length (cm) |
-|---|---|---|
-| Single / Twin | 3.5 ฟุต | 100 × 200 |
-| Double | 4 ฟุต | 120 × 200 |
-| Queen | 5 ฟุต | 150 × 200 |
-| King | 6 ฟุต | 180 × 200 |
-| Super King | 7 ฟุต | 200 × 200 |
-| IKEA Single | — | 90 × 200 |
-| US Twin | — | 97 × 191 |
-| US Queen | — | 152 × 203 |
-| US King | — | 193 × 203 |
-| UK Double | — | 135 × 190 |
-| UK King | — | 150 × 200 |
-| AU Queen | — | 153 × 203 |
-| AU King | — | 183 × 203 |
+| Country/Region | Sizes Available | Unit | Example "King" W×L |
+|---|---|---|---|
+| 🇺🇸 US / 🇨🇦 Canada | Twin, Full, Queen, King, Cal King | inch primary | 193 × 203 cm / 76 × 80 in |
+| 🇬🇧 UK | Single, Double, King, Super King | cm | 150 × 200 cm / 59 × 79 in |
+| 🇪🇺 EU / 🇮🇹 Italy / 🇫🇷 France / 🇳🇱 Netherlands / 🇩🇰 Denmark | 90×200, 140×200, 160×200, 180×200 | cm | 180 × 200 cm / 71 × 79 in |
+| 🇦🇺 Australia | Single, King Single, Double, Queen, King | cm | 183 × 203 cm / 72 × 80 in |
+| 🇹🇭 Thailand | 3.5ft, 5ft, 6ft, 6.5ft, 7ft | ft + cm | 180 × 200 cm / 6 × 6.5 ft |
+| 🇲🇾/🇸🇬 Malaysia / Singapore | Super Single, Queen, King | cm + inch | 183 × 191 cm / 72 × 75 in |
+| 🇮🇳 India | Single, Double, Queen, King | inch | 183 × 198 cm / 72 × 78 in |
+| 🇯🇵 Japan | Semi-Single, Single, Semi-Double, Double, Queen, King | cm | 180 × 195 cm / 71 × 77 in |
 
-**Confirm:** "These standard sizes are correct" — OR — provide any corrections.
+**Unit display rule:** Every size label shows **BOTH** `cm` and `inch` simultaneously — no toggle needed on the reference tables. The cm/inch toggle is used only for the custom configurator input fields.
+
+**Confirm:** "Country-first architecture confirmed" — OR — provide size corrections per country.
 
 ---
 
-### Requirement 9 — Custom Configurator Modes
+### Requirement 9 — Product Purchase Paths & Configurator Modes
 
-The configurator must support two product types selectable by tab. Confirm the specification below is correct before Droid builds.
+Every product detail page supports **two distinct purchase paths**:
 
-**Mode A — Fitted Bed Sheet:**
-| Input | Label shown | Notes |
-|---|---|---|
-| Width | Width (W) | Mattress width |
-| Length | Length (L) | Mattress length |
-| Depth | Depth (D) | Pocket height (mattress thickness) |
+**Path A — Standard Size (Instant Add to Cart)**
+- Country selector filters available sizes to that region's standards
+- Size dropdown shows 4–6 options with BOTH cm + inch labels
+- Fabric + color selector
+- Live price from `products` table
+- One-click "Add to Cart"
 
-**Mode B — V-Berth Boat Sheet:**
-| Input | Label shown | Notes |
-|---|---|---|
-| Head Width | Head Width (Bow) | Narrow end at the front of the boat |
-| Foot Width | Foot Width (Cabin) | Wide end at the cabin entry |
-| Length | Length (L) | Bow to stern along the center line |
-| Depth | Depth (D) | Mattress thickness for the elastic pocket |
+**Path B — Custom Size (Quote Required)**
+- Configurator tabs for different custom bed types
+- Customer enters dimensions → gets live ESTIMATE price
+- "Submit for Custom Quote" → stored in `custom_quotes` table
+- Admin approves → magic link emailed → customer adds locked price to cart
 
-**Pricing formula for V-Berth:** `((Head Width + Foot Width) / 2) × Length` = trapezoid area × fabric rate per cm²
+**Configurator tabs (Custom Path):**
 
-**Shared features for both modes:**
-- Unit toggle: **cm / inch** (converts all inputs in place)
+| Tab | Inputs | Shape | Use Case |
+|---|---|---|---|
+| 🛏 Fitted Bed Sheet | W × L × D | Rectangle | Standard custom rectangle |
+| ⚓ V-Berth Boat | Head × Foot × L × D | Trapezoid | Marine mattresses |
+| 🚛 Truck Cab | W × L × D | Rectangle | Truck sleeper cabs |
+| 👨‍👩‍👧 Family / Co-Sleep | W × L × D | Rectangle | Mega-beds, combined mattresses |
+| 🚐 RV / Camper | W × L × D | Rectangle | RV mattresses |
+
+**Pricing formula for V-Berth:** `((Head + Foot) / 2) × Length` = trapezoid area × fabric rate per cm²
+
+**Shared features for both paths:**
+- Unit toggle: **cm / inch** (geo-defaulted, `localStorage` persisted, converts in place)
 - Fabric selector: BreezePlus | CloudSoft | PremaCotton | EcoLuxe
-- SVG measurement diagram shown beside the inputs
-- Live price updates as inputs change
-- Price note on every display: *"Price excludes shipping & import tariff"*
+- Color selector
+- SVG measurement diagram (switches per tab)
+- Live price updates
+- Price note: *"Price excludes shipping & import tariff"*
 
-**Confirm:** "Yes, both modes and specs are correct" — OR — list any changes.
+**Confirm:** "Both paths and all configurator tabs confirmed" — OR — list changes.
 
 ---
 

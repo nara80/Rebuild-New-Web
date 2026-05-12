@@ -47,8 +47,8 @@
 | About Us | `/about/` | Company story, certifications |
 | Contact | `/contact/` | Form + multi-channel links |
 | Fabric Collections | `/fabric/` | 4 fabric tabs, expanded detail |
-| Size Guide | `/sizeguide/` | TH/US/UK/EU/AU size tables |
-| Size Guide TH (#1 SEO) | `/mattress-size-th/` | Thai SEO hub — highest traffic |
+| Size Guide | `/sizeguide/` | Unified country-first mattress size selector |
+| Size Guide TH (#1 SEO) | `/mattress-size-th/` | Thai SEO hub — preserved with country tabs |
 | How to Measure | `/how-to-measure-mattress-size/` | Credit card method diagram |
 | Bed Sheet Size | `/bed-sheets-size/` | Sheet sizing guide |
 | Shipping Policy | `/shipping/` | Rates, regions, transit times |
@@ -165,6 +165,63 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 - **Live price display:** Updates automatically as inputs change
 - **Pricing note on all displays:** *"Price excludes shipping & import tariff"*
 - **Measurement diagram:** Labeled SVG diagram shown beside inputs (rectangle for bed sheet, trapezoid for V-Berth)
+
+---
+
+## Custom Quote-to-Cart Workflow (Custom Sizes)
+
+For non-standard sizes (marine V-berths, truck cabs, family co-sleep, RVs), customers cannot add directly to cart. Instead they submit a quote request, you manually price it, and they add the locked price via a magic link.
+
+### Step-by-Step Flow
+
+```
+Customer on Product Page (Custom Configurator)
+       ↓
+Enters dimensions + selects fabric + extras
+       ↓
+Clicks "Submit for Custom Quote"
+       ↓
+POST /api/quote  →  D1 custom_quotes table (status='pending')
+                     + MailChannels email to admin
+       ↓
+Customer sees: "Quote submitted. We'll reply within 24 hours."
+       ↓
+ADMIN: Review in dashboard → set quoted_price → approve
+       ↓
+Customer receives email: "Your quote QT-250512-001 is ready — $89.00"
+       ↓
+Magic link: /quote/QT-250512-001
+       ↓
+Customer opens link → sees locked quote with "Add to Cart — $89.00"
+       ↓
+Quote item added to cart with type='custom_quote', price frozen
+       ↓
+Standard checkout (Phase 5 Stripe flow)
+       ↓
+Order stored with quote_id reference + full dimensions
+```
+
+### Quote Item in Cart JSON
+```json
+{
+  "type": "custom_quote",
+  "quote_id": "QT-250512-001",
+  "product_name": "Custom Marine Fitted Sheet",
+  "dimensions": {"w":183,"l":198,"h":12,"unit":"cm"},
+  "fabric": "PremaCotton",
+  "color": "Sea",
+  "extras": ["embroidery_name"],
+  "locked_price": 8900,
+  "currency": "USD"
+}
+```
+
+### Admin Quote Management
+| Field | Admin Action |
+|---|---|
+| `status` | pending → approved / rejected / expired |
+| `quoted_price` | Admin enters price in cents (e.g., 8900 = $89.00) |
+| `expires_at` | Auto-set to 7 days from creation; admin can extend |
 
 ---
 
@@ -299,23 +356,49 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 
 ### 5. Product Detail (`/product/[slug]/`)
 
-```
-[IMAGE GALLERY]  main image + thumbnails
+**Two distinct purchase paths on every product page:**
 
+**Path A — Standard Size (Instant Add to Cart)**
+```
 [PRODUCT INFO]
   Title (TH/EN toggle)
   Fabric badge + short description
   ★★★★★ (Siriraj certified badge if BreezePlus/TPU)
 
-[CUSTOM CONFIGURATOR]  ← full version
-  Tab: [🛏 Fitted Bed Sheet] [⚓ V-Berth Boat Sheet]
-  Unit toggle: cm / inch
-  Measurement diagram beside inputs
+[STANDARD SIZE SELECTOR]
+  Step 1: Country / Region
+    [🇺🇸 US/Canada ▼]  [🇬🇧 UK ▼]  [🇪🇺 EU ▼]  [🇹🇭 Thailand ▼] ...
+
+  Step 2: Size (filtered to that country's standards)
+    [○] Twin      99×191 cm / 39×75 in   $35
+    [○] Full     137×191 cm / 54×75 in   $42
+    [●] Queen    153×203 cm / 60×80 in   $49
+    [○] King     193×203 cm / 76×80 in   $55
+
+  Step 3: Fabric & Color
+    [●] PremaCotton  [○] BreezePlus  [○] CloudSoft  [○] EcoLuxe
+    Color swatches
+
+  Price: $49.00     [         Add to Cart          ]
+```
+
+**Path B — Custom Size (Quote Required)**
+```
+[Need a custom size? Click here →]
+  ↓ (expands)
+[CUSTOM CONFIGURATOR]
+  Tab: [🛏 Fitted Bed Sheet] [⚓ V-Berth Boat Sheet] [🚛 Truck Cab] [👨‍👩‍👧 Family / Co-Sleep] [🚐 RV]
+  Unit toggle: cm / inch  (geo-defaulted, localStorage persisted)
+  Measurement diagram beside inputs (SVG switches per tab)
   Fabric swatches (4 options)
   Color selector
-  Live price (via Worker API)
-  Note: "Price excludes shipping & import tariff"
-  [Add to Cart]
+  Live ESTIMATE price (via Worker API)
+  Note: "Price excludes shipping & import tariff. Final price confirmed after quote approval."
+  [Submit for Custom Quote]
+
+  → Quote stored in `custom_quotes` table
+  → Admin approves → customer receives magic link → adds locked price to cart
+```
 
 [MEASUREMENT GUIDE]  ← inline collapsible
   Credit card method diagram
@@ -323,7 +406,6 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 [PRODUCT TABS]  Description | Fabric Details | Size Guide | Care
 
 [RELATED PRODUCTS]
-```
 
 ### 6. About Us (`/about/`)
 
@@ -380,13 +462,34 @@ Dark Grey #4D545B | Silver #B7BEC8 | Sand #D9D1C1 | Sky #9CCAE1 | Emerald #61828
 
 ### 9. Size Guide Pages (SEO Hub)
 
+**Architecture: Country-First Progressive Disclosure**
+
+**Landing page** (`/sizeguide/`):
 ```
-/mattress-size-th/             ← #1 traffic page, fully preserved in Thai
+Step 1: Select Your Country / Region
+  🇺🇸 US/Canada    🇬🇧 UK    🇪🇺 EU    🇦🇺 Australia
+  🇹🇭 Thailand     🇲🇾/🇸🇬 MY/SG    🇮🇳 India    🇯🇵 Japan
+  [🌍 Other / Not Sure?]
+
+Step 2: Select Your Mattress Type
+  Standard Mattress | Family / Co-Sleep | Marine | Truck Cab | RV
+
+Step 3: Pick Your Size
+  [Only 4–6 sizes relevant to that country + type]
+  Each size label shows BOTH units: "Queen  153 × 203 cm / 60 × 80 in"
+
+[→ CTA: Shop this size  /  → CTA: Need custom? Measure →]
+```
+
+**Deep pages:**
+```
+/mattress-size-th/             ← #1 traffic page, Thai SEO hub
 /how-to-measure-mattress-size/
-/mattress-size/
-/bed-sheets-size/
+/mattress-size/                ← International size tables by country tab
+/bed-sheets-size/              ← Duvet + pillow sizing
 ```
-Each page: comparison table (TH/US/UK/EU/AU/JP sizes) + credit card measurement diagram + CTA to configurator.
+
+**Unit display rule:** Every size label shows BOTH `cm` and `inch` simultaneously — no toggle needed. Geo unit preference (cm vs inch) is stored in `localStorage` and used for configurator inputs only.
 
 ### 10. Shipping Policy (`/shipping/`)
 
@@ -520,7 +623,8 @@ mildmate-web/
 │   ├── blogs/page/[n]/index.html    ← Blog index pagination
 │   ├── blogs/[slug]/index.html      ← Individual blog post pages
 │   │
-│   ├── product/[slug]/index.html    ← 83 product detail pages
+│   ├── product/[slug]/index.html    ← 83 product detail pages (standard + custom paths)
+│   ├── quote/[quote-id]/index.html  ← Magic link: locked custom quote → Add to Cart
 │   │
 │   ├── mattress-size-th/index.html  ← #1 SEO page
 │   ├── mattress-size/index.html
@@ -557,7 +661,8 @@ mildmate-web/
 │   │   ├── email.ts
 │   │   ├── subscribers.ts
 │   │   ├── auth.ts                  ← Social login (Google, Facebook, LINE, Apple)
-│   │   └── customers.ts             ← Customer profile, order history, saved addresses
+│   │   ├── customers.ts             ← Customer profile, order history, saved addresses
+│   │   └── quote.ts                 ← Custom quote: submit, approve, fetch by ID
 │   ├── admin/
 │   │   ├── products.ts
 │   │   ├── orders.ts
@@ -627,6 +732,22 @@ CREATE TABLE orders (
   payment_id TEXT,                -- Stripe session ID
   payment_status TEXT DEFAULT 'pending',
   order_status TEXT DEFAULT 'pending',    -- 'pending' | 'in-production' | 'shipped' | 'cancelled'
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Custom Quotes (custom-size orders requiring manual pricing)
+CREATE TABLE custom_quotes (
+  id INTEGER PRIMARY KEY,
+  quote_id TEXT UNIQUE NOT NULL,   -- e.g., "QT-250512-001"
+  customer_email TEXT NOT NULL,
+  product_type TEXT,               -- 'marine', 'truck_cab', 'family_cosleep', 'rv', 'other'
+  dimensions TEXT,                 -- JSON: {"w":183,"l":198,"h":15,"unit":"cm"}
+  fabric TEXT,
+  color TEXT,
+  extras TEXT,                     -- JSON array: ["embroidery_name", "tpu_liner"]
+  status TEXT DEFAULT 'pending',     -- pending | approved | rejected | expired
+  quoted_price INTEGER,            -- cents, NULL until admin approves
+  expires_at TEXT,                 -- ISO timestamp, 7 days from created
   created_at TEXT DEFAULT (datetime('now'))
 );
 
