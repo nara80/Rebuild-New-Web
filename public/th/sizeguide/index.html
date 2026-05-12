@@ -131,9 +131,8 @@
         <div id="type-tabs" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:32px;">
           <button class="type-btn active" data-type="standard">ที่นอนมาตรฐาน</button>
           <button class="type-btn" data-type="family">ครอบครัว / Co-Sleep</button>
-          <button class="type-btn" data-type="marine">เรือ / ยอชท์</button>
-          <button class="type-btn" data-type="truck">ห้องนอนรถบรรทุก</button>
-          <button class="type-btn" data-type="rv">รถบ้าน / RV</button>
+          <button class="type-btn" data-type="pillow">หมอน</button>
+          <button class="type-btn" data-type="duvet">ผ้าห่ม / ผ้านวม</button>
         </div>
 
         <div id="size-table-wrap" style="max-width:800px; margin:0 auto;">
@@ -159,25 +158,7 @@
       </div>
     </section>
 
-    <section class="section" style="background:#f5faff;">
-      <div class="container">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">คู่มือเพิ่มเติม</h2>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:24px;">
-          <a href="/how-to-measure-mattress-size/" class="card" style="display:block; padding:32px; text-decoration:none; color:inherit; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="margin-bottom:12px; color:var(--color-primary);">วิธีวัดขนาด</h3>
-            <p class="small">วิธีวัดด้วยบัตรเครดิต — ไม่ต้องใช้สายวัด</p>
-          </a>
-          <a href="/bed-sheets-size/" class="card" style="display:block; padding:32px; text-decoration:none; color:inherit; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="margin-bottom:12px; color:var(--color-primary);">ขนาดผ้าปูและผ้านวม</h3>
-            <p class="small">ความลึกกระเป๋าผ้าปูและคู่มือขนาดผ้านวม</p>
-          </a>
-          <a href="/mattress-size-th/" class="card" style="display:block; padding:32px; text-decoration:none; color:inherit; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="margin-bottom:12px; color:var(--color-primary);">ศูนย์กลาง SEO ไทย</h3>
-            <p class="small">ตารางขนาดที่นอนไทย — หน้าที่มีการเข้าชมสูงสุด</p>
-          </a>
-        </div>
-      </div>
-    </section>
+
   </main>
 
   <style>
@@ -277,20 +258,18 @@
             { name: 'Queen + Twin', cm: '252 × 203', in: '99 × 80', price: 'ขอใบเสนอราคา' },
             { name: '2× Queen → Mega', cm: '306 × 203', in: '120 × 80', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
-            { name: 'Apreamare Cabinato 11', cm: '~175 × 190', in: '~69 × 75', price: 'ขอใบเสนอราคา' },
-            { name: 'Bayliner SS7', cm: '~168 × 185', in: '~66 × 73', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '51 × 66', in: '20 × 26', price: '$12' },
+            { name: 'Queen', cm: '51 × 76', in: '20 × 30', price: '$14' },
+            { name: 'King', cm: '51 × 92', in: '20 × 36', price: '$16' },
+            { name: 'Euro Square', cm: '66 × 66', in: '26 × 26', price: '$18' },
+            { name: 'Travel / Boudoir', cm: '30 × 40', in: '12 × 16', price: '$8' },
           ],
-          truck: [
-            { name: 'Volvo VNL Sleeper', cm: '81 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
-            { name: 'Freightliner Cascadia', cm: '81 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
-            { name: 'Kenworth T680', cm: '81 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'RV Short Queen', cm: '153 × 191', in: '60 × 75', price: '$47' },
-            { name: 'RV Queen', cm: '153 × 203', in: '60 × 80', price: '$49' },
-            { name: 'RV King', cm: '183 × 203', in: '72 × 80', price: '$55' },
+          duvet: [
+            { name: 'Twin', cm: '168 × 218', in: '66 × 86', price: '$55' },
+            { name: 'Full / Queen', cm: '224 × 234', in: '88 × 92', price: '$68' },
+            { name: 'King', cm: '264 × 234', in: '104 × 92', price: '$78' },
+            { name: 'Cal King', cm: '288 × 274', in: '114 × 108', price: '$88' },
           ],
         },
         uk: {
@@ -306,17 +285,18 @@
             { name: '2× Single', cm: '180 × 190', in: '71 × 75', price: 'ขอใบเสนอราคา' },
             { name: '2× Double → Mega', cm: '270 × 190', in: '106 × 75', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
-            { name: 'Jeanneau Merry Fisher', cm: '~170 × 185', in: '~67 × 73', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '50 × 75', in: '20 × 30', price: '$12' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Super King', cm: '50 × 100', in: '20 × 39', price: '$18' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster / Neck Roll', cm: '38 × 190', in: '15 × 75', price: '$22' },
           ],
-          truck: [
-            { name: 'DAF XF Sleeper', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
-            { name: 'Scania R-Series', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'UK RV Single', cm: '90 × 190', in: '35 × 75', price: '$35' },
-            { name: 'UK RV Double', cm: '135 × 190', in: '53 × 75', price: '$42' },
+          duvet: [
+            { name: 'Single', cm: '135 × 200', in: '53 × 79', price: '$52' },
+            { name: 'Double', cm: '200 × 200', in: '79 × 79', price: '$62' },
+            { name: 'King', cm: '225 × 220', in: '89 × 87', price: '$72' },
+            { name: 'Super King', cm: '260 × 220', in: '102 × 87', price: '$82' },
           ],
         },
         eu: {
@@ -333,17 +313,17 @@
             { name: '2× Single', cm: '180 × 200', in: '71 × 79', price: 'ขอใบเสนอราคา' },
             { name: '2× Queen → Mega', cm: '320 × 200', in: '126 × 79', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
-            { name: 'Bavaria Cruiser', cm: '~160 × 200', in: '~63 × 79', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '50 × 75', in: '20 × 30', price: '$12' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Body / Pregnancy', cm: '40 × 140', in: '16 × 55', price: '$28' },
           ],
-          truck: [
-            { name: 'MAN TGX Sleeper', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
-            { name: 'Iveco S-Way', cm: '80 × 200', in: '31 × 79', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'EU RV Single', cm: '90 × 200', in: '35 × 79', price: '$35' },
-            { name: 'EU RV Double', cm: '140 × 200', in: '55 × 79', price: '$44' },
+          duvet: [
+            { name: 'Single', cm: '135 × 200', in: '53 × 79', price: '$52' },
+            { name: 'Double', cm: '200 × 200', in: '79 × 79', price: '$62' },
+            { name: 'King', cm: '240 × 220', in: '94 × 87', price: '$72' },
+            { name: 'Super King', cm: '260 × 240', in: '102 × 94', price: '$85' },
           ],
         },
         au: {
@@ -360,17 +340,18 @@
             { name: '2× King Single', cm: '214 × 203', in: '84 × 80', price: 'ขอใบเสนอราคา' },
             { name: '2× Queen → Mega', cm: '306 × 203', in: '120 × 80', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Beneteau Antares 11', cm: '~183 × 198', in: '~72 × 78', price: 'ขอใบเสนอราคา' },
-            { name: 'Riviera 39', cm: '~170 × 190', in: '~67 × 75', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '50 × 75', in: '20 × 30', price: '$12' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'U-Shaped / Pregnancy', cm: '35 × 170', in: '14 × 67', price: '$32' },
           ],
-          truck: [
-            { name: 'Kenworth T610 Sleeper', cm: '82 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
-            { name: 'Mack Super-Liner', cm: '82 × 203', in: '32 × 80', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'AU RV Queen', cm: '153 × 203', in: '60 × 80', price: '$49' },
-            { name: 'AU RV King', cm: '183 × 203', in: '72 × 80', price: '$55' },
+          duvet: [
+            { name: 'Single', cm: '140 × 210', in: '55 × 83', price: '$52' },
+            { name: 'Double', cm: '180 × 210', in: '71 × 83', price: '$60' },
+            { name: 'Queen', cm: '210 × 210', in: '83 × 83', price: '$68' },
+            { name: 'King', cm: '240 × 210', in: '94 × 83', price: '$75' },
+            { name: 'Super King', cm: '270 × 240', in: '106 × 94', price: '$88' },
           ],
         },
         th: {
@@ -387,16 +368,17 @@
             { name: '2× 3.5ft', cm: '214 × 198', in: '84 × 78', price: 'ขอใบเสนอราคา' },
             { name: '2× 5ft → Mega', cm: '304 × 198', in: '120 × 78', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'เรือไทยทั่วไป', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard (ไซส์มาตรฐาน)', cm: '48 × 73', in: '19 × 29', price: '$12' },
+            { name: 'King (ไซส์คิง)', cm: '48 × 84', in: '19 × 33', price: '$14' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster / หมอนข้าง', cm: '13 × 90', in: '5 × 35', price: '$10' },
+            { name: 'Dutch / หมอนดัตช์', cm: '30 × 50', in: '12 × 20', price: '$9' },
           ],
-          truck: [
-            { name: 'ISUZU ELF Sleeper', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
-            { name: 'Hino 500 Series', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'TH RV 5ft', cm: '152 × 198', in: '60 × 78', price: '$49' },
-            { name: 'TH RV 6ft', cm: '183 × 198', in: '72 × 78', price: '$55' },
+          duvet: [
+            { name: '5ft (5 ฟุต)', cm: '152 × 210', in: '60 × 83', price: '$55' },
+            { name: '6ft (6 ฟุต)', cm: '183 × 210', in: '72 × 83', price: '$65' },
+            { name: '7ft / Oversized (7 ฟุต)', cm: '213 × 240', in: '84 × 94', price: '$78' },
           ],
         },
         my: {
@@ -410,16 +392,16 @@
             { name: '2× Super Single', cm: '214 × 190', in: '84 × 75', price: 'ขอใบเสนอราคา' },
             { name: '2× Queen → Mega', cm: '304 × 190', in: '120 × 75', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Local Cruiser', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '48 × 73', in: '19 × 29', price: '$12' },
+            { name: 'King', cm: '48 × 84', in: '19 × 33', price: '$14' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster', cm: '13 × 90', in: '5 × 35', price: '$10' },
           ],
-          truck: [
-            { name: 'UD Quester Sleeper', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
-            { name: 'Fuso Fighter', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'MY/SG RV Queen', cm: '152 × 190', in: '60 × 75', price: '$48' },
-            { name: 'MY/SG RV King', cm: '183 × 191', in: '72 × 75', price: '$55' },
+          duvet: [
+            { name: 'Queen', cm: '210 × 210', in: '83 × 83', price: '$65' },
+            { name: 'King', cm: '240 × 210', in: '94 × 83', price: '$75' },
+            { name: 'Oversized (Super King)', cm: '270 × 240', in: '106 × 94', price: '$88' },
           ],
         },
         in: {
@@ -434,16 +416,16 @@
             { name: '2× Single', cm: '182 × 183', in: '72 × 72', price: 'ขอใบเสนอราคา' },
             { name: '2× Queen → Mega', cm: '304 × 183', in: '120 × 72', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Indian Yacht', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '46 × 69', in: '18 × 27', price: '$10' },
+            { name: 'King', cm: '46 × 91', in: '18 × 36', price: '$14' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster', cm: '13 × 90', in: '5 × 35', price: '$10' },
           ],
-          truck: [
-            { name: 'Tata Prima Sleeper', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
-            { name: 'Ashok Leyland Captain', cm: '80 × 190', in: '31 × 75', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'IN RV Queen', cm: '152 × 183', in: '60 × 72', price: '$48' },
-            { name: 'IN RV King', cm: '183 × 198', in: '72 × 78', price: '$55' },
+          duvet: [
+            { name: 'Single', cm: '150 × 220', in: '59 × 87', price: '$50' },
+            { name: 'Double', cm: '224 × 254', in: '88 × 100', price: '$65' },
+            { name: 'King', cm: '274 × 274', in: '108 × 108', price: '$85' },
           ],
         },
         jp: {
@@ -461,16 +443,17 @@
             { name: '2× Single', cm: '194 × 195', in: '76 × 77', price: 'ขอใบเสนอราคา' },
             { name: '2× Queen → Mega', cm: '320 × 195', in: '126 × 77', price: 'ขอใบเสนอราคา' },
           ],
-          marine: [
-            { name: 'Yanmar Cruiser', cm: 'สั่งตัด', in: 'Custom', price: 'ขอใบเสนอราคา' },
+          pillow: [
+            { name: 'Standard', cm: '43 × 63', in: '17 × 25', price: '$11' },
+            { name: 'Semi-Double', cm: '50 × 70', in: '20 × 28', price: '$13' },
+            { name: 'Queen', cm: '50 × 75', in: '20 × 30', price: '$14' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
           ],
-          truck: [
-            { name: 'Hino Profia Sleeper', cm: '80 × 195', in: '31 × 77', price: 'ขอใบเสนอราคา' },
-            { name: 'Isuzu Giga', cm: '80 × 195', in: '31 × 77', price: 'ขอใบเสนอราคา' },
-          ],
-          rv: [
-            { name: 'JP RV Double', cm: '140 × 195', in: '55 × 77', price: '$44' },
-            { name: 'JP RV Queen', cm: '160 × 195', in: '63 × 77', price: '$50' },
+          duvet: [
+            { name: 'Single', cm: '150 × 210', in: '59 × 83', price: '$50' },
+            { name: 'Double', cm: '190 × 210', in: '75 × 83', price: '$60' },
+            { name: 'Queen', cm: '210 × 210', in: '83 × 83', price: '$68' },
+            { name: 'King', cm: '230 × 210', in: '91 × 83', price: '$75' },
           ],
         },
       };
@@ -486,18 +469,16 @@
         document.getElementById('table-title').textContent = title;
 
         const html = [
-          '<div class="size-table-row header">',
+          '<div class="size-table-row header" style="grid-template-columns:1fr 1fr;">',
             '<div>ชื่อขนาด</div>',
             '<div>ขนาด</div>',
-            '<div style="text-align:right">เริ่มต้น</div>',
           '</div>'
         ];
         rows.forEach(r => {
           html.push(
-            '<div class="size-table-row">',
+            '<div class="size-table-row" style="grid-template-columns:1fr 1fr;">',
               '<div class="size-name">' + r.name + '</div>',
               '<div class="size-dims">' + r.cm + ' cm <span class="in">(' + r.in + ' in)</span></div>',
-              '<div class="size-price">' + r.price + '</div>',
             '</div>'
           );
         });
