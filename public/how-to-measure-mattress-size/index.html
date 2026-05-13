@@ -3,14 +3,173 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="How to measure your mattress using the credit card method. No tape measure required — MildMate.">
+  <meta name="description" content="How to measure your mattress for a perfect MildMate fit. Simple steps for Width, Length, and Thickness.">
   <title>How to Measure Your Mattress — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .measure-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .measure-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .measure-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .measure-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .measure-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .measure-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Main Layout ────────────────────────── */
+    .measure-main {
+      padding: 56px 24px;
+    }
+    .measure-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .info-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+      margin-bottom: 40px;
+    }
+
+    .info-section h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    /* ── Blueprint Visual ─────────────────── */
+    .blueprint-wrap {
+      background: #fff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 0;
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
+    .blueprint-wrap img { width: 100%; height: auto; display: block; }
+
+    /* ── Dimensions List ──────────────────── */
+    .dims-card {
+      background: #f8fbff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 40px;
+    }
+    .dims-card h3 {
+      font-size: 1.5rem;
+      color: var(--color-primary);
+      margin-bottom: 24px;
+    }
+    .dims-list {
+      display: grid;
+      gap: 28px;
+    }
+    .dim-item strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--color-text);
+    }
+    .dim-item p {
+      margin: 0;
+      color: var(--color-muted);
+      line-height: 1.6;
+      font-size: 0.9375rem;
+    }
+
+    /* ── Card Check ───────────────────────── */
+    .card-check-box {
+      background: var(--color-surface);
+      border: 1px dashed var(--color-primary);
+      border-radius: var(--radius);
+      padding: 40px;
+    }
+    .credit-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .card-check-text h3 {
+      margin-bottom: 16px;
+      color: var(--color-primary);
+      font-size: 1.25rem;
+    }
+    .card-check-text p {
+      margin-bottom: 0;
+      color: var(--color-muted);
+      line-height: 1.6;
+      font-size: 0.9375rem;
+    }
+    .card-check-img {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid #d0e6fa;
+      box-shadow: var(--shadow);
+    }
+    .card-check-img img { width: 100%; height: auto; display: block; }
+
+    /* ── CTAs ─────────────────────────────── */
+    .cta-block {
+      background: var(--color-text);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 48px;
+      text-align: center;
+      margin-top: 56px;
+    }
+    .cta-block h2 { color: #fff; margin-bottom: 12px; }
+    .cta-block p { opacity: 0.8; margin-bottom: 32px; }
+
+    @media (max-width: 768px) {
+      .measure-hero h1 { font-size: 1.875rem; }
+      .info-section { padding: 32px 24px; }
+      .credit-card-row { grid-template-columns: 1fr; }
+      .cta-block { padding: 40px 24px; }
+    }
+  </style>
 </head>
-<body>
+<body class="measure-page">
 
   <!-- ===== HEADER ===== -->
   <header class="site-header">
@@ -43,14 +202,6 @@
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
     <div class="mobile-drawer" aria-label="Mobile menu">
-      <div class="mobile-drawer-search">
-        <form action="/products/" method="get" class="drawer-search-form">
-          <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off">
-          <button type="submit" aria-label="ส่งการค้นหา">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </form>
-      </div>
       <ul class="mobile-nav-list">
         <li><a href="/">Home</a></li>
         <li><a href="/products/">Shop</a></li>
@@ -58,266 +209,85 @@
         <li><a href="/sizeguide/">Size Guide</a></li>
       </ul>
     </div>
-    <div class="search-overlay" aria-hidden="true">
-      <div class="search-overlay-inner">
-        <button class="search-close" aria-label="Close search">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-        <form action="/products/" method="get" class="search-form">
-          <input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off">
-          <button type="submit" aria-label="Submit search">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </form>
-      </div>
-    </div>
   </header>
 
   <main>
-    <section class="page-hero">
-      <div class="container">
-        <h1>How to Measure Your Mattress</h1>
-        <p>The MildMate Zero-Friction Method — no tape measure required. Perfect fit guaranteed.</p>
+    
+    <!-- ===== HERO ===== -->
+    <section class="measure-hero">
+      <div class="measure-hero-inner">
+        <h1>Measure for a Perfect Fit</h1>
+        <p class="hero-sub">Getting the dimensions right for your custom MildMate bedding is easier than you think. Let's get started.</p>
       </div>
     </section>
 
-    <!-- Value Proposition -->
-    <section class="section" style="background:#f0f7ff;">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">The Hybrid Zero-Friction Method</h2>
-        <p style="text-align:center; color:var(--color-muted); margin-bottom:32px;">Measuring mattresses for custom protectors or high-tension fitted sheets can be error-prone. MildMate eliminates this friction by leveraging engineering data and offering flexible verification methods.</p>
+    <div class="measure-main">
+      <div class="measure-container">
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">Research-First Strategy</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;">For standard mattress brands (Tempur-Pedic, Sealy, IKEA), we identify the engineering specifications first. You verify — you don't measure from scratch.</p>
+        <!-- ===== CONSOLIDATED MEASUREMENT SECTION ===== -->
+        <div class="info-section">
+          <h2>Getting Your Bed Ready</h2>
+          <p style="margin-bottom: 32px;">For a flawless fit, start with a bare mattress. Remove all sheets and blankets to get an accurate profile. If you plan to use a permanent topper or pad under your new sheet, simply keep it in place while you measure.</p>
+          
+          <div class="blueprint-wrap">
+            <img src="/images/Measurement/Mattress_Measurement.jpg" alt="Mattress measurement technical diagram">
           </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">Dual-Verification Choice</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;">Pick your tool: a traditional tape measure, or the credit-card scaling method for precision without any tools.</p>
-          </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">Down-to-the-Penny Quote</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;">Pricing is estimated from surface area (W x L) and depth (D), then locked after your final approval.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Credit Card Visual -->
-    <section class="section">
-      <div class="container" style="max-width:800px;">
-        <div style="text-align:center; margin-bottom:32px;">
-          <svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-            <!-- Mattress outline -->
-            <rect x="20" y="30" width="360" height="60" fill="none" stroke="#333" stroke-width="2" rx="4"/>
-            <!-- Credit cards along width -->
-            <rect x="30" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="94" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="158" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="222" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="286" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <!-- Remaining partial space -->
-            <rect x="350" y="35" width="20" height="34" fill="#e5e7eb" stroke="#ccc" stroke-width="1" rx="2" stroke-dasharray="4 2"/>
-            <!-- Labels -->
-            <text x="200" y="20" text-anchor="middle" font-size="12" fill="#333" font-family="Quicksand,sans-serif">Width: place cards end-to-end, count how many fit</text>
-            <text x="200" y="105" text-anchor="middle" font-size="11" fill="#666" font-family="Quicksand,sans-serif">Each credit card = 85.60 mm (3.375 in)</text>
-          </svg>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7-Step Workflow -->
-    <section class="section" style="background:#f5faff;">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:32px;">The 7-Step Workflow</h2>
-
-        <div class="steps" style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px;">
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">1</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Model Identification &amp; Research</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">You provide your mattress brand, model, or standard size. We research the engineering specs for Width (W), Length (L), and Depth (D).</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">2</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Pre-Filled Template Delivery</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">We send a digital blueprint pre-populated with standard dimensions through your preferred consultation channel.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">3</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Verification — Pick Your Tool</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>Tape measure:</strong> Check physical cm against the template. <strong>Credit card:</strong> Any standard card (8.56 cm) gives you precise "card counts" for W, L, and D.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">4</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Submission &amp; Refinement</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">You confirm the dimensions or provide minor adjustments. We refine the blueprint instantly.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">5</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Final Digital Drafting</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">We finalize the blueprint with technical markings, model name, and the MildMate spec sheet.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">6</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Final Quote &amp; Approval</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">A locked price based on your product type: Fitted Sheet (CloudSoft or BreezePlus), Waterproof Protector, or 6-Side Encasement.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">7</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Physical Order Conversion</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">Upon approval, your order enters production. Any applicable service-fee credit is applied automatically.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Credit Card Quick Guide -->
-    <section class="section">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">Credit Card Method — Quick Guide</h2>
-
-        <div class="steps" style="display:flex; flex-direction:column; gap:20px; margin-bottom:24px;">
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">1</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Grab a Standard Credit Card</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">Any standard credit, debit, or ID card works. Every card is exactly <strong>85.60 mm</strong> (3.375 inches) long — ISO/IEC 7810 ID-1 standard, used worldwide.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">2</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Measure Width (W)</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">Place cards end-to-end across the top of your mattress. Count full cards plus any remainder. Multiply by 85.6 mm. Example: 2 full cards = 171.2 mm.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">3</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Measure Length (L)</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">Repeat the same process from head to foot of the mattress. Record the total length in mm or inches.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">4</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">Measure Depth / Pocket (D)</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">Measure from the top of the mattress down to where you want the sheet to tuck under. Use cards on their short edge (53.98 mm / 2.125 in) or estimate with a ruler.</p>
+          
+          <div class="dims-card">
+            <h3>The Three Key Dimensions</h3>
+            <div class="dims-list">
+              <div class="dim-item">
+                <strong>1. Width (W)</strong>
+                <p>Measure across the mattress at its <strong>widest point</strong>. For the most reliable fit, measure from one vertical edge to the other, avoiding the corners where seams can sometimes bulge.</p>
+              </div>
+              <div class="dim-item">
+                <strong>2. Length (L)</strong>
+                <p>Measure from head to foot through the <strong>longest point</strong>. Since many mattress corners are rounded, measuring through the middle area ensures your bedding will have the perfect longitudinal profile.</p>
+              </div>
+              <div class="dim-item">
+                <strong>3. Thickness (Depth)</strong>
+                <p>Measure the vertical edge of your mattress from the top seam straight down to the bottom edge. Be sure to include any toppers or pads that will stay on the bed.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="note-box" style="padding:16px 20px; background:#fff8e1; border-left:4px solid #ffc107; border-radius:var(--radius); margin-bottom:32px;">
-          <p style="margin:0; color:#5d4037;"><strong>Note:</strong> Every standard credit card is exactly <strong>85.60 mm (3.375 in)</strong> long. This is an ISO/IEC 7810 ID-1 standard dimension used worldwide.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Technical Standards -->
-    <section class="section" style="background:#f0f7ff;">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">The Golden Formula — Manufacturing Standards</h2>
-        <p style="text-align:center; color:var(--color-muted); margin-bottom:32px;">To ensure the signature <strong>"MildMate Cinch-Fit"</strong>, manufacturing follows these parameters:</p>
-
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">The Pocket Notch (N)</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>N = D + 3 inches</strong><br>Includes 2" tuck-under and 1" sewing allowance. This ensures your fitted sheet grips tight with zero slip.</p>
-          </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">Tolerance</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>1% - 2% size tolerance</strong> for a professional, taut finish — never baggy, never too tight.</p>
-          </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">Hardware</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>360° heavy-duty elastic anchor</strong> on all fitted products. Full perimeter grip, wash after wash.</p>
+        <!-- ===== CREDIT CARD ALTERNATIVE ===== -->
+        <div class="info-section">
+          <h2>No Tape Measure? Use a Card</h2>
+          <p style="margin-bottom: 32px;">If you don't have a tape measure handy, you can use any standard card (like a credit or ID card) for a surprisingly precise reading.</p>
+          
+          <div class="card-check-box">
+             <div class="credit-card-row">
+               <div class="card-check-text">
+                 <h3>The Friendly "Card Check"</h3>
+                 <p>Every standard card is exactly <strong>85.60 mm (3.375 in)</strong> long. Simply count how many "flips" it takes to cover the edge. For example, if your mattress thickness is 3 card lengths, that’s exactly 25.68 cm.</p>
+               </div>
+               <div class="card-check-img">
+                 <img src="/images/Measurement/005-Measure-02.jpg" alt="Credit card measurement method demonstration">
+               </div>
+             </div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- CTA -->
-    <section class="section">
-      <div class="container" style="max-width:800px; text-align:center;">
-        <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:16px;">Ready for Your Perfect Fit?</h2>
-        <p style="color:var(--color-muted); margin-bottom:24px;">Start with your mattress model and we'll handle the rest.</p>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
-          <a href="/contact/" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; padding:13px 28px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Request a Custom Quote
-          </a>
-          <a href="/sizeguide/" class="btn-outline" style="display:inline-flex; align-items:center; gap:8px; background:#f0f7ff; color:var(--color-primary); border:1.5px solid var(--color-primary); padding:12px 26px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            Browse Size Guide
-          </a>
+        <!-- ===== CTA ===== -->
+        <div class="cta-block">
+          <h2>Ready for Your Perfect Fit?</h2>
+          <p>Check our Unified International Size Guide for US, UK, EU, and Thai standards.</p>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;">
+            <a href="/sizeguide/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:13px 32px; border-radius:var(--radius); text-decoration:none; font-weight:700;">View Size Guide</a>
+            <a href="/custom-measurement/" class="btn-outline" style="background:transparent; color:#fff; border:1.5px solid #fff; padding:12px 30px; border-radius:var(--radius); text-decoration:none; font-weight:700;">Custom Shape</a>
+          </div>
         </div>
+
       </div>
-    </section>
+    </div>
+
   </main>
 
   <!-- ===== FOOTER ===== -->
   <footer class="site-footer">
     <div class="container">
-      <div class="footer-grid">
-        <div class="footer-col">
-          <h3>Quick Links</h3>
-          <ul>
-            <li><a href="/about/">About Us</a></li>
-            <li><a href="/contact/">Contact Us</a></li>
-            <li><a href="/reviews/">Reviews</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3>Customer Service</h3>
-          <ul>
-            <li><a href="/faq/">FAQ</a></li>
-            <li><a href="/sizeguide/">Size Guide</a></li>
-            <li><a href="/blogs/">Blog</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3>Shop With Us</h3>
-          <div class="footer-icons-grid">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
-            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
-            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h3>Contact</h3>
-          <ul>
-            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
-            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
-          </ul>
-          <div class="footer-icons-grid contact-icons">
-            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
-            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
-          </div>
-        </div>
-      </div>
-      <div class="footer-social-center">
-        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
-        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
-        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
-        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
-        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
-      </div>
       <div class="footer-bottom">
         <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">

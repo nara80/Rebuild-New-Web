@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Engineering-grade measurement protocol for custom boat mattresses, RV bedding, and specialized shapes. Get a precision quote with our schematic drafting service.">
+  <title>Custom Measurement Guide — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .custom-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .custom-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 80px 24px 64px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .custom-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.1;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .custom-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .custom-hero h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    .custom-hero .hero-sub {
+      font-size: 1.125rem;
+      color: rgba(255,255,255,0.95);
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Main Layout ────────────────────────── */
+    .custom-main {
+      padding: 64px 24px;
+    }
+    .custom-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .protocol-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 48px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+      margin-bottom: 48px;
+    }
+
+    .section-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 20px;
+    }
+
+    /* ── Workflow Steps ───────────────────── */
+    .workflow-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      margin-top: 40px;
+    }
+    .workflow-step {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 32px;
+      align-items: center;
+      padding-bottom: 32px;
+      border-bottom: 1px solid #f0f7ff;
+    }
+    .workflow-step:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .step-number-box {
+      width: 64px;
+      height: 64px;
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(44,150,244,0.3);
+    }
+    .step-content h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .step-content p {
+      margin: 0;
+      color: var(--color-muted);
+      line-height: 1.6;
+    }
+    .step-visual-thumb {
+      width: 120px;
+      height: 80px;
+      background: #f8fbff;
+      border: 1px dashed #d0e6fa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    /* ── Marketing Visuals ────────────────── */
+    .visual-gallery {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .gallery-item {
+      border-radius: var(--radius);
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      background: #eef4fb;
+      border: 1px solid #d0e6fa;
+      position: relative;
+    }
+    .gallery-label {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255,255,255,0.9);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    /* ── CTA ──────────────────────────────── */
+    .cta-block {
+      background: var(--color-text);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 56px;
+      text-align: center;
+    }
+    .cta-block h2 { color: #fff; margin-bottom: 16px; font-size: 2rem; }
+    .cta-block p { opacity: 0.85; margin-bottom: 32px; font-size: 1.1rem; }
+
+    @media (max-width: 768px) {
+      .workflow-step { grid-template-columns: 64px 1fr; }
+      .step-visual-thumb { display: none; }
+      .visual-gallery { grid-template-columns: 1fr; }
+      .custom-hero h1 { font-size: 2rem; }
+      .protocol-section { padding: 32px 24px; }
+      .cta-block { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body class="custom-page">
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
+          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="My account">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="Language switch">
+          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="Mobile menu">
+      <ul class="mobile-nav-list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products/">Shop</a></li>
+        <li><a href="/fabric/">Fabrics</a></li>
+        <li><a href="/sizeguide/">Size Guide</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    
+    <!-- ===== HERO ===== -->
+    <section class="custom-hero">
+      <div class="custom-hero-inner">
+        <h1>Custom Shape Blueprints</h1>
+        <p class="hero-sub">The perfect fit for your unique space. Specialized design for Marine V-Berths, RVs, Camper Vans, and Commercial Truck Cabs.</p>
+      </div>
+    </section>
+
+    <div class="custom-main">
+      <div class="custom-container">
+
+        <!-- ===== PROTOCOL ===== -->
+        <div class="protocol-section">
+          <div class="section-kicker">How We Design Your Perfect Fit</div>
+          <h2>Your Custom Design Journey</h2>
+          <p>We use engineering precision to ensure your specialized bedding fits like a glove. Here is how we work together to create your custom masterpiece.</p>
+
+          <div class="workflow-grid">
+            
+            <!-- Step 1 -->
+            <div class="workflow-step">
+              <div class="step-number-box">01</div>
+              <div class="step-content">
+                <h3>Share Your Model or Sketch</h3>
+                <p>Tell us your vehicle or boat model. If it's a unique creation, a simple hand-drawn sketch of the mattress shape is all we need to get started.</p>
+              </div>
+              <div class="step-visual-thumb">Model / Sketch</div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="workflow-step">
+              <div class="step-number-box">02</div>
+              <div class="step-content">
+                <h3>We Draft Your Blueprint</h3>
+                <p>Our team creates a custom technical blueprint with proposed dimensions based on our extensive vehicle database.</p>
+              </div>
+              <div class="step-visual-thumb">Technical Draft</div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="workflow-step">
+              <div class="step-number-box">03</div>
+              <div class="step-content">
+                <h3>Quick Precision Check</h3>
+                <p>Review the dimensions using a tape measure or our easy **Credit Card Method**. Confirm the numbers and send them back to us.</p>
+              </div>
+              <div class="step-visual-thumb">Verification Check</div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="workflow-step">
+              <div class="step-number-box">04</div>
+              <div class="step-content">
+                <h3>Choose Your Fabric</h3>
+                <p>Once the shape is locked, we'll send the final blueprint for your records and help you select the perfect fabric for your lifestyle.</p>
+              </div>
+              <div class="step-visual-thumb">Fabric Selection</div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="workflow-step">
+              <div class="step-number-box">05</div>
+              <div class="step-content">
+                <h3>Receive Your Tailored Quote</h3>
+                <p>We provide your final custom quote. Upon approval, your order enters production for a guaranteed precision fit.</p>
+              </div>
+              <div class="step-visual-thumb">Locked Quote</div>
+            </div>
+
+          </div>
+
+          <!-- Marketing Visuals -->
+          <div class="visual-gallery">
+            <div class="gallery-item">
+              <div class="gallery-label">Marine V-Berth</div>
+              <!-- <img src="/images/dummy-marine.jpg" alt=""> -->
+            </div>
+            <div class="gallery-item">
+              <div class="gallery-label">RV / Truck Cab</div>
+              <!-- <img src="/images/dummy-rv.jpg" alt=""> -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CTA ===== -->
+        <div class="cta-block">
+          <h2>Ready to Start Your Blueprint?</h2>
+          <p>Our engineering team is ready to draft your custom mattress schematic.</p>
+          <a href="/contact/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:16px 48px; border-radius:var(--radius); text-decoration:none; font-weight:700; font-size:1.1rem; display:inline-block;">Get Your Custom Quote</a>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">Privacy Policy</a>
+          <a href="/shipping/">Returns &amp; Delivery</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

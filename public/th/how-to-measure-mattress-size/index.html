@@ -3,271 +3,286 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="วิธีวัดขนาดที่นอนแบบ Zero-Friction ของ MildMate — ไม่ต้องใช้สายวัด วัดด้วยบัตรเครดิตได้เลย">
+  <meta name="description" content="วิธีวัดขนาดที่นอนเพื่อให้ได้ความพอดีแบบ MildMate ขั้นตอนง่ายๆ สำหรับความกว้าง ความยาว และความหนา">
   <title>วิธีวัดขนาดที่นอน — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .measure-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .measure-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .measure-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .measure-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .measure-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .measure-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Main Layout ────────────────────────── */
+    .measure-main {
+      padding: 56px 24px;
+    }
+    .measure-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .info-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+      margin-bottom: 40px;
+    }
+
+    .info-section h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    /* ── Blueprint Visual ─────────────────── */
+    .blueprint-wrap {
+      background: #fff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 0;
+      margin-bottom: 40px;
+      overflow: hidden;
+    }
+    .blueprint-wrap img { width: 100%; height: auto; display: block; }
+
+    /* ── Dimensions List ──────────────────── */
+    .dims-card {
+      background: #f8fbff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 40px;
+    }
+    .dims-card h3 {
+      font-size: 1.5rem;
+      color: var(--color-primary);
+      margin-bottom: 24px;
+    }
+    .dims-list {
+      display: grid;
+      gap: 28px;
+    }
+    .dim-item strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--color-text);
+    }
+    .dim-item p {
+      margin: 0;
+      color: var(--color-muted);
+      line-height: 1.6;
+      font-size: 0.9375rem;
+    }
+
+    /* ── Card Check ───────────────────────── */
+    .card-check-box {
+      background: var(--color-surface);
+      border: 1px dashed var(--color-primary);
+      border-radius: var(--radius);
+      padding: 40px;
+    }
+    .credit-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .card-check-text h3 {
+      margin-bottom: 16px;
+      color: var(--color-primary);
+      font-size: 1.25rem;
+    }
+    .card-check-text p {
+      margin-bottom: 0;
+      color: var(--color-muted);
+      line-height: 1.6;
+      font-size: 0.9375rem;
+    }
+    .card-check-img {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid #d0e6fa;
+      box-shadow: var(--shadow);
+    }
+    .card-check-img img { width: 100%; height: auto; display: block; }
+
+    /* ── CTAs ─────────────────────────────── */
+    .cta-block {
+      background: var(--color-text);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 48px;
+      text-align: center;
+      margin-top: 56px;
+    }
+    .cta-block h2 { color: #fff; margin-bottom: 12px; }
+    .cta-block p { opacity: 0.8; margin-bottom: 32px; }
+
+    @media (max-width: 768px) {
+      .measure-hero h1 { font-size: 1.875rem; }
+      .info-section { padding: 32px 24px; }
+      .credit-card-row { grid-template-columns: 1fr; }
+      .cta-block { padding: 40px 24px; }
+    }
+  </style>
 </head>
-<body>
+<body class="measure-page">
 
   <!-- ===== HEADER ===== -->
   <header class="site-header">
     <div class="container header-inner">
-      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
-      <nav class="main-nav" aria-label="Main navigation">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/th/" class="logo-link" aria-label="MildMate หน้าหลัก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="เมนูหลัก">
         <ul class="nav-list">
-          <li class="nav-item"><a href="/" class="nav-link">หน้าหลัก</a></li>
-          <li class="nav-item"><a href="/products/" class="nav-link">ร้านค้า</a></li>
-          <li class="nav-item"><a href="/fabric/" class="nav-link">เนื้อผ้า</a></li>
+          <li class="nav-item"><a href="/th/" class="nav-link">หน้าหลัก</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">สินค้า</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">ผ้า</a></li>
           <li class="nav-item"><a href="/sizeguide/" class="nav-link">คู่มือขนาด</a></li>
         </ul>
       </nav>
       <div class="header-actions">
-        <button class="search-btn" aria-label="Search products" aria-expanded="false">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         </button>
-        <a href="/account/" class="account-btn" aria-label="My account">
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </a>
-        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span class="cart-count">0</span>
         </a>
-        <div class="lang-toggle" role="group" aria-label="Language switch">
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา">
           <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
         </div>
       </div>
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu">
-      <div class="mobile-drawer-search">
-        <form action="/products/" method="get" class="drawer-search-form">
-          <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off">
-          <button type="submit" aria-label="ส่งการค้นหา">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </form>
-      </div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ">
       <ul class="mobile-nav-list">
-        <li><a href="/">หน้าหลัก</a></li>
-        <li><a href="/products/">ร้านค้า</a></li>
-        <li><a href="/fabric/">เนื้อผ้า</a></li>
+        <li><a href="/th/">หน้าหลัก</a></li>
+        <li><a href="/products/">สินค้า</a></li>
+        <li><a href="/fabric/">ผ้า</a></li>
         <li><a href="/sizeguide/">คู่มือขนาด</a></li>
       </ul>
-    </div>
-    <div class="search-overlay" aria-hidden="true">
-      <div class="search-overlay-inner">
-        <button class="search-close" aria-label="Close search">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-        <form action="/products/" method="get" class="search-form">
-          <input type="search" name="q" placeholder="ค้นหาผ้าปู เนื้อผ้า ขนาด..." aria-label="ค้นหา" autocomplete="off">
-          <button type="submit" aria-label="ส่งการค้นหา">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </form>
-      </div>
     </div>
   </header>
 
   <main>
-    <section class="page-hero">
-      <div class="container">
-        <h1>วิธีวัดขนาดที่นอน</h1>
-        <p>วิธี Zero-Friction ของ MildMate — ไม่ต้องใช้สายวัด วัดด้วยบัตรเครดิตได้เลย พอดีเป๊ะทุกครั้ง</p>
+    
+    <!-- ===== HERO ===== -->
+    <section class="measure-hero">
+      <div class="measure-hero-inner">
+        <h1>วัดขนาดให้พอดีเป๊ะ</h1>
+        <p class="hero-sub">การได้ขนาดที่ถูกต้องสำหรับเครื่องนอน MildMate สั่งตัดของคุณนั้นง่ายกว่าที่คุณคิด มาเริ่มกันเลย</p>
       </div>
     </section>
 
-    <!-- Value Proposition -->
-    <section class="section" style="background:#f0f7ff;">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">วิธี Hybrid Zero-Friction</h2>
-        <p style="text-align:center; color:var(--color-muted); margin-bottom:32px;">การวัดที่นอนสำหรับผ้าปูกันน้ำหรือผ้าปูรัดมุมแบบตึงสูง มักมีข้อผิดพลาด MildMate ขจัดความยุ่งยากนี้ด้วยการใช้ข้อมูลวิศวกรรม และให้คุณเลือกวิธียืนยันที่สะดวกที่สุด</p>
+    <div class="measure-main">
+      <div class="measure-container">
 
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">กลยุทธ์ Research-First</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;">สำหรับที่นอนมาตรฐาน (Tempur-Pedic, Sealy, IKEA) เราค้นหาข้อมูลสเปกวิศวกรรมก่อน คุณแค่ "ยืนยัน" — ไม่ต้องวัดจากศูนย์</p>
+        <!-- ===== CONSOLIDATED MEASUREMENT SECTION ===== -->
+        <div class="info-section">
+          <h2>การเตรียมที่นอนของคุณ</h2>
+          <p style="margin-bottom: 32px;">เพื่อความพอดีอย่างไร้ที่ติ ควรเริ่มด้วยที่นอนที่ว่างเปล่า นำผ้าปูและผ้าห่มออกทั้งหมดเพื่อให้ได้โปรไฟล์ที่แม่นยำ หากคุณวางแผนจะใช้ท็อปเปอร์หรือแผ่นรองที่นอนไว้ใต้ผ้าปูใหม่เสมอ ให้วางสิ่งเหล่านั้นไว้ในขณะที่คุณวัด</p>
+          
+          <div class="blueprint-wrap">
+            <img src="/images/Measurement/Mattress_Measurement.jpg" alt="ไดอะแกรมทางเทคนิคการวัดขนาดที่นอน">
           </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">เลือกวิธียืนยันได้ 2 แบบ</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;">ใช้สายวัดแบบดั้งเดิม หรือวิธีวัดด้วยบัตรเครดิตเพื่อความแม่นยำโดยไม่ต้องใช้อุปกรณ์</p>
-          </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">ใบเสนอราคาละเอียด</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;">ราคาคำนวณจากพื้นที่ผิว (กว้าง x ยาว) และความหนา (สูง) ล็อกราคาหลังคุณอนุมัติ</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Credit Card Visual -->
-    <section class="section">
-      <div class="container" style="max-width:800px;">
-        <div style="text-align:center; margin-bottom:32px;">
-          <svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
-            <!-- Mattress outline -->
-            <rect x="20" y="30" width="360" height="60" fill="none" stroke="#333" stroke-width="2" rx="4"/>
-            <!-- Credit cards along width -->
-            <rect x="30" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="94" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="158" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="222" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <rect x="286" y="35" width="54" height="34" fill="#2c96f4" stroke="#1a7fd4" stroke-width="1" rx="3"/>
-            <!-- Remaining partial space -->
-            <rect x="350" y="35" width="20" height="34" fill="#e5e7eb" stroke="#ccc" stroke-width="1" rx="2" stroke-dasharray="4 2"/>
-            <!-- Labels -->
-            <text x="200" y="20" text-anchor="middle" font-size="12" fill="#333" font-family="Quicksand,sans-serif">ความกว้าง: วางบัตรเรียงกัน นับจำนวนบัตร</text>
-            <text x="200" y="105" text-anchor="middle" font-size="11" fill="#666" font-family="Quicksand,sans-serif">บัตรเครดิต 1 ใบ = 85.60 มม. (3.375 นิ้ว)</text>
-          </svg>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7-Step Workflow -->
-    <section class="section" style="background:#f5faff;">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:32px;">ขั้นตอนการทำงาน 7 ขั้นตอน</h2>
-
-        <div class="steps" style="display:flex; flex-direction:column; gap:20px; margin-bottom:32px;">
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">1</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">ระบุรุ่นและค้นหาข้อมูล</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">คุณแจ้งยี่ห้อ รุ่น หรือขนาดมาตรฐานของที่นอน เราค้นหาสเปกวิศวกรรมสำหรับ กว้าง (W) ยาว (L) และ สูง (D)</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">2</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">ส่งแบบฟอร์มสำเร็จรูป</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">เราส่งแบบฟอร์มดิจิตอลที่กรอกขนาดมาตรฐานไว้แล้ว ผ่านช่องทางที่คุณสะดวก</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">3</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">ยืนยันขนาด — เลือกอุปกรณ์</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>สายวัด:</strong> ตรวจสอบเซนติเมตรจริงกับแบบฟอร์ม <strong>บัตรเครดิต:</strong> ใช้บัตรมาตรฐาน (8.56 ซม.) นับจำนวนบัตรสำหรับ W, L, และ D</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">4</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">ส่งข้อมูลและปรับแต่ง</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">คุณยืนยันขนาดหรือแจ้งปรับเล็กน้อย เราปรับแบบฟอร์มทันที</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">5</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">ร่างสุดท้ายแบบดิจิตอล</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">เราสรุปแบบฟอร์มพร้อมเครื่องหมายทางเทคนิค ชื่อรุ่น และสเปก MildMate</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">6</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">ใบเสนอราคาและอนุมัติ</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">ราคาล็อกตามประเภทสินค้า: ผ้าปูรัดมุม (CloudSoft หรือ BreezePlus), ผ้าปูกันน้ำ, หรือผ้าปูซิปรอบ 6 ด้าน</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">7</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">แปลงเป็นออเดอร์จริง</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">หลังอนุมัติ ออเดอร์เข้าสู่การผลิต ค่าบริการวัด (ถ้ามี) หักลบอัตโนมัติ</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Credit Card Quick Guide -->
-    <section class="section">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">วิธีวัดด้วยบัตรเครดิต — คู่มือด่วน</h2>
-
-        <div class="steps" style="display:flex; flex-direction:column; gap:20px; margin-bottom:24px;">
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">1</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">เตรียมบัตรเครดิตมาตรฐาน</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">บัตรเครดิต เดบิต หรือบัตรประชาชนใดก็ได้ ทุกใบมีความยาว <strong>85.60 มม.</strong> (3.375 นิ้ว) ตามมาตรฐาน ISO/IEC 7810 ID-1 ทั่วโลก</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">2</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">วัดความกว้าง (W)</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">วางบัตรเรียงกันจากขอบถึงขอบของที่นอน นับจำนวนบัตรเต็มใบ + เศษที่เหลือ คูณด้วย 85.6 มม. ตัวอย่าง: 2 ใบเต็ม = 171.2 มม.</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">3</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">วัดความยาว (L)</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">ทำซ้ำจากหัวนอนถึงปลายเท้า บันทึกความยาวรวมเป็นมิลลิเมตรหรือนิ้ว</p>
-            </div>
-          </div>
-          <div class="step-card" style="display:flex; gap:16px; align-items:flex-start; padding:20px; background:var(--color-surface); border-radius:var(--radius);">
-            <div class="step-number" style="min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--color-primary); color:#fff; border-radius:50%; font-weight:700;">4</div>
-            <div>
-              <h3 style="margin:0 0 8px; font-size:1rem;">วัดความสูง / กระเป๋า (D)</h3>
-              <p style="margin:0; color:#555; font-size:0.9375rem;">วัดจากผิวด้านบนของที่นอนลงไปจนถึงจุดที่ต้องการให้ผ้าปูสอดใต้ ใช้บัตรตั้งฉาก (53.98 มม. / 2.125 นิ้ว) หรือประมาณด้วยไม้บรรทัด</p>
+          
+          <div class="dims-card">
+            <h3>3 ขนาดที่สำคัญ</h3>
+            <div class="dims-list">
+              <div class="dim-item">
+                <strong>1. ความกว้าง (W)</strong>
+                <p>วัดขนาดที่นอนในส่วนที่กว้างที่สุด เพื่อการสวมใส่ที่มั่นใจที่สุด ให้วัดจากขอบแนวตั้งด้านหนึ่งไปอีกด้านหนึ่ง โดยหลีกเลี่ยงบริเวณมุมที่ตะเข็บอาจนูนออกมาในบางครั้ง</p>
+              </div>
+              <div class="dim-item">
+                <strong>2. ความยาว (L)</strong>
+                <p>วัดจากหัวนอนถึงปลายเท้าผ่านส่วนที่ยาวที่สุด เนื่องจากมุมที่นอนมักจะโค้งมน การวัดผ่านพื้นที่ส่วนกลางจะช่วยให้มั่นใจได้ว่าเครื่องนอนของคุณจะมีโปรไฟล์ตามยาวที่สมบูรณ์แบบ</p>
+              </div>
+              <div class="dim-item">
+                <strong>3. ความหนา (Depth)</strong>
+                <p>วัดขอบแนวตั้งของที่นอนจากตะเข็บด้านบนตรงลงมาจนถึงขอบด้านล่าง อย่าลืมรวมท็อปเปอร์หรือแผ่นรองที่ใช้งานร่วมกันภายใต้ผ้าปูใหม่นี้ด้วย</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="note-box" style="padding:16px 20px; background:#fff8e1; border-left:4px solid #ffc107; border-radius:var(--radius); margin-bottom:32px;">
-          <p style="margin:0; color:#5d4037;"><strong>หมายเหตุ:</strong> บัตรเครดิตมาตรฐานทุกใบมีความยาว <strong>85.60 มม. (3.375 นิ้ว)</strong> ตามมาตรฐาน ISO/IEC 7810 ID-1 ที่ใช้ทั่วโลก</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Technical Standards -->
-    <section class="section" style="background:#f0f7ff;">
-      <div class="container" style="max-width:800px;">
-        <h2 style="text-align:center; font-size:1.25rem; font-weight:700; margin-bottom:24px;">สูตรทอง — มาตรฐานการผลิต</h2>
-        <p style="text-align:center; color:var(--color-muted); margin-bottom:32px;">เพื่อให้ได้ <strong>"MildMate Cinch-Fit"</strong> ที่เป็นเอกลักษณ์ การผลิตของเราปฏิบัติตามพารามิเตอร์เหล่านี้:</p>
-
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:20px;">
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">กระเป๋าลึก (N)</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>N = D + 3 นิ้ว</strong><br>รวม 2 นิ้วสำหรับสอดใต้ที่นอน และ 1 นิ้วสำหรับตะเข็บ ทำให้ผ้าปูรัดแน่นไม่หลุด</p>
-          </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">ช่องว่างอนุญาต</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>ช่วงว่าง 1% - 2%</strong> เพื่อให้ได้ผิวตึงแบบมืออาชีพ — ไม่หลวม ไม่แน่นจนเกินไป</p>
-          </div>
-          <div style="padding:24px; background:#fff; border:1.5px solid #d0e6fa; border-radius:var(--radius);">
-            <h3 style="color:var(--color-primary); margin-bottom:12px; font-size:1rem;">อุปกรณ์ยึด</h3>
-            <p style="margin:0; color:#555; font-size:0.9375rem;"><strong>ยางยืดหนัก 360°</strong> รอบด้านทุกชิ้นงานแบบรัดมุม ยึดเกาะรอบที่นอน ซักแล้วซักอีก</p>
+        <!-- ===== CREDIT CARD ALTERNATIVE ===== -->
+        <div class="info-section">
+          <h2>ไม่มีสายวัด? ลองใช้วิธี "เช็กด้วยบัตร"</h2>
+          <p style="margin-bottom: 32px;">หากคุณไม่มีสายวัดใกล้ตัว คุณสามารถใช้บัตรเครดิตหรือบัตรประชาชนทั่วไปเพื่อการอ่านค่าที่แม่นยำอย่างน่าประหลาดใจ</p>
+          
+          <div class="card-check-box">
+             <div class="credit-card-row">
+               <div class="card-check-text">
+                 <h3>การเช็กด้วยบัตรแบบง่ายๆ</h3>
+                 <p>บัตรมาตรฐานทุกใบมีความยาวแม่นยำที่ <strong>85.60 มม. (3.375 นิ้ว)</strong> เพียงนับจำนวนครั้งที่ "พลิกบัตร" เพื่อให้ครอบคลุมขอบหรือแกนที่ต้องการ ตัวอย่างเช่น หากความหนาของที่นอนคือความยาวบัตร 3 ใบ นั่นคือ 25.68 ซม. พอดี</p>
+               </div>
+               <div class="card-check-img">
+                 <img src="/images/Measurement/005-Measure-02.jpg" alt="การสาธิตวิธีวัดด้วยบัตรเครดิต">
+               </div>
+             </div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- CTA -->
-    <section class="section">
-      <div class="container" style="max-width:800px; text-align:center;">
-        <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:16px;">พร้อมสำหรับความพอดีที่สมบูรณ์แบบ?</h2>
-        <p style="color:var(--color-muted); margin-bottom:24px;">เริ่มด้วยยี่ห้อและรุ่นที่นอนของคุณ ที่เหลือเราจัดการให้</p>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
-          <a href="/contact/" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; padding:13px 28px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            ขอใบเสนอราคา
-          </a>
-          <a href="/sizeguide/" class="btn-outline" style="display:inline-flex; align-items:center; gap:8px; background:#f0f7ff; color:var(--color-primary); border:1.5px solid var(--color-primary); padding:12px 26px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            ดูคู่มือขนาด
-          </a>
+        <!-- ===== CTA ===== -->
+        <div class="cta-block">
+          <h2>พร้อมสำหรับความพอดีที่สมบูรณ์แบบหรือยัง?</h2>
+          <p>ตรวจสอบคู่มือขนาดมาตรฐานสากล ทั้ง US, UK, EU และไทย</p>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;">
+            <a href="/sizeguide/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:13px 32px; border-radius:var(--radius); text-decoration:none; font-weight:700;">ดูคู่มือขนาด</a>
+            <a href="/th/custom-measurement/" class="btn-outline" style="background:transparent; color:#fff; border:1.5px solid #fff; padding:12px 30px; border-radius:var(--radius); text-decoration:none; font-weight:700;">พิมพ์เขียวสั่งตัดพิเศษ</a>
+          </div>
         </div>
+
       </div>
-    </section>
+    </div>
+
   </main>
 
   <!-- ===== FOOTER ===== -->

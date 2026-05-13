@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ระเบียบการวัดขนาดระดับวิศวกรรมสำหรับที่นอนเรือสั่งตัด รถบ้าน และรูปทรงพิเศษ รับใบเสนอราคาที่แม่นยำด้วยบริการร่างพิมพ์เขียวของเรา">
+  <title>คู่มือการวัดขนาดสั่งตัด — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .custom-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .custom-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 80px 24px 64px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .custom-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.1;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .custom-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .custom-hero h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      color: #fff;
+    }
+    .custom-hero .hero-sub {
+      font-size: 1.125rem;
+      color: rgba(255,255,255,0.95);
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Main Layout ────────────────────────── */
+    .custom-main {
+      padding: 64px 24px;
+    }
+    .custom-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .protocol-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 48px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+      margin-bottom: 48px;
+    }
+
+    .section-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 20px;
+    }
+
+    /* ── Workflow Steps ───────────────────── */
+    .workflow-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      margin-top: 40px;
+    }
+    .workflow-step {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 32px;
+      align-items: center;
+      padding-bottom: 32px;
+      border-bottom: 1px solid #f0f7ff;
+    }
+    .workflow-step:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .step-number-box {
+      width: 64px;
+      height: 64px;
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(44,150,244,0.3);
+    }
+    .step-content h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .step-content p {
+      margin: 0;
+      color: var(--color-muted);
+      line-height: 1.6;
+    }
+    .step-visual-thumb {
+      width: 120px;
+      height: 80px;
+      background: #f8fbff;
+      border: 1px dashed #d0e6fa;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    /* ── Marketing Visuals ────────────────── */
+    .visual-gallery {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .gallery-item {
+      border-radius: var(--radius);
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      background: #eef4fb;
+      border: 1px solid #d0e6fa;
+      position: relative;
+    }
+    .gallery-label {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(255,255,255,0.9);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    /* ── CTA ──────────────────────────────── */
+    .cta-block {
+      background: var(--color-text);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 56px;
+      text-align: center;
+    }
+    .cta-block h2 { color: #fff; margin-bottom: 16px; font-size: 2rem; }
+    .cta-block p { opacity: 0.85; margin-bottom: 32px; font-size: 1.1rem; }
+
+    @media (max-width: 768px) {
+      .workflow-step { grid-template-columns: 64px 1fr; }
+      .step-visual-thumb { display: none; }
+      .visual-gallery { grid-template-columns: 1fr; }
+      .custom-hero h1 { font-size: 2rem; }
+      .protocol-section { padding: 32px 24px; }
+      .cta-block { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body class="custom-page">
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/th/" class="logo-link" aria-label="MildMate หน้าหลัก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="เมนูหลัก">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/th/" class="nav-link">หน้าหลัก</a></li>
+          <li class="nav-item"><a href="/products/" class="nav-link">สินค้า</a></li>
+          <li class="nav-item"><a href="/fabric/" class="nav-link">ผ้า</a></li>
+          <li class="nav-item"><a href="/sizeguide/" class="nav-link">คู่มือขนาด</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา">
+          <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ">
+      <ul class="mobile-nav-list">
+        <li><a href="/th/">หน้าหลัก</a></li>
+        <li><a href="/products/">สินค้า</a></li>
+        <li><a href="/fabric/">ผ้า</a></li>
+        <li><a href="/sizeguide/">คู่มือขนาด</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    
+    <!-- ===== HERO ===== -->
+    <section class="custom-hero">
+      <div class="custom-hero-inner">
+        <h1>พิมพ์เขียวสำหรับที่นอนสั่งตัดพิเศษ</h1>
+        <p class="hero-sub">ความพอดีที่สมบูรณ์แบบสำหรับพื้นที่เฉพาะตัวของคุณ บริการออกแบบพิเศษสำหรับเรือ (V-Berths), รถบ้าน (RV), รถแคมป์ และห้องนอนในรถบรรทุก</p>
+      </div>
+    </section>
+
+    <div class="custom-main">
+      <div class="custom-container">
+
+        <!-- ===== PROTOCOL ===== -->
+        <div class="protocol-section">
+          <div class="section-kicker">เราออกแบบความพอดีที่สมบูรณ์แบบให้คุณได้อย่างไร</div>
+          <h2>เส้นทางสู่ที่นอนสั่งตัดของคุณ</h2>
+          <p>เราใช้ความแม่นยำทางวิศวกรรมเพื่อให้มั่นใจว่าเครื่องนอนสั่งตัดพิเศษของคุณจะสวมใส่ได้พอดีเป๊ะ และนี่คือขั้นตอนการทำงานร่วมกันเพื่อสร้างสรรค์ผลงานชิ้นเอกของคุณ</p>
+
+          <div class="workflow-grid">
+            
+            <!-- Step 1 -->
+            <div class="workflow-step">
+              <div class="step-number-box">01</div>
+              <div class="step-content">
+                <h3>ส่งข้อมูลรุ่นหรือภาพสเก็ตช์</h3>
+                <p>แจ้งรุ่นของพาหนะหรือเรือของคุณ หากเป็นรูปทรงที่ออกแบบเอง เพียงส่งภาพสเก็ตช์ด้วยมืออย่างง่ายของรูปทรงที่นอนมาให้เราเริ่มต้น</p>
+              </div>
+              <div class="step-visual-thumb">รุ่น / ภาพสเก็ตช์</div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="workflow-step">
+              <div class="step-number-box">02</div>
+              <div class="step-content">
+                <h3>เราจะร่างพิมพ์เขียวให้คุณ</h3>
+                <p>ทีมวิศวกรของเราจะสร้างพิมพ์เขียวทางเทคนิคสั่งตัดพิเศษ พร้อมเสนอขนาดอ้างอิงจากฐานข้อมูลพาหนะที่ครอบคลุมของเรา</p>
+              </div>
+              <div class="step-visual-thumb">ร่างพิมพ์เขียว</div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="workflow-step">
+              <div class="step-number-box">03</div>
+              <div class="step-content">
+                <h3>เช็กความแม่นยำอีกครั้ง</h3>
+                <p>ตรวจสอบขนาดโดยใช้สายวัดหรือ **วิธีวัดด้วยบัตรเครดิต** ที่แสนง่ายของเรา ยืนยันตัวเลขแล้วส่งกลับมาให้เรา</p>
+              </div>
+              <div class="step-visual-thumb">การเช็กความแม่นยำ</div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="workflow-step">
+              <div class="step-number-box">04</div>
+              <div class="step-content">
+                <h3>เลือกเนื้อผ้าที่คุณต้องการ</h3>
+                <p>เมื่อล็อกรูปทรงเรียบร้อยแล้ว เราจะส่งพิมพ์เขียวร่างสุดท้ายให้คุณเก็บไว้ และช่วยคุณเลือกชุดเนื้อผ้าที่เหมาะกับไลฟ์สไตล์ของคุณที่สุด</p>
+              </div>
+              <div class="step-visual-thumb">การเลือกเนื้อผ้า</div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="workflow-step">
+              <div class="step-number-box">05</div>
+              <div class="step-content">
+                <h3>รับใบเสนอราคาพิเศษ</h3>
+                <p>รับใบเสนอราคาพิเศษขั้นสุดท้าย และออเดอร์จะเข้าสู่การผลิตทันทีที่คุณอนุมัติ เพื่อความพอดีที่แม่นยำระดับวิศวกรรม</p>
+              </div>
+              <div class="step-visual-thumb">ล็อกราคา</div>
+            </div>
+
+          </div>
+
+          <!-- Marketing Visuals -->
+          <div class="visual-gallery">
+            <div class="gallery-item">
+              <div class="gallery-label">เรือ (Marine V-Berth)</div>
+            </div>
+            <div class="gallery-item">
+              <div class="gallery-label">รถบ้าน / รถบรรทุก</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CTA ===== -->
+        <div class="cta-block">
+          <h2>พร้อมที่จะเริ่มทำพิมพ์เขียวของคุณหรือยัง?</h2>
+          <p>ทีมวิศวกรของเราพร้อมแล้วที่จะร่างแบบที่นอนสั่งตัดพิเศษให้กับคุณ</p>
+          <a href="/contact/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:16px 48px; border-radius:var(--radius); text-decoration:none; font-weight:700; font-size:1.1rem; display:inline-block;">ขอใบเสนอราคาพิเศษ</a>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">นโยบายความเป็นส่วนตัว</a>
+          <a href="/shipping/">การจัดส่งและคืนสินค้า</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

@@ -9,8 +9,213 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .sizeguide-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .sizeguide-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .sizeguide-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .sizeguide-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .sizeguide-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .sizeguide-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Main Layout ────────────────────────── */
+    .sizeguide-main {
+      padding: 56px 24px;
+    }
+    .sizeguide-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .info-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+      margin-bottom: 40px;
+    }
+
+    .section-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+
+    .info-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    /* ── Country Grid ─────────────────────── */
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .country-btn {
+      background: #f8fbff;
+      border: 1.5px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      font-family: var(--font-main);
+    }
+    .country-btn:hover, .country-btn.active {
+      border-color: var(--color-primary);
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(44,150,244,0.12);
+      transform: translateY(-2px);
+    }
+    .country-btn.active {
+      border-color: var(--color-primary);
+      border-width: 2px;
+      background: #fff;
+    }
+    .country-btn .flag { font-size: 1.75rem; line-height: 1; }
+    .country-btn .label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); }
+
+    /* ── Type Tabs ────────────────────────── */
+    .type-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .type-btn {
+      background: #fff;
+      border: 1.5px solid #d0e6fa;
+      border-radius: 999px;
+      padding: 10px 24px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      transition: all 0.2s;
+    }
+    .type-btn:hover, .type-btn.active {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 12px rgba(44,150,244,0.2);
+    }
+
+    /* ── Size Table ────────────────────────── */
+    .size-table-wrap {
+      background: #fff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .table-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: #f8fbff;
+      border-bottom: 1px solid #d0e6fa;
+    }
+    .table-header-row h3 { font-size: 1rem; font-weight: 700; margin: 0; color: var(--color-primary); }
+    .table-header-row span { font-size: 0.75rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; }
+
+    .size-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 16px 24px;
+      border-bottom: 1px solid #f0f7ff;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .size-row:last-child { border-bottom: none; }
+    .size-row:hover { background: #fcfdff; }
+    .size-row.header {
+      background: #f8fbff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-muted);
+      border-bottom: 1px solid #d0e6fa;
+    }
+    .size-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
+    .size-dims { font-size: 0.9375rem; color: var(--color-text); text-align: right; }
+    .size-dims .cm { font-weight: 600; }
+    .size-dims .in { color: var(--color-muted); margin-left: 8px; font-size: 0.8125rem; }
+
+    /* ── CTAs ─────────────────────────────── */
+    .cta-block {
+      background: var(--color-text);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 48px;
+      text-align: center;
+      margin-top: 56px;
+    }
+    .cta-block h2 { color: #fff; margin-bottom: 12px; }
+    .cta-block p { opacity: 0.8; margin-bottom: 32px; }
+
+    @media (max-width: 768px) {
+      .sizeguide-hero h1 { font-size: 1.875rem; }
+      .info-section { padding: 32px 20px; }
+      .country-grid { grid-template-columns: repeat(3, 1fr); }
+      .cta-block { padding: 40px 24px; }
+    }
+    @media (max-width: 480px) {
+      .country-grid { grid-template-columns: repeat(2, 1fr); }
+      .size-row { padding: 14px 16px; }
+      .size-dims { font-size: 0.875rem; }
+    }
+  </style>
 </head>
-<body>
+<body class="sizeguide-page">
 
   <header class="site-header">
     <div class="container header-inner">
@@ -73,172 +278,102 @@
   </header>
 
   <main>
-    <section class="page-hero">
-      <div class="container">
-        <h1>ค้นหาขนาดที่พอดี</h1>
-        <p>เลือกประเทศของคุณเพื่อดูขนาดที่นอนที่ตรงกับเตียง ทุกขนาดแสดงทั้งเซนติเมตรและนิ้ว</p>
+    
+    <!-- ===== HERO ===== -->
+    <section class="sizeguide-hero">
+      <div class="sizeguide-hero-inner">
+        <h1>สารบบขนาดมาตรฐานโลก</h1>
+        <p class="hero-sub">การวัดที่แม่นยำสำหรับ 13 ตลาดหลักทั่วโลก ข้อมูลทางเทคนิคที่รวมเป็นหนึ่งเดียวทั้งหน่วยเซนติเมตรและนิ้ว</p>
       </div>
     </section>
 
-    <section class="section" style="background:#f0f7ff;">
-      <div class="container">
-        <div style="text-align:center; margin-bottom:32px;">
-          <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:8px;">ขั้นตอน 1: เตียงของคุณอยู่ที่ไหน?</h2>
-          <p class="small" style="color:var(--color-muted);">แสดงขนาดสำหรับ 13 ตลาดหลักที่ MildMate จัดส่ง</p>
-        </div>
-        <div id="country-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; max-width:960px; margin:0 auto;">
-          <button class="country-btn active" data-country="us" data-label="สหรัฐ / แคนาดา">
-            <span class="flag">🇺🇸</span>
-            <span class="label">สหรัฐ / แคนาดา</span>
-          </button>
-          <button class="country-btn" data-country="uk" data-label="อังกฤษ">
-            <span class="flag">🇬🇧</span>
-            <span class="label">อังกฤษ</span>
-          </button>
-          <button class="country-btn" data-country="eu" data-label="ยุโรป">
-            <span class="flag">🇪🇺</span>
-            <span class="label">ยุโรป</span>
-          </button>
-          <button class="country-btn" data-country="au" data-label="ออสเตรเลีย">
-            <span class="flag">🇦🇺</span>
-            <span class="label">ออสเตรเลีย</span>
-          </button>
-          <button class="country-btn" data-country="th" data-label="ไทย">
-            <span class="flag">🇹🇭</span>
-            <span class="label">ไทย</span>
-          </button>
-          <button class="country-btn" data-country="my" data-label="มาเลเซีย / สิงคโปร์">
-            <span class="flag">🇲🇾</span>
-            <span class="label">มาเลเซีย / สิงคโปร์</span>
-          </button>
-          <button class="country-btn" data-country="in" data-label="อินเดีย">
-            <span class="flag">🇮🇳</span>
-            <span class="label">อินเดีย</span>
-          </button>
-          <button class="country-btn" data-country="jp" data-label="ญี่ปุ่น">
-            <span class="flag">🇯🇵</span>
-            <span class="label">ญี่ปุ่น</span>
-          </button>
-        </div>
-      </div>
-    </section>
+    <div class="sizeguide-main">
+      <div class="sizeguide-container">
 
-    <section class="section">
-      <div class="container">
-        <div style="text-align:center; margin-bottom:24px;">
-          <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:8px;">ขั้นตอน 2: ประเภทเตียง?</h2>
-        </div>
-        <div id="type-tabs" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:32px;">
-          <button class="type-btn active" data-type="standard">ที่นอนมาตรฐาน</button>
-          <button class="type-btn" data-type="family">ครอบครัว / Co-Sleep</button>
-          <button class="type-btn" data-type="pillow">หมอน</button>
-          <button class="type-btn" data-type="duvet">ผ้าห่ม / ผ้านวม</button>
-        </div>
-
-        <div id="size-table-wrap" style="max-width:800px; margin:0 auto;">
-          <div id="size-table-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h3 id="table-title" style="font-size:1.125rem; font-weight:700;">สหรัฐ / แคนาดา — ขนาดที่นอนมาตรฐาน</h3>
-            <span class="small" style="color:var(--color-muted);">ทุกขนาด: เซนติเมตร / นิ้ว</span>
-          </div>
-          <div id="size-table" style="background:#fff; border:1px solid #d0e6fa; border-radius:var(--radius); overflow:hidden;">
-            <!-- injected by JS -->
+        <!-- ===== STEP 1: COUNTRY ===== -->
+        <div class="info-section">
+          <div class="section-kicker">ขั้นตอนสารบบรวมชุดที่ 01</div>
+          <h2>เลือกภูมิภาคของคุณ</h2>
+          <p>MildMate ผลิตตามมาตรฐานสากล เลือกภูมิภาคของคุณเพื่อโหลดขนาดที่ได้รับการยืนยันแล้ว</p>
+          <div id="country-grid" class="country-grid">
+            <button class="country-btn active" data-country="us">
+              <span class="flag">🇺🇸</span>
+              <span class="label">สหรัฐ / แคนาดา</span>
+            </button>
+            <button class="country-btn" data-country="uk">
+              <span class="flag">🇬🇧</span>
+              <span class="label">อังกฤษ</span>
+            </button>
+            <button class="country-btn" data-country="eu">
+              <span class="flag">🇪🇺</span>
+              <span class="label">ยุโรป</span>
+            </button>
+            <button class="country-btn" data-country="au">
+              <span class="flag">🇦🇺</span>
+              <span class="label">ออสเตรเลีย</span>
+            </button>
+            <button class="country-btn" data-country="th">
+              <span class="flag">🇹🇭</span>
+              <span class="label">ไทย</span>
+            </button>
+            <button class="country-btn" data-country="my">
+              <span class="flag">🇲🇾</span>
+              <span class="label">มาเลเซีย / สิงคโปร์</span>
+            </button>
+            <button class="country-btn" data-country="in">
+              <span class="flag">🇮🇳</span>
+              <span class="label">อินเดีย</span>
+            </button>
+            <button class="country-btn" data-country="jp">
+              <span class="flag">🇯🇵</span>
+              <span class="label">ญี่ปุ่น</span>
+            </button>
           </div>
         </div>
 
-        <div style="text-align:center; margin-top:32px; display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">
-          <a href="/products/" class="btn-primary" style="display:inline-flex; align-items:center; gap:8px; background:var(--color-primary); color:#fff; padding:13px 28px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-            ช้อปขนาดมาตรฐาน
-          </a>
-          <a href="/how-to-measure-mattress-size/" class="btn-outline" style="display:inline-flex; align-items:center; gap:8px; background:#f0f7ff; color:var(--color-primary); border:1.5px solid var(--color-primary); padding:12px 26px; border-radius:var(--radius); text-decoration:none; font-weight:700;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M2 12c0-5.5 4.5-10 10-10s10 4.5 10 10"/><path d="M2 12c0 5.5 4.5 10 10 10s10-4.5 10-10"/></svg>
-            ต้องการสั่งตัด? วัดขนาด →
-          </a>
-        </div>
-      </div>
-    </section>
+        <!-- ===== STEP 2: CATEGORY ===== -->
+        <div class="info-section">
+          <div class="section-kicker">ขั้นตอนสารบบรวมชุดที่ 02</div>
+          <h2>เลือกหมวดหมู่สินค้า</h2>
+          <div id="type-tabs" class="type-tabs">
+            <button class="type-btn active" data-type="standard">ที่นอนมาตรฐาน</button>
+            <button class="type-btn" data-type="family">ครอบครัว / Co-Sleep</button>
+            <button class="type-btn" data-type="pillow">หมอน</button>
+            <button class="type-btn" data-type="duvet">ผ้าห่ม / ผ้านวม</button>
+          </div>
 
+          <div id="size-table-wrap" class="size-table-wrap">
+            <div class="table-header-row">
+              <h3 id="table-title">สหรัฐ / แคนาดา — ที่นอนมาตรฐาน</h3>
+              <span>เซนติเมตร / นิ้ว</span>
+            </div>
+            <div id="size-table-rows">
+              <!-- Header Row -->
+              <div class="size-row header">
+                <div class="size-name">ชื่อขนาด</div>
+                <div class="size-dims">ขนาด</div>
+              </div>
+              <div id="size-data-body">
+                <!-- Injected by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CTA ===== -->
+        <div class="cta-block">
+          <h2>ขนาดไม่ปกติหรือรูปทรงพิเศษใช่หรือไม่?</h2>
+          <p>สำหรับที่นอนบนเรือ (V-Berth), รถบ้าน (RV), รถบรรทุก หรือเตียงสั่งทำพิเศษ เรามีบริการออกแบบพิมพ์เขียวทางวิศวกรรม</p>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;">
+            <a href="/how-to-measure-mattress-size/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:13px 32px; border-radius:var(--radius); text-decoration:none; font-weight:700;">วิธีวัดขนาด</a>
+            <a href="/th/custom-measurement/" class="btn-outline" style="background:transparent; color:#fff; border:1.5px solid #fff; padding:12px 30px; border-radius:var(--radius); text-decoration:none; font-weight:700;">พิมพ์เขียวสั่งตัดพิเศษ</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
 
   </main>
-
-  <style>
-    .country-btn {
-      background: #fff;
-      border: 1.5px solid #d0e6fa;
-      border-radius: var(--radius);
-      padding: 16px 12px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      font-family: var(--font-main);
-    }
-    .country-btn:hover, .country-btn.active {
-      border-color: var(--color-primary);
-      box-shadow: 0 2px 12px rgba(44,150,244,0.10);
-    }
-    .country-btn.active { background: #f8fbff; }
-    .country-btn .flag { font-size: 1.5rem; line-height: 1; }
-    .country-btn .label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
-
-    .type-btn {
-      background: #fff;
-      border: 1.5px solid #d0e6fa;
-      border-radius: 999px;
-      padding: 8px 18px;
-      cursor: pointer;
-      font-family: var(--font-main);
-      font-weight: 600;
-      font-size: 0.875rem;
-      color: var(--color-text);
-      transition: all 0.2s;
-    }
-    .type-btn:hover, .type-btn.active {
-      background: var(--color-primary);
-      color: #fff;
-      border-color: var(--color-primary);
-    }
-
-    .size-table-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
-      padding: 14px 20px;
-      border-bottom: 1px solid #eef4fb;
-      align-items: center;
-    }
-    .size-table-row:last-child { border-bottom: none; }
-    .size-table-row.header {
-      background: #f8fbff;
-      font-weight: 700;
-      font-size: 0.8125rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--color-primary);
-    }
-    .size-table-row .size-name { font-weight: 700; }
-    .size-table-row .size-dims {
-      font-size: 0.9375rem;
-      color: var(--color-text);
-    }
-    .size-table-row .size-dims .in {
-      color: var(--color-muted);
-      font-size: 0.8125rem;
-      margin-left: 6px;
-    }
-    .size-table-row .size-price {
-      font-weight: 700;
-      color: var(--color-primary);
-      text-align: right;
-    }
-    @media (max-width: 640px) {
-      .size-table-row { grid-template-columns: 1fr 1fr; padding: 12px 16px; }
-      .size-table-row .size-price { display: none; }
-      .country-btn { padding: 12px 8px; }
-    }
-  </style>
 
   <script>
     (function() {
@@ -468,21 +603,19 @@
         const title = country.label + ' — ' + typeLabel;
         document.getElementById('table-title').textContent = title;
 
-        const html = [
-          '<div class="size-table-row header" style="grid-template-columns:1fr 1fr;">',
-            '<div>ชื่อขนาด</div>',
-            '<div>ขนาด</div>',
-          '</div>'
-        ];
+        let html = '';
         rows.forEach(r => {
-          html.push(
-            '<div class="size-table-row" style="grid-template-columns:1fr 1fr;">',
-              '<div class="size-name">' + r.name + '</div>',
-              '<div class="size-dims">' + r.cm + ' cm <span class="in">(' + r.in + ' in)</span></div>',
-            '</div>'
-          );
+          html += `
+            <div class="size-row">
+              <div class="size-name">${r.name}</div>
+              <div class="size-dims">
+                <span class="cm">${r.cm} cm</span>
+                <span class="in">(${r.in} in)</span>
+              </div>
+            </div>
+          `;
         });
-        document.getElementById('size-table').innerHTML = html.join('');
+        document.getElementById('size-data-body').innerHTML = html;
       }
 
       document.getElementById('country-grid').addEventListener('click', function(e) {
