@@ -125,6 +125,46 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 
 ---
 
+## Product Category Structure (Revised 2026-05-14)
+
+### Primary Navigation — Product Type (SEO discoverability)
+| Category | URL | Products |
+|---|---|---|
+| Fitted Sheets | `/fitted-sheets/` | Marine, Family, Pet Owner, Adjustable |
+| Flat Sheets | `/flat-sheets/` | Standard, Extra Deep Pocket (20") |
+| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper, Pet Owner |
+| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
+| Mattress Protectors | `/mattress-protectors/` | Encasement, Pillow Protector |
+
+### SEO Landing Pages — Use Case (high-conversion)
+| Category | URL | Cross-links to Product Type |
+|---|---|---|
+| Marine & Yacht | `/marine/` | `/fitted-sheets/` — Marine Fitted Sheet |
+| Family & Co-Sleep | `/family/` | `/fitted-sheets/` — Family Fitted Sheet |
+| Easy-Change Duvet | `/duvet/` | `/duvet-covers/` — 3-Sided Zipper |
+| Protection | `/protection/` | `/mattress-protectors/` — Encasement |
+| Pet Owner Bedding | `/pets/` | `/fitted-sheets/`, `/duvet-covers/` — BreezePlus |
+
+### Product Detail Pages (14 total)
+| Product | URL | Category |
+|---|---|---|
+| 3-Sided Zipper Duvet Cover | `/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/` | Duvet Cover, Pets |
+| Custom Family Fitted Sheet | `/product/family-co-sleeping-solutions-th-size/` | Fitted Sheet, Family |
+| Marine Fitted Sheet (V-Berth) | `/product/product-boat-bedding-fitted-sheet-microfiber/` | Fitted Sheet, Marine |
+| RV & Van Mattress Encasement | `/product/sheet-protectors/` | Protector, Protection |
+| BedBridge Connector | `/product/tbar/` | Accessory, Family |
+| Pillow Protector | `/product/pillow-protector/` | Protector, Protection |
+| Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Fitted Sheet, Pets |
+| Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Cover, Pets |
+| Adjustable Mattress Fitted Sheet | `/product/adjustable-mattress-fitted-sheet/` | Fitted Sheet |
+| Flat Sheet — Standard | `/product/flat-sheet-standard/` | Flat Sheet |
+| Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Flat Sheet |
+| Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcase |
+| Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcase |
+| Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcase |
+
+---
+
 ## Database Schema (4 tables)
 
 - `products` — product catalog

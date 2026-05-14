@@ -45,7 +45,9 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Card hover effect works (lift + shadow)
 - [x] **Mobile:** 2 columns then 1 column at narrow width
 
-> **Action needed:** Provide 4 category photos → place in `public/images/categories/`
+> **Action needed:** Provide 5 niche category photos → place in `public/images/categories/`
+> **NEW:** 5 primary product-type categories (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) added for SEO discoverability
+> **NEW:** Pet Owner landing page (`/pets/`) added for BreezePlus anti-fur market
 > - `category-marine.jpg` (V-Berth on boat) ✅
 > - `category-family.jpg` (family bed) ✅
 > - `category-duvet.jpg` (3-sided zipper duvet) ✅
@@ -227,22 +229,59 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [ ] Each card has placeholder, title, price, "Customize" button
 - [ ] Header and footer present
 
-### Marine Category (`/marine/`)
+### Primary Product-Type Categories
+
+#### Fitted Sheets (`/fitted-sheets/`)
+- [ ] Page loads at `/fitted-sheets/`
+- [ ] "Custom Fitted Sheets" heading visible
+- [ ] Marine, Family, Pet Owner, Adjustable products shown
+
+#### Flat Sheets (`/flat-sheets/`)
+- [ ] Page loads at `/flat-sheets/`
+- [ ] "Custom Flat Sheets" heading visible
+- [ ] Standard and Extra Deep Pocket products shown
+
+#### Duvet Covers (`/duvet-covers/`)
+- [ ] Page loads at `/duvet-covers/`
+- [ ] "Custom Duvet Covers" heading visible
+- [ ] 3-Sided Zipper and Pet Owner products shown
+
+#### Pillowcases (`/pillowcases/`)
+- [ ] Page loads at `/pillowcases/`
+- [ ] "Custom Pillowcases" heading visible
+- [ ] Envelope, Zipper, Sham products shown
+
+#### Mattress Protectors (`/mattress-protectors/`)
+- [ ] Page loads at `/mattress-protectors/`
+- [ ] "Mattress & Pillow Protectors" heading visible
+
+### SEO Landing Pages (Use Case)
+
+#### Marine Category (`/marine/`)
 - [ ] Page loads at `/marine/`
 - [ ] "Marine & Yacht" heading visible
-- [ ] Marine-related products shown
+- [ ] Cross-links to `/fitted-sheets/` for Marine Fitted Sheet
 
-### Family Category (`/family/`)
+#### Family Category (`/family/`)
 - [ ] Page loads at `/family/`
 - [ ] "Family & Co-Sleep" heading visible
+- [ ] Cross-links to `/fitted-sheets/` for Family Fitted Sheet
 
-### Duvet Category (`/duvet/`)
+#### Pet Owner (`/pets/`)
+- [ ] Page loads at `/pets/`
+- [ ] "Pet Owner Bedding" heading visible
+- [ ] BreezePlus anti-fur explanation
+- [ ] Cross-links to `/fitted-sheets/` and `/duvet-covers/`
+
+#### Duvet Category (`/duvet/`)
 - [ ] Page loads at `/duvet/`
 - [ ] "Easy-Change Duvet" heading visible
+- [ ] Cross-links to `/duvet-covers/`
 
-### Protection Category (`/protection/`)
+#### Protection Category (`/protection/`)
 - [ ] Page loads at `/protection/`
 - [ ] "Protection" heading visible
+- [ ] Cross-links to `/mattress-protectors/`
 
 ---
 

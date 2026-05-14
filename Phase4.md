@@ -318,10 +318,16 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 | Page / File | What It Is |
 |---|---|
 | `public/products/index.html` | Full product listing with filter bar (data from D1) |
-| `public/marine/index.html` | Marine & Yacht category page (dynamic from D1) |
-| `public/family/index.html` | Family & Co-Sleep category page (dynamic from D1) |
-| `public/duvet/index.html` | Easy-Change Duvet category page (dynamic from D1) |
-| `public/protection/index.html` | Protection category page (dynamic from D1) |
+| `public/fitted-sheets/index.html` | **NEW** Primary: All fitted sheet variants (dynamic from D1) |
+| `public/flat-sheets/index.html` | **NEW** Primary: Standard + Extra Deep Pocket flat sheets (dynamic from D1) |
+| `public/duvet-covers/index.html` | **NEW** Primary: 3-Sided Zipper + Pet Owner duvet covers (dynamic from D1) |
+| `public/pillowcases/index.html` | **NEW** Primary: Envelope, Zipper, Sham pillowcases (dynamic from D1) |
+| `public/mattress-protectors/index.html` | **NEW** Primary: Encasements + Pillow Protectors (dynamic from D1) |
+| `public/marine/index.html` | SEO Landing: Marine & Yacht category page (dynamic from D1) |
+| `public/family/index.html` | SEO Landing: Family & Co-Sleep category page (dynamic from D1) |
+| `public/duvet/index.html` | SEO Landing: Easy-Change Duvet category page (dynamic from D1) |
+| `public/protection/index.html` | SEO Landing: Protection category page (dynamic from D1) |
+| `public/pets/index.html` | **NEW** SEO Landing: Pet Owner Bedding (BreezePlus anti-fur) |
 | `public/product/[slug]/index.html` | 83 individual product detail pages |
 | `public/mattress-size-th/index.html` | #1 SEO page — fully built with size tables |
 | `public/mattress-size/index.html` | EN size guide page |
@@ -350,7 +356,8 @@ Phase 4 builds the homepage in 8 sections from top to bottom:
 ```
 1. HERO           — Big headline + CTA buttons + lifestyle background image
 2. TRUST BAR      — 4 certification/trust icons in a row
-3. SHOP BY NICHE  — 4 category cards with images
+3a. SHOP BY PRODUCT TYPE  — 5 category cards (Primary navigation)
+3b. SHOP BY NICHE  — 5 category cards with images (SEO landing pages)
 4. TOP PRODUCTS   — 5 product cards from your Etsy top performers
 5. CONFIGURATOR   — Two-mode live price calculator (see Configurator Requirement below)
 6. FABRIC TABS    — 4-tab showcase of BreezePlus, CloudSoft, PremaCotton, EcoLuxe
@@ -535,7 +542,7 @@ Once all 8 requirements are ready, hand off to Droid.
 >
 > **Requirement 11 — Blog:** Build blog index with 3 sample posts. Sample post 1: [title/category/excerpt/body]. Post 2: [same]. Post 3: [same].
 >
-> Build the homepage (EN + TH), all new static pages (About, Contact, Fabric Collections, Shipping Policy, Privacy Policy, Customer Reviews), blog index + 3 sample posts, product listing + 4 category pages (dynamic from D1), all 83 product detail pages, the 4 size guide pages, and all backend Workers (products API, pricing API with both modes, geo-currency API)."
+> Build the homepage (EN + TH), all new static pages (About, Contact, Fabric Collections, Shipping Policy, Privacy Policy, Customer Reviews), blog index + 3 sample posts, product listing + 10 category pages (5 primary product-type + 5 SEO landing), all product detail pages (14+ expandable to 83), the 4 size guide pages, and all backend Workers (products API, pricing API with both modes, geo-currency API)."
 
 ---
 
@@ -721,7 +728,8 @@ Go through this checklist before moving to Phase 5:
 - [ ] Homepage loads with all 8 sections visible and correctly styled
 - [ ] Hero headline reads: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
 - [ ] Trust bar shows all 4 icons
-- [ ] 4 category cards visible with images (or placeholders)
+- [ ] 5 product-type category cards visible (Fitted Sheets, Flat Sheets, Duvet Covers, Pillowcases, Protectors)
+- [ ] 5 niche category cards visible with images (Marine, Family, Pets, Duvet, Protection)
 - [ ] Top 5 products show with prices
 - [ ] Configurator shows two tabs: "🛏 Fitted Bed Sheet" and "⚓ V-Berth Boat Sheet"
 - [ ] Fitted Bed Sheet tab shows Width / Length / Depth inputs
@@ -740,7 +748,8 @@ Go through this checklist before moving to Phase 5:
 - [x] Customer Reviews page (`/reviews/`) shows review grid — 8 real Etsy reviews
 - [ ] Blog index (`/blogs/`) shows 3 sample posts with thumbnails + pagination
 - [ ] Product listing page (`/products/`) shows product grid (data from D1)
-- [ ] Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) show filtered grid
+- [ ] Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) show product grids
+- [ ] SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`) show filtered grids with cross-links to primary categories
 - [ ] Filter bar on product listing works
 - [ ] Product detail page shows two-mode configurator with live price update
 - [ ] "Measure My Mattress" collapsible section opens and closes
@@ -819,7 +828,8 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 | How to Measure (`/how-to-measure-mattress-size/`) | ✅ | Credit-card method with SVG diagram |
 | Bed Sheet Sizes (`/bed-sheets-size/`) | ✅ | Pocket depth + duvet cover sizing |
 | Product Listing (`/products/`) | ✅ | Filter bar + 6 product cards with placeholders |
-| Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) | ✅ | Pre-filtered product grids |
+| Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) | ✅ | Product-type grids |
+| SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`) | ✅ | Use-case landing pages with cross-links |
 | Configurator JS (`/js/configurator.js`) | ✅ | Two-mode (Sheet + V-Berth), unit toggle cm/inch, live price, fabric selector |
 | Cart JS (`/js/cart.js`) | ✅ | localStorage-based cart with add/remove/updateQty/clear |
 | Geo JS (`/js/geo.js`) | ✅ | Detects location via `/api/geo`, updates price display |

@@ -71,9 +71,20 @@
 ### Dynamic Pages (data from Cloudflare D1)
 | Page | URL | Notes |
 |---|---|---|
-| Product Category | `/marine/`, `/family/`, `/duvet/`, `/protection/` | Filtered product grid, pulled from D1 |
-| All Products | `/products/` | Full product listing, filter bar |
-| Product Detail | `/product/[slug]/` | 83 product pages, configurator |
+| **Primary Product Type Categories** | | |
+| Fitted Sheets | `/fitted-sheets/` | All fitted sheet variants — standard, marine, family, pet, adjustable |
+| Flat Sheets | `/flat-sheets/` | Standard + Extra Deep Pocket (20") |
+| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper + Pet Owner variants |
+| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham styles |
+| Mattress Protectors | `/mattress-protectors/` | Encasements + Pillow Protectors |
+| **SEO Landing Pages (Use Case)** | | |
+| Marine & Yacht | `/marine/` | Marine bedding — links to fitted-sheets |
+| Family & Co-Sleep | `/family/` | Co-sleeping solutions — links to fitted-sheets |
+| Easy-Change Duvet | `/duvet/` | Duvet landing — links to duvet-covers |
+| Protection | `/protection/` | Waterproof line — links to mattress-protectors |
+| Pet Owner Bedding | `/pets/` | **NEW** BreezePlus anti-fur — links to fitted-sheets + duvet-covers |
+| All Products | `/products/` | Full product listing with filter bar |
+| Product Detail | `/product/[slug]/` | 14 product pages (expandable to 83), configurator |
 
 ### Admin Pages (Google login required)
 | Page | URL | Notes |
