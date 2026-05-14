@@ -956,6 +956,10 @@ main {
   gap: 24px;
 }
 
+.niche-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .category-card {
   display: block;
   border-radius: var(--radius);
@@ -1844,7 +1848,8 @@ main {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .category-grid {
+  .category-grid,
+  .niche-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
@@ -1942,7 +1947,8 @@ main {
     padding: 2px 6px;
   }
 
-  .category-grid {
+  .category-grid,
+  .niche-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
@@ -2086,7 +2092,8 @@ main {
     padding: 2px 4px;
   }
 
-  .category-grid {
+  .category-grid,
+  .niche-grid {
     grid-template-columns: 1fr;
   }
 
