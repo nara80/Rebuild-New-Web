@@ -38,14 +38,15 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 3. Shop by Niche (Category Cards) ✅ Done
-- [x] 6 cards visible: Marine & Yacht, Family & Co-Sleep, Pet Owner, Easy-Change Duvet, Protection, RV & Truck Cab
-- [x] Each card shows real photo (not placeholder)
-- [x] Each card is clickable and links to correct category page
+### 3. Shop by Product (Primary Navigation) ✅ Done
+- [x] 5 cards visible: Fitted Sheets, Flat Sheets, Duvet Covers, Pillowcases, Protectors
+- [x] Each card has warm brand-colored placeholder (Ivory, Beige, Baby Pink, Sand, Vanilla)
+- [x] Section has warm cream background (`#fdfbf7`)
+- [x] Each card is clickable and links to correct product-type category page
 - [x] Card hover effect works (lift + shadow)
 - [x] **Mobile:** 2 columns then 1 column at narrow width
 
-> **Action needed:** Provide 7 niche category photos → place in `public/images/categories/`
+> **Action needed:** Provide 5 product-type category photos → place in `public/images/categories/`
 > **NEW:** 5 primary product-type categories (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) added for SEO discoverability
 > **NEW:** 6 SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`)
 > **NEW:** Pet Owner landing page (`/pets/`) added for BreezePlus anti-fur market
@@ -56,38 +57,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 4. Top Products ✅ Verified
-- [x] 5 product cards visible in horizontal scroll row
-- [x] Each card has: real product image + title + price + "Customize" button
-- [x] Prices show in USD (or THB if you're browsing from Thailand)
-- [x] "Customize" buttons link to correct product detail paths
-- [x] Horizontal scroll works on mobile (swipe left/right)
-- [x] **Mobile:** cards are swipeable, not squished
-
-> **Action needed:** Download product photos from Etsy → rename to match slugs → place in `public/images/products/`
-> Priority 5: 3-Sided Zipper Duvet, Family Sheet, Marine V-Berth, RV Encasement, BedBridge
-
----
-
-### 5. Choose Your Solution (Router Section) ✅ Verified
-- [x] Headline reads: "Built for Your Unique Space"
-- [x] 4 router cards visible: Marine & Yacht, Family Beds, Duvet Covers, Specialized Protection
-- [x] Each card shows real photo + title + description + CTA button
-- [x] Each card links to the correct product category page
-- [x] Card hover effect works (lift + shadow)
-- [x] **Mobile:** cards stack vertically (1 column)
-
-#### Measurement Blueprint Trust Block
-- [x] Icon visible (ruler/blueprint)
-- [x] Text reads: "Worried about measuring? Don't be..."
-- [x] Block has left blue border accent
-- [x] Centered below the router cards
-
-> **Note:** Configurator removed from homepage. Each product page now has its own specific formula (Sheet: W/L/D, Duvet: W/L, Marine: Head/Bottom/Width/Depth, etc.).
-
----
-
-### 6. Fabric Showcase ✅ Verified
+### 4. Fabric Showcase ✅ Verified
 - [x] 4 tabs: BreezePlus, CloudSoft, PremaCotton, EcoLuxe
 - [x] Clicking each tab switches content panel
 - [x] Each panel shows: fabric name, tagline, description, feature list, colors
@@ -97,7 +67,22 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 7. Social Proof (Reviews) ✅ Verified
+### 5. Most Popular ✅ Verified
+- [x] 5 product cards visible in horizontal scroll row
+- [x] Headline reads: "Most Popular" (reframed from "Top Products")
+- [x] Subtitle: "These are the styles our customers love most..."
+- [x] Each card has: real product image + title + price + "Customize" button
+- [x] Prices show in USD (or THB if you're browsing from Thailand)
+- [x] "Customize" buttons link to correct product detail paths
+- [x] Horizontal scroll works on mobile (swipe left/right)
+- [x] **Mobile:** cards are swipeable, not squished
+
+> **Action needed:** Download product photos from Etsy → rename to match slugs → place in `public/images/products/`
+> Priority 5: 3-Sided Zipper Duvet, Family Sheet, Marine V-Berth, 6-Sided Encasement, BedBridge
+
+---
+
+### 6. Social Proof (Reviews) ✅ Verified
 - [x] 2 review cards visible
 - [x] 5-star rating shown on each card
 - [x] Review text and author name visible
@@ -108,7 +93,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 8. Email Signup ✅ Verified
+### 7. Email Signup ✅ Verified
 - [x] "Get 15% Off Your First Order" headline visible
 - [x] Email input + Subscribe button with AJAX (no page reload)
 - [x] Section has blue gradient background
@@ -119,8 +104,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ## Homepage TH (`/th/`) ✅ Verified
 - [x] Page loads at `http://127.0.0.1:8788/th/`
-- [x] All 8 sections visible with Thai text
-- [x] Configurator labels in Thai
+- [x] All 7 sections visible with Thai text
 - [x] Fabric tabs in Thai
 - [x] All links work correctly (same URLs as EN version)
 - [x] **Mobile:** same responsive behavior as EN homepage
