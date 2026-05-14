@@ -409,28 +409,54 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 
 ---
 
-## Image Checklist
+## Image Checklist (Updated 2026-05-14)
 
+### Real Photos (from Etsy / existing assets)
 | Image | Path | Status |
 |---|---|---|
-| Hero background | `public/images/Hero01.png` (used by CSS) | ✅ |
-| Marine category | `public/images/categories/category-marine.jpg` | ✅ |
-| Family category | `public/images/categories/category-family.jpg` | ✅ |
-| Duvet category | `public/images/categories/category-duvet.jpg` | ✅ |
-| Protection category | `public/images/categories/category-protection.jpg` | ✅ |
-| 3-Sided Zipper Duvet | `public/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.png` | ✅ |
-| Custom Family Sheet | `public/images/products/family-co-sleeping-solutions-th-size.png` | ✅ |
-| Marine V-Berth | `public/images/products/product-boat-bedding-fitted-sheet-microfiber.png` | ✅ |
-| RV Encasement | `public/images/products/sheet-protectors.png` | ✅ |
-| BedBridge | `public/images/products/tbar.png` | ✅ |
-| Router — Marine & Yacht | `public/images/router/router-marine.jpg` | ✅ |
-| Router — Family Beds | `public/images/router/router-family.jpg` | ✅ |
-| Router — Duvet Covers | `public/images/router/router-duvet.jpg` | ✅ |
-| Router — Protection | `public/images/router/router-protection.jpg` | ✅ |
-| BreezePlus fabric | `public/images/fabrics/fabric-breezeplus.png` | ✅ |
-| CloudSoft fabric | `public/images/fabrics/fabric-cloudsoft.png` | ✅ |
-| PremaCotton fabric | `public/images/fabrics/fabric-premacotton.png` | ✅ |
-| EcoLuxe fabric | `public/images/fabrics/fabric-ecoluxe.png` | ✅ |
+| Hero background | `public/images/Hero01.jpg` | ✅ |
+| Marine category | `public/images/categories/category-marine.jpg` | ✅ Real photo |
+| Family category | `public/images/categories/category-family.jpg` | ✅ Real photo |
+| Duvet category | `public/images/categories/category-duvet.jpg` | ✅ Real photo |
+| Protection category | `public/images/categories/category-protection.jpg` | ✅ Real photo |
+| 3-Sided Zipper Duvet | `public/images/products/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg` | ✅ Real photo |
+| Custom Family Sheet | `public/images/products/family-co-sleeping-solutions-th-size.jpg` | ✅ Real photo |
+| Marine V-Berth | `public/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg` | ✅ Real photo |
+| 6-Sided Encasement | `public/images/products/sheet-protectors.jpg` | ✅ Real photo |
+| BedBridge Connector | `public/images/products/tbar.jpg` | ✅ Real photo |
+| Router — Marine & Yacht | `public/images/router/router-marine.jpg` | ✅ Real photo |
+| Router — Family Beds | `public/images/router/router-family.jpg` | ✅ Real photo |
+| Router — Duvet Covers | `public/images/router/router-duvet.jpg` | ✅ Real photo |
+| Router — Protection | `public/images/router/router-protection.jpg` | ✅ Real photo |
+| BreezePlus fabric | `public/images/fabrics/fabric-breezeplus.jpg` | ✅ Real photo |
+| CloudSoft fabric | `public/images/fabrics/fabric-cloudsoft.jpg` | ✅ Real photo |
+| PremaCotton fabric | `public/images/fabrics/fabric-premacotton.jpg` | ✅ Real photo |
+| EcoLuxe fabric | `public/images/fabrics/fabric-ecoluxe.jpg` | ✅ Real photo |
+
+### Branded Placeholder Images (auto-generated, replace with real photos before launch)
+| Image | Path | Status | Replace Priority |
+|---|---|---|---|
+| Fitted Sheets category | `public/images/categories/category-fitted-sheets.jpg` | ✅ Generated | Medium |
+| Flat Sheets category | `public/images/categories/category-flat-sheets.jpg` | ✅ Generated | Medium |
+| Duvet Covers category | `public/images/categories/category-duvet-covers.jpg` | ✅ Generated | Medium |
+| Pillowcases category | `public/images/categories/category-pillowcases.jpg` | ✅ Generated | Medium |
+| Mattress Protectors category | `public/images/categories/category-mattress-protectors.jpg` | ✅ Generated | Medium |
+| Pet Owner category | `public/images/categories/category-pets.jpg` | ✅ Generated | High |
+| RV & Truck Cab category | `public/images/categories/category-rv-truck.jpg` | ✅ Generated | High |
+| Pet Owner Fitted Sheet | `public/images/products/pet-owner-fitted-sheet.jpg` | ✅ Generated | High |
+| Pet Owner Duvet Cover | `public/images/products/pet-owner-duvet-cover.jpg` | ✅ Generated | High |
+| Adjustable Mattress Fitted Sheet | `public/images/products/adjustable-mattress-fitted-sheet.jpg` | ✅ Generated | High |
+| Flat Sheet — Standard | `public/images/products/flat-sheet-standard.jpg` | ✅ Generated | Medium |
+| Flat Sheet — Extra Deep Pocket | `public/images/products/flat-sheet-extra-deep-pocket.jpg` | ✅ Generated | Medium |
+| Envelope Pillowcase | `public/images/products/pillowcase-envelope.jpg` | ✅ Generated | Medium |
+| Zipper Pillowcase | `public/images/products/pillowcase-zipper.jpg` | ✅ Generated | Medium |
+| Sham Pillowcase | `public/images/products/pillowcase-sham.jpg` | ✅ Generated | Medium |
+| Pet-Proof Mattress Protector | `public/images/products/pet-proof-mattress-protector.jpg` | ✅ Generated | High |
+| Pillow Protector | `public/images/products/pillow-protector.jpg` | ✅ Generated | Medium |
+
+> **How placeholders were generated:** `scripts/generate-placeholders.js` uses `sharp` to convert SVG text-to-image with brand palette colors. All generated images are 800×600px JPEG. Replace with real product photos from your photographer or Etsy listings before launch.
+>
+> **To replace:** Simply overwrite the .jpg file with a real photo — same filename, same folder. No HTML changes needed.
 
 ---
 

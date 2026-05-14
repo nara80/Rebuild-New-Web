@@ -660,10 +660,40 @@ mildmate-web/
 │   │   └── geo.js                   ← Currency toggle
 │   ├── images/
 │   │   ├── logo.png                 ← Main logo (transparent PNG)
-│   │   ├── hero-bg.jpg
+│   │   ├── Hero01.jpg               ← Homepage hero background
 │   │   ├── og-image.jpg             ← Social share preview (1200×630)
-│   │   ├── categories/
-│   │   └── products/
+│   │   ├── categories/              ← Category card images (Shop by Product + Shop by Niche)
+│   │   │   ├── category-marine.jpg      ✅ Real photo
+│   │   │   ├── category-family.jpg      ✅ Real photo
+│   │   │   ├── category-duvet.jpg       ✅ Real photo
+│   │   │   ├── category-protection.jpg  ✅ Real photo
+│   │   │   ├── category-pets.jpg        ✅ Generated placeholder
+│   │   │   ├── category-rv-truck.jpg    ✅ Generated placeholder
+│   │   │   ├── category-fitted-sheets.jpg     ✅ Generated placeholder
+│   │   │   ├── category-flat-sheets.jpg       ✅ Generated placeholder
+│   │   │   ├── category-duvet-covers.jpg        ✅ Generated placeholder
+│   │   │   ├── category-pillowcases.jpg         ✅ Generated placeholder
+│   │   │   └── category-mattress-protectors.jpg   ✅ Generated placeholder
+│   │   ├── products/                ← Product detail hero images
+│   │   │   ├── 3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg  ✅ Real
+│   │   │   ├── family-co-sleeping-solutions-th-size.jpg                      ✅ Real
+│   │   │   ├── product-boat-bedding-fitted-sheet-microfiber.jpg              ✅ Real
+│   │   │   ├── sheet-protectors.jpg                                          ✅ Real
+│   │   │   ├── tbar.jpg                                                      ✅ Real
+│   │   │   ├── pet-owner-fitted-sheet.jpg              ✅ Generated placeholder
+│   │   │   ├── pet-owner-duvet-cover.jpg               ✅ Generated placeholder
+│   │   │   ├── adjustable-mattress-fitted-sheet.jpg      ✅ Generated placeholder
+│   │   │   ├── flat-sheet-standard.jpg                 ✅ Generated placeholder
+│   │   │   ├── flat-sheet-extra-deep-pocket.jpg        ✅ Generated placeholder
+│   │   │   ├── pillowcase-envelope.jpg                 ✅ Generated placeholder
+│   │   │   ├── pillowcase-zipper.jpg                   ✅ Generated placeholder
+│   │   │   ├── pillowcase-sham.jpg                     ✅ Generated placeholder
+│   │   │   ├── pet-proof-mattress-protector.jpg        ✅ Generated placeholder
+│   │   │   └── pillow-protector.jpg                    ✅ Generated placeholder
+│   │   ├── fabrics/                 ← Fabric showcase photos
+│   │   ├── router/                  ← Niche landing page hero/router images
+│   │   ├── Logo/                    ← Marketplace & social icons
+│   │   └── about/                   ← About page photos
 │   ├── _redirects                   ← 301s for WordPress legacy URLs
 │   ├── _headers                     ← Security headers (CSP, HSTS)
 │   ├── sitemap.xml
