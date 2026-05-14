@@ -48,6 +48,17 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 > **Action needed:** Provide 5 product-type category photos → place in `public/images/categories/`
 > **NEW:** 5 primary product-type categories (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) added for SEO discoverability
+
+---
+
+### 4. Shop by Niche (Category Cards) ✅ Done
+- [x] 6 cards visible: Marine & Yacht, Family & Co-Sleep, Pet Owner, Easy-Change Duvet, Protection, RV & Truck Cab
+- [x] Each card shows real photo or placeholder
+- [x] Each card is clickable and links to correct niche/SEO landing page
+- [x] Card hover effect works (lift + shadow)
+- [x] **Mobile:** 2 columns then 1 column at narrow width
+
+> **Action needed:** Provide 7 niche category photos → place in `public/images/categories/`
 > **NEW:** 6 SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`)
 > **NEW:** Pet Owner landing page (`/pets/`) added for BreezePlus anti-fur market
 > - `category-marine.jpg` (V-Berth on boat) ✅
