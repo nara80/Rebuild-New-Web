@@ -10,146 +10,482 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <style>
-    .about-page { background: #f0f7ff; }
+    .about-page { background: #f9f9f9; }
 
-    /* ── Hero ─────────────────────────────── */
-    .page-hero {
-      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
-      padding: 80px 24px 64px;
+    /* ── Section 1: Technical Hero ─────────────── */
+    .about-hero {
+      background: #f9f9f9;
+      padding: 72px 0 56px;
       position: relative;
       overflow: hidden;
-      color: #fff;
-      text-align: center;
     }
-    .page-hero::before {
-      content: '';
+    .blueprint-grid-overlay {
       position: absolute;
       inset: 0;
       pointer-events: none;
-      opacity: 0.1;
+      opacity: 0.05;
       background-image:
-        linear-gradient(#fff 1px, transparent 1px),
-        linear-gradient(90deg, #fff 1px, transparent 1px);
+        linear-gradient(var(--color-primary) 1px, transparent 1px),
+        linear-gradient(90deg, var(--color-primary) 1px, transparent 1px);
       background-size: 40px 40px;
     }
-    .page-hero-inner {
+    .about-hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
       max-width: var(--container-max);
       margin: 0 auto;
+      padding: 0 24px;
       position: relative;
       z-index: 1;
     }
-    .page-hero h1 {
-      font-size: 2.75rem;
+    .about-hero-text h1 {
+      font-size: 2.5rem;
       font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 20px;
-      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      color: var(--color-text);
     }
-    .page-hero .hero-sub {
-      font-size: 1.125rem;
-      color: rgba(255,255,255,0.95);
-      max-width: 650px;
-      margin: 0 auto;
+    .about-hero-text .hero-sub {
+      font-size: 1.0625rem;
+      color: var(--color-muted);
+      margin-bottom: 28px;
+      max-width: 500px;
       line-height: 1.6;
     }
-
-    /* ── Main Layout ────────────────────────── */
-    .about-main {
-      padding: 64px 24px;
-    }
-    .about-container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .info-section {
-      background: #fff;
+    .about-hero-visual {
+      position: relative;
       border-radius: var(--radius);
-      padding: 48px;
+      overflow: hidden;
       box-shadow: var(--shadow);
-      border: 1px solid #d0e6fa;
-      margin-bottom: 48px;
     }
-    .section-kicker {
+    .about-hero-visual img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .tech-specs-overlay {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(4px);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      min-width: 170px;
+    }
+    .tech-specs-overlay strong {
+      display: block;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-muted);
+      margin-bottom: 6px;
+    }
+    .tech-specs-overlay span {
+      display: block;
+      color: var(--color-text);
+      font-weight: 600;
+    }
+
+    /* ── Section 2: Engineering Genesis ─────────── */
+    .genesis-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .genesis-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .genesis-image {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .genesis-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .genesis-kicker {
       font-size: 0.75rem;
       font-weight: 700;
       color: var(--color-primary);
       text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 20px;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
     }
-    .info-section h2 {
+    .genesis-section h2 {
       font-size: 1.875rem;
       font-weight: 700;
+      line-height: 1.2;
       margin-bottom: 24px;
     }
-    
+    .genesis-quote {
+      border-left: 3px solid var(--color-primary);
+      padding: 4px 0 4px 24px;
+      margin: 24px 0;
+      font-size: 1.0625rem;
+      line-height: 1.7;
+      color: var(--color-text);
+      font-style: normal;
+    }
+    .genesis-quote p {
+      margin: 0 0 16px;
+    }
+    .genesis-quote p:last-child { margin-bottom: 0; }
+    .genesis-quote strong {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    /* ── Section 3: Authority Timeline ──────────── */
+    .timeline-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+    }
+    .timeline-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .timeline-header h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-header p {
+      color: var(--color-muted);
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .timeline-container {
+      max-width: 760px;
+      margin: 0 auto;
+      position: relative;
+      padding-left: 40px;
+    }
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--color-primary);
+      opacity: 0.25;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -33px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      border: 3px solid #f9f9f9;
+      box-shadow: 0 0 0 2px var(--color-primary);
+    }
+    .timeline-year-badge {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+    .timeline-content h3 {
+      font-size: 1.1875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-content p {
+      color: var(--color-muted);
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    /* ── Section 4: Material Standards ──────────── */
+    .materials-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .materials-header {
+      text-align: center;
+      margin-bottom: 48px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .materials-header h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .materials-header p {
+      color: var(--color-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 880px;
+      margin: 0 auto 40px;
+    }
+    .material-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+    }
+    .material-card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .material-card-body {
+      padding: 24px 26px 28px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .material-card .kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .material-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .material-card .cert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(44,150,244,0.1);
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+    .material-card p {
+      font-size: 0.9375rem;
+      color: var(--color-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .spec-tag {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      background: rgba(44,150,244,0.06);
+      padding: 4px 10px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .cert-logos {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0 16px;
+      flex-wrap: wrap;
+    }
+    .cert-logos img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+    .materials-cta {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .materials-cta .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      padding: 14px 32px;
+      font-size: 1rem;
+    }
+    .materials-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+
+    /* ── Section 5: Video ──────────────────────── */
+    .video-demo-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    .video-demo-section h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .video-demo-section .video-sub {
+      color: var(--color-muted);
+      margin-bottom: 36px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .iframe-wrapper {
+      position: relative;
+      max-width: 350px;
+      margin: 0 auto;
+      aspect-ratio: 9 / 16;
+      border: 8px solid #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      background: #000;
+    }
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ── Section 6: Global Reach ───────────────── */
+    .global-reach-section {
+      background: #f9f9f9;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+    }
+    .global-reach-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      text-align: center;
+    }
+    .global-reach-inner h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .global-reach-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+    .global-cities-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      text-align: left;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .city-col h4 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-primary);
+    }
+    .city-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .city-col li {
+      font-size: 1rem;
+      color: var(--color-text);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .city-col li:last-child { border-bottom: none; }
+
+    /* ── Buttons reuse ─────────────────────────── */
+    .about-hero-cta .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      padding: 13px 28px;
+      font-size: 0.9375rem;
+    }
+    .about-hero-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+
+    /* ── Mobile ──────────────────────────────── */
     @media (max-width: 768px) {
-      .page-hero h1 { font-size: 2rem; }
-      .info-section { padding: 32px 24px; }
+      .about-hero { padding: 48px 0 32px; }
+      .about-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .about-hero-text h1 { font-size: 1.875rem; }
+      .tech-specs-overlay {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin-top: 12px;
+        min-width: 0;
+      }
+      .genesis-section,
+      .timeline-section,
+      .materials-section,
+      .video-demo-section { padding: 56px 20px; }
+      .genesis-section h2,
+      .timeline-header h2,
+      .materials-header h2,
+      .video-demo-section h2 { font-size: 1.5rem; }
+      .genesis-inner { grid-template-columns: 1fr; gap: 32px; }
+      .genesis-image { order: -1; }
+      .materials-grid { grid-template-columns: 1fr; }
+      .global-cities-grid { grid-template-columns: 1fr; gap: 24px; }
+      .cert-logos img { height: 34px; }
+      .timeline-container { padding-left: 32px; }
+      .timeline-container::before { left: 7px; }
+      .timeline-dot { left: -41px; width: 14px; height: 14px; }
+      .iframe-wrapper {
+        max-width: 280px;
+        border-width: 6px;
+        border-radius: 16px;
+      }
     }
   </style>
-</head>
-<body class="about-page">
-
-  <!-- ===== HEADER ===== -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
-      <nav class="main-nav" aria-label="Main navigation">
-        <ul class="nav-list">
-          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
-          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
-          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <button class="search-btn" aria-label="Search products" aria-expanded="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        </button>
-        <a href="/account/" class="account-btn" aria-label="My account">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </a>
-        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          <span class="cart-count">0</span>
-        </a>
-        <div class="lang-toggle" role="group" aria-label="Language switch">
-          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
-        </div>
-      </div>
-    </div>
-    <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu">
-      <ul class="mobile-nav-list">
-        <li><a href="/">Home</a></li>
-        <li><a href="/products/">Shop</a></li>
-        <li><a href="/fabric/">Fabrics</a></li>
-        <li><a href="/sizeguide/">Size Guide</a></li>
-      </ul>
-    </div>
-  </header>
-
-  <main>
-    
-    <!-- ===== HERO ===== -->
-    <section class="page-hero">
-      <div class="page-hero-inner">
-        <h1>About MildMate</h1>
-        <p class="hero-sub">Precision bedding engineered for every shape of sleep. Photo-Measurement, digital blueprinting, and OEKO-TEX certified textiles since 2019.</p>
-      </div>
-    </section>
-
-    <div class="about-main">
-      <div class="about-container">
-        <div class="info-section">
-          <h2>Precision Bedding Engineering</h2>
-          <p>...</p>
-        </div>
-      </div>
-    </div>
 </head>
 <body class="about-page">
 

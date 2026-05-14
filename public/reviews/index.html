@@ -73,147 +73,17 @@
     </div>
   </header>
 
-  <style>
-    .reviews-page { background: #f0f7ff; }
-
-    /* ── Hero ─────────────────────────────── */
-    .page-hero {
-      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
-      padding: 80px 24px 64px;
-      position: relative;
-      overflow: hidden;
-      color: #fff;
-      text-align: center;
-    }
-    .page-hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.1;
-      background-image:
-        linear-gradient(#fff 1px, transparent 1px),
-        linear-gradient(90deg, #fff 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-    .page-hero-inner {
-      max-width: var(--container-max);
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-    .page-hero h1 {
-      font-size: 2.75rem;
-      font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 20px;
-      color: #fff;
-    }
-    .page-hero .hero-sub {
-      font-size: 1.125rem;
-      color: rgba(255,255,255,0.95);
-      max-width: 650px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    /* ── Main Layout ────────────────────────── */
-    .reviews-main {
-      padding: 64px 24px;
-    }
-    .reviews-container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .info-section {
-      background: #fff;
-      border-radius: var(--radius);
-      padding: 48px;
-      box-shadow: var(--shadow);
-      border: 1px solid #d0e6fa;
-      margin-bottom: 48px;
-    }
-    .section-kicker {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 20px;
-    }
-    .info-section h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 24px;
-    }
-    
-    @media (max-width: 768px) {
-      .page-hero h1 { font-size: 2rem; }
-      .info-section { padding: 32px 24px; }
-    }
-  </style>
-</head>
-<body class="reviews-page">
-
-  <!-- ===== HEADER ===== -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
-      <nav class="main-nav" aria-label="Main navigation">
-        <ul class="nav-list">
-          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-          <li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li>
-          <li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li>
-          <li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <button class="search-btn" aria-label="Search products" aria-expanded="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        </button>
-        <a href="/account/" class="account-btn" aria-label="My account">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </a>
-        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          <span class="cart-count">0</span>
-        </a>
-        <div class="lang-toggle" role="group" aria-label="Language switch">
-          <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th">TH</span>
-        </div>
-      </div>
-    </div>
-    <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu">
-      <ul class="mobile-nav-list">
-        <li><a href="/">Home</a></li>
-        <li><a href="/products/">Shop</a></li>
-        <li><a href="/fabric/">Fabrics</a></li>
-        <li><a href="/sizeguide/">Size Guide</a></li>
-      </ul>
-    </div>
-  </header>
-
   <main>
-    
-    <!-- ===== HERO ===== -->
     <section class="page-hero">
-      <div class="page-hero-inner">
+      <div class="container">
         <h1>Customer Reviews</h1>
-        <p class="hero-sub">Real feedback from Etsy and eBay buyers around the world.</p>
+        <p>Real feedback from Etsy and eBay buyers around the world.</p>
       </div>
     </section>
 
-    <div class="reviews-main">
-      <div class="reviews-container">
-        <div class="info-section">
-          <h2>Etsy Reviews</h2>
-          ...
-        </div>
-      </div>
-    </div>
+    <section class="section">
+      <div class="container">
+        <h2 style="margin-top:0; margin-bottom:24px; font-size:1.25rem;">Etsy Reviews</h2>
         <div class="reviews-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px;">
           <!-- REVIEWS-START -->
           <div class="review-card">
