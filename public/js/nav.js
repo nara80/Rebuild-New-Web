@@ -52,7 +52,7 @@
 
   /* ── 3. Language toggle — actual navigation ── */
   // Pages known to have both EN and TH versions (expand as TH pages are built)
-  const BILINGUAL_PAGES = ['/'];
+  const BILINGUAL_PAGES = ['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/'];
   const langToggle = document.querySelector('.lang-toggle');
   if (langToggle) {
     langToggle.addEventListener('click', function (e) {
