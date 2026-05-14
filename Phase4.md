@@ -869,3 +869,59 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 
 ### Next Step
 Move to **Phase 5 — Checkout + Stripe Payments** when ready.
+
+### Additional Updates (2026-05-14)
+
+**Header consistency (blue-gradient CI Blue hero):**
+- `/about/`, `/reviews/`, `/fabric/` — all updated from gray/page-hero to blue-gradient centered hero matching `/contact/` style
+- Hero CSS: `linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%)` with white blueprint grid overlay
+
+**Font system — bilingual EN/TH:**
+- All 26+ HTML files: Google Fonts URL updated to include both Quicksand + Sarabun
+- `main.css`: `:lang(th) { font-family: 'Sarabun', sans-serif; }` rule applied
+- AGENTS.md and Framework.md updated with full font system documentation
+
+**Full global footer restored:**
+- `/how-to-measure-mattress-size/` — restored 4-col global footer (was copyright bar only)
+- `/custom-measurement/` — restored 4-col global footer (was copyright bar only)
+
+**Size guide — comprehensive revision across all 8 regions (JS-based interactive table):**
+
+| Country | Changes |
+|---|---|
+| US/Canada | Family/Co-Sleep expanded (2xTwinXL through 2xKing — 6 sizes); Duvet corrected (68in widths, Twin XL added, Full/Queen/King/CalKing corrected); Pillow added Dakimakura (43x120cm) + Half (43x60cm) |
+| UK | Family/Co-Sleep expanded (2xSmallDouble through 2xSuperKing — 4 sizes); EU-style brackets removed from standard mattress names; Pillow added Dakimakura + Half |
+| EU | Standard mattress names cleaned (no brackets); Family/Co-Sleep expanded (6 combos: 2xDouble through 2xKing); Duvet corrected (Single 140x200, King 240x220, Super King 260x220); Pillow added Dakimakura + Half |
+| Australia | Family/Co-Sleep expanded (7 combos including 2xDouble); Pillow added Dakimakura + Half |
+| Thailand | 3FT added to Standard Mattress (90x198cm); Family/Co-Sleep expanded (8 sizes: 7FT–12FT with combined widths); Duvet column headers renamed (Bed Size / Duvet Cover Size); Duvet sizes corrected (3FT,3.5FT→70x90in, 5FT,6FT→90x100in, 7FT→110x100in, 9FT,9.5FT→125x100in); No Dakimakura (per user); removed Unified Directory kickers |
+| Malaysia/SG | Standard added Single (91x190cm) alongside Super Single; Family/Co-Sleep expanded (6 combos); Duvet corrected (Single 150x210, Super King 260x230); Pillow added Dakimakura + Half |
+| India | Standard Queen/King corrected to 60x75/72x75in; Family/Co-Sleep expanded (4 combos); Duvet corrected (150x200, 200x200, 240x220); Pillow added Dakimakura + Half |
+| Japan | Family/Co-Sleep expanded (7 combos: 2xSemiDouble through 2xKing); Pillow added Dakimakura + Half |
+
+### URL Structure & Redirects (2026-05-14)
+
+**Redirect rules — add to `public/_redirects`:**
+
+```
+/mattress-size-th/*   /sizeguide/th/   301
+/mattress-size/*      /sizeguide/      301
+/bed-sheets-size/*    /sizeguide/      301
+```
+
+**Existing pages kept as-is:**
+- `/sizeguide/` — English hub (all 8 regions, interactive tables)
+- `/sizeguide/th/` — Thai-only size guide (all Thai UI, same size tables) ✅ existing
+- `/how-to-measure-mattress-size/` — English measurement guide ✅ existing
+- `/th/how-to-measure-mattress-size/` — Thai measurement guide ✅ existing
+
+**Thai versions to build (2026-05-14):**
+- `/about/th/` — Thai About Us page (all Thai text, same content structure as `/about/`)
+- `/fabric/th/` — Thai Fabric Collections page (all Thai text)
+- `/reviews/th/` — Thai Reviews page (all Thai text)
+
+**Language toggle logic:** Header EN/TH toggle routes between `/th/` and non-`/th/` URL versions.
+
+### Thai Pages Built (2026-05-14)
+- `/th/about/index.html` — Thai About Us (all Thai UI, same content structure)
+- `/th/fabric/index.html` — Thai Fabric Collections (all Thai UI, 4-tab fabric showcase)
+- `/th/reviews/index.html` — Thai Reviews (all Thai UI, 7 real Etsy reviews)

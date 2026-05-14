@@ -137,6 +137,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] **Section 6 — Global Reach:** 3-column city grid (11+ cities across 3 regions)
 - [x] All 8 real images loaded (hero, genesis, 4 swatches, EngineeringLab)
 - [x] Header and footer present
+- [x] **Hero updated (2026-05-14):** Blue-gradient CI Blue centered hero (`linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%)` + blueprint grid overlay) — matching `/contact/` style
 
 ### Contact (`/contact/`) ✅
 - [x] Page loads at `/contact/`
@@ -147,6 +148,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Email + Phone cards
 - [x] Marketplace buttons row: Etsy, eBay, Shopee, Lazada, TikTok Shop
 - [x] Header and footer present
+- [x] **Hero (2026-05-14):** Blue-gradient CI Blue centered hero — reference page for header consistency standard
 
 ### Fabric Collections (`/fabric/`) ✅
 - [x] Page loads at `/fabric/`
@@ -154,6 +156,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Each panel has "Shop [Fabric]" button
 - [x] Comparison table at bottom with all 4 fabrics
 - [x] Header and footer present
+- [x] **Hero updated (2026-05-14):** Blue-gradient CI Blue centered hero — matching `/contact/` style
 
 ### Returns & Delivery (`/shipping/`) ✅
 - [x] Page loads at `/shipping/` (URL kept for SEO continuity)
@@ -183,8 +186,35 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Etsy badge at bottom
 - [x] "Write a Review on Etsy" button
 - [x] Header and footer present
+- [x] **Hero updated (2026-05-14):** Blue-gradient CI Blue centered hero — matching `/contact/` style
 
 > ~~Action needed: Replace placeholder reviews with real ones from Etsy~~ ✅ Done — 8 real Etsy reviews mapped with buyer names/countries via `scripts/build-reviews.js`
+
+---
+
+## URL Structure & Redirects (2026-05-14)
+
+### Phase 2 — Redirect Rules (`public/_redirects`)
+
+| Old URL | New URL | Type | Status |
+|---|---|---|---|
+| `/mattress-size-th/*` | `/sizeguide/th/` | 301 | ⚠️ Pending — add to `_redirects` |
+| `/mattress-size/*` | `/sizeguide/` | 301 | ⚠️ Pending — add to `_redirects` |
+| `/bed-sheets-size/*` | `/sizeguide/` | 301 | ⚠️ Pending — add to `_redirects` |
+
+### Language Toggle — `/th/` Versions Required
+
+| Page | EN | TH | Status |
+|---|---|---|---|
+| Homepage | `/` | `/th/` | ✅ Existing |
+| Size Guide Hub | `/sizeguide/` | `/sizeguide/th/` | ✅ Existing |
+| How to Measure | `/how-to-measure-mattress-size/` | `/th/how-to-measure-mattress-size/` | ✅ Existing |
+| Contact | `/contact/` | `/th/contact/` | ✅ Existing |
+| About Us | `/about/` | `/th/about/` | ✅ Built (2026-05-14) |
+| Fabric Collections | `/fabric/` | `/th/fabric/` | ✅ Built (2026-05-14) |
+| Reviews | `/reviews/` | `/th/reviews/` | ✅ Built (2026-05-14) |
+
+**Language toggle rule:** Header TH button → `/th/` prefix. Header EN button → remove `/th/` prefix.
 
 ---
 
@@ -241,12 +271,24 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [ ] Credit card method steps visible
 - [ ] SVG diagram showing card placement
 - [ ] Note: "Every standard credit card is exactly 85.60 mm (3.375 in) long"
+- [x] **Footer restored (2026-05-14):** Full 4-col global footer (was stripped to copyright bar)
 
 ### Bed Sheet Sizes (`/bed-sheets-size/`)
 - [ ] Page loads at `/bed-sheets-size/`
 - [ ] Pocket depth table: Standard / Deep / Extra-Deep
 - [ ] Duvet cover size table
 - [ ] CTA to configurator
+
+### Size Guide Post-Build Revision (2026-05-14) ✅
+All 8 regional size guide pages updated with JS-based interactive tables:
+- [x] **US/Canada:** Family/Co-Sleep expanded (2xTwinXL through 2xKing — 6 sizes); Duvet corrected (68in widths, Twin XL added, Full/Queen/King/CalKing corrected); Pillow added Dakimakura (43x120cm) + Half (43x60cm)
+- [x] **UK:** Family/Co-Sleep expanded (2xSmallDouble through 2xSuperKing — 4 sizes); EU-style brackets removed from standard mattress names; Pillow added Dakimakura + Half
+- [x] **EU:** Standard mattress names cleaned (no brackets); Family/Co-Sleep expanded (6 combos: 2xDouble through 2xKing); Duvet corrected (Single 140x200, King 240x220, Super King 260x220); Pillow added Dakimakura + Half
+- [x] **Australia:** Family/Co-Sleep expanded (7 combos including 2xDouble); Pillow added Dakimakura + Half
+- [x] **Thailand:** 3FT added to Standard Mattress (90x198cm); Family/Co-Sleep expanded (8 sizes: 7FT–12FT with combined widths); Duvet column headers renamed (Bed Size / Duvet Cover Size); Duvet sizes corrected; No Dakimakura (per user request); Unified Directory kickers removed
+- [x] **Malaysia/SG:** Standard added Single (91x190cm) alongside Super Single; Family/Co-Sleep expanded (6 combos); Duvet corrected (Single 150x210, Super King 260x230); Pillow added Dakimakura + Half
+- [x] **India:** Standard Queen/King corrected to 60x75/72x75in; Family/Co-Sleep expanded (4 combos); Duvet corrected (150x200, 200x200, 240x220); Pillow added Dakimakura + Half
+- [x] **Japan:** Family/Co-Sleep expanded (7 combos: 2xSemiDouble through 2xKing); Pillow added Dakimakura + Half
 
 ---
 
@@ -278,6 +320,8 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Contact: email + phone + WhatsApp + LINE icons
 - [x] Bottom bar: copyright + Privacy Policy + Returns & Delivery links
 - [x] **Mobile:** columns stack vertically, icons left-aligned
+- [x] `/how-to-measure-mattress-size/` — full 4-col global footer restored (2026-05-14, was copyright bar only)
+- [x] `/custom-measurement/` — full 4-col global footer restored (2026-05-14, was copyright bar only)
 
 ---
 

@@ -1,3 +1,15 @@
+## Phase 3 Completion Summary (2026-05-09)
+
+Design system implemented. `main.css` (~400 lines) with brand tokens, Quicksand font, sticky header with mega-menu (Shop) and dropdown (Fabrics), mobile drawer (slides from left), 4-column minimal footer (Quick Links, Customer Service, Shop With Us, Contact) with icon-only marketplace links (Etsy, eBay, Shopee, Lazada, TikTok), centered social row, deep navy `#001d3d` footer background. Header injected into all 258 pages.
+
+### Additional Updates (2026-05-14)
+- Header consistency: `/about/`, `/reviews/`, `/fabric/` page heroes updated to blue-gradient CI Blue centered style (matching `/contact/`)
+- Full global footer restored on `/how-to-measure-mattress-size/` and `/custom-measurement/` (both had stripped-down footers)
+- Quicksand (EN) + Sarabun (TH) bilingual font system implemented across all 26+ HTML files
+- CSS `:lang(th) { font-family: 'Sarabun', sans-serif; }` added to `main.css` — Thai pages auto-use Sarabun
+
+---
+
 # Phase 3 — Design System + Shared Components
 **Goal:** Build the visual identity of the entire website — the brand colors, typography, sticky header with simplified navigation, minimal premium footer, and mobile navigation. These components are then injected into all pages at once.
 

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MildMate — ผ้าปูที่นอนแม่นยำ ออกแบบสำหรับทุกรูปแบบการนอน ตั้งแต่ปี 2019 พร้อมการวัดแบบดิจิทัลและผ้าผ่านมาตรฐาน OEKO-TEX">
+  <title>เกี่ยวกับเรา — วิศวกรรมที่นอนแม่นยำ | MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .about-page { background: #f9f9f9; }
+    .about-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .about-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .about-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .about-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .genesis-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .genesis-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .genesis-image {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .genesis-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .genesis-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .genesis-section h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 24px;
+    }
+    .genesis-quote {
+      border-left: 3px solid var(--color-primary);
+      padding: 4px 0 4px 24px;
+      margin: 24px 0;
+      font-size: 1.0625rem;
+      line-height: 1.7;
+      color: var(--color-text);
+      font-style: normal;
+    }
+    .genesis-quote p { margin: 0 0 16px; }
+    .genesis-quote p:last-child { margin-bottom: 0; }
+    .genesis-quote strong { color: var(--color-primary); font-weight: 700; }
+    .timeline-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+    }
+    .timeline-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .timeline-header h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-header p {
+      color: var(--color-muted);
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .timeline-container {
+      max-width: 760px;
+      margin: 0 auto;
+      position: relative;
+      padding-left: 40px;
+    }
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--color-primary);
+      opacity: 0.25;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -33px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      border: 3px solid #f9f9f9;
+      box-shadow: 0 0 0 2px var(--color-primary);
+    }
+    .timeline-year-badge {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .timeline-content h3 {
+      font-size: 1.1875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-content p {
+      color: var(--color-muted);
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      margin: 0;
+    }
+    .materials-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .materials-header {
+      text-align: center;
+      margin-bottom: 48px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .materials-header h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .materials-header p {
+      color: var(--color-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 880px;
+      margin: 0 auto 40px;
+    }
+    .material-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+    }
+    .material-card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .material-card-body {
+      padding: 24px 26px 28px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .material-card .kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .material-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .material-card .cert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(44,150,244,0.1);
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+    .material-card p {
+      font-size: 0.9375rem;
+      color: var(--color-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .spec-tag {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+      font-family: 'Sarabun', sans-serif;
+      background: rgba(44,150,244,0.06);
+      padding: 4px 10px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .cert-logos {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0 16px;
+      flex-wrap: wrap;
+    }
+    .cert-logos img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+    .materials-cta {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .materials-cta .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      padding: 14px 32px;
+      font-size: 1rem;
+    }
+    .materials-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+    .video-demo-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    .video-demo-section h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .video-demo-section .video-sub {
+      color: var(--color-muted);
+      margin-bottom: 36px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .iframe-wrapper {
+      position: relative;
+      max-width: 350px;
+      margin: 0 auto;
+      aspect-ratio: 9 / 16;
+      border: 8px solid #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      background: #000;
+    }
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .global-reach-section {
+      background: #f9f9f9;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+    }
+    .global-reach-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      text-align: center;
+    }
+    .global-reach-inner h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .global-reach-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+    .global-cities-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      text-align: left;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .city-col h4 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-primary);
+    }
+    .city-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .city-col li {
+      font-size: 1rem;
+      color: var(--color-text);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .city-col li:last-child { border-bottom: none; }
+    @media (max-width: 768px) {
+      .about-hero { padding: 48px 20px 36px; }
+      .about-hero-inner h1 { font-size: 1.875rem; }
+      .genesis-section,
+      .timeline-section,
+      .materials-section,
+      .video-demo-section { padding: 56px 20px; }
+      .genesis-section h2,
+      .timeline-header h2,
+      .materials-header h2,
+      .video-demo-section h2 { font-size: 1.5rem; }
+      .genesis-inner { grid-template-columns: 1fr; gap: 32px; }
+      .genesis-image { order: -1; }
+      .materials-grid { grid-template-columns: 1fr; }
+      .global-cities-grid { grid-template-columns: 1fr; gap: 24px; }
+      .timeline-container { padding-left: 32px; }
+      .timeline-container::before { left: 7px; }
+      .timeline-dot { left: -41px; width: 14px; height: 14px; }
+      .iframe-wrapper {
+        max-width: 280px;
+        border-width: 6px;
+        border-radius: 16px;
+      }
+    }
+  </style>
+</head>
+<body class="about-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/th/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="เมนูหลัก">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li>
+          <li class="nav-item"><a href="/th/products/" class="nav-link">ร้านค้า</a></li>
+          <li class="nav-item"><a href="/th/fabric/" class="nav-link">ผ้า</a></li>
+          <li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="เปลี่ยนภาษา">
+          <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="เมนูบนมือถือ">
+      <div class="mobile-drawer-search">
+        <form action="/th/products/" method="get" class="drawer-search-form">
+          <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off">
+          <button type="submit" aria-label="ส่งการค้นหา">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+      <ul class="mobile-nav-list">
+        <li><a href="/th/">หน้าแรก</a></li>
+        <li><a href="/th/products/">ร้านค้า</a></li>
+        <li><a href="/th/fabric/">ผ้า</a></li>
+        <li><a href="/th/sizeguide/">คู่มือขนาด</a></li>
+      </ul>
+    </div>
+    <div class="search-overlay" aria-hidden="true">
+      <div class="search-overlay-inner">
+        <button class="search-close" aria-label="ปิดการค้นหา">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <form action="/th/products/" method="get" class="search-form">
+          <input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหา" autocomplete="off">
+          <button type="submit" aria-label="ส่งการค้นหา">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="about-hero">
+      <div class="about-hero-inner">
+        <h1>ความแม่นยำของที่นอน ออกแบบสำหรับทุกรูปแบบการนอน</h1>
+        <p class="hero-sub">ตั้งแต่ปี 2019 MildMate กำจัด "ความลำบากทางคณิตศาสตร์" สำหรับพื้นที่นอนที่ไม่มาตรฐาน ตั้งแต่เตียงครอบครัวขนาดใหญ่ไปจนถึงรถบ้านท่องเที่ยว เราให้การวัดแบบดิจิทัลและประสิทธิภาพผ้าที่ผ่านการทดสอบทางคลินิก</p>
+      </div>
+    </section>
+
+    <section class="genesis-section">
+      <div class="genesis-inner">
+        <div class="genesis-text">
+          <div class="genesis-kicker">ปัญหาปี 2019</div>
+          <h2>แก้ไข "ความขัดแย้งของช่องว่างที่นอน"</h2>
+          <div class="genesis-quote">
+            <p>MildMate ก่อตั้งในปี 2019 เพื่อแก้ไข<strong>ความล้มเหลวทางเรขาคณิต</strong>: การเปลี่ยนผ่านที่ "เป็นปม" ของที่นอนที่ต่อกันในสภาพแวดล้อมการนอนร่วมกัน ผ้าปูที่นอนทั่วไปไม่สามารถรักษาแรงตึงโครงสร้างที่ต้องการสำหรับ<strong>พื้นผิวการนอนของครอบครัวที่เป็นหนึ่งเดียว</strong></p>
+            <p>เราเปลี่ยนจากบ้านครอบครัวในประเทศไทยสู่ห้องปฏิบัติการวิศวกรรมเฉพาะทาง โดยปฏิบัติต่อที่นอนทุกตัวไม่ใช่เฟอร์นิเจอร์ แต่เป็นสินทรัพย์ทางเทคนิค เราแทนที่การ "คาดเดา" ด้วยโปรโตคอลการวัดที่เข้มงวด</p>
+          </div>
+        </div>
+        <div class="genesis-image">
+          <img src="/images/about/about-genesis.jpg" alt="ความขัดแย้งของช่องว่างที่นอน — ที่นอนที่ต่อกันสร้างการเปลี่ยนผ่านที่เป็นปม" width="500" height="380" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-section">
+      <div class="timeline-header">
+        <h2>จากโปรโตคอลก่อตั้งสู่ความแม่นยำระดับโลก</h2>
+        <p>เจ็ดปีของวินัยวิศวกรรมที่สะสม</p>
+      </div>
+      <div class="timeline-container">
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2019</span>
+            <h3>โปรโตคอลก่อตั้ง</h3>
+            <p>เปิดตัวในประเทศไทยเพื่อแก้ไขเรขาคณิตการนอนร่วมและปัญหา "ช่องว่างที่นอน" ระบบการวัดพาราเมตริกแรกแทนที่การคาดเดาสำหรับเตียงครอบครัวที่ต่อกัน</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2022</span>
+            <h3>มาตรฐานความปลอดภัยวัสดุ</h3>
+            <p>ได้รับการรับรอง OEKO-TEX® Standard 100 สำหรับคอลเลกชัน PremaCotton รับประกันเส้นใยปลอดสารพิษ 100% สำหรับทารกและผิวบอบบาง</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2024</span>
+            <h3>โครงสร้างพื้นฐานระดับโลก</h3>
+            <p>เปิดตัวการดำเนินงานระหว่างประเทศผ่าน Etsy และ eBay จัดส่งผ้าปูที่นอนแม่นยำถึง 11+ เมืองทั่วโลก</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2026</span>
+            <h3>ห้องปฏิบัติการวิศวกรรม</h3>
+            <p>ปัจจุบัน MildMate ดำเนินงานเป็นบริษัทสิ่งทอเฉพาะทางพร้อมมาตรฐานความเบี่ยงเบนทางเรขาคณิต 1–2 ซม. สำหรับรูปทรงที่นอนใดๆ บนโลก</p>
+            <img src="/images/about/EngineeringLab.jpg" alt="ห้องปฏิบัติการวิศวกรรม MildMate — การผลิตสิ่งทอแม่นยำ" width="600" height="340" loading="lazy" style="margin-top: 18px; width: 100%; max-width: 520px; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);">
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="materials-section">
+      <div class="materials-header">
+        <h2>มาตรฐานวัสดุของ MildMate</h2>
+        <p>เราไม่ใช้ผ้าลินิน "สำเร็จรูป" เราเลือกและออกแบบวัสดุตามการนำความร้อน ความทนทานเชิงกล และความปลอดภัยของมนุษย์</p>
+      </div>
+
+      <div class="materials-grid">
+
+        <div class="material-card">
+          <img src="/images/about/swatch-premacotton.jpg" alt="สีผ้า PremaCotton" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าชุดที่ 1 — ชั้นสุขอนามัย</div>
+            <h3>PremaCotton</h3>
+            <div class="spec-tag">ข้อมูลจำเพาะ: 100% ปลอดภัยสำหรับมนุษย์ | OEKO-TEX® Std 100</div>
+            <p>รับรอง OEKO-TEX Standard 100 ปลอดสารพิษตั้งแต่เมล็ดถึงผ้าสำหรับทารกและผิวบอบบาง มาตรฐานอ้างอิงสำหรับความปลอดภัยวัสดุที่ผ่านการทดสอบทางคลินิก</p>
+          </div>
+        </div>
+
+        <div class="material-card">
+          <img src="/images/about/swatch-breezeplus.jpg" alt="สีผ้า BreezePlus" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าชุดที่ 2 — ชั้นควบคุมอุณหภูมิ</div>
+            <h3>BreezePlus</h3>
+            <div class="spec-tag">ข้อมูลจำเพาะ: ผสม 50/50 ผ้าฝ้ายเส้นยาว | ควบคุมอุณหภูมิ 3–5°C</div>
+            <p>ผสม 50/50 ผ้าฝ้ายเส้นยาวกับไมโครไฟเบอร์เฉพาะทาง ควบคุมอุณหภูมิ 3–5°C เย็นกว่าผ้าฝ้ายทั่วไป เทคโนโลยีต้านไรฝุ่นได้รับการตรวจสอบจากคณะแพทยศาสตร์ศิริราช ออกแบบสำหรับสภาพแวดล้อมร้อนชื้น เรือ และความชื้นสูง</p>
+          </div>
+        </div>
+
+        <div class="material-card">
+          <img src="/images/about/swatch-cloudsoft.jpg" alt="สีผ้า CloudSoft" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าชุดที่ 3 — ชั้นความสบาย</div>
+            <h3>CloudSoft</h3>
+            <div class="spec-tag">ข้อมูลจำเพาะ: 120 GSM | ไมโครไฟเบอร์แปรงสองชั้น</div>
+            <p>ไมโครไฟเบอร์แปรงสองชั้น 120 GSM ทนความชื้นและอากาศเค็ม ระบายอากาศเร็วไม่ต้องรีด สำหรับเรือ รถบ้าน และห้องพักรถ</p>
+          </div>
+        </div>
+
+        <div class="material-card">
+          <img src="/images/about/swatch-ecoluxe.jpg" alt="สีผ้า EcoLuxe" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าชุดที่ 4 — ชั้นยั่งยืน</div>
+            <h3>EcoLuxe</h3>
+            <div class="spec-tag">ข้อมูลจำเพาะ: เส้นใยดิบไม่ฟอก | ย่อยสลายได้ทางชีวภาพ</div>
+            <p>ผ้าคาลิโก (Greige) คุณภาพพรีเมียมในสภาพธรรมชาติไม่ฟอก ทอด้วยลายผ้าธรรมดาที่ทนทาน นิ่มขึ้นทุกครั้งที่ซักและรักษาลักษณะดิบเป็นธรรมชาติ</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="materials-cta">
+        <a href="/th/fabric/" class="btn btn-primary">สำรวจคอลเลกชันผ้า</a>
+      </div>
+    </section>
+
+    <section class="video-demo-section">
+      <h2>มาตรฐาน MildMate</h2>
+      <p class="video-sub">ผ้าที่ผ่านการรับรองความปลอดภัย ขนาดแม่นยำ และงานฝีมือไทย — สามเสาหลักของทุกชิ้นที่เราผลิต</p>
+      <div class="iframe-wrapper">
+        <iframe
+          src="https://www.youtube.com/embed/Ooqvv3SVll8?si=ODaYtzXlYuDhXjyC&rel=0"
+          title="MildMate Engineering Demo"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+
+    <section class="global-reach-section">
+      <div class="global-reach-inner">
+        <h2>การเข้าถึงทั่วโลก</h2>
+        <p>ผ้าปูที่นอนแม่นยำ ผลิตในประเทศไทย จัดส่งถึง 11+ เมืองใน 2 ทวีป</p>
+        <div class="global-cities-grid">
+          <div class="city-col">
+            <h4>อเมริกาเหนือ</h4>
+            <ul>
+              <li>นิวยอร์ก</li>
+              <li>ลอสแองเจลิส</li>
+              <li>ชิคาโก</li>
+              <li>ซานฟรานซิสโก</li>
+            </ul>
+          </div>
+          <div class="city-col">
+            <h4>ยุโรปและตะวันออกกลาง</h4>
+            <ul>
+              <li>ลอนดอน</li>
+              <li>ปารีส</li>
+              <li>แฟรงเฟิร์ต</li>
+              <li>ดูไบ</li>
+            </ul>
+          </div>
+          <div class="city-col">
+            <h4>เอเชียแปซิฟิก</h4>
+            <ul>
+              <li>สิงคโปร์</li>
+              <li>โตเกียว</li>
+              <li>ซิดนีย์</li>
+              <li>กรุงเทพฯ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h3>ลิงก์ด่วน</h3>
+          <ul>
+            <li><a href="/th/about/">เกี่ยวกับเรา</a></li>
+            <li><a href="/th/contact/">ติดต่อเรา</a></li>
+            <li><a href="/th/reviews/">รีวิว</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>บริการลูกค้า</h3>
+          <ul>
+            <li><a href="/th/faq/">คำถามที่พบบ่อย</a></li>
+            <li><a href="/th/sizeguide/">คู่มือขนาด</a></li>
+            <li><a href="/th/blogs/">บล็อก</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>ร้านค้าของเรา</h3>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>ติดต่อ</h3>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/th/policy/">นโยบายความเป็นส่วนตัว</a>
+          <a href="/th/shipping/">ส่งมอบและคืนสินค้า</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

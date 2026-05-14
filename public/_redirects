@@ -1,3 +1,7 @@
 # MildMate Redirects
-# Phase 2 will populate this file with 301 redirect rules
-# for all old WordPress URLs that need to be redirected.
+# Updated 2026-05-14 — Phase 4 URL restructure
+
+# Size guide consolidation
+/mattress-size-th/*   /sizeguide/th/   301
+/mattress-size/*      /sizeguide/      301
+/bed-sheets-size/*    /sizeguide/      301
