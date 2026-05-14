@@ -250,6 +250,7 @@
       border-bottom: 1px solid #d0e6fa;
     }
     .size-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
+    .size-name-sub { font-weight: 400; color: var(--color-muted); font-size: 0.8125rem; display: block; }
     .size-dims { text-align: right; }
     .size-dims .cm { font-weight: 600; font-size: 0.9375rem; color: var(--color-text); display: block; }
     .size-dims .in { color: var(--color-muted); font-size: 0.8125rem; display: block; }
@@ -354,7 +355,7 @@
 
         <!-- ===== STEP 1: COUNTRY ===== -->
         <div class="info-section">
-          <div class="section-kicker">Unified Directory Step 01</div>
+          <div class="section-kicker"></div>
           <h2>Select Your Region</h2>
           <p>MildMate manufactures to international standards. Choose your region to load verified dimensions.</p>
           <div id="country-grid" class="country-grid">
@@ -395,7 +396,7 @@
 
         <!-- ===== STEP 2: CATEGORY ===== -->
         <div class="info-section">
-          <div class="section-kicker">Unified Directory Step 02</div>
+          <div class="section-kicker"></div>
           <h2>Select Product Category</h2>
           <div id="type-tabs" class="type-tabs">
             <button class="type-btn active" data-type="standard">Standard Mattress</button>
@@ -410,13 +411,8 @@
               <span>CM / INCH</span>
             </div>
             <div id="size-table-rows">
-              <!-- Header Row -->
-              <div class="size-row header">
-                <div class="size-name">Size Name</div>
-                <div class="size-dims">Dimensions</div>
-              </div>
               <div id="size-data-body">
-                <!-- Injected by JS -->
+                <!-- Injected by JS (includes header row) -->
               </div>
             </div>
           </div>
@@ -635,14 +631,21 @@
         th: {
           label: 'Thailand',
           standard: [
+            { name: '3 ฟุต (Single)', cm: '90 × 198', in: '35 × 78', price: '$32' },
             { name: '3.5 ฟุต (Single)', cm: '107 × 198', in: '42 × 78', price: '$35' },
             { name: '5 ฟุต (Queen)', cm: '152 × 198', in: '60 × 78', price: '$49' },
             { name: '6 ฟุต (King)', cm: '183 × 198', in: '72 × 78', price: '$55' },
             { name: '7 ฟุต (Super King)', cm: '213 × 198', in: '84 × 78', price: '$62' },
           ],
           family: [
-            { name: '2× 3.5ft → Family', cm: '214 × 198', in: '84 × 78', price: 'Quote' },
-            { name: '2× 5ft → Mega', cm: '304 × 198', in: '120 × 78', price: 'Quote' },
+            { name: '7FT\n(2×3.5 FT)', cm: '214 × 198', in: '84 × 78', price: 'Quote' },
+            { name: '8FT\n(5+3 FT)', cm: '242 × 198', in: '95 × 78', price: 'Quote' },
+            { name: '8.5FT\n(5+3.5 FT)', cm: '259 × 198', in: '102 × 78', price: 'Quote' },
+            { name: '9FT\n(6+3 FT)', cm: '273 × 198', in: '107 × 78', price: 'Quote' },
+            { name: '9.5FT\n(6+3.5 FT)', cm: '290 × 198', in: '114 × 78', price: 'Quote' },
+            { name: '10FT\n(2×5 FT)', cm: '304 × 198', in: '120 × 78', price: 'Quote' },
+            { name: '11FT\n(5+6 FT)', cm: '335 × 198', in: '132 × 78', price: 'Quote' },
+            { name: '12FT\n(2×6 FT)', cm: '366 × 198', in: '144 × 78', price: 'Quote' },
           ],
           pillow: [
             { name: 'Standard', cm: '48 × 74', in: '19 × 29', price: '$12' },
@@ -652,9 +655,10 @@
             { name: 'Body', cm: '48 × 124', in: '19 × 49', price: '$28' },
           ],
           duvet: [
-            { name: '5ft (5 ฟุต)', cm: '152 × 210', in: '60 × 83', price: '$55' },
-            { name: '6ft (6 ฟุต)', cm: '183 × 210', in: '72 × 83', price: '$65' },
-            { name: '7ft / Oversized (7 ฟุต)', cm: '213 × 240', in: '84 × 94', price: '$78' },
+            { name: '3FT, 3.5FT', cm: '178 × 229', in: '70 × 90', price: '$52' },
+            { name: '5FT, 6FT', cm: '229 × 254', in: '90 × 100', price: '$65' },
+            { name: '7FT', cm: '279 × 254', in: '110 × 100', price: '$78' },
+            { name: '9FT, 9.5FT', cm: '318 × 254', in: '125 × 100', price: '$92' },
           ],
         },
         my: {
@@ -744,11 +748,25 @@
         const title = country.label + ' — ' + typeLabel;
         document.getElementById('table-title').textContent = title;
 
-        let html = '';
+        // Thailand duvet cover uses "Bed Size" / "Duvet Cover Size" headers
+        const isThailandDuvet = (currentCountry === 'th' && currentType === 'duvet');
+        const col1Label = isThailandDuvet ? 'Bed Size' : 'Size Name';
+        const col2Label = isThailandDuvet ? 'Duvet Cover Size' : 'Dimensions';
+
+        let html = `
+          <div class="size-row header">
+            <div class="size-name">${col1Label}</div>
+            <div class="size-dims">${col2Label}</div>
+          </div>
+        `;
         rows.forEach(r => {
+          const parts = r.name.split('\n');
+          const displayName = parts.length > 1
+            ? parts[0] + '<span class="size-name-sub">' + parts.slice(1).join('') + '</span>'
+            : r.name;
           html += `
             <div class="size-row">
-              <div class="size-name">${r.name}</div>
+              <div class="size-name">${displayName}</div>
               <div class="size-dims">
                 <span class="cm">${r.cm} cm</span>
                 <span class="in">(${r.in} in)</span>
