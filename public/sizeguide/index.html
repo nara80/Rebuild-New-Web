@@ -153,7 +153,7 @@
     /* ── Country Grid ─────────────────────── */
     .country-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       margin-top: 24px;
     }
@@ -250,9 +250,9 @@
       border-bottom: 1px solid #d0e6fa;
     }
     .size-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
-    .size-dims { font-size: 0.9375rem; color: var(--color-text); text-align: right; }
-    .size-dims .cm { font-weight: 600; }
-    .size-dims .in { color: var(--color-muted); margin-left: 8px; font-size: 0.8125rem; }
+    .size-dims { text-align: right; }
+    .size-dims .cm { font-weight: 600; font-size: 0.9375rem; color: var(--color-text); display: block; }
+    .size-dims .in { color: var(--color-muted); font-size: 0.8125rem; display: block; }
 
     /* ── CTAs ─────────────────────────────── */
     .cta-block {
@@ -269,13 +269,11 @@
     @media (max-width: 768px) {
       .sizeguide-hero h1 { font-size: 1.875rem; }
       .info-section { padding: 32px 20px; }
-      .country-grid { grid-template-columns: repeat(3, 1fr); }
+      .country-grid { grid-template-columns: repeat(2, 1fr); }
       .cta-block { padding: 40px 24px; }
     }
     @media (max-width: 480px) {
-      .country-grid { grid-template-columns: repeat(2, 1fr); }
       .size-row { padding: 14px 16px; }
-      .size-dims { font-size: 0.875rem; }
     }
   </style>
 </head>
