@@ -83,8 +83,9 @@
 | Easy-Change Duvet | `/duvet/` | Duvet landing — links to duvet-covers |
 | Protection | `/protection/` | Waterproof line — links to mattress-protectors |
 | Pet Owner Bedding | `/pets/` | **NEW** BreezePlus anti-fur — links to fitted-sheets + duvet-covers |
+| RV & Truck Cab | `/rv-truck/` | **NEW** RV, van, truck cab — 6-Sided Encasement + Marine Fitted Sheet |
 | All Products | `/products/` | Full product listing with filter bar |
-| Product Detail | `/product/[slug]/` | 14 product pages (expandable to 83), configurator |
+| Product Detail | `/product/[slug]/` | 15 product pages (expandable to 83), configurator |
 
 ### Admin Pages (Google login required)
 | Page | URL | Notes |

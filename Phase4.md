@@ -328,6 +328,7 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 | `public/duvet/index.html` | SEO Landing: Easy-Change Duvet category page (dynamic from D1) |
 | `public/protection/index.html` | SEO Landing: Protection category page (dynamic from D1) |
 | `public/pets/index.html` | **NEW** SEO Landing: Pet Owner Bedding (BreezePlus anti-fur) |
+| `public/rv-truck/index.html` | **NEW** SEO Landing: RV & Truck Cab bedding |
 | `public/product/[slug]/index.html` | 83 individual product detail pages |
 | `public/mattress-size-th/index.html` | #1 SEO page — fully built with size tables |
 | `public/mattress-size/index.html` | EN size guide page |
@@ -542,7 +543,7 @@ Once all 8 requirements are ready, hand off to Droid.
 >
 > **Requirement 11 — Blog:** Build blog index with 3 sample posts. Sample post 1: [title/category/excerpt/body]. Post 2: [same]. Post 3: [same].
 >
-> Build the homepage (EN + TH), all new static pages (About, Contact, Fabric Collections, Shipping Policy, Privacy Policy, Customer Reviews), blog index + 3 sample posts, product listing + 10 category pages (5 primary product-type + 5 SEO landing), all product detail pages (14+ expandable to 83), the 4 size guide pages, and all backend Workers (products API, pricing API with both modes, geo-currency API)."
+> Build the homepage (EN + TH), all new static pages (About, Contact, Fabric Collections, Shipping Policy, Privacy Policy, Customer Reviews), blog index + 3 sample posts, product listing + 11 category pages (5 primary product-type + 6 SEO landing), all product detail pages (15+ expandable to 83), the 4 size guide pages, and all backend Workers (products API, pricing API with both modes, geo-currency API)."
 
 ---
 
@@ -749,7 +750,7 @@ Go through this checklist before moving to Phase 5:
 - [ ] Blog index (`/blogs/`) shows 3 sample posts with thumbnails + pagination
 - [ ] Product listing page (`/products/`) shows product grid (data from D1)
 - [ ] Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) show product grids
-- [ ] SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`) show filtered grids with cross-links to primary categories
+- [ ] SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`) show filtered grids with cross-links to primary categories
 - [ ] Filter bar on product listing works
 - [ ] Product detail page shows two-mode configurator with live price update
 - [ ] "Measure My Mattress" collapsible section opens and closes
@@ -829,7 +830,7 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 | Bed Sheet Sizes (`/bed-sheets-size/`) | ✅ | Pocket depth + duvet cover sizing |
 | Product Listing (`/products/`) | ✅ | Filter bar + 6 product cards with placeholders |
 | Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) | ✅ | Product-type grids |
-| SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`) | ✅ | Use-case landing pages with cross-links |
+| SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`) | ✅ | Use-case landing pages with cross-links |
 | Configurator JS (`/js/configurator.js`) | ✅ | Two-mode (Sheet + V-Berth), unit toggle cm/inch, live price, fabric selector |
 | Cart JS (`/js/cart.js`) | ✅ | localStorage-based cart with add/remove/updateQty/clear |
 | Geo JS (`/js/geo.js`) | ✅ | Detects location via `/api/geo`, updates price display |

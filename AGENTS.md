@@ -134,7 +134,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | Flat Sheets | `/flat-sheets/` | Standard, Extra Deep Pocket (20") |
 | Duvet Covers | `/duvet-covers/` | 3-Sided Zipper, Pet Owner |
 | Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
-| Mattress Protectors | `/mattress-protectors/` | Encasement, Pillow Protector |
+| Mattress Protectors | `/mattress-protectors/` | Pet-Proof Protector, 6-Sided Encasement, Pillow Protector |
 
 ### SEO Landing Pages — Use Case (high-conversion)
 | Category | URL | Cross-links to Product Type |
@@ -144,14 +144,16 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | Easy-Change Duvet | `/duvet/` | `/duvet-covers/` — 3-Sided Zipper |
 | Protection | `/protection/` | `/mattress-protectors/` — Encasement |
 | Pet Owner Bedding | `/pets/` | `/fitted-sheets/`, `/duvet-covers/` — BreezePlus |
+| RV & Truck Cab | `/rv-truck/` | `/mattress-protectors/` — 6-Sided Encasement + Marine Fitted Sheet |
 
-### Product Detail Pages (14 total)
+### Product Detail Pages (15 total)
 | Product | URL | Category |
 |---|---|---|
 | 3-Sided Zipper Duvet Cover | `/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/` | Duvet Cover, Pets |
 | Custom Family Fitted Sheet | `/product/family-co-sleeping-solutions-th-size/` | Fitted Sheet, Family |
 | Marine Fitted Sheet (V-Berth) | `/product/product-boat-bedding-fitted-sheet-microfiber/` | Fitted Sheet, Marine |
-| RV & Van Mattress Encasement | `/product/sheet-protectors/` | Protector, Protection |
+| Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protector, Pets |
+| 6-Sided Mattress Encasement | `/product/sheet-protectors/` | Protector, Protection, RV-Truck, Marine |
 | BedBridge Connector | `/product/tbar/` | Accessory, Family |
 | Pillow Protector | `/product/pillow-protector/` | Protector, Protection |
 | Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Fitted Sheet, Pets |

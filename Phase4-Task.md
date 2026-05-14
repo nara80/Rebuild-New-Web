@@ -45,8 +45,9 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] Card hover effect works (lift + shadow)
 - [x] **Mobile:** 2 columns then 1 column at narrow width
 
-> **Action needed:** Provide 5 niche category photos → place in `public/images/categories/`
+> **Action needed:** Provide 6 niche category photos → place in `public/images/categories/`
 > **NEW:** 5 primary product-type categories (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) added for SEO discoverability
+> **NEW:** 6 SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`)
 > **NEW:** Pet Owner landing page (`/pets/`) added for BreezePlus anti-fur market
 > - `category-marine.jpg` (V-Berth on boat) ✅
 > - `category-family.jpg` (family bed) ✅
@@ -282,6 +283,14 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [ ] Page loads at `/protection/`
 - [ ] "Protection" heading visible
 - [ ] Cross-links to `/mattress-protectors/`
+
+#### RV & Truck Cab (`/rv-truck/`)
+- [ ] Page loads at `/rv-truck/`
+- [ ] "RV & Truck Cab Bedding" heading visible
+- [ ] Problem section: tight spaces, built-in platforms, odd mattress shapes
+- [ ] 6-Sided Encasement card visible
+- [ ] Marine Fitted Sheet card visible
+- [ ] CTA block: "Have an odd-shaped mattress? We measure, you sleep."
 
 ---
 
