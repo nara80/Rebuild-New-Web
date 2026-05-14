@@ -34,6 +34,11 @@ html {
   font-size: 16px;
 }
 
+/* Thai language — use Sarabun for consistency with Quicksand */
+:lang(th) {
+  font-family: 'Sarabun', sans-serif;
+}
+
 body {
   font-family: var(--font-main);
   color: var(--color-text);

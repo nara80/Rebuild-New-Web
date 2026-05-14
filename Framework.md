@@ -35,6 +35,8 @@
 | Body | 1rem | 400 |
 | Small/Caption | 0.875rem | 400 |
 
+**Font pairing (bilingual):** Quicksand (EN) + Sarabun (TH) — loaded together via Google Fonts, CSS `:lang(th)` applies Sarabun automatically.
+
 ---
 
 ## Complete Site Pages Overview
@@ -410,7 +412,9 @@ Order stored with quote_id reference + full dimensions
 ### 6. About Us (`/about/`)
 
 ```
-[HERO]  Brand story headline + lifestyle photo
+[HERO]  Blue gradient (CI Blue) centered hero with blueprint grid overlay
+  H1: "Precision Bedding. Engineered for Every Shape of Sleep."
+  Sub: Brand story intro (consistent with /contact/ hero style)
 
 [OUR STORY]  Founding, mission, handcraft in Thailand
 
@@ -510,7 +514,10 @@ Covers: data collected, usage, cookies, third parties (Stripe, MailChannels), ri
 ### 12. Customer Reviews (`/reviews/`)
 
 ```
-[HERO]  "What Our Customers Say"
+[HERO]  Blue gradient (CI Blue) centered hero with blueprint grid overlay
+  H1: "Customer Reviews"
+  Sub: "Real feedback from verified buyers around the world."
+  (Consistent with /contact/ hero style)
 
 [RATING BADGE]  5.0 ★★★★★ — verified reviews
 

@@ -7,89 +7,50 @@
   <title>About — Precision Bedding Engineering | MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <style>
     .about-page { background: #f9f9f9; }
 
-    /* ── Section 1: Technical Hero ─────────────── */
+    /* ── Hero ─────────────────────────────── */
     .about-hero {
-      background: #f9f9f9;
-      padding: 72px 0 56px;
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
       position: relative;
       overflow: hidden;
+      color: #fff;
     }
-    .blueprint-grid-overlay {
+    .about-hero::before {
+      content: '';
       position: absolute;
       inset: 0;
       pointer-events: none;
-      opacity: 0.05;
+      opacity: 0.08;
       background-image:
-        linear-gradient(var(--color-primary) 1px, transparent 1px),
-        linear-gradient(90deg, var(--color-primary) 1px, transparent 1px);
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
       background-size: 40px 40px;
     }
     .about-hero-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 48px;
-      align-items: center;
       max-width: var(--container-max);
       margin: 0 auto;
-      padding: 0 24px;
       position: relative;
       z-index: 1;
+      text-align: center;
     }
-    .about-hero-text h1 {
+    .about-hero-inner h1 {
       font-size: 2.5rem;
       font-weight: 700;
       line-height: 1.15;
-      margin-bottom: 18px;
-      color: var(--color-text);
+      margin-bottom: 16px;
+      color: #fff;
     }
-    .about-hero-text .hero-sub {
+    .about-hero-inner .hero-sub {
       font-size: 1.0625rem;
-      color: var(--color-muted);
-      margin-bottom: 28px;
-      max-width: 500px;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
       line-height: 1.6;
-    }
-    .about-hero-visual {
-      position: relative;
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-    .about-hero-visual img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    .tech-specs-overlay {
-      position: absolute;
-      bottom: 16px;
-      right: 16px;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(4px);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-      font-size: 0.8125rem;
-      line-height: 1.6;
-      min-width: 170px;
-    }
-    .tech-specs-overlay strong {
-      display: block;
-      font-size: 0.6875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--color-muted);
-      margin-bottom: 6px;
-    }
-    .tech-specs-overlay span {
-      display: block;
-      color: var(--color-text);
-      font-weight: 600;
     }
 
     /* ── Section 2: Engineering Genesis ─────────── */
@@ -453,16 +414,8 @@
 
     /* ── Mobile ──────────────────────────────── */
     @media (max-width: 768px) {
-      .about-hero { padding: 48px 0 32px; }
-      .about-hero-inner { grid-template-columns: 1fr; gap: 32px; }
-      .about-hero-text h1 { font-size: 1.875rem; }
-      .tech-specs-overlay {
-        position: relative;
-        bottom: auto;
-        right: auto;
-        margin-top: 12px;
-        min-width: 0;
-      }
+      .about-hero { padding: 48px 20px 36px; }
+      .about-hero-inner h1 { font-size: 1.875rem; }
       .genesis-section,
       .timeline-section,
       .materials-section,
@@ -552,24 +505,11 @@
 
   <main>
 
-    <!-- ============================================== -->
-    <!-- 1. THE HERO (The Mission)                       -->
-    <!-- ============================================== -->
+    <!-- ===== HERO ===== -->
     <section class="about-hero">
-      <div class="blueprint-grid-overlay"></div>
       <div class="about-hero-inner">
-        <div class="about-hero-text">
-          <h1>Precision Bedding. Engineered for Every Shape of Sleep.</h1>
-          <p class="hero-sub">Since 2019, MildMate has eliminated "math friction" for non-standard sleep surfaces. From oversized family beds to nomadic RVs, we provide digital blueprinting and clinically validated textile performance.</p>
-        </div>
-        <div class="about-hero-visual">
-          <img src="/images/about/about-hero.jpg" alt="MildMate precision engineering — custom bedding lab" width="600" height="450" loading="eager">
-          <div class="tech-specs-overlay">
-            <strong>Technical Specs</strong>
-            <span>Tolerance: ±1–2cm</span>
-            <span>OEKO-TEX® Certified</span>
-          </div>
-        </div>
+        <h1>Precision Bedding. Engineered for Every Shape of Sleep.</h1>
+        <p class="hero-sub">Since 2019, MildMate has eliminated "math friction" for non-standard sleep surfaces. From oversized family beds to nomadic RVs, we provide digital blueprinting and clinically validated textile performance.</p>
       </div>
     </section>
 

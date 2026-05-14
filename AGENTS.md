@@ -62,6 +62,17 @@ This file is read by Droid at the start of every session. It contains all critic
 --shadow: 0 2px 12px rgba(0,0,0,0.08);
 ```
 
+### Font System (Bilingual EN/TH)
+| Language | Font | Source |
+|---|---|---|
+| English | Quicksand (400, 600, 700) | Google Fonts |
+| Thai | Sarabun (400, 600, 700) | Google Fonts |
+
+**Implementation:**
+- Both fonts loaded via single Google Fonts URL: `family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap`
+- CSS `:lang(th) { font-family: 'Sarabun', sans-serif; }` in `main.css` overrides Quicksand for Thai text
+- All 26+ HTML files updated with dual font URL
+
 ---
 
 ## Phase Status
@@ -72,7 +83,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact all blue-gradient hero), full footer restored on how-to-measure-mattress-size, Sarabun Thai font added to all pages |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
@@ -90,7 +101,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | Dev domain | `mildmate-new.pages.dev` |
 | Cutover trigger | 100% completion, not before |
 | Language | Bilingual Thai/English, EN primary |
-| Font | Quicksand (replaced Prompt) |
+| Font | Quicksand (EN) + Sarabun (TH) — bilingual font pairing |
 | Header desktop | Logo left, nav center, actions right |
 | Header mobile | Hamburger left, logo center, actions right |
 | Mobile drawer | Slides in from left |
