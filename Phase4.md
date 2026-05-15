@@ -936,3 +936,58 @@ Move to **Phase 5 — Checkout + Stripe Payments** when ready.
 - `/th/about/index.html` — Thai About Us (all Thai UI, same content structure)
 - `/th/fabric/index.html` — Thai Fabric Collections (all Thai UI, 4-tab fabric showcase)
 - `/th/reviews/index.html` — Thai Reviews (all Thai UI, 7 real Etsy reviews)
+
+---
+
+### Thai Version — Missing Pages (2026-05-15)
+
+After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Priority below:
+
+**Thai versions built (2026-05-15):**
+| Page | EN | TH | Status |
+|---|---|---|---|
+| Homepage | `/` | `/th/` | ✅ Built |
+| About Us | `/about/` | `/th/about/` | ✅ Built |
+| Contact | `/contact/` | `/th/contact/` | ✅ Built |
+| Fabric Collections | `/fabric/` | `/th/fabric/` | ✅ Built |
+| FAQ | `/faq/` | `/th/faq/` | ✅ Built |
+| Reviews | `/reviews/` | `/th/reviews/` | ✅ Built |
+| Shipping Policy | `/shipping/` | `/th/shipping/` | ✅ Built |
+| Privacy Policy | `/policy/` | `/th/policy/` | ✅ Built |
+| Size Guide Hub | `/sizeguide/` | `/th/sizeguide/` | ✅ Built |
+| How to Measure | `/how-to-measure-mattress-size/` | `/th/how-to-measure-mattress-size/` | ✅ Built |
+| Custom Measurement | `/custom-measurement/` | `/th/custom-measurement/` | ✅ Built |
+| Product Listing | `/products/` | `/th/products/` | ✅ Built |
+| Fitted Sheets | `/fitted-sheets/` | `/th/fitted-sheets/` | ✅ Built |
+| Flat Sheets | `/flat-sheets/` | `/th/flat-sheets/` | ✅ Built |
+| Duvet Covers | `/duvet-covers/` | `/th/duvet-covers/` | ✅ Built |
+| Pillowcases | `/pillowcases/` | `/th/pillowcases/` | ✅ Built |
+| Mattress Protectors | `/mattress-protectors/` | `/th/mattress-protectors/` | ✅ Built |
+| Marine & Yacht | `/marine/` | `/th/marine/` | ✅ Built |
+| Family & Co-Sleep | `/family/` | `/th/family/` | ✅ Built |
+| Pet Owner | `/pets/` | `/th/pets/` | ✅ Built |
+| Easy-Change Duvet | `/duvet/` | `/th/duvet/` | ✅ Built |
+| Protection | `/protection/` | `/th/protection/` | ✅ Built |
+| RV & Truck Cab | `/rv-truck/` | `/th/rv-truck/` | ✅ Built |
+
+**Still missing — Thai versions not built:**
+| Page | EN URL | Priority | Notes |
+|---|---|---|---|
+| Bed Sheet Size Guide | `/bed-sheets-size/` | Medium | Separate guide from sizeguide; footer link |
+| Mattress Size Guide (EN) | `/mattress-size/` | Medium | International sizes SEO page; linked from sizeguide |
+| Thai Mattress Sizes | `/mattress-size-th/` | Medium | TH SEO hub; separate from `/th/sizeguide/` |
+| Pillow Protectors | `/pillow-protectors/` | Medium | Category page; nav link in EN mattress-protectors |
+| Unsubscribe | `/unsubscribe/` | Low | User-specific; TH policy links to EN version ✅ |
+| My Account | `/account/` | Low | Phase 5 gated; redirect logged-out users |
+| Checkout | `/checkout/` | Low | Phase 5 payment flow; not SEO-critical |
+| Order Confirmed | `/order-confirmed/` | Low | Phase 5 post-payment page |
+| Blog Index | `/blogs/` | Low | Blog not built yet; Phase 6+ |
+
+**Navigation link check — which TH pages have outgoing links to missing pages:**
+- No TH page links to `/bed-sheets-size/`, `/mattress-size/`, `/mattress-size-th/`, `/pillow-protectors/`, `/account/`, `/checkout/`, `/order-confirmed/`, `/blogs/` — these are either low-priority, user-specific, or Phase 5+ features.
+- `/th/policy/` links to EN `/unsubscribe/` — this is intentional (unsubscribe is language-agnostic, email-based).
+
+**Language toggle — nav.js BILINGUAL_PAGES list (updated 2026-05-15):**
+`['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/fitted-sheets/', '/flat-sheets/', '/duvet-covers/', '/pillowcases/', '/mattress-protectors/', '/pets/', '/marine/', '/family/', '/duvet/', '/protection/', '/rv-truck/', '/shipping/', '/policy/']`
+
+**Internal link fix (2026-05-15):** All 18 TH pages updated — nav links, footer links, hero CTAs changed from EN paths (`/products/`) to TH-prefixed paths (`/th/products/`). From any TH page, clicking nav links stays in TH. Lang toggle switches language correctly via BILINGUAL_PAGES lookup.

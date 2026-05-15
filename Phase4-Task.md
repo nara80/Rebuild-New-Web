@@ -460,6 +460,30 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 
 ---
 
+## Thai Version — Missing Pages (2026-05-15)
+
+**22 Thai pages built** (see Phase4.md for full list). 10 EN pages still missing Thai equivalents:
+
+| Page | EN URL | Priority | Notes |
+|---|---|---|---|
+| Bed Sheet Size Guide | `/bed-sheets-size/` | Medium | Separate guide from sizeguide; footer link |
+| Mattress Size Guide (EN) | `/mattress-size/` | Medium | International sizes; linked from sizeguide |
+| Thai Mattress Sizes | `/mattress-size-th/` | Medium | TH SEO hub; separate from `/th/sizeguide/` |
+| Pillow Protectors | `/pillow-protectors/` | Medium | Category page; nav link in EN mattress-protectors |
+| Unsubscribe | `/unsubscribe/` | Low | User-specific; EN version sufficient; `/th/policy/` links here ✅ |
+| My Account | `/account/` | Low | Phase 5 gated; redirect logged-out users |
+| Checkout | `/checkout/` | Low | Phase 5 payment flow; not SEO-critical |
+| Order Confirmed | `/order-confirmed/` | Low | Phase 5 post-payment page |
+| Blog Index | `/blogs/` | Low | Blog not built yet |
+
+**No TH page has outgoing links to any of the 9 missing pages** — these are either low-priority, user-specific (auth/checkout), or Phase 5+ features.
+
+**nav.js BILINGUAL_PAGES (updated 2026-05-15):** Both `/shipping/` and `/policy/` added so lang toggle routes correctly between EN and TH versions.
+
+**Internal links fixed (2026-05-15):** 18 TH pages updated — all nav/footer/hero links changed from EN paths to TH-prefixed paths. From any TH page, clicking nav stays in TH until user toggles language.
+
+---
+
 ## How to Use This Checklist
 
 1. Pick one unchecked item above (e.g., "Hero Section")
