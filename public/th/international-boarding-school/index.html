@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ผ้าปูที่นอนสำหรับนักเรียนปัจมูลิกนานาชาติ — ขนาด Single Bed ตัดตามสั่ง ส่งจากประเทศไทยไปทั่วโลก ผ้านวมซิป 3 ด้าน เปลี่ยนง่าย สะดวก ดูแลง่าย">
+  <title>ผ้าปูนักเรียนปัจมูลิกนานาชาติ — ขนาด Single Bed ตัดตามสั่ง — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    :lang(th) { font-family: 'Sarabun', sans-serif; }
+    .listing-page { background: #f0f7ff; }
+    .brand-hero { background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%); padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff; }
+    .brand-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px; }
+    .brand-hero-inner { max-width: var(--container-max); margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+    .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
+    .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
+    .listing-section { padding: 48px 0; }
+    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+    .listing-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
+    .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
+    .listing-card:hover .card-image img { transform: scale(1.04); }
+    .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .listing-card .card-tag.highlight { background: #fff3e0; color: #e65100; }
+    .listing-card .card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; line-height: 1.3; }
+    .listing-card .card-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+    .listing-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
+    .listing-card .card-cta { margin-top: auto; }
+    .listing-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
+    .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
+    .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
+    .listing-card .btn-outline { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+    .listing-card .btn-outline:hover { background: #e8f4fd; }
+    .listing-desc-section { background: #fff; border-top: 1px solid var(--color-border); padding: 56px 0; }
+    .listing-desc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .listing-desc-grid h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: var(--color-text); }
+    .listing-desc-grid p { color: #555; line-height: 1.7; margin-bottom: 16px; }
+    .listing-desc-grid ul { padding-left: 20px; margin-bottom: 24px; }
+    .listing-desc-grid ul li { margin-bottom: 8px; color: #555; }
+    .listing-desc-grid .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .listing-desc-grid .feature-item { background: var(--color-surface); padding: 16px; border-radius: var(--radius); }
+    .listing-desc-grid .feature-item strong { display: block; color: var(--color-text); margin-bottom: 4px; }
+    .listing-desc-grid .feature-item span { font-size: 0.875rem; color: #666; }
+    .pricing-panel { background: var(--color-surface); border-radius: var(--radius); padding: 32px; border: 1px solid var(--color-border); }
+    .pricing-panel h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 24px; color: var(--color-text); }
+    .pricing-panel .form-group { margin-bottom: 20px; }
+    .pricing-panel label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: var(--color-text); }
+    .pricing-panel select { width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; }
+    .pricing-panel select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.15); }
+    .size-guide-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-top: 8px; }
+    .size-guide-link:hover { text-decoration: underline; }
+    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 20px; }
+    .explore-fabrics-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-bottom: 20px; }
+    .explore-fabrics-link:hover { text-decoration: underline; }
+    .price-display { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+    .price-display .price-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; }
+    .price-display .price-value { font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }
+    .price-display .price-sub { font-size: 0.75rem; color: #999; margin-top: 4px; }
+    .custom-shape-cta { margin-top: 20px; padding: 16px; background: #fff; border: 2px dashed var(--color-border); border-radius: var(--radius); text-align: center; }
+    .custom-shape-cta p { font-size: 0.875rem; color: #666; margin-bottom: 10px; }
+    .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+    .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
+    .sizing-table-wrap { overflow-x: auto; margin-top: 16px; }
+    .sizing-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .sizing-table th { background: var(--color-primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+    .sizing-table td { padding: 9px 12px; border-bottom: 1px solid var(--color-border); color: #555; }
+    .sizing-table tr:nth-child(even) td { background: var(--color-surface); }
+    .testimonial-highlight { background: linear-gradient(135deg, #fff8e1, #fff3cd); border-left: 4px solid #ff9800; padding: 20px 24px; border-radius: var(--radius); margin-top: 24px; }
+    .testimonial-highlight p { font-style: italic; color: #555; line-height: 1.6; margin-bottom: 12px; }
+    .testimonial-highlight .review-author { font-weight: 600; color: var(--color-text); font-size: 0.875rem; }
+    @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
+    @media (max-width: 480px) { .listing-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="listing-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/th/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="เมนูหลัก"><ul class="nav-list"><li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li><li class="nav-item"><a href="/th/products/" class="nav-link">สินค้า</a></li><li class="nav-item"><a href="/th/fabric/" class="nav-link">เนื้อผ้า</a></li><li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li></ul></nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีผู้ใช้"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
+        <div class="lang-toggle" role="group" aria-label="สลับภาษา"><span data-lang="en" onclick="window.location.href='/international-boarding-school/'" style="cursor:pointer">EN</span><span>/</span><span data-lang="th" class="active">TH</span></div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ"><div class="mobile-drawer-search"><form action="/th/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/th/">หน้าแรก</a></li><li><a href="/th/products/">สินค้า</a></li><li><a href="/th/fabric/">เนื้อผ้า</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li></ul></div>
+    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="ปิดการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/th/products/" method="get" class="search-form"><input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
+  </header>
+
+  <main>
+    <section class="brand-hero">
+      <div class="brand-hero-inner">
+        <h1>นักเรียนปัจมูลิกนานาชาติ</h1>
+        <p class="hero-sub">ผ้าปูที่นอนขนาด Single Bed ตัดตามสั่ง สำหรับหอพักทั่วโลก ผ้านวมซิป 3 ด้าน — ซักผ้าไม่ต้องใช้เวลาทั้งวัน ส่งตรงจากประเทศไทยไปถึงลูกของคุณที่ไหนก็ได้</p>
+      </div>
+    </section>
+
+    <section class="listing-section">
+      <div class="container">
+        <div class="listing-grid">
+
+          <!-- ผ้านวมซิป 3 ด้าน — สินค้าหลัก -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/3-sided-duvet.jpg" alt="ผ้านวมซิป 3 ด้าน" width="800" height="600" loading="lazy" decoding="async">
+              <div class="card-video-badge" style="background:rgba(255,152,0,0.9);"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>ขายดีที่สุด</div>
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag highlight">ยอดนิยม</span><span class="card-tag">ซิป 3 ด้าน</span><span class="card-tag">ซักง่าย</span></div>
+              <h3 class="card-title">ผ้านวมซิป 3 ด้าน</h3>
+              <div class="card-price">จาก ฿2,295</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และอากร</div>
+              <div class="card-cta"><a href="/product/3-sided-duvet/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <!-- ผ้าปูที่นอน — Single -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="ผ้าปูที่นอนพลาสติก — Single" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">ผ้าปูที่นอน</span><span class="card-tag">ขนาด Single</span></div>
+              <h3 class="card-title">ผ้าปูที่นอนกระชับ — Single Bed</h3>
+              <div class="card-price">จาก ฿1,485</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และอากร</div>
+              <div class="card-cta"><a href="/product/product-boat-bedding-fitted-sheet-microfiber/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <!-- ผ้าปูแบน — Single -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/flat-sheet-standard.jpg" alt="ผ้าปูแบนมาตรฐาน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">ผ้าปูแบน</span><span class="card-tag">ขนาด Single</span></div>
+              <h3 class="card-title">ผ้าปูแบน — Single Bed</h3>
+              <div class="card-price">จาก ฿1,345</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และอากร</div>
+              <div class="card-cta"><a href="/product/flat-sheet-standard/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <!-- ถุงหมอนแบบซอง -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-envelope.jpg" alt="ถุงหมอนแบบซอง" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">ถุงหมอน</span><span class="card-tag">มาตรฐาน</span></div>
+              <h3 class="card-title">ถุงหมอนแบบซอง (Envelope)</h3>
+              <div class="card-price">฿565</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และอากร</div>
+              <div class="card-cta"><a href="/product/pillowcase-envelope/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <!-- ผ้าคลุมหมอนกันเปื้อน -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pillow-protector.jpg" alt="ผ้าคลุมหมอนกันเปื้อน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">กันเปื้อน</span><span class="card-tag">หมอน</span></div>
+              <h3 class="card-title">ผ้าคลุมหมอนกันเปื้อน</h3>
+              <div class="card-price">฿635</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และอากร</div>
+              <div class="card-cta"><a href="/product/pillow-protector/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <!-- Size Guide Card -->
+          <article class="listing-card">
+            <div class="card-image" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); display:flex; align-items:center; justify-content:center; min-height:200px;">
+              <div style="text-align:center; padding:20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1565c0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+                <p style="font-weight:700; color:#1565c0; margin-top:12px; font-size:0.9rem;">ไม่แน่ใจขนาดหอพัดของลูก?</p>
+                <p style="color:#1976d2; font-size:0.8rem; margin-top:6px;">ขนาด Single Bed แตกต่างกันตามประเทศ — เรามีตารางเปรียบเทียบให้</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">คู่มือขนาด</span></div>
+              <h3 class="card-title">ขนาด Single Bed ตามประเทศ — ตารางเปรียบเทียบ</h3>
+              <div class="card-price-note">US, UK, EU, AU, TH, SG, JP และอื่นๆ</div>
+              <div class="card-cta"><a href="/th/sizeguide/" class="btn btn-outline">ดูคู่มือขนาด →</a></div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="listing-desc-section">
+      <div class="container">
+        <div class="listing-desc-grid">
+          <div>
+            <h2>ผ้าปูสำหรับนักเรียนปัจมูลิกนานาชาติ — สิ่งที่พ่อแม่ต้องรู้</h2>
+            <p>ทุกประเทศมีคำจำกัดความ "Single Bed" ไม่เหมือนกัน US Twin คือ 99×191ซม. แต่ UK Single คือ 90×190ซม. และ Japan Single คือ 100×200ซม. ลูกของคุณอาจไปถึงหอพักโดยคาดว่าผ้าปูจะพอดี — แต่กลับพบว่าไม่พอดี</p>
+            <p>MildMate ช่วยแก้ปัญหานี้ได้ เราตัดผ้าปูที่นอนขนาด Single ในมิติที่แม่นยำตามที่ลูกต้องการ ไม่ว่าจะเรียนอยู่ประเทศใด พร้อมผ้านวมซิป 3 ด้าน ที่เปลี่ยนผ้านวมได้ในไม่กี่นาที ไม่ต้องใช้เวลาทั้งวัน</p>
+            <ul>
+              <li>ตัดตามสั่งขนาด Single Bed ใดๆ ก็ได้ (ซม. หรือ นิ้ว)</li>
+              <li>ผ้านวมซิป 3 ด้าน — เปลี่ยนผ้านวมได้ในไม่กี่นาที แม้ในห้องพักเล็กๆ</li>
+              <li>ผ้า BreezePlus: กันขนสัตว์ เย็นกว่าฝ้าย 3-5 องศา</li>
+              <li>ส่งตรงจากประเทศไทยไปทั่วโลก</li>
+              <li>ร้านค้าบน Etsy ที่ได้รับคะแนนสูง — ติดต่อเราก่อนสั่งซื้อหากไม่แน่ใจเรื่องขนาด</li>
+            </ul>
+            <div class="testimonial-highlight">
+              <p>"ฉันซื้อผ้านวมซิป 3 ด้านนี้ให้ลูกชายที่ไปเรียนมหาวิทยาลัย บริการลูกค้าของ MildMate สุดยอด! พนักงานช่วยดูแลจนฉันได้รับสินค้าที่ต้องการแน่นอน หากมีคำถามพิเศษ อย่าลังเลที่จะติดต่อไป หาซื้อผ้านวมซิป 3 ด้านไม่ง่ายเลย ดีใจที่เจอ MildMate"</p>
+              <div class="review-author">— รีวิวจากผู้ซื้อบน Etsy</div>
+            </div>
+            <div class="features-grid" style="margin-top:24px;">
+              <div class="feature-item"><strong>รับประกันขนาด</strong><span>ไม่แน่ใจขนาด? ติดต่อเราก่อนสั่ง — เรายินดีให้คำแนะนำ</span></div>
+              <div class="feature-item"><strong>ซิป 3 ด้าน</strong><span>เปลี่ยนผ้านวมได้ง่ายแม้ในห้องเล็ก</span></div>
+              <div class="feature-item"><strong>ผ้าคุณภาพสูง</strong><span>BreezePlus: เย็น นุ่ม กันขนสัตว์</span></div>
+              <div class="feature-item"><strong>จัดส่งทั่วโลก</strong><span>จากประเทศไทยไปถึงที่ที่ลูกเรียน</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="pricing-panel">
+              <h3>ขอใบเสนอราคา</h3>
+              <div class="form-group">
+                <label for="region-select">ลูกของคุณเรียนอยู่ประเทศใด?</label>
+                <select id="region-select">
+                  <option value="">— เลือกประเทศ —</option>
+                  <option value="us">🇺🇸 สหรัฐอเมริกา / แคนาดา</option>
+                  <option value="uk">🇬🇧 สหราชอาณาจักร</option>
+                  <option value="eu">🇪🇺 สหภาพยุโรป</option>
+                  <option value="au">🇦🇺 ออสเตรเลีย / นิวซีแลนด์</option>
+                  <option value="th">🇹🇭 ไทย</option>
+                  <option value="my">🇲🇾🇸🇬 มาเลเซีย / สิงค์โปร์</option>
+                  <option value="jp">🇯🇵 ญี่ปุ่น</option>
+                  <option value="kr">🇰🇷 เกาหลีใต้</option>
+                  <option value="hk">🇭🇰 ฮ่องกง</option>
+                  <option value="other">🌍 อื่นๆ</option>
+                </select>
+                <a href="/th/sizeguide/" class="size-guide-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></svg>ดูตารางเปรียบเทียบขนาด Single Bed →</a>
+              </div>
+              <div class="form-group">
+                <label for="size-select">ขนาด Single Bed (เป็นข้อมูลอ้างอิง)</label>
+                <select id="size-select" disabled><option value="">— เลือกประเทศก่อน —</option></select>
+              </div>
+              <div class="form-group">
+                <label>เนื้อผ้า</label>
+                <a href="/th/fabric/" class="explore-fabrics-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>ดูคอลเลกชันเนื้อผ้า →</a>
+                <span class="fabric-badge">BreezePlus แนะนำ — เย็นสบาย ดูแลง่าย</span>
+              </div>
+              <div class="price-display">
+                <div class="price-label">ราคาโดยประมาณจาก</div>
+                <div class="price-value" id="estimated-price">—</div>
+                <div class="price-sub">ราคาไม่รวมค่าจัดส่ง ภาษี และอากร</div>
+              </div>
+              <div class="custom-shape-cta">
+                <p>ไม่แน่ใจว่าลูกต้องใช้ขนาดเท่าไหร่? ทีมงานของเราพร้อมช่วยเหลือ</p>
+                <a href="/th/contact/" class="btn-outline">ติดต่อเรา →</a>
+              </div>
+            </div>
+
+            <!-- ตารางขนาด Single bed -->
+            <div style="margin-top:24px; background:#fff; border-radius:var(--radius); padding:24px; border:1px solid var(--color-border);">
+              <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:var(--color-text);">ขนาด Single Bed — เปรียบเทียบระหว่างประเทศ</h3>
+              <div class="sizing-table-wrap">
+                <table class="sizing-table">
+                  <thead>
+                    <tr>
+                      <th>ประเทศ</th>
+                      <th>Single Bed (ซม.)</th>
+                      <th>Single Bed (นิ้ว)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>🇺🇸 สหรัฐฯ Twin</td><td>99 × 191 ซม.</td><td>39 × 75 นิ้ว</td></tr>
+                    <tr><td>🇬🇧 สหราชอาณาจักร</td><td>90 × 190 ซม.</td><td>35.5 × 74.8 นิ้ว</td></tr>
+                    <tr><td>🇪🇺 ยุโรป</td><td>90 × 200 ซม.</td><td>35.4 × 78.7 นิ้ว</td></tr>
+                    <tr><td>🇦🇺 ออสเตรเลีย / NZ</td><td>92 × 188 ซม.</td><td>36.2 × 74 นิ้ว</td></tr>
+                    <tr><td>🇹🇭 ไทย</td><td>107 × 191 ซม.</td><td>42 × 75 นิ้ว</td></tr>
+                    <tr><td>🇸🇬 สิงค์โปร์</td><td>107 × 191 ซม.</td><td>42 × 75 นิ้ว</td></tr>
+                    <tr><td>🇯🇵 ญี่ปุ่น</td><td>100 × 200 ซม.</td><td>39.4 × 78.7 นิ้ว</td></tr>
+                    <tr><td>🇰🇷 เกาหลีใต้</td><td>110 × 200 ซม.</td><td>43.3 × 78.7 นิ้ว</td></tr>
+                    <tr><td>🇭🇰 ฮ่องกง</td><td>107 × 191 ซม.</td><td>42 × 75 นิ้ว</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>ลิงก์ด่วน</h3><ul><li><a href="/th/about/">เกี่ยวกับเรา</a></li><li><a href="/th/contact/">ติดต่อเรา</a></li><li><a href="/th/reviews/">รีวิว</a></li></ul></div><div class="footer-col"><h3>บริการลูกค้า</h3><ul><li><a href="/th/faq/">คำถามที่พบบ่อย</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li><li><a href="/th/blogs/">บล็อก</a></li></ul></div><div class="footer-col"><h3>สั่งซื้อผ่าน</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>ติดต่อ</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/th/policy/">นโยบายความเป็นส่วนตัว</a><a href="/th/shipping/">การส่งมอบและคืนสินค้า</a></div></div></div></footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
+    const SIZES_BY_REGION = {
+      us: [{ label: 'Twin 99×191ซม. / 39×75นิ้ว', price: 55 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      uk: [{ label: 'Single 90×190ซม. / 35.5×74.8นิ้ว', price: 53 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      eu: [{ label: 'Single 90×200ซม. / 35.4×78.7นิ้ว', price: 54 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      au: [{ label: 'Single 92×188ซม. / 36.2×74นิ้ว', price: 54 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      th: [{ label: 'Single 107×191ซม. / 42×75นิ้ว', price: 53 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      my: [{ label: 'Single 107×191ซม. / 42×75นิ้ว', price: 53 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      jp: [{ label: 'Single 100×200ซม. / 39.4×78.7นิ้ว', price: 55 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      kr: [{ label: 'Single 110×200ซม. / 43.3×78.7นิ้ว', price: 56 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      hk: [{ label: 'Single 107×191ซม. / 42×75นิ้ว', price: 53 }, { label: 'ขนาด Single ตามสั่ง →', price: 'custom' }],
+      other: [{ label: 'ขนาดตามสั่ง →', price: 'custom' }]
+    };
+    let selectedRegion = '', selectedSize = '';
+    const regionSelect = document.getElementById('region-select');
+    const sizeSelect = document.getElementById('size-select');
+    const priceEl = document.getElementById('estimated-price');
+    function updatePrice() {
+      let base = 0;
+      if (selectedRegion && selectedSize) {
+        const opt = (SIZES_BY_REGION[selectedRegion] || []).find(s => s.label === selectedSize);
+        if (opt) base = opt.price === 'custom' ? 0 : opt.price;
+      }
+      if (selectedRegion === 'other' || selectedSize === 'ขนาด Single ตามสั่ง →' || selectedSize === 'ขนาดตามสั่ง →') { priceEl.textContent = 'เสนอราคาตามสั่ง'; }
+      else if (base > 0) { priceEl.textContent = '฿' + base + '0'; }
+      else { priceEl.textContent = '—'; }
+    }
+    regionSelect.addEventListener('change', () => {
+      selectedRegion = regionSelect.value; selectedSize = '';
+      if (selectedRegion) { sizeSelect.disabled = false; sizeSelect.innerHTML = '<option value="">— เลือกขนาด —</option>' + (SIZES_BY_REGION[selectedRegion] || []).map(s => `<option value="${s.label}">${s.label}</option>`).join(''); }
+      else { sizeSelect.disabled = true; sizeSelect.innerHTML = '<option value="">— เลือกประเทศก่อน —</option>'; }
+      updatePrice();
+    });
+    sizeSelect.addEventListener('change', () => { selectedSize = sizeSelect.value; updatePrice(); });
+  </script>
+</body>
+</html>

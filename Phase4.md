@@ -64,7 +64,7 @@ The "Shop by Niche" section has 4 cards. Each needs one photo.
 | Marine & Yacht | `category-marine.jpg` | `public/images/categories/` | V-Berth mattress on a boat |
 | Family & Co-Sleep | `category-family.jpg` | `public/images/categories/` | Family bed, parents + child |
 | Easy-Change Duvet | `category-duvet.jpg` | `public/images/categories/` | 3-sided zipper duvet open |
-| Protection | `category-protection.jpg` | `public/images/categories/` | Waterproof protector or pet on bed |
+| International Boarding School | `category-ibs.jpg` | `public/images/categories/` | Student with duvet at dorm abroad |
 
 **For each image, write:** Ready / Missing (Droid will use a colored placeholder for missing ones).
 
@@ -572,7 +572,7 @@ After Droid finishes, open `http://localhost:8788` and review each section top t
 
 | Check | Expected |
 |---|---|
-| 4 cards visible | Marine, Family, Duvet, Protection |
+| 6 cards visible | Marine, Family, Pets, Duvet, International Boarding School, RV & Truck |
 | Each card has image | Photo or colored placeholder |
 | Each card links somewhere | Clicking goes to the category listing |
 | Mobile | Cards stack to 2 columns |
@@ -730,7 +730,7 @@ Go through this checklist before moving to Phase 5:
 - [ ] Hero headline reads: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
 - [ ] Trust bar shows all 4 icons
 - [ ] 5 product-type category cards visible (Fitted Sheets, Flat Sheets, Duvet Covers, Pillowcases, Protectors)
-- [ ] 5 niche category cards visible with images (Marine, Family, Pets, Duvet, Protection)
+- [ ] 6 niche category cards visible with images (Marine, Family, Pets, Duvet, International Boarding School, RV & Truck)
 - [ ] Top 5 products show with prices
 - [ ] Configurator shows two tabs: "🛏 Fitted Bed Sheet" and "⚓ V-Berth Boat Sheet"
 - [ ] Fitted Bed Sheet tab shows Width / Length / Depth inputs

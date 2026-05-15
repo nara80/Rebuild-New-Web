@@ -52,7 +52,7 @@
 
   /* ── 3. Language toggle — actual navigation ── */
   // Pages known to have both EN and TH versions (expand as TH pages are built)
-  const BILINGUAL_PAGES = ['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/fitted-sheets/', '/flat-sheets/', '/duvet-covers/', '/pillowcases/', '/mattress-protectors/', '/pets/', '/marine/', '/family/', '/duvet/', '/protection/', '/rv-truck/', '/shipping/', '/policy/'];
+  const BILINGUAL_PAGES = ['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/fitted-sheets/', '/flat-sheets/', '/duvet-covers/', '/pillowcases/', '/mattress-protectors/', '/pets/', '/marine/', '/family/', '/duvet/', '/international-boarding-school/', '/rv-truck/', '/shipping/', '/policy/'];
   const langToggle = document.querySelector('.lang-toggle');
   if (langToggle) {
     langToggle.addEventListener('click', function (e) {
