@@ -1,5 +1,5 @@
 # Phase 4 — Homepage + Product Pages
-**Goal:** Build all real content pages — the homepage with every section filled, the product listing grid, individual product detail pages with the live price configurator, and the size guide SEO hub pages.
+**Goal:** Build all real content pages — the homepage with every section filled, the product listing grid, individual product detail pages, and the size guide SEO hub pages.
 
 **End Result:** A fully functional shopping experience. Visitors can land on the homepage, browse products by category, enter their mattress dimensions, and see a live price update — all before Phase 5 adds the actual payment step.
 
@@ -21,7 +21,7 @@ Phase 4 builds real content into pages that already have the header and footer f
 - [ ] `public/css/main.css` exists and has content
 - [ ] `public/js/nav.js` exists
 - [ ] Opening `http://localhost:8788` shows a styled header with logo and navigation
-- [ ] Footer with LINE widget appears at the bottom of the page
+
 
 **If any item is missing:** Go back and complete Phase 3 before continuing.
 

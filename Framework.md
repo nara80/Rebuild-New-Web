@@ -906,3 +906,105 @@ Both the desktop header and mobile drawer instances are updated.
 
 ### Key Insight
 The issue is specific to pages with large inline `<script>` blocks that run before nav.js can attach. Most pages (no large inline JS, nav.js loads cleanly) work fine via nav.js alone. Only pages with conflicting inline scripts need the onclick workaround.
+
+---
+
+## Product Listing Page Specification (Phase 4 Updated)
+
+Every category page (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`, `/marine/`, `/family/`, `/pets/`, `/protection/`, `/rv-truck/`, `/duvet/`) uses this layout:
+
+### Page Structure
+
+```
+[BRAND HERO]                    ← Blue gradient + blueprint grid, consistent with /contact/
+  H1: {Category Name}
+  Sub: {Category-specific tagline}
+  (same style as /contact/ hero)
+
+[LISTING SECTION]               ← 11 product cards in auto-fill grid
+  [Filter bar] (optional per page)
+  [11 listing-card elements]
+
+[LISTING DESC SECTION]         ← Description + Features + Pricing Panel
+  Left: description text + features grid
+  Right: interactive pricing panel
+```
+
+### Brand Hero (Consistent Across All Pages)
+```css
+.brand-hero {
+  background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+  padding: 72px 24px 56px;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+.brand-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(#fff 1px, transparent 1px),
+    linear-gradient(90deg, #fff 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; color: #fff; }
+.hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); }
+```
+
+### Product Card (`.listing-card`)
+Each card contains:
+- `.card-image` with `img` (4:3 aspect ratio) + optional `.card-video-badge`
+- `.card-body` with `.card-tags`, `.card-title`, `.card-price`, `.card-price-note`, `.card-cta`
+
+**`.card-tags`** — comma-separated cross-sell category tags stored in D1 `products.tags` field (e.g., `"Family, Duvet, Marine, Pets"`). Rendered as `.card-tag` pills.
+
+**Video badge** (`card-video-badge`): used for measurement guide cards (links to `/custom-measurement/`). Contains inline SVG play icon + "VIDEO" text.
+
+### Pricing Panel
+
+Structure:
+1. **Select Region** → enables Standard Size dropdown
+2. **Standard Size** → populated from `SIZES_BY_REGION` JS object
+3. **Depth / Pocket Height** (optional for fitted/flat/protectors)
+4. **Fabric Collection** or **Fabric Badge** (restricted pages)
+5. **Price Display** → shows selected price or "Custom quote"
+6. **Custom Shape CTA** → dashed-border box with CTA button
+
+### Fabric Rules Per Category
+| Category | Fabric Options |
+|---|---|
+| Fitted Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
+| Flat Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
+| Duvet Covers | BreezePlus only (badge, no selector) |
+| Pillowcases | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
+| Mattress Protectors | BreezePlus + CloudSoft (TPU badge) |
+| Marine & Yacht | CloudSoft only (badge, no selector) |
+| Family & Co-Sleep | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
+| Pet Owner Bedding | BreezePlus only (badge, no selector) |
+| Protection | BreezePlus + CloudSoft (TPU badge) |
+| RV & Truck | CloudSoft only (badge, no selector) |
+| Easy-Change Duvet | BreezePlus only (badge, no selector) |
+
+### Custom Shape CTA — Links
+| Page | CTA Link |
+|---|---|
+| Fitted Sheets, Flat Sheets, Mattress Protectors, Protection, Duvet (Easy-Change) | `/how-to-measure-mattress-size/` |
+| Marine & Yacht, Family, Pets, RV & Truck, Pillowcases | `/custom-measurement/` |
+
+### Price Display Note
+Every price display includes: *"Price excludes shipping, tax & tariff"*
+
+### D1 `products` Table — Tags Field
+Added in migration `002_add_tags.sql`:
+```sql
+ALTER TABLE products ADD COLUMN tags TEXT DEFAULT '';
+```
+Tags format: comma-separated cross-sell category names.
+Example: `"Family, Duvet, Marine, Pets"` for 3-Sided Zipper Duvet Cover.
+
+Available cross-sell tags:
+`Fitted Sheets | Flat Sheets | Duvet | Marine | Family | Pets | Protection | RV-Truck | Pillowcases | Mattress Protectors`
+
+Migration `003_seed_products.sql` seeds all 15 products with their tags.
