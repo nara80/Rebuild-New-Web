@@ -1007,3 +1007,122 @@ Available cross-sell tags:
 `Fitted Sheets | Flat Sheets | Duvet | Marine | Family | Pets | Protection | RV-Truck | Pillowcases | Mattress Protectors`
 
 Migration `003_seed_products.sql` seeds all 15 products with their tags.
+
+---
+
+## Product Detail Page Specification (Phase 4 — Updated 2026-05-15)
+
+Every product detail page (`/product/[slug]/`) uses this layout:
+
+### Page Structure
+
+```
+[BRAND HERO]                    ← Blue gradient + blueprint grid (same as /contact/)
+  H1: {Product Name}
+  Sub: {Product-specific tagline}
+
+[PRODUCT LAYOUT — 2-column grid]
+  Left: Product Gallery (sticky)
+  Right: Product Info Panel
+    ├── Breadcrumb
+    ├── Product Title (H1)
+    ├── Tagline
+    ├── Rating (★★★★★ + review count link)
+    ├── Pricing Panel (bordered card)
+    │   ├── Step 1: Region (grid of country buttons)
+    │   ├── Step 2: Size (dropdown with optgroups by region)
+    │   ├── Step 3: Fabric (swatch selector OR fabric badge for restricted categories)
+    │   ├── Step 4: Color (color dot selector)
+    │   ├── Price Display (฿X,XXX)
+    │   ├── Add to Cart + Custom Size buttons
+    │   ├── Custom Dimensions panel (toggle expand)
+    │   │   ├── Width / Length / Depth inputs
+    │   │   ├── Unit toggle (cm / inch)
+    │   │   ├── Live price estimate
+    │   │   └── Submit for Custom Quote button
+    │   └── Payment badges (Visa/MC, Apple Pay, Secure checkout)
+    ├── Trust Signals (2×2 grid of icons)
+    └── Trust Badges row
+
+[PRODUCT TABS — accordion below fold]
+  Description | Fabric Details | Size Guide | Care
+
+[REVIEWS SECTION]
+  Rating summary (score + stars + count)
+  2-column grid of review cards
+
+[RELATED PRODUCTS — 4 cards horizontal]
+  4 related product cards
+
+[FOOTER — 4-col global]
+```
+
+### Hero (Consistent with /contact/)
+
+```css
+background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+padding: 72px 24px 56px;
+```
+
+### Pricing Panel (`.pricing-panel`)
+
+- White background, bordered card, 28px padding
+- **Region selector**: Grid of 8 country buttons (US, UK, EU, AU, TH, MY/SG, JP, Other). Selected state: blue background, white text.
+- **Size dropdown**: Shows optgroups per country/region. Selected size updates price instantly.
+- **Custom Size toggle**: Button reveals custom dimension inputs (W × L × D + unit toggle + live estimate + Submit for Custom Quote)
+- **Add to Cart button**: Blue filled, disabled until size selected. Shows "Added!" with green background for 2 seconds after click.
+- **Custom Size button**: Blue outline, toggles custom dimensions panel.
+
+### Fabric Rules Per Product Type
+
+| Product | Fabric Options |
+|---|---|
+| Duvet Covers | BreezePlus only (fabric badge, no swatch selector) |
+| Pet Owner (Fitted/Duvet) | BreezePlus only (fabric badge) |
+| Marine & Yacht | CloudSoft only (fabric badge) |
+| RV & Truck | CloudSoft only (fabric badge) |
+| Fitted Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe (swatch selector) |
+| Flat Sheets | All 4: swatch selector |
+| Pillowcases | All 4: swatch selector |
+| Mattress Protectors | TPU badge + BreezePlus outer (badge) |
+| Pillow Protectors | TPU badge + BreezePlus outer (badge) |
+| Boarding Dorm products | BreezePlus only (fabric badge) |
+
+### Color Selector (BreezePlus only)
+
+9 color dots: Pure White, Sand, Sky, Sea, Emerald, Dark Grey, Silver, Baby Pink, Ivory.
+Selected dot gets primary-color border ring.
+
+### Gallery
+
+- Main image (4:3, sticky on scroll above fold)
+- Thumbnail strip (5 max) with video thumb option
+- Badge overlay (top-left): BEST SELLER / ANTI-FUR / WATERPROOF etc.
+- Clicking video thumb opens YouTube in new tab
+
+### Tabs (Description, Fabric Details, Size Guide, Care)
+
+- Active tab: CI Blue bottom border
+- Content panel shows/hides on click (no animation)
+
+### Reviews Section
+
+- Summary card: large score number + star row + text
+- Review cards: avatar circle (initials), name, country, star rating, review text, verified purchase label
+
+### Related Products
+
+- 4 cards in responsive grid
+- Card: image (4:3) + title + price + price note
+
+### Custom Quote Flow
+
+Custom dimensions panel expands on "Custom Size" button click.
+Unit toggle (cm/inch) converts all input labels.
+Submit button triggers alert (mock) — real flow: POST to `/api/quote` → admin approves → magic link email.
+
+### Add to Cart Flow (Phase 5 stub)
+
+"Add to Cart" button disabled until size selected.
+On click: button text changes to "Added!" with green background for 2 seconds, then reverts.
+Real cart logic stored in `cart.js` localStorage with product details + dimensions.
