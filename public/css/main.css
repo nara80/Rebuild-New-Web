@@ -1777,6 +1777,45 @@ main {
   margin: 0 auto;
 }
 
+/* ── Brand Hero (CI Blue gradient + blueprint grid) ── */
+.brand-hero {
+  background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+  padding: 72px 24px 56px;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+.brand-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(#fff 1px, transparent 1px),
+    linear-gradient(90deg, #fff 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.brand-hero .container {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.brand-hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.brand-hero .hero-sub {
+  font-size: 1.0625rem;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
 /* Product listing */
 .filter-bar {
   display: flex;
