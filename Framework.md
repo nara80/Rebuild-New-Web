@@ -866,3 +866,43 @@ CREATE TABLE customers (
 - Inventory management
 - Auto-translation (manual TH/EN per page)
 - Shopee/Lazada direct API integration (links only — orders managed on those platforms directly)
+
+---
+
+## Bug Fix: Language Toggle Fails on `/sizeguide/` (Inline Onclick Workaround)
+
+### Symptom
+- Lang-toggle works on all pages
+- On `/sizeguide/` only: clicking EN (from TH version) works; clicking TH (from EN version) does nothing — no navigation, no error
+- nav.js has `/sizeguide/` correctly in `BILINGUAL_PAGES`, `/th/sizeguide/` exists and returns 200, `_redirects` is not the cause
+
+### Root Cause
+Pages with a large inline `<script>` block (e.g., `/sizeguide/` has ~330 lines of interactive JS for the size-table UI) can have a JS timing or event-bubbling edge case that prevents nav.js's `addEventListener` from reliably triggering `window.location.href` for the TH span specifically.
+
+### Fix Applied (commit `9116e7b`)
+Add a guaranteed fallback `onclick` directly on the language-toggle spans. This fires before any external JS event delegation and works regardless of nav.js load order or inline-script interference.
+
+**On `/sizeguide/index.html` (EN page):**
+```html
+<div class="lang-toggle" role="group" aria-label="Language switch">
+  <span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/sizeguide/'" style="cursor:pointer">TH</span>
+</div>
+```
+Both the desktop header and mobile drawer instances are updated.
+
+**On `/th/sizeguide/index.html` (TH page):**
+```html
+<div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา">
+  <span data-lang="en" onclick="window.location.href='/sizeguide/'" style="cursor:pointer">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
+</div>
+```
+
+### How to Apply This Fix to Any Other Page
+1. Find all `lang-toggle` blocks in the page HTML (there can be 2 — desktop header + mobile drawer)
+2. Add `onclick="window.location.href='/th/[path]/'"` to the TH span
+3. Add `onclick="window.location.href='/[path]/'"` to the EN span on the TH version
+4. Include `style="cursor:pointer"` for visual clarity
+5. Keep the nav.js event delegation as the primary mechanism — the inline onclick is a fallback, not a replacement
+
+### Key Insight
+The issue is specific to pages with large inline `<script>` blocks that run before nav.js can attach. Most pages (no large inline JS, nav.js loads cleanly) work fine via nav.js alone. Only pages with conflicting inline scripts need the onclick workaround.
