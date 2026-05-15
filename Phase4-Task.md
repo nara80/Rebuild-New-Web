@@ -190,15 +190,20 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-## URL Structure & Redirects (2026-05-14)
+## URL Structure & Redirects (2026-05-14, updated 2026-05-15)
 
-### Phase 2 — Redirect Rules (`public/_redirects`)
+### `_redirects` — WordPress old URL → new bilingual pages
+
+All old WordPress URLs (blog posts, pages, sub-paths) are handled by wildcard `/*` rules:
 
 | Old URL | New URL | Type | Status |
 |---|---|---|---|
-| `/mattress-size-th/*` | `/sizeguide/th/` | 301 | ⚠️ Pending — add to `_redirects` |
-| `/mattress-size/*` | `/sizeguide/` | 301 | ⚠️ Pending — add to `_redirects` |
-| `/bed-sheets-size/*` | `/sizeguide/` | 301 | ⚠️ Pending — add to `_redirects` |
+| `/bed-sheets-size/*` | `/sizeguide/` | 301 | ✅ Active — catches all sub-paths |
+| `/mattress-size/*` | `/sizeguide/` | 301 | ✅ Active — catches all sub-paths |
+| `/mattress-size-th/*` | `/sizeguide/th/` | 301 | ✅ Active — catches all sub-paths |
+| `/pillow-protectors/*` | `/mattress-protectors/` | 301 | ✅ Active — catches all sub-paths |
+
+**No separate TH pages needed** — the wildcard `/*` handles ALL old WordPress content automatically.
 
 ### Language Toggle — `/th/` Versions Required
 
@@ -462,23 +467,26 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 
 ## Thai Version — Missing Pages (2026-05-15)
 
-**22 Thai pages built** (see Phase4.md for full list). 10 EN pages still missing Thai equivalents:
+**5 EN pages missing TH equivalents — no separate TH page needed (handled by redirects):**
+| Page | EN URL | What happens |
+|---|---|---|
+| ~~Bed Sheet Size Guide~~ | ~~`/bed-sheets-size/`~~ | **`301 → /sizeguide/`** — wildcard `/*` catches all paths; no separate TH page |
+| ~~Mattress Size (EN)~~ | ~~`/mattress-size/`~~ | **`301 → /sizeguide/`** — wildcard `/*` catches all paths; no separate TH page |
+| ~~Thai Mattress Sizes~~ | ~~`/mattress-size-th/`~~ | **`301 → /sizeguide/th/`** — wildcard `/*` catches all paths; no separate TH page |
+| ~~Pillow Protectors~~ | ~~`/pillow-protectors/`~~ | **`301 → /mattress-protectors/`** — wildcard `/*` catches all paths; no separate TH page |
+| ~~Unsubscribe~~ | ~~`/unsubscribe/`~~ | **EN version sufficient** — email-based, language-agnostic |
 
-| Page | EN URL | Priority | Notes |
-|---|---|---|---|
-| Bed Sheet Size Guide | `/bed-sheets-size/` | Medium | Separate guide from sizeguide; footer link |
-| Mattress Size Guide (EN) | `/mattress-size/` | Medium | International sizes; linked from sizeguide |
-| Thai Mattress Sizes | `/mattress-size-th/` | Medium | TH SEO hub; separate from `/th/sizeguide/` |
-| Pillow Protectors | `/pillow-protectors/` | Medium | Category page; nav link in EN mattress-protectors |
-| Unsubscribe | `/unsubscribe/` | Low | User-specific; EN version sufficient; `/th/policy/` links here ✅ |
-| My Account | `/account/` | Low | Phase 5 gated; redirect logged-out users |
-| Checkout | `/checkout/` | Low | Phase 5 payment flow; not SEO-critical |
-| Order Confirmed | `/order-confirmed/` | Low | Phase 5 post-payment page |
-| Blog Index | `/blogs/` | Low | Blog not built yet |
+**4 EN pages intentionally not built in TH (Phase 5+ or user-specific):**
+| Page | EN URL | Reason |
+|---|---|---|
+| My Account | `/account/` | Phase 5 gated; redirect logged-out users |
+| Checkout | `/checkout/` | Phase 5 payment flow; not SEO-critical |
+| Order Confirmed | `/order-confirmed/` | Phase 5 post-payment page |
+| Blog Index | `/blogs/` | Blog not built yet |
 
-**No TH page has outgoing links to any of the 9 missing pages** — these are either low-priority, user-specific (auth/checkout), or Phase 5+ features.
+**All WordPress old URLs:** `_redirects` wildcard `/*` rules catch every old blog post and page slug automatically. No separate TH pages needed for any WordPress legacy content.
 
-**nav.js BILINGUAL_PAGES (updated 2026-05-15):** Both `/shipping/` and `/policy/` added so lang toggle routes correctly between EN and TH versions.
+**nav.js BILINGUAL_PAGES (updated 2026-05-15):** `/shipping/` and `/policy/` added so lang toggle routes correctly between EN and TH versions.
 
 **Internal links fixed (2026-05-15):** 18 TH pages updated — all nav/footer/hero links changed from EN paths to TH-prefixed paths. From any TH page, clicking nav stays in TH until user toggles language.
 

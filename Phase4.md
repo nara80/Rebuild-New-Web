@@ -973,19 +973,25 @@ After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Prior
 **Still missing — Thai versions not built:**
 | Page | EN URL | Priority | Notes |
 |---|---|---|---|
-| Bed Sheet Size Guide | `/bed-sheets-size/` | Medium | Separate guide from sizeguide; footer link |
-| Mattress Size Guide (EN) | `/mattress-size/` | Medium | International sizes SEO page; linked from sizeguide |
-| Thai Mattress Sizes | `/mattress-size-th/` | Medium | TH SEO hub; separate from `/th/sizeguide/` |
-| Pillow Protectors | `/pillow-protectors/` | Medium | Category page; nav link in EN mattress-protectors |
+| ~~Bed Sheet Size Guide~~ | ~~`/bed-sheets-size/`~~ | — | **Redirects to `/sizeguide/`** (301) — no separate TH page needed |
+| ~~Mattress Size (EN)~~ | ~~`/mattress-size/`~~ | — | **Redirects to `/sizeguide/`** (301) — no separate TH page needed |
+| ~~Thai Mattress Sizes~~ | ~~`/mattress-size-th/`~~ | — | **Redirects to `/sizeguide/th/`** (301) — no separate TH page needed |
+| ~~Pillow Protectors~~ | ~~`/pillow-protectors/`~~ | — | **Redirects to `/mattress-protectors/`** (301) — no separate TH page needed |
 | Unsubscribe | `/unsubscribe/` | Low | User-specific; TH policy links to EN version ✅ |
 | My Account | `/account/` | Low | Phase 5 gated; redirect logged-out users |
 | Checkout | `/checkout/` | Low | Phase 5 payment flow; not SEO-critical |
 | Order Confirmed | `/order-confirmed/` | Low | Phase 5 post-payment page |
-| Blog Index | `/blogs/` | Low | Blog not built yet; Phase 6+ |
+| Blog Index | `/blogs/` | Low | Blog not built yet |
 
-**Navigation link check — which TH pages have outgoing links to missing pages:**
-- No TH page links to `/bed-sheets-size/`, `/mattress-size/`, `/mattress-size-th/`, `/pillow-protectors/`, `/account/`, `/checkout/`, `/order-confirmed/`, `/blogs/` — these are either low-priority, user-specific, or Phase 5+ features.
-- `/th/policy/` links to EN `/unsubscribe/` — this is intentional (unsubscribe is language-agnostic, email-based).
+**WordPress redirects — no separate TH pages needed:**
+The `_redirects` file handles ALL old WordPress URLs with 301 redirects to the new bilingual structure:
+```
+/bed-sheets-size/*   → /sizeguide/       (catches all /bed-sheets-size/sub-path)
+/mattress-size/*     → /sizeguide/       (catches all /mattress-size/sub-path)
+/mattress-size-th/* → /sizeguide/th/   (catches all /mattress-size-th/sub-path)
+/pillow-protectors/* → /mattress-protectors/ (catches all /pillow-protectors/sub-path)
+```
+These wildcards redirect every old WordPress blog post, page, and sub-URL automatically. No separate TH versions needed.
 
 **Language toggle — nav.js BILINGUAL_PAGES list (updated 2026-05-15):**
 `['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/fitted-sheets/', '/flat-sheets/', '/duvet-covers/', '/pillowcases/', '/mattress-protectors/', '/pets/', '/marine/', '/family/', '/duvet/', '/protection/', '/rv-truck/', '/shipping/', '/policy/']`

@@ -1,10 +1,13 @@
 ﻿# MildMate Redirects
-# Updated 2026-05-15 — Product URL change
+# Updated 2026-05-15
 
 # Product URL changes
 /product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/   /product/3-sided-duvet/   301
 
-# Size guide consolidation
-/mattress-size-th/*   /sizeguide/th/   301
+# WordPress old URLs — redirect ALL sub-paths to new sizeguide pages
+# /bed-sheets-size/* → /sizeguide/       catches /bed-sheets-size/ + /bed-sheets-size/post-slug/
+# /mattress-size/*   → /sizeguide/       catches /mattress-size/ + /mattress-size/post-slug/
+# /mattress-size-th/* → /sizeguide/th/   catches /mattress-size-th/ + /mattress-size-th/post-slug/
+/bed-sheets-size/*   /sizeguide/      301
 /mattress-size/*      /sizeguide/      301
-/bed-sheets-size/*    /sizeguide/      301
+/mattress-size-th/*   /sizeguide/th/   301
