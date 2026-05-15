@@ -1,5 +1,8 @@
-# MildMate Redirects
-# Updated 2026-05-14 — Phase 4 URL restructure
+﻿# MildMate Redirects
+# Updated 2026-05-15 — Product URL change
+
+# Product URL changes
+/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/   /product/3-sided-duvet/   301
 
 # Size guide consolidation
 /mattress-size-th/*   /sizeguide/th/   301
