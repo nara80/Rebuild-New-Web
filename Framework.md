@@ -64,9 +64,9 @@
 ### Blog Pages (static HTML, managed manually)
 | Page | URL | Notes |
 |---|---|---|
-| Blog Index | `/blogs/` | 20 posts per page, paginated |
-| Blog Index Page 2+ | `/blogs/page/2/` etc. | Pagination pages |
-| Individual Blog Post | `/blogs/[post-slug]/` | One file per article |
+| Blog Index | `/blogs/` | Featured post + 6-card grid, filter tabs, newsletter CTA — implemented 2026-05-16 |
+| Blog Post Template | `/blogs/template/index.html` | Hero image, rich article body, author box, social share, related products — implemented 2026-05-16 |
+| Individual Blog Post | `/blogs/[post-slug]/` | One file per article — use template as base |
 
 ### Dynamic Pages (data from Cloudflare D1)
 | Page | URL | Notes |
@@ -638,9 +638,9 @@ mildmate-web/
 │   ├── duvet/index.html
 │   ├── protection/index.html
 │   │
-│   ├── blogs/index.html             ← Blog index page 1
-│   ├── blogs/page/[n]/index.html    ← Blog index pagination
-│   ├── blogs/[slug]/index.html      ← Individual blog post pages
+│   ├── blogs/index.html             ← Blog index page (featured post + grid)
+│   ├── blogs/template/index.html    ← Blog post template (hero, body, related products)
+│   ├── blogs/[slug]/index.html      ← Individual blog post pages (copy from template)
 │   │
 │   ├── product/[slug]/index.html    ← 83 product detail pages (standard + custom paths)
 │   ├── quote/[quote-id]/index.html  ← Magic link: locked custom quote → Add to Cart

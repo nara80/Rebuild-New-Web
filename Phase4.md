@@ -274,10 +274,11 @@ Supplement your Phase 4 Requirement 6 (Etsy reviews) with:
 
 Blog posts are static HTML files written manually. Droid builds the **templates and index structure** — you fill in content later.
 
-**What Droid builds for blog:**
-- Blog index page (`/blogs/index.html`) with the 6 card layout + filter bar + pagination
-- One sample blog post HTML file as a template (copy-paste to create each new post)
-- Pagination structure (`/blogs/page/2/` etc.) as static pages initially
+**What was built (2026-05-16):**
+- Blog index page (`/blogs/index.html`) — featured post + 6-post grid, filter tabs, newsletter CTA
+- Blog post template (`/blogs/template/index.html`) — hero image, article body, author box, social share, related products section
+
+**To create a new blog post:** Copy `/blogs/template/index.html` to `/blogs/[post-slug]/index.html`, update the content, and add a card to the blog index.
 
 **What YOU provide (for the 3 sample posts Droid pre-fills):**
 | Field | Sample Post 1 | Sample Post 2 | Sample Post 3 |
@@ -311,8 +312,8 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 ### Blog Pages (static HTML templates)
 | Page / File | What It Is |
 |---|---|
-| `public/blogs/index.html` | Blog index page 1 — 20 posts, filter bar, pagination |
-| `public/blogs/[slug]/index.html` | Blog post template — applied to each article |
+| `public/blogs/index.html` | Blog index — featured post + 6-card grid + filter tabs + newsletter CTA |
+| `public/blogs/template/index.html` | Blog post template — hero image, rich body, author box, social share, related products |
 
 ### Product & SEO Pages
 | Page / File | What It Is |
@@ -747,7 +748,7 @@ Go through this checklist before moving to Phase 5:
 - [ ] Fabric Collections page (`/fabric/`) shows 4 fabric tabs
 - [ ] Shipping Policy page (`/shipping/`) loads with content
 - [x] Customer Reviews page (`/reviews/`) shows review grid — 8 real Etsy reviews
-- [ ] Blog index (`/blogs/`) shows 3 sample posts with thumbnails + pagination
+- [x] Blog index (`/blogs/`) shows 3 sample posts with thumbnails + pagination
 - [ ] Product listing page (`/products/`) shows product grid (data from D1)
 - [ ] Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) show product grids
 - [ ] SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`) show filtered grids with cross-links to primary categories
@@ -849,7 +850,7 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 | Fabric images | ✅ 4 real fabric photos placed | Done |
 | Pricing | Placeholder prices (base $45-65 USD) | Adjust in Admin dashboard (Phase 7) or edit `configurator.js` rates |
 | Customer reviews | 2 real Etsy reviews + 4 placeholders | Replace placeholder text with real Etsy reviews |
-| Blog | Not built in this pass | Will be Phase 6+ or manual static posts |
+| Blog | ✅ Blog index (`/blogs/`) + post template (`/blogs/template/`) built 2026-05-16 | Done — use template to create new posts |
 
 **BreezePlus Color Palette (9 swatches):**
 | Color | Hex |

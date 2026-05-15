@@ -482,7 +482,7 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 | My Account | `/account/` | Phase 5 gated; redirect logged-out users |
 | Checkout | `/checkout/` | Phase 5 payment flow; not SEO-critical |
 | Order Confirmed | `/order-confirmed/` | Phase 5 post-payment page |
-| Blog Index | `/blogs/` | Blog not built yet |
+| Blog Index | `/blogs/` | ✅ Blog index + post template built 2026-05-16 |
 
 **All WordPress old URLs:** `_redirects` wildcard `/*` rules catch every old blog post and page slug automatically. No separate TH pages needed for any WordPress legacy content.
 
