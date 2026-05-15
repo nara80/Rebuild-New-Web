@@ -64,7 +64,7 @@ The "Shop by Niche" section has 4 cards. Each needs one photo.
 | Marine & Yacht | `category-marine.jpg` | `public/images/categories/` | V-Berth mattress on a boat |
 | Family & Co-Sleep | `category-family.jpg` | `public/images/categories/` | Family bed, parents + child |
 | Easy-Change Duvet | `category-duvet.jpg` | `public/images/categories/` | 3-sided zipper duvet open |
-| International Boarding School | `category-ibs.jpg` | `public/images/categories/` | Student with duvet at dorm abroad |
+| Boarding Dorm | `category-ibs.jpg` | `public/images/categories/` | Student with duvet at dorm abroad |
 
 **For each image, write:** Ready / Missing (Droid will use a colored placeholder for missing ones).
 

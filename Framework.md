@@ -81,7 +81,7 @@
 | Marine & Yacht | `/marine/` | Marine bedding — links to fitted-sheets |
 | Family & Co-Sleep | `/family/` | Co-sleeping solutions — links to fitted-sheets |
 | Easy-Change Duvet | `/duvet/` | Duvet landing — links to duvet-covers |
-| International Boarding School | `/international-boarding-school/` | **NEW** Parents buying for kids abroad — single bed, 3-sided zipper, size comparison chart |
+| Boarding Dorm | `/boarding-dorm/` | **NEW** Parents buying for kids abroad — single bed, 3-sided zipper, size comparison chart |
 | Pet Owner Bedding | `/pets/` | **NEW** BreezePlus anti-fur — links to fitted-sheets + duvet-covers |
 | RV & Truck Cab | `/rv-truck/` | **NEW** RV, van, truck cab — 6-Sided Encasement + Marine Fitted Sheet |
 | All Products | `/products/` | Full product listing with filter bar |
@@ -138,7 +138,7 @@ Home | Shop | Fabrics | Size Guide
 │ • Marine Pillows  │ • BedBridge Connector        │
 │ • Boat Duvets     │ • Co-Sleep Duvets            │
 ├───────────────────┼──────────────────────────────┤
-│ Easy-Change Duvet │ International Boarding School  │
+│ Easy-Change Duvet │ Boarding Dorm  │
 │ • 3-Sided Zipper  │ • Parents Buying for Kids Abroad │
 │ • Dorm/College    │ • 3-Sided Zipper Duvet          │
 │ • Weighted Cover  │ • Mattress Encasement        │
@@ -296,7 +296,7 @@ Order stored with quote_id reference + full dimensions
   OEKO-TEX Certified | Siriraj Dust-Mite Certified | 5★ Reviews | Ships Worldwide
 
 [SHOP BY NICHE]  ← 6 cards, image + label
-  Marine & Yacht | Family Co-Sleep | Pet Owner | Easy-Change Duvet | International Boarding School | RV & Truck
+  Marine & Yacht | Family Co-Sleep | Pet Owner | Easy-Change Duvet | Boarding Dorm | RV & Truck
 
 [TOP PRODUCTS]  ← horizontal scroll on mobile, 3-col grid desktop
   Based on Etsy top 5 performers
@@ -984,7 +984,7 @@ Structure:
 | Family & Co-Sleep | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
 | Pet Owner Bedding | BreezePlus only (badge, no selector) |
 | Easy-Change Duvet | BreezePlus only (badge, no selector) |
-| International Boarding School | BreezePlus only (badge, no selector) |
+| Boarding Dorm | BreezePlus only (badge, no selector) |
 
 ### Custom Shape CTA — Links
 | Page | CTA Link |
