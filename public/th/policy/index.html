@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="นโยบายความเป็นส่วนตัว MildMate — วิธีที่เราเก็บรวบรวม ใช้ และปกป้องข้อมูลส่วนบุคคลของคุณ">
+  <title>นโยบายความเป็นส่วนตัว — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/th/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="เมนูหลัก">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li>
+          <li class="nav-item"><a href="/th/products/" class="nav-link">สินค้า</a></li>
+          <li class="nav-item"><a href="/th/fabric/" class="nav-link">เนื้อผ้า</a></li>
+          <li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีผู้ใช้">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count">0</span>
+        </a>
+        <div class="lang-toggle" role="group" aria-label="สลับภาษา">
+          <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ">
+      <div class="mobile-drawer-search">
+        <form action="/th/products/" method="get" class="drawer-search-form">
+          <input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหาสินค้า" autocomplete="off">
+          <button type="submit" aria-label="ส่งการค้นหา">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+      <ul class="mobile-nav-list">
+        <li><a href="/th/">หน้าแรก</a></li>
+        <li><a href="/th/products/">สินค้า</a></li>
+        <li><a href="/th/fabric/">เนื้อผ้า</a></li>
+        <li><a href="/th/sizeguide/">คู่มือขนาด</a></li>
+      </ul>
+    </div>
+    <div class="search-overlay" aria-hidden="true">
+      <div class="search-overlay-inner">
+        <button class="search-close" aria-label="ปิดการค้นหา">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <form action="/th/products/" method="get" class="search-form">
+          <input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off">
+          <button type="submit" aria-label="ส่งการค้นหา">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>นโยบายความเป็นส่วนตัว</h1>
+        <p>อัปเดตล่าสุด: พฤษภาคม 2569</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container" style="max-width:800px;">
+        <h2>1. บทนำ</h2>
+        <p>MildMate ("เรา", "ของเรา") เคารพความเป็นส่วนตัวของคุณและมุ่งมั่นปกป้องข้อมูลส่วนบุคคลของคุณ นโยบายความเป็นส่วนตัวนี้อธิบายวิธีที่เราเก็บรวบรวม ใช้ และปกป้องข้อมูลของคุณเมื่อคุณเข้าชมเว็บไซต์ของเราหรือสั่งซื้อสินค้า นโยบายนี้มีผลบังคับใช้ตั้งแต่พฤษภาคม 2569</p>
+
+        <h2>2. ข้อมูลที่เราเก็บรวบรวม</h2>
+        <p>เราอาจเก็บรวบรวมข้อมูลประเภทต่อไปนี้:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>ข้อมูลติดต่อ:</strong> ชื่อ ที่อยู่อีเมล เบอร์โทรศัพท์ ที่อยู่จัดส่ง</li>
+          <li><strong>รายละเอียดคำสั่งซื้อ:</strong> ข้อมูลสินค้า ขนาด ตัวเลือกผ้า</li>
+          <li><strong>ข้อมูลการชำระเงิน:</strong> ประมวลผลอย่างปลอดภัยโดย Stripe — เราไม่เก็บหมายเลขบัตรเต็ม</li>
+          <li><strong>ข้อมูลการใช้งาน:</strong> ที่อยู่ IP ประเภทเบราว์เซอร์ หน้าที่เข้าชม (ผ่าน Google Analytics 4)</li>
+          <li><strong>การสื่อสาร:</strong> อีเมล ข้อความ และข้อมูลสอบถาม</li>
+          <li><strong>ข้อมูลอุปกรณ์:</strong> ขนาดหน้าจอ ระบบปฏิบัติการ (สำหรับเพิ่มประสิทธิภาพเว็บไซต์)</li>
+        </ul>
+
+        <h2>3. วิธีที่เราใช้ข้อมูลของคุณ</h2>
+        <p>เราใช้ข้อมูลส่วนบุคคลของคุณเพื่อ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>ประมวลผลและจัดส่งคำสั่งซื้อของคุณ</li>
+          <li>สื่อสารเกี่ยวกับสถานะคำสั่งซื้อ</li>
+          <li>ให้บริการลูกค้า</li>
+          <li>ส่งอีเมลโปรโมชัน (ด้วยความยินยอม — ดูหัวข้อ 3A ด้านล่าง)</li>
+          <li>วิเคราะห์ปริมาณการเข้าชมเว็บไซต์และปรับปรุงประสบการณ์ผู้ใช้</li>
+          <li>วัดประสิทธิภาพการโฆษณา (Facebook Pixel)</li>
+          <li>ปฏิบัติตามข้อกำหนดทางกฎหมาย</li>
+        </ul>
+
+        <h2>3A. การตลาดและการสื่อสาร</h2>
+        <p>ด้วยความยินยอมของคุณ เราอาจส่งอีเมลโปรโมชันเกี่ยวกับสินค้าใหม่ ข้อเสนอพิเศษ และเคล็ดลับเกี่ยวกับผ้าปูที่นอน อีเมลการตลาดทุกฉบับมี<strong>ลิงก์ยกเลิกการติดตาม</strong>ที่ด้านล่างซึ่งนำไปสู่ <a href="/unsubscribe/">mildmate.com/unsubscribe/</a> คุณยังสามารถส่งอีเมลถึง <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> หัวข้อ "ยกเลิกการติดตาม" และเราจะลบคุณภายใน 48 ชั่วโมง อีเมลยืนยันคำสั่งซื้อและแจ้งเตือนการจัดส่งเป็นการทำธุรกรรมและไม่สามารถยกเลิกได้ เพราะจำเป็นต่อการจัดส่งสินค้าของคุณ</p>
+
+        <h2>4. บริการจากบุคคลที่สาม</h2>
+        <p>เราแบ่งปันข้อมูลจำกัดกับบุคคลที่สามที่เชื่อถือได้ที่จำเป็นต่อการดำเนินธุรกิจของเรา:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>Stripe:</strong> การประมวลผลการชำระเงิน — รายละเอียดบัตรถูก tokenize เราไม่เคยเห็นหมายเลขบัตรเต็ม</li>
+          <li><strong>MailChannels (ผ่าน Cloudflare):</strong> การส่งอีเมลธุรกรรมและการตลาด</li>
+          <li><strong>ขนส่ง (Thailand Post, DHL, FedEx):</strong> ที่อยู่จัดส่งบนป้ายจัดส่งเท่านั้น ไม่มีการแบ่งปันข้อมูล API</li>
+          <li><strong>Cloudflare:</strong> ความปลอดภัยเว็บไซต์ ป้องกัน DDoS และโฮสติ้ง</li>
+          <li><strong>Google Analytics 4:</strong> สถิติการใช้งานเว็บไซต์แบบไม่ระบุตัวตน</li>
+          <li><strong>Meta (Facebook Pixel):</strong> การติดตามการแปลงสำหรับวัดประสิทธิภาพการโฆษณา</li>
+        </ul>
+
+        <h2>5. คุกกี้และเทคโนโลยีติดตาม</h2>
+        <p>เราใช้คุกกี้และเทคโนโลยีที่คล้ายกันเพื่อดำเนินการและปรับปรุงเว็บไซต์ของเรา เมื่อคุณเข้าชมครั้งแรก แบนเนอร์ความยินยอมคุกกี้ช่วยให้คุณเลือกประเภทที่จะยอมรับ คุณสามารถอัปเดตการตั้งค่าได้ทุกเมื่อโดยล้างคุกกี้เบราว์เซอร์ของคุณ — แบนเนอร์จะปรากฏอีกครั้งในการเข้าชมครั้งต่อไป</p>
+
+        <table style="width:100%; border-collapse:collapse; margin:16px 0; font-size:0.875rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--color-border);">
+              <th style="text-align:left; padding:8px;">ประเภท</th>
+              <th style="text-align:left; padding:8px;">วัตถุประสงค์</th>
+              <th style="text-align:left; padding:8px;">ผู้ให้บริการ</th>
+              <th style="text-align:left; padding:8px;">ระยะเวลา</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <td style="padding:8px;"><strong>จำเป็น</strong></td>
+              <td style="padding:8px;">ตะกร้าสินค้า การตั้งค่าภาษา เซสชัน</td>
+              <td style="padding:8px;">MildMate (ผู้ให้บริการลำดับแรก)</td>
+              <td style="padding:8px;">เซสชัน — 30 วัน</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <td style="padding:8px;"><strong>การวิเคราะห์</strong></td>
+              <td style="padding:8px;">การดูหน้า พฤติกรรมผู้เข้าชม แหล่งที่มาการเข้าชม</td>
+              <td style="padding:8px;">Google Analytics 4</td>
+              <td style="padding:8px;">สูงสุด 14 เดือน</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <td style="padding:8px;"><strong>การโฆษณา</strong></td>
+              <td style="padding:8px;">การติดตามการแปลง การวัดประสิทธิภาพโฆษณา</td>
+              <td style="padding:8px;">Meta (Facebook Pixel)</td>
+              <td style="padding:8px;">สูงสุด 180 วัน</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>คุณสามารถควบคุมคุกกี้ผ่านการตั้งค่าเบราว์เซอร์ของคุณ สำหรับข้อมูลเพิ่มเติม โปรดไปที่ <a href="https://www.aboutcookies.org" target="_blank" rel="noopener noreferrer">AboutCookies.org</a></p>
+
+        <h2>6. การเก็บรักษาข้อมูล</h2>
+        <p>เราเก็บรักษาข้อมูลส่วนบุคคลของคุณตราบเท่าที่จำเป็นต่อการปฏิบัติตามวัตถุประสงค์ที่ระบุในนโยบายนี้ หรือตามที่กฎหมายกำหนด:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>รายการคำสั่งซื้อ:</strong> 7 ปี เพื่อวัตถุประสงค์ทางภาษีและการรับประกัน</li>
+          <li><strong>สมาชิกอีเมล:</strong> จนกว่าคุณจะยกเลิกการติดตามหรือร้องขอให้ลบ</li>
+          <li><strong>ข้อมูลการวิเคราะห์:</strong> 14 เดือน (ค่าเริ่มต้น Google Analytics)</li>
+          <li><strong>ข้อมูลตะกร้าที่ถูกละทิ้ง:</strong> 30 วัน จากนั้นลบโดยอัตโนมัติ</li>
+        </ul>
+
+        <h2>7. สิทธิ์ของคุณ</h2>
+        <p>ขึ้นอยู่กับตำแหน่งของคุณ คุณอาจมีสิทธิ์ดังต่อไปนี้:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>เข้าถึง:</strong> ร้องขอสำเนาข้อมูลส่วนบุคคลของคุณ</li>
+          <li><strong>แก้ไข:</strong> อัปเดตข้อมูลที่ไม่ถูกต้องหรือไม่สมบูรณ์</li>
+          <li><strong>ลบ:</strong> ร้องขอให้ลบข้อมูลของคุณ (ดูหัวข้อ 11)</li>
+          <li><strong>เคลื่อนย้าย:</strong> รับข้อมูลของคุณในรูปแบบที่เครื่องอ่านได้</li>
+          <li><strong>คัดค้าน:</strong> คัดค้านกิจกรรมการประมวลผลบางประเภท</li>
+          <li><strong>ถอนความยินยอม:</strong> ยกเลิกการตลาดได้ทุกเมื่อ</li>
+        </ul>
+        <p>หากต้องการใช้สิทธิ์เหล่านี้ ส่งอีเมลถึง <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> หัวข้อ "คำขอความเป็นส่วนตัว" เราจะตอบภายใน 30 วัน</p>
+
+        <h2>7A. สิทธิ์ความเป็นส่วนตัวแคลิฟอร์เนีย (CCPA)</h2>
+        <p>หากคุณเป็นผู้อยู่อาศัยในรัฐแคลิฟอร์เนีย คุณมีสิทธิ์:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>รู้ว่าเราเก็บรวบรวมข้อมูลส่วนบุคคลใดเกี่ยวกับคุณ</li>
+          <li>รู้ว่าข้อมูลส่วนบุคคลของคุณถูกขายหรือแบ่งปันหรือไม่ (เรา<strong>ไม่ขาย</strong>ข้อมูลส่วนบุคคล)</li>
+          <li>ร้องขอให้ลบข้อมูลส่วนบุคคลของคุณ</li>
+          <li>ไม่ถูกเลือกปฏิบัติสำหรับการใช้สิทธิ์ความเป็นส่วนตัวของคุณ</li>
+        </ul>
+        <p>หากต้องการส่งคำขอ CCPA ส่งอีเมลถึง <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> หัวข้อ "คำขอ CCPA"</p>
+
+        <h2>8. ความปลอดภัย</h2>
+        <p>เราใช้มาตรการทางเทคนิคและองค์กรที่เหมาะสมเพื่อปกป้องข้อมูลส่วนบุคคลของคุณ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>ข้อมูลทั้งหมดถูกเข้ารหัสขณะส่ง (HTTPS/TLS 1.3)</li>
+          <li>ข้อมูลการชำระเงินจัดการโดย Stripe — ได้รับการรับรอง PCI DSS</li>
+          <li>การเข้าถึงฐานข้อมูลจำกัดเฉพาะบุคลากรที่ได้รับอนุญาตเท่านั้น</li>
+          <li>ตรวจสอบความปลอดภัยเป็นประจำของ Cloudflare Workers และฐานข้อมูล D1 ของเรา</li>
+        </ul>
+
+        <h2>9. ความเป็นส่วนตัวของเด็ก</h2>
+        <p>เว็บไซต์ของเราไม่ได้มุ่งเป้าไปที่เด็กอายุต่ำกว่า 13 ปี เราไม่เก็บรวบรวมข้อมูลส่วนบุคคลจากเด็กอายุต่ำกว่า 13 ปีโดยเจตนา หากคุณเชื่อว่าเราได้เก็บรวบรวมข้อมูลดังกล่าวโดยไม่ได้ตั้งใจ โปรดติดต่อเราทันทีที่ <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> และเราจะลบทันที</p>
+
+        <h2>10. การแจ้งเหตุละเอียดข้อมูลรั่วไหล</h2>
+        <p>ในกรณีที่ไม่น่าเป็นไปได้ที่จะเกิดการละเอียดข้อมูลที่ส่งผลกระทบต่อข้อมูลส่วนบุคคลของคุณ เราจะ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>แจ้งผู้ใช้ที่ได้รับผลกระทบทางอีเมลภายใน <strong>72 ชั่วโมง</strong>หลังพบเหตุ</li>
+          <li>โพสต์ประกาศบนหน้าแรกเว็บไซต์</li>
+          <li>รายงานต่อหน่วยงานที่เกี่ยวข้องตามที่กฎหมายกำหนด (เช่น สำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคลไทย หน่วยงานกำกับดูแลสหภาพยุโรป)</li>
+          <li>ดำเนินการทันทีเพื่อระงับเหตุและป้องกันการเกิดซ้ำ</li>
+        </ul>
+
+        <h2>11. การลบบัญชี</h2>
+        <p>เมื่อระบบบัญชีของฉันพร้อมใช้งาน (เฟส 5) ผู้ใช้ที่ลงทะเบียนอาจลบบัญชีได้ทุกเมื่อผ่านหน้าการตั้งค่าบัญชี เมื่อลบแล้ว:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>โปรไฟล์บัญชีและที่อยู่ที่บันทึกไว้จะถูกลบอย่างถาวร</li>
+          <li>ประวัติคำสั่งซื้อจะถูก<strong>ทำให้เป็นนิรนาม</strong> (เก็บไว้ 7 ปีเพื่อข้อกำหนดทางภาษี/กฎหมาย แต่ตัดตัวระบุส่วนบุคคลออก)</li>
+          <li>การสมัครสมาชิกอีเมลจะถูกยกเลิกโดยอัตโนมัติ</li>
+        </ul>
+        <p>จนกว่าระบบบัญชีจะพร้อม คุณอาจร้องขอให้ลบโดยส่งอีเมลถึง <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> หัวข้อ "ลบบัญชี"</p>
+
+        <h2>12. การโอนข้อมูลระหว่างประเทศ</h2>
+        <p>MildMate ตั้งอยู่ในประเทศไทย เมื่อคุณสั่งซื้อหรือเข้าชมเว็บไซต์ของเรา ข้อมูลของคุณอาจถูกประมวลผลใน:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>ประเทศไทย:</strong> การดำเนินงานหลักและการจัดส่งคำสั่งซื้อ</li>
+          <li><strong>สหรัฐอเมริกา:</strong> Cloudflare โฮสติ้ง Stripe การประมวลผลการชำระเงิน Google Analytics MailChannels อีเมล</li>
+          <li><strong>สหภาพยุโรป:</strong> ที่อยู่จัดส่งของคุณปรากฏบนพิกัดศุลกากรสำหรับการจัดส่งในสหภาพยุโรป</li>
+        </ul>
+        <p>การโอนระหว่างประเทศทั้งหมดใช้มาตรการป้องกันที่เหมาะสม รวมถึงข้อตกลงสัญญามาตรฐาน (ในกรณีที่ใช้ได้) และการเข้ารหัสขณะส่ง</p>
+
+        <h2>13. การเปลี่ยนแปลงนโยบายนี้</h2>
+        <p>เราอาจอัปเดตนโยบายความเป็นส่วนตัวนี้เป็นครั้งคราว การเปลี่ยนแปลงจะโพสต์บนหน้านี้พร้อมวันที่อัปเดต สำหรับการเปลี่ยนแปลงที่สำคัญ เราจะแจ้งคุณทางอีเมลหรือผ่านประกาศที่โดดเด่นบนเว็บไซต์ของเรา</p>
+
+        <h2>14. ติดต่อเรา</h2>
+        <p>หากคุณมีคำถามใด ๆ เกี่ยวกับนโยบายความเป็นส่วนตัวนี้หรือแนวปฏิบัติข้อมูลของเรา โปรดติดต่อเรา:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>อีเมล: <a href="mailto:contact@mildmate.com">contact@mildmate.com</a></li>
+          <li>WhatsApp: <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer">+66 (0)87 236 2364</a></li>
+          <li>LINE Official: <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer">@MildMate</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h3>ลิงก์ด่วน</h3>
+          <ul>
+            <li><a href="/th/about/">เกี่ยวกับเรา</a></li>
+            <li><a href="/th/contact/">ติดต่อเรา</a></li>
+            <li><a href="/th/reviews/">รีวิว</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>บริการลูกค้า</h3>
+          <ul>
+            <li><a href="/th/faq/">คำถามที่พบบ่อย</a></li>
+            <li><a href="/th/sizeguide/">คู่มือขนาด</a></li>
+            <li><a href="/th/blogs/">บล็อก</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>สั่งซื้อผ่าน</h3>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>ติดต่อ</h3>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/th/policy/">นโยบายความเป็นส่วนตัว</a>
+          <a href="/th/shipping/">การส่งมอบและการคืนสินค้า</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>
