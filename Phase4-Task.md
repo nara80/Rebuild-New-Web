@@ -433,30 +433,30 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 | PremaCotton fabric | `public/images/fabrics/fabric-premacotton.jpg` | ✅ Real photo |
 | EcoLuxe fabric | `public/images/fabrics/fabric-ecoluxe.jpg` | ✅ Real photo |
 
-### Branded Placeholder Images (auto-generated, replace with real photos before launch)
+### All Product & Category Images — Complete (replaced with real photos)
 | Image | Path | Status | Replace Priority |
-|---|---|---|---|
-| Fitted Sheets category | `public/images/categories/category-fitted-sheets.jpg` | ✅ Generated | Medium |
-| Flat Sheets category | `public/images/categories/category-flat-sheets.jpg` | ✅ Generated | Medium |
-| Duvet Covers category | `public/images/categories/category-duvet-covers.jpg` | ✅ Generated | Medium |
-| Pillowcases category | `public/images/categories/category-pillowcases.jpg` | ✅ Generated | Medium |
-| Mattress Protectors category | `public/images/categories/category-mattress-protectors.jpg` | ✅ Generated | Medium |
-| Pet Owner category | `public/images/categories/category-pets.jpg` | ✅ Generated | High |
-| RV & Truck Cab category | `public/images/categories/category-rv-truck.jpg` | ✅ Generated | High |
-| Pet Owner Fitted Sheet | `public/images/products/pet-owner-fitted-sheet.jpg` | ✅ Generated | High |
-| Pet Owner Duvet Cover | `public/images/products/pet-owner-duvet-cover.jpg` | ✅ Generated | High |
-| Adjustable Mattress Fitted Sheet | `public/images/products/adjustable-mattress-fitted-sheet.jpg` | ✅ Generated | High |
-| Flat Sheet — Standard | `public/images/products/flat-sheet-standard.jpg` | ✅ Generated | Medium |
-| Flat Sheet — Extra Deep Pocket | `public/images/products/flat-sheet-extra-deep-pocket.jpg` | ✅ Generated | Medium |
-| Envelope Pillowcase | `public/images/products/pillowcase-envelope.jpg` | ✅ Generated | Medium |
-| Zipper Pillowcase | `public/images/products/pillowcase-zipper.jpg` | ✅ Generated | Medium |
-| Sham Pillowcase | `public/images/products/pillowcase-sham.jpg` | ✅ Generated | Medium |
-| Pet-Proof Mattress Protector | `public/images/products/pet-proof-mattress-protector.jpg` | ✅ Generated | High |
-| Pillow Protector | `public/images/products/pillow-protector.jpg` | ✅ Generated | Medium |
+|---|---|---|
+| Fitted Sheets category | `public/images/categories/category-fitted-sheets.jpg` | ✅ Real photo | — |
+| Flat Sheets category | `public/images/categories/category-flat-sheets.jpg` | ✅ Real photo | — |
+| Duvet Covers category | `public/images/categories/category-duvet-covers.jpg` | ✅ Real photo | — |
+| Pillowcases category | `public/images/categories/category-pillowcases.jpg` | ✅ Real photo | — |
+| Mattress Protectors category | `public/images/categories/category-mattress-protectors.jpg` | ✅ Real photo | — |
+| Pet Owner category | `public/images/categories/category-pets.jpg` | ✅ Real photo | — |
+| RV & Truck Cab category | `public/images/categories/category-rv-truck.jpg` | ✅ Real photo | — |
+| Pet Owner Fitted Sheet | `public/images/products/pet-owner-fitted-sheet.jpg` | ✅ Real photo | — |
+| Pet Owner Duvet Cover | `public/images/products/pet-owner-duvet-cover.jpg` | ✅ Real photo | — |
+| Adjustable Mattress Fitted Sheet | `public/images/products/adjustable-mattress-fitted-sheet.jpg` | ✅ Real photo | — |
+| Flat Sheet — Standard | `public/images/products/flat-sheet-standard.jpg` | ✅ Real photo | — |
+| Flat Sheet — Extra Deep Pocket | `public/images/products/flat-sheet-extra-deep-pocket.jpg` | ✅ Real photo | — |
+| Envelope Pillowcase | `public/images/products/pillowcase-envelope.jpg` | ✅ Real photo | — |
+| Zipper Pillowcase | `public/images/products/pillowcase-zipper.jpg` | ✅ Real photo | — |
+| Sham Pillowcase | `public/images/products/pillowcase-sham.jpg` | ✅ Real photo | — |
+| Pet-Proof Mattress Protector | `public/images/products/pet-proof-mattress-protector.jpg` | ✅ Real photo | — |
+| Pillow Protector | `public/images/products/pillow-protector.jpg` | ✅ Real photo | — |
 
 > **How placeholders were generated:** `scripts/generate-placeholders.js` uses `sharp` to convert SVG text-to-image with brand palette colors. All generated images are 800×600px JPEG. Replace with real product photos from your photographer or Etsy listings before launch.
 >
-> **To replace:** Simply overwrite the .jpg file with a real photo — same filename, same folder. No HTML changes needed.
+> **All images replaced with real photos (2026-05-15).** Product detail + category card images are complete.
 
 ---
 

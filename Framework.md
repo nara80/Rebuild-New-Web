@@ -364,7 +364,7 @@ Order stored with quote_id reference + full dimensions
 ```
 [FILTER BAR]  Category | Fabric | Size Region (TH/US/UK/EU/AU)
 [PRODUCT GRID]  3-col desktop, 2-col mobile — data pulled from D1
-  Card: Image | Title | Price (THB or USD) | "Customize" CTA
+  Card: Image | Title | Price (THB or USD) | "View Options" CTA
 ```
 > Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) render the same grid pre-filtered by category. All data is dynamic from D1.
 
@@ -667,29 +667,29 @@ mildmate-web/
 │   │   │   ├── category-family.jpg      ✅ Real photo
 │   │   │   ├── category-duvet.jpg       ✅ Real photo
 │   │   │   ├── category-protection.jpg  ✅ Real photo
-│   │   │   ├── category-pets.jpg        ✅ Generated placeholder
-│   │   │   ├── category-rv-truck.jpg    ✅ Generated placeholder
-│   │   │   ├── category-fitted-sheets.jpg     ✅ Generated placeholder
-│   │   │   ├── category-flat-sheets.jpg       ✅ Generated placeholder
-│   │   │   ├── category-duvet-covers.jpg        ✅ Generated placeholder
-│   │   │   ├── category-pillowcases.jpg         ✅ Generated placeholder
-│   │   │   └── category-mattress-protectors.jpg   ✅ Generated placeholder
+│   │   │   ├── category-pets.jpg        ✅ Real photo
+│   │   │   ├── category-rv-truck.jpg    ✅ Real photo
+│   │   │   ├── category-fitted-sheets.jpg     ✅ Real photo
+│   │   │   ├── category-flat-sheets.jpg       ✅ Real photo
+│   │   │   ├── category-duvet-covers.jpg        ✅ Real photo
+│   │   │   ├── category-pillowcases.jpg         ✅ Real photo
+│   │   │   └── category-mattress-protectors.jpg   ✅ Real photo
 │   │   ├── products/                ← Product detail hero images
 │   │   │   ├── 3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg  ✅ Real
 │   │   │   ├── family-co-sleeping-solutions-th-size.jpg                      ✅ Real
 │   │   │   ├── product-boat-bedding-fitted-sheet-microfiber.jpg              ✅ Real
 │   │   │   ├── sheet-protectors.jpg                                          ✅ Real
 │   │   │   ├── tbar.jpg                                                      ✅ Real
-│   │   │   ├── pet-owner-fitted-sheet.jpg              ✅ Generated placeholder
-│   │   │   ├── pet-owner-duvet-cover.jpg               ✅ Generated placeholder
-│   │   │   ├── adjustable-mattress-fitted-sheet.jpg      ✅ Generated placeholder
-│   │   │   ├── flat-sheet-standard.jpg                 ✅ Generated placeholder
-│   │   │   ├── flat-sheet-extra-deep-pocket.jpg        ✅ Generated placeholder
-│   │   │   ├── pillowcase-envelope.jpg                 ✅ Generated placeholder
-│   │   │   ├── pillowcase-zipper.jpg                   ✅ Generated placeholder
-│   │   │   ├── pillowcase-sham.jpg                     ✅ Generated placeholder
-│   │   │   ├── pet-proof-mattress-protector.jpg        ✅ Generated placeholder
-│   │   │   └── pillow-protector.jpg                    ✅ Generated placeholder
+│   │   │   ├── pet-owner-fitted-sheet.jpg              ✅ Real photo
+│   │   │   ├── pet-owner-duvet-cover.jpg               ✅ Real photo
+│   │   │   ├── adjustable-mattress-fitted-sheet.jpg      ✅ Real photo
+│   │   │   ├── flat-sheet-standard.jpg                 ✅ Real photo
+│   │   │   ├── flat-sheet-extra-deep-pocket.jpg        ✅ Real photo
+│   │   │   ├── pillowcase-envelope.jpg                 ✅ Real photo
+│   │   │   ├── pillowcase-zipper.jpg                   ✅ Real photo
+│   │   │   ├── pillowcase-sham.jpg                     ✅ Real photo
+│   │   │   ├── pet-proof-mattress-protector.jpg        ✅ Real photo
+│   │   │   └── pillow-protector.jpg                    ✅ Real photo
 │   │   ├── fabrics/                 ← Fabric showcase photos
 │   │   ├── router/                  ← Niche landing page hero/router images
 │   │   ├── Logo/                    ← Marketplace & social icons
@@ -844,6 +844,7 @@ CREATE TABLE customers (
 | **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels | ⏸️ Pending |
 | **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export | ⏸️ Pending |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
+| **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏸️ Pending |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook | ⏸️ Pending |
 
 > **Note:** Phase 2 (SEO URL Preservation) is intentionally deferred — it will run pre-launch after Phase 7 is complete. All other phases proceed in normal order.
