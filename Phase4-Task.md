@@ -52,19 +52,22 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 ---
 
 ### 4. Shop by Niche (Category Cards) ✅ Done
-- [x] 6 cards visible: Marine & Yacht, Family & Co-Sleep, Pet Owner, Easy-Change Duvet, Protection, RV & Truck Cab
+- [x] 6 cards visible: Marine & Yacht, Family & Co-Sleep, Pet Owner, Deep Pocket, Boarding Dorm, RV & Truck Cab
 - [x] Each card shows real photo or placeholder
 - [x] Each card is clickable and links to correct niche/SEO landing page
 - [x] Card hover effect works (lift + shadow)
 - [x] **Mobile:** 2 columns then 1 column at narrow width
 
 > **Action needed:** Provide 7 niche category photos → place in `public/images/categories/`
-> **NEW:** 6 SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`)
+> **NEW:** 6 SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/deep-pocket/`, `/boarding-dorm/`, `/rv-truck/`)
 > **NEW:** Pet Owner landing page (`/pets/`) added for BreezePlus anti-fur market
 > - `category-marine.jpg` (V-Berth on boat) ✅
 > - `category-family.jpg` (family bed) ✅
-> - `category-duvet.jpg` (3-sided zipper duvet) ✅
+> - `category-deep-pocket.jpg` (deep pocket pillow-top) ✅
 > - `category-protection.jpg` (waterproof protector) ✅
+> - `category-pets.jpg` (pet on bed) ✅
+> - `category-rv-truck.jpg` (RV/camper interior) ✅
+> - `category-boarding-dorm.jpg` (student bedroom) ✅
 
 ---
 
@@ -274,23 +277,25 @@ All old WordPress URLs (blog posts, pages, sub-paths) are handled by wildcard `/
 - [x] BreezePlus anti-fur explanation
 - [x] Cross-links to `/fitted-sheets/` and `/duvet-covers/`
 
-#### Duvet Category (`/duvet/`)
-- [x] Page loads at `/duvet/`
-- [x] "Easy-Change Duvet" heading visible
-- [x] Cross-links to `/duvet-covers/`
+#### Deep Pocket (`/deep-pocket/`)
+- [x] Page loads at `/deep-pocket/`
+- [x] "Deep Pocket" heading visible
+- [x] Deep Pocket + Adjustable Base explanation
+- [x] Cross-links to `/fitted-sheets/` and `/flat-sheets/`
 
-#### Protection Category (`/protection/`)
-- [x] Page loads at `/protection/`
-- [x] "Protection" heading visible
-- [x] Cross-links to `/mattress-protectors/`
+#### Boarding Dorm (`/boarding-dorm/`)
+- [x] Page loads at `/boarding-dorm/`
+- [x] "Boarding Dorm" heading visible
+- [x] Student/student-parent angle
+- [x] Cross-links to `/duvet-covers/` for 3-Sided Zipper Duvet
 
 #### RV & Truck Cab (`/rv-truck/`)
 - [x] Page loads at `/rv-truck/`
 - [x] "RV & Truck Cab Bedding" heading visible
 - [x] Problem section: tight spaces, built-in platforms, odd mattress shapes
-- [x] 6-Sided Encasement card visible
-- [x] Marine Fitted Sheet card visible
-- [x] CTA block: "Have an odd-shaped mattress? We measure, you sleep."
+- [x] CloudSoft quick-dry explanation
+- [x] Cross-links to `/fitted-sheets/` for Marine Fitted Sheet
+- [x] Cross-links to `/mattress-protectors/` for 6-Sided Encasement
 
 ---
 

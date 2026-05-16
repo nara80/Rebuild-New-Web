@@ -82,10 +82,10 @@
 | **SEO Landing Pages (Use Case)** | | |
 | Marine & Yacht | `/marine/` | Marine bedding — links to fitted-sheets |
 | Family & Co-Sleep | `/family/` | Co-sleeping solutions — links to fitted-sheets |
-| Easy-Change Duvet | `/duvet/` | Duvet landing — links to duvet-covers |
-| Boarding Dorm | `/boarding-dorm/` | **NEW** Parents buying for kids abroad — single bed, 3-sided zipper, size comparison chart |
+| Deep Pocket | `/deep-pocket/` | Deep pocket + adjustable base bedding — links to fitted-sheets + flat-sheets |
+| Boarding Dorm | `/boarding-dorm/` | Parents buying for kids abroad — single bed, 3-sided zipper, size comparison chart |
 | Pet Owner Bedding | `/pets/` | **NEW** BreezePlus anti-fur — links to fitted-sheets + duvet-covers |
-| RV & Truck Cab | `/rv-truck/` | **NEW** RV, van, truck cab — 6-Sided Encasement + Marine Fitted Sheet |
+| RV & Truck Cab | `/rv-truck/` | **NEW** RV, van, truck cab — CloudSoft quick-dry bedding |
 | All Products | `/products/` | Full product listing with filter bar |
 | Product Detail | `/product/[slug]/` | 15 product pages (expandable to 83), configurator |
 
@@ -140,10 +140,10 @@ Home | Shop | Fabrics | Size Guide
 │ • Marine Pillows  │ • BedBridge Connector        │
 │ • Boat Duvets     │ • Co-Sleep Duvets            │
 ├───────────────────┼──────────────────────────────┤
-│ Easy-Change Duvet │ Boarding Dorm  │
-│ • 3-Sided Zipper  │ • Parents Buying for Kids Abroad │
-│ • Dorm/College    │ • 3-Sided Zipper Duvet          │
-│ • Weighted Cover  │ • Mattress Encasement        │
+│ Deep Pocket       │ Boarding Dorm                 │
+│ • Deep Pocket     │ • Parents Buying for Kids Abroad │
+│ • Adjustable Base │ • 3-Sided Zipper Duvet          │
+│                   │ • Mattress Encasement        │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -298,7 +298,7 @@ Order stored with quote_id reference + full dimensions
   OEKO-TEX Certified | Siriraj Dust-Mite Certified | 5★ Reviews | Ships Worldwide
 
 [SHOP BY NICHE]  ← 6 cards, image + label
-  Marine & Yacht | Family Co-Sleep | Pet Owner | Easy-Change Duvet | Boarding Dorm | RV & Truck
+  Marine & Yacht | Family Co-Sleep | Pet Owner | Deep Pocket | Boarding Dorm | RV & Truck
 
 [TOP PRODUCTS]  ← horizontal scroll on mobile, 3-col grid desktop
   Based on Etsy top 5 performers
@@ -368,7 +368,7 @@ Order stored with quote_id reference + full dimensions
 [PRODUCT GRID]  3-col desktop, 2-col mobile — data pulled from D1
   Card: Image | Title | Price (THB or USD) | "View Options" CTA
 ```
-> Category pages (`/marine/`, `/family/`, `/duvet/`, `/protection/`) render the same grid pre-filtered by category. All data is dynamic from D1.
+> Category pages (`/marine/`, `/family/`, `/deep-pocket/`, `/pets/`, `/protection/`, `/rv-truck/`) render the same grid pre-filtered by category. All data is dynamic from D1.
 
 ### 5. Product Detail (`/product/[slug]/`)
 
@@ -637,8 +637,10 @@ mildmate-web/
 │   ├── products/index.html
 │   ├── marine/index.html            ← Category page (dynamic from D1)
 │   ├── family/index.html
-│   ├── duvet/index.html
-│   ├── protection/index.html
+│   ├── deep-pocket/index.html
+│   ├── boarding-dorm/index.html
+│   ├── pets/index.html
+│   ├── rv-truck/index.html
 │   │
 │   ├── blogs/index.html             ← Blog index page (featured + 11-card grid)
 │   ├── blogs/page/2/index.html    ← Blog pagination page 2 (5 posts)
@@ -915,7 +917,7 @@ The issue is specific to pages with large inline `<script>` blocks that run befo
 
 ## Product Listing Page Specification (Phase 4 Updated)
 
-Every category page (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`, `/marine/`, `/family/`, `/pets/`, `/protection/`, `/rv-truck/`, `/duvet/`) uses this layout:
+Every category page (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`, `/marine/`, `/family/`, `/pets/`, `/deep-pocket/`, `/rv-truck/`) uses this layout:
 
 ### Page Structure
 
@@ -987,13 +989,13 @@ Structure:
 | Marine & Yacht | CloudSoft only (badge, no selector) |
 | Family & Co-Sleep | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
 | Pet Owner Bedding | BreezePlus only (badge, no selector) |
-| Easy-Change Duvet | BreezePlus only (badge, no selector) |
+| Deep Pocket | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
 | Boarding Dorm | BreezePlus only (badge, no selector) |
 
 ### Custom Shape CTA — Links
 | Page | CTA Link |
 |---|---|
-| Fitted Sheets, Flat Sheets, Mattress Protectors, Protection, Duvet (Easy-Change) | `/how-to-measure-mattress-size/` |
+| Fitted Sheets, Flat Sheets, Mattress Protectors, Protection, Deep Pocket | `/how-to-measure-mattress-size/` |
 | Marine & Yacht, Family, Pets, RV & Truck, Pillowcases | `/custom-measurement/` |
 
 ### Price Display Note

@@ -142,10 +142,10 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 |---|---|---|
 | Marine & Yacht | `/marine/` | `/fitted-sheets/` — Marine Fitted Sheet |
 | Family & Co-Sleep | `/family/` | `/fitted-sheets/` — Family Fitted Sheet |
-| Easy-Change Duvet | `/duvet/` | `/duvet-covers/` — 3-Sided Zipper |
-| Protection | `/protection/` | `/mattress-protectors/` — Encasement |
-| Pet Owner Bedding | `/pets/` | `/fitted-sheets/`, `/duvet-covers/` — BreezePlus |
-| RV & Truck Cab | `/rv-truck/` | `/mattress-protectors/` — 6-Sided Encasement + Marine Fitted Sheet |
+| Deep Pocket | `/deep-pocket/` | `/fitted-sheets/` + `/flat-sheets/` — Adjustable Fitted Sheet, Extra Deep Pocket Flat |
+| Boarding Dorm | `/boarding-dorm/` | `/duvet-covers/` — 3-Sided Zipper Duvet |
+| Pet Owner Bedding | `/pets/` | `/fitted-sheets/`, `/duvet-covers/` — BreezePlus anti-fur |
+| RV & Truck Cab | `/rv-truck/` | `/fitted-sheets/`, `/mattress-protectors/` — CloudSoft quick-dry |
 
 ### Product Detail Pages (15 total)
 | Product | URL | Category |
