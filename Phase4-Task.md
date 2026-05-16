@@ -224,108 +224,108 @@ All old WordPress URLs (blog posts, pages, sub-paths) are handled by wildcard `/
 ## Product & Category Pages
 
 ### Product Listing (`/products/`)
-- [ ] Page loads at `/products/`
-- [ ] Filter bar visible: Category dropdown + Fabric dropdown
-- [ ] 6 product cards in grid
-- [ ] Each card has placeholder, title, price, "Customize" button
-- [ ] Header and footer present
+- [x] Page loads at `/products/`
+- [x] Filter bar visible: Category dropdown + Fabric dropdown
+- [x] 6 product cards in grid
+- [x] Each card has placeholder, title, price, "Customize" button
+- [x] Header and footer present
 
 ### Primary Product-Type Categories
 
 #### Fitted Sheets (`/fitted-sheets/`)
-- [ ] Page loads at `/fitted-sheets/`
-- [ ] "Custom Fitted Sheets" heading visible
-- [ ] Marine, Family, Pet Owner, Adjustable products shown
+- [x] Page loads at `/fitted-sheets/`
+- [x] "Custom Fitted Sheets" heading visible
+- [x] Marine, Family, Pet Owner, Adjustable products shown
 
 #### Flat Sheets (`/flat-sheets/`)
-- [ ] Page loads at `/flat-sheets/`
-- [ ] "Custom Flat Sheets" heading visible
-- [ ] Standard and Extra Deep Pocket products shown
+- [x] Page loads at `/flat-sheets/`
+- [x] "Custom Flat Sheets" heading visible
+- [x] Standard and Extra Deep Pocket products shown
 
 #### Duvet Covers (`/duvet-covers/`)
-- [ ] Page loads at `/duvet-covers/`
-- [ ] "Custom Duvet Covers" heading visible
-- [ ] 3-Sided Zipper and Pet Owner products shown
+- [x] Page loads at `/duvet-covers/`
+- [x] "Custom Duvet Covers" heading visible
+- [x] 3-Sided Zipper and Pet Owner products shown
 
 #### Pillowcases (`/pillowcases/`)
-- [ ] Page loads at `/pillowcases/`
-- [ ] "Custom Pillowcases" heading visible
-- [ ] Envelope, Zipper, Sham products shown
+- [x] Page loads at `/pillowcases/`
+- [x] "Custom Pillowcases" heading visible
+- [x] Envelope, Zipper, Sham products shown
 
 #### Mattress Protectors (`/mattress-protectors/`)
-- [ ] Page loads at `/mattress-protectors/`
-- [ ] "Mattress & Pillow Protectors" heading visible
+- [x] Page loads at `/mattress-protectors/`
+- [x] "Mattress & Pillow Protectors" heading visible
 
 ### SEO Landing Pages (Use Case)
 
 #### Marine Category (`/marine/`)
-- [ ] Page loads at `/marine/`
-- [ ] "Marine & Yacht" heading visible
-- [ ] Cross-links to `/fitted-sheets/` for Marine Fitted Sheet
+- [x] Page loads at `/marine/`
+- [x] "Marine & Yacht" heading visible
+- [x] Cross-links to `/fitted-sheets/` for Marine Fitted Sheet
 
 #### Family Category (`/family/`)
-- [ ] Page loads at `/family/`
-- [ ] "Family & Co-Sleep" heading visible
-- [ ] Cross-links to `/fitted-sheets/` for Family Fitted Sheet
+- [x] Page loads at `/family/`
+- [x] "Family & Co-Sleep" heading visible
+- [x] Cross-links to `/fitted-sheets/` for Family Fitted Sheet
 
 #### Pet Owner (`/pets/`)
-- [ ] Page loads at `/pets/`
-- [ ] "Pet Owner Bedding" heading visible
-- [ ] BreezePlus anti-fur explanation
-- [ ] Cross-links to `/fitted-sheets/` and `/duvet-covers/`
+- [x] Page loads at `/pets/`
+- [x] "Pet Owner Bedding" heading visible
+- [x] BreezePlus anti-fur explanation
+- [x] Cross-links to `/fitted-sheets/` and `/duvet-covers/`
 
 #### Duvet Category (`/duvet/`)
-- [ ] Page loads at `/duvet/`
-- [ ] "Easy-Change Duvet" heading visible
-- [ ] Cross-links to `/duvet-covers/`
+- [x] Page loads at `/duvet/`
+- [x] "Easy-Change Duvet" heading visible
+- [x] Cross-links to `/duvet-covers/`
 
 #### Protection Category (`/protection/`)
-- [ ] Page loads at `/protection/`
-- [ ] "Protection" heading visible
-- [ ] Cross-links to `/mattress-protectors/`
+- [x] Page loads at `/protection/`
+- [x] "Protection" heading visible
+- [x] Cross-links to `/mattress-protectors/`
 
 #### RV & Truck Cab (`/rv-truck/`)
-- [ ] Page loads at `/rv-truck/`
-- [ ] "RV & Truck Cab Bedding" heading visible
-- [ ] Problem section: tight spaces, built-in platforms, odd mattress shapes
-- [ ] 6-Sided Encasement card visible
-- [ ] Marine Fitted Sheet card visible
-- [ ] CTA block: "Have an odd-shaped mattress? We measure, you sleep."
+- [x] Page loads at `/rv-truck/`
+- [x] "RV & Truck Cab Bedding" heading visible
+- [x] Problem section: tight spaces, built-in platforms, odd mattress shapes
+- [x] 6-Sided Encasement card visible
+- [x] Marine Fitted Sheet card visible
+- [x] CTA block: "Have an odd-shaped mattress? We measure, you sleep."
 
 ---
 
 ## Size Guide SEO Hub
 
 ### Size Guide Landing (`/sizeguide/`)
-- [ ] Page loads at `/sizeguide/`
-- [ ] 4 cards visible linking to specific guides
-- [ ] Header and footer present
+- [x] Page loads at `/sizeguide/`
+- [x] 4 cards visible linking to specific guides
+- [x] Header and footer present
 
 ### Thai Size Guide (`/mattress-size-th/`)
-- [ ] Page loads at `/mattress-size-th/`
-- [ ] Thai heading: "ตารางขนาดที่นอน"
-- [ ] Thai size table: 3.5ฟุต through 7ฟุต
-- [ ] International sizes included
-- [ ] CTA button in Thai linking to configurator
+- [x] Page loads at `/mattress-size-th/`
+- [x] Thai heading: "ตารางขนาดที่นอน"
+- [x] Thai size table: 3.5ฟุต through 7ฟุต
+- [x] International sizes included
+- [x] CTA button in Thai linking to configurator
 
 ### International Size Guide (`/mattress-size/`)
-- [ ] Page loads at `/mattress-size/`
-- [ ] EN heading: "Mattress Size Guide"
-- [ ] Size comparison table with TH/US/UK/EU/AU/JP
-- [ ] CTA to measurement guide
+- [x] Page loads at `/mattress-size/`
+- [x] EN heading: "Mattress Size Guide"
+- [x] Size comparison table with TH/US/UK/EU/AU/JP
+- [x] CTA to measurement guide
 
 ### How to Measure (`/how-to-measure-mattress-size/`)
-- [ ] Page loads at `/how-to-measure-mattress-size/`
-- [ ] Credit card method steps visible
-- [ ] SVG diagram showing card placement
-- [ ] Note: "Every standard credit card is exactly 85.60 mm (3.375 in) long"
+- [x] Page loads at `/how-to-measure-mattress-size/`
+- [x] Credit card method steps visible
+- [x] SVG diagram showing card placement
+- [x] Note: "Every standard credit card is exactly 85.60 mm (3.375 in) long"
 - [x] **Footer restored (2026-05-14):** Full 4-col global footer (was stripped to copyright bar)
 
 ### Bed Sheet Sizes (`/bed-sheets-size/`)
-- [ ] Page loads at `/bed-sheets-size/`
-- [ ] Pocket depth table: Standard / Deep / Extra-Deep
-- [ ] Duvet cover size table
-- [ ] CTA to configurator
+- [x] Page loads at `/bed-sheets-size/`
+- [x] Pocket depth table: Standard / Deep / Extra-Deep
+- [x] Duvet cover size table
+- [x] CTA to configurator
 
 ### Size Guide Post-Build Revision (2026-05-14) ✅
 All 8 regional size guide pages updated with JS-based interactive tables:
@@ -514,10 +514,28 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 
 ---
 
-## Notes
+## Phase 4 Completion Status ✅ (2026-05-16)
 
-- All placeholder prices are estimates — update via Admin dashboard in Phase 7
-- EcoLuxe fabric is Calico / Greige (natural unbleached cotton), NOT GOTS-certified organic
+All build steps completed. Phase 4 is done.
+
+| Category | Items | Status |
+|---|---|---|
+| Homepage EN + TH | 8 sections each | ✅ Complete |
+| Static Pages EN | About, Contact, Fabric, Shipping, Policy, Reviews, Unsubscribe | ✅ Complete |
+| Static Pages TH | 22 pages total (6 static + 16 product/category) | ✅ Complete |
+| Blog | Index + pagination page 2 + template + 1 real post (17 posts) | ✅ Complete |
+| Product/Category Pages | 12 pages (5 primary + 6 SEO landing + 1 listing) | ✅ Complete |
+| Size Guide Pages | 4 pages with comprehensive tables | ✅ Complete |
+| Header/Nav | EN + TH with search overlay + mobile drawer | ✅ Complete |
+| Global Footer | 4-col restored on all pages | ✅ Complete |
+| Workers API | products, pricing, geo-currency, subscribe, unsubscribe | ✅ Complete |
+| Cookie Consent | GDPR banner with modal, GA4 conditional load | ✅ Complete |
+| Font System | Quicksand (EN) + Sarabun (TH) bilingual | ✅ Complete |
+| Image Compression | 92.5% size reduction | ✅ Complete |
+| Bilingual URL Architecture | All EN/TH pages with language toggle | ✅ Complete |
+| Product Detail Pages | All with configurator, tabs, related products | ✅ Complete |
+| Fabric Pages | 4-tab showcase with comparison table | ✅ Complete |
+| Redirects | `_redirects` file with WordPress 301s | ✅ Complete |
 - BreezePlus color palette (9 swatches): Dark Grey #4D545B, Silver #B7BEC8, Sand #D9D1C1, Sky #9CCAE1, Emerald #618283, Sea #5A7DA2, Pure White #FFFFFF, Baby Pink #E9B7BF, Ivory #F1EFE1
 - If any page shows 404, confirm the folder exists in `public/` (e.g., `public/about/index.html`)
 - If styles look broken, hard-refresh or check that `main.css` loaded in DevTools Network tab
