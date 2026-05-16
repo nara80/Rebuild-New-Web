@@ -64,9 +64,11 @@
 ### Blog Pages (static HTML, managed manually)
 | Page | URL | Notes |
 |---|---|---|
-| Blog Index | `/blogs/` | Featured post + 6-card grid, filter tabs, newsletter CTA — implemented 2026-05-16 |
+| Blog Index | `/blogs/` | Featured post + 11-card grid, filter tabs, pagination (12/page), newsletter CTA — implemented 2026-05-16 |
+| Blog Pagination | `/blogs/page/2/` | Page 2 — posts 13–17 (5 cards) — implemented 2026-05-16 |
 | Blog Post Template | `/blogs/template/index.html` | Hero image, rich article body, author box, social share, related products — implemented 2026-05-16 |
-| Individual Blog Post | `/blogs/[post-slug]/` | One file per article — use template as base |
+| Blog Post Sample | `/blogs/v-berth-sheets-vs-standard/` | First real blog post (Marine/V-Berth) — implemented 2026-05-16 |
+| Individual Blog Post | `/blogs/[post-slug]/` | One file per article — copy from template |
 
 ### Dynamic Pages (data from Cloudflare D1)
 | Page | URL | Notes |
@@ -638,8 +640,10 @@ mildmate-web/
 │   ├── duvet/index.html
 │   ├── protection/index.html
 │   │
-│   ├── blogs/index.html             ← Blog index page (featured post + grid)
-│   ├── blogs/template/index.html    ← Blog post template (hero, body, related products)
+│   ├── blogs/index.html             ← Blog index page (featured + 11-card grid)
+│   ├── blogs/page/2/index.html    ← Blog pagination page 2 (5 posts)
+│   ├── blogs/template/index.html    ← Blog post template
+│   ├── blogs/v-berth-sheets-vs-standard/index.html  ← First real blog post
 │   ├── blogs/[slug]/index.html      ← Individual blog post pages (copy from template)
 │   │
 │   ├── product/[slug]/index.html    ← 83 product detail pages (standard + custom paths)

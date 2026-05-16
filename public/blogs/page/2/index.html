@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MildMate blog — page 2 of bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.">
+  <title>MildMate Blog — Page 2 — Bedding Guides & Sleep Tips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .blog-index-page { background: #f0f7ff; }
+    .blog-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .blog-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .blog-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .blog-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .blog-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .blog-filters {
+      background: #fff;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 24px;
+    }
+    .blog-filters-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 16px 0;
+    }
+    .filter-tab {
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      background: var(--color-surface);
+      color: var(--color-text);
+    }
+    .filter-tab:hover, .filter-tab.active {
+      background: var(--color-primary);
+      color: #fff;
+    }
+    .blog-listing-section { padding: 48px 0 80px; }
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 28px;
+    }
+    .blog-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .blog-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+    }
+    .blog-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
+    .blog-card .card-image img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+    .blog-card:hover .card-image img { transform: scale(1.04); }
+    .blog-card .card-image .card-category {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .blog-card .card-body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+    .blog-card .card-date { font-size: 0.75rem; color: #999; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .blog-card .card-title { font-size: 1.0625rem; font-weight: 700; color: var(--color-text); line-height: 1.35; margin-bottom: 10px; flex: 1; }
+    .blog-card .card-title a { color: inherit; text-decoration: none; }
+    .blog-card .card-title a:hover { color: var(--color-primary); }
+    .blog-card .card-excerpt { font-size: 0.875rem; color: #666; line-height: 1.6; margin-bottom: 16px; }
+    .blog-card .card-read-more {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+    }
+    .blog-card .card-read-more:hover { text-decoration: underline; }
+    .blog-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+    }
+    .blog-pagination a, .blog-pagination span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      height: 40px;
+      padding: 0 8px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .blog-pagination a {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .blog-pagination a:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .blog-pagination a.page-nav { font-weight: 700; }
+    .blog-pagination .current { background: var(--color-primary); color: #fff; border: 1px solid var(--color-primary); }
+    .blog-pagination .ellipsis { color: #999; background: none; border: none; }
+    @media (max-width: 768px) {
+      .blog-hero-inner h1 { font-size: 1.75rem; }
+      .blog-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="blog-index-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation"><ul class="nav-list"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li><li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li><li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li></ul></nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="Search products" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+        <a href="/account/" class="account-btn" aria-label="My account"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
+        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/blogs/'" style="cursor:pointer">TH</span></div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="Mobile menu"><div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/">Home</a></li><li><a href="/products/">Shop</a></li><li><a href="/fabric/">Fabrics</a></li><li><a href="/sizeguide/">Size Guide</a></li></ul></div>
+    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="Close search"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
+  </header>
+
+  <main>
+
+    <section class="blog-hero">
+      <div class="blog-hero-inner">
+        <h1>MildMate Blog</h1>
+        <p class="hero-sub">Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners — from MildMate engineers.</p>
+      </div>
+    </section>
+
+    <div class="blog-filters">
+      <div class="blog-filters-inner">
+        <span class="filter-tab">All Posts</span>
+        <span class="filter-tab">Marine</span>
+        <span class="filter-tab">Family</span>
+        <span class="filter-tab">Pet Owner</span>
+        <span class="filter-tab">RV &amp; Truck</span>
+        <span class="filter-tab">Sleep Tips</span>
+        <span class="filter-tab">Fabric Guide</span>
+        <span class="filter-tab">How-To</span>
+      </div>
+    </div>
+
+    <section class="blog-listing-section">
+      <div class="container">
+
+        <div class="blog-grid">
+
+          <!-- Post 13 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-duvet-weights.jpg" alt="Weighted blanket vs duvet cover" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Sleep Tips</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                December 5, 2025
+              </div>
+              <h3 class="card-title"><a href="#">Weighted Blanket vs Duvet Cover: What's the Difference?</a></h3>
+              <p class="card-excerpt">We get asked this constantly. A duvet is a cover; a weighted blanket is a therapeutic tool. Here's exactly when to use each — and why you might want both.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 14 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-rv-road-trip.jpg" alt="RV road trip bedding essentials" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">RV &amp; Truck</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                November 22, 2025
+              </div>
+              <h3 class="card-title"><a href="#">The Ultimate RV Bedding Checklist for Long Road Trips</a></h3>
+              <p class="card-excerpt">Three days in and your sheets are wrinkled, your pillow flat, and your duvet cover smells like campfire smoke. Here's what to pack and why.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 15 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-eco-luxe.jpg" alt="EcoLuxe sustainable bedding" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Fabric Guide</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                November 8, 2025
+              </div>
+              <h3 class="card-title"><a href="#">EcoLuxe: The Sustainable Choice for Chemical-Free Sleep</a></h3>
+              <p class="card-excerpt">EcoLuxe is unbleached, minimally processed cotton — no GOTS cert but genuinely clean. A deep dive into why it matters for sensitive skin and eco-conscious buyers.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 16 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-pet-allergies.jpg" alt="Pet allergies and bedding hygiene" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Pet Owner</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                October 25, 2025
+              </div>
+              <h3 class="card-title"><a href="#">Pet Allergies and Bedding: A Practical Guide for Pet Owners</a></h3>
+              <p class="card-excerpt">Dander, saliva, and fur embed in standard sheets within days. Here's the bedding system that actually controls pet allergens in your bedroom.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 17 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-mattress-depth.jpg" alt="Measuring mattress depth for deep pocket sheets" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">How-To</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                October 12, 2025
+              </div>
+              <h3 class="card-title"><a href="#">Deep Pocket Sheets Explained: Why 12 Inches Isn't Always Deep Enough</a></h3>
+              <p class="card-excerpt">Mattress toppers, memory foam pads, and pillow-top surfaces push depths well beyond standard labels. Learn how to measure for any mattress depth accurately.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Pagination -->
+        <nav class="blog-pagination" aria-label="Blog pagination">
+          <a href="/blogs/" class="page-nav">&laquo;</a>
+          <a href="/blogs/" class="page-nav">&lsaquo;</a>
+          <a href="/blogs/">1</a>
+          <span class="current">2</span>
+          <span class="ellipsis">&hellip;</span>
+          <span class="ellipsis">&rsaquo;</span>
+          <span class="ellipsis">&raquo;</span>
+        </nav>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/about/">About Us</a></li>
+            <li><a href="/contact/">Contact Us</a></li>
+            <li><a href="/reviews/">Reviews</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Customer Service</h3>
+          <ul>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><a href="/sizeguide/">Size Guide</a></li>
+            <li><a href="/blogs/">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Shop With Us</h3>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>Contact</h3>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">Privacy Policy</a>
+          <a href="/shipping/">Returns &amp; Delivery</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+</body>
+</html>

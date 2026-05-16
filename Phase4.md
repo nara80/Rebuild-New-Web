@@ -312,8 +312,10 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 ### Blog Pages (static HTML templates)
 | Page / File | What It Is |
 |---|---|
-| `public/blogs/index.html` | Blog index — featured post + 6-card grid + filter tabs + newsletter CTA |
+| `public/blogs/index.html` | Blog index — featured post + 11-card grid + filter tabs + pagination (12/page) + newsletter CTA |
+| `public/blogs/page/2/index.html` | Blog pagination page 2 — 5 posts (posts 13–17) |
 | `public/blogs/template/index.html` | Blog post template — hero image, rich body, author box, social share, related products |
+| `public/blogs/v-berth-sheets-vs-standard/index.html` | First real blog post — "5 Reasons V-Berth Sheets Beat Standard Sheets" |
 
 ### Product & SEO Pages
 | Page / File | What It Is |
@@ -850,7 +852,7 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 | Fabric images | ✅ 4 real fabric photos placed | Done |
 | Pricing | Placeholder prices (base $45-65 USD) | Adjust in Admin dashboard (Phase 7) or edit `configurator.js` rates |
 | Customer reviews | 2 real Etsy reviews + 4 placeholders | Replace placeholder text with real Etsy reviews |
-| Blog | ✅ Blog index (`/blogs/`) + post template (`/blogs/template/`) built 2026-05-16 | Done — use template to create new posts |
+| Blog | ✅ Blog index (`/blogs/`) + pagination page 2 (`/blogs/page/2/`) + post template + first real post (`/blogs/v-berth-sheets-vs-standard/`) — 17 posts across 2 pages — implemented 2026-05-16 | Done — use template to create new posts |
 
 **BreezePlus Color Palette (9 swatches):**
 | Color | Hex |

@@ -281,6 +281,42 @@
     .newsletter-form button { padding: 12px 24px; background: #1a7fd4; color: #fff; border: 2px solid rgba(255,255,255,0.4); border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; font-family: var(--font-main); cursor: pointer; transition: background 0.2s; }
     .newsletter-form button:hover { background: #1569b0; }
 
+    /* ── Pagination ─────────────────────────── */
+    .blog-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+    }
+    .blog-pagination a, .blog-pagination span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      height: 40px;
+      padding: 0 8px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .blog-pagination a {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .blog-pagination a:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .blog-pagination a.page-nav { font-weight: 700; }
+    .blog-pagination .current {
+      background: var(--color-primary);
+      color: #fff;
+      border: 1px solid var(--color-primary);
+    }
+    .blog-pagination .ellipsis { color: #999; background: none; border: none; }
+
     /* ── Responsive ─────────────────────────── */
     @media (max-width: 768px) {
       .blog-hero-inner h1 { font-size: 1.75rem; }
@@ -346,13 +382,13 @@
           </div>
           <div class="card-body">
             <div class="featured-badge">Featured</div>
-            <h2 class="card-title"><a href="/blogs/template/">5 Reasons V-Berth Sheets Beat Standard Sheets on Your Boat</a></h2>
+            <h2 class="card-title"><a href="/blogs/v-berth-sheets-vs-standard/">5 Reasons V-Berth Sheets Beat Standard Sheets on Your Boat</a></h2>
             <p class="card-excerpt">Standard sheets were never built for boats. If you've ever spent twenty minutes wrestling a flat sheet into a V-Berth at 2am in a rolling anchorage, you already know why custom fitted sheets change everything.</p>
             <div class="card-date">
               <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
               May 12, 2026 &middot; 7 min read
             </div>
-            <a href="/blogs/template/" class="btn">Read Article</a>
+            <a href="/blogs/v-berth-sheets-vs-standard/" class="btn">Read Article</a>
           </div>
         </article>
 
@@ -461,7 +497,120 @@
             </div>
           </article>
 
-        </div>
+          <!-- Post 8 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-diy-sheets.jpg" alt="DIY custom bedding measurement" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">How-To</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                February 10, 2026
+              </div>
+              <h3 class="card-title"><a href="#">The Credit Card Method: Measure Any Mattress in 3 Minutes</a></h3>
+              <p class="card-excerpt">No tape measure? No problem. A standard credit card is all you need to capture width, length, and depth with enough accuracy for our pattern team.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 9 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-premacotton.jpg" alt="PremaCotton fabric natural cotton" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Fabric Guide</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                January 28, 2026
+              </div>
+              <h3 class="card-title"><a href="#">PremaCotton vs Egyptian Cotton: Why Thai-Made Cotton Wins</a></h3>
+              <p class="card-excerpt">We tested PremaCotton against Egyptian cotton over 6 months. The results surprised us — and changed how we think about bedding value.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 10 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-breezeplus-care.jpg" alt="BreezePlus fabric care guide" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Care Tips</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                January 15, 2026
+              </div>
+              <h3 class="card-title"><a href="#">BreezePlus Care Guide: Washing Tips for Pet Owners</a></h3>
+              <p class="card-excerpt">BreezePlus is machine-washable and odor-resistant, but there's a right way to do it. Here's our step-by-step guide to keeping it fresh.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 11 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-family-safety.jpg" alt="Family co-sleep safety standards" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Family</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                January 3, 2026
+              </div>
+              <h3 class="card-title"><a href="#">Co-Sleep Safety Standards: What Parents Need to Know</a></h3>
+              <p class="card-excerpt">Co-sleeping safety isn't just about mattress size — sheet tension, fabric breathability, and secure corners all play a role in safe family sleep.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 12 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-marine-humidity.jpg" alt="Marine bedding humidity management" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Marine</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                December 18, 2025
+              </div>
+              <h3 class="card-title"><a href="#">Managing Humidity Below Deck: Best Fabrics for Liveaboard Yachts</a></h3>
+              <p class="card-excerpt">Mold, mildew, and musty sheets are the enemy of liveaboard life. The right fabric and a simple drying routine make all the difference.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+          <!-- Post 12 -->
+          <article class="blog-card">
+            <div class="card-image">
+              <img src="/images/blog-marine-humidity.jpg" alt="Marine bedding humidity management" width="600" height="338" loading="lazy" decoding="async">
+              <span class="card-category">Marine</span>
+            </div>
+            <div class="card-body">
+              <div class="card-date">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                December 18, 2025
+              </div>
+              <h3 class="card-title"><a href="#">Managing Humidity Below Deck: Best Fabrics for Liveaboard Yachts</a></h3>
+              <p class="card-excerpt">Mold, mildew, and musty sheets are the enemy of liveaboard life. The right fabric and a simple drying routine make all the difference.</p>
+              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+            </div>
+          </article>
+
+        </div><!-- /.blog-grid -->
+
+        <!-- Pagination -->
+        <nav class="blog-pagination" aria-label="Blog pagination">
+          <span class="ellipsis">&laquo;</span>
+          <span class="ellipsis">&lsaquo;</span>
+          <span class="current">1</span>
+          <a href="/blogs/page/2/">2</a>
+          <span class="ellipsis">&hellip;</span>
+          <a href="/blogs/page/2/" class="page-nav">&rsaquo;</a>
+          <a href="/blogs/page/2/" class="page-nav">&raquo;</a>
+        </nav>
 
         <!-- Newsletter CTA -->
         <div class="blog-newsletter">
@@ -482,51 +631,54 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-col">
-          <h4>Shop</h4>
+          <h3>Quick Links</h3>
           <ul>
-            <li><a href="/fitted-sheets/">Fitted Sheets</a></li>
-            <li><a href="/flat-sheets/">Flat Sheets</a></li>
-            <li><a href="/duvet-covers/">Duvet Covers</a></li>
-            <li><a href="/pillowcases/">Pillowcases</a></li>
-            <li><a href="/mattress-protectors/">Mattress Protectors</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Use Cases</h4>
-          <ul>
-            <li><a href="/marine/">Marine &amp; Yacht</a></li>
-            <li><a href="/family/">Family Co-Sleep</a></li>
-            <li><a href="/pets/">Pet Owner</a></li>
-            <li><a href="/rv-truck/">RV &amp; Truck</a></li>
-            <li><a href="/protection/">Protection</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Help</h4>
-          <ul>
-            <li><a href="/sizeguide/">Size Guide</a></li>
-            <li><a href="/fabric/">Fabric Guide</a></li>
-            <li><a href="/how-to-measure-mattress-size/">How to Measure</a></li>
-            <li><a href="/custom-measurement/">Custom Measurement</a></li>
-            <li><a href="/faq/">FAQ</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Company</h4>
-          <ul>
-            <li><a href="/about/">About MildMate</a></li>
-            <li><a href="/contact/">Contact</a></li>
-            <li><a href="/policy/">Privacy Policy</a></li>
-            <li><a href="/shipping/">Shipping</a></li>
+            <li><a href="/about/">About Us</a></li>
+            <li><a href="/contact/">Contact Us</a></li>
             <li><a href="/reviews/">Reviews</a></li>
           </ul>
         </div>
+        <div class="footer-col">
+          <h3>Customer Service</h3>
+          <ul>
+            <li><a href="/faq/">FAQ</a></li>
+            <li><a href="/sizeguide/">Size Guide</a></li>
+            <li><a href="/blogs/">Blog</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Shop With Us</h3>
+          <div class="footer-icons-grid">
+            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
+            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
+            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
+            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>Contact</h3>
+          <ul>
+            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
+            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
+          </ul>
+          <div class="footer-icons-grid contact-icons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-social-center">
+        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
+        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
+        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
+        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
+        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 MildMate. All rights reserved.</p>
-        <div class="footer-social">
-          <a href="https://www.facebook.com/mildmate" target="_blank" rel="noopener" aria-label="Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-          <a href="https://www.instagram.com/mildmate" target="_blank" rel="noopener" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a>
+        <p>&copy; MildMate 2026</p>
+        <div class="footer-bottom-links">
+          <a href="/policy/">Privacy Policy</a>
+          <a href="/shipping/">Returns &amp; Delivery</a>
         </div>
       </div>
     </div>
