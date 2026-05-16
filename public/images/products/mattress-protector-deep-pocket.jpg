@@ -8,6 +8,6 @@
   <rect width="800" height="600" fill="url(#bg)"/>
   <rect x="80" y="100" width="640" height="400" rx="20" fill="#fff" stroke="#2c96f4" stroke-width="3"/>
   <rect x="120" y="140" width="560" height="320" rx="12" fill="#e8f4fd" stroke="#2c96f4" stroke-width="2"/>
-  <text x="400" y="280" font-family="Quicksand,sans-serif" font-size="28" font-weight="700" fill="#2c96f4" text-anchor="middle">Mattress Encasement General</text>
+  <text x="400" y="280" font-family="Quicksand,sans-serif" font-size="28" font-weight="700" fill="#2c96f4" text-anchor="middle">Mattress Protector Deep Pocket</text>
   <text x="400" y="320" font-family="Quicksand,sans-serif" font-size="16" fill="#666" text-anchor="middle">MildMate Custom Bedding</text>
 </svg>

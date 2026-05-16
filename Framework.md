@@ -71,23 +71,30 @@
 | Individual Blog Post | `/blogs/[post-slug]/` | One file per article — copy from template |
 
 ### Dynamic Pages (data from Cloudflare D1)
-| Page | URL | Notes |
+
+**Shop by Product — 5 categories (primary navigation, SEO discoverability)**
+| Category | URL | Products |
 |---|---|---|
-| **Primary Product Type Categories** | | |
 | Sheets | `/sheets/` | Fitted (Marine, Family, Pet, Adjustable) + Flat (Standard, Deep Pocket) |
 | Duvet Covers | `/duvet-covers/` | 3-Sided Zipper + Pet Owner Duvet |
 | Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
 | Protection | `/protection/` | Mattress Protectors + Pillow Protectors |
 | Accessories | `/accessories/` | BedBridge Connector |
-| **SEO Landing Pages (Use Case)** | | |
-| Marine & Yacht | `/marine/` | Marine bedding — links to sheets |
-| Family & Co-Sleep | `/family/` | Co-sleeping solutions — links to sheets |
-| Deep Pocket | `/deep-pocket/` | Deep pocket + adjustable base — links to sheets |
-| Boarding Dorm | `/boarding-dorm/` | Parents buying for kids abroad — single bed, 3-sided zipper, size comparison chart |
-| Pet Owner Bedding | `/pets/` | BreezePlus anti-fur — links to duvet-covers |
-| RV & Truck Cab | `/rv-truck/` | RV, van, truck cab — CloudSoft quick-dry bedding |
-| All Products | `/products/` | Full product listing with filter bar |
-| Product Detail | `/product/[slug]/` | 22 product listings, configurator |
+
+**Shop by Niche — 6 categories (use-case landing pages, high-conversion)**
+| Category | URL | Cross-links to |
+|---|---|---|
+| Marine & Yacht | `/marine/` | `/sheets/` |
+| Family & Co-Sleep | `/family/` | `/sheets/` |
+| Deep Pocket | `/deep-pocket/` | `/sheets/` |
+| Boarding Dorm | `/boarding-dorm/` | `/duvet-covers/` |
+| Pet Owner Bedding | `/pets/` | `/duvet-covers/` |
+| RV & Truck Cab | `/rv-truck/` | `/sheets/`, `/protection/` |
+
+**Browse All**
+| Category | URL | Notes |
+|---|---|---|
+| All Products | `/products/` | Full catalog grid with filter bar |
 
 ### Admin Pages (Google login required)
 | Page | URL | Notes |

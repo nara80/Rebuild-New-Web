@@ -2610,6 +2610,26 @@ main {
   }
 }
 
+/* ── Global Product Tags ────────────────────── */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.tag-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: #e8f4fd;
+}
+
 
 .cookie-banner {
   position: fixed;
@@ -2884,4 +2904,24 @@ main {
   .cookie-modal-actions .cookie-btn {
     width: 100%;
   }
+}
+
+/* ── Global Product Tags ────────────────────── */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.tag-pill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: #e8f4fd;
 }

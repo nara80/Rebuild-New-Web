@@ -16,7 +16,6 @@
     .product-gallery { position: sticky; top: 90px; }
     .gallery-main { border-radius: var(--radius); overflow: hidden; background: var(--color-surface); margin-bottom: 12px; position: relative; }
     .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; cursor: zoom-in; }
-    .gallery-badge { position: absolute; top: 16px; left: 16px; background: rgba(44,150,244,0.85); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; border-radius: 20px; backdrop-filter: blur(4px); }
     .gallery-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
     .gallery-thumb { width: 72px; height: 72px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: border-color 0.15s; background: var(--color-surface); }
     .gallery-thumb:hover, .gallery-thumb.active { border-color: var(--color-primary); }
@@ -173,19 +172,18 @@
       <div class="product-gallery">
         <div class="gallery-main">
           <img src="/images/products/mattress-protector-pet.jpg" alt="Pet-Proof Mattress Protector" id="gallery-main-img" width="800" height="600" loading="eager">
-          <div class="gallery-badge">WATERPROOF</div>
         </div>
         <div class="gallery-nav">
-          <div class="gallery-thumb active" data-img="/images/products/mattress-protector-pet.jpg" data-badge="WATERPROOF">
+          <div class="gallery-thumb active" data-img="/images/products/mattress-protector-pet.jpg">
             <img src="/images/products/mattress-protector-pet.jpg" alt="Main view" width="72" height="72" loading="lazy">
           </div>
-          <div class="gallery-thumb" data-img="/images/products/pet-proof-mattress-protector-2.jpg" data-badge="">
+          <div class="gallery-thumb" data-img="/images/products/pet-proof-mattress-protector-2.jpg">
             <img src="/images/products/pet-proof-mattress-protector-2.jpg" alt="TPU layer detail" width="72" height="72" loading="lazy" onerror="this.parentElement.style.display='none'">
           </div>
-          <div class="gallery-thumb" data-img="/images/products/pet-proof-mattress-protector-3.jpg" data-badge="">
+          <div class="gallery-thumb" data-img="/images/products/pet-proof-mattress-protector-3.jpg">
             <img src="/images/products/pet-proof-mattress-protector-3.jpg" alt="On mattress" width="72" height="72" loading="lazy" onerror="this.parentElement.style.display='none'">
           </div>
-          <div class="gallery-thumb video-thumb" data-video="https://www.youtube.com/watch?v=EXAMPLE" data-badge="VIDEO">
+          <div class="gallery-thumb video-thumb" data-video="https://www.youtube.com/watch?v=EXAMPLE">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </div>
@@ -470,6 +468,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Global Tags -->
+    <div class="container" style="max-width:1280px; padding:0 24px 64px;">
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+        <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">Tags:</span>
+        <a href="/protection/" class="tag-pill">Protection</a>
+        <a href="/pets/" class="tag-pill">Pet Owner Bedding</a>
+        <a href="/rv-truck/" class="tag-pill">RV & Truck</a>
+        <a href="/marine/" class="tag-pill">Marine & Yacht</a>
+        <a href="/family/" class="tag-pill">Family & Co-Sleep</a>
+      </div>
+    </div>
   </main>
 
   <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>Quick Links</h3><ul><li><a href="/about/">About Us</a></li><li><a href="/contact/">Contact Us</a></li><li><a href="/reviews/">Reviews</a></li></ul></div><div class="footer-col"><h3>Customer Service</h3><ul><li><a href="/faq/">FAQ</a></li><li><a href="/sizeguide/">Size Guide</a></li><li><a href="/blogs/">Blog</a></li></ul></div><div class="footer-col"><h3>Shop With Us</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>Contact</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/policy/">Privacy Policy</a><a href="/shipping/">Returns &amp; Delivery</a></div></div></div></footer>
@@ -485,8 +495,6 @@
         document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
         document.getElementById('gallery-main-img').src = thumb.dataset.img;
-        const badge = document.querySelector('.gallery-badge');
-        if (thumb.dataset.badge) { badge.textContent = thumb.dataset.badge; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
       });
     });
 

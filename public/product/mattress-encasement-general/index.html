@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Pet Owner Duvet Cover by MildMate — BreezePlus fabric with 3-sided zipper. Pet hair slides off, laundry takes minutes not hours. Custom-sized to fit your duvet.">
-  <title>Pet Owner Duvet Cover — BreezePlus Anti-Fur — MildMate</title>
+  <meta name="description" content="6-Sided Mattress Encasement by MildMate — full waterproof protection from all angles. TPU inner layer. OEKO-TEX certified. Ships worldwide.">
+  <title>6-Sided Mattress Encasement — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <style>
-    /* ─── Page Layout ─────────────────────────── */
     .product-page { background: #f0f7ff; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
     .product-gallery { position: sticky; top: 90px; }
@@ -20,9 +19,6 @@
     .gallery-thumb { width: 72px; height: 72px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: border-color 0.15s; background: var(--color-surface); }
     .gallery-thumb:hover, .gallery-thumb.active { border-color: var(--color-primary); }
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .gallery-thumb.video-thumb { display: flex; align-items: center; justify-content: center; background: #1a1a2e; }
-    .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
-    /* ─── Right: Product Info ───────────────────── */
     .product-info {}
     .product-breadcrumb { font-size: 0.8125rem; color: #888; margin-bottom: 16px; }
     .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
@@ -34,7 +30,6 @@
     .rating-text { font-size: 0.875rem; color: #555; }
     .rating-text strong { color: var(--color-primary); cursor: pointer; }
     .rating-text strong:hover { text-decoration: underline; }
-    /* ─── Pricing Panel ─────────────────────────── */
     .pricing-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
     .panel-section { margin-bottom: 20px; }
     .panel-section:last-child { margin-bottom: 0; }
@@ -54,14 +49,11 @@
     .color-option.selected { border-color: var(--color-primary); }
     .color-option:not(.selected) { opacity: 0.5; }
     .color-option:hover { opacity: 1; }
-    /* Price Display */
     .price-block { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
     .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
     .price-label { font-size: 0.8125rem; color: #888; }
     .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
     .price-sub { font-size: 0.75rem; color: #999; }
-    .price-note { font-size: 0.75rem; color: #999; margin-top: 4px; }
-    /* Add to Cart */
     .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
     .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-add-cart:hover { background: var(--color-primary-dark); }
@@ -70,14 +62,9 @@
     .btn-custom-quote:hover { background: #e8f4fd; }
     .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #888; }
     .payment-badge { display: flex; align-items: center; gap: 4px; }
-    /* ─── Trust Signals ────────────────────────── */
     .trust-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
     .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #555; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
-    /* ─── Custom Dimensions Toggle ─────────────── */
-    .custom-toggle { margin-top: 16px; text-align: center; }
-    .custom-toggle button { background: none; border: none; font-size: 0.875rem; color: var(--color-primary); cursor: pointer; font-weight: 600; font-family: var(--font-main); text-decoration: underline; }
-    .custom-toggle button:hover { color: var(--color-primary-dark); }
     .custom-dimensions { display: none; margin-top: 16px; padding: 20px; background: var(--color-surface); border-radius: var(--radius); border: 1px solid var(--color-border); }
     .custom-dimensions.open { display: block; }
     .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -90,7 +77,6 @@
     .unit-btn.active { background: var(--color-primary); color: #fff; }
     .custom-quote-btn { width: 100%; padding: 14px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .custom-quote-btn:hover { background: var(--color-primary-dark); }
-    /* ─── Accordion Tabs ───────────────────────── */
     .product-tabs { margin-top: 40px; }
     .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
     .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
@@ -102,7 +88,6 @@
     .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
-    /* ─── Reviews Section ───────────────────────── */
     .reviews-section { margin-top: 48px; }
     .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
@@ -120,7 +105,6 @@
     .review-stars { color: #f59e0b; font-size: 0.875rem; }
     .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
     .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
-    /* ─── Related Products ──────────────────────── */
     .related-section { margin-top: 64px; }
     .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
     .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -132,9 +116,8 @@
     .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
     .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
-    /* ─── Responsive ────────────────────────────── */
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } .reviews-header { flex-direction: column; align-items: start; } }
+    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
     @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -149,7 +132,7 @@
         <button class="search-btn" aria-label="Search products" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
         <a href="/account/" class="account-btn" aria-label="My account"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
         <a href="/checkout/" class="cart-btn" aria-label="Shopping cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
-        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/product/pet-owner-duvet-cover/'" style="cursor:pointer">TH</span></div>
+        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/product/mattress-encasement-general/'" style="cursor:pointer">TH</span></div>
       </div>
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
@@ -161,46 +144,33 @@
     <div class="container" style="padding-top:24px;">
       <nav class="product-breadcrumb" aria-label="Breadcrumb">
         <a href="/">Home</a> &rsaquo;
-        <a href="/duvet-covers/">Duvet Covers</a> &rsaquo;
-        <a href="/pets/">Pet Owner</a> &rsaquo;
-        <span>Pet Owner Duvet Cover</span>
+        <a href="/protection/">Protection</a> &rsaquo;
+        <span>6-Sided Mattress Encasement</span>
       </nav>
     </div>
 
     <div class="product-layout">
-      <!-- LEFT: Gallery -->
       <div class="product-gallery">
         <div class="gallery-main">
-          <img src="/images/products/pet-owner-duvet-cover.jpg" alt="Pet Owner Duvet Cover" id="gallery-main-img" width="800" height="600" loading="eager">
+          <img src="/images/products/mattress-encasement-general.jpg" alt="6-Sided Mattress Encasement" id="gallery-main-img" width="800" height="600" loading="eager">
         </div>
         <div class="gallery-nav">
-          <div class="gallery-thumb active" data-img="/images/products/pet-owner-duvet-cover.jpg">
-            <img src="/images/products/pet-owner-duvet-cover.jpg" alt="Main view" width="72" height="72" loading="lazy">
-          </div>
-          <div class="gallery-thumb" data-img="/images/products/pet-owner-duvet-cover-2.jpg">
-            <img src="/images/products/pet-owner-duvet-cover-2.jpg" alt="3-sided zipper" width="72" height="72" loading="lazy" onerror="this.parentElement.style.display='none'">
-          </div>
-          <div class="gallery-thumb" data-img="/images/products/pet-owner-duvet-cover-3.jpg">
-            <img src="/images/products/pet-owner-duvet-cover-3.jpg" alt="On bed" width="72" height="72" loading="lazy" onerror="this.parentElement.style.display='none'">
-          </div>
-          <div class="gallery-thumb video-thumb" data-video="https://www.youtube.com/watch?v=EXAMPLE">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <div class="gallery-thumb active" data-img="/images/products/mattress-encasement-general.jpg">
+            <img src="/images/products/mattress-encasement-general.jpg" alt="Main view" width="72" height="72" loading="lazy">
           </div>
         </div>
       </div>
 
-      <!-- RIGHT: Product Info -->
       <div class="product-info">
-        <h1 class="product-title">Pet Owner Duvet Cover</h1>
-        <p class="product-tagline">BreezePlus fabric with 3-sided zipper — pet hair slides off, laundry takes minutes not hours.</p>
+        <h1 class="product-title">6-Sided Mattress Encasement</h1>
+        <p class="product-tagline">Full 6-sided encasement — complete waterproof protection from all angles. TPU inner layer. OEKO-TEX certified.</p>
 
         <div class="product-rating">
           <span class="stars">★★★★★</span>
-          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">4 reviews</strong></span>
+          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
         </div>
 
         <div class="pricing-panel">
-          <!-- Step 1: Region -->
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
@@ -215,70 +185,58 @@
             </div>
           </div>
 
-          <!-- Step 2: Size (duvet cover: W × L) -->
           <div class="panel-section">
-            <div class="panel-label">Select Duvet Size</div>
+            <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value="">— Choose size —</option>
               <optgroup label="🇺🇸 US / Canada">
-                <option value="173x224" data-price="2295">Twin — 173×224cm (68×88in)</option>
-                <option value="224x224" data-price="2495">Full/Queen — 224×224cm (88×88in)</option>
-                <option value="270x244" data-price="2695">King — 270×244cm (106×96in)</option>
+                <option value="99x191x30" data-price="2095">Twin — 99×191×30cm (39×75×12in)</option>
+                <option value="137x191x30" data-price="2295">Full — 137×191×30cm (54×75×12in)</option>
+                <option value="153x203x30" data-price="2495">Queen — 153×203×30cm (60×80×12in)</option>
+                <option value="193x203x30" data-price="2695">King — 193×203×30cm (76×80×12in)</option>
               </optgroup>
               <optgroup label="🇬🇧 UK">
-                <option value="140x200" data-price="2245">Single — 140×200cm</option>
-                <option value="200x200" data-price="2495">Double — 200×200cm</option>
-                <option value="225x220" data-price="2695">King — 225×220cm</option>
+                <option value="90x190x30" data-price="2045">Single — 90×190×30cm</option>
+                <option value="135x190x30" data-price="2245">Double — 135×190×30cm</option>
+                <option value="150x200x30" data-price="2445">King — 150×200×30cm</option>
               </optgroup>
               <optgroup label="🇪🇺 EU">
-                <option value="140x200" data-price="2245">Single — 140×200cm</option>
-                <option value="200x200" data-price="2495">Double — 200×200cm</option>
-                <option value="240x220" data-price="2695"> King — 240×220cm</option>
+                <option value="90x200x30" data-price="2095">Single — 90×200×30cm</option>
+                <option value="140x200x30" data-price="2295">Double — 140×200×30cm</option>
+                <option value="160x200x30" data-price="2495">King — 160×200×30cm</option>
               </optgroup>
               <optgroup label="🇹🇭 Thailand">
-                <option value="160x210" data-price="2245">3.5ft — 160×210cm</option>
-                <option value="180x210" data-price="2495">6ft Queen — 180×210cm</option>
-                <option value="200x220" data-price="2695">King — 200×220cm</option>
+                <option value="107x191x30" data-price="2095">3.5ft — 107×191×30cm</option>
+                <option value="120x200x30" data-price="2295">6ft Queen — 120×200×30cm</option>
+                <option value="152x198x30" data-price="2495">King — 152×198×30cm</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions →</option>
               </optgroup>
             </select>
-            <div class="size-hint">Enter your duvet's exact dimensions — <a href="/sizeguide/">view size guide →</a></div>
+            <div class="size-hint">Depth (pocket) is 30cm (12 inch) — <a href="/sizeguide/">view size guide →</a></div>
           </div>
 
-          <!-- Step 3: Fabric (BreezePlus only) -->
           <div class="panel-section">
             <div class="panel-label">Fabric</div>
-            <div class="fabric-badge">BreezePlus — Pet Hair Resistant · 3–5°C Cooler · OEKO-TEX</div>
+            <div class="fabric-badge">TPU Inner Layer Only — full 6-sided waterproof encasement</div>
           </div>
 
-          <!-- Step 4: Color -->
           <div class="panel-section">
-            <div class="panel-label">Color — BreezePlus</div>
+            <div class="panel-label">Color</div>
             <div class="color-selector" id="color-selector">
               <div class="color-option selected" data-color="pure-white" style="background:#fff; border:2px solid #ddd;" title="Pure White"></div>
-              <div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div>
-              <div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div>
-              <div class="color-option" data-color="sea" style="background:#5A7DA2;" title="Sea"></div>
-              <div class="color-option" data-color="emerald" style="background:#618283;" title="Emerald"></div>
-              <div class="color-option" data-color="dark-grey" style="background:#4D545B;" title="Dark Grey"></div>
-              <div class="color-option" data-color="silver" style="background:#B7BEC8;" title="Silver"></div>
-              <div class="color-option" data-color="baby-pink" style="background:#E9B7BF;" title="Baby Pink"></div>
-              <div class="color-option" data-color="ivory" style="background:#F1EFE1;" title="Ivory"></div>
             </div>
           </div>
 
-          <!-- Price Display -->
           <div class="price-block">
             <div class="price-row">
               <span class="price-label">Price</span>
-              <span class="price-value" id="price-display">฿2,295</span>
+              <span class="price-value" id="price-display">฿2,095</span>
             </div>
             <div class="price-sub">Excludes shipping & import tariff</div>
           </div>
 
-          <!-- Add to Cart -->
           <div class="add-to-cart-row">
             <button class="btn-add-cart" id="add-to-cart" disabled>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -287,10 +245,9 @@
             <button class="btn-custom-quote" id="custom-quote-btn">Custom Size</button>
           </div>
 
-          <!-- Custom Dimensions Panel -->
           <div class="custom-dimensions" id="custom-dimensions">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-              <strong style="font-size:0.9375rem;">Enter your exact duvet dimensions</strong>
+              <strong style="font-size:0.9375rem;">Enter your exact mattress dimensions</strong>
               <div class="unit-toggle">
                 <button class="unit-btn active" id="unit-cm">cm</button>
                 <button class="unit-btn" id="unit-in">inch</button>
@@ -299,15 +256,15 @@
             <div class="dim-inputs">
               <div class="dim-field">
                 <label for="dim-width">Width (W)</label>
-                <input type="number" id="dim-width" placeholder="e.g. 180" min="30" max="400">
+                <input type="number" id="dim-width" placeholder="e.g. 152" min="30" max="300">
               </div>
               <div class="dim-field">
                 <label for="dim-length">Length (L)</label>
-                <input type="number" id="dim-length" placeholder="e.g. 210" min="30" max="400">
+                <input type="number" id="dim-length" placeholder="e.g. 203" min="30" max="300">
               </div>
               <div class="dim-field">
-                <label for="dim-depth">Fill (optional)</label>
-                <input type="number" id="dim-depth" placeholder="e.g. 300" min="1" max="800">
+                <label for="dim-depth">Depth (D)</label>
+                <input type="number" id="dim-depth" placeholder="e.g. 30" min="5" max="60">
               </div>
             </div>
             <div class="price-row" style="margin-bottom:12px;">
@@ -333,7 +290,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="product-tabs">
         <div class="tab-list" role="tablist">
@@ -343,34 +299,31 @@
           <button class="tab-btn" role="tab" data-tab="care">Care</button>
         </div>
         <div class="tab-content open" id="tab-description" role="tabpanel">
-          <h3>Engineered for Life with Pets</h3>
-          <p>The same BreezePlus fabric as our best-selling Pet Owner Fitted Sheet, in duvet cover form with a 3-sided zipper. Hair slides off, duvet changes in minutes. Built for pet owners who wash bedding frequently.</p>
-          <p>The 3-sided zipper means you do not have to lift the heavy duvet to change the cover. Open the zipper, slide the old cover off, slide the new one on, zip it closed. Pet hair comes off in the wash rather than embedding in the fabric.</p>
+          <h3>Complete Waterproof Protection from All Angles</h3>
+          <p>Unlike standard fitted protectors, the 6-Sided Mattress Encasement wraps your entire mattress — top, bottom, and all four sides — for complete protection against dust mites, allergens, bed bugs, and liquids from any direction.</p>
           <ul>
-            <li>3-sided zipper — change cover without lifting the duvet</li>
-            <li>BreezePlus fabric — pet hair slides off instead of embedding</li>
-            <li>3–5°C cooler than standard cotton</li>
-            <li>100% chemical-free — OEKO-TEX certified</li>
-            <li>Custom-made to your exact duvet dimensions</li>
-            <li>Quick-dry after washing</li>
+            <li>Full 6-sided encasement — no exposed surfaces</li>
+            <li>TPU inner layer — 100% waterproof from all angles</li>
+            <li>12 inch / 30cm depth — fits most standard mattresses</li>
+            <li>Pure White only — clean and minimal</li>
+            <li>OEKO-TEX certified for safety</li>
+            <li>Ideal for allergy sufferers and asthma sufferers</li>
           </ul>
         </div>
         <div class="tab-content" id="tab-fabric" role="tabpanel">
-          <h3>BreezePlus — Pet Owner Edition</h3>
-          <p>50/50 long-staple cotton and microfiber blend. The microfiber creates a ultra-smooth surface that pet hair literally slides off. No more soaking, brushing, or lint rollers after every nap. The same fabric technology trusted by pet owners worldwide.</p>
+          <h3>TPU Inner Layer — Full Waterproof Encasement</h3>
+          <p>The 6-Sided Mattress Encasement uses a pure TPU inner layer without an outer fabric shell — this allows it to wrap completely around the mattress with no exposed seams. The TPU membrane blocks 100% of liquids, dust mites, and allergens from all six sides.</p>
           <ul>
-            <li>Pet hair resistant — hair slides off in one sweep</li>
-            <li>3–5°C cooler than cotton — better for pets who overheat</li>
-            <li>Quick dry — wash today, dry by tomorrow</li>
-            <li>OEKO-TEX certified — no toxic dye or finish</li>
-            <li>Wrinkle-resistant — looks neat without ironing</li>
+            <li>TPU inner — 100% waterproof, quiet, skin-safe</li>
+            <li>Full 6-sided coverage — no exposed surfaces</li>
+            <li>OEKO-TEX certified — no toxic chemicals</li>
+            <li>Machine washable at 60°C</li>
           </ul>
           <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections →</a></p>
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
-          <h3>Size Guide — Duvet Covers</h3>
-          <p>Duvet cover sizes should match your duvet's exact dimensions (width × length). Measure your duvet directly — do not assume standard sizes as they vary between manufacturers.</p>
-          <p>Select your region above to see standard sizes. For custom dimensions — including non-standard or oversized duvets — use the "Custom Size" option to enter your exact measurements.</p>
+          <h3>Size Guide — 6-Sided Mattress Encasement</h3>
+          <p>Measure your mattress width × length × depth carefully. The encasement requires exact dimensions since it wraps all six sides. Select your region above to see standard sizes, or use "Custom Size" for exact measurements.</p>
           <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide →</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
@@ -379,15 +332,14 @@
             <li>Machine wash warm (40°C / 104°F) — gentle cycle</li>
             <li>Do not bleach — mild detergent only</li>
             <li>Tumble dry low or hang dry</li>
-            <li>No ironing needed — wrinkle-resistant by design</li>
-            <li>Remove pet hair before washing — a quick vacuum or lint roll saves a rinse cycle</li>
+            <li>Do not iron the TPU layer</li>
+            <li>Remove and re-install monthly for hygiene</li>
           </ul>
-          <p>BreezePlus dries significantly faster than pure cotton — typically 2–3 hours on a line or low tumble dry. This also extends the fabric lifespan.</p>
+          <p>TPU is durable and maintains its waterproof properties through 100+ wash cycles at 60°C.</p>
         </div>
       </div>
     </div>
 
-    <!-- Reviews -->
     <div class="container" id="reviews" style="max-width:1280px; padding:0 24px;">
       <div class="reviews-section">
         <div class="reviews-header">
@@ -397,88 +349,82 @@
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
             <div class="summary-stars">★★★★★</div>
-            <div class="summary-text">Based on 4 verified reviews</div>
+            <div class="summary-text">Based on 2 verified reviews</div>
           </div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
           <div class="review-card">
             <div class="review-header">
-              <div class="review-avatar">S</div>
+              <div class="review-avatar">J</div>
               <div class="review-meta">
-                <div class="review-name">Sarah K.</div>
-                <div class="review-country">United Kingdom</div>
+                <div class="review-name">Jennifer R.</div>
+                <div class="review-country">United States</div>
               </div>
               <div class="review-stars">★★★★★</div>
             </div>
-            <div class="review-text">"Two German Shepherds and a cat — the duvet used to be a fur nightmare. BreezePlus changes everything. Hair just comes off in the wash. The 3-sided zipper is so practical."</div>
-            <div class="review-product">Verified purchase: Pet Owner Duvet Cover · King / BreezePlus Sand</div>
+            <div class="review-text">"I have severe dust mite allergies and this encasement has made a huge difference. Complete peace of mind with the 6-sided protection. OEKO-TEX certification was important for me."</div>
+            <div class="review-product">Verified purchase: 6-Sided Mattress Encasement · Queen / Pure White</div>
           </div>
           <div class="review-card">
             <div class="review-header">
               <div class="review-avatar">M</div>
               <div class="review-meta">
-                <div class="review-name">Mark T.</div>
+                <div class="review-name">Michael T.</div>
                 <div class="review-country">Australia</div>
               </div>
               <div class="review-stars">★★★★★</div>
             </div>
-            <div class="review-text">"Finally a duvet cover that does not collect fur. BreezePlus is the real deal. Washes well, dries fast, and the zipper makes changing it so easy."</div>
-            <div class="review-product">Verified purchase: Pet Owner Duvet Cover · Queen / BreezePlus Sky</div>
+            <div class="review-text">"Needed full protection for my mattress after moving into a rental. The TPU layer is completely waterproof and it's held up well after several washes."</div>
+            <div class="review-product">Verified purchase: 6-Sided Mattress Encasement · King / Pure White</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Related Products -->
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="related-section">
         <h2>You might also like</h2>
         <div class="related-grid">
-          <a href="/product/pet-owner-fitted-sheet/" class="related-card">
-            <div class="card-image"><img src="/images/products/pet-owner-fitted-sheet.jpg" alt="Pet Owner Fitted Sheet" width="400" height="300" loading="lazy"></div>
-            <div class="card-body">
-              <div class="card-title">Pet Owner Fitted Sheet</div>
-              <div class="card-price">From ฿1,695</div>
-              <div class="card-price-note">BreezePlus · anti-fur</div>
-            </div>
-          </a>
-          <a href="/product/3-sided-duvet/" class="related-card">
-            <div class="card-image"><img src="/images/products/3-sided-duvet.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy"></div>
-            <div class="card-body">
-              <div class="card-title">3-Sided Zipper Duvet Cover</div>
-              <div class="card-price">From ฿2,295</div>
-              <div class="card-price-note">BreezePlus · easy laundry</div>
-            </div>
-          </a>
-          <a href="/product/pillow-protector/" class="related-card">
-            <div class="card-image"><img src="/images/products/pillow-protector.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy"></div>
+          <a href="/product/pillow-protector-general/" class="related-card">
+            <div class="card-image"><img src="/images/products/pillow-protector-general.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy"></div>
             <div class="card-body">
               <div class="card-title">Pillow Protector</div>
               <div class="card-price">฿635</div>
               <div class="card-price-note">TPU waterproof liner</div>
             </div>
           </a>
-          <a href="/product/pet-proof-mattress-protector/" class="related-card">
-            <div class="card-image"><img src="/images/products/mattress-protector-pet.jpg" alt="Pet-Proof Mattress Protector" width="400" height="300" loading="lazy"></div>
+          <a href="/product/mattress-protector-standard/" class="related-card">
+            <div class="card-image"><img src="/images/products/mattress-protector-standard.jpg" alt="Standard Mattress Protector" width="400" height="300" loading="lazy"></div>
             <div class="card-body">
-              <div class="card-title">Pet-Proof Mattress Protector</div>
+              <div class="card-title">Standard Mattress Protector</div>
               <div class="card-price">From ฿1,695</div>
-              <div class="card-price-note">TPU waterproof · full encasement</div>
+              <div class="card-price-note">TPU + 3-layer barrier</div>
+            </div>
+          </a>
+          <a href="/product/rv-truck-mattress-encasement/" class="related-card">
+            <div class="card-image"><img src="/images/products/rv-truck-mattress-encasement.jpg" alt="RV & Truck Mattress Encasement" width="400" height="300" loading="lazy"></div>
+            <div class="card-body">
+              <div class="card-title">RV & Truck Mattress Encasement</div>
+              <div class="card-price">From ฿2,095</div>
+              <div class="card-price-note">8 inch / 20cm depth</div>
+            </div>
+          </a>
+          <a href="/product/mattress-protector-deep-pocket/" class="related-card">
+            <div class="card-image"><img src="/images/products/mattress-protector-deep-pocket.jpg" alt="Deep Pocket Mattress Protector" width="400" height="300" loading="lazy"></div>
+            <div class="card-body">
+              <div class="card-title">Deep Pocket Mattress Protector</div>
+              <div class="card-price">From ฿1,895</div>
+              <div class="card-price-note">20 inch / 51cm depth</div>
             </div>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Global Tags -->
     <div class="container" style="max-width:1280px; padding:0 24px 64px;">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">Tags:</span>
-        <a href="/duvet-covers/" class="tag-pill">Duvet Covers</a>
-        <a href="/pets/" class="tag-pill">Pet Owner Bedding</a>
-        <a href="/boarding-dorm/" class="tag-pill">Boarding Dorm</a>
-        <a href="/deep-pocket/" class="tag-pill">Deep Pocket</a>
-        <a href="/rv-truck/" class="tag-pill">RV & Truck</a>
+        <a href="/protection/" class="tag-pill">Protection</a>
       </div>
     </div>
   </main>
@@ -489,10 +435,8 @@
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
-    // Gallery
     document.querySelectorAll('.gallery-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
-        if (thumb.dataset.video) { window.open(thumb.dataset.video, '_blank'); return; }
         document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
         document.getElementById('gallery-main-img').src = thumb.dataset.img;
@@ -512,10 +456,10 @@
     });
 
     const SIZES_BY_REGION = {
-      us: { '173x224': { label: 'Twin — 173×224cm', price: 2295 }, '224x224': { label: 'Full/Queen — 224×224cm', price: 2495 }, '270x244': { label: 'King — 270×244cm', price: 2695 } },
-      uk: { '140x200': { label: 'Single — 140×200cm', price: 2245 }, '200x200': { label: 'Double — 200×200cm', price: 2495 }, '225x220': { label: 'King — 225×220cm', price: 2695 } },
-      eu: { '140x200': { label: 'Single — 140×200cm', price: 2245 }, '200x200': { label: 'Double — 200×200cm', price: 2495 }, '240x220': { label: 'King — 240×220cm', price: 2695 } },
-      th: { '160x210': { label: '3.5ft — 160×210cm', price: 2245 }, '180x210': { label: '6ft Queen — 180×210cm', price: 2495 }, '200x220': { label: 'King — 200×220cm', price: 2695 } }
+      us: { '99x191x30': { label: 'Twin — 99×191×30cm', price: 2095 }, '137x191x30': { label: 'Full — 137×191×30cm', price: 2295 }, '153x203x30': { label: 'Queen — 153×203×30cm', price: 2495 }, '193x203x30': { label: 'King — 193×203×30cm', price: 2695 } },
+      uk: { '90x190x30': { label: 'Single — 90×190×30cm', price: 2045 }, '135x190x30': { label: 'Double — 135×190×30cm', price: 2245 }, '150x200x30': { label: 'King — 150×200×30cm', price: 2445 } },
+      eu: { '90x200x30': { label: 'Single — 90×200×30cm', price: 2095 }, '140x200x30': { label: 'Double — 140×200×30cm', price: 2295 }, '160x200x30': { label: 'King — 160×200×30cm', price: 2495 } },
+      th: { '107x191x30': { label: '3.5ft — 107×191×30cm', price: 2095 }, '120x200x30': { label: '6ft Queen — 120×200×30cm', price: 2295 }, '152x198x30': { label: 'King — 152×198×30cm', price: 2495 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {
@@ -555,11 +499,12 @@
     function updateCustomPrice() {
       const w = parseFloat(document.getElementById('dim-width').value);
       const l = parseFloat(document.getElementById('dim-length').value);
-      if (w && l) {
+      const d = parseFloat(document.getElementById('dim-depth').value);
+      if (w && l && d) {
         let area = w * l;
         if (unit === 'in') { area = w * 2.54 * l * 2.54; }
-        const rate = 0.055;
-        const basePrice = Math.round(area * rate + 800);
+        const rate = 0.065;
+        const basePrice = Math.round(area * rate + 900);
         document.getElementById('custom-price').textContent = '\u0e3f' + basePrice.toLocaleString();
       } else {
         document.getElementById('custom-price').textContent = '\u2014';
@@ -567,11 +512,13 @@
     }
     document.getElementById('dim-width').addEventListener('input', updateCustomPrice);
     document.getElementById('dim-length').addEventListener('input', updateCustomPrice);
+    document.getElementById('dim-depth').addEventListener('input', updateCustomPrice);
 
     document.getElementById('submit-custom-quote').addEventListener('click', () => {
       const w = document.getElementById('dim-width').value;
       const l = document.getElementById('dim-length').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + w + ' \u00d7 ' + l + ' ' + unit);
+      const d = document.getElementById('dim-depth').value;
+      alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + w + ' \u00d7 ' + l + ' \u00d7 ' + d + ' ' + unit);
     });
 
     document.getElementById('add-to-cart').addEventListener('click', () => {
