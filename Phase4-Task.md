@@ -38,16 +38,20 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-### 3. Shop by Product (Primary Navigation) ✅ Done
-- [x] 5 cards visible: Fitted Sheets, Flat Sheets, Duvet Covers, Pillowcases, Protectors
-- [x] Each card has warm brand-colored placeholder (Ivory, Beige, Baby Pink, Sand, Vanilla)
+### 3. Shop by Product (Primary Navigation) ✅ Restructured 2026-05-16
+- [x] 5 cards visible: Sheets, Duvet Covers, Pillowcases, Protection, Accessories
+- [x] Each card has brand-colored placeholder image
 - [x] Section has warm cream background (`#fdfbf7`)
 - [x] Each card is clickable and links to correct product-type category page
 - [x] Card hover effect works (lift + shadow)
 - [x] **Mobile:** 2 columns then 1 column at narrow width
 
-> **Action needed:** Provide 5 product-type category photos → place in `public/images/categories/`
-> **NEW:** 5 primary product-type categories (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) added for SEO discoverability
+> **NEW:** 5 primary product-type categories — Fitted + Flat Sheets merged to `/sheets/`, Protectors renamed to `/protection/`, Accessories added at `/accessories/`
+> - `category-sheets.jpg` ✅
+> - `category-duvet-covers.jpg` ✅
+> - `category-pillowcases.jpg` ✅
+> - `category-protection.jpg` ✅
+> - `category-accessories.jpg` ✅
 
 ---
 
@@ -193,20 +197,32 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 
 ---
 
-## URL Structure & Redirects (2026-05-14, updated 2026-05-15)
+## URL Structure & Redirects (2026-05-14, updated 2026-05-16)
 
 ### `_redirects` — WordPress old URL → new bilingual pages
 
-All old WordPress URLs (blog posts, pages, sub-paths) are handled by wildcard `/*` rules:
+| Old URL | New URL | Type | Status |
+|---|---|---|---|
+| `/bed-sheets-size/*` | `/sizeguide/` | 301 | ✅ Active |
+| `/mattress-size/*` | `/sizeguide/` | 301 | ✅ Active |
+| `/mattress-size-th/*` | `/sizeguide/th/` | 301 | ✅ Active |
+
+### `_redirects` — Shop by Product Restructure (2026-05-16)
 
 | Old URL | New URL | Type | Status |
 |---|---|---|---|
-| `/bed-sheets-size/*` | `/sizeguide/` | 301 | ✅ Active — catches all sub-paths |
-| `/mattress-size/*` | `/sizeguide/` | 301 | ✅ Active — catches all sub-paths |
-| `/mattress-size-th/*` | `/sizeguide/th/` | 301 | ✅ Active — catches all sub-paths |
-| `/pillow-protectors/*` | `/mattress-protectors/` | 301 | ✅ Active — catches all sub-paths |
-
-**No separate TH pages needed** — the wildcard `/*` handles ALL old WordPress content automatically.
+| `/fitted-sheets/*` | `/sheets/` | 301 | ✅ Active |
+| `/flat-sheets/*` | `/sheets/` | 301 | ✅ Active |
+| `/mattress-protectors/` (exact) | `/protection/` | 301 | ✅ Active |
+| `/mattress-protectors/*` | `/protection/` | 301 | ✅ Active |
+| `/protection/*` (Easy-Change Duvet) | `/boarding-dorm/` | 301 | ✅ Active |
+| `/duvet/*` (Easy-Change Duvet) | `/deep-pocket/` | 301 | ✅ Active |
+| `/th/fitted-sheets/*` | `/th/sheets/` | 301 | ✅ Active |
+| `/th/flat-sheets/*` | `/th/sheets/` | 301 | ✅ Active |
+| `/th/mattress-protectors/` (exact) | `/th/protection/` | 301 | ✅ Active |
+| `/th/mattress-protectors/*` | `/th/protection/` | 301 | ✅ Active |
+| `/th/protection/*` | `/th/boarding-dorm/` | 301 | ✅ Active |
+| `/th/duvet/*` | `/th/deep-pocket/` | 301 | ✅ Active |
 
 ### Language Toggle — `/th/` Versions Required
 
@@ -233,17 +249,26 @@ All old WordPress URLs (blog posts, pages, sub-paths) are handled by wildcard `/
 - [x] Each card has placeholder, title, price, "Customize" button
 - [x] Header and footer present
 
-### Primary Product-Type Categories
+### Primary Product-Type Categories (restructured 2026-05-16)
 
-#### Fitted Sheets (`/fitted-sheets/`)
-- [x] Page loads at `/fitted-sheets/`
-- [x] "Custom Fitted Sheets" heading visible
-- [x] Marine, Family, Pet Owner, Adjustable products shown
+#### Sheets (`/sheets/`) ✅ New — merged fitted + flat
+- [x] Page loads at `/sheets/`
+- [x] "Fitted Sheets" and "Flat Sheets" sub-section headings
+- [x] Marine, Family, Pet Owner, Adjustable (Fitted) + Standard, Extra Deep Pocket (Flat) products shown
 
-#### Flat Sheets (`/flat-sheets/`)
-- [x] Page loads at `/flat-sheets/`
-- [x] "Custom Flat Sheets" heading visible
-- [x] Standard and Extra Deep Pocket products shown
+#### Duvet Covers (`/duvet-covers/`)
+- [x] Page loads at `/duvet-covers/`
+
+#### Pillowcases (`/pillowcases/`)
+- [x] Page loads at `/pillowcases/`
+
+#### Protection (`/protection/`) ✅ New — renamed from mattress-protectors
+- [x] Page loads at `/protection/`
+- [x] Mattress Protectors + Pillow Protectors combined (8 products)
+
+#### Accessories (`/accessories/`) ✅ New — added
+- [x] Page loads at `/accessories/`
+- [x] BedBridge Connector listed
 
 #### Duvet Covers (`/duvet-covers/`)
 - [x] Page loads at `/duvet-covers/`
@@ -443,30 +468,67 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 | PremaCotton fabric | `public/images/fabrics/fabric-premacotton.jpg` | ✅ Real photo |
 | EcoLuxe fabric | `public/images/fabrics/fabric-ecoluxe.jpg` | ✅ Real photo |
 
-### All Product & Category Images — Complete (replaced with real photos)
-| Image | Path | Status | Replace Priority |
-|---|---|---|
-| Fitted Sheets category | `public/images/categories/category-fitted-sheets.jpg` | ✅ Real photo | — |
-| Flat Sheets category | `public/images/categories/category-flat-sheets.jpg` | ✅ Real photo | — |
-| Duvet Covers category | `public/images/categories/category-duvet-covers.jpg` | ✅ Real photo | — |
-| Pillowcases category | `public/images/categories/category-pillowcases.jpg` | ✅ Real photo | — |
-| Mattress Protectors category | `public/images/categories/category-mattress-protectors.jpg` | ✅ Real photo | — |
-| Pet Owner category | `public/images/categories/category-pets.jpg` | ✅ Real photo | — |
-| RV & Truck Cab category | `public/images/categories/category-rv-truck.jpg` | ✅ Real photo | — |
-| Pet Owner Fitted Sheet | `public/images/products/pet-owner-fitted-sheet.jpg` | ✅ Real photo | — |
-| Pet Owner Duvet Cover | `public/images/products/pet-owner-duvet-cover.jpg` | ✅ Real photo | — |
-| Adjustable Mattress Fitted Sheet | `public/images/products/adjustable-mattress-fitted-sheet.jpg` | ✅ Real photo | — |
-| Flat Sheet — Standard | `public/images/products/flat-sheet-standard.jpg` | ✅ Real photo | — |
-| Flat Sheet — Extra Deep Pocket | `public/images/products/flat-sheet-extra-deep-pocket.jpg` | ✅ Real photo | — |
-| Envelope Pillowcase | `public/images/products/pillowcase-envelope.jpg` | ✅ Real photo | — |
-| Zipper Pillowcase | `public/images/products/pillowcase-zipper.jpg` | ✅ Real photo | — |
-| Sham Pillowcase | `public/images/products/pillowcase-sham.jpg` | ✅ Real photo | — |
-| Pet-Proof Mattress Protector | `public/images/products/pet-proof-mattress-protector.jpg` | ✅ Real photo | — |
-| Pillow Protector | `public/images/products/pillow-protector.jpg` | ✅ Real photo | — |
+### All Product & Category Images — Complete (updated 2026-05-16)
 
-> **How placeholders were generated:** `scripts/generate-placeholders.js` uses `sharp` to convert SVG text-to-image with brand palette colors. All generated images are 800×600px JPEG. Replace with real product photos from your photographer or Etsy listings before launch.
->
-> **All images replaced with real photos (2026-05-15).** Product detail + category card images are complete.
+> **Placeholder images generated:** `scripts/generate-placeholders.js` uses `sharp` to convert SVG text-to-image with brand palette colors. All generated images are 800×600px JPEG. Replace with real product photos before launch.
+
+**Category images:**
+| Image | Path | Status |
+|---|---|---|
+| Marine & Yacht | `public/images/categories/category-marine.jpg` | ✅ Placeholder |
+| Family Co-Sleep | `public/images/categories/category-family.jpg` | ✅ Placeholder |
+| Pet Owner | `public/images/categories/category-pets.jpg` | ✅ Placeholder |
+| Deep Pocket | `public/images/categories/category-deep-pocket.jpg` | ✅ Placeholder |
+| Boarding Dorm | `public/images/categories/category-boarding-dorm.jpg` | ✅ Placeholder |
+| RV & Truck Cab | `public/images/categories/category-rv-truck.jpg` | ✅ Placeholder |
+| Sheets | `public/images/categories/category-sheets.jpg` | ✅ Placeholder |
+| Duvet Covers | `public/images/categories/category-duvet-covers.jpg` | ✅ Placeholder |
+| Pillowcases | `public/images/categories/category-pillowcases.jpg` | ✅ Placeholder |
+| Protection | `public/images/categories/category-protection.jpg` | ✅ Placeholder |
+| Accessories | `public/images/categories/category-accessories.jpg` | ✅ Placeholder |
+
+**Product images (22 listings):**
+| Product | Path | Status |
+|---|---|---|
+| 3-Sided Zipper Duvet Cover | `public/images/products/3-sided-duvet.jpg` | ✅ Placeholder |
+| Pet Owner Duvet Cover | `public/images/products/pet-owner-duvet-cover.jpg` | ✅ Placeholder |
+| RV & Truck Duvet Cover | `public/images/products/rv-truck-duvet.jpg` | ✅ Placeholder |
+| Custom Family Fitted Sheet | `public/images/products/family-co-sleeping-solutions-th-size.jpg` | ✅ Real photo |
+| Pet Owner Fitted Sheet | `public/images/products/pet-owner-fitted-sheet.jpg` | ✅ Real photo |
+| Marine Fitted Sheet (V-Berth) | `public/images/products/marine-fitted-sheet.jpg` | ✅ Real photo |
+| RV & Truck Fitted Sheet | `public/images/products/rv-truck-fitted-sheet.jpg` | ✅ Placeholder |
+| Adjustable Fitted Sheet | `public/images/products/adjustable-mattress-fitted-sheet.jpg` | ✅ Real photo |
+| Flat Sheet — Standard | `public/images/products/flat-sheet-standard.jpg` | ✅ Real photo |
+| Flat Sheet — Extra Deep Pocket | `public/images/products/flat-sheet-extra-deep-pocket.jpg` | ✅ Real photo |
+| Envelope Pillowcase | `public/images/products/pillowcase-envelope.jpg` | ✅ Real photo |
+| Zipper Pillowcase | `public/images/products/pillowcase-zipper.jpg` | ✅ Real photo |
+| Sham Pillowcase | `public/images/products/pillowcase-sham.jpg` | ✅ Real photo |
+| Pet Owner Pillowcase | `public/images/products/pet-owner-pillowcase.jpg` | ✅ Placeholder |
+| RV & Truck Pillowcase | `public/images/products/rv-truck-pillowcase.jpg` | ✅ Placeholder |
+| Waterproof Mattress Protector — Standard | `public/images/products/mattress-protector-standard.jpg` | ✅ Placeholder |
+| Waterproof Mattress Protector — Family | `public/images/products/mattress-protector-family.jpg` | ✅ Placeholder |
+| Waterproof Mattress Protector — Pet Owner | `public/images/products/mattress-protector-pet.jpg` | ✅ Real photo |
+| Waterproof Mattress Protector — Dorm | `public/images/products/mattress-protector-dorm.jpg` | ✅ Placeholder |
+| 6-Sided Mattress Encasement | `public/images/products/mattress-encasement-general.jpg` | ✅ Real photo |
+| RV & Truck Mattress Encasement | `public/images/products/rv-truck-mattress-encasement.jpg` | ✅ Placeholder |
+| Pillow Protector | `public/images/products/pillow-protector-general.jpg` | ✅ Placeholder |
+| RV & Truck Pillow Protector | `public/images/products/rv-truck-pillow-protector.jpg` | ✅ Placeholder |
+| BedBridge Connector | `public/images/products/bedbridge-connector.jpg` | ✅ Real photo |
+| Custom Pet-Proof Mattress Protector | `public/images/products/custom-pet-proof-mattress-protector.jpg` | ✅ Placeholder |
+| BedBridge Connector (TH) | `public/images/products/bedbridge-connector-th.jpg` | ✅ Placeholder |
+
+**Deleted (replaced by new slugs):**
+- `category-duvet.jpg` → deleted (old Easy-Change Duvet segment)
+- `category-fitted-sheets.jpg` → deleted (merged into /sheets/)
+- `category-flat-sheets.jpg` → deleted (merged into /sheets/)
+- `category-mattress-protectors.jpg` → deleted (renamed to /protection/)
+- `3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg` → delete after cleaner slug `3-sided-duvet.jpg` live
+- `product-boat-bedding-fitted-sheet-microfiber.jpg` → delete after cleaner slug `marine-fitted-sheet.jpg` live
+- `sheet-protectors.jpg` → delete after cleaner slug `mattress-encasement-general.jpg` live
+- `tbar.jpg` → delete after cleaner slug `bedbridge-connector.jpg` live
+- `pet-proof-mattress-protector.jpg` → delete after cleaner slug `mattress-protector-pet.jpg` live
+- `family-co-sleeping-solutions-th-size.jpg` → **KEEP** (still used on TH product page)
+- `adjustable-mattress-fitted-sheet.jpg` → **KEEP** (still used on EN product page)
 
 ---
 

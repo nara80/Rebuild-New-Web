@@ -131,40 +131,47 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 ### Primary Navigation — Product Type (SEO discoverability)
 | Category | URL | Products |
 |---|---|---|
-| Fitted Sheets | `/fitted-sheets/` | Marine, Family, Pet Owner, Adjustable |
-| Flat Sheets | `/flat-sheets/` | Standard, Extra Deep Pocket (20") |
+| Sheets | `/sheets/` | Marine, Family, Pet Owner, Adjustable (Fitted) + Standard, Extra Deep Pocket (Flat) |
 | Duvet Covers | `/duvet-covers/` | 3-Sided Zipper, Pet Owner |
 | Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
-| Mattress Protectors | `/mattress-protectors/` | Pet-Proof Protector, 6-Sided Encasement, Pillow Protector |
+| Protection | `/protection/` | Mattress Protectors + Pillow Protectors |
+| Accessories | `/accessories/` | BedBridge Connector |
 
 ### SEO Landing Pages — Use Case (high-conversion)
 | Category | URL | Cross-links to Product Type |
 |---|---|---|
-| Marine & Yacht | `/marine/` | `/fitted-sheets/` — Marine Fitted Sheet |
-| Family & Co-Sleep | `/family/` | `/fitted-sheets/` — Family Fitted Sheet |
-| Deep Pocket | `/deep-pocket/` | `/fitted-sheets/` + `/flat-sheets/` — Adjustable Fitted Sheet, Extra Deep Pocket Flat |
+| Marine & Yacht | `/marine/` | `/sheets/` — Marine Fitted Sheet |
+| Family & Co-Sleep | `/family/` | `/sheets/` — Family Fitted Sheet |
+| Deep Pocket | `/deep-pocket/` | `/sheets/` — Adjustable Fitted Sheet, Extra Deep Pocket Flat |
 | Boarding Dorm | `/boarding-dorm/` | `/duvet-covers/` — 3-Sided Zipper Duvet |
-| Pet Owner Bedding | `/pets/` | `/fitted-sheets/`, `/duvet-covers/` — BreezePlus anti-fur |
-| RV & Truck Cab | `/rv-truck/` | `/fitted-sheets/`, `/mattress-protectors/` — CloudSoft quick-dry |
+| Pet Owner Bedding | `/pets/` | `/sheets/`, `/duvet-covers/` — BreezePlus anti-fur |
+| RV & Truck Cab | `/rv-truck/` | `/sheets/`, `/protection/` — CloudSoft quick-dry |
 
-### Product Detail Pages (15 total)
+### Product Detail Pages (22 product listings with clean slugs)
 | Product | URL | Category |
 |---|---|---|
-| 3-Sided Zipper Duvet Cover | `/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/` | Duvet Cover, Pets |
-| Custom Family Fitted Sheet | `/product/family-co-sleeping-solutions-th-size/` | Fitted Sheet, Family |
-| Marine Fitted Sheet (V-Berth) | `/product/product-boat-bedding-fitted-sheet-microfiber/` | Fitted Sheet, Marine |
-| Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protector, Pets |
-| 6-Sided Mattress Encasement | `/product/sheet-protectors/` | Protector, Protection, RV-Truck, Marine |
-| BedBridge Connector | `/product/tbar/` | Accessory, Family |
-| Pillow Protector | `/product/pillow-protector/` | Protector, Protection |
+| 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Cover, Pets |
+| Custom Family Fitted Sheet | `/product/family-fitted-sheet/` | Fitted Sheet, Family |
+| Marine Fitted Sheet (V-Berth) | `/product/marine-fitted-sheet/` | Fitted Sheet, Marine |
+| Pet-Proof Mattress Protector | `/product/mattress-protector-pet/` | Protector, Pets |
+| 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protector, Protection, RV-Truck, Marine |
+| BedBridge Connector | `/product/bedbridge-connector/` | Accessory, Family |
+| Pillow Protector | `/product/pillow-protector-general/` | Protector, Protection |
 | Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Fitted Sheet, Pets |
 | Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Cover, Pets |
-| Adjustable Mattress Fitted Sheet | `/product/adjustable-mattress-fitted-sheet/` | Fitted Sheet |
+| Adjustable Mattress Fitted Sheet | `/product/adjustable-fitted-sheet/` | Fitted Sheet |
 | Flat Sheet — Standard | `/product/flat-sheet-standard/` | Flat Sheet |
 | Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Flat Sheet |
 | Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcase |
 | Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcase |
 | Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcase |
+| Waterproof Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection |
+| Waterproof Mattress Protector — Family | `/product/mattress-protector-family/` | Protection, Family |
+| Waterproof Mattress Protector — Dorm | `/product/mattress-protector-dorm/` | Protection, Dorm |
+| RV & Truck Mattress Encasement | `/product/rv-truck-mattress-encasement/` | Protection, RV-Truck |
+| RV & Truck Pillow Protector | `/product/rv-truck-pillow-protector/` | Protection, RV-Truck |
+| Custom Pet-Proof Mattress Protector | `/product/custom-pet-proof-mattress-protector/` | Protection, Pets |
+| BedBridge (Thai version) | `/product/bedbridge-connector-th/` | Accessory, Family |
 
 ---
 

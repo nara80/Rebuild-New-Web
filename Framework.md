@@ -74,20 +74,20 @@
 | Page | URL | Notes |
 |---|---|---|
 | **Primary Product Type Categories** | | |
-| Fitted Sheets | `/fitted-sheets/` | All fitted sheet variants — standard, marine, family, pet, adjustable |
-| Flat Sheets | `/flat-sheets/` | Standard + Extra Deep Pocket (20") |
-| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper + Pet Owner variants |
-| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham styles |
-| Mattress Protectors | `/mattress-protectors/` | Encasements + Pillow Protectors |
+| Sheets | `/sheets/` | Fitted (Marine, Family, Pet, Adjustable) + Flat (Standard, Deep Pocket) |
+| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper + Pet Owner Duvet |
+| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
+| Protection | `/protection/` | Mattress Protectors + Pillow Protectors |
+| Accessories | `/accessories/` | BedBridge Connector |
 | **SEO Landing Pages (Use Case)** | | |
-| Marine & Yacht | `/marine/` | Marine bedding — links to fitted-sheets |
-| Family & Co-Sleep | `/family/` | Co-sleeping solutions — links to fitted-sheets |
-| Deep Pocket | `/deep-pocket/` | Deep pocket + adjustable base bedding — links to fitted-sheets + flat-sheets |
+| Marine & Yacht | `/marine/` | Marine bedding — links to sheets |
+| Family & Co-Sleep | `/family/` | Co-sleeping solutions — links to sheets |
+| Deep Pocket | `/deep-pocket/` | Deep pocket + adjustable base — links to sheets |
 | Boarding Dorm | `/boarding-dorm/` | Parents buying for kids abroad — single bed, 3-sided zipper, size comparison chart |
-| Pet Owner Bedding | `/pets/` | **NEW** BreezePlus anti-fur — links to fitted-sheets + duvet-covers |
-| RV & Truck Cab | `/rv-truck/` | **NEW** RV, van, truck cab — CloudSoft quick-dry bedding |
+| Pet Owner Bedding | `/pets/` | BreezePlus anti-fur — links to duvet-covers |
+| RV & Truck Cab | `/rv-truck/` | RV, van, truck cab — CloudSoft quick-dry bedding |
 | All Products | `/products/` | Full product listing with filter bar |
-| Product Detail | `/product/[slug]/` | 15 product pages (expandable to 83), configurator |
+| Product Detail | `/product/[slug]/` | 22 product listings, configurator |
 
 ### Admin Pages (Google login required)
 | Page | URL | Notes |

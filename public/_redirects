@@ -4,11 +4,30 @@
 # Product URL changes
 /product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/   /product/3-sided-duvet/   301
 
-# Segment rename: Easy-Change Duvet + Protection → Deep Pocket + Boarding Dorm
-/duvet/*                          /deep-pocket/                      301
-/protection/*                     /boarding-dorm/                    301
+# Shop by Product restructure (2026-05-16)
+# Sheets: fitted + flat sheets combined under /sheets/
+/fitted-sheets/*   /sheets/   301
+/flat-sheets/*   /sheets/   301
+# Protection: mattress-protectors renamed to /protection/
+# (exact match for index page + wildcard for sub-paths)
+# Exact index page — redirect to the new /protection/ listing page
+/mattress-protectors/   /protection/   301
+# All product detail pages under mattress-protectors
+/mattress-protectors/*   /protection/   301
+# Old /protection/* (Easy-Change Duvet segment) → /boarding-dorm/
+/protection/*   /boarding-dorm/   301
+# Segment rename: Easy-Change Duvet → Deep Pocket
+/duvet/*   /deep-pocket/   301
 
 # WordPress old URLs — redirect ALL sub-paths to new sizeguide pages
-/bed-sheets-size/*   /sizeguide/      301
-/mattress-size/*      /sizeguide/      301
+/bed-sheets-size/*   /sizeguide/   301
+/mattress-size/*   /sizeguide/   301
 /mattress-size-th/*   /sizeguide/th/   301
+
+# Thai language redirects for Shop by Product (2026-05-16)
+/th/fitted-sheets/*   /th/sheets/   301
+/th/flat-sheets/*   /th/sheets/   301
+/th/mattress-protectors/   /th/protection/   301
+/th/mattress-protectors/*   /th/protection/   301
+/th/protection/*   /th/boarding-dorm/   301
+/th/duvet/*   /th/deep-pocket/   301

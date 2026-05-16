@@ -70,12 +70,12 @@ async function generate(outPath, opts) {
   await generate(path.join(cats, 'category-boarding-dorm.jpg'), { ...colors.boarding,   label: 'Boarding Dorm',    sublabel: 'Student Bedding — Ships Worldwide' });
   await generate(path.join(cats, 'category-rv-truck.jpg'),       { ...colors.rv,         label: 'RV & Truck Cab',   sublabel: 'CloudSoft Quick-Dry Bedding' });
 
-  // --- Product-type category images ---
-  await generate(path.join(cats, 'category-fitted-sheets.jpg'),      { ...colors.fitted,    label: 'Fitted Sheets',    sublabel: 'Custom Made to Measure' });
-  await generate(path.join(cats, 'category-flat-sheets.jpg'),        { ...colors.flat,      label: 'Flat Sheets',      sublabel: 'Standard & Extra Deep Pocket' });
-  await generate(path.join(cats, 'category-duvet-covers.jpg'),         { ...colors.duvet,     label: 'Duvet Covers',     sublabel: '3-Sided Zipper Design' });
-  await generate(path.join(cats, 'category-pillowcases.jpg'),          { ...colors.pillow,    label: 'Pillowcases',      sublabel: 'Envelope, Zipper & Sham' });
-  await generate(path.join(cats, 'category-mattress-protectors.jpg'),   { ...colors.protector, label: 'Mattress Protectors', sublabel: 'Waterproof & Encasement' });
+  // --- Product-type / Shop-by-Product category images ---
+  await generate(path.join(cats, 'category-sheets.jpg'),           { bg: '#2c96f4', text: '#FFFFFF', label: 'Sheets',           sublabel: 'Fitted & Flat — All Sizes' });
+  await generate(path.join(cats, 'category-protection.jpg'),        { ...colors.protector, label: 'Protection',        sublabel: 'Waterproof Mattress & Pillow' });
+  await generate(path.join(cats, 'category-accessories.jpg'),      { bg: '#4D545B', text: '#FFFFFF', label: 'Accessories',       sublabel: 'BedBridge & More' });
+  await generate(path.join(cats, 'category-duvet-covers.jpg'),     { ...colors.duvet,     label: 'Duvet Covers',     sublabel: '3-Sided Zipper Design' });
+  await generate(path.join(cats, 'category-pillowcases.jpg'),       { ...colors.pillow,    label: 'Pillowcases',      sublabel: 'Envelope, Zipper & Sham' });
 
   // --- Product detail images (22 product listings — 2026-05-16) ---
   const productImages = [
@@ -104,6 +104,8 @@ async function generate(outPath, opts) {
     ['pillow-protector-general.jpg',           'Pillow Protector',                'All 4 Fabric Collections',       colors.pillow],
     ['rv-truck-pillow-protector.jpg',          'RV & Truck Pillow Protector',    'CloudSoft — Quick-Dry',           colors.rv],
     ['bedbridge-connector.jpg',                'BedBridge Connector',             'Family Co-Sleep Accessory',       colors.family],
+    ['custom-pet-proof-mattress-protector.jpg','Custom Pet-Proof Mattress Protector','BreezePlus — Custom Shape',      colors.pets],
+    ['bedbridge-connector-th.jpg',            'BedBridge Connector (TH)',         'เชื่อมต่อเตียงครอบครัว',           colors.family],
   ];
 
   for (const [filename, label, sublabel, color] of productImages) {
