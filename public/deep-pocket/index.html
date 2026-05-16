@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Mattress Protection — waterproof, pet-proof, TPU-lined bedding protection. Surface-level to 6-sided encasement. OEKO-TEX certified. Made to measure by MildMate.">
-  <title>Mattress Protection — Waterproof, Pet-Proof, TPU-Lined Bedding Protection — MildMate</title>
+  <meta name="description" content="Deep Pocket & Adjustable Base Bedding — sheets for thick mattresses, pillow-top combos, and adjustable beds. Up to 20-inch depth, custom sizes. All 4 fabric collections.">
+  <title>Deep Pocket & Adjustable Base Bedding — Thick Mattress Sheets — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
@@ -23,7 +23,6 @@
     .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
     .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
     .listing-card:hover .card-image img { transform: scale(1.04); }
-    .listing-card .card-video-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6875rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); }
     .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
     .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
     .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -34,8 +33,6 @@
     .listing-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
     .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
     .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
-    .listing-card .btn-outline { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
-    .listing-card .btn-outline:hover { background: #e8f4fd; }
     .listing-desc-section { background: #fff; border-top: 1px solid var(--color-border); padding: 56px 0; }
     .listing-desc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
     .listing-desc-grid h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: var(--color-text); }
@@ -54,8 +51,6 @@
     .pricing-panel select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.15); }
     .size-guide-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-top: 8px; }
     .size-guide-link:hover { text-decoration: underline; }
-    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 20px; }
-    .fabric-label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: var(--color-text); }
     .fabric-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
     .fabric-option { padding: 10px; border: 2px solid var(--color-border); border-radius: var(--radius); cursor: pointer; text-align: center; font-size: 0.875rem; font-weight: 600; transition: all 0.15s; background: #fff; }
     .fabric-option:hover { border-color: var(--color-primary); }
@@ -71,7 +66,8 @@
     .custom-shape-cta p { font-size: 0.875rem; color: #666; margin-bottom: 10px; }
     .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
     .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
-    @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } .fabric-options { grid-template-columns: 1fr 1fr; } }
+    .depth-badge { display: inline-block; background: #2c96f4; color: #fff; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; }
+    @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
     @media (max-width: 480px) { .listing-grid { grid-template-columns: 1fr; } .listing-card .card-image img { aspect-ratio: 16/9; } }
   </style>
 </head>
@@ -86,7 +82,7 @@
         <button class="search-btn" aria-label="Search products" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
         <a href="/account/" class="account-btn" aria-label="My account"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
         <a href="/checkout/" class="cart-btn" aria-label="Shopping cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
-        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/protection/'" style="cursor:pointer">TH</span></div>
+        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/deep-pocket/'" style="cursor:pointer">TH</span></div>
       </div>
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
@@ -97,8 +93,8 @@
   <main>
     <section class="brand-hero">
       <div class="brand-hero-inner">
-        <h1>Protection</h1>
-        <p class="hero-sub">Complete waterproof protection — surface-level to 6-sided encasement. TPU-lined throughout. OEKO-TEX certified.</p>
+        <h1>Deep Pocket &amp; Adjustable Base</h1>
+        <p class="hero-sub">Sheets for thick mattresses, pillow-top combos, adjustable beds, and Euro-top setups. Up to 20" depth, custom dimensions available.</p>
       </div>
     </section>
 
@@ -106,111 +102,14 @@
       <div class="container">
         <div class="listing-grid">
 
-          <!-- Card 1 — 6-Sided Mattress Encasement -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/sheet-protectors.jpg" alt="6-Sided Mattress Encasement" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Marine</span><span class="card-tag">Protection</span><span class="card-tag">RV-Truck</span><span class="card-tag">Mattress Protectors</span></div>
-              <h3 class="card-title">6-Sided Mattress Encasement</h3>
-              <div class="card-price">From $55.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/sheet-protectors/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 2 — Pet-Proof Mattress Protector -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pet-proof-mattress-protector.jpg" alt="Pet-Proof Mattress Protector" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Pets</span><span class="card-tag">Protection</span><span class="card-tag">Mattress Protectors</span></div>
-              <h3 class="card-title">Pet-Proof Mattress Protector</h3>
-              <div class="card-price">$55.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/pet-proof-mattress-protector/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 3 — Pillow Protector -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pillow-protector.jpg" alt="Pillow Protector" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Protection</span><span class="card-tag">Pillowcases</span></div>
-              <h3 class="card-title">Pillow Protector</h3>
-              <div class="card-price">From $18.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/pillow-protector/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 4 — Marine Fitted Sheet (V-Berth) -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/product-boat-bedding-fitted-sheet-microfiber.jpg" alt="Marine Fitted Sheet (V-Berth)" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Marine</span><span class="card-tag">Fitted Sheets</span></div>
-              <h3 class="card-title">Marine Fitted Sheet (V-Berth)</h3>
-              <div class="card-price">From $55.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/product-boat-bedding-fitted-sheet-microfiber/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 5 — Pet Owner Fitted Sheet -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pet-owner-fitted-sheet.jpg" alt="Pet Owner Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Pets</span><span class="card-tag">Fitted Sheets</span></div>
-              <h3 class="card-title">Pet Owner Fitted Sheet</h3>
-              <div class="card-price">From $48.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/pet-owner-fitted-sheet/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 6 — Pet Owner Duvet Cover -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pet-owner-duvet-cover.jpg" alt="Pet Owner Duvet Cover" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Pets</span><span class="card-tag">Duvet</span></div>
-              <h3 class="card-title">Pet Owner Duvet Cover</h3>
-              <div class="card-price">$68.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/pet-owner-duvet-cover/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 7 — 3-Sided Zipper Duvet Cover -->
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/3-sided-duvet.jpg" alt="3-Sided Zipper Duvet Cover" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Family</span><span class="card-tag">Duvet</span><span class="card-tag">Marine</span><span class="card-tag">Pets</span></div>
-              <h3 class="card-title">3-Sided Zipper Duvet Cover</h3>
-              <div class="card-price">$65.00</div>
-              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
-              <div class="card-cta"><a href="/product/3-sided-duvet/" class="btn btn-primary">View Options</a></div>
-            </div>
-          </article>
-
-          <!-- Card 8 — Adjustable Mattress Fitted Sheet -->
+          <!-- Card 1 — Adjustable Mattress Fitted Sheet -->
           <article class="listing-card">
             <div class="card-image">
               <img src="/images/products/adjustable-mattress-fitted-sheet.jpg" alt="Adjustable Mattress Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
+              <span class="depth-badge" style="position:absolute;top:12px;left:12px;background:rgba(44,150,244,0.9);color:#fff;font-size:0.6875rem;font-weight:600;padding:4px 8px;border-radius:4px;">UP TO 20" DEPTH</span>
             </div>
             <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Fitted Sheets</span></div>
+              <div class="card-tags"><span class="card-tag">Fitted Sheets</span><span class="card-tag">Adjustable Base</span></div>
               <h3 class="card-title">Adjustable Mattress Fitted Sheet</h3>
               <div class="card-price">From $42.00</div>
               <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
@@ -218,7 +117,22 @@
             </div>
           </article>
 
-          <!-- Card 9 — Family Fitted Sheet -->
+          <!-- Card 2 — Flat Sheet Extra Deep Pocket -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/flat-sheet-extra-deep-pocket.jpg" alt="Flat Sheet — Extra Deep Pocket" width="800" height="600" loading="lazy" decoding="async">
+              <span class="depth-badge" style="position:absolute;top:12px;left:12px;background:rgba(44,150,244,0.9);color:#fff;font-size:0.6875rem;font-weight:600;padding:4px 8px;border-radius:4px;">20" DEPTH</span>
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">Flat Sheets</span><span class="card-tag">Deep Pocket</span></div>
+              <h3 class="card-title">Flat Sheet — Extra Deep Pocket</h3>
+              <div class="card-price">$45.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <div class="card-cta"><a href="/product/flat-sheet-extra-deep-pocket/" class="btn btn-primary">View Options</a></div>
+            </div>
+          </article>
+
+          <!-- Card 3 — Custom Family Fitted Sheet -->
           <article class="listing-card">
             <div class="card-image">
               <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="Custom Family Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
@@ -232,7 +146,35 @@
             </div>
           </article>
 
-          <!-- Card 10 — Flat Sheet Standard -->
+          <!-- Card 4 — Pet Owner Fitted Sheet -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pet-owner-fitted-sheet.jpg" alt="Pet Owner Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">Pets</span><span class="card-tag">Fitted Sheets</span></div>
+              <h3 class="card-title">Pet Owner Fitted Sheet</h3>
+              <div class="card-price">From $48.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <div class="card-cta"><a href="/product/pet-owner-fitted-sheet/" class="btn btn-primary">View Options</a></div>
+            </div>
+          </article>
+
+          <!-- Card 5 — 6-Sided Mattress Encasement -->
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/sheet-protectors.jpg" alt="6-Sided Mattress Encasement" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">Protection</span><span class="card-tag">Mattress Protectors</span></div>
+              <h3 class="card-title">6-Sided Mattress Encasement</h3>
+              <div class="card-price">From $55.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <div class="card-cta"><a href="/product/sheet-protectors/" class="btn btn-primary">View Options</a></div>
+            </div>
+          </article>
+
+          <!-- Card 6 — Flat Sheet Standard -->
           <article class="listing-card">
             <div class="card-image">
               <img src="/images/products/flat-sheet-standard.jpg" alt="Flat Sheet — Standard" width="800" height="600" loading="lazy" decoding="async">
@@ -246,17 +188,17 @@
             </div>
           </article>
 
-          <!-- Card 11 — Protection Video -->
+          <!-- Card 7 — Pillowcase Envelope -->
           <article class="listing-card">
             <div class="card-image">
-              <img src="/images/products/sheet-protectors.jpg" alt="Mattress Protection — How TPU Lining Works" width="800" height="600" loading="lazy" decoding="async">
-              <div class="card-video-badge"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>VIDEO</div>
+              <img src="/images/products/pillowcase-envelope.jpg" alt="Pillowcase Envelope" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="card-body">
-              <div class="card-tags"><span class="card-tag">Protection</span></div>
-              <h3 class="card-title">Mattress Protection — How TPU Lining Works</h3>
-              <div class="card-price-note" style="margin-bottom:0;">Video guide explaining TPU waterproof technology</div>
-              <div class="card-cta" style="margin-top:12px;"><a href="/custom-measurement/" class="btn btn-outline">Watch Video</a></div>
+              <div class="card-tags"><span class="card-tag">Pillowcases</span></div>
+              <h3 class="card-title">Pillowcase Envelope</h3>
+              <div class="card-price">From $18.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <div class="card-cta"><a href="/product/pillowcase-envelope/" class="btn btn-primary">View Options</a></div>
             </div>
           </article>
 
@@ -268,22 +210,22 @@
       <div class="container">
         <div class="listing-desc-grid">
           <div>
-            <h2>Waterproof Protection — Every Level, Every Need</h2>
-            <p>Protection needs vary. Some people need a surface-level waterproof barrier against spills and sweat. Others need full 6-sided encasement against dust mites, bed bugs, or salt air in marine environments. MildMate covers the full spectrum — all with TPU (thermoplastic polyurethane) lining throughout, not just at the seams.</p>
-            <p>TPU is the key difference. Unlike older PVC-coated protectors that crack and peel over time, TPU is a flexible, medical-grade polymer that stays waterproof through hundreds of washes. It's also OEKO-TEX certified, meaning no harmful chemicals in your sleeping environment.</p>
+            <h2>Deep Pocket &amp; Adjustable Base Bedding</h2>
+            <p>Modern mattresses are thicker than ever — pillow-top, Euro-top, hybrid, and memory foam builds routinely measure 12 to 20 inches. Standard sheets pop off at the corners by morning. Adjustable base beds add another challenge: the sheet must flex and move with the mattress as it bends without ripping the elastic.</p>
+            <p>MildMate's Deep Pocket collection solves both. Our fitted sheets accommodate up to 20 inches of mattress depth with reinforced 360-degree heavy-duty elastic, a 2-inch secure tuck-under, and a drum-tight fit that stays in place on adjustable beds — even when the base is articulated.</p>
             <ul>
-              <li>TPU lining throughout — not just seam-sealed, fully lined throughout</li>
-              <li>OEKO-TEX certified — no harmful chemicals, safe for the whole family</li>
-              <li>6-sided encasement option — complete mattress封床保护 from all angles</li>
-              <li>Surface protectors with TPU backing — breathable yet waterproof</li>
-              <li>Available in BreezePlus (cooling) and CloudSoft (plush) outer fabrics</li>
-              <li>Machine washable, quick dry, built to last years not months</li>
+              <li>True 20-inch depth available — fits pillow-top, Euro-top, and hybrid mattresses</li>
+              <li>Adjustable base compatible — moves with the bed without popping off</li>
+              <li>360-degree reinforced elastic for constant tension on all sides</li>
+              <li>2-inch secure tuck-under grips the base to prevent sliding</li>
+              <li>Custom dimensions available for non-standard depths or odd-shaped bases</li>
+              <li>4 fabric collections: BreezePlus, CloudSoft, PremaCotton, EcoLuxe</li>
             </ul>
             <div class="features-grid">
-              <div class="feature-item"><strong>TPU Waterproof</strong><span>Full TPU lining — not just seam-sealed</span></div>
-              <div class="feature-item"><strong>OEKO-TEX Certified</strong><span>No harmful chemicals in any protector</span></div>
-              <div class="feature-item"><strong>6-Sided Option</strong><span>Complete encasement from all angles</span></div>
-              <div class="feature-item"><strong>Allergy Friendly</strong><span>Barrier against dust mites and allergens</span></div>
+              <div class="feature-item"><strong>Up to 20" Depth</strong><span>Fits pillow-top, Euro-top, and hybrid mattresses</span></div>
+              <div class="feature-item"><strong>Adjustable Base</strong><span>Designed to flex with articulated bed frames</span></div>
+              <div class="feature-item"><strong>360° Elastic</strong><span>Constant tension prevents corner pop-off</span></div>
+              <div class="feature-item"><strong>Custom Sizes</strong><span>Any depth, width, or non-standard shape</span></div>
             </div>
           </div>
           <div>
@@ -293,24 +235,24 @@
                 <label for="region-select">Select Region</label>
                 <select id="region-select">
                   <option value="">— Choose your country —</option>
-                  <option value="us">🇺🇸 US / Canada</option>
-                  <option value="uk">🇬🇧 UK</option>
-                  <option value="eu">🇪🇺 EU</option>
-                  <option value="au">🇦🇺 Australia</option>
-                  <option value="th">🇹🇭 Thailand</option>
-                  <option value="my">🇲🇾🇸🇬 Malaysia / Singapore</option>
-                  <option value="in">🇮🇳 India</option>
-                  <option value="jp">🇯🇵 Japan</option>
-                  <option value="custom">🌍 Custom / Other</option>
+                  <option value="us">US / Canada</option>
+                  <option value="uk">UK</option>
+                  <option value="eu">EU</option>
+                  <option value="au">Australia</option>
+                  <option value="th">Thailand</option>
+                  <option value="my">Malaysia / Singapore</option>
+                  <option value="in">India</option>
+                  <option value="jp">Japan</option>
+                  <option value="custom">Custom / Other</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="standard-size-select">Standard Size</label>
                 <select id="standard-size-select" disabled><option value="">— Select region first —</option></select>
-                <a href="/sizeguide/" class="size-guide-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></svg>View Size Guide</a>
+                <a href="/sizeguide/" class="size-guide-link">View Size Guide</a>
               </div>
               <div class="form-group">
-                <label for="depth-select">Depth / Pocket Height <span style="font-weight:400; color:#999;">(optional)</span></label>
+                <label for="depth-select">Depth / Pocket Height</label>
                 <select id="depth-select">
                   <option value="">— Any depth —</option>
                   <option value="15">Up to 15 cm / 6 in</option>
@@ -324,13 +266,14 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Fabric</label>
-                <a href="/fabric/" class="explore-fabrics-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Explore the Fabric Collections →</a>
+                <label>Fabric Collection</label>
+                <a href="/fabric/" class="explore-fabrics-link">Explore the Fabric Collections →</a>
                 <div class="fabric-options" id="fabric-options">
                   <button type="button" class="fabric-option" data-fabric="BreezePlus">BreezePlus</button>
                   <button type="button" class="fabric-option" data-fabric="CloudSoft">CloudSoft</button>
+                  <button type="button" class="fabric-option" data-fabric="PremaCotton">PremaCotton</button>
+                  <button type="button" class="fabric-option" data-fabric="EcoLuxe">EcoLuxe</button>
                 </div>
-                <p class="fabric-note">Both BreezePlus and CloudSoft include TPU liner. BreezePlus adds cooling + pet hair resistance.</p>
               </div>
               <div class="price-display">
                 <div class="price-label">Estimated price from</div>
@@ -338,8 +281,8 @@
                 <div class="price-sub">Price excludes shipping, tax &amp; tariff</div>
               </div>
               <div class="custom-shape-cta">
-                <p>Need a custom shape or non-standard mattress dimension?</p>
-                <a href="/how-to-measure-mattress-size/" class="btn-outline">Measure My Custom Shape →</a>
+                <p>Have a non-standard mattress or adjustable base?</p>
+                <a href="/custom-measurement/" class="btn-outline">Measure My Custom Shape →</a>
               </div>
             </div>
           </div>
@@ -348,7 +291,7 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>Quick Links</h3><ul><li><a href="/about/">About Us</a></li><li><a href="/contact/">Contact Us</a></li><li><a href="/reviews/">Reviews</a></li></ul></div><div class="footer-col"><h3>Customer Service</h3><ul><li><a href="/faq/">FAQ</a></li><li><a href="/sizeguide/">Size Guide</a></li><li><a href="/blogs/">Blog</a></li></ul></div><div class="footer-col"><h3>Shop With Us</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>Contact</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/policy/">Privacy Policy</a><a href="/shipping/">Returns &amp; Delivery</a></div></div></div></footer>
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>Quick Links</h3><ul><li><a href="/about/">About Us</a></li><li><a href="/contact/">Contact Us</a></li><li><a href="/reviews/">Reviews</a></li></ul></div><div class="footer-col"><h3>Customer Service</h3><ul><li><a href="/faq/">FAQ</a></li><li><a href="/sizeguide/">Size Guide</a></li><li><a href="/blogs/">Blog</a></li></ul></div><div class="footer-col"><h3>Shop With Us</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>Contact</h3><ul><li><a href="mailto:contact@mildmate.com">contact@mildmate.com</a></li><li><a href="tel:+66872362364">+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/policy/">Privacy Policy</a><a href="/shipping/">Returns &amp; Delivery</a></div></div></div></footer>
 
   <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
@@ -365,7 +308,7 @@
       jp: [{ label: 'Single 100×200cm', price: 34 }, { label: 'Semi-Double 120×200cm', price: 40 }, { label: 'Double 140×200cm', price: 46 }, { label: 'Queen 160×200cm', price: 52 }, { label: 'Custom size →', price: 'custom' }],
       custom: [{ label: 'Custom shape →', price: 'custom' }]
     };
-    const FABRIC_PRICES = { BreezePlus: 0, CloudSoft: -5 };
+    const FABRIC_PRICES = { BreezePlus: 0, CloudSoft: -5, PremaCotton: 10, EcoLuxe: 5 };
     let selectedRegion = '', selectedSize = '', selectedDepth = '', selectedFabric = 'BreezePlus';
     const regionSelect = document.getElementById('region-select');
     const sizeSelect = document.getElementById('standard-size-select');
