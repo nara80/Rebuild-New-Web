@@ -322,10 +322,10 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 |---|---|
 | `public/products/index.html` | Full product listing with filter bar (data from D1) |
 | `public/fitted-sheets/index.html` | **NEW** Primary: All fitted sheet variants (dynamic from D1) |
-| `public/flat-sheets/index.html` | **NEW** Primary: Standard + Extra Deep Pocket flat sheets (dynamic from D1) |
+| `public/sheets/index.html` | **NEW** Primary: Fitted Sheets + Flat Sheets (dynamic from D1) |
 | `public/duvet-covers/index.html` | **NEW** Primary: 3-Sided Zipper + Pet Owner duvet covers (dynamic from D1) |
 | `public/pillowcases/index.html` | **NEW** Primary: Envelope, Zipper, Sham pillowcases (dynamic from D1) |
-| `public/mattress-protectors/index.html` | **NEW** Primary: Encasements + Pillow Protectors (dynamic from D1) |
+| `public/protection/index.html` | **NEW** Primary: Mattress Protectors + Pillow Protectors (dynamic from D1) |
 | `public/marine/index.html` | SEO Landing: Marine & Yacht category page (dynamic from D1) |
 | `public/family/index.html` | SEO Landing: Family & Co-Sleep category page (dynamic from D1) |
 | `public/duvet/index.html` | SEO Landing: Easy-Change Duvet category page (dynamic from D1) |
@@ -752,7 +752,7 @@ Go through this checklist before moving to Phase 5:
 - [x] Customer Reviews page (`/reviews/`) shows review grid — 8 real Etsy reviews
 - [x] Blog index (`/blogs/`) shows 17 posts across 2 pages with pagination + featured post
 - [x] Product listing page (`/products/`) shows product grid
-- [x] Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) show product grids
+- [x] Primary category pages (`/sheets/`, `/duvet-covers/`, `/pillowcases/`, `/protection/`) show product grids
 - [x] SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`) show filtered grids with cross-links to primary categories
 - [x] Product detail pages show two-mode configurator with live price update
 - [x] "Measure My Mattress" collapsible section opens and closes
@@ -830,7 +830,7 @@ Phase 5 connects the cart to Stripe so customers can actually complete a purchas
 | How to Measure (`/how-to-measure-mattress-size/`) | ✅ | Credit-card method with SVG diagram |
 | Bed Sheet Sizes (`/bed-sheets-size/`) | ✅ | Pocket depth + duvet cover sizing |
 | Product Listing (`/products/`) | ✅ | Filter bar + 6 product cards with placeholders |
-| Primary category pages (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`) | ✅ | Product-type grids |
+| Primary category pages (`/sheets/`, `/duvet-covers/`, `/pillowcases/`, `/protection/`) | ✅ | Product-type grids |
 | SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`) | ✅ | Use-case landing pages with cross-links |
 | Configurator JS (`/js/configurator.js`) | ✅ | Two-mode (Sheet + V-Berth), unit toggle cm/inch, live price, fabric selector |
 | Cart JS (`/js/cart.js`) | ✅ | localStorage-based cart with add/remove/updateQty/clear |
@@ -959,11 +959,11 @@ After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Prior
 | How to Measure | `/how-to-measure-mattress-size/` | `/th/how-to-measure-mattress-size/` | ✅ Built |
 | Custom Measurement | `/custom-measurement/` | `/th/custom-measurement/` | ✅ Built |
 | Product Listing | `/products/` | `/th/products/` | ✅ Built |
-| Fitted Sheets | `/fitted-sheets/` | `/th/fitted-sheets/` | ✅ Built |
-| Flat Sheets | `/flat-sheets/` | `/th/flat-sheets/` | ✅ Built |
+| Sheets | `/sheets/` | `/th/sheets/` | ✅ Built |
+| Flat Sheets | `/flat-sheets/` | `/th/flat-sheets/` | ❌ Deprecated — sheets now under `/sheets/` |
 | Duvet Covers | `/duvet-covers/` | `/th/duvet-covers/` | ✅ Built |
 | Pillowcases | `/pillowcases/` | `/th/pillowcases/` | ✅ Built |
-| Mattress Protectors | `/mattress-protectors/` | `/th/mattress-protectors/` | ✅ Built |
+| Protection | `/protection/` | `/th/protection/` | ✅ Built |
 | Marine & Yacht | `/marine/` | `/th/marine/` | ✅ Built |
 | Family & Co-Sleep | `/family/` | `/th/family/` | ✅ Built |
 | Pet Owner | `/pets/` | `/th/pets/` | ✅ Built |
@@ -995,6 +995,6 @@ The `_redirects` file handles ALL old WordPress URLs with 301 redirects to the n
 These wildcards redirect every old WordPress blog post, page, and sub-URL automatically. No separate TH versions needed.
 
 **Language toggle — nav.js BILINGUAL_PAGES list (updated 2026-05-15):**
-`['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/fitted-sheets/', '/flat-sheets/', '/duvet-covers/', '/pillowcases/', '/mattress-protectors/', '/pets/', '/marine/', '/family/', '/duvet/', '/protection/', '/rv-truck/', '/shipping/', '/policy/']`
+`['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/sheets/', '/duvet-covers/', '/pillowcases/', '/protection/', '/accessories/', '/pets/', '/marine/', '/family/', '/deep-pocket/', '/boarding-dorm/', '/rv-truck/', '/shipping/', '/policy/']`
 
 **Internal link fix (2026-05-15):** All 18 TH pages updated — nav links, footer links, hero CTAs changed from EN paths (`/products/`) to TH-prefixed paths (`/th/products/`). From any TH page, clicking nav links stays in TH. Lang toggle switches language correctly via BILINGUAL_PAGES lookup.
