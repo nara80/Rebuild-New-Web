@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ผ้าปูกันเปื้อนที่นอนครอบครัว ขนาดใหญ่ กันน้ำ กันเปื้อน ซักได้บ่อย">
+  <title>ผ้าปูกันเปื้อนที่นอนครอบครัว — ขนาดใหญ่ — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .product-page { background: #f0f7ff; }
+    .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    .product-gallery { position: sticky; top: 90px; }
+    .gallery-main { border-radius: var(--radius); overflow: hidden; background: var(--color-surface); margin-bottom: 12px; position: relative; }
+    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; cursor: zoom-in; }
+    .gallery-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .gallery-thumb { width: 72px; height: 72px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: border-color 0.15s; background: var(--color-surface); }
+    .gallery-thumb:hover, .gallery-thumb.active { border-color: var(--color-primary); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-thumb.video-thumb { display: flex; align-items: center; justify-content: center; background: #1a1a2e; }
+    .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
+    .product-info {}
+    .product-breadcrumb { font-size: 0.8125rem; color: #888; margin-bottom: 16px; }
+    .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
+    .product-breadcrumb a:hover { text-decoration: underline; }
+    .product-title { font-size: 2.25rem; font-weight: 700; color: var(--color-text); line-height: 1.2; margin-bottom: 8px; }
+    .product-tagline { font-size: 1rem; color: #666; margin-bottom: 20px; line-height: 1.5; }
+    .product-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+    .stars { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
+    .rating-text { font-size: 0.875rem; color: #555; }
+    .rating-text strong { color: var(--color-primary); cursor: pointer; }
+    .rating-text strong:hover { text-decoration: underline; }
+    .pricing-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
+    .panel-section { margin-bottom: 20px; }
+    .panel-section:last-child { margin-bottom: 0; }
+    .panel-label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .region-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .region-btn { padding: 8px 6px; border: 2px solid var(--color-border); border-radius: 6px; background: #fff; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); cursor: pointer; text-align: center; transition: all 0.15s; font-family: var(--font-main); }
+    .region-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .region-btn.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+    .size-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .size-select:focus { outline: none; border-color: var(--color-primary); }
+    .size-hint { font-size: 0.75rem; color: #888; margin-top: 6px; }
+    .size-hint a { color: var(--color-primary); text-decoration: none; }
+    .size-hint a:hover { text-decoration: underline; }
+    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 16px; }
+    .color-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-option { width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: border-color 0.15s; }
+    .color-option.selected { border-color: var(--color-primary); }
+    .color-option:not(.selected) { opacity: 0.5; }
+    .color-option:hover { opacity: 1; }
+    .price-block { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+    .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+    .price-label { font-size: 0.8125rem; color: #888; }
+    .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
+    .price-sub { font-size: 0.75rem; color: #999; }
+    .price-note { font-size: 0.75rem; color: #999; margin-top: 4px; }
+    .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-add-cart:hover { background: var(--color-primary-dark); }
+    .btn-add-cart:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-custom-quote { padding: 16px 20px; background: #fff; color: var(--color-primary); border: 2px solid var(--color-primary); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .btn-custom-quote:hover { background: #e8f4fd; }
+    .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #888; }
+    .payment-badge { display: flex; align-items: center; gap: 4px; }
+    .trust-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+    .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #555; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
+    .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
+    .custom-toggle { margin-top: 16px; text-align: center; }
+    .custom-toggle button { background: none; border: none; font-size: 0.875rem; color: var(--color-primary); cursor: pointer; font-weight: 600; font-family: var(--font-main); text-decoration: underline; }
+    .custom-toggle button:hover { color: var(--color-primary-dark); }
+    .custom-dimensions { display: none; margin-top: 16px; padding: 20px; background: var(--color-surface); border-radius: var(--radius); border: 1px solid var(--color-border); }
+    .custom-dimensions.open { display: block; }
+    .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .dim-field { display: flex; flex-direction: column; gap: 4px; }
+    .dim-field label { font-size: 0.75rem; font-weight: 600; color: #555; }
+    .dim-field input { padding: 10px 12px; border: 2px solid var(--color-border); border-radius: 6px; font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); width: 100%; box-sizing: border-box; }
+    .dim-field input:focus { outline: none; border-color: var(--color-primary); }
+    .unit-toggle { display: flex; gap: 0; border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; width: fit-content; }
+    .unit-btn { padding: 8px 16px; border: none; background: #fff; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #666; font-family: var(--font-main); transition: all 0.15s; }
+    .unit-btn.active { background: var(--color-primary); color: #fff; }
+    .custom-quote-btn { width: 100%; padding: 14px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .custom-quote-btn:hover { background: var(--color-primary-dark); }
+    .product-tabs { margin-top: 40px; }
+    .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
+    .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
+    .tab-btn:hover { color: var(--color-text); }
+    .tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+    .tab-content { display: none; padding: 24px 0; }
+    .tab-content.open { display: block; }
+    .tab-content h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-bottom: 12px; }
+    .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
+    .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
+    .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
+    .reviews-section { margin-top: 48px; }
+    .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
+    .reviews-summary { display: flex; align-items: center; gap: 16px; background: var(--color-surface); padding: 20px 24px; border-radius: var(--radius); margin-bottom: 32px; width: 100%; box-sizing: border-box; }
+    .summary-score { font-size: 3rem; font-weight: 700; color: var(--color-text); line-height: 1; }
+    .summary-detail { flex: 1; }
+    .summary-stars { color: #f59e0b; font-size: 1.25rem; margin-bottom: 4px; }
+    .summary-text { font-size: 0.875rem; color: #666; }
+    .review-card { background: #fff; border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .review-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--color-primary); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+    .review-meta { flex: 1; }
+    .review-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
+    .review-country { font-size: 0.8125rem; color: #888; }
+    .review-stars { color: #f59e0b; font-size: 0.875rem; }
+    .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
+    .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
+    .related-section { margin-top: 64px; }
+    .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
+    .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .related-card { background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; }
+    .related-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+    .related-card .card-image { position: relative; overflow: hidden; }
+    .related-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+    .related-card .card-body { padding: 16px; }
+    .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
+    .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
+    .related-card .card-price-note { font-size: 0.75rem; color: #999; }
+    @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } .reviews-header { flex-direction: column; align-items: start; } }
+    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="product-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation"><ul class="nav-list"><li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li><li class="nav-item"><a href="/th/products/" class="nav-link">ร้านค้า</a></li><li class="nav-item"><a href="/th/fabric/" class="nav-link">ผ้า</a></li><li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li></ul></nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา"><span data-lang="en" onclick="window.location.href='/product/mattress-protector-family/'" style="cursor:pointer">EN</span><span>/</span><span data-lang="th" class="active">TH</span></div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ"><div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/th/">หน้าแรก</a></li><li><a href="/th/products/">ร้านค้า</a></li><li><a href="/th/fabric/">ผ้า</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li></ul></div>
+    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="ปิดการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
+  </header>
+
+  <main>
+    <div class="container" style="padding-top:24px;">
+      <nav class="product-breadcrumb" aria-label="Breadcrumb">
+        <a href="/th/">หน้าแรก</a> &rsaquo;
+        <a href="/protection/">ผ้าปูกันเปื้อน</a> &rsaquo;
+        <a href="/family/">Family &amp; Co-Sleep</a> &rsaquo;
+        <span>ผ้าปูกันเปื้อนที่นอนครอบครัว — กันน้ำ</span>
+      </nav>
+    </div>
+
+    <div class="product-layout">
+      <!-- LEFT: Gallery -->
+      <div class="product-gallery">
+        <div class="gallery-main">
+          <img src="/images/products/mattress-protector-family/main.jpg" alt="ผ้าปูกันเปื้อนที่นอนครอบครัว — กันน้ำ" id="gallery-main-img" width="800" height="600" loading="eager">
+        </div>
+        <div class="gallery-nav">
+          <div class="gallery-thumb active" data-img="/images/products/mattress-protector-family/main.jpg">
+            <img src="/images/products/mattress-protector-family/main.jpg" alt="Main view" width="72" height="72" loading="lazy">
+          </div>
+          
+        </div>
+      </div>
+
+      <!-- RIGHT: Product Info -->
+      <div class="product-info">
+        <h1 class="product-title">ผ้าปูกันเปื้อนที่นอนครอบครัว — กันน้ำ</h1>
+        <p class="product-tagline">ขนาดใหญ่ กันน้ำ กันเปื้อน สำหรับที่นอนครอบครัว</p>
+
+        <div class="product-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
+        </div>
+
+        <div class="pricing-panel">
+          <!-- Step 1: Region -->
+          <div class="panel-section">
+            <div class="panel-label">จัดส่งไปที่ไหน?</div>
+            <div class="region-grid" id="region-grid">
+              <button class="region-btn selected" data-region="th">🇺🇸 US</button>
+              <button class="region-btn" data-region="uk">🇬🇧 สหราชอาณาจักร</button>
+              <button class="region-btn" data-region="eu">🇪🇺 สหภาพยุโรป</button>
+              <button class="region-btn" data-region="au">🇦🇺 ออสเตรเลีย</button>
+              <button class="region-btn" data-region="th">🇹🇭 TH</button>
+              <button class="region-btn" data-region="my">🇲🇾 สิงคโปร์/มาเลเซีย</button>
+              <button class="region-btn" data-region="jp">🇯🇵 ญี่ปุ่น</button>
+              <button class="region-btn" data-region="other">🌍 อื่นๆ</button>
+            </div>
+          </div>
+
+          <!-- Step 2: Size -->
+          <div class="panel-section">
+            <div class="panel-label">เลือกขนาดที่นอน</div>
+            <select class="size-select" id="size-select">
+              <option value="">— เลือกขนาด —</option>
+              <optgroup label="🇺🇸 US / Canada">
+                <option value="153x203x30" data-price="2095">ควีน — 153×203×30cm (60×80×12in)</option>
+                <option value="193x203x30" data-price="2295">คิง — 193×203×30cm (76×80×12in)</option>
+                <option value="183x203x30" data-price="2295">CA King — 183×203×30cm (72×80×12in)</option>
+              </optgroup>
+              <optgroup label="🇬🇧 UK">
+                <option value="150x200x30" data-price="2095">คิง — 150×200×30cm</option>
+                <option value="183x198x30" data-price="2295">Super King — 183×198×30cm</option>
+              </optgroup>
+              <optgroup label="🇪🇺 EU">
+                <option value="160x200x30" data-price="2095">คิง — 160×200×30cm</option>
+                <option value="180x200x30" data-price="2295">Super King — 180×200×30cm</option>
+              </optgroup>
+              <optgroup label="🇹🇭 Thailand">
+                <option value="120x200x30" data-price="1895">ควีน 6 ฟุต — 120×200×30cm</option>
+                <option value="152x198x30" data-price="2095">คิง — 152×198×30cm</option>
+              </optgroup>
+              <optgroup label="ขนาดพิเศษ">
+                <option value="custom">ขนาดพิเศษ →/option>
+              </optgroup>
+            </select>
+            <div class="size-hint">Depth (pocket) is 30cm (12 inch) — <a href="/th/sizeguide/">ดูคู่มือขนาด →</a></div>
+          </div>
+
+          <!-- Step 3: Fabric -->
+          <div class="panel-section">
+            <div class="panel-label">ผ้า</div>
+            <div class="fabric-badge">TPU Waterproof + 3-Layer Barrier — waterproof + breathable + quilted</div>
+          </div>
+
+          <!-- Step 4: Color -->
+          <div class="panel-section">
+            <div class="panel-label">Color</div>
+            <div class="color-selector" id="color-selector">
+              <div class="color-option selected" data-color="pure-white" style="background:#fff; border:2px solid #ddd;" title="Pure White"></div>
+              <div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div>
+              <div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div>
+            </div>
+          </div>
+
+          <!-- Price Display -->
+          <div class="price-block">
+            <div class="price-row">
+              <span class="price-label">ราคา</span>
+              <span class="price-value" id="price-display">฿2,095</span>
+            </div>
+            <div class="price-sub">Excludes shipping & import tariff</div>
+          </div>
+
+          <!-- เพิ่มลงตะกร้า -->
+          <div class="add-to-cart-row">
+            <button class="btn-add-cart" id="add-to-cart" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              Add to Cart
+            </button>
+            <button class="btn-custom-quote" id="custom-quote-btn">ขนาดพิเศษ<//button>
+          </div>
+
+          <!-- Custom Dimensions Panel -->
+          <div class="custom-dimensions" id="custom-dimensions">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <strong style="font-size:0.9375rem;">ป้อนขนาดที่นอนของคุณ</strong>
+              <div class="unit-toggle">
+                <button class="unit-btn active" id="unit-cm">cm</button>
+                <button class="unit-btn" id="unit-in">inch</button>
+              </div>
+            </div>
+            <div class="dim-inputs">
+              <div class="dim-field">
+                <label for="dim-width">กว้าง (ก)</label>
+                <input type="number" id="dim-width" placeholder="e.g. 152" min="30" max="300">
+              </div>
+              <div class="dim-field">
+                <label for="dim-length">ยาว (ย)</label>
+                <input type="number" id="dim-length" placeholder="e.g. 203" min="30" max="300">
+              </div>
+              <div class="dim-field">
+                <label for="dim-depth">ลึก (ล)</label>
+                <input type="number" id="dim-depth" placeholder="e.g. 30" min="5" max="60">
+              </div>
+            </div>
+            <div class="price-row" style="margin-bottom:12px;">
+              <span class="price-label">ราคาโดยประมาณ</span>
+              <span class="price-value" id="custom-price" style="font-size:1.5rem;">—</span>
+            </div>
+            <button class="custom-quote-btn" id="submit-custom-quote">Submit for ราคาพิเศษ →</button>
+          </div>
+
+          <div class="payment-badges">
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> วีซ่า / มาสเตอร์การ์ด</span>
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Apple Pay</span>
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> ชำระเงินปลอดภัย</span>
+          </div>
+        </div>
+
+        <div class="trust-signals">
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> ได้รับการรับรอง OEKO-TEX</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> ร้านค้ายอดนิยม Etsy</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> จัดส่งจากประเทศไทย</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="container" style="max-width:1280px; padding:0 24px;">
+      <div class="product-tabs">
+        <div class="tab-list" role="tablist">
+          <button class="tab-btn active" role="tab" data-tab="description">รายละเอียด</button>
+          <button class="tab-btn" role="tab" data-tab="fabric">รายละเอียดผ้า</button>
+          <button class="tab-btn" role="tab" data-tab="sizing">คู่มือขนาด</button>
+          <button class="tab-btn" role="tab" data-tab="care">การดูแลรักษา</button>
+        </div>
+        <div class="tab-content open" id="tab-description" role="tabpanel">
+          <h3>Family-Size Waterproof Protection</h3>
+          <p>Designed for larger family-size mattresses, the Family Waterproof Mattress Protector uses a TPU + 3-layer barrier to block 100% of liquids from reaching your mattress. OEKO-TEX certified for safety — ideal for family beds, co-sleeping, and homes with children.</p>
+          <ul>
+            <li>TPU waterproof inner liner — 100% fluid barrier</li>
+            <li>3-layer design: waterproof membrane + breathable layer + quilted outer</li>
+            <li>12 inch / 30cm skirt depth — fits most standard and family-size mattresses</li>
+            <li>Fitted-sheet style with all-around elastic — stays secure</li>
+            <li>Available in Pure White, Sand, and Sky</li>
+            <li>Preserves mattress warranty and extends mattress lifespan</li>
+          </ul>
+        </div>
+        <div class="tab-content" id="tab-fabric" role="tabpanel">
+          <h3>TPU + 3-Layer Waterproof System</h3>
+          <p>The inner TPU (Thermoplastic Polyurethane) membrane is a thin, quiet, and durable waterproof layer that blocks 100% of liquids — urine, sweat, spills — from reaching your mattress. The middle breathable layer allows air flow for comfort, while the outer quilted layer adds a soft finish.</p>
+          <ul>
+            <li>TPU inner — 100% waterproof, quiet, skin-safe</li>
+            <li>Breathable middle layer — temperature regulating</li>
+            <li>Quilted outer layer — soft finish</li>
+            <li>ได้รับการรับรอง OEKO-TEX — ไม่มีสารเคมี</li>
+            <li>Machine washable at 60°C</li>
+          </ul>
+          <p><a href="/th/fabric/" style="color:var(--color-primary); font-weight:600;">สำรวจคอลเลกชันผ้าทั้งหมด →</a></p>
+        </div>
+        <div class="tab-content" id="tab-sizing" role="tabpanel">
+          <h3>คู่มือขนาด — Mattress Protectors</h3>
+          <p>Designed for Queen, King, CA King, and Super King mattresses. The protector skirt depth is 30cm (12 inch). Measure your mattress width × length × depth to confirm fit.</p>
+          <p>Select your region above to see standard family sizes. For custom dimensions, use the "ขนาดพิเศษ" option.</p>
+          <p><a href="/th/sizeguide/" style="color:var(--color-primary);">ดูคู่มือขนาดเต็ม →</a> or <a href="/th/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
+        </div>
+        <div class="tab-content" id="tab-care" role="tabpanel">
+          <h3>Care Instructions</h3>
+          <ul>
+            <li>Machine wash warm (40°C / 104°F) — gentle cycle</li>
+            <li>ไม่ใช้น้ำยาฟอกขาว</li>
+            <li>Tumble dry low or hang dry</li>
+            <li>Do not iron the TPU layer</li>
+            <li>Wash at least once per month to maintain hygiene</li>
+          </ul>
+          <p>TPU is durable and maintains its waterproof properties through 100+ wash cycles at 60°C.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- รีวิว -->
+    <div class="container" id="reviews" style="max-width:1280px; padding:0 24px;">
+      <div class="reviews-section">
+        <div class="reviews-header">
+          <h2>รีวิวลูกค้า</h2>
+        </div>
+        <div class="reviews-summary">
+          <div class="summary-score">5.0</div>
+          <div class="summary-detail">
+            <div class="summary-stars">★★★★★</div>
+            <div class="summary-text">จากรีวิวที่ผ่านการยืนยัน 2 รายการ</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">S</div>
+              <div class="review-meta">
+                <div class="review-name">Sarah J.</div>
+                <div class="review-country">สหรัฐอเมริกา</div>
+              </div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+            <div class="review-text">"Perfect for our king size bed. We have two kids who sometimes wet the bed and this protector has saved our mattress multiple times. Easy to wash and fits well."</div>
+            <div class="review-product">การซื้อที่ผ่านการยืนยัน: ผ้าปูกันเปื้อนที่นอนครอบครัว — กันน้ำ · King / Pure White</div>
+          </div>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">A</div>
+              <div class="review-meta">
+                <div class="review-name">Amy W.</div>
+                <div class="review-country">ออสเตรเลีย</div>
+              </div>
+              <div class="review-stars">★★★★★</div>
+            </div>
+            <div class="review-text">"We co-sleep with our toddler and needed something that would protect our mattress. The TPU layer works perfectly and it's held up well after many washes."</div>
+            <div class="review-product">การซื้อที่ผ่านการยืนยัน: ผ้าปูกันเปื้อนที่นอนครอบครัว — กันน้ำ · Queen / Sand</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="container" style="max-width:1280px; padding:0 24px;">
+      <div class="related-section">
+        <h2>คุณอาจชอบ</h2>
+        <div class="related-grid">
+          <a href="/th/product/family-fitted-sheet/" class="related-card">
+            <div class="card-image"><img src="/images/products/family-fitted-sheet/main.jpg" alt="Family Fitted Sheet" width="400" height="300" loading="lazy"></div>
+            <div class="card-body">
+              <div class="card-title">Family Fitted Sheet</div>
+              <div class="card-price">From ฿1,895</div>
+              <div class="card-price-note">BreezePlus · family-size</div>
+            </div>
+          </a>
+          <a href="/th/product/bedbridge-connector/" class="related-card">
+            <div class="card-image"><img src="/images/products/bedbridge-connector/main.jpg" alt="BedBridge Connector" width="400" height="300" loading="lazy"></div>
+            <div class="card-body">
+              <div class="card-title">BedBridge Connector</div>
+              <div class="card-price">฿1,495</div>
+              <div class="card-price-note">Joins split mattresses</div>
+            </div>
+          </a>
+          <a href="/th/product/mattress-protector-deep-pocket/" class="related-card">
+            <div class="card-image"><img src="/images/products/mattress-protector-deep-pocket/main.jpg" alt="Deep Pocket Mattress Protector" width="400" height="300" loading="lazy"></div>
+            <div class="card-body">
+              <div class="card-title">Deep Pocket Mattress Protector</div>
+              <div class="card-price">From ฿1,895</div>
+              <div class="card-price-note">20 inch / 51cm depth</div>
+            </div>
+          </a>
+          <a href="/th/product/mattress-protector-standard/" class="related-card">
+            <div class="card-image"><img src="/images/products/mattress-protector-standard/main.jpg" alt="Standard Mattress Protector" width="400" height="300" loading="lazy"></div>
+            <div class="card-body">
+              <div class="card-title">Standard Mattress Protector</div>
+              <div class="card-price">From ฿1,695</div>
+              <div class="card-price-note">TPU + 3-layer barrier</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Tags -->
+    <div class="container" style="max-width:1280px; padding:0 24px 64px;">
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+        <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">แท็ก:</span>
+        <a href="/protection/" class="tag-pill">ผ้าปูกันเปื้อน</a>
+        <a href="/family/" class="tag-pill">Family &amp; Co-Sleep</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>ลิงก์ด่วน</h3><ul><li><a href="/th/about/">เกี่ยวกับเรา</a></li><li><a href="/th/contact/">ติดต่อ Us</a></li><li><a href="/th/reviews/">รีวิว</a></li></ul></div><div class="footer-col"><h3>บริการลูกค้า</h3><ul><li><a href="/th/faq/">คำถามที่พบบ่อย</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li><li><a href="/th/blogs/">บล็อก</a></li></ul></div><div class="footer-col"><h3>ช้อปกับเรา</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>ติดต่อ</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/th/policy/">นโยบายความเป็นส่วนตัว</a><a href="/th/shipping/">การคืนสินค้าและการจัดส่ง</a></div></div></div></footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
+    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        if (thumb.dataset.video) { window.open(thumb.dataset.video, '_blank'); return; }
+        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        document.getElementById('gallery-main-img').src = thumb.dataset.img;
+      });
+    });
+
+    let selectedRegion = 'us', selectedSize = '', selectedColor = 'pure-white';
+
+    document.querySelectorAll('.region-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedRegion = btn.dataset.region;
+        selectedSize = '';
+        document.getElementById('add-to-cart').disabled = true;
+      });
+    });
+
+    const SIZES_BY_REGION = {
+      us: { '153x203x30': { label: 'Queen — 153×203×30cm', price: 2095 }, '193x203x30': { label: 'King — 193×203×30cm', price: 2295 }, '183x203x30': { label: 'CA King — 183×203×30cm', price: 2295 } },
+      uk: { '150x200x30': { label: 'King — 150×200×30cm', price: 2095 }, '183x198x30': { label: 'Super King — 183×198×30cm', price: 2295 } },
+      eu: { '160x200x30': { label: 'King — 160×200×30cm', price: 2095 }, '180x200x30': { label: 'Super King — 180×200×30cm', price: 2295 } },
+      th: { '120x200x30': { label: '6ft Queen — 120×200×30cm', price: 1895 }, '152x198x30': { label: 'King — 152×198×30cm', price: 2095 } }
+    };
+
+    document.getElementById('size-select').addEventListener('change', function() {
+      selectedSize = this.value;
+      if (selectedSize && selectedSize !== 'custom') {
+        const regionSizes = SIZES_BY_REGION[selectedRegion] || {};
+        const sizeData = regionSizes[selectedSize];
+        if (sizeData) {
+          document.getElementById('price-display').textContent = '\u0e3f' + sizeData.price.toLocaleString();
+          document.getElementById('add-to-cart').disabled = false;
+        }
+      } else if (selectedSize === 'custom') {
+        document.getElementById('custom-dimensions').classList.add('open');
+        document.getElementById('add-to-cart').disabled = true;
+      } else {
+        document.getElementById('price-display').textContent = '\u2014';
+        document.getElementById('add-to-cart').disabled = true;
+      }
+    });
+
+    document.querySelectorAll('.color-option').forEach(c => {
+      c.addEventListener('click', () => {
+        document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+        c.classList.add('selected');
+        selectedColor = c.dataset.color;
+      });
+    });
+
+    document.getElementById('custom-quote-btn').addEventListener('click', () => {
+      document.getElementById('custom-dimensions').classList.toggle('open');
+    });
+
+    let unit = 'cm';
+    document.getElementById('unit-cm').addEventListener('click', () => { unit = 'cm'; document.getElementById('unit-cm').classList.add('active'); document.getElementById('unit-in').classList.remove('active'); });
+    document.getElementById('unit-in').addEventListener('click', () => { unit = 'in'; document.getElementById('unit-in').classList.add('active'); document.getElementById('unit-cm').classList.remove('active'); });
+
+    function updateCustomPrice() {
+      const w = parseFloat(document.getElementById('dim-width').value);
+      const l = parseFloat(document.getElementById('dim-length').value);
+      const d = parseFloat(document.getElementById('dim-depth').value);
+      if (w && l && d) {
+        let area = w * l;
+        if (unit === 'in') { area = w * 2.54 * l * 2.54; }
+        const rate = 0.055;
+        const basePrice = Math.round(area * rate + 800);
+        document.getElementById('custom-price').textContent = '\u0e3f' + basePrice.toLocaleString();
+      } else {
+        document.getElementById('custom-price').textContent = '\u2014';
+      }
+    }
+    document.getElementById('dim-width').addEventListener('input', updateCustomPrice);
+    document.getElementById('dim-length').addEventListener('input', updateCustomPrice);
+    document.getElementById('dim-depth').addEventListener('input', updateCustomPrice);
+
+    document.getElementById('submit-custom-quote').addEventListener('click', () => {
+      const w = document.getElementById('dim-width').value;
+      const l = document.getElementById('dim-length').value;
+      const d = document.getElementById('dim-depth').value;
+      alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + w + ' \u00d7 ' + l + ' \u00d7 ' + d + ' ' + unit);
+    });
+
+    document.getElementById('add-to-cart').addEventListener('click', () => {
+      const btn = document.getElementById('add-to-cart');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
+      btn.style.background = '#16a34a';
+      setTimeout(() => { btn.innerHTML = originalText; btn.style.background = ''; btn.disabled = true; btn.textContent = 'Added to Cart'; }, 2000);
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('open');
+      });
+    });
+  </script>
+</body>
+</html>

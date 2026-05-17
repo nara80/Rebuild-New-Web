@@ -687,22 +687,36 @@ mildmate-web/
 │   │   │   ├── category-duvet-covers.jpg        ✅ Real photo
 │   │   │   ├── category-pillowcases.jpg         ✅ Real photo
 │   │   │   └── category-mattress-protectors.jpg   ✅ Real photo
-│   │   ├── products/                ← Product detail hero images
-│   │   │   ├── 3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets.jpg  ✅ Real
-│   │   │   ├── family-co-sleeping-solutions-th-size.jpg                      ✅ Real
-│   │   │   ├── product-boat-bedding-fitted-sheet-microfiber.jpg              ✅ Real
-│   │   │   ├── sheet-protectors.jpg                                          ✅ Real
-│   │   │   ├── tbar.jpg                                                      ✅ Real
-│   │   │   ├── pet-owner-fitted-sheet.jpg              ✅ Real photo
-│   │   │   ├── pet-owner-duvet-cover.jpg               ✅ Real photo
-│   │   │   ├── adjustable-mattress-fitted-sheet.jpg      ✅ Real photo
-│   │   │   ├── flat-sheet-standard.jpg                 ✅ Real photo
-│   │   │   ├── flat-sheet-extra-deep-pocket.jpg        ✅ Real photo
-│   │   │   ├── pillowcase-envelope.jpg                 ✅ Real photo
-│   │   │   ├── pillowcase-zipper.jpg                   ✅ Real photo
-│   │   │   ├── pillowcase-sham.jpg                     ✅ Real photo
-│   │   │   ├── pet-proof-mattress-protector.jpg        ✅ Real photo
-│   │   │   └── pillow-protector.jpg                    ✅ Real photo
+│   │   ├── products/                ← Product detail hero images (per-product subfolders)
+│   │   │   ├── 3-sided-duvet/main.jpg
+│   │   │   ├── bedbridge-connector/main.jpg + main-th.jpg
+│   │   │   ├── boat-fitted-sheet/main.jpg
+│   │   │   ├── deep-pocket-fitted-sheet/main.jpg
+│   │   │   ├── dorm-fitted-sheet/main.jpg
+│   │   │   ├── duvet-cover-dorm/main.jpg
+│   │   │   ├── duvet-cover-marine/main.jpg
+│   │   │   ├── duvet-cover-rv/main.jpg
+│   │   │   ├── duvet-insert/main.jpg
+│   │   │   ├── family-fitted-sheet/main.jpg + main-th.jpg
+│   │   │   ├── flat-sheet-extra-deep-pocket/main.jpg
+│   │   │   ├── flat-sheet-standard/main.jpg
+│   │   │   ├── marine-fitted-sheet/main.jpg
+│   │   │   ├── mattress-encasement-general/main.jpg
+│   │   │   ├── mattress-lift-helper/main.jpg
+│   │   │   ├── mattress-protector-deep-pocket/main.jpg
+│   │   │   ├── mattress-protector-dorm/main.jpg
+│   │   │   ├── mattress-protector-family/main.jpg
+│   │   │   ├── mattress-protector-standard/main.jpg
+│   │   │   ├── pet-owner-duvet-cover/main.jpg
+│   │   │   ├── pet-owner-fitted-sheet/main.jpg
+│   │   │   ├── pet-proof-mattress-protector/main.jpg
+│   │   │   ├── pillow-protector-general/main.jpg
+│   │   │   ├── pillowcase-envelope/main.jpg
+│   │   │   ├── pillowcase-sham/main.jpg
+│   │   │   ├── pillowcase-zipper/main.jpg
+│   │   │   ├── rv-truck-fitted-sheet/main.jpg
+│   │   │   ├── rv-truck-mattress-encasement/main.jpg
+│   │   │   └── standard-fitted-sheet/main.jpg
 │   │   ├── fabrics/                 ← Fabric showcase photos
 │   │   ├── router/                  ← Niche landing page hero/router images
 │   │   ├── Logo/                    ← Marketplace & social icons

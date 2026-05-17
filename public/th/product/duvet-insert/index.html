@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ใส่ผ้านวม (Duvet Insert) ขนเป็ดเกรดพรีเมียม สำหรับผ้าคลุมทุกขนาด อุ่นเบา">
+  <title>ใส่ผ้านวม (Duvet Insert) — ขนเป็ดเกรดพรีเมียม — MildMate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .product-page { background: #f0f7ff; }
+    .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
+    .product-gallery { position: sticky; top: 90px; }
+    .gallery-main { border-radius: var(--radius); overflow: hidden; background: var(--color-surface); margin-bottom: 12px; position: relative; }
+    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+    .gallery-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .gallery-thumb { width: 72px; height: 72px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: border-color 0.15s; background: var(--color-surface); }
+    .gallery-thumb:hover, .gallery-thumb.active { border-color: var(--color-primary); }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .product-info { }
+    .product-breadcrumb { font-size: 0.8125rem; color: #888; margin-bottom: 16px; }
+    .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
+    .product-breadcrumb a:hover { text-decoration: underline; }
+    .product-title { font-size: 2.25rem; font-weight: 700; color: var(--color-text); line-height: 1.2; margin-bottom: 8px; }
+    .product-tagline { font-size: 1rem; color: #666; margin-bottom: 20px; line-height: 1.5; }
+    .product-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+    .stars { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
+    .rating-text { font-size: 0.875rem; color: #555; }
+    .rating-text strong { color: var(--color-primary); cursor: pointer; }
+    .rating-text strong:hover { text-decoration: underline; }
+    .pricing-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
+    .panel-section { margin-bottom: 20px; }
+    .panel-section:last-child { margin-bottom: 0; }
+    .panel-label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .size-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .size-select:focus { outline: none; border-color: var(--color-primary); }
+    .size-hint { font-size: 0.75rem; color: #888; margin-top: 6px; }
+    .size-hint a { color: var(--color-primary); text-decoration: none; }
+    .size-hint a:hover { text-decoration: underline; }
+    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 16px; }
+    .color-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-option { width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: border-color 0.15s; }
+    .color-option.selected { border-color: var(--color-primary); }
+    .color-option:not(.selected) { opacity: 0.5; }
+    .color-option:hover { opacity: 1; }
+    .price-block { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+    .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+    .price-label { font-size: 0.8125rem; color: #888; }
+    .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
+    .price-sub { font-size: 0.75rem; color: #999; }
+    .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-add-cart:hover { background: var(--color-primary-dark); }
+    .btn-add-cart:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-custom-quote { padding: 16px 20px; background: #fff; color: var(--color-primary); border: 2px solid var(--color-primary); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+    .btn-custom-quote:hover { background: #e8f4fd; }
+    .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #888; }
+    .payment-badge { display: flex; align-items: center; gap: 4px; }
+    .trust-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+    .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #555; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
+    .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
+    .product-tabs { margin-top: 40px; }
+    .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
+    .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
+    .tab-btn:hover { color: var(--color-text); }
+    .tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+    .tab-content { display: none; padding: 24px 0; }
+    .tab-content.open { display: block; }
+    .tab-content h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-bottom: 12px; }
+    .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
+    .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
+    .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
+    .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: var(--color-surface); border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
+    .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #e8f4fd; }
+    @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } }
+    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .add-to-cart-row { flex-direction: column; } }
+  </style>
+</head>
+<body class="product-page">
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
+      <a href="/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
+      <nav class="main-nav" aria-label="Main navigation"><ul class="nav-list"><li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li><li class="nav-item"><a href="/th/products/" class="nav-link">ร้านค้า</a></li><li class="nav-item"><a href="/th/fabric/" class="nav-link">ผ้า</a></li><li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li></ul></nav>
+      <div class="header-actions">
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีของฉัน"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
+        <div class="lang-toggle" role="group" aria-label="สวิตช์ภาษา"><span data-lang="en" onclick="window.location.href='/product/duvet-insert/'" style="cursor:pointer">EN</span><span>/</span><span data-lang="th" class="active">TH</span></div>
+      </div>
+    </div>
+    <div class="mobile-overlay" aria-hidden="true"></div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ"><div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/th/">หน้าแรก</a></li><li><a href="/th/products/">ร้านค้า</a></li><li><a href="/th/fabric/">ผ้า</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li></ul></div>
+    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="ปิดการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="ค้นหาผ้าปู ผ้า ขนาด..." aria-label="ค้นหาสินค้า" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
+  </header>
+
+  <main>
+    <div class="container" style="padding-top:24px;">
+      <nav class="product-breadcrumb" aria-label="Breadcrumb">
+        <a href="/th/">หน้าแรก</a> &rsaquo;
+        <a href="/th/duvet-covers/">ผ้าคลุมผ้านวม</a> &rsaquo;
+        <span>Duvet Insert</span>
+      </nav>
+    </div>
+
+    <div class="product-layout">
+      <div class="product-gallery">
+        <div class="gallery-main">
+          <img src="/images/products/duvet-insert/main.jpg" alt="Duvet Insert" id="gallery-main-img" width="800" height="600" loading="eager">
+        </div>
+        <div class="gallery-nav">
+          <div class="gallery-thumb active" data-img="/images/products/duvet-insert/main.jpg">
+            <img src="/images/products/duvet-insert/main.jpg" alt="Main view" width="72" height="72" loading="lazy">
+          </div>
+          
+          
+        </div>
+      </div>
+
+      <div class="product-info">
+        <h1 class="product-title">Duvet Insert</h1>
+        <p class="product-tagline">ขนเป็ดเกรดพรีเมียม อุ่นเบา สำหรับผ้าคลุมทุกขนาด</p>
+
+        <div class="product-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-text">5.0 · <strong>42 reviews</strong></span>
+        </div>
+
+        <div class="pricing-panel">
+          <div class="panel-section">
+            <div class="panel-label">Select Size (Thailand Standard)</div>
+            <select class="size-select" id="size-select">
+              <option value="">— เลือกขนาด —</option>
+              <optgroup label="🇹🇭 Thailand">
+                <option value="107x191" data-price="1290">3.5 ฟุต — 107×191cm (42×75in)</option>
+                <option value="120x200" data-price="1490">ควีน 6 ฟุต — 120×200cm (47×79in)</option>
+                <option value="152x198" data-price="1690">คิง — 152×198cm (60×78in)</option>
+              </optgroup>
+              <optgroup label="ขนาดพิเศษ">
+                <option value="custom">ขนาดพิเศษ →/option>
+              </optgroup>
+            </select>
+            <div class="size-hint"><a href="/th/sizeguide/">View คู่มือขนาด →</a></div>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-label">Fill Weight</div>
+            <select class="size-select" id="fill-select">
+              <option value="">— Choose fill weight —</option>
+              <option value="light" data-price-mod="0">Light (300g) — Summer</option>
+              <option value="medium" data-price-mod="200">Medium (400g) — All Season</option>
+              <option value="warm" data-price-mod="400">Warm (600g) — Winter</option>
+            </select>
+          </div>
+
+          <div class="panel-section">
+            <div class="panel-label">ผ้า</div>
+            <div class="fabric-badge">Polyester — Hypoallergenic · Quick Dry · Machine Washable</div>
+          </div>
+
+          <div class="price-block">
+            <div class="price-row">
+              <span class="price-label">ราคา</span>
+              <span class="price-value" id="price-display">—</span>
+            </div>
+            <div class="price-sub">Excludes shipping & import tariff</div>
+          </div>
+
+          <div class="add-to-cart-row">
+            <button class="btn-add-cart" id="add-to-cart" disabled>เพิ่มลงตะกร้า</button>
+            <button class="btn-custom-quote" onclick="window.location.href='/contact/'">ขนาดพิเศษ<//button>
+          </div>
+
+          <div class="payment-badges">
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> วีซ่า / มาสเตอร์การ์ด</span>
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Apple Pay</span>
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> ชำระเงินปลอดภัย</span>
+          </div>
+        </div>
+
+        <div class="trust-signals">
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> ได้รับการรับรอง OEKO-TEX</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> จัดส่งจากประเทศไทย</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> ร้านค้ายอดนิยม Etsy</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" style="max-width:1280px; padding:0 24px;">
+      <div class="product-tabs">
+        <div class="tab-list" role="tablist">
+          <button class="tab-btn active" role="tab" data-tab="description">รายละเอียด</button>
+          <button class="tab-btn" role="tab" data-tab="details">Details</button>
+          <button class="tab-btn" role="tab" data-tab="care">การดูแลรักษา</button>
+        </div>
+        <div class="tab-content open" id="tab-description" role="tabpanel">
+          <h3>Lightweight Duvet Insert — Made in Thailand</h3>
+          <p>Our Duvet Insert uses premium polyester hollow fiber filling that provides excellent warmth without the weight. Hypoallergenic and breathable — ideal for year-round comfort in Thailand's climate.</p>
+          <ul>
+            <li>Polyester hollow fiber filling — hypoallergenic and dust-mite resistant</li>
+            <li>Lightweight yet warm — perfect for Thailand's climate</li>
+            <li>Available in 3 fill weights: Light (300g), Medium (400g), Warm (600g)</li>
+            <li>Standard Thailand sizes: 3.5ft, 6ft Queen, King</li>
+            <li>Custom sizes available — contact us for quote</li>
+            <li>OEKO-TEX certified filling</li>
+            <li>Quick-dry after washing</li>
+          </ul>
+        </div>
+        <div class="tab-content" id="tab-details" role="tabpanel">
+          <h3>Product Details</h3>
+          <ul>
+            <li><strong>Fill:</strong> 100% Polyester Hollow Fiber</li>
+            <li><strong>Cover Fabric:</strong> Polyester (soft touch)</li>
+            <li><strong>Fill Weights:</strong> Light (300g/m²), Medium (400g/m²), Warm (600g/m²)</li>
+            <li><strong>Sizes:</strong> 3.5ft (107×191cm), 6ft Queen (120×200cm), King (152×198cm)</li>
+            <li><strong>ขนาดพิเศษs:</strong> Available — contact us for pricing</li>
+            <li><strong>Certification:</strong> OEKO-TEX certified</li>
+            <li><strong>Country of Origin:</strong> Thailand</li>
+          </ul>
+        </div>
+        <div class="tab-content" id="tab-care" role="tabpanel">
+          <h3>Care Instructions</h3>
+          <ul>
+            <li>Machine wash cold (30°C) — gentle cycle</li>
+            <li>Tumble dry low or hang dry</li>
+            <li>Do not bleach</li>
+            <li>Do not iron</li>
+            <li>Fluff up after washing to restore loft</li>
+          </ul>
+          <p>The polyester hollow fiber filling dries quickly and maintains its fluffy texture wash after wash.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" style="max-width:1280px; padding:0 24px 64px;">
+      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:32px;">
+        <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">แท็ก:</span>
+        <a href="/th/duvet-covers/" class="tag-pill">ผ้าคลุมผ้านวม</a>
+        <a href="/th/sheets/" class="tag-pill">Bedding</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>ลิงก์ด่วน</h3><ul><li><a href="/th/about/">เกี่ยวกับเรา</a></li><li><a href="/th/contact/">ติดต่อ Us</a></li><li><a href="/th/reviews/">รีวิว</a></li></ul></div><div class="footer-col"><h3>บริการลูกค้า</h3><ul><li><a href="/th/faq/">คำถามที่พบบ่อย</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li><li><a href="/th/blogs/">บล็อก</a></li></ul></div><div class="footer-col"><h3>ช้อปกับเรา</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>ติดต่อ</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/th/policy/">นโยบายความเป็นส่วนตัว</a><a href="/th/shipping/">การคืนสินค้าและการจัดส่ง</a></div></div></div></footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
+    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+      thumb.addEventListener('click', () => {
+        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+        document.getElementById('gallery-main-img').src = thumb.dataset.img;
+      });
+    });
+
+    let selectedSize = '', selectedFill = '';
+    const SIZES = { '107x191': 1290, '120x200': 1490, '152x198': 1690 };
+    const FILL_MOD = { 'light': 0, 'medium': 200, 'warm': 400 };
+
+    document.getElementById('size-select').addEventListener('change', function() {
+      selectedSize = this.value;
+      updatePrice();
+    });
+
+    document.getElementById('fill-select').addEventListener('change', function() {
+      selectedFill = this.value;
+      updatePrice();
+    });
+
+    function updatePrice() {
+      if (!selectedSize || !selectedFill) return;
+      const base = SIZES[selectedSize] || 0;
+      const mod = FILL_MOD[selectedFill] || 0;
+      const total = base + mod;
+      document.getElementById('price-display').textContent = '\u0e3f' + total.toLocaleString();
+      document.getElementById('add-to-cart').disabled = false;
+    }
+
+    document.getElementById('add-to-cart').addEventListener('click', () => {
+      const btn = document.getElementById('add-to-cart');
+      btn.innerHTML = '\u2713 Added!';
+      btn.style.background = '#16a34a';
+      setTimeout(() => { btn.innerHTML = 'Add to Cart'; btn.style.background = ''; btn.disabled = true; }, 2000);
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('open');
+      });
+    });
+  </script>
+</body>
+</html>
