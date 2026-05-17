@@ -3,19 +3,404 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ผ้าปูที่นอนสั่งตัดจาก MildMate ไซส์มาตรฐานสำหรับ 8 ภูมิภาค พร้อมราคาเฉพาะคิวสำหรับทุกรูปแบบพิเศษ">
-  <title>พบไซส์ที่เหมาะกับคุณ — MildMate</title>
+  <meta name="description" content="ผลิตภัณฑ์นอนหลับสั่งตัดทุกรูปแบบ ผ้าปูที่นอน เรือ รถ RV ครอบครัว สัตว์เลี้ยง — MildMate">
+  <title>ผลิตภัณฑ์ทั้งหมด | MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/nav.css">
+  <link rel="stylesheet" href="/css/hero.css">
 </head>
 <body>
-  <header class="site-header"><div class="container header-inner"><button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button><a href="/th/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a><nav class="main-nav" aria-label="เมนูหลัก"><ul class="nav-list"><li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li><li class="nav-item"><a href="/th/products/" class="nav-link">สินค้า</a></li><li class="nav-item"><a href="/th/fabric/" class="nav-link">เนื้อผ้า</a></li><li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li></ul></nav><div class="header-actions"><button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button><a href="/account/" class="account-btn" aria-label="บัญชีผู้ใช้"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a><a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a><div class="lang-toggle" role="group" aria-label="สลับภาษา"><span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span></div></div></div><div class="mobile-overlay" aria-hidden="true"></div><div class="mobile-drawer" aria-label="เมนูมือถือ"><div class="mobile-drawer-search"><form action="/th/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหาสินค้า" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/th/">หน้าแรก</a></li><li><a href="/th/products/">สินค้า</a></li><li><a href="/th/fabric/">เนื้อผ้า</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li></ul></div><div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="ปิดการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/th/products/" method="get" class="search-form"><input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div></header>
+  <header class="site-header" id="site-header"></header>
+
   <main>
-    <section class="brand-hero"><div class="container"><h1>พบไซส์ที่เหมาะกับคุณ</h1><p class="hero-sub">ไซส์มาตรฐานสำหรับ 8 ภูมิภาค ราคาเฉพาะคิวสำหรับทุกรูปแบบพิเศษ</p></div></section>
-    <section class="section"><div class="container"><div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:32px; padding:16px; background:var(--color-surface); border-radius:var(--radius);"><div class="filter-group"><label for="filter-category" style="font-weight:600; margin-right:8px;">ประเภท:</label><select id="filter-category" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);"><optgroup label="สินค้าตามประเภท"><option value="all">ทั้งหมด</option><option value="sheets">ผ้าปูที่นอน</option><option value="duvet-covers">ผ้าคลุมผ้าสวย</option><option value="pillowcases">ถุงหมอน</option><option value="protection">ผ้าปูกันเปื้อน</option><option value="accessories">อุปกรณ์เสริม</option></optgroup><optgroup label="สินค้าตามกลุ่มใช้งาน"><option value="marine">เรือ &amp; ยางนำ</option><option value="family">ครอบครัว &amp; Co-Sleep</option><option value="pets">เจ้าของสัตว์เลี้ยง</option><option value="deep-pocket">ความลึกพิเศษ</option><option value="boarding-dorm">หอพักนักเรียน</option><option value="rv-truck">RV &amp; Truck Cab</option></optgroup></select></div><div class="filter-group"><label for="filter-fabric" style="font-weight:600; margin-right:8px;">เนื้อผ้า:</label><select id="filter-fabric" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);"><option value="all">ทั้งหมด</option><option value="breezeplus">BreezePlus</option><option value="cloudsoft">CloudSoft</option><option value="premacotton">PremaCotton</option><option value="ecoluxe">EcoLuxe</option></select></div></div><div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;"><article class="product-card" data-categories="duvet-cover,duvet,pets"><div class="product-image"><img src="/images/products/3-sided-duvet.jpg" alt="3-Sided Zipper Duvet Cover" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">3-Sided Zipper Duvet Cover</h3><div class="product-price" data-usd="65" data-thb="2295">฿2,295</div><a href="/product/3-sided-duvet/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="fitted-sheet,family"><div class="product-image"><img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="Custom Family Fitted Sheet" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Custom Family Fitted Sheet</h3><div class="product-price" data-usd="45" data-thb="1590">฿1,590</div><a href="/product/family-co-sleeping-solutions-th-size/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="protector,protection,pets"><div class="product-image"><img src="/images/products/mattress-protector-pet.jpg" alt="Pet-Proof Mattress Protector" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Pet-Proof Mattress Protector</h3><div class="product-price" data-usd="48" data-thb="1695">฿1,695</div><a href="/product/pet-proof-mattress-protector/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="protector,protection,rv-truck,marine"><div class="product-image"><img src="/images/products/mattress-encasement-general.jpg" alt="6-Sided Mattress Encasement" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">6-Sided Mattress Encasement</h3><div class="product-price" data-usd="55" data-thb="1945">฿1,945</div><a href="/product/sheet-protectors/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="protector,protection"><div class="product-image"><img src="/images/products/pillow-protector.jpg" alt="Pillow Protector" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Pillow Protector</h3><div class="product-price" data-usd="18" data-thb="635">฿635</div><a href="/product/pillow-protector/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="fitted-sheet,pets"><div class="product-image"><img src="/images/products/pet-owner-fitted-sheet.jpg" alt="Pet Owner Fitted Sheet" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Pet Owner Fitted Sheet</h3><div class="product-price" data-usd="48" data-thb="1695">฿1,695</div><a href="/product/pet-owner-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="duvet-cover,pets"><div class="product-image"><img src="/images/products/pet-owner-duvet-cover.jpg" alt="Pet Owner Duvet Cover" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Pet Owner Duvet Cover</h3><div class="product-price" data-usd="68" data-thb="2400">฿2,400</div><a href="/product/pet-owner-duvet-cover/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="fitted-sheet"><div class="product-image"><img src="/images/products/adjustable-mattress-fitted-sheet.jpg" alt="Adjustable Mattress Fitted Sheet" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Adjustable Mattress Fitted Sheet</h3><div class="product-price" data-usd="42" data-thb="1485">฿1,485</div><a href="/product/adjustable-mattress-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="flat-sheet"><div class="product-image"><img src="/images/products/flat-sheet-standard.jpg" alt="Flat Sheet Standard" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Flat Sheet Standard</h3><div class="product-price" data-usd="38" data-thb="1345">฿1,345</div><a href="/product/flat-sheet-standard/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="flat-sheet"><div class="product-image"><img src="/images/products/flat-sheet-extra-deep-pocket.jpg" alt="Flat Sheet Extra Deep Pocket" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Flat Sheet Extra Deep Pocket</h3><div class="product-price" data-usd="42" data-thb="1485">฿1,485</div><a href="/product/flat-sheet-extra-deep-pocket/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="pillowcase"><div class="product-image"><img src="/images/products/pillowcase-envelope.jpg" alt="Envelope Pillowcase" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Envelope Pillowcase</h3><div class="product-price" data-usd="16" data-thb="565">฿565</div><a href="/product/pillowcase-envelope/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="pillowcase"><div class="product-image"><img src="/images/products/pillowcase-zipper.jpg" alt="Zipper Pillowcase" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Zipper Pillowcase</h3><div class="product-price" data-usd="18" data-thb="635">฿635</div><a href="/product/pillowcase-zipper/" class="btn btn-primary">ดูตัวเลือก</a></div></article><article class="product-card" data-categories="pillowcase"><div class="product-image"><img src="/images/products/pillowcase-sham.jpg" alt="Sham Pillowcase" width="800" height="800" loading="lazy" decoding="async"></div><div class="product-info"><h3 class="product-title">Sham Pillowcase</h3><div class="product-price" data-usd="20" data-thb="705">฿705</div><a href="/product/pillowcase-sham/" class="btn btn-primary">ดูตัวเลือก</a></div></article></div></div></section>
+    <section class="brand-hero">
+      <div class="brand-hero-inner container">
+        <h1>ผลิตภัณฑ์ทั้งหมด</h1>
+        <p class="hero-sub">ผ้าปูที่นอนสั่งตัด รองรับทุกรูปแบบ ตั้งแต่เตียงมาตรฐานไปจนถึงเรือยอตช์</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:32px; padding:16px; background:var(--color-surface); border-radius:var(--radius);">
+          <div class="filter-group">
+            <label for="filter-category" style="font-weight:600; margin-right:8px;">ประเภท:</label>
+            <select id="filter-category" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+              <optgroup label="สินค้าตามประเภท">
+                <option value="all">ทั้งหมด</option>
+                <option value="sheets">ผ้าปูที่นอน</option>
+                <option value="duvet-covers">ผ้าคลุมผ้าสวย</option>
+                <option value="pillowcases">ถุงหมอน</option>
+                <option value="protection">ผ้าปูกันเปื้อน</option>
+                <option value="accessories">อุปกรณ์เสริม</option>
+              </optgroup>
+              <optgroup label="สินค้าตามกลุ่มใช้งาน">
+                <option value="marine">เรือ &amp; ยางนำ</option>
+                <option value="family">ครอบครัว &amp; Co-Sleep</option>
+                <option value="pets">เจ้าของสัตว์เลี้ยง</option>
+                <option value="deep-pocket">ความลึกพิเศษ</option>
+                <option value="boarding-dorm">หอพักนักเรียน</option>
+                <option value="rv-truck">RV &amp; Truck Cab</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-fabric" style="font-weight:600; margin-right:8px;">เนื้อผ้า:</label>
+            <select id="filter-fabric" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
+              <option value="all">ทั้งหมด</option>
+              <option value="breezeplus">BreezePlus</option>
+              <option value="cloudsoft">CloudSoft</option>
+              <option value="premacotton">PremaCotton</option>
+              <option value="ecoluxe">EcoLuxe</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;">
+
+          <!-- === SHEETS === -->
+          <article class="product-card" data-categories="sheets">
+            <div class="product-image">
+              <img src="/images/products/standard-fitted-sheet.jpg" alt="ผ้าปูที่นอนมาตรฐาน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอนมาตรฐาน</h3>
+              <div class="product-price" data-usd="35" data-thb="1235">฿1,235</div>
+              <a href="/th/product/standard-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,deep-pocket">
+            <div class="product-image">
+              <img src="/images/products/deep-pocket-fitted-sheet.jpg" alt="ผ้าปูที่นอนความลึกพิเศษ" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอนความลึกพิเศษ</h3>
+              <div class="product-price" data-usd="42" data-thb="1485">฿1,485</div>
+              <a href="/th/product/deep-pocket-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,marine">
+            <div class="product-image">
+              <img src="/images/products/boat-fitted-sheet.jpg" alt="ผ้าปูที่นอนเรือ" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอนเรือ</h3>
+              <div class="product-price" data-usd="45" data-thb="1590">฿1,590</div>
+              <a href="/th/product/boat-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,boarding-dorm">
+            <div class="product-image">
+              <img src="/images/products/dorm-fitted-sheet.jpg" alt="ผ้าปูที่นอนหอพัก" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอนหอพัก</h3>
+              <div class="product-price" data-usd="38" data-thb="1345">฿1,345</div>
+              <a href="/th/product/dorm-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,family">
+            <div class="product-image">
+              <img src="/images/products/family-co-sleeping-solutions-th-size.jpg" alt="ผ้าปูครอบครัว Co-Sleep" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูครอบครัว Co-Sleep</h3>
+              <div class="product-price" data-usd="45" data-thb="1590">฿1,590</div>
+              <a href="/th/product/family-co-sleeping-solutions-th-size/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/rv-truck-fitted-sheet.jpg" alt="ผ้าปูที่นอน RV & Truck" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอน RV & Truck</h3>
+              <div class="product-price" data-usd="45" data-thb="1590">฿1,590</div>
+              <a href="/th/product/rv-truck-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,pets">
+            <div class="product-image">
+              <img src="/images/products/pet-owner-fitted-sheet.jpg" alt="ผ้าปูที่นอนสำหรับสัตว์เลี้ยง" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอนสำหรับสัตว์เลี้ยง</h3>
+              <div class="product-price" data-usd="48" data-thb="1695">฿1,695</div>
+              <a href="/th/product/pet-owner-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,marine">
+            <div class="product-image">
+              <img src="/images/products/marine-fitted-sheet.jpg" alt="ผ้าปูที่นอน Marine (V-Berth)" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูที่นอน Marine (V-Berth)</h3>
+              <div class="product-price" data-usd="48" data-thb="1695">฿1,695</div>
+              <a href="/th/product/marine-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <!-- === FLAT SHEETS === -->
+          <article class="product-card" data-categories="sheets">
+            <div class="product-image">
+              <img src="/images/products/flat-sheet-standard.jpg" alt="ผ้าปูราบมาตรฐาน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูราบมาตรฐาน</h3>
+              <div class="product-price" data-usd="38" data-thb="1345">฿1,345</div>
+              <a href="/th/product/flat-sheet-standard/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,deep-pocket">
+            <div class="product-image">
+              <img src="/images/products/flat-sheet-extra-deep-pocket.jpg" alt="ผ้าปูราบความลึกพิเศษ" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูราบความลึกพิเศษ</h3>
+              <div class="product-price" data-usd="42" data-thb="1485">฿1,485</div>
+              <a href="/th/product/flat-sheet-extra-deep-pocket/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <!-- === DUVET COVERS === -->
+          <article class="product-card" data-categories="duvet-covers,pets">
+            <div class="product-image">
+              <img src="/images/products/3-sided-duvet.jpg" alt="ผ้าคลุมผ้าสวย 3 ด้านซิป" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าคลุมผ้าสวย 3 ด้านซิป</h3>
+              <div class="product-price" data-usd="65" data-thb="2295">฿2,295</div>
+              <a href="/th/product/3-sided-duvet/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="duvet-covers">
+            <div class="product-image">
+              <img src="/images/products/duvet-cover-standard.jpg" alt="ผ้าคลุมผ้าสวยมาตรฐาน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าคลุมผ้าสวยมาตรฐาน</h3>
+              <div class="product-price" data-usd="65" data-thb="2295">฿2,295</div>
+              <a href="/th/product/duvet-cover-standard/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="duvet-covers,pets">
+            <div class="product-image">
+              <img src="/images/products/pet-owner-duvet-cover.jpg" alt="ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง</h3>
+              <div class="product-price" data-usd="68" data-thb="2400">฿2,400</div>
+              <a href="/th/product/pet-owner-duvet-cover/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="duvet-covers,marine">
+            <div class="product-image">
+              <img src="/images/products/duvet-cover-marine.jpg" alt="ผ้าคลุมผ้าสวย Marine" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าคลุมผ้าสวย Marine</h3>
+              <div class="product-price" data-usd="65" data-thb="2295">฿2,295</div>
+              <a href="/th/product/duvet-cover-marine/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="duvet-covers,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/duvet-cover-rv.jpg" alt="ผ้าคลุมผ้าสวย RV" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าคลุมผ้าสวย RV</h3>
+              <div class="product-price" data-usd="65" data-thb="2295">฿2,295</div>
+              <a href="/th/product/duvet-cover-rv/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="duvet-covers,boarding-dorm">
+            <div class="product-image">
+              <img src="/images/products/duvet-cover-dorm.jpg" alt="ผ้าคลุมผ้าสวยหอพัก" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าคลุมผ้าสวยหอพัก</h3>
+              <div class="product-price" data-usd="65" data-thb="2295">฿2,295</div>
+              <a href="/th/product/duvet-cover-dorm/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="duvet-covers">
+            <div class="product-image">
+              <img src="/images/products/duvet-insert.jpg" alt="ใส้ผ้าสวย (Duvet Insert)" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ใส้ผ้าสวย (Duvet Insert)</h3>
+              <div class="product-price" data-usd="18" data-thb="635">฿635</div>
+              <a href="/th/product/duvet-insert/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <!-- === PILLOWCASES === -->
+          <article class="product-card" data-categories="pillowcases,marine,family,pets,deep-pocket,boarding-dorm,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/pillowcase-envelope.jpg" alt="ถุงหมอนแบบซอง" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ถุงหมอนแบบซอง</h3>
+              <div class="product-price" data-usd="16" data-thb="565">฿565</div>
+              <a href="/th/product/pillowcase-envelope/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="pillowcases,marine,family,pets,deep-pocket,boarding-dorm,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/pillowcase-zipper.jpg" alt="ถุงหมอนซิป" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ถุงหมอนซิป</h3>
+              <div class="product-price" data-usd="18" data-thb="635">฿635</div>
+              <a href="/th/product/pillowcase-zipper/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="pillowcases,marine,family,pets,deep-pocket,boarding-dorm,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/pillowcase-sham.jpg" alt="ถุงหมอน Sham" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ถุงหมอน Sham</h3>
+              <div class="product-price" data-usd="20" data-thb="705">฿705</div>
+              <a href="/th/product/pillowcase-sham/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <!-- === PROTECTION === -->
+          <article class="product-card" data-categories="protection">
+            <div class="product-image">
+              <img src="/images/products/mattress-protector-standard.jpg" alt="ผ้าปูกันเปื้อนมาตรฐาน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูกันเปื้อนมาตรฐาน</h3>
+              <div class="product-price" data-usd="38" data-thb="1345">฿1,345</div>
+              <a href="/th/product/mattress-protector-standard/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="protection,family">
+            <div class="product-image">
+              <img src="/images/products/mattress-protector-family.jpg" alt="ผ้าปูกันเปื้อนครอบครัว" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูกันเปื้อนครอบครัว</h3>
+              <div class="product-price" data-usd="42" data-thb="1485">฿1,485</div>
+              <a href="/th/product/mattress-protector-family/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="protection,deep-pocket">
+            <div class="product-image">
+              <img src="/images/products/mattress-protector-deep-pocket.jpg" alt="ผ้าปูกันเปื้อนความลึกพิเศษ" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูกันเปื้อนความลึกพิเศษ</h3>
+              <div class="product-price" data-usd="48" data-thb="1695">฿1,695</div>
+              <a href="/th/product/mattress-protector-deep-pocket/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="protection,pets">
+            <div class="product-image">
+              <img src="/images/products/mattress-protector-pet.jpg" alt="ผ้าปูกันเปื้อนสัตว์เลี้ยง" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าปูกันเปื้อนสัตว์เลี้ยง</h3>
+              <div class="product-price" data-usd="48" data-thb="1695">฿1,695</div>
+              <a href="/th/product/pet-proof-mattress-protector/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="protection">
+            <div class="product-image">
+              <img src="/images/products/mattress-encasement-general.jpg" alt="ผ้าห่อที่นอน 6 ด้าน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าห่อที่นอน 6 ด้าน</h3>
+              <div class="product-price" data-usd="55" data-thb="1945">฿1,945</div>
+              <a href="/th/product/mattress-encasement-general/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="protection,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/rv-truck-mattress-encasement.jpg" alt="ผ้าห่อที่นอน RV & Truck" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้าห่อที่นอน RV & Truck</h3>
+              <div class="product-price" data-usd="58" data-thb="2045">฿2,045</div>
+              <a href="/th/product/rv-truck-mattress-encasement/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="protection,marine,family,pets,deep-pocket,boarding-dorm,rv-truck">
+            <div class="product-image">
+              <img src="/images/products/pillow-protector-general.jpg" alt="ผ้ากันเปื้อนหมอน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">ผ้ากันเปื้อนหมอน</h3>
+              <div class="product-price" data-usd="18" data-thb="635">฿635</div>
+              <a href="/th/product/pillow-protector-general/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+          <!-- === ACCESSORIES === -->
+          <article class="product-card" data-categories="accessories,family">
+            <div class="product-image">
+              <img src="/images/products/bedbridge-connector.jpg" alt=" BedBridge Connector" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <h3 class="product-title">BedBridge Connector</h3>
+              <div class="product-price" data-usd="38" data-thb="1345">฿1,345</div>
+              <a href="/th/product/bedbridge-connector/" class="btn btn-primary">ดูตัวเลือก</a>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
   </main>
-  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>ลิงก์ด่วน</h3><ul><li><a href="/th/about/">เกี่ยวกับเรา</a></li><li><a href="/th/contact/">ติดต่อเรา</a></li><li><a href="/th/reviews/">รีวิว</a></li></ul></div><div class="footer-col"><h3>บริการลูกค้า</h3><ul><li><a href="/th/faq/">คำถามที่พบบ่อย</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li><li><a href="/th/blogs/">บล็อก</a></li></ul></div><div class="footer-col"><h3>สั่งซื้อผ่าน</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>ติดต่อ</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/th/policy/">นโยบายความเป็นส่วนตัว</a><a href="/th/shipping/">การส่งมอบและคืนสินค้า</a></div></div></div></footer>
-  <script src="/js/nav.js"></script><script src="/js/cart.js"></script><script src="/js/cookie-consent.js"></script>
-</body></html>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="/js/nav.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var catFilter = document.getElementById('filter-category');
+      var fabFilter = document.getElementById('filter-fabric');
+      var cards = document.querySelectorAll('.product-card');
+
+      function applyFilters() {
+        var cat = catFilter ? catFilter.value : 'all';
+        var fab = fabFilter ? fabFilter.value : 'all';
+        cards.forEach(function(card) {
+          var cats = card.getAttribute('data-categories') || '';
+          var show = (cat === 'all' || cats.split(',').indexOf(cat) !== -1);
+          card.style.display = show ? '' : 'none';
+        });
+      }
+
+      if (catFilter) catFilter.addEventListener('change', applyFilters);
+      if (fabFilter) fabFilter.addEventListener('change', applyFilters);
+    });
+  </script>
+</body>
+</html>
