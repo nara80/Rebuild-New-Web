@@ -1,32 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Boarding dorm bedding by MildMate — single bed, made-to-measure. 3-sided zipper duvet cover for easy laundry. Ships from Thailand to your child's dorm anywhere.">
-  <title>Boarding Dorm Bedding — Single Bed, Made to Measure — MildMate</title>
+  <meta name="description" content="Dormitory beds face heavy use: frequent washing, shared laundry, and constant turnover. MildMate's dorm sheets are built for this — durable enough for inst">
+  <title>Boarding Dorm — Custom Bedding — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <style>
     .listing-page { background: #f0f7ff; }
-    .brand-hero { background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%); padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff; }
-    .brand-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px; }
+    .brand-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff;
+    }
+    .brand-hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08;
+      background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
     .brand-hero-inner { max-width: var(--container-max); margin: 0 auto; position: relative; z-index: 1; text-align: center; }
     .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
     .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
     .listing-section { padding: 48px 0; }
     .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
     .listing-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
     .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
     .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
     .listing-card:hover .card-image img { transform: scale(1.04); }
+    .listing-card .card-video-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6875rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); }
     .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
     .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
     .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
-    .listing-card .card-tag.highlight { background: #fff3e0; color: #e65100; }
     .listing-card .card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; line-height: 1.3; }
     .listing-card .card-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
     .listing-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
@@ -54,10 +63,10 @@
     .pricing-panel select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.15); }
     .size-guide-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-top: 8px; }
     .size-guide-link:hover { text-decoration: underline; }
-    .fabric-label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: var(--color-text); }
-    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 20px; }
     .explore-fabrics-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-bottom: 20px; }
     .explore-fabrics-link:hover { text-decoration: underline; }
+    .fabric-label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: var(--color-text); }
+    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 20px; }
     .price-display { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
     .price-display .price-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; }
     .price-display .price-value { font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }
@@ -66,24 +75,13 @@
     .custom-shape-cta p { font-size: 0.875rem; color: #666; margin-bottom: 10px; }
     .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
     .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
-    /* Sizing comparison table */
-    .sizing-table-wrap { overflow-x: auto; margin-top: 16px; }
-    .sizing-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    .sizing-table th { background: var(--color-primary); color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
-    .sizing-table td { padding: 9px 12px; border-bottom: 1px solid var(--color-border); color: #555; }
-    .sizing-table tr:nth-child(even) td { background: var(--color-surface); }
-    .sizing-table tr:hover td { background: #e8f4fd; }
-    /* Testimonial highlight */
-    .testimonial-highlight { background: linear-gradient(135deg, #fff8e1, #fff3cd); border-left: 4px solid #ff9800; padding: 20px 24px; border-radius: var(--radius); margin-top: 24px; }
-    .testimonial-highlight p { font-style: italic; color: #555; line-height: 1.6; margin-bottom: 12px; }
-    .testimonial-highlight .review-author { font-weight: 600; color: var(--color-text); font-size: 0.875rem; }
     @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
     @media (max-width: 480px) { .listing-grid { grid-template-columns: 1fr; } .listing-card .card-image img { aspect-ratio: 16/9; } }
   </style>
 </head>
 <body class="listing-page">
 
-  <header class="site-header">
+<header class="site-header">
     <div class="container header-inner">
       <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
       <a href="/" class="logo-link" aria-label="MildMate Home"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
@@ -92,135 +90,195 @@
         <button class="search-btn" aria-label="Search products" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
         <a href="/account/" class="account-btn" aria-label="My account"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
         <a href="/checkout/" class="cart-btn" aria-label="Shopping cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
-        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/international-boarding-school/'" style="cursor:pointer">TH</span></div>
+        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/boarding-dorm/'" style="cursor:pointer">TH</span></div>
       </div>
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu"><div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/">Home</a></li><li><a href="/products/">Shop</a></li><li><a href="/fabric/">Fabrics</a></li><li><a href="/sizeguide/">Size Guide</a></li></ul></div>
-    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="Close search"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
+    <div class="mobile-drawer" aria-label="Mobile menu">
+      <div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search products" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div>
+      <ul class="mobile-nav-list"><li><a href="/">Home</a></li><li><a href="/products/">Shop</a></li><li><a href="/fabric/">Fabrics</a></li><li><a href="/sizeguide/">Size Guide</a></li></ul>
+    </div>
+    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="Close search"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="Search bedding, fabrics, sizes..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
   </header>
 
   <main>
     <section class="brand-hero">
       <div class="brand-hero-inner">
         <h1>Boarding Dorm</h1>
-        <p class="hero-sub">Single bed bedding, made-to-measure for dorms worldwide. 3-sided zipper duvet covers — because doing laundry shouldn't take all afternoon. Ships from Thailand to your child anywhere.</p>
+        <p class="hero-sub">Durable, easy-change bedding for dormitory beds. OEKO-TEX certified, machine washable, quick-dry for shared laundry.</p>
       </div>
     </section>
-
+    <section class="listing-section">
+          <div class="container">
+            <div class="listing-grid">
     
-<section class="listing-section">
-  <div class="container">
-    <div class="listing-grid">
-
-                    <article class="listing-card"><div class="card-image"><img src="/images/products/dorm-fitted-sheet/main.jpg" alt="Dorm Fitted Sheet" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Dorm Fitted Sheet</h3><div class="card-price">From $38.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/dorm-fitted-sheet/" class="btn btn-primary">View Options</a></div></div></article>
-
-                    <article class="listing-card"><div class="card-image"><img src="/images/products/duvet-cover-dorm/main.jpg" alt="Duvet Cover — Dorm" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Duvet Cover — Dorm</h3><div class="card-price">From $65.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/duvet-cover-dorm/" class="btn btn-primary">View Options</a></div></div></article>
-
-                    <article class="listing-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Envelope Pillowcase</h3><div class="card-price">$16.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillowcase-envelope/" class="btn btn-primary">View Options</a></div></div></article>
-
-                    <article class="listing-card"><div class="card-image"><img src="/images/products/pillowcase-zipper/main.jpg" alt="Zipper Pillowcase" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Zipper Pillowcase</h3><div class="card-price">$18.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillowcase-zipper/" class="btn btn-primary">View Options</a></div></div></article>
-
-                    <article class="listing-card"><div class="card-image"><img src="/images/products/pillowcase-sham/main.jpg" alt="Sham Pillowcase" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Sham Pillowcase</h3><div class="card-price">$20.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillowcase-sham/" class="btn btn-primary">View Options</a></div></div></article>
-
-                    <article class="listing-card"><div class="card-image"><img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Pillow Protector</h3><div class="card-price">From $18.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillow-protector-general/" class="btn btn-primary">View Options</a></div></div></article>
-
-    </div>
-  </div>
-</section>
-
-<section class="listing-desc-section">
-      <div class="container">
-        0.00</div><div class="listing-desc-grid">
-          <div>
-            <h2>Bedding for Boarding Dorm — What Parents Need to Know</h2>
-            <p>Every country has its own "single bed" definition. A US Twin is 39×75in, but a UK single is 90×190cm, and a Japanese single is 100×200cm. Your child might arrive at their dorm expecting their bedding to fit — only to find it doesn't.</p>
-            <p>MildMate solves this. We make single bed bedding in exact measurements, to fit the exact size your child needs wherever they are studying. And our 3-sided zipper duvet cover means laundry day takes minutes, not hours — just unzip, swap, zip up.</p>
-            <ul>
-              <li>Custom-cut to any country's single bed dimensions (cm or inches)</li>
-              <li>3-sided zipper duvet cover — change the cover in minutes, not hours</li>
-              <li>BreezePlus fabric: pet hair slides off, 3–5°C cooler than cotton</li>
-              <li>Shipped directly from Thailand to dorms worldwide</li>
-              <li>Family-owned Etsy boutique with top ratings — contact us before ordering if unsure of sizes</li>
-            </ul>
-            <div class="testimonial-highlight">
-              <p>"I bought this easy duvet cover for my son at college. The customer service at MildMate is amazing! The staff went out of their way to make sure I got the product I wanted. If you have any special questions or requests, do not hesitate to reach out to them. It is not easy to find 3-Sided Zip Duvet Covers, so I am glad to have found MildMate."</p>
-              <div class="review-author">— Etsy Buyer Review</div>
-            </div>
-            <div class="features-grid" style="margin-top:24px;">
-              <div class="feature-item"><strong>Size Guarantee</strong><span>Don't know their size? Contact us before ordering — we'll guide you.</span></div>
-              <div class="feature-item"><strong>3-Sided Zipper</strong><span>Easy duvet changes even in small dorm rooms</span></div>
-              <div class="feature-item"><strong>Premium Fabric</strong><span>BreezePlus: cooler, softer, pet-hair resistant</span></div>
-              <div class="feature-item"><strong>Worldwide Shipping</strong><span>From Thailand to wherever your child studies</span></div>
+              <article class="listing-card"><div class="card-image"><img src="/images/products/dorm-fitted-sheet/main.jpg" alt="Dorm Fitted Sheet" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Dorm Fitted Sheet</h3><div class="card-price">From $38.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/dorm-fitted-sheet/" class="btn btn-primary">View Options</a></div></div></article>
+    
+              <article class="listing-card"><div class="card-image"><img src="/images/products/duvet-cover-dorm/main.jpg" alt="Duvet Cover — Dorm" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Duvet Cover — Dorm</h3><div class="card-price">From $65.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/duvet-cover-dorm/" class="btn btn-primary">View Options</a></div></div></article>
+    
+              <article class="listing-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Envelope Pillowcase</h3><div class="card-price">$16.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillowcase-envelope/" class="btn btn-primary">View Options</a></div></div></article>
+    
+              <article class="listing-card"><div class="card-image"><img src="/images/products/pillowcase-zipper/main.jpg" alt="Zipper Pillowcase" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Zipper Pillowcase</h3><div class="card-price">$18.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillowcase-zipper/" class="btn btn-primary">View Options</a></div></div></article>
+    
+              <article class="listing-card"><div class="card-image"><img src="/images/products/pillowcase-sham/main.jpg" alt="Sham Pillowcase" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Sham Pillowcase</h3><div class="card-price">$20.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillowcase-sham/" class="btn btn-primary">View Options</a></div></div></article>
+    
+              <article class="listing-card"><div class="card-image"><img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><h3 class="card-title">Pillow Protector</h3><div class="card-price">From $18.00</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="/product/pillow-protector-general/" class="btn btn-primary">View Options</a></div></div></article>
+    
             </div>
           </div>
-          <div>
-            <div class="pricing-panel">
-              <h3>Get a Custom Quote</h3>
-              <div class="form-group">
-                <label for="region-select">Where is your child studying?</label>
-                <select id="region-select">
-                  <option value="">— Choose country —</option>
-                  <option value="us">🇺🇸 USA / Canada</option>
-                  <option value="uk">🇬🇧 United Kingdom</option>
-                  <option value="eu">🇪🇺 European Union</option>
-                  <option value="au">🇦🇺 Australia / New Zealand</option>
-                  <option value="th">🇹🇭 Thailand</option>
-                  <option value="my">🇲🇾🇸🇬 Malaysia / Singapore</option>
-                  <option value="jp">🇯🇵 Japan</option>
-                  <option value="kr">🇰🇷 South Korea</option>
-                  <option value="hk">🇭🇰 Hong Kong</option>
-                  <option value="other">🌍 Other</option>
-                </select>
-                <a href="/sizeguide/" class="size-guide-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></svg>View Single Bed Size Comparison →</a>
+        </section>
+    <section class="listing-desc-section">
+          <div class="container">
+            <div class="listing-desc-grid">
+              <div>
+                <h2>Boarding Dorm — Built for Shared Living</h2>
+                <p>Dormitory beds face heavy use: frequent washing, shared laundry, and constant turnover. MildMate's dorm sheets are built for this — durable enough for institutional laundering, quick-drying so they're ready for the next resident, and OEKO-TEX certified for peace of mind.</p>
+                <ul>
+                  <li>Custom-cut for standard and non-standard dormitory bed sizes</li>
+                  <li>OEKO-TEX certified safe for shared living environments</li>
+                  <li>Machine washable — designed for frequent industrial laundering</li>
+                  <li>Quick-dry fabrics minimize laundry turnaround time</li>
+                  <li>BreezePlus available for students with pets (emotional support animals)</li>
+                  <li>3-sided zipper duvet covers for easy dorm-style changes</li>
+                </ul>
+                <div class="features-grid">
+                  <div class="feature-item"><strong>Dorm Durable</strong><span>Built for frequent institutional washing</span></div>
+                  <div class="feature-item"><strong>OEKO-TEX</strong><span>Certified safe for shared living</span></div>
+                  <div class="feature-item"><strong>Quick Dry</strong><span>Minimizes laundry turnaround</span></div>
+                  <div class="feature-item"><strong>Pet Friendly</strong><span>BreezePlus for emotional support animals</span></div>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="size-select">Single Bed Size (for reference)</label>
-                <select id="size-select" disabled><option value="">— Select country first —</option></select>
-              </div>
-              <div class="form-group">
-                <label>Fabric</label>
-                <a href="/fabric/" class="explore-fabrics-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Explore Fabric Collections →</a>
-                <span class="fabric-badge">BreezePlus recommended — cooler and easy-care</span>
-              </div>
-              <div class="price-display">
-                <div class="price-label">Estimated price from</div>
-                <div class="price-value" id="estimated-price">—</div>
-                <div class="price-sub">Price excludes shipping, tax &amp; tariff</div>
-              </div>
-              <div class="custom-shape-cta">
-                <p>Not sure what size your child needs? Our team is here to help.</p>
-                <a href="/contact/" class="btn-outline">Contact Us →</a>
-              </div>
-            </div>
-
-            <!-- Single bed sizing table -->
-            <div style="margin-top:24px; background:#fff; border-radius:var(--radius); padding:24px; border:1px solid var(--color-border);">
-              <h3 style="font-size:1rem; font-weight:700; margin-bottom:16px; color:var(--color-text);">Single Bed Sizes — International Comparison</h3>
-              <div class="sizing-table-wrap">
-                <table class="sizing-table">
-                  <thead>
-                    <tr>
-                      <th>Country</th>
-                      <th>Single Bed (cm)</th>
-                      <th>Single Bed (in)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td>🇺🇸 US Twin</td><td>99 × 191 cm</td><td>39 × 75 in</td></tr>
-                    <tr><td>🇬🇧 UK</td><td>90 × 190 cm</td><td>35.5 × 74.8 in</td></tr>
-                    <tr><td>🇪🇺 EU</td><td>90 × 200 cm</td><td>35.4 × 78.7 in</td></tr>
-                    <tr><td>🇦🇺 AU / NZ</td><td>92 × 188 cm</td><td>36.2 × 74 in</td></tr>
-                    <tr><td>🇹🇭 Thailand</td><td>107 × 191 cm</td><td>42 × 75 in</td></tr>
-                    <tr><td>🇸🇬 Singapore</td><td>107 × 191 cm</td><td>42 × 75 in</td></tr>
-                    <tr><td>🇯🇵 Japan</td><td>100 × 200 cm</td><td>39.4 × 78.7 in</td></tr>
-                    <tr><td>🇰🇷 South Korea</td><td>110 × 200 cm</td><td>43.3 × 78.7 in</td></tr>
-                    <tr><td>🇭🇰 Hong Kong</td><td>107 × 191 cm</td><td>42 × 75 in</td></tr>
-                  </tbody>
-                </table>
+              <div>
+                <div class="pricing-panel">
+                  <h3>Get a Custom Quote</h3>
+                  <div class="form-group">
+                    <label for="region-select">Select Region</label>
+                    <select id="region-select">
+                      <option value="">— Choose your country —</option>
+                      <option value="us">🇺🇸 US / Canada</option>
+                      <option value="uk">🇬🇧 UK</option>
+                      <option value="eu">🇪🇺 EU</option>
+                      <option value="au">🇦🇺 Australia</option>
+                      <option value="th">🇹🇭 Thailand</option>
+                      <option value="my">🇲🇾🇸🇬 Malaysia / Singapore</option>
+                      <option value="in">🇮🇳 India</option>
+                      <option value="jp">🇯🇵 Japan</option>
+                      <option value="custom">🌍 Custom / Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="standard-size-select">Standard Size</label>
+                    <select id="standard-size-select" disabled><option value="">— Select region first —</option></select>
+                    <a href="/sizeguide/" class="size-guide-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></svg>View Size Guide</a>
+                  </div>
+                  <div class="form-group">
+                    <label>Fabric Collection</label>
+                    <a href="/fabric/" class="explore-fabrics-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>Explore the Fabric Collections →</a>
+                    <div class="fabric-options" id="fabric-options">
+                      <button type="button" class="fabric-option" data-fabric="BreezePlus">BreezePlus</button>
+                      <button type="button" class="fabric-option" data-fabric="CloudSoft">CloudSoft</button>
+                      <button type="button" class="fabric-option" data-fabric="PremaCotton">PremaCotton</button>
+                      <button type="button" class="fabric-option" data-fabric="EcoLuxe">EcoLuxe</button>
+                    </div>
+                    <p class="fabric-note">PremaCotton recommended for standard dorm use. BreezePlus for pet-friendly rooms.</p>
+                  </div>
+                  <div class="price-display">
+                    <div class="price-label">Estimated price from</div>
+                    <div class="price-value" id="estimated-price">—</div>
+                    <div class="price-sub">Price excludes shipping, tax &amp; tariff</div>
+                  </div>
+                  <div class="custom-shape-cta">
+                    <p>Need a custom size for a non-standard dorm bed?</p>
+                    <a href="/custom-measurement/" class="btn-outline">Measure My Custom Shape →</a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
+        </section>
+  </main>
+
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>Quick Links</h3><ul><li><a href="/about/">About Us</a></li><li><a href="/contact/">Contact Us</a></li><li><a href="/reviews/">Reviews</a></li></ul></div><div class="footer-col"><h3>Customer Service</h3><ul><li><a href="/faq/">FAQ</a></li><li><a href="/sizeguide/">Size Guide</a></li><li><a href="/blogs/">Blog</a></li></ul></div><div class="footer-col"><h3>Shop With Us</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>Contact</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/policy/">Privacy Policy</a><a href="/shipping/">Returns &amp; Delivery</a></div></div></div></footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
+    const SIZES_BY_REGION = {
+      us: [{ label: 'Twin 172×218cm / 68×86in', price: 65 }, { label: 'Full/Double 218×218cm / 86×86in', price: 72 }, { label: 'Queen 229×229cm / 90×90in', price: 80 }, { label: 'King 264×229cm / 104×90in', price: 92 }, { label: 'Cal King 269×224cm / 106×88in', price: 95 }, { label: 'Custom size →', price: 'custom' }],
+      uk: [{ label: 'Single 140×200cm', price: 62 }, { label: 'Double 200×200cm', price: 70 }, { label: 'King 225×220cm', price: 85 }, { label: 'Super King 260×220cm', price: 95 }, { label: 'Custom size →', price: 'custom' }],
+      eu: [{ label: 'Single 140×200cm', price: 63 }, { label: 'Double 200×200cm', price: 72 }, { label: 'King 220×240cm', price: 88 }, { label: 'Super King 260×240cm', price: 98 }, { label: 'Custom size →', price: 'custom' }],
+      au: [{ label: 'Single 140×210cm', price: 63 }, { label: 'Double 180×210cm', price: 72 }, { label: 'Queen 210×210cm', price: 82 }, { label: 'King 245×210cm', price: 92 }, { label: 'Custom size →', price: 'custom' }],
+      th: [{ label: 'Single 150×215cm', price: 62 }, { label: 'Queen 215×215cm', price: 78 }, { label: 'King 250×215cm', price: 90 }, { label: 'Custom size →', price: 'custom' }],
+      my: [{ label: 'Single 150×215cm', price: 62 }, { label: 'Queen 215×215cm', price: 78 }, { label: 'King 250×215cm', price: 90 }, { label: 'Custom size →', price: 'custom' }],
+      in: [{ label: 'Single 152×228cm', price: 64 }, { label: 'Double 218×218cm', price: 74 }, { label: 'Queen 228×254cm', price: 84 }, { label: 'King 254×274cm', price: 95 }, { label: 'Custom size →', price: 'custom' }],
+      jp: [{ label: 'Single 150×210cm', price: 62 }, { label: 'Semi-Double 180×210cm', price: 70 }, { label: 'Double 200×230cm', price: 78 }, { label: 'Queen 210×230cm', price: 86 }, { label: 'Custom size →', price: 'custom' }],
+      custom: [{ label: 'Custom shape →', price: 'custom' }]
+    };
+    const regionSelect = document.getElementById('region-select');
+    const sizeSelect = document.getElementById('size-select');
+    const depthSelect = document.getElementById('depth-select');
+    const priceEl = document.getElementById('estimated-price');
+    let selectedRegion = '', selectedSize = '';
+    function updatePrice() {
+      let base = 0;
+      if (selectedRegion && selectedSize) {
+        const opt = (SIZES_BY_REGION[selectedRegion] || []).find(s => s.label === selectedSize);
+        if (opt) base = opt.price === 'custom' ? 0 : opt.price;
+      }
+      if (selectedRegion === 'custom' || selectedSize === 'Custom size →') { priceEl.textContent = 'Custom quote'; }
+      else if (base > 0) { priceEl.textContent = '$' + base + '.00'; }
+      else { priceEl.textContent = '—'; }
+    }
+    regionSelect.addEventListener('change', () => {
+      selectedRegion = regionSelect.value; selectedSize = '';
+      if (selectedRegion) {
+        sizeSelect.disabled = false;
+        sizeSelect.innerHTML = '<option value="">— Select size —</option>' + (SIZES_BY_REGION[selectedRegion] || []).map(s => `<option value="${s.label}">${s.label}</option>`).join('');
+      } else { sizeSelect.disabled = true; sizeSelect.innerHTML = '<option value="">— Select region first —</option>'; }
+      updatePrice();
+    });
+    sizeSelect.addEventListener('change', () => { selectedSize = sizeSelect.value; updatePrice(); });
+    depthSelect.addEventListener('change', updatePrice);
+  </script>
+</body>
+</html>
+
+
+  <script src="/js/nav.js"></script>
+
+  <script>
+    const SIZES_BY_REGION = {us:[{label:"Twin 99×191cm / 39×75in",price:28},{label:"Twin XL 99×203cm / 39×80in",price:30},{label:"Full 137×191cm / 54×75in",price:35},{label:"Custom dorm size →",price:"custom"}],uk:[{label:"Single 90×190cm",price:26},{label:"Double 135×190cm",price:32},{label:"Custom dorm size →",price:"custom"}],eu:[{label:"Single 90×200cm",price:27},{label:"Double 140×200cm",price:33},{label:"Custom dorm size →",price:"custom"}],au:[{label:"Single 92×188cm",price:27},{label:"Double 138×188cm",price:33},{label:"Custom dorm size →",price:"custom"}],th:[{label:"Single 107×191cm",price:26},{label:"Queen 152×198cm",price:38},{label:"Custom dorm size →",price:"custom"}],my:[{label:"Single 107×191cm",price:26},{label:"Queen 152×198cm",price:38},{label:"Custom dorm size →",price:"custom"}],in:[{label:"Single 90×198cm",price:27},{label:"Double 138×198cm",price:33},{label:"Custom dorm size →",price:"custom"}],jp:[{label:"Single 100×200cm",price:28},{label:"Semi-Double 120×200cm",price:33},{label:"Custom dorm size →",price:"custom"}],custom:[{label:"Custom dorm size →",price:"custom"}]};
+    const FABRIC_PRICES = { BreezePlus: 0, CloudSoft: -5, PremaCotton: 10, EcoLuxe: 5 };
+        let selectedRegion = "", selectedSize = "", selectedFabric = "BreezePlus";
+    const regionSelect = document.getElementById("region-select");
+    const sizeSelect = document.getElementById("standard-size-select");
+    const priceEl = document.getElementById("estimated-price");
+    const fabricBtns = document.querySelectorAll(".fabric-option");
+    function updatePrice() {
+      let base = 0;
+      if (selectedRegion && selectedSize) {
+        const opt = (SIZES_BY_REGION[selectedRegion] || []).find(s => s.label === selectedSize);
+        if (opt) base = opt.price === "custom" ? 0 : opt.price;
+      }
+      const fabricAdj = FABRIC_PRICES[selectedFabric] || 0;
+      const total = base + fabricAdj;
+      if (selectedRegion === "custom" || selectedSize === "Custom size →" || selectedSize === "Custom shape →" || selectedSize === "Custom dorm size →" || selectedSize === "Custom V-Berth →") { priceEl.textContent = "Custom quote"; }
+      else if (total > 0) { priceEl.textContent = "$" + total + ".00"; }
+      else { priceEl.textContent = "—"; }
+    }
+    regionSelect.addEventListener("change", () => {
+      selectedRegion = regionSelect.value; selectedSize = "";
+      if (selectedRegion) { sizeSelect.disabled = false; sizeSelect.innerHTML = "<option value=''>— Select size —</option>" + (SIZES_BY_REGION[selectedRegion] || []).map(s => "<option value="" + s.label + "">" + s.label + "</option>").join(""); }
+      else { sizeSelect.disabled = true; sizeSelect.innerHTML = "<option value=''>— Select region first —</option>"; }
+      updatePrice();
+    });
+    sizeSelect.addEventListener("change", () => { selectedSize = sizeSelect.value; updatePrice(); });
+    fabricBtns.forEach(btn => {
+      btn.addEventListener("click", () => { fabricBtns.forEach(b => b.classList.remove("selected")); btn.classList.add("selected"); selectedFabric = btn.dataset.fabric; updatePrice(); });
+    });
+    document.querySelector("[data-fabric='BreezePlus']").classList.add("selected");
+  </script>
+
+</body>
+</html>
