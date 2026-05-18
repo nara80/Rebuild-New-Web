@@ -87,8 +87,8 @@
 | Marine & Yacht | `/marine/` | `/sheets/` |
 | Family & Co-Sleep | `/family/` | `/sheets/` |
 | Deep Pocket | `/deep-pocket/` | `/sheets/` |
-| Boarding Dorm | `/boarding-dorm/` | `/duvet-covers/` |
-| Pet Owner Bedding | `/pets/` | `/duvet-covers/` |
+| Boarding Dorm | `/boarding-dorm/` | `/sheets/` |
+| Pet Owner Bedding | `/pets/` | `/sheets/`, `/protection/` |
 | RV & Truck Cab | `/rv-truck/` | `/sheets/`, `/protection/` |
 
 **Browse All**
@@ -938,7 +938,7 @@ The issue is specific to pages with large inline `<script>` blocks that run befo
 
 ## Product Listing Page Specification (Phase 4 Updated)
 
-Every category page (`/fitted-sheets/`, `/flat-sheets/`, `/duvet-covers/`, `/pillowcases/`, `/mattress-protectors/`, `/marine/`, `/family/`, `/pets/`, `/deep-pocket/`, `/rv-truck/`) uses this layout:
+Every category page (`/sheets/`, `/duvet-covers/`, `/pillowcases/`, `/protection/`, `/accessories/`, `/marine/`, `/family/`, `/pets/`, `/deep-pocket/`, `/boarding-dorm/`, `/rv-truck/`) uses this layout:
 
 ### Page Structure
 
@@ -1023,16 +1023,17 @@ Structure:
 ### Fabric Rules Per Category
 | Category | Fabric Options |
 |---|---|
-| Fitted Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
-| Flat Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
+| Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
 | Duvet Covers | BreezePlus only (badge, no selector) |
 | Pillowcases | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
-| Mattress Protectors | BreezePlus + CloudSoft (TPU badge) |
+| Protection | BreezePlus + CloudSoft (TPU badge) |
+| Accessories | All 4 (BedBridge) |
 | Marine & Yacht | CloudSoft only (badge, no selector) |
 | Family & Co-Sleep | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
 | Pet Owner Bedding | BreezePlus only (badge, no selector) |
 | Deep Pocket | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe |
 | Boarding Dorm | BreezePlus only (badge, no selector) |
+| RV & Truck Cab | CloudSoft only (badge, no selector) |
 
 ### Custom Shape CTA — Links
 | Page | CTA Link |

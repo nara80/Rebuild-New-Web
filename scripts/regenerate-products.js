@@ -76,8 +76,19 @@ function buildCardTags(categories) {
   return tags;
 }
 
-function tagHtml(tags) {
-  return tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+function tagUrl(catKey) {
+  if (TYPES[catKey]) return `/${catKey}/`;
+  if (NICHES[catKey]) return `/${catKey}/`;
+  return null;
+}
+
+function tagLinkHtml(tags, categories) {
+  return tags.map((t, i) => {
+    const catKey = categories[i];
+    const url = tagUrl(catKey);
+    if (url) return `<a href="${url}" class="card-tag" style="text-decoration:none;">${t}</a>`;
+    return `<span class="card-tag">${t}</span>`;
+  }).join('');
 }
 
 // ─── Build EN product-card HTML (for /products/) ─────────────────
@@ -89,7 +100,7 @@ function buildEnProductCard(product) {
               <img src="${product.image}" alt="${product.name}" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="product-info">
-              <div class="product-tags" aria-label="Categories">${tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+              <div class="product-tags" aria-label="Categories">${tagLinkHtml(tags, product.categories)}</div>
               <h3 class="product-title">${product.name}</h3>
               <div class="product-price" data-usd="${product.priceUsd}" data-thb="${product.priceThb}">From $${product.priceUsd.toFixed(2)}</div>
               <div class="product-price-note">Excludes shipping, tax &amp; tariff</div>
@@ -98,16 +109,35 @@ function buildEnProductCard(product) {
           </article>`;
 }
 
+function buildTagsForCard(categories, primaryOverride, nicheOverride) {
+  const tags = [];
+  const catKeys = [];
+  if (primaryOverride) {
+    tags.push(TYPES[primaryOverride].tag);
+    catKeys.push(primaryOverride);
+  } else {
+    const primary = getPrimaryType(categories);
+    if (primary) { tags.push(TYPES[primary].tag); catKeys.push(primary); }
+  }
+  if (nicheOverride) {
+    tags.push(NICHES[nicheOverride].tag);
+    catKeys.push(nicheOverride);
+  } else {
+    getNiches(categories).forEach(n => { tags.push(NICHES[n].tag); catKeys.push(n); });
+  }
+  return { tags, catKeys };
+}
+
 // ─── Build TH product-card HTML (for /th/products/) ──────────────
 function buildThProductCard(product) {
-  const tags = buildCardTags(product.categories);
+  const { tags, catKeys } = buildTagsForCard(product.categories);
   const dataCats = buildDataCategories(product.categories);
   return `          <article class="product-card" data-categories="${dataCats}">
             <div class="product-image">
               <img src="${product.image}" alt="${product.nameTh}" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="product-info">
-              <div class="product-tags" aria-label="Categories">${tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+              <div class="product-tags" aria-label="Categories">${tagLinkHtml(tags, catKeys)}</div>
               <h3 class="product-title">${product.nameTh}</h3>
               <div class="product-price" data-usd="${product.priceUsd}" data-thb="${product.priceThb}">฿${product.priceThb}</div>
               <div class="product-price-note">ไม่รวมค่าจัดส่งและภาษีนำเข้า</div>
@@ -118,36 +148,31 @@ function buildThProductCard(product) {
 
 // ─── Build EN niche listing card (niche pages only) ─────────────
 function buildEnListingCard(product, nicheSlug) {
-  const primaryType = getPrimaryType(product.categories);
-  const tags = [];
-  if (primaryType) tags.push(TYPES[primaryType].tag);
-  tags.push(NICHES[nicheSlug].tag);
-  return `              <article class="listing-card"><div class="card-image"><img src="${product.image}" alt="${product.name}" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><div class="card-tags">${tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div><h3 class="card-title">${product.name}</h3><div class="card-price">From $${product.priceUsd.toFixed(2)}</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="${product.url}" class="btn btn-primary">View Options</a></div></div></article>`;
+  const { tags, catKeys } = buildTagsForCard(product.categories, null, nicheSlug);
+  return `              <article class="listing-card"><div class="card-image"><img src="${product.image}" alt="${product.name}" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><div class="card-tags">${tagLinkHtml(tags, catKeys)}</div><h3 class="card-title">${product.name}</h3><div class="card-price">From $${product.priceUsd.toFixed(2)}</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="${product.url}" class="btn btn-primary">View Options</a></div></div></article>`;
 }
 
 // ─── Build TH niche listing card (niche pages only) ─────────────
 function buildThListingCard(product, nicheSlug) {
-  const primaryType = getPrimaryType(product.categories);
-  const tags = [];
-  if (primaryType) tags.push(TYPES[primaryType].tag);
-  tags.push(NICHES[nicheSlug].tag);
-  return `              <article class="listing-card"><div class="card-image"><img src="${product.image}" alt="${product.nameTh}" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><div class="card-tags">${tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div><h3 class="card-title">${product.nameTh}</h3><div class="card-price">฿${product.priceThb}</div><div class="card-price-note">ไม่รวมค่าจัดส่งและภาษีนำเข้า</div><div class="card-cta"><a href="${product.urlTh}" class="btn btn-primary">ดูตัวเลือก</a></div></div></article>`;
+  const { tags, catKeys } = buildTagsForCard(product.categories, null, nicheSlug);
+  return `              <article class="listing-card"><div class="card-image"><img src="${product.image}" alt="${product.nameTh}" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><div class="card-tags">${tagLinkHtml(tags, catKeys)}</div><h3 class="card-title">${product.nameTh}</h3><div class="card-price">฿${product.priceThb}</div><div class="card-price-note">ไม่รวมค่าจัดส่งและภาษีนำเข้า</div><div class="card-cta"><a href="${product.urlTh}" class="btn btn-primary">ดูตัวเลือก</a></div></div></article>`;
 }
 
 // ─── Build EN type page listing-card HTML ──────────────────────
 function buildEnTypeCard(product, pageType) {
-  const tags = buildCardTags(product.categories);
-  const dataCats = buildDataCategories(product.categories);
-  // For /pillowcases/ page: only show PILLOWCASES tag (no niche tags, no DUVET)
+  const primaryType = getPrimaryType(product.categories);
   const displayTags = (pageType === 'type-page-pillowcases')
-    ? [TYPES.pillowcases.tag]
-    : tags;
+    ? [{ tags: [TYPES.pillowcases.tag], catKeys: ['pillowcases'] }]
+    : (primaryType ? [{ tags: [TYPES[primaryType].tag], catKeys: [primaryType] }] : null);
+  if (!displayTags) return '';
+  const { tags, catKeys } = displayTags[0];
+  const dataCats = buildDataCategories(product.categories);
   return `          <article class="listing-card" data-categories="${dataCats}">
             <div class="card-image">
               <img src="${product.image}" alt="${product.name}" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="card-body">
-              <div class="card-tags">${displayTags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+              <div class="card-tags">${tagLinkHtml(tags, catKeys)}</div>
               <h3 class="card-title">${product.name}</h3>
               <div class="card-price">From $${product.priceUsd.toFixed(2)}</div>
               <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
@@ -158,18 +183,19 @@ function buildEnTypeCard(product, pageType) {
 
 // ─── Build TH type page listing-card HTML ──────────────────────
 function buildThTypeCard(product, pageType) {
-  const tags = buildCardTags(product.categories);
-  const dataCats = buildDataCategories(product.categories);
-  // For /th/pillowcases/ page: only show PILLOWCASES tag (no niche tags, no DUVET)
+  const primaryType = getPrimaryType(product.categories);
   const displayTags = (pageType === 'type-page-pillowcases')
-    ? [TYPES.pillowcases.tag]
-    : tags;
+    ? [{ tags: [TYPES.pillowcases.tag], catKeys: ['pillowcases'] }]
+    : (primaryType ? [{ tags: [TYPES[primaryType].tag], catKeys: [primaryType] }] : null);
+  if (!displayTags) return '';
+  const { tags, catKeys } = displayTags[0];
+  const dataCats = buildDataCategories(product.categories);
   return `          <article class="listing-card" data-categories="${dataCats}">
             <div class="card-image">
               <img src="${product.image}" alt="${product.nameTh}" width="800" height="600" loading="lazy" decoding="async">
             </div>
             <div class="card-body">
-              <div class="card-tags">${displayTags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
+              <div class="card-tags">${tagLinkHtml(tags, catKeys)}</div>
               <h3 class="card-title">${product.nameTh}</h3>
               <div class="card-price">฿${product.priceThb}</div>
               <div class="card-price-note">ไม่รวมค่าจัดส่งและภาษีนำเข้า</div>
