@@ -78,7 +78,7 @@
     if (currency === 'THB') {
       return '฿' + Math.round(amount).toLocaleString();
     }
-    return '$' + amount.toFixed(2);
+    return 'USD ' + amount.toFixed(2);
   }
 
   function calculatePrice() {

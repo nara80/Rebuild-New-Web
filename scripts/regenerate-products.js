@@ -102,7 +102,7 @@ function buildEnProductCard(product) {
             <div class="product-info">
               <div class="product-tags" aria-label="Categories">${tagLinkHtml(tags, product.categories)}</div>
               <h3 class="product-title">${product.name}</h3>
-              <div class="product-price" data-usd="${product.priceUsd}" data-thb="${product.priceThb}">From $${product.priceUsd.toFixed(2)}</div>
+              <div class="product-price" data-usd="${product.priceUsd}" data-thb="${product.priceThb}">From USD ${product.priceUsd.toFixed(2)}</div>
               <div class="product-price-note">Excludes shipping, tax &amp; tariff</div>
               <a href="${product.url}" class="btn btn-primary">View Options</a>
             </div>
@@ -149,7 +149,7 @@ function buildThProductCard(product) {
 // ─── Build EN niche listing card (niche pages only) ─────────────
 function buildEnListingCard(product, nicheSlug) {
   const { tags, catKeys } = buildTagsForCard(product.categories, null, nicheSlug);
-  return `              <article class="listing-card"><div class="card-image"><img src="${product.image}" alt="${product.name}" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><div class="card-tags">${tagLinkHtml(tags, catKeys)}</div><h3 class="card-title">${product.name}</h3><div class="card-price">From $${product.priceUsd.toFixed(2)}</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="${product.url}" class="btn btn-primary">View Options</a></div></div></article>`;
+  return `              <article class="listing-card"><div class="card-image"><img src="${product.image}" alt="${product.name}" width="800" height="600" loading="lazy" decoding="async"></div><div class="card-body"><div class="card-tags">${tagLinkHtml(tags, catKeys)}</div><h3 class="card-title">${product.name}</h3><div class="card-price">From USD ${product.priceUsd.toFixed(2)}</div><div class="card-price-note">Excludes shipping, tax &amp; tariff</div><div class="card-cta"><a href="${product.url}" class="btn btn-primary">View Options</a></div></div></article>`;
 }
 
 // ─── Build TH niche listing card (niche pages only) ─────────────
@@ -174,7 +174,7 @@ function buildEnTypeCard(product, pageType) {
             <div class="card-body">
               <div class="card-tags">${tagLinkHtml(tags, catKeys)}</div>
               <h3 class="card-title">${product.name}</h3>
-              <div class="card-price">From $${product.priceUsd.toFixed(2)}</div>
+              <div class="card-price">From USD ${product.priceUsd.toFixed(2)}</div>
               <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
               <div class="card-cta"><a href="${product.url}" class="btn btn-primary">View Options</a></div>
             </div>

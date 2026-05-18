@@ -17,7 +17,7 @@
     if (currency === 'THB' && thb) {
       el.textContent = '฿' + thb.toLocaleString();
     } else {
-      el.textContent = '$' + usd.toFixed(2);
+      el.textContent = 'USD ' + usd.toFixed(2);
     }
   }
 
