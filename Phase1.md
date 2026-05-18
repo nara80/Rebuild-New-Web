@@ -5,6 +5,10 @@ Scaffold built and functional. All folders created, `wrangler.toml` configured w
 ### Additional Updates (2026-05-14)
 - No changes needed — Phase 1 foundation intact
 
+### Additional Updates (2026-05-18)
+- **Product catalog architecture updated:** D1 `products` table serves Phase 5+ order processing and Phase 7 admin CRUD. Storefront catalog pages are driven by `data/products.json` + `scripts/regenerate-products.js`.
+- No D1 schema changes needed — `data/products.json` is the build-time source, D1 is the runtime/order database.
+
 ---
 
 # Phase 1 — Foundation

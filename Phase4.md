@@ -320,18 +320,16 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 ### Product & SEO Pages
 | Page / File | What It Is |
 |---|---|
-| `public/products/index.html` | Full product listing with filter bar (data from D1) |
-| `public/fitted-sheets/index.html` | **NEW** Primary: All fitted sheet variants (dynamic from D1) |
-| `public/sheets/index.html` | **NEW** Primary: Fitted Sheets + Flat Sheets (dynamic from D1) |
-| `public/duvet-covers/index.html` | **NEW** Primary: 3-Sided Zipper + Pet Owner duvet covers (dynamic from D1) |
-| `public/pillowcases/index.html` | **NEW** Primary: Envelope, Zipper, Sham pillowcases (dynamic from D1) |
-| `public/protection/index.html` | **NEW** Primary: Mattress Protectors + Pillow Protectors (dynamic from D1) |
-| `public/marine/index.html` | SEO Landing: Marine & Yacht category page (dynamic from D1) |
-| `public/family/index.html` | SEO Landing: Family & Co-Sleep category page (dynamic from D1) |
-| `public/duvet/index.html` | SEO Landing: Easy-Change Duvet category page (dynamic from D1) |
-| `public/protection/index.html` | SEO Landing: Protection category page (dynamic from D1) |
-| `public/pets/index.html` | **NEW** SEO Landing: Pet Owner Bedding (BreezePlus anti-fur) |
-| `public/rv-truck/index.html` | **NEW** SEO Landing: RV & Truck Cab bedding |
+| `public/products/index.html` | Full product listing with filter bar (from `data/products.json`) |
+| `public/sheets/index.html` | **NEW** Primary: Fitted Sheets + Flat Sheets (from `data/products.json`) |
+| `public/duvet-covers/index.html` | **NEW** Primary: 3-Sided Zipper + Pet Owner duvet covers (from `data/products.json`) |
+| `public/pillowcases/index.html` | **NEW** Envelope, Zipper, Sham pillowcases (from `data/products.json`) |
+| `public/protection/index.html` | **NEW** Mattress Protectors + Pillow Protectors (from `data/products.json`) |
+| `public/marine/index.html` | SEO Landing: Marine & Yacht category page (from `data/products.json`) |
+| `public/family/index.html` | SEO Landing: Family & Co-Sleep category page (from `data/products.json`) |
+| `public/duvet/index.html` | SEO Landing: Easy-Change Duvet category page (from `data/products.json`) |
+| `public/pets/index.html` | SEO Landing: Pet Owner Bedding (BreezePlus anti-fur) |
+| `public/rv-truck/index.html` | SEO Landing: RV & Truck Cab bedding |
 | `public/product/[slug]/index.html` | 83 individual product detail pages |
 | `public/mattress-size-th/index.html` | #1 SEO page — fully built with size tables |
 | `public/mattress-size/index.html` | EN size guide page |
@@ -341,7 +339,7 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 ### Backend Workers
 | File | What It Is |
 |---|---|
-| `workers/api/products.ts` | Serves product data + category filtering from D1 |
+| `workers/api/products.ts` | Serves product data from D1 (Phase 5+ runtime use — storefront uses `data/products.json`) |
 | `workers/api/pricing.ts` | Calculates price for Fitted Bed Sheet AND V-Berth modes |
 | `workers/api/geo-currency.ts` | Detects Thai visitors, returns THB prices |
 | `workers/api/subscribe.ts` | Email signup: validation + D1 INSERT OR IGNORE + localized messages |
@@ -761,6 +759,11 @@ Go through this checklist before moving to Phase 5:
 - [x] Cart persists after browser refresh (localStorage)
 - [x] All pages have header and footer from Phase 3
 - [x] Pages look correct on mobile (resize browser to narrow)
+- [x] Product catalog system verified: `data/products.json` exists with all 27 products
+- [x] `node scripts/regenerate-products.js` runs successfully (23 pages, 189 cards)
+- [x] Filter consistency check matches: sheets=9, duvet-covers=6, pillowcases=3, protection=7, accessories=2, marine=7, family=8, pets=8, deep-pocket=7, boarding-dorm=6, rv-truck=8
+- [x] `/pillowcases/` shows only `PILLOWCASES` tag on all cards (no niche tags, no DUVET)
+- [x] Niche pages show `PILLOWCASES` + niche tag on pillowcase cards
 
 ---
 
@@ -781,6 +784,9 @@ Go through this checklist before moving to Phase 5:
 | Size guide page shows wrong title | Tell Droid: "The /mattress-size-th/ page title should say [correct title]." |
 | Fabric tabs not switching | Tell Droid: "Clicking a fabric tab is not switching the content panel." |
 | Mobile layout broken | Tell Droid: "The [section name] section looks broken on mobile — [describe what you see]." |
+| Product catalog out of sync | Run `node scripts/regenerate-products.js` to rebuild all 23 pages from `data/products.json` |
+| Add/edit product | Edit `data/products.json`, then run `node scripts/regenerate-products.js` |
+| Pillowcase shows wrong niche tag | The pillowcase cards on niche pages use `buildEnListingCard(nicheSlug)` — confirm JSON `categories` array is correct for that product | |
 
 ---
 
@@ -1033,3 +1039,153 @@ These wildcards redirect every old WordPress blog post, page, and sub-URL automa
 - On `/products/`: dropdown filters by matching `data-categories` values
 
 **All three components must stay in sync:** If a product is added to `/marine/`, its `data-categories` in `/products/index.html` must include `marine`.
+
+---
+
+## Product Catalog System — JSON-Based Build System (2026-05-18)
+
+### Single Source of Truth: `data/products.json`
+
+All 27 products are defined in **`data/products.json`** — a JSON file that drives every storefront page.
+
+**Why JSON instead of D1 for catalog data:**
+- Static HTML pages load instantly (no Worker API call on page load)
+- Regeneration is deterministic and auditable
+- D1 `products` table exists separately for Phase 5+ order processing
+- Admin dashboard (Phase 7) will read/write the JSON file
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `data/products.json` | **Master product data** — 27 products with slugs, names, prices, categories, images |
+| `data/templates.json` | HTML card templates |
+| `scripts/build-products.js` | Full page generator (initial build) |
+| `scripts/regenerate-products.js` | Incremental updater (run after any JSON change) |
+| `data/HOW_TO_USE.md` | Full documentation for the system |
+
+### Regenerating All Pages
+
+```bash
+node scripts/regenerate-products.js
+```
+
+This updates 23 pages with consistent card tags, `data-categories`, and filter counts — all derived from the JSON `categories[]` array.
+
+### `data/products.json` Structure
+
+```json
+{
+  "products": [
+    {
+      "slug": "family-fitted-sheet",
+      "name": "Family Fitted Sheet",
+      "nameTh": "ผ้าปูครอบครัว Co-Sleep",
+      "categories": ["sheets", "family"],
+      "priceUsd": 45,
+      "priceThb": 1590,
+      "image": "/images/products/family-fitted-sheet/main.jpg",
+      "url": "/product/family-fitted-sheet/",
+      "urlTh": "/th/product/family-fitted-sheet/"
+    }
+  ]
+}
+```
+
+**`categories[]` drives everything:**
+1. `data-categories` attribute on `/products/` cards
+2. Card tags (primary type tag first, niche tags second)
+3. Which niche pages the card appears on
+4. Filter dropdown counts in the consistency check output
+
+### Tag Rules (verified 2026-05-18)
+
+| Page | Tags shown |
+|---|---|
+| `/products/` shop | All tags from `categories[]` — e.g., `PILLOWCASES` + all niche tags |
+| `/pillowcases/` | `PILLOWCASES` only (no niche tags, no DUVET) |
+| `/sheets/` | `SHEETS` + niche tags |
+| `/duvet-covers/` | `DUVET-COVERS` + niche tags |
+| Niche page (`/marine/`, `/family/`, etc.) | Primary type tag + that niche's tag |
+| **No DUVET tag** on pillowcase cards | DUVET = Duvet Cover product type only |
+
+### Filter Consistency Check
+
+The regenerator outputs this after every run:
+
+```
+sheets         → 9 products
+duvet-covers   → 6 products
+pillowcases    → 3 products
+protection     → 7 products
+accessories    → 2 products
+marine         → 7 products
+family         → 8 products
+pets           → 8 products
+deep-pocket    → 7 products
+boarding-dorm  → 6 products
+rv-truck       → 8 products
+```
+
+This confirms all three components (card tags, filter dropdown, `data-categories`) stay in sync.
+
+### Adding a New Product
+
+**Step 1:** Add to `data/products.json`
+
+```json
+{
+  "slug": "my-new-product",
+  "name": "My New Product",
+  "nameTh": "สินค้าใหม่ของฉัน",
+  "categories": ["sheets", "marine", "family"],
+  "priceUsd": 48,
+  "priceThb": 1695,
+  "image": "/images/products/my-new-product/main.jpg",
+  "url": "/product/my-new-product/",
+  "urlTh": "/th/product/my-new-product/"
+}
+```
+
+**Step 2:** Add image at `public/images/products/my-new-product/main.jpg`
+
+**Step 3:** Run:
+```bash
+node scripts/regenerate-products.js
+```
+
+**Result:** Automatically updates:
+- `/products/` → card with `data-categories="sheets,marine,family"` + tags `SHEETS` `MARINE` `FAMILY`
+- `/marine/` → card with tags `SHEETS` `MARINE`
+- `/family/` → card with tags `SHEETS` `FAMILY`
+- `/sheets/` → card with tags `SHEETS` `MARINE` `FAMILY`
+- Filter counts updated in consistency check
+
+### Product Dashboard (Phase 7 — Future)
+
+The admin dashboard will include a **Product Catalog Editor** that reads/writes `data/products.json`:
+
+| Field | Input Type |
+|---|---|
+| Title EN + TH | Text inputs |
+| Description EN + TH | Textarea |
+| Product Type tag | Dropdown (from `types` in JSON) |
+| Niche tags | Multi-select dropdown (from `niches` in JSON) |
+| Images (up to 10) | Drag & drop → R2 CDN |
+| Video | URL input (optional) |
+| Prices | Size × Fabric matrix |
+| Slug | Auto-generated from title, editable |
+| Status | Active / Draft toggle |
+
+The dashboard will regenerate `data/products.json` on save and run `scripts/regenerate-products.js` automatically.
+
+### D1 `products` Table — No Schema Change Needed
+
+The existing D1 `products` table (from Phase 1) stores **catalog metadata for the admin dashboard and Phase 5+ features**. It is NOT the source of truth for storefront pages.
+
+| Table | Purpose | Updated By |
+|---|---|---|
+| D1 `products` | Admin CRUD, Phase 5+ order processing | Phase 7 Admin Dashboard |
+| `data/products.json` | All storefront catalog pages | `scripts/regenerate-products.js` |
+
+No D1 schema change is needed. The JSON file is the build-time source; D1 is the runtime/order database.

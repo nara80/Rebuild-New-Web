@@ -604,5 +604,6 @@ All build steps completed. Phase 4 is done.
 | Fabric Pages | 4-tab showcase with comparison table | ✅ Complete |
 | Redirects | `_redirects` file with WordPress 301s | ✅ Complete |
 - BreezePlus color palette (9 swatches): Dark Grey #4D545B, Silver #B7BEC8, Sand #D9D1C1, Sky #9CCAE1, Emerald #618283, Sea #5A7DA2, Pure White #FFFFFF, Baby Pink #E9B7BF, Ivory #F1EFE1
+- Product Catalog System | `data/products.json` + `scripts/regenerate-products.js` | ✅ Complete
 - If any page shows 404, confirm the folder exists in `public/` (e.g., `public/about/index.html`)
 - If styles look broken, hard-refresh or check that `main.css` loaded in DevTools Network tab

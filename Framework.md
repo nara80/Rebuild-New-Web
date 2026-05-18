@@ -375,7 +375,7 @@ Order stored with quote_id reference + full dimensions
 [PRODUCT GRID]  3-col desktop, 2-col mobile — data pulled from D1
   Card: Image | Title | Price (THB or USD) | "View Options" CTA
 ```
-> Category pages (`/marine/`, `/family/`, `/deep-pocket/`, `/pets/`, `/protection/`, `/rv-truck/`) render the same grid pre-filtered by category. All data is dynamic from D1.
+> Category pages (`/marine/`, `/family/`, `/deep-pocket/`, `/pets/`, `/boarding-dorm/`, `/rv-truck/`) render the same grid pre-filtered by category. **All data is driven from `data/products.json`** via `scripts/regenerate-products.js`. Run the regenerator after any change to the JSON file.
 
 ### 5. Product Detail (`/product/[slug]/`)
 
@@ -642,7 +642,7 @@ mildmate-web/
 │   ├── order-confirmed/index.html
 │   ├── account/index.html          ← My Account (order history, social login)
 │   ├── products/index.html
-│   ├── marine/index.html            ← Category page (dynamic from D1)
+│   ├── marine/index.html            ← Niche landing (from `data/products.json`)
 │   ├── family/index.html
 │   ├── deep-pocket/index.html
 │   ├── boarding-dorm/index.html
@@ -1058,6 +1058,106 @@ Migration `003_seed_products.sql` seeds all 15 products with their tags.
 
 ---
 
+## Product Catalog System (2026-05-18)
+
+### Architecture: JSON as Build-Time Source of Truth
+
+Product data lives in **`data/products.json`** — a single JSON file that drives all static pages.
+
+```
+data/products.json
+       │
+       ├──► scripts/regenerate-products.js
+       │         │
+       │         ├──► public/products/index.html        (EN shop, 27 cards)
+       │         ├──► public/th/products/index.html     (TH shop, 27 cards)
+       │         ├──► public/sheets/index.html          (EN type, 9 cards)
+       │         ├──► public/pillowcases/index.html    (EN type, 3 cards)
+       │         ├──► public/marine/index.html          (EN niche, 7 cards)
+       │         ├──► public/family/index.html         (EN niche, 8 cards)
+       │         └──► ...all type + niche pages (EN + TH)
+```
+
+**D1 `products` table is separate** — it stores orders/custom dimensions from Phase 5+. The JSON drives the storefront catalog pages only.
+
+### JSON Schema (`data/products.json`)
+
+```json
+{
+  "products": [
+    {
+      "slug": "pillowcase-envelope",
+      "name": "Envelope Pillowcase",
+      "nameTh": "ถุงหมอนแบบซอง",
+      "categories": ["pillowcases", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"],
+      "priceUsd": 16,
+      "priceThb": 565,
+      "image": "/images/products/pillowcase-envelope/main.jpg",
+      "url": "/product/pillowcase-envelope/",
+      "urlTh": "/th/product/pillowcase-envelope/"
+    }
+  ]
+}
+```
+
+**`categories[]` array drives everything:**
+- `data-categories` attribute on `/products/` cards
+- Card tags (primary type first, niche tags second)
+- Which niche pages the card appears on
+- Filter dropdown counts
+
+### Tag Rules (verified 2026-05-18)
+
+| Page Type | Tag Rule | Example |
+|---|---|---|
+| `/products/` shop | All tags from `categories[]` | `PILLOWCASES` `MARINE` `FAMILY` `PETS` ... |
+| `/pillowcases/` type page | `PILLOWCASES` only (no niche tags) | `PILLOWCASES` |
+| `/sheets/` type page | `SHEETS` + niche tags | `SHEETS` `MARINE` |
+| Niche page (`/marine/`, `/family/`, etc.) | Primary type + current niche | `PILLOWCASES` `MARINE` |
+| **No DUVET tag** on pillowcase cards | DUVET is for Duvet Cover products only | — |
+
+### Regenerator Command
+
+```bash
+node scripts/regenerate-products.js
+
+# Output:
+# ✅ 23 pages updated, 189 cards generated
+# 🔍 Filter consistency check:
+#   sheets         → 9 products
+#   duvet-covers  → 6 products
+#   pillowcases    → 3 products
+#   protection     → 7 products
+#   accessories   → 2 products
+#   marine        → 7 products
+#   family        → 8 products
+#   pets          → 8 products
+#   deep-pocket   → 7 products
+#   boarding-dorm  → 6 products
+#   rv-truck      → 8 products
+```
+
+### Adding a New Product
+
+1. Add entry to `data/products.json`
+2. Add image to `public/images/products/<slug>/main.jpg`
+3. Run: `node scripts/regenerate-products.js`
+4. All 23 pages auto-update
+
+### Product Dashboard (Phase 7 — Future)
+
+Admin CRUD interface that edits `data/products.json`:
+- Title (EN + TH)
+- Description (EN + TH)
+- Tags: dual dropdown (Product Type + Niche Category) — populated from JSON metadata
+- Images: drag & drop (up to 10 per product) → uploads to R2
+- Video: optional URL field
+- Prices: per Size + Fabric matrix
+
+D1 schema remains unchanged — serves order/custom-dimension storage from Phase 5+.
+
+---
+
 ## Product Detail Page Specification (Phase 4 — Updated 2026-05-15)
 
 Every product detail page (`/product/[slug]/`) uses this layout:
@@ -1174,3 +1274,21 @@ Submit button triggers alert (mock) — real flow: POST to `/api/quote` → admi
 "Add to Cart" button disabled until size selected.
 On click: button text changes to "Added!" with green background for 2 seconds, then reverts.
 Real cart logic stored in `cart.js` localStorage with product details + dimensions.
+
+---
+
+## Updated File Structure (2026-05-18)
+
+New catalog system files added:
+
+```
+├── data/
+│   ├── products.json              ← MASTER PRODUCT DATA (single source of truth)
+│   ├── templates.json             ← HTML card templates
+│   └── HOW_TO_USE.md             ← Catalog system documentation
+├── scripts/
+│   ├── build-products.js          ← Full page generator (initial build)
+│   └── regenerate-products.js     ← Incremental updater (run after JSON changes)
+```
+
+All existing pages remain in `public/`. The regenerator overwrites only the product grid sections in each page — hero, descriptions, footer, and all other content is preserved.
