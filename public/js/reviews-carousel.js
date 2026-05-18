@@ -66,8 +66,17 @@
     track.scrollTo({ left: stride * index, behavior: 'smooth' });
   }
 
-  // Scroll events
-  track.addEventListener('scroll', updateDots, { passive: true });
+  // Scroll events — throttled via rAF to avoid forced reflows
+  var revTicking = false;
+  track.addEventListener('scroll', function () {
+    if (!revTicking) {
+      requestAnimationFrame(function () {
+        updateDots();
+        revTicking = false;
+      });
+      revTicking = true;
+    }
+  }, { passive: true });
 
   // Dot clicks — one dot per card
   dots.forEach((dot, i) => {

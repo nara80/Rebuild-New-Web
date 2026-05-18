@@ -10,11 +10,14 @@
   const mobileOverlay = document.querySelector('.mobile-overlay');
 
   /* ── 1. Sticky header shrink on scroll ───── */
+  var headerTicking = false;
   function onScroll() {
-    if (window.scrollY > 20) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
+    if (!headerTicking) {
+      requestAnimationFrame(function () {
+        header.classList.toggle('scrolled', window.scrollY > 20);
+        headerTicking = false;
+      });
+      headerTicking = true;
     }
   }
 
@@ -159,9 +162,16 @@
     });
   }
 
+  var dotTicking = false;
   if (scrollRow) {
     scrollRow.addEventListener('scroll', function () {
-      window.requestAnimationFrame(updateActiveDot);
+      if (!dotTicking) {
+        requestAnimationFrame(function () {
+          updateActiveDot();
+          dotTicking = false;
+        });
+        dotTicking = true;
+      }
     }, { passive: true });
   }
 
