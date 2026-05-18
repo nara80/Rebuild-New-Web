@@ -998,3 +998,38 @@ These wildcards redirect every old WordPress blog post, page, and sub-URL automa
 `['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/sheets/', '/duvet-covers/', '/pillowcases/', '/protection/', '/accessories/', '/pets/', '/marine/', '/family/', '/deep-pocket/', '/boarding-dorm/', '/rv-truck/', '/shipping/', '/policy/']`
 
 **Internal link fix (2026-05-15):** All 18 TH pages updated — nav links, footer links, hero CTAs changed from EN paths (`/products/`) to TH-prefixed paths (`/th/products/`). From any TH page, clicking nav links stays in TH. Lang toggle switches language correctly via BILINGUAL_PAGES lookup.
+
+### Filtering System — Tag & Category Consistency (2026-05-18)
+
+**Verified working pattern across all three components:**
+
+1. **Product card tags** (`.card-tags` on category/niche listing pages like `/pets/`, `/family/`, `/sheets/`, etc.)
+2. **Filter dropdown** (category selector in `/products/` shop page header)
+3. **`data-categories` attribute** (on `.product-card` articles in `/products/`)
+
+**How they connect:**
+- All three components derive from the SAME `data-categories` attribute on each product card article in `/products/index.html`.
+- Tags on category/niche pages are filtered chips — each chip displays a slug from `data-categories` as uppercase text.
+- The filter dropdown in `/products/` filters the `/products/` grid via JavaScript matching against `data-categories`.
+- A product appears on a category listing page (`/sheets/`, `/pets/`, etc.) when that page's niche slug is present in the product's `data-categories` list.
+
+**Valid tag/category slugs (lowercase, hyphenated):**
+`sheets`, `duvet-covers`, `pillowcases`, `protection`, `accessories`, `family`, `pets`, `marine`, `rv-truck`, `boarding-dorm`, `deep-pocket`, `duvet`
+
+**`data-categories` format:**
+`data-categories="sheets,marine,pets"` — comma-separated slugs, no spaces, first slug = primary type.
+
+**Tag display rules per context (verified 2026-05-18):**
+| Page | Tags shown |
+|---|---|
+| Primary type listing (`/sheets/`, `/duvet-covers/`, etc.) | Product type tag + cross-link niche tags |
+| Niche landing (`/family/`, `/pets/`, `/marine/`, etc.) | Page's own niche tag + any product type tags |
+| `/products/` shop page | All tags matching the card's `data-categories` |
+
+**Example — 3-Sided Zipper Duvet Cover:**
+- `data-categories="duvet-covers,pets,family"` → appears on `/duvet-covers/`, `/pets/`, `/family/`
+- On `/duvet-covers/`: shows `DUVET-COVERS` + `FAMILY` + `PETS` chips
+- On `/pets/`: shows `DUVET-COVERS` + `FAMILY` + `PETS` chips (product is listed here because `pets` matches)
+- On `/products/`: dropdown filters by matching `data-categories` values
+
+**All three components must stay in sync:** If a product is added to `/marine/`, its `data-categories` in `/products/index.html` must include `marine`.

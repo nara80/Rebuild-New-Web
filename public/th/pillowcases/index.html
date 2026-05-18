@@ -3,205 +3,275 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ถุงหมอนมาตรฐานสำหรับ 8 ภูมิภาค พร้อมราคาเฉพาะคิวสำหรับ V-Berth ที่นอนเรือ ที่นอนปรับได้ และทุกรูปแบบพิเศษ">
-  <title>ผ้าปูที่นอนสั่งตัด — MildMate</title>
+  <meta name="description" content="ถุงหมอนแบบซอง ซิป และ Sham ทำจากผ้าคุณภาพ 4 คอลเลกชัน OEKO-TEX รับรอง ขนาดมาตรฐานและสั่งตัดได้">
+  <title>ถุงหมอน — ซอง ซิป และ Sham — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .listing-page { background: #f0f7ff; }
+    .brand-hero { background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%); padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff; }
+    .brand-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px; }
+    .brand-hero-inner { max-width: var(--container-max); margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+    .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
+    .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
+    .listing-section { padding: 48px 0; }
+    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+    .listing-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
+    .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
+    .listing-card:hover .card-image img { transform: scale(1.04); }
+    .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .listing-card .card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; line-height: 1.3; }
+    .listing-card .card-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+    .listing-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
+    .listing-card .card-cta { margin-top: auto; }
+    .listing-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
+    .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
+    .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
+    .listing-card .btn-outline { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+    .listing-card .btn-outline:hover { background: #e8f4fd; }
+    .listing-desc-section { background: #fff; border-top: 1px solid var(--color-border); padding: 56px 0; }
+    .listing-desc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .listing-desc-grid h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: var(--color-text); }
+    .listing-desc-grid p { color: #555; line-height: 1.7; margin-bottom: 16px; }
+    .listing-desc-grid ul { padding-left: 20px; margin-bottom: 24px; }
+    .listing-desc-grid ul li { margin-bottom: 8px; color: #555; }
+    .listing-desc-grid .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .listing-desc-grid .feature-item { background: var(--color-surface); padding: 16px; border-radius: var(--radius); }
+    .listing-desc-grid .feature-item strong { display: block; color: var(--color-text); margin-bottom: 4px; }
+    .listing-desc-grid .feature-item span { font-size: 0.875rem; color: #666; }
+    .pricing-panel { background: var(--color-surface); border-radius: var(--radius); padding: 32px; border: 1px solid var(--color-border); }
+    .pricing-panel h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 24px; color: var(--color-text); }
+    .pricing-panel .form-group { margin-bottom: 20px; }
+    .pricing-panel label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: var(--color-text); }
+    .pricing-panel select { width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; }
+    .pricing-panel select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.15); }
+    .size-guide-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-top: 8px; }
+    .size-guide-link:hover { text-decoration: underline; }
+    .fabric-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .fabric-option { padding: 10px; border: 2px solid var(--color-border); border-radius: var(--radius); cursor: pointer; text-align: center; font-size: 0.875rem; font-weight: 600; transition: all 0.15s; background: #fff; }
+    .fabric-option:hover { border-color: var(--color-primary); }
+    .fabric-option.selected { border-color: var(--color-primary); background: #e8f4fd; color: var(--color-primary); }
+    .fabric-note { font-size: 0.75rem; color: #666; margin-bottom: 16px; }
+    .explore-fabrics-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-bottom: 20px; }
+    .explore-fabrics-link:hover { text-decoration: underline; }
+    .price-display { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+    .price-display .price-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; }
+    .price-display .price-value { font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }
+    .price-display .price-sub { font-size: 0.75rem; color: #999; margin-top: 4px; }
+    .custom-shape-cta { margin-top: 20px; padding: 16px; background: #fff; border: 2px dashed var(--color-border); border-radius: var(--radius); text-align: center; }
+    .custom-shape-cta p { font-size: 0.875rem; color: #666; margin-bottom: 10px; }
+    .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+    .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
+    @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
+    @media (max-width: 480px) { .listing-grid { grid-template-columns: 1fr; } }
+  </style>
 </head>
-<body>
+<body class="listing-page">
 
   <header class="site-header">
     <div class="container header-inner">
       <button class="hamburger" aria-label="เปิดเมนู" aria-expanded="false"><span></span><span></span><span></span></button>
       <a href="/th/" class="logo-link" aria-label="MildMate หน้าแรก"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></a>
-      <nav class="main-nav" aria-label="เมนูหลัก">
-        <ul class="nav-list">
-          <li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li>
-          <li class="nav-item"><a href="/th/products/" class="nav-link">สินค้า</a></li>
-          <li class="nav-item"><a href="/th/fabric/" class="nav-link">เนื้อผ้า</a></li>
-          <li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li>
-        </ul>
-      </nav>
+      <nav class="main-nav" aria-label="เมนูหลัก"><ul class="nav-list"><li class="nav-item"><a href="/th/" class="nav-link">หน้าแรก</a></li><li class="nav-item"><a href="/th/products/" class="nav-link">สินค้า</a></li><li class="nav-item"><a href="/th/fabric/" class="nav-link">เนื้อผ้า</a></li><li class="nav-item"><a href="/th/sizeguide/" class="nav-link">คู่มือขนาด</a></li></ul></nav>
       <div class="header-actions">
-        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        </button>
-        <a href="/account/" class="account-btn" aria-label="บัญชีผู้ใช้">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </a>
-        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          <span class="cart-count">0</span>
-        </a>
-        <div class="lang-toggle" role="group" aria-label="สลับภาษา">
-          <span data-lang="en">EN</span><span>/</span><span data-lang="th" class="active">TH</span>
-        </div>
+        <button class="search-btn" aria-label="ค้นหาสินค้า" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+        <a href="/account/" class="account-btn" aria-label="บัญชีผู้ใช้"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <a href="/checkout/" class="cart-btn" aria-label="ตะกร้าสินค้า"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
+        <div class="lang-toggle" role="group" aria-label="สลับภาษา"><span data-lang="en" onclick="window.location.href='/pillowcases/'">EN</span><span>/</span><span data-lang="th" class="active">TH</span></div>
       </div>
     </div>
     <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="เมนูมือถือ">
-      <div class="mobile-drawer-search">
-        <form action="/th/products/" method="get" class="drawer-search-form">
-          <input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหาสินค้า" autocomplete="off">
-          <button type="submit" aria-label="ส่งการค้นหา">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </form>
-      </div>
-      <ul class="mobile-nav-list">
-        <li><a href="/th/">หน้าแรก</a></li>
-        <li><a href="/th/products/">สินค้า</a></li>
-        <li><a href="/th/fabric/">เนื้อผ้า</a></li>
-        <li><a href="/th/sizeguide/">คู่มือขนาด</a></li>
-      </ul>
-    </div>
-    <div class="search-overlay" aria-hidden="true">
-      <div class="search-overlay-inner">
-        <button class="search-close" aria-label="ปิดการค้นหา">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-        <form action="/th/products/" method="get" class="search-form">
-          <input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off">
-          <button type="submit" aria-label="ส่งการค้นหา">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </button>
-        </form>
-      </div>
-    </div>
+    <div class="mobile-drawer" aria-label="เมนูมือถือ"><div class="mobile-drawer-search"><form action="/th/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/th/">หน้าแรก</a></li><li><a href="/th/products/">สินค้า</a></li><li><a href="/th/fabric/">เนื้อผ้า</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li></ul></div>
+    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="ปิดการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/th/products/" method="get" class="search-form"><input type="search" name="q" placeholder="ค้นหาสินค้า..." aria-label="ค้นหา" autocomplete="off"><button type="submit" aria-label="ส่งการค้นหา"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
   </header>
 
   <main>
     <section class="brand-hero">
-      <div class="container">
-        <h1>ผ้าปูที่นอน</h1>
-        <p class="hero-sub">ไซส์มาตรฐาน 3 รูปแบบซิป ราคาเฉพาะคิวสำหรับหมอนพิเศษและหมอนโดริแมกุระ</p>
+      <div class="brand-hero-inner">
+        <h1>ถุงหมอน</h1>
+        <p class="hero-sub">แบบซอง ซิป และ Sham ครบทั้ง 4 คอลเลกชันผ้า มีตัวเลือก OEKO-TEX ขนาดมาตรฐานและสั่งตัดได้</p>
       </div>
     </section>
 
-    <section class="section">
+    <section class="listing-section">
       <div class="container">
-        <div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:32px; padding:16px; background:var(--color-surface); border-radius:var(--radius);">
-          <div class="filter-group">
-            <label for="filter-fabric" style="font-weight:600; margin-right:8px;">เนื้อผ้า:</label>
-            <select id="filter-fabric" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
-              <option value="all">ทั้งหมด</option>
-              <option value="breezeplus">BreezePlus</option>
-              <option value="cloudsoft">CloudSoft</option>
-              <option value="premacotton">PremaCotton</option>
-              <option value="ecoluxe">EcoLuxe</option>
-            </select>
+        <div class="listing-grid">
+
+          <article class="listing-card" data-categories="pillowcases,duvet">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-envelope/main.jpg" alt="ถุงหมอนแบบซอง" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">PILLOWCASES</span><span class="card-tag">DUVET</span></div>
+              <h3 class="card-title">ถุงหมอนแบบซอง</h3>
+              <div class="card-price">฿565 ขึ้นไป</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/th/product/pillowcase-envelope/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <article class="listing-card" data-categories="pillowcases,duvet">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-zipper/main.jpg" alt="ถุงหมอนซิป" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">PILLOWCASES</span><span class="card-tag">DUVET</span></div>
+              <h3 class="card-title">ถุงหมอนซิป</h3>
+              <div class="card-price">฿635 ขึ้นไป</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/th/product/pillowcase-zipper/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <article class="listing-card" data-categories="pillowcases,duvet">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-sham/main.jpg" alt="ถุงหมอน Sham" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">PILLOWCASES</span><span class="card-tag">DUVET</span></div>
+              <h3 class="card-title">ถุงหมอน Sham</h3>
+              <div class="card-price">฿705 ขึ้นไป</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/th/product/pillowcase-sham/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+          <article class="listing-card" data-categories="protection">
+            <div class="card-image">
+              <img src="/images/products/pillow-protector-general/main.jpg" alt="ผ้าคลุมหมอนกันเปื้อน" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">PROTECTION</span></div>
+              <h3 class="card-title">ผ้าคลุมหมอนกันเปื้อน</h3>
+              <div class="card-price">฿635 ขึ้นไป</div>
+              <div class="card-price-note">ราคาไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/th/product/pillow-protector-general/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="listing-desc-section">
+      <div class="container">
+        <div class="listing-desc-grid">
+          <div>
+            <h2>ถุงหมอน — สไตล์ที่เหมาะกับทุกการนอน</h2>
+            <p>ตั้งแต่แบบซองคลาสสิกไปจนถึงซิปปิดเต็มรูปแบบและ Sham ตกแต่ง — MildMate มีถุงหมอนสำหรับทุกความต้องการ ทั้ง 3 สไตล์ มีให้เลือกทุก 4 คอลเลกชันผ้า</p>
+            <ul>
+              <li>แบบซอง: ปิดแบบคลาสสิก เปลี่ยนง่าย</li>
+              <li>ซิป: ปิดเต็มรูปแบบ เหมาะสำหรับผู้แพ้ภูมิคุ้มกัน</li>
+              <li>Sham: ตกแต่งสไตล์โรงแรม ดูหนานุ่ม</li>
+              <li>ขนาดมาตรฐาน: 50×75cm — เหมาะกับหมอนส่วนใหญ่</li>
+              <li>ขนาดสั่งตัดสำหรับ Dakimakura หมอนลำตัว และหมอนพิเศษ</li>
+              <li>ทั้ง 4 คอลเลกชันผ้า — BreezePlus, CloudSoft, PremaCotton, EcoLuxe</li>
+              <li>OEKO-TEX รับรองบน PremaCotton</li>
+            </ul>
+            <div class="features-grid">
+              <div class="feature-item"><strong>แบบซอง</strong><span>ปิดคลาสสิก เปลี่ยนง่าย</span></div>
+              <div class="feature-item"><strong>แบบซิป</strong><span>ปิดเต็มรูปแบบ กันฝุ่น</span></div>
+              <div class="feature-item"><strong>แบบ Sham</strong><span>สไตล์โรงแรม ดูหนานุ่ม</span></div>
+              <div class="feature-item"><strong>4 ผ้า</strong><span>BreezePlus CloudSoft PremaCotton EcoLuxe</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="pricing-panel">
+              <h3>ขอราคาสั่งตัด</h3>
+              <div class="form-group">
+                <label for="region-select">เลือกภูมิภาค</label>
+                <select id="region-select">
+                  <option value="">— เลือกประเทศของคุณ —</option>
+                  <option value="th">🇹🇭 ไทย</option>
+                  <option value="us">🇺🇸 สหรัฐอเมริกา / แคนาดา</option>
+                  <option value="uk">🇬🇧 สหราชอาณาจักร</option>
+                  <option value="eu">🇪🇺 ยุโรป</option>
+                  <option value="au">🇦🇺 ออสเตรเลีย</option>
+                  <option value="my">🇲🇾🇸🇬 มาเลเซีย / สิงคโปร์</option>
+                  <option value="in">🇮🇳 อินเดีย</option>
+                  <option value="jp">🇯🇵 ญี่ปุ่น</option>
+                  <option value="custom">🌍 กำหนดเอง / อื่นๆ</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="size-select">ขนาดหมอนมาตรฐาน</label>
+                <select id="size-select" disabled><option value="">— เลือกภูมิภาคก่อน —</option></select>
+                <a href="/th/sizeguide/" class="size-guide-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/></svg>ดูคู่มือขนาด</a>
+              </div>
+              <div class="form-group">
+                <label>คอลเลกชันผ้า</label>
+                <a href="/th/fabric/" class="explore-fabrics-link"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>สำรวจคอลเลกชันผ้า →</a>
+                <div class="fabric-options">
+                  <button type="button" class="fabric-option" data-fabric="BreezePlus">BreezePlus</button>
+                  <button type="button" class="fabric-option" data-fabric="CloudSoft">CloudSoft</button>
+                  <button type="button" class="fabric-option" data-fabric="PremaCotton">PremaCotton</button>
+                  <button type="button" class="fabric-option" data-fabric="EcoLuxe">EcoLuxe</button>
+                </div>
+              </div>
+              <div class="price-display">
+                <div class="price-label">ราคาโดยประมาณ ขึ้นจาก</div>
+                <div class="price-value" id="estimated-price">—</div>
+                <div class="price-sub">ราคาไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              </div>
+              <div class="custom-shape-cta">
+                <p>ต้องการขนาดหรือรูปร่างกำหนดเอง?</p>
+                <a href="/th/custom-measurement/" class="btn-outline">วัดขนาดของคุณ →</a>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;">
-          <article class="product-card">
-            <div class="product-image">
-              <img src="/images/products/marine-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="800" height="800" loading="lazy" decoding="async">
-            </div>
-            <div class="product-info">
-              <h3 class="product-title">Marine Fitted Sheet</h3>
-              <div class="product-price" data-usd="55" data-thb="1945">฿1,945</div>
-              <a href="/product/boat-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
-            </div>
-          </article>
-          <article class="product-card">
-            <div class="product-image">
-              <img src="/images/products/family-fitted-sheet/main-th.jpg" alt="Custom Family Fitted Sheet" width="800" height="800" loading="lazy" decoding="async">
-            </div>
-            <div class="product-info">
-              <h3 class="product-title">Custom Family Fitted Sheet</h3>
-              <div class="product-price" data-usd="45" data-thb="1590">฿1,590</div>
-              <a href="/product/family-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
-            </div>
-          </article>
-          <article class="product-card">
-            <div class="product-image">
-              <img src="/images/products/pet-owner-fitted-sheet/main.jpg" alt="Pet Owner Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="product-info">
-              <h3 class="product-title">Pet Owner Fitted Sheet</h3>
-              <div class="product-price" data-usd="48" data-thb="1695">฿1,695</div>
-              <a href="/product/pet-owner-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
-            </div>
-          </article>
-          <article class="product-card">
-            <div class="product-image">
-              <img src="/images/products/deep-pocket-fitted-sheet/main.jpg" alt="Deep Pocket Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
-            </div>
-            <div class="product-info">
-              <h3 class="product-title">Deep Pocket Fitted Sheet</h3>
-              <div class="product-price" data-usd="42" data-thb="1485">฿1,485</div>
-              <a href="/product/deep-pocket-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
-            </div>
-          </article>
-        </div>
-
-        
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-col">
-          <h3>ลิงก์ด่วน</h3>
-          <ul>
-            <li><a href="/th/about/">เกี่ยวกับเรา</a></li>
-            <li><a href="/th/contact/">ติดต่อเรา</a></li>
-            <li><a href="/th/reviews/">รีวิว</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3>บริการลูกค้า</h3>
-          <ul>
-            <li><a href="/th/faq/">คำถามที่พบบ่อย</a></li>
-            <li><a href="/th/sizeguide/">คู่มือขนาด</a></li>
-            <li><a href="/th/blogs/">บล็อก</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3>สั่งซื้อผ่าน</h3>
-          <div class="footer-icons-grid">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a>
-            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a>
-            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a>
-          </div>
-        </div>
-        <div class="footer-col">
-          <h3>ติดต่อ</h3>
-          <ul>
-            <li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li>
-            <li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li>
-          </ul>
-          <div class="footer-icons-grid contact-icons">
-            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a>
-            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a>
-          </div>
-        </div>
-      </div>
-      <div class="footer-social-center">
-        <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a>
-        <a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a>
-        <a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a>
-        <a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a>
-        <a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; MildMate 2026</p>
-        <div class="footer-bottom-links">
-          <a href="/th/policy/">นโยบายความเป็นส่วนตัว</a>
-          <a href="/th/shipping/">การส่งมอบและคืนสินค้า</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+  <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>ลิงก์ด่วน</h3><ul><li><a href="/th/about/">เกี่ยวกับเรา</a></li><li><a href="/th/contact/">ติดต่อเรา</a></li><li><a href="/th/reviews/">รีวิว</a></li></ul></div><div class="footer-col"><h3>บริการลูกค้า</h3><ul><li><a href="/th/faq/">คำถามที่พบบ่อย</a></li><li><a href="/th/sizeguide/">คู่มือขนาด</a></li><li><a href="/th/blogs/">บล็อก</a></li></ul></div><div class="footer-col"><h3>สั่งซื้อผ่าน</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>ติดต่อ</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/th/policy/">นโยบายความเป็นส่วนตัว</a><a href="/th/shipping/">การส่งมอบและคืนสินค้า</a></div></div></div></footer>
 
   <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
+  <script>
+    const SIZES_BY_REGION = {
+      th: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'King 50×90cm', price: 850 }, { label: 'หมอนลำตัว 50×150cm', price: 1235 }, { label: 'Dakimakura 50×160cm', price: 1345 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      us: [{ label: 'มาตรฐาน 50×75cm / 20×30นิ้ว', price: 565 }, { label: 'King 51×91cm / 20×36นิ้ว', price: 850 }, { label: 'หมอนลำตัว 51×152cm / 20×60นิ้ว', price: 1235 }, { label: 'Dakimakura 50×160cm', price: 1345 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      uk: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'King 50×90cm', price: 850 }, { label: 'หมอนลำตัว 50×150cm', price: 1235 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      eu: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'King 50×90cm', price: 850 }, { label: 'หมอนลำตัว 50×150cm', price: 1235 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      au: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'King 50×90cm', price: 850 }, { label: 'หมอนลำตัว 50×150cm', price: 1235 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      my: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'King 50×90cm', price: 850 }, { label: 'หมอนลำตัว 50×150cm', price: 1235 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      in: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'King 51×91cm', price: 850 }, { label: 'หมอนลำตัว 51×152cm', price: 1235 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      jp: [{ label: 'มาตรฐาน 50×75cm', price: 565 }, { label: 'Semi-Double 50×120cm', price: 990 }, { label: 'Queen 50×150cm', price: 1130 }, { label: 'Dakimakura 50×160cm', price: 1345 }, { label: 'ขนาดกำหนดเอง →', price: 'custom' }],
+      custom: [{ label: 'รูปร่างกำหนดเอง →', price: 'custom' }]
+    };
+    const FABRIC_PRICES = { BreezePlus: 0, CloudSoft: -175, PremaCotton: 350, EcoLuxe: 175 };
+    let selectedRegion = '', selectedSize = '', selectedFabric = 'BreezePlus';
+    const regionSelect = document.getElementById('region-select');
+    const sizeSelect = document.getElementById('size-select');
+    const priceEl = document.getElementById('estimated-price');
+    function updatePrice() {
+      let base = 0;
+      if (selectedRegion && selectedSize) {
+        const opt = (SIZES_BY_REGION[selectedRegion] || []).find(s => s.label === selectedSize);
+        if (opt) base = opt.price === 'custom' ? 0 : opt.price;
+      }
+      const total = base + (FABRIC_PRICES[selectedFabric] || 0);
+      if (selectedRegion === 'custom' || selectedSize === 'ขนาดกำหนดเอง →') { priceEl.textContent = 'ราคาเฉพาะคิว'; }
+      else if (total > 0) { priceEl.textContent = '฿' + total.toLocaleString(); }
+      else { priceEl.textContent = '—'; }
+    }
+    regionSelect.addEventListener('change', () => {
+      selectedRegion = regionSelect.value; selectedSize = '';
+      if (selectedRegion) { sizeSelect.disabled = false; sizeSelect.innerHTML = '<option value="">— เลือกขนาด —</option>' + (SIZES_BY_REGION[selectedRegion] || []).map(s => `<option value="${s.label}">${s.label}</option>`).join(''); }
+      else { sizeSelect.disabled = true; sizeSelect.innerHTML = '<option value="">— เลือกภูมิภาคก่อน —</option>'; }
+      updatePrice();
+    });
+    sizeSelect.addEventListener('change', () => { selectedSize = sizeSelect.value; updatePrice(); });
+    document.querySelectorAll('.fabric-option').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.fabric-option').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedFabric = btn.dataset.fabric; updatePrice(); }); });
+    document.querySelector('[data-fabric="BreezePlus"]').classList.add('selected');
+  </script>
 </body>
 </html>

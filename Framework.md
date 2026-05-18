@@ -985,7 +985,28 @@ Each card contains:
 - `.card-image` with `img` (4:3 aspect ratio) + optional `.card-video-badge`
 - `.card-body` with `.card-tags`, `.card-title`, `.card-price`, `.card-price-note`, `.card-cta`
 
-**`.card-tags`** — comma-separated cross-sell category tags stored in D1 `products.tags` field (e.g., `"Family, Duvet, Marine, Pets"`). Rendered as `.card-tag` pills.
+- `.card-tags` — chip pills. Each chip is an `<span class="card-tag">{SLUG}</span>` inside `<div class="card-tags">`.
+
+**How card-tags work (verified 2026-05-18):**
+- Tags are HTML chip pills rendered from `/products/index.html` `data-categories` attribute, NOT from D1.
+- Each chip displays an ALL-CAPS slug from the `data-categories` attribute on the product card article.
+- ALL tags must be UPPERCASE slugs.
+- Valid tag slugs: `SHEETS`, `DUVET-COVERS`, `PILLOWCASES`, `PROTECTION`, `ACCESSORIES`, `FAMILY`, `PETS`, `MARINE`, `RV-TRUCK`, `BOARDING-DORM`, `DEEP-POCKET`
+- Product type tags (`SHEETS`, `PILLOWCASES`, etc.) are rendered when the product's `data-categories` includes that slug.
+- Niche tags (`FAMILY`, `PETS`, `MARINE`, etc.) are rendered when the product's `data-categories` includes that niche slug.
+
+**Tag display rules per listing context (verified 2026-05-18):**
+- Primary product-type listing page (`/sheets/`, `/duvet-covers/`, `/protection/`, etc.): Shows the product's primary type tag + any cross-link niche tags it belongs to.
+- Niche landing page (`/family/`, `/pets/`, `/marine/`, etc.): Shows the page's own niche tag + any product-type tags.
+- The 3 tag layers must stay in sync: card-tags chips on listing pages must match `data-categories` in `/products/index.html`.
+
+**Filter dropdown in `/products/index.html` (2026-05-18):**
+- Value = slug matches `data-categories` attribute on `.product-card` articles.
+- EN dropdown values: `sheets`, `duvet-covers`, `pillowcases`, `protection`, `accessories`, `marine`, `family`, `pets`, `deep-pocket`, `boarding-dorm`, `rv-truck`
+- TH dropdown adds `/th/` prefix to each href.
+- Tag format: `data-categories="sheets,marine,pets"` (comma-separated slugs, no spaces.
+- Product type slug (first in list) = the primary category the product belongs to.
+- A product appears on ALL category listing pages whose slug matches any value in its `data-categories` attribute.
 
 **Video badge** (`card-video-badge`): used for measurement guide cards (links to `/custom-measurement/`). Contains inline SVG play icon + "VIDEO" text.
 
@@ -1030,8 +1051,8 @@ ALTER TABLE products ADD COLUMN tags TEXT DEFAULT '';
 Tags format: comma-separated cross-sell category names.
 Example: `"Family, Duvet, Marine, Pets"` for 3-Sided Zipper Duvet Cover.
 
-Available cross-sell tags:
-`Fitted Sheets | Flat Sheets | Duvet | Marine | Family | Pets | Protection | RV-Truck | Pillowcases | Mattress Protectors`
+Tags are driven by the `data-categories` attribute on each product article in `/products/index.html`, NOT a D1 column.
+Valid tag slugs: `sheets`, `duvet-covers`, `pillowcases`, `protection`, `accessories`, `family`, `pets`, `marine`, `rv-truck`, `boarding-dorm`, `deep-pocket`, `duvet`
 
 Migration `003_seed_products.sql` seeds all 15 products with their tags.
 
