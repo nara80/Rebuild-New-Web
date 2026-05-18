@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    /* ─── Page Layout ─────────────────────────── */
+    /* âââ Page Layout âââââââââââââââââââââââââââ */
     .product-page { background: #f0f7ff; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
     .product-gallery { position: sticky; top: 90px; }
@@ -23,7 +23,7 @@
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gallery-thumb.video-thumb { display: flex; align-items: center; justify-content: center; background: #1a1a2e; }
     .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
-    /* ─── Right: Product Info ───────────────────── */
+    /* âââ Right: Product Info âââââââââââââââââââââ */
     .product-info {}
     .product-breadcrumb { font-size: 0.8125rem; color: #888; margin-bottom: 16px; }
     .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
@@ -35,7 +35,7 @@
     .rating-text { font-size: 0.875rem; color: #555; }
     .rating-text strong { color: var(--color-primary); cursor: pointer; }
     .rating-text strong:hover { text-decoration: underline; }
-    /* ─── Pricing Panel ─────────────────────────── */
+    /* âââ Pricing Panel âââââââââââââââââââââââââââ */
     .pricing-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
     .panel-section { margin-bottom: 20px; }
     .panel-section:last-child { margin-bottom: 0; }
@@ -71,11 +71,11 @@
     .btn-custom-quote:hover { background: #e8f4fd; }
     .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #888; }
     .payment-badge { display: flex; align-items: center; gap: 4px; }
-    /* ─── Trust Signals ────────────────────────── */
+    /* âââ Trust Signals ââââââââââââââââââââââââââ */
     .trust-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
     .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #555; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
-    /* ─── Custom Dimensions Toggle ─────────────── */
+    /* âââ Custom Dimensions Toggle âââââââââââââââ */
     .custom-toggle { margin-top: 16px; text-align: center; }
     .custom-toggle button { background: none; border: none; font-size: 0.875rem; color: var(--color-primary); cursor: pointer; font-weight: 600; font-family: var(--font-main); text-decoration: underline; }
     .custom-toggle button:hover { color: var(--color-primary-dark); }
@@ -91,7 +91,7 @@
     .unit-btn.active { background: var(--color-primary); color: #fff; }
     .custom-quote-btn { width: 100%; padding: 14px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .custom-quote-btn:hover { background: var(--color-primary-dark); }
-    /* ─── Accordion Tabs ───────────────────────── */
+    /* âââ Accordion Tabs âââââââââââââââââââââââââ */
     .product-tabs { margin-top: 40px; }
     .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
     .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
@@ -103,7 +103,7 @@
     .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
-    /* ─── Reviews Section ───────────────────────── */
+    /* âââ Reviews Section âââââââââââââââââââââââââ */
     .reviews-section { margin-top: 48px; }
     .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
@@ -121,7 +121,7 @@
     .review-stars { color: #f59e0b; font-size: 0.875rem; }
     .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
     .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
-    /* ─── Related Products ──────────────────────── */
+    /* âââ Related Products ââââââââââââââââââââââââ */
     .related-section { margin-top: 64px; }
     .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
     .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -133,7 +133,7 @@
     .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
     .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
-    /* ─── Responsive ────────────────────────────── */
+    /* âââ Responsive ââââââââââââââââââââââââââââââ */
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } .reviews-header { flex-direction: column; align-items: start; } }
     @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
@@ -192,8 +192,8 @@
         <p class="product-tagline">Waterproof TPU barrier with custom skirt depth  -  built to stay put when your pets jump on and off the bed.</p>
 
         <div class="product-rating">
-          <span class="stars">★★★★★</span>
-          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
+          <span class="stars">âââââ</span>
+          <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
         </div>
 
         <div class="pricing-panel">
@@ -201,47 +201,47 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn selected" data-region="us">🇺🇸 US</button>
-              <button class="region-btn" data-region="uk">🇬🇧 UK</button>
-              <button class="region-btn" data-region="eu">🇪🇺 EU</button>
-              <button class="region-btn" data-region="au">🇦🇺 AU</button>
-              <button class="region-btn" data-region="th">🇹🇭 TH</button>
-              <button class="region-btn" data-region="my">🇲🇾 SG/MY</button>
-              <button class="region-btn" data-region="jp">🇯🇵 JP</button>
-              <button class="region-btn" data-region="other">🌍 Other</button>
+              <button class="region-btn selected" data-region="us">ðºð¸ US</button>
+              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
+              <button class="region-btn" data-region="eu">ðªðº EU</button>
+              <button class="region-btn" data-region="au">ð¦ðº AU</button>
+              <button class="region-btn" data-region="th">ð¹ð­ TH</button>
+              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
+              <button class="region-btn" data-region="other">ð Other</button>
             </div>
           </div>
 
-          <!-- Step 2: Size (mattress protector: W × L × D) -->
+          <!-- Step 2: Size (mattress protector: W Ã L Ã D) -->
           <div class="panel-section">
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="🇺🇸 US / Canada">
-                <option value="99x191x30" data-price="1695">Twin  -  99×191×30cm (39×75×12in)</option>
-                <option value="137x191x30" data-price="1895">Full  -  137×191×30cm (54×75×12in)</option>
-                <option value="153x203x30" data-price="2095">Queen  -  153×203×30cm (60×80×12in)</option>
+              <optgroup label="ðºð¸ US / Canada">
+                <option value="99x191x30" data-price="1695">Twin  -  99Ã191Ã30cm (39Ã75Ã12in)</option>
+                <option value="137x191x30" data-price="1895">Full  -  137Ã191Ã30cm (54Ã75Ã12in)</option>
+                <option value="153x203x30" data-price="2095">Queen  -  153Ã203Ã30cm (60Ã80Ã12in)</option>
               </optgroup>
-              <optgroup label="🇬🇧 UK">
-                <option value="90x190x30" data-price="1645">Single  -  90×190×30cm</option>
-                <option value="135x190x30" data-price="1895">Double  -  135×190×30cm</option>
-                <option value="150x200x30" data-price="2095">King  -  150×200×30cm</option>
+              <optgroup label="ð¬ð§ UK">
+                <option value="90x190x30" data-price="1645">Single  -  90Ã190Ã30cm</option>
+                <option value="135x190x30" data-price="1895">Double  -  135Ã190Ã30cm</option>
+                <option value="150x200x30" data-price="2095">King  -  150Ã200Ã30cm</option>
               </optgroup>
-              <optgroup label="🇪🇺 EU">
-                <option value="90x200x30" data-price="1695">Single  -  90×200×30cm</option>
-                <option value="140x200x30" data-price="1895">Double  -  140×200×30cm</option>
-                <option value="160x200x30" data-price="2095">King  -  160×200×30cm</option>
+              <optgroup label="ðªðº EU">
+                <option value="90x200x30" data-price="1695">Single  -  90Ã200Ã30cm</option>
+                <option value="140x200x30" data-price="1895">Double  -  140Ã200Ã30cm</option>
+                <option value="160x200x30" data-price="2095">King  -  160Ã200Ã30cm</option>
               </optgroup>
-              <optgroup label="🇹🇭 Thailand">
-                <option value="107x191x30" data-price="1695">3.5ft  -  107×191×30cm</option>
-                <option value="120x200x30" data-price="1895">6ft Queen  -  120×200×30cm</option>
-                <option value="152x198x30" data-price="2095">King  -  152×198×30cm</option>
+              <optgroup label="ð¹ð­ Thailand">
+                <option value="107x191x30" data-price="1695">3.5ft  -  107Ã191Ã30cm</option>
+                <option value="120x200x30" data-price="1895">6ft Queen  -  120Ã200Ã30cm</option>
+                <option value="152x198x30" data-price="2095">King  -  152Ã198Ã30cm</option>
               </optgroup>
               <optgroup label="Custom Size">
-                <option value="custom">Custom dimensions →</option>
+                <option value="custom">Custom dimensions â</option>
               </optgroup>
             </select>
-            <div class="size-hint">Depth (pocket) defaults to 30cm  -  <a href="/sizeguide/">view size guide →</a></div>
+            <div class="size-hint">Depth (pocket) defaults to 30cm  -  <a href="/sizeguide/">view size guide â</a></div>
           </div>
 
           <!-- Step 3: Fabric (TPU + BreezePlus) -->
@@ -270,7 +270,7 @@
           <div class="price-block">
             <div class="price-row">
               <span class="price-label">Price</span>
-              <span class="price-value" id="price-display">฿1,695</span>
+              <span class="price-value" id="price-display">USD  1,695</span>
             </div>
             <div class="price-sub">Excludes shipping & import tariff</div>
           </div>
@@ -311,7 +311,7 @@
               <span class="price-label">Estimated price</span>
               <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote →</button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote â</button>
           </div>
 
           <div class="payment-badges">
@@ -359,26 +359,26 @@
             <li>TPU inner  -  100% waterproof, quiet, skin-safe</li>
             <li>BreezePlus outer  -  breathable, pet hair resistant</li>
             <li>OEKO-TEX certified  -  no toxic chemicals</li>
-            <li>Machine washable at 60°C</li>
+            <li>Machine washable at 60Â°C</li>
           </ul>
-          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections →</a></p>
+          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections â</a></p>
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Mattress Protectors</h3>
-          <p>Measure your mattress width × length × depth (including any mattress topper). The protector skirt should match your mattress depth closely  -  our standard is 30cm but you can specify a custom depth for thicker mattresses.</p>
+          <p>Measure your mattress width Ã length Ã depth (including any mattress topper). The protector skirt should match your mattress depth closely  -  our standard is 30cm but you can specify a custom depth for thicker mattresses.</p>
           <p>Select your region above to see standard sizes. For custom dimensions  -  including split-king or non-standard shapes  -  use the "Custom Size" option.</p>
-          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide →</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
+          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
           <h3>Care Instructions</h3>
           <ul>
-            <li>Machine wash warm (40°C / 104°F)  -  gentle cycle</li>
+            <li>Machine wash warm (40Â°C / 104Â°F)  -  gentle cycle</li>
             <li>Do not bleach  -  mild detergent only</li>
             <li>Tumble dry low or hang dry</li>
             <li>Do not iron the TPU layer</li>
             <li>Wash at least once per month to maintain hygiene</li>
           </ul>
-          <p>TPU is durable and maintains its waterproof properties through 100+ wash cycles at 60°C.</p>
+          <p>TPU is durable and maintains its waterproof properties through 100+ wash cycles at 60Â°C.</p>
         </div>
       </div>
     </div>
@@ -392,7 +392,7 @@
         <div class="reviews-summary">
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars">★★★★★</div>
+            <div class="summary-stars">âââââ</div>
             <div class="summary-text">Based on 2 verified reviews</div>
           </div>
         </div>
@@ -404,10 +404,10 @@
                 <div class="review-name">Tariq</div>
                 <div class="review-country">Canada</div>
               </div>
-              <div class="review-stars">★★★★★</div>
+              <div class="review-stars">âââââ</div>
             </div>
             <div class="review-text">"Works exactly as described. Our golden retriever had an accident and the mattress stayed completely dry. Easy to put on and the elastic keeps it in place even with the dog jumping on and off."</div>
-            <div class="review-product">Verified purchase: Pet-Proof Mattress Protector · Queen / BreezePlus Sky</div>
+            <div class="review-product">Verified purchase: Pet-Proof Mattress Protector Â· Queen / BreezePlus Sky</div>
           </div>
           <div class="review-card">
             <div class="review-header">
@@ -416,10 +416,10 @@
                 <div class="review-name">Jessica M.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">★★★★★</div>
+              <div class="review-stars">âââââ</div>
             </div>
             <div class="review-text">"Bought this after our old mattress protector tore. The TPU layer is completely waterproof and the BreezePlus outer looks and feels quality. Fits our queen mattress perfectly."</div>
-            <div class="review-product">Verified purchase: Pet-Proof Mattress Protector · Queen / BreezePlus Sand</div>
+            <div class="review-product">Verified purchase: Pet-Proof Mattress Protector Â· Queen / BreezePlus Sand</div>
           </div>
         </div>
       </div>
@@ -434,23 +434,23 @@
             <div class="card-image"><img src="/images/products/pet-owner-duvet-cover/main.jpg" alt="Pet Owner Duvet Cover" width="400" height="300" loading="lazy"></div>
             <div class="card-body">
               <div class="card-title">Pet Owner Duvet Cover</div>
-              <div class="card-price">From ฿2,400</div>
-              <div class="card-price-note">BreezePlus · 3-sided zipper</div>
+              <div class="card-price">From USD  2,400</div>
+              <div class="card-price-note">BreezePlus Â· 3-sided zipper</div>
             </div>
           </a>
           <a href="/product/pet-owner-fitted-sheet/" class="related-card">
             <div class="card-image"><img src="/images/products/pet-owner-fitted-sheet/main.jpg" alt="Pet Owner Fitted Sheet" width="400" height="300" loading="lazy"></div>
             <div class="card-body">
               <div class="card-title">Pet Owner Fitted Sheet</div>
-              <div class="card-price">From ฿1,695</div>
-              <div class="card-price-note">BreezePlus · anti-fur</div>
+              <div class="card-price">From USD  1,695</div>
+              <div class="card-price-note">BreezePlus Â· anti-fur</div>
             </div>
           </a>
           <a href="/product/pillow-protector-general/" class="related-card">
             <div class="card-image"><img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy"></div>
             <div class="card-body">
               <div class="card-title">Pillow Protector</div>
-              <div class="card-price">฿635</div>
+              <div class="card-price">USD  635</div>
               <div class="card-price-note">TPU waterproof liner</div>
             </div>
           </a>
@@ -458,8 +458,8 @@
             <div class="card-image"><img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy"></div>
             <div class="card-body">
               <div class="card-title">3-Sided Zipper Duvet Cover</div>
-              <div class="card-price">From ฿2,295</div>
-              <div class="card-price-note">BreezePlus · easy laundry</div>
+              <div class="card-price">From USD  2,295</div>
+              <div class="card-price-note">BreezePlus Â· easy laundry</div>
             </div>
           </a>
         </div>
@@ -508,10 +508,10 @@
     });
 
     const SIZES_BY_REGION = {
-      us: { '99x191x30': { label: 'Twin  -  99×191×30cm', price: 1695 }, '137x191x30': { label: 'Full  -  137×191×30cm', price: 1895 }, '153x203x30': { label: 'Queen  -  153×203×30cm', price: 2095 } },
-      uk: { '90x190x30': { label: 'Single  -  90×190×30cm', price: 1645 }, '135x190x30': { label: 'Double  -  135×190×30cm', price: 1895 }, '150x200x30': { label: 'King  -  150×200×30cm', price: 2095 } },
-      eu: { '90x200x30': { label: 'Single  -  90×200×30cm', price: 1695 }, '140x200x30': { label: 'Double  -  140×200×30cm', price: 1895 }, '160x200x30': { label: 'King  -  160×200×30cm', price: 2095 } },
-      th: { '107x191x30': { label: '3.5ft  -  107×191×30cm', price: 1695 }, '120x200x30': { label: '6ft Queen  -  120×200×30cm', price: 1895 }, '152x198x30': { label: 'King  -  152×198×30cm', price: 2095 } }
+      us: { '99x191x30': { label: 'Twin  -  99Ã191Ã30cm', price: 1695 }, '137x191x30': { label: 'Full  -  137Ã191Ã30cm', price: 1895 }, '153x203x30': { label: 'Queen  -  153Ã203Ã30cm', price: 2095 } },
+      uk: { '90x190x30': { label: 'Single  -  90Ã190Ã30cm', price: 1645 }, '135x190x30': { label: 'Double  -  135Ã190Ã30cm', price: 1895 }, '150x200x30': { label: 'King  -  150Ã200Ã30cm', price: 2095 } },
+      eu: { '90x200x30': { label: 'Single  -  90Ã200Ã30cm', price: 1695 }, '140x200x30': { label: 'Double  -  140Ã200Ã30cm', price: 1895 }, '160x200x30': { label: 'King  -  160Ã200Ã30cm', price: 2095 } },
+      th: { '107x191x30': { label: '3.5ft  -  107Ã191Ã30cm', price: 1695 }, '120x200x30': { label: '6ft Queen  -  120Ã200Ã30cm', price: 1895 }, '152x198x30': { label: 'King  -  152Ã198Ã30cm', price: 2095 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {
