@@ -1189,3 +1189,28 @@ The existing D1 `products` table (from Phase 1) stores **catalog metadata for th
 | `data/products.json` | All storefront catalog pages | `scripts/regenerate-products.js` |
 
 No D1 schema change is needed. The JSON file is the build-time source; D1 is the runtime/order database.
+
+---
+
+### Additional Updates (2026-05-18)
+
+**JSON-driven product catalog system:**
+- `data/products.json` — 27 products defined as single source of truth
+- `scripts/regenerate-products.js` — regenerates 23 catalog pages (EN + TH type/niche listings)
+- All product cards use clickable `<a>` tag links for tags — links to type and niche listing pages
+- Type pages show only primary type tag (no niche tags); niche pages show primary type + current niche
+- Price display changed from `$XX` to `USD XX` across all pages
+
+**Global reach updates:**
+- About page Global Reach section updated with real customer cities: North America (Alaska, Florida, Arizona, Alberta, Vancouver), Europe (London, Highland Council, Berlin, Dubai, Amsterdam), Asia-Pacific (Seoul added)
+
+**Performance optimizations:**
+- WebP images generated for hero, logo, and all 11 category thumbnails (avg 42% size reduction, logo 87% reduction)
+- Hero + category images use `<picture>` with WebP source + JPG fallback
+- Logo WebP across all 107 HTML pages
+- `main.css` minified → `main.min.css` (55KB → 39.7KB, -28%)
+- 16.6KB critical CSS inlined in `<head>` across all pages
+- Non-critical CSS deferred via `<link rel="preload" onload="this.rel='stylesheet'">` pattern
+- `nav.js` scroll handler: rAF throttling to eliminate forced DOM reflows (was 2,183ms)
+- `reviews-carousel.js` scroll handler: rAF throttling
+- `scripts/convert-webp.js` — reusable WebP conversion script

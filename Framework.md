@@ -8,6 +8,7 @@
 - **Email:** MailChannels (free, built into Workers — no signup needed)
 - **Payments:** Stripe (USD + PromptPay THB natively)
 - **Admin auth:** Cloudflare Access (Google login)
+- **Parcel tracking:** AfterShip (FedEx, UPS, DHL, Thai Post + 100+ carriers) — tracking page at `/track/[tracking]` via AfterShip embedded widget or API
 
 ---
 
@@ -58,7 +59,8 @@
 | Customer Reviews | `/reviews/` | Curated reviews + rating badge |
 | Checkout | `/checkout/` | 3-step guest checkout (guest or logged-in) |
 | Order Confirmed | `/order-confirmed/` | Post-payment confirmation |
-| My Account | `/account/` | Order history, saved addresses, social login |
+| My Account | `/account/` | Order history, saved addresses, parcel tracking (AfterShip), social login |
+| Parcel Tracking | `/track/[tracking]/` | AfterShip embedded widget — FedEx, UPS, DHL, Thai Post + 100+ carriers auto-detected |
 | All 258 WordPress URLs | various | Preserved from Phase 2 |
 
 ### Blog Pages (static HTML, managed manually)
@@ -808,6 +810,8 @@ CREATE TABLE orders (
   payment_id TEXT,                -- Stripe session ID
   payment_status TEXT DEFAULT 'pending',
   order_status TEXT DEFAULT 'pending',    -- 'pending' | 'in-production' | 'shipped' | 'cancelled'
+  tracking_number TEXT,           -- AfterShip / carrier tracking ID (FedEx, UPS, DHL, Thai Post)
+  carrier TEXT,                   -- Carrier slug: 'fedex' | 'ups' | 'dhl' | 'thaipost' | 'other'
   created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -866,10 +870,10 @@ CREATE TABLE customers (
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
 | **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` | ⏸️ Deferred — runs pre-launch after Phase 7 |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint | ✅ Complete |
-| **5** | Checkout + Stripe + Social Login | Guest checkout + Stripe payments + optional social login (Google, Facebook, LINE, Apple) + My Account page | ⏸️ Pending |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling | ✅ Complete |
+| **5** | Checkout + Stripe + Social Login | Guest checkout + Stripe payments + optional social login (Google, Facebook, LINE, Apple) + My Account page with AfterShip parcel tracking | ⏸️ Pending |
 | **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels | ⏸️ Pending |
-| **7** | Admin Dashboard | Orders (V-Berth fields visible), product CRUD, R2 uploader, CSV export | ⏸️ Pending |
+| **7** | Admin Dashboard | Orders (V-Berth fields + tracking_number + carrier), AfterShip tracking display, product CRUD, R2 uploader, CSV export | ⏸️ Pending |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏸️ Pending |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook | ⏸️ Pending |

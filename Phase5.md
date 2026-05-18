@@ -1,5 +1,5 @@
 # Phase 5 — Checkout + Stripe Payments + Social Login
-**Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase. Thai visitors pay via PromptPay QR code. International visitors pay by card, Apple Pay, or Google Pay. Every successful payment automatically saves the order to your database and sends confirmation emails. Customers can check out as guests or log in via social accounts (Google, Facebook, LINE, Apple) to save their order history and shipping addresses.
+**Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase. Thai visitors pay via PromptPay QR code. International visitors pay by card, Apple Pay, or Google Pay. Every successful payment automatically saves the order to your database and sends confirmation emails. Customers can check out as guests or log in via social accounts (Google, Facebook, LINE, Apple) to save their order history and shipping addresses. Customers can also track their parcel status via AfterShip — FedEx, UPS, DHL, Thai Post and 100+ carriers supported.
 
 **End Result:** A complete 3-step guest checkout with optional social login. You can do a real test purchase and see the order appear in your database, receive a "New Order" notification email, and the customer receives an order confirmation — all automatically. Logged-in customers can view their order history and re-order custom sizes quickly.
 
@@ -194,7 +194,8 @@ Order confirmation email sent
 |---|---|
 | `public/checkout/index.html` | 3-step checkout page (Cart Review → Shipping Details → Payment) with optional social login |
 | `public/order-confirmed/index.html` | Success page shown after payment |
-| `public/account/index.html` | My Account page — order history, saved addresses, social login buttons |
+| `public/account/index.html` | My Account page — order history, saved addresses, parcel tracking (AfterShip), social login buttons |
+| `public/track/index.html` | Parcel tracking page — AfterShip embedded widget (auto-detects carrier from tracking number) |
 | `workers/api/checkout.ts` | Creates a Stripe payment session |
 | `workers/api/webhook.ts` | Receives Stripe payment confirmation → saves order → sends emails |
 | `workers/api/email.ts` | MailChannels email helper (customer receipt + team notification) |
@@ -378,11 +379,28 @@ Once all requirements are ready and your Stripe keys are stored as Cloudflare se
 > **Requirement 6 — Email sender:** [Sender Name] <[sender address]>
 > **Requirement 7 — Social login:** [Build with Google + LINE / Skip for now — add later]
 >
-> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, MailChannels email system, My Account page, and the Order Confirmed page."
+> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, MailChannels email system, My Account page with AfterShip parcel tracking, and the Parcel Tracking page.
+
+**Phase 5 Additional Requirements:**
+
+### Requirement 8 — AfterShip Parcel Tracking (Optional but Recommended)
+
+Customer order tracking (FedEx, UPS, DHL, Thai Post, 100+ carriers) via AfterShip.
+
+**What to collect:**
+| Item | Where to Find | Notes |
+|---|---|---|
+| AfterShip API Key | [aftership.com](https://www.aftership.com) → Settings → API → Free tier | Free plan: 100 shipments/mo |
+| Custom domain (optional) | AfterShip dashboard → Settings → Branded Tracking Page | `mildmate.com/track/[tracking]` |
+
+**If you skip for now:** Tracking numbers can still be stored in the order and displayed in My Account as carrier links. AfterShip can be added later without rebuilding.
+
+---
 
 **What Droid builds:**
 1. `public/checkout/index.html` — 3-step checkout UI with optional social login buttons
-2. `public/account/index.html` — My Account page (order history, saved addresses)
+2. `public/account/index.html` — My Account page (order history, saved addresses, AfterShip parcel tracking widget, social login)
+3. `public/track/index.html` — Parcel tracking page — AfterShip widget auto-detects FedEx/UPS/DHL/Thai Post + 100+ carriers from tracking number
 3. `workers/api/checkout.ts` — Stripe session creator
 4. `workers/api/webhook.ts` — payment confirmation handler
 5. `workers/api/email.ts` — MailChannels email sender

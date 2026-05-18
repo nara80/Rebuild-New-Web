@@ -1,7 +1,7 @@
 # Phase 7 — Admin Dashboard
 **Goal:** Build a private management interface for your team — protected by Google login — where you can view orders with custom dimensions for manufacturing, edit products and prices, upload images, and export subscriber emails. No coding knowledge required to use it.
 
-**End Result:** A clean, password-protected web dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code.
+**End Result:** A clean, password-protected web dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can enter tracking numbers and monitor delivery status via AfterShip (FedEx, UPS, DHL, Thai Post + 100+ carriers).
 
 **Time Estimate:** 30–45 minutes setup (mostly Cloudflare Access configuration); Droid builds all the code.
 
@@ -32,7 +32,7 @@ The dashboard has 5 sections, accessible from a left sidebar:
 | File | What It Is |
 |---|---|
 | `admin/index.html` | Dashboard overview — order counts, revenue summary |
-| `admin/orders.html` | Order table with custom dimensions for manufacturing |
+| `admin/orders.html` | Order table with custom dimensions for manufacturing + tracking_number + carrier fields (AfterShip integration) |
 | `admin/products.html` | Product editor — titles, prices, fabric options |
 | `admin/upload.html` | Drag-and-drop R2 image uploader |
 | `admin/subscribers.html` | Email subscriber list + CSV export |
@@ -80,6 +80,25 @@ The Orders page has a status column. Decide what status options your team needs.
 | `cancelled` | Red | Order was cancelled/refunded |
 
 **Do you want to add, remove, or rename any of these?** Write your final status list — you will give it to Droid.
+
+---
+
+### Requirement 4 — Parcel Tracking Provider (AfterShip)
+
+Phase 5 added AfterShip for customer-facing parcel tracking. Now the admin dashboard needs to display and manage tracking data.
+
+**AfterShip account:**
+- Sign up at [aftership.com](https://www.aftership.com) — Free Plan: 100 tracked shipments/month
+- AfterShip provides a tracking page at `mildmate.com/track/[tracking]` (custom domain can be configured)
+- Supports FedEx, UPS, DHL, Thai Post, and 400+ other carriers automatically
+
+**What to collect:**
+| Item | Where | What You Need |
+|---|---|---|
+| AfterShip API Key | Settings → API → Free tier key | `aftership-api-key-...` |
+| Tracking page slug | AfterShip dashboard | `/track/[tracking]` — Droid configures this |
+
+> Without AfterShip, tracking numbers are stored but status cannot be auto-fetched. Admin enters `tracking_number` + selects `carrier` in the Orders page. Customer sees tracking via carrier link in My Account.
 
 ---
 
