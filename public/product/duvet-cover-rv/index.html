@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -467,6 +467,7 @@
       .reviews-header { flex-direction: column; align-items: start; gap: 12px; }
     }
     @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; }
       .dim-inputs { grid-template-columns: 1fr; }
     }
     /* âââ Global Tags âââââââââââââââââââââââââââ */
@@ -542,7 +543,7 @@
 
         <!-- Rating -->
         <div class="product-rating">
-          <span class="stars">âââââ</span>
+          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">72 reviews</strong></span>
         </div>
 
@@ -553,14 +554,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn" data-region="us">ðºð¸ US</button>
-              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
-              <button class="region-btn" data-region="eu">ðªðº EU</button>
-              <button class="region-btn" data-region="au">ð¦ðº AU</button>
-              <button class="region-btn selected" data-region="th">ð¹ð­ TH</button>
-              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
-              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn" data-region="us">º¸ US</button>
+              <button class="region-btn" data-region="uk">¬§ UK</button>
+              <button class="region-btn" data-region="eu">ªº EU</button>
+              <button class="region-btn" data-region="au">¦º AU</button>
+              <button class="region-btn selected" data-region="th">¹­ TH</button>
+              <button class="region-btn" data-region="my">²¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">¯µ JP</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
 
@@ -569,39 +570,39 @@
             <div class="panel-label">Select Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="ð¹ð­ Thailand">
-                <option value="107x191" data-price="2495">3.5ft  -  107Ã191cm (42Ã75in)</option>
-                <option value="120x200" data-price="2695">6ft Queen  -  120Ã200cm (47Ã79in)</option>
-                <option value="152x198" data-price="2895">King  -  152Ã198cm (60Ã78in)</option>
+              <optgroup label="¹­ Thailand">
+                <option value="107x191" data-price="2495">3.5ft  -  107  191cm (42  75in)</option>
+                <option value="120x200" data-price="2695">6ft Queen  -  120  200cm (47  79in)</option>
+                <option value="152x198" data-price="2895">King  -  152  198cm (60  78in)</option>
               </optgroup>
-              <optgroup label="ðºð¸ US / Canada">
-                <option value="99x191" data-price="2495">Twin  -  99Ã191cm (39Ã75in)</option>
-                <option value="137x191" data-price="2695">Full  -  137Ã191cm (54Ã75in)</option>
-                <option value="153x203" data-price="2895">Queen  -  153Ã203cm (60Ã80in)</option>
+              <optgroup label="º¸ US / Canada">
+                <option value="99x191" data-price="2495">Twin  -  99  191cm (39  75in)</option>
+                <option value="137x191" data-price="2695">Full  -  137  191cm (54  75in)</option>
+                <option value="153x203" data-price="2895">Queen  -  153  203cm (60  80in)</option>
               </optgroup>
-              <optgroup label="ð¬ð§ UK">
-                <option value="90x190" data-price="2445">Single  -  90Ã190cm</option>
-                <option value="135x190" data-price="2695">Double  -  135Ã190cm</option>
-                <option value="150x200" data-price="2895">King  -  150Ã200cm</option>
+              <optgroup label="¬§ UK">
+                <option value="90x190" data-price="2445">Single  -  90  190cm</option>
+                <option value="135x190" data-price="2695">Double  -  135  190cm</option>
+                <option value="150x200" data-price="2895">King  -  150  200cm</option>
               </optgroup>
-              <optgroup label="ðªðº EU">
-                <option value="90x200" data-price="2495">Single  -  90Ã200cm</option>
-                <option value="140x200" data-price="2695">Double  -  140Ã200cm</option>
-                <option value="160x200" data-price="2895">King  -  160Ã200cm</option>
+              <optgroup label="ªº EU">
+                <option value="90x200" data-price="2495">Single  -  90  200cm</option>
+                <option value="140x200" data-price="2695">Double  -  140  200cm</option>
+                <option value="160x200" data-price="2895">King  -  160  200cm</option>
               </optgroup>
-              <optgroup label="ð¦ðº AU">
-                <option value="92x188" data-price="2495">Single  -  92Ã188cm</option>
-                <option value="137x188" data-price="2695">Double  -  137Ã188cm</option>
-                <option value="153x203" data-price="2895">Queen  -  153Ã203cm</option>
+              <optgroup label="¦º AU">
+                <option value="92x188" data-price="2495">Single  -  92  188cm</option>
+                <option value="137x188" data-price="2695">Double  -  137  188cm</option>
+                <option value="153x203" data-price="2895">Queen  -  153  203cm</option>
               </optgroup>
-              <optgroup label="ð²ð¾ MY / SG">
-                <option value="107x191" data-price="2495">Super Single  -  107Ã191cm (42Ã75in)</option>
-                <option value="152x198" data-price="2895">Queen  -  152Ã198cm (60Ã78in)</option>
+              <optgroup label="²¾ MY / SG">
+                <option value="107x191" data-price="2495">Super Single  -  107  191cm (42  75in)</option>
+                <option value="152x198" data-price="2895">Queen  -  152  198cm (60  78in)</option>
               </optgroup>
-              <optgroup label="ð¯ðµ JP">
-                <option value="100x200" data-price="2545">Single  -  100Ã200cm (39.4Ã78.7in)</option>
-                <option value="120x200" data-price="2745">Semi-Double  -  120Ã200cm (47Ã79in)</option>
-                <option value="140x200" data-price="2895">Double  -  140Ã200cm (55Ã79in)</option>
+              <optgroup label="¯µ JP">
+                <option value="100x200" data-price="2545">Single  -  100  200cm (39.4  78.7in)</option>
+                <option value="120x200" data-price="2745">Semi-Double  -  120  200cm (47  79in)</option>
+                <option value="140x200" data-price="2895">Double  -  140  200cm (55  79in)</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -754,7 +755,7 @@
 
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Duvet Covers</h3>
-          <p>RV and truck cab mattresses often use non-standard sizes. The size dropdown above includes common sizes, but if your cab mattress is an unusual dimension, use the "Custom Size" option to enter your exact W Ã L Ã D.</p>
+          <p>RV and truck cab mattresses often use non-standard sizes. The size dropdown above includes common sizes, but if your cab mattress is an unusual dimension, use the "Custom Size" option to enter your exact W    L    D.</p>
           <p>Not sure of your duvet size? <a href="/sizeguide/" style="color:var(--color-primary);">View our full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a>  -  we'll help you get the right size.</p>
         </div>
 
@@ -780,7 +781,7 @@
           <div class="reviews-summary" style="margin-bottom:24px;">
             <div class="summary-score">5.0</div>
             <div class="summary-detail">
-              <div class="summary-stars">âââââ</div>
+              <div class="summary-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
               <div class="summary-text">Based on 72 verified reviews</div>
             </div>
           </div>
@@ -794,7 +795,7 @@
                 <div class="review-name">Robert K.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"I long-haul truck and CloudSoft is perfect for cab living. Dries overnight even with the cab heater on low. The zipper makes it easy to swap when I stop for the night. Highly recommend for OTR drivers."</div>
             <div class="review-product">Verified purchase: RV Duvet Cover Â· CloudSoft</div>
@@ -806,7 +807,7 @@
                 <div class="review-name">Lisa M.</div>
                 <div class="review-country">Australia</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"We full-time in our RV and these sheets have been a game changer. CloudSoft dries so fast which is crucial when you're traveling between locations. Great quality, fits our RV mattress perfectly."</div>
             <div class="review-product">Verified purchase: RV Duvet Cover Â· CloudSoft Sea</div>
@@ -913,38 +914,38 @@
     // âââ Size Selection âââââââââââââââââââââââââ
     const SIZES_BY_REGION = {
       th: {
-        '107x191': { label: '3.5ft  -  107Ã191cm (42Ã75in)', price: 2495 },
-        '120x200': { label: '6ft Queen  -  120Ã200cm (47Ã79in)', price: 2695 },
-        '152x198': { label: 'King  -  152Ã198cm (60Ã78in)', price: 2895 }
+        '107x191': { label: '3.5ft  -  107  191cm (42  75in)', price: 2495 },
+        '120x200': { label: '6ft Queen  -  120  200cm (47  79in)', price: 2695 },
+        '152x198': { label: 'King  -  152  198cm (60  78in)', price: 2895 }
       },
       us: {
-        '99x191': { label: 'Twin  -  99Ã191cm (39Ã75in)', price: 2495 },
-        '137x191': { label: 'Full  -  137Ã191cm (54Ã75in)', price: 2695 },
-        '153x203': { label: 'Queen  -  153Ã203cm (60Ã80in)', price: 2895 }
+        '99x191': { label: 'Twin  -  99  191cm (39  75in)', price: 2495 },
+        '137x191': { label: 'Full  -  137  191cm (54  75in)', price: 2695 },
+        '153x203': { label: 'Queen  -  153  203cm (60  80in)', price: 2895 }
       },
       uk: {
-        '90x190': { label: 'Single  -  90Ã190cm', price: 2445 },
-        '135x190': { label: 'Double  -  135Ã190cm', price: 2695 },
-        '150x200': { label: 'King  -  150Ã200cm', price: 2895 }
+        '90x190': { label: 'Single  -  90  190cm', price: 2445 },
+        '135x190': { label: 'Double  -  135  190cm', price: 2695 },
+        '150x200': { label: 'King  -  150  200cm', price: 2895 }
       },
       eu: {
-        '90x200': { label: 'Single  -  90Ã200cm', price: 2495 },
-        '140x200': { label: 'Double  -  140Ã200cm', price: 2695 },
-        '160x200': { label: 'King  -  160Ã200cm', price: 2895 }
+        '90x200': { label: 'Single  -  90  200cm', price: 2495 },
+        '140x200': { label: 'Double  -  140  200cm', price: 2695 },
+        '160x200': { label: 'King  -  160  200cm', price: 2895 }
       },
       au: {
-        '92x188': { label: 'Single  -  92Ã188cm', price: 2495 },
-        '137x188': { label: 'Double  -  137Ã188cm', price: 2695 },
-        '153x203': { label: 'Queen  -  153Ã203cm', price: 2895 }
+        '92x188': { label: 'Single  -  92  188cm', price: 2495 },
+        '137x188': { label: 'Double  -  137  188cm', price: 2695 },
+        '153x203': { label: 'Queen  -  153  203cm', price: 2895 }
       },
       my: {
-        '107x191': { label: 'Super Single  -  107Ã191cm (42Ã75in)', price: 2495 },
-        '152x198': { label: 'Queen  -  152Ã198cm (60Ã78in)', price: 2895 }
+        '107x191': { label: 'Super Single  -  107  191cm (42  75in)', price: 2495 },
+        '152x198': { label: 'Queen  -  152  198cm (60  78in)', price: 2895 }
       },
       jp: {
-        '100x200': { label: 'Single  -  100Ã200cm (39.4Ã78.7in)', price: 2545 },
-        '120x200': { label: 'Semi-Double  -  120Ã200cm (47Ã79in)', price: 2745 },
-        '140x200': { label: 'Double  -  140Ã200cm (55Ã79in)', price: 2895 }
+        '100x200': { label: 'Single  -  100  200cm (39.4  78.7in)', price: 2545 },
+        '120x200': { label: 'Semi-Double  -  120  200cm (47  79in)', price: 2745 },
+        '140x200': { label: 'Double  -  140  200cm (55  79in)', price: 2895 }
       }
     };
 
@@ -1015,7 +1016,7 @@
       const w = document.getElementById('dim-width').value;
       const l = document.getElementById('dim-length').value;
       const d = document.getElementById('dim-depth').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + ' Ã ' + l + ' Ã ' + d + ' ' + unit);
+      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + '    ' + l + '    ' + d + ' ' + unit);
     });
 
     // âââ Add to Cart ââââââââââââââââââââââââââââ

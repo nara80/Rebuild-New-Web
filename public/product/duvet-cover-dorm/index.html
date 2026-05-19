@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -467,6 +467,7 @@
       .reviews-header { flex-direction: column; align-items: start; gap: 12px; }
     }
     @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; }
       .dim-inputs { grid-template-columns: 1fr; }
     }
     /* âââ Global Tags âââââââââââââââââââââââââââ */
@@ -542,7 +543,7 @@
 
         <!-- Rating -->
         <div class="product-rating">
-          <span class="stars">âââââ</span>
+          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">203 reviews</strong></span>
         </div>
 
@@ -553,14 +554,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn" data-region="us">ðºð¸ US</button>
-              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
-              <button class="region-btn" data-region="eu">ðªðº EU</button>
-              <button class="region-btn" data-region="au">ð¦ðº AU</button>
-              <button class="region-btn selected" data-region="th">ð¹ð­ TH</button>
-              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
-              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn" data-region="us">º¸ US</button>
+              <button class="region-btn" data-region="uk">¬§ UK</button>
+              <button class="region-btn" data-region="eu">ªº EU</button>
+              <button class="region-btn" data-region="au">¦º AU</button>
+              <button class="region-btn selected" data-region="th">¹­ TH</button>
+              <button class="region-btn" data-region="my">²¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">¯µ JP</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
 
@@ -569,32 +570,32 @@
             <div class="panel-label">Select Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="ð¹ð­ Thailand">
-                <option value="152x198" data-price="2695">King  -  152Ã198cm (60Ã78in)</option>
-                <option value="120x200" data-price="2495">6ft Queen  -  120Ã200cm (47Ã79in)</option>
+              <optgroup label="¹­ Thailand">
+                <option value="152x198" data-price="2695">King  -  152  198cm (60  78in)</option>
+                <option value="120x200" data-price="2495">6ft Queen  -  120  200cm (47  79in)</option>
               </optgroup>
-              <optgroup label="ðºð¸ US / Canada">
-                <option value="153x203" data-price="2695">Queen  -  153Ã203cm (60Ã80in)</option>
-                <option value="137x191" data-price="2495">Full  -  137Ã191cm (54Ã75in)</option>
+              <optgroup label="º¸ US / Canada">
+                <option value="153x203" data-price="2695">Queen  -  153  203cm (60  80in)</option>
+                <option value="137x191" data-price="2495">Full  -  137  191cm (54  75in)</option>
               </optgroup>
-              <optgroup label="ð¬ð§ UK">
-                <option value="150x200" data-price="2695">King  -  150Ã200cm</option>
-                <option value="135x190" data-price="2495">Double  -  135Ã190cm</option>
+              <optgroup label="¬§ UK">
+                <option value="150x200" data-price="2695">King  -  150  200cm</option>
+                <option value="135x190" data-price="2495">Double  -  135  190cm</option>
               </optgroup>
-              <optgroup label="ðªðº EU">
-                <option value="160x200" data-price="2695">King  -  160Ã200cm</option>
-                <option value="140x200" data-price="2495">Double  -  140Ã200cm</option>
+              <optgroup label="ªº EU">
+                <option value="160x200" data-price="2695">King  -  160  200cm</option>
+                <option value="140x200" data-price="2495">Double  -  140  200cm</option>
               </optgroup>
-              <optgroup label="ð¦ðº AU">
-                <option value="153x203" data-price="2695">Queen  -  153Ã203cm</option>
-                <option value="137x188" data-price="2495">Double  -  137Ã188cm</option>
+              <optgroup label="¦º AU">
+                <option value="153x203" data-price="2695">Queen  -  153  203cm</option>
+                <option value="137x188" data-price="2495">Double  -  137  188cm</option>
               </optgroup>
-              <optgroup label="ð²ð¾ MY / SG">
-                <option value="152x198" data-price="2695">Queen  -  152Ã198cm (60Ã78in)</option>
+              <optgroup label="²¾ MY / SG">
+                <option value="152x198" data-price="2695">Queen  -  152  198cm (60  78in)</option>
               </optgroup>
-              <optgroup label="ð¯ðµ JP">
-                <option value="140x200" data-price="2695">Double  -  140Ã200cm (55Ã79in)</option>
-                <option value="120x200" data-price="2545">Semi-Double  -  120Ã200cm (47Ã79in)</option>
+              <optgroup label="¯µ JP">
+                <option value="140x200" data-price="2695">Double  -  140  200cm (55  79in)</option>
+                <option value="120x200" data-price="2545">Semi-Double  -  120  200cm (47  79in)</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -745,7 +746,7 @@
 
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Duvet Covers</h3>
-          <p>For boarding dorms, the most common sizes are Double and Single. The size options above reflect standard dorm bed dimensions across regions. If your dorm has non-standard dimensions, use the "Custom Size" option to enter your exact W Ã L.</p>
+          <p>For boarding dorms, the most common sizes are Double and Single. The size options above reflect standard dorm bed dimensions across regions. If your dorm has non-standard dimensions, use the "Custom Size" option to enter your exact W    L.</p>
           <p>Not sure of your duvet size? <a href="/sizeguide/" style="color:var(--color-primary);">View our full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a>  -  we'll help you get the right size.</p>
         </div>
 
@@ -771,7 +772,7 @@
           <div class="reviews-summary" style="margin-bottom:24px;">
             <div class="summary-score">5.0</div>
             <div class="summary-detail">
-              <div class="summary-stars">âââââ</div>
+              <div class="summary-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
               <div class="summary-text">Based on 203 verified reviews</div>
             </div>
           </div>
@@ -785,7 +786,7 @@
                 <div class="review-name">Amy M.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"I bought this duvet cover for my son at college. The customer service at MildMate is amazing! The staff went out of their way to make sure I got the product I wanted. The 3-sided zipper is so practical for dorm life."</div>
             <div class="review-product">Verified purchase: Duvet Cover Â· Twin / BreezePlus Sand</div>
@@ -797,7 +798,7 @@
                 <div class="review-name">Sophie L.</div>
                 <div class="review-country">United Kingdom</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Perfect for my daughter's boarding school. The double size fits the dorm bed perfectly, and the CloudSoft fabric dries quickly in the shared laundry. Great quality for the price."</div>
             <div class="review-product">Verified purchase: Duvet Cover Â· Double / CloudSoft</div>
@@ -909,31 +910,31 @@
     // âââ Size Selection âââââââââââââââââââââââââ
     const SIZES_BY_REGION = {
       th: {
-        '152x198': { label: 'King  -  152Ã198cm (60Ã78in)', price: 2695 },
-        '120x200': { label: '6ft Queen  -  120Ã200cm (47Ã79in)', price: 2495 }
+        '152x198': { label: 'King  -  152  198cm (60  78in)', price: 2695 },
+        '120x200': { label: '6ft Queen  -  120  200cm (47  79in)', price: 2495 }
       },
       us: {
-        '153x203': { label: 'Queen  -  153Ã203cm (60Ã80in)', price: 2695 },
-        '137x191': { label: 'Full  -  137Ã191cm (54Ã75in)', price: 2495 }
+        '153x203': { label: 'Queen  -  153  203cm (60  80in)', price: 2695 },
+        '137x191': { label: 'Full  -  137  191cm (54  75in)', price: 2495 }
       },
       uk: {
-        '150x200': { label: 'King  -  150Ã200cm', price: 2695 },
-        '135x190': { label: 'Double  -  135Ã190cm', price: 2495 }
+        '150x200': { label: 'King  -  150  200cm', price: 2695 },
+        '135x190': { label: 'Double  -  135  190cm', price: 2495 }
       },
       eu: {
-        '160x200': { label: 'King  -  160Ã200cm', price: 2695 },
-        '140x200': { label: 'Double  -  140Ã200cm', price: 2495 }
+        '160x200': { label: 'King  -  160  200cm', price: 2695 },
+        '140x200': { label: 'Double  -  140  200cm', price: 2495 }
       },
       au: {
-        '153x203': { label: 'Queen  -  153Ã203cm', price: 2695 },
-        '137x188': { label: 'Double  -  137Ã188cm', price: 2495 }
+        '153x203': { label: 'Queen  -  153  203cm', price: 2695 },
+        '137x188': { label: 'Double  -  137  188cm', price: 2495 }
       },
       my: {
-        '152x198': { label: 'Queen  -  152Ã198cm (60Ã78in)', price: 2695 }
+        '152x198': { label: 'Queen  -  152  198cm (60  78in)', price: 2695 }
       },
       jp: {
-        '140x200': { label: 'Double  -  140Ã200cm (55Ã79in)', price: 2695 },
-        '120x200': { label: 'Semi-Double  -  120Ã200cm (47Ã79in)', price: 2545 }
+        '140x200': { label: 'Double  -  140  200cm (55  79in)', price: 2695 },
+        '120x200': { label: 'Semi-Double  -  120  200cm (47  79in)', price: 2545 }
       }
     };
 
@@ -1036,7 +1037,7 @@
       const w = document.getElementById('dim-width').value;
       const l = document.getElementById('dim-length').value;
       const d = document.getElementById('dim-depth').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + ' Ã ' + l + ' Ã ' + d + ' ' + unit);
+      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + '    ' + l + '    ' + d + ' ' + unit);
     });
 
     // âââ Add to Cart ââââââââââââââââââââââââââââ

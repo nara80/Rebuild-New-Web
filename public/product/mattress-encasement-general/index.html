@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -119,7 +119,8 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
-    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body class="product-page">
@@ -167,7 +168,7 @@
         <p class="product-tagline">Full 6-sided encasement  -  complete waterproof protection from all angles. TPU inner layer. OEKO-TEX certified.</p>
 
         <div class="product-rating">
-          <span class="stars">âââââ</span>
+          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
         </div>
 
@@ -175,14 +176,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn selected" data-region="us">ðºð¸ US</button>
-              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
-              <button class="region-btn" data-region="eu">ðªðº EU</button>
-              <button class="region-btn" data-region="au">ð¦ðº AU</button>
-              <button class="region-btn" data-region="th">ð¹ð­ TH</button>
-              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
-              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn selected" data-region="us">º¸ US</button>
+              <button class="region-btn" data-region="uk">¬§ UK</button>
+              <button class="region-btn" data-region="eu">ªº EU</button>
+              <button class="region-btn" data-region="au">¦º AU</button>
+              <button class="region-btn" data-region="th">¹­ TH</button>
+              <button class="region-btn" data-region="my">²¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">¯µ JP</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
 
@@ -190,26 +191,26 @@
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="ðºð¸ US / Canada">
-                <option value="99x191x30" data-price="2095">Twin  -  99Ã191Ã30cm (39Ã75Ã12in)</option>
-                <option value="137x191x30" data-price="2295">Full  -  137Ã191Ã30cm (54Ã75Ã12in)</option>
-                <option value="153x203x30" data-price="2495">Queen  -  153Ã203Ã30cm (60Ã80Ã12in)</option>
-                <option value="193x203x30" data-price="2695">King  -  193Ã203Ã30cm (76Ã80Ã12in)</option>
+              <optgroup label="º¸ US / Canada">
+                <option value="99x191x30" data-price="2095">Twin  -  99  191  30cm (39  75  12in)</option>
+                <option value="137x191x30" data-price="2295">Full  -  137  191  30cm (54  75  12in)</option>
+                <option value="153x203x30" data-price="2495">Queen  -  153  203  30cm (60  80  12in)</option>
+                <option value="193x203x30" data-price="2695">King  -  193  203  30cm (76  80  12in)</option>
               </optgroup>
-              <optgroup label="ð¬ð§ UK">
-                <option value="90x190x30" data-price="2045">Single  -  90Ã190Ã30cm</option>
-                <option value="135x190x30" data-price="2245">Double  -  135Ã190Ã30cm</option>
-                <option value="150x200x30" data-price="2445">King  -  150Ã200Ã30cm</option>
+              <optgroup label="¬§ UK">
+                <option value="90x190x30" data-price="2045">Single  -  90  190  30cm</option>
+                <option value="135x190x30" data-price="2245">Double  -  135  190  30cm</option>
+                <option value="150x200x30" data-price="2445">King  -  150  200  30cm</option>
               </optgroup>
-              <optgroup label="ðªðº EU">
-                <option value="90x200x30" data-price="2095">Single  -  90Ã200Ã30cm</option>
-                <option value="140x200x30" data-price="2295">Double  -  140Ã200Ã30cm</option>
-                <option value="160x200x30" data-price="2495">King  -  160Ã200Ã30cm</option>
+              <optgroup label="ªº EU">
+                <option value="90x200x30" data-price="2095">Single  -  90  200  30cm</option>
+                <option value="140x200x30" data-price="2295">Double  -  140  200  30cm</option>
+                <option value="160x200x30" data-price="2495">King  -  160  200  30cm</option>
               </optgroup>
-              <optgroup label="ð¹ð­ Thailand">
-                <option value="107x191x30" data-price="2095">3.5ft  -  107Ã191Ã30cm</option>
-                <option value="120x200x30" data-price="2295">6ft Queen  -  120Ã200Ã30cm</option>
-                <option value="152x198x30" data-price="2495">King  -  152Ã198Ã30cm</option>
+              <optgroup label="¹­ Thailand">
+                <option value="107x191x30" data-price="2095">3.5ft  -  107  191  30cm</option>
+                <option value="120x200x30" data-price="2295">6ft Queen  -  120  200  30cm</option>
+                <option value="152x198x30" data-price="2495">King  -  152  198  30cm</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -324,7 +325,7 @@
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  6-Sided Mattress Encasement</h3>
-          <p>Measure your mattress width Ã length Ã depth carefully. The encasement requires exact dimensions since it wraps all six sides. Select your region above to see standard sizes, or use "Custom Size" for exact measurements.</p>
+          <p>Measure your mattress width    length    depth carefully. The encasement requires exact dimensions since it wraps all six sides. Select your region above to see standard sizes, or use "Custom Size" for exact measurements.</p>
           <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
@@ -349,7 +350,7 @@
         <div class="reviews-summary">
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars">âââââ</div>
+            <div class="summary-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <div class="summary-text">Based on 2 verified reviews</div>
           </div>
         </div>
@@ -361,7 +362,7 @@
                 <div class="review-name">Jennifer R.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"I have severe dust mite allergies and this encasement has made a huge difference. Complete peace of mind with the 6-sided protection. OEKO-TEX certification was important for me."</div>
             <div class="review-product">Verified purchase: 6-Sided Mattress Encasement Â· Queen / Pure White</div>
@@ -373,7 +374,7 @@
                 <div class="review-name">Michael T.</div>
                 <div class="review-country">Australia</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Needed full protection for my mattress after moving into a rental. The TPU layer is completely waterproof and it's held up well after several washes."</div>
             <div class="review-product">Verified purchase: 6-Sided Mattress Encasement Â· King / Pure White</div>
@@ -457,10 +458,10 @@
     });
 
     const SIZES_BY_REGION = {
-      us: { '99x191x30': { label: 'Twin  -  99Ã191Ã30cm', price: 2095 }, '137x191x30': { label: 'Full  -  137Ã191Ã30cm', price: 2295 }, '153x203x30': { label: 'Queen  -  153Ã203Ã30cm', price: 2495 }, '193x203x30': { label: 'King  -  193Ã203Ã30cm', price: 2695 } },
-      uk: { '90x190x30': { label: 'Single  -  90Ã190Ã30cm', price: 2045 }, '135x190x30': { label: 'Double  -  135Ã190Ã30cm', price: 2245 }, '150x200x30': { label: 'King  -  150Ã200Ã30cm', price: 2445 } },
-      eu: { '90x200x30': { label: 'Single  -  90Ã200Ã30cm', price: 2095 }, '140x200x30': { label: 'Double  -  140Ã200Ã30cm', price: 2295 }, '160x200x30': { label: 'King  -  160Ã200Ã30cm', price: 2495 } },
-      th: { '107x191x30': { label: '3.5ft  -  107Ã191Ã30cm', price: 2095 }, '120x200x30': { label: '6ft Queen  -  120Ã200Ã30cm', price: 2295 }, '152x198x30': { label: 'King  -  152Ã198Ã30cm', price: 2495 } }
+      us: { '99x191x30': { label: 'Twin  -  99  191  30cm', price: 2095 }, '137x191x30': { label: 'Full  -  137  191  30cm', price: 2295 }, '153x203x30': { label: 'Queen  -  153  203  30cm', price: 2495 }, '193x203x30': { label: 'King  -  193  203  30cm', price: 2695 } },
+      uk: { '90x190x30': { label: 'Single  -  90  190  30cm', price: 2045 }, '135x190x30': { label: 'Double  -  135  190  30cm', price: 2245 }, '150x200x30': { label: 'King  -  150  200  30cm', price: 2445 } },
+      eu: { '90x200x30': { label: 'Single  -  90  200  30cm', price: 2095 }, '140x200x30': { label: 'Double  -  140  200  30cm', price: 2295 }, '160x200x30': { label: 'King  -  160  200  30cm', price: 2495 } },
+      th: { '107x191x30': { label: '3.5ft  -  107  191  30cm', price: 2095 }, '120x200x30': { label: '6ft Queen  -  120  200  30cm', price: 2295 }, '152x198x30': { label: 'King  -  152  198  30cm', price: 2495 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {

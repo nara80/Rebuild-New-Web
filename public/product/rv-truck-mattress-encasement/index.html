@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -119,7 +119,8 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
-    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body class="product-page">
@@ -168,7 +169,7 @@
         <p class="product-tagline">6-sided waterproof encasement for RV and truck cab mattresses. TPU inner layer. OEKO-TEX certified. Stays secure on the road.</p>
 
         <div class="product-rating">
-          <span class="stars">âââââ</span>
+          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
         </div>
 
@@ -176,14 +177,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn selected" data-region="us">ðºð¸ US</button>
-              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
-              <button class="region-btn" data-region="eu">ðªðº EU</button>
-              <button class="region-btn" data-region="au">ð¦ðº AU</button>
-              <button class="region-btn" data-region="th">ð¹ð­ TH</button>
-              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
-              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn selected" data-region="us">º¸ US</button>
+              <button class="region-btn" data-region="uk">¬§ UK</button>
+              <button class="region-btn" data-region="eu">ªº EU</button>
+              <button class="region-btn" data-region="au">¦º AU</button>
+              <button class="region-btn" data-region="th">¹­ TH</button>
+              <button class="region-btn" data-region="my">²¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">¯µ JP</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
 
@@ -191,15 +192,15 @@
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="ðºð¸ US RV / Truck">
-                <option value="76x191x20" data-price="1945">Short Twin  -  76Ã191Ã20cm (30Ã75Ã8in)</option>
-                <option value="99x191x20" data-price="2145">Standard Twin  -  99Ã191Ã20cm (39Ã75Ã8in)</option>
-                <option value="137x191x20" data-price="2345">Full  -  137Ã191Ã20cm (54Ã75Ã8in)</option>
+              <optgroup label="º¸ US RV / Truck">
+                <option value="76x191x20" data-price="1945">Short Twin  -  76  191  20cm (30  75  8in)</option>
+                <option value="99x191x20" data-price="2145">Standard Twin  -  99  191  20cm (39  75  8in)</option>
+                <option value="137x191x20" data-price="2345">Full  -  137  191  20cm (54  75  8in)</option>
               </optgroup>
-              <optgroup label="ð¬ð§ UK / EU RV">
-                <option value="70x190x20" data-price="1895">Small Single  -  70Ã190Ã20cm</option>
-                <option value="90x190x20" data-price="2095">Single  -  90Ã190Ã20cm</option>
-                <option value="120x190x20" data-price="2295">Small Double  -  120Ã190Ã20cm</option>
+              <optgroup label="¬§ UK / EU RV">
+                <option value="70x190x20" data-price="1895">Small Single  -  70  190  20cm</option>
+                <option value="90x190x20" data-price="2095">Single  -  90  190  20cm</option>
+                <option value="120x190x20" data-price="2295">Small Double  -  120  190  20cm</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -315,7 +316,7 @@
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  RV & Truck Mattress Encasement</h3>
-          <p>RV mattresses are typically thinner (8 inch / 20cm depth) and may have shorter lengths than standard home mattresses. Measure your mattress width Ã length Ã depth carefully before ordering. Use "Custom Size" for exact measurements.</p>
+          <p>RV mattresses are typically thinner (8 inch / 20cm depth) and may have shorter lengths than standard home mattresses. Measure your mattress width    length    depth carefully before ordering. Use "Custom Size" for exact measurements.</p>
           <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
@@ -340,7 +341,7 @@
         <div class="reviews-summary">
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars">âââââ</div>
+            <div class="summary-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <div class="summary-text">Based on 2 verified reviews</div>
           </div>
         </div>
@@ -352,7 +353,7 @@
                 <div class="review-name">Tom R.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Perfect for my Class B camper van. The 8 inch depth was exactly what I needed and it stays in place even on bumpy roads. Good quality TPU layer."</div>
             <div class="review-product">Verified purchase: RV & Truck Mattress Encasement Â· Short Twin / Pure White</div>
@@ -364,7 +365,7 @@
                 <div class="review-name">Karen S.</div>
                 <div class="review-country">Australia</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"We have a caravan and needed proper protection for the mattress. The 6-sided encasement gives us complete peace of mind. OEKO-TEX certified was important for us."</div>
             <div class="review-product">Verified purchase: RV & Truck Mattress Encasement Â· Small Double / Sand</div>
@@ -449,9 +450,9 @@
     });
 
     const SIZES_BY_REGION = {
-      us: { '76x191x20': { label: 'Short Twin  -  76Ã191Ã20cm', price: 1945 }, '99x191x20': { label: 'Standard Twin  -  99Ã191Ã20cm', price: 2145 }, '137x191x20': { label: 'Full  -  137Ã191Ã20cm', price: 2345 } },
-      uk: { '70x190x20': { label: 'Small Single  -  70Ã190Ã20cm', price: 1895 }, '90x190x20': { label: 'Single  -  90Ã190Ã20cm', price: 2095 }, '120x190x20': { label: 'Small Double  -  120Ã190Ã20cm', price: 2295 } },
-      eu: { '70x190x20': { label: 'Small Single  -  70Ã190Ã20cm', price: 1895 }, '90x190x20': { label: 'Single  -  90Ã190Ã20cm', price: 2095 }, '120x190x20': { label: 'Small Double  -  120Ã190Ã20cm', price: 2295 } }
+      us: { '76x191x20': { label: 'Short Twin  -  76  191  20cm', price: 1945 }, '99x191x20': { label: 'Standard Twin  -  99  191  20cm', price: 2145 }, '137x191x20': { label: 'Full  -  137  191  20cm', price: 2345 } },
+      uk: { '70x190x20': { label: 'Small Single  -  70  190  20cm', price: 1895 }, '90x190x20': { label: 'Single  -  90  190  20cm', price: 2095 }, '120x190x20': { label: 'Small Double  -  120  190  20cm', price: 2295 } },
+      eu: { '70x190x20': { label: 'Small Single  -  70  190  20cm', price: 1895 }, '90x190x20': { label: 'Single  -  90  190  20cm', price: 2095 }, '120x190x20': { label: 'Small Double  -  120  190  20cm', price: 2295 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {

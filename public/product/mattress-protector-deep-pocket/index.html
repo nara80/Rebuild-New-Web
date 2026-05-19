@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -119,7 +119,8 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
-    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body class="product-page">
@@ -168,7 +169,7 @@
         <p class="product-tagline">Extra-deep waterproof protection for thick mattresses, pillow-tops, and adjustable beds. TPU + 3-layer barrier. OEKO-TEX certified.</p>
 
         <div class="product-rating">
-          <span class="stars">âââââ</span>
+          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
         </div>
 
@@ -176,14 +177,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn selected" data-region="us">ðºð¸ US</button>
-              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
-              <button class="region-btn" data-region="eu">ðªðº EU</button>
-              <button class="region-btn" data-region="au">ð¦ðº AU</button>
-              <button class="region-btn" data-region="th">ð¹ð­ TH</button>
-              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
-              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn selected" data-region="us">º¸ US</button>
+              <button class="region-btn" data-region="uk">¬§ UK</button>
+              <button class="region-btn" data-region="eu">ªº EU</button>
+              <button class="region-btn" data-region="au">¦º AU</button>
+              <button class="region-btn" data-region="th">¹­ TH</button>
+              <button class="region-btn" data-region="my">²¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">¯µ JP</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
 
@@ -191,26 +192,26 @@
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="ðºð¸ US / Canada">
-                <option value="99x191x51" data-price="1995">Twin  -  99Ã191Ã51cm (39Ã75Ã20in)</option>
-                <option value="137x191x51" data-price="2195">Full  -  137Ã191Ã51cm (54Ã75Ã20in)</option>
-                <option value="153x203x51" data-price="2395">Queen  -  153Ã203Ã51cm (60Ã80Ã20in)</option>
-                <option value="193x203x51" data-price="2595">King  -  193Ã203Ã51cm (76Ã80Ã20in)</option>
+              <optgroup label="º¸ US / Canada">
+                <option value="99x191x51" data-price="1995">Twin  -  99  191  51cm (39  75  20in)</option>
+                <option value="137x191x51" data-price="2195">Full  -  137  191  51cm (54  75  20in)</option>
+                <option value="153x203x51" data-price="2395">Queen  -  153  203  51cm (60  80  20in)</option>
+                <option value="193x203x51" data-price="2595">King  -  193  203  51cm (76  80  20in)</option>
               </optgroup>
-              <optgroup label="ð¬ð§ UK">
-                <option value="90x190x51" data-price="1945">Single  -  90Ã190Ã51cm</option>
-                <option value="135x190x51" data-price="2195">Double  -  135Ã190Ã51cm</option>
-                <option value="150x200x51" data-price="2395">King  -  150Ã200Ã51cm</option>
+              <optgroup label="¬§ UK">
+                <option value="90x190x51" data-price="1945">Single  -  90  190  51cm</option>
+                <option value="135x190x51" data-price="2195">Double  -  135  190  51cm</option>
+                <option value="150x200x51" data-price="2395">King  -  150  200  51cm</option>
               </optgroup>
-              <optgroup label="ðªðº EU">
-                <option value="90x200x51" data-price="1995">Single  -  90Ã200Ã51cm</option>
-                <option value="140x200x51" data-price="2195">Double  -  140Ã200Ã51cm</option>
-                <option value="160x200x51" data-price="2395">King  -  160Ã200Ã51cm</option>
+              <optgroup label="ªº EU">
+                <option value="90x200x51" data-price="1995">Single  -  90  200  51cm</option>
+                <option value="140x200x51" data-price="2195">Double  -  140  200  51cm</option>
+                <option value="160x200x51" data-price="2395">King  -  160  200  51cm</option>
               </optgroup>
-              <optgroup label="ð¹ð­ Thailand">
-                <option value="107x191x51" data-price="1995">3.5ft  -  107Ã191Ã51cm</option>
-                <option value="120x200x51" data-price="2195">6ft Queen  -  120Ã200Ã51cm</option>
-                <option value="152x198x51" data-price="2395">King  -  152Ã198Ã51cm</option>
+              <optgroup label="¹­ Thailand">
+                <option value="107x191x51" data-price="1995">3.5ft  -  107  191  51cm</option>
+                <option value="120x200x51" data-price="2195">6ft Queen  -  120  200  51cm</option>
+                <option value="152x198x51" data-price="2395">King  -  152  198  51cm</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -326,7 +327,7 @@
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Deep Pocket Mattress Protectors</h3>
-          <p>The Deep Pocket Mattress Protector has a 20 inch / 51cm skirt depth  -  ideal for pillow-top mattresses and thicker beds. Measure your mattress width Ã length Ã depth including any pillow-top to confirm fit.</p>
+          <p>The Deep Pocket Mattress Protector has a 20 inch / 51cm skirt depth  -  ideal for pillow-top mattresses and thicker beds. Measure your mattress width    length    depth including any pillow-top to confirm fit.</p>
           <p>Select your region above to see standard sizes, or use "Custom Size" for exact measurements.</p>
           <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
@@ -352,7 +353,7 @@
         <div class="reviews-summary">
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars">âââââ</div>
+            <div class="summary-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <div class="summary-text">Based on 2 verified reviews</div>
           </div>
         </div>
@@ -364,7 +365,7 @@
                 <div class="review-name">Chris P.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"We have a pillow-top mattress and standard protectors kept popping off. This 20 inch deep pocket version stays in place perfectly. OEKO-TEX certified was important for us with kids."</div>
             <div class="review-product">Verified purchase: Deep Pocket Mattress Protector Â· Queen / Pure White</div>
@@ -376,7 +377,7 @@
                 <div class="review-name">Hannah L.</div>
                 <div class="review-country">United Kingdom</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Perfect for my deep mattress with topper. The TPU layer is completely waterproof and it fits my king size perfectly. Good quality for the price."</div>
             <div class="review-product">Verified purchase: Deep Pocket Mattress Protector Â· King / Pure White</div>
@@ -461,10 +462,10 @@
     });
 
     const SIZES_BY_REGION = {
-      us: { '99x191x51': { label: 'Twin  -  99Ã191Ã51cm', price: 1995 }, '137x191x51': { label: 'Full  -  137Ã191Ã51cm', price: 2195 }, '153x203x51': { label: 'Queen  -  153Ã203Ã51cm', price: 2395 }, '193x203x51': { label: 'King  -  193Ã203Ã51cm', price: 2595 } },
-      uk: { '90x190x51': { label: 'Single  -  90Ã190Ã51cm', price: 1945 }, '135x190x51': { label: 'Double  -  135Ã190Ã51cm', price: 2195 }, '150x200x51': { label: 'King  -  150Ã200Ã51cm', price: 2395 } },
-      eu: { '90x200x51': { label: 'Single  -  90Ã200Ã51cm', price: 1995 }, '140x200x51': { label: 'Double  -  140Ã200Ã51cm', price: 2195 }, '160x200x51': { label: 'King  -  160Ã200Ã51cm', price: 2395 } },
-      th: { '107x191x51': { label: '3.5ft  -  107Ã191Ã51cm', price: 1995 }, '120x200x51': { label: '6ft Queen  -  120Ã200Ã51cm', price: 2195 }, '152x198x51': { label: 'King  -  152Ã198Ã51cm', price: 2395 } }
+      us: { '99x191x51': { label: 'Twin  -  99  191  51cm', price: 1995 }, '137x191x51': { label: 'Full  -  137  191  51cm', price: 2195 }, '153x203x51': { label: 'Queen  -  153  203  51cm', price: 2395 }, '193x203x51': { label: 'King  -  193  203  51cm', price: 2595 } },
+      uk: { '90x190x51': { label: 'Single  -  90  190  51cm', price: 1945 }, '135x190x51': { label: 'Double  -  135  190  51cm', price: 2195 }, '150x200x51': { label: 'King  -  150  200  51cm', price: 2395 } },
+      eu: { '90x200x51': { label: 'Single  -  90  200  51cm', price: 1995 }, '140x200x51': { label: 'Double  -  140  200  51cm', price: 2195 }, '160x200x51': { label: 'King  -  160  200  51cm', price: 2395 } },
+      th: { '107x191x51': { label: '3.5ft  -  107  191  51cm', price: 1995 }, '120x200x51': { label: '6ft Queen  -  120  200  51cm', price: 2195 }, '152x198x51': { label: 'King  -  152  198  51cm', price: 2395 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {

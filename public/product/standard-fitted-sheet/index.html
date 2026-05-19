@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -119,7 +119,8 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
-    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
     .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: var(--color-surface); border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
     .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #e8f4fd; }
   </style>
@@ -300,7 +301,7 @@
         <div class="tab-content" id="tab-care" role="tabpanel">
           <h3>Care Instructions</h3>
           <ul>
-            <li>Machine wash warm (40°C / 104°F)  -  regular cycle</li>
+            <li>Machine wash warm (40&deg;C / 104&deg;F)  -  regular cycle</li>
             <li>Do not bleach  -  mild detergent only</li>
             <li>Tumble dry medium or hang dry</li>
             <li>No ironing needed  -  wrinkle-resistant by design</li>

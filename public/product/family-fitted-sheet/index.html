@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -121,7 +121,8 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
-    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
     .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: var(--color-surface); border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
     .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #e8f4fd; }
   </style>
@@ -167,7 +168,7 @@
               <button class="region-btn selected" data-region="th"> TH</button>
               <button class="region-btn" data-region="my"> SG/MY</button>
               <button class="region-btn" data-region="jp"> JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
           <div class="panel-section">
@@ -175,18 +176,18 @@
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
               <optgroup label=" Thailand">
-                <option value="152x198x30" data-price="2295">King  -  152Ã198Ã30cm</option>
-                <option value="183x198x30" data-price="2595">Super King  -  183Ã198Ã30cm</option>
-                <option value="200x200x30" data-price="2795">Custom Family  -  200Ã200Ã30cm</option>
+                <option value="152x198x30" data-price="2295">King  -  152  198  30cm</option>
+                <option value="183x198x30" data-price="2595">Super King  -  183  198  30cm</option>
+                <option value="200x200x30" data-price="2795">Custom Family  -  200  200  30cm</option>
               </optgroup>
               <optgroup label=" US / Canada">
-                <option value="153x203x30" data-price="2295">Queen  -  153Ã203Ã30cm</option>
-                <option value="183x203x30" data-price="2595">King  -  183Ã203Ã30cm</option>
-                <option value="200x200x30" data-price="2795">Custom Family  -  200Ã200Ã30cm</option>
+                <option value="153x203x30" data-price="2295">Queen  -  153  203  30cm</option>
+                <option value="183x203x30" data-price="2595">King  -  183  203  30cm</option>
+                <option value="200x200x30" data-price="2795">Custom Family  -  200  200  30cm</option>
               </optgroup>
               <optgroup label=" UK">
-                <option value="150x200x30" data-price="2295">King  -  150Ã200Ã30cm</option>
-                <option value="180x200x30" data-price="2595">Super King  -  180Ã200Ã30cm</option>
+                <option value="150x200x30" data-price="2295">King  -  150  200  30cm</option>
+                <option value="180x200x30" data-price="2595">Super King  -  180  200  30cm</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -268,7 +269,7 @@
           <p>Family-size mattresses, co-sleeping setups, floor beds, and customtatami dimensions  -  CloudSoft is made to your exact measurements so the whole family sleeps comfortably. Full-perimeter elastic keeps the sheet secure no matter how much movement happens during the night.</p>
           <p>OEKO-TEX certified with no toxic dye or finish  -  safe for babies and children. Quick-dry fabric handles frequent washing from spills and accidents.</p>
           <ul>
-            <li>Custom-made to your exact W Ã L Ã D mattress dimensions</li>
+            <li>Custom-made to your exact W    L    D mattress dimensions</li>
             <li>Full-perimeter elastic for a secure, non-slip fit</li>
             <li>Quick-dry  -  convenient for family laundry</li>
             <li>OEKO-TEX certified  -  safe for children</li>
@@ -290,7 +291,7 @@
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Family Fitted Sheets</h3>
-          <p>Family mattresses vary widely by region and customtatami setups. We make sheets for Super King (183Ã203cm US / 180Ã200cm UK) and custom family sizes including Japanese tatami and floor bed dimensions.</p>
+          <p>Family mattresses vary widely by region and customtatami setups. We make sheets for Super King (183  203cm US / 180  200cm UK) and custom family sizes including Japanese tatami and floor bed dimensions.</p>
           <p>Use the "Custom Size" option for any non-standard dimensions including circular or oval family beds.</p>
           <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
@@ -358,7 +359,7 @@
     document.querySelectorAll('.gallery-thumb').forEach(thumb => { thumb.addEventListener('click', () => { document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active')); thumb.classList.add('active'); document.getElementById('gallery-main-img').src = thumb.dataset.img; }); });
     let selectedRegion = 'th', selectedSize = '', selectedColor = 'pure-white';
     document.querySelectorAll('.region-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedRegion = btn.dataset.region; selectedSize = ''; document.getElementById('add-to-cart').disabled = true; }); });
-    const SIZES_BY_REGION = { th: { '152x198x30': { label: 'King  -  152Ã198Ã30cm', price: 2295 }, '183x198x30': { label: 'Super King  -  183Ã198Ã30cm', price: 2595 }, '200x200x30': { label: 'Custom Family  -  200Ã200Ã30cm', price: 2795 } }, us: { '153x203x30': { label: 'Queen  -  153Ã203Ã30cm', price: 2295 }, '183x203x30': { label: 'King  -  183Ã203Ã30cm', price: 2595 }, '200x200x30': { label: 'Custom Family  -  200Ã200Ã30cm', price: 2795 } }, uk: { '150x200x30': { label: 'King  -  150Ã200Ã30cm', price: 2295 }, '180x200x30': { label: 'Super King  -  180Ã200Ã30cm', price: 2595 } } };
+    const SIZES_BY_REGION = { th: { '152x198x30': { label: 'King  -  152  198  30cm', price: 2295 }, '183x198x30': { label: 'Super King  -  183  198  30cm', price: 2595 }, '200x200x30': { label: 'Custom Family  -  200  200  30cm', price: 2795 } }, us: { '153x203x30': { label: 'Queen  -  153  203  30cm', price: 2295 }, '183x203x30': { label: 'King  -  183  203  30cm', price: 2595 }, '200x200x30': { label: 'Custom Family  -  200  200  30cm', price: 2795 } }, uk: { '150x200x30': { label: 'King  -  150  200  30cm', price: 2295 }, '180x200x30': { label: 'Super King  -  180  200  30cm', price: 2595 } } };
     document.getElementById('size-select').addEventListener('change', function() { selectedSize = this.value; if (selectedSize && selectedSize !== 'custom') { const regionSizes = SIZES_BY_REGION[selectedRegion] || {}; const sizeData = regionSizes[selectedSize]; if (sizeData) { document.getElementById('price-display').textContent = 'USD  ' + sizeData.price.toLocaleString(); document.getElementById('add-to-cart').disabled = false; } } else if (selectedSize === 'custom') { document.getElementById('custom-dimensions').classList.add('open'); document.getElementById('add-to-cart').disabled = true; } else { document.getElementById('price-display').textContent = ' - '; document.getElementById('add-to-cart').disabled = true; } });
     document.querySelectorAll('.color-option').forEach(c => { c.addEventListener('click', () => { document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected')); c.classList.add('selected'); selectedColor = c.dataset.color; }); });
     document.getElementById('custom-quote-btn').addEventListener('click', () => { document.getElementById('custom-dimensions').classList.toggle('open'); });
@@ -369,7 +370,7 @@
     document.getElementById('dim-width').addEventListener('input', updateCustomPrice);
     document.getElementById('dim-length').addEventListener('input', updateCustomPrice);
     document.getElementById('dim-depth').addEventListener('input', updateCustomPrice);
-    document.getElementById('submit-custom-quote').addEventListener('click', () => { alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + document.getElementById('dim-width').value + ' Ã ' + document.getElementById('dim-length').value + ' Ã ' + document.getElementById('dim-depth').value + ' ' + unit); });
+    document.getElementById('submit-custom-quote').addEventListener('click', () => { alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + document.getElementById('dim-width').value + '    ' + document.getElementById('dim-length').value + '    ' + document.getElementById('dim-depth').value + ' ' + unit); });
     document.getElementById('add-to-cart').addEventListener('click', () => { const btn = document.getElementById('add-to-cart'); btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!'; btn.style.background = '#16a34a'; setTimeout(() => { btn.innerHTML = btn.innerHTML; btn.style.background = ''; btn.disabled = true; }, 2000); });
     document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open')); btn.classList.add('active'); document.getElementById('tab-' + btn.dataset.tab).classList.add('open'); }); });
   </script>

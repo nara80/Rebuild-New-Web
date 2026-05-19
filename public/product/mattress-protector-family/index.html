@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -125,7 +125,8 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } .reviews-header { flex-direction: column; align-items: start; } }
-    @media (max-width: 480px) { .dim-inputs { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) {
+    .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body class="product-page">
@@ -177,7 +178,7 @@
         <p class="product-tagline">Extra coverage for larger family-size mattresses. TPU + 3-layer waterproof barrier. OEKO-TEX certified.</p>
 
         <div class="product-rating">
-          <span class="stars">âââââ</span>
+          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">2 reviews</strong></span>
         </div>
 
@@ -186,14 +187,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn selected" data-region="us">ðºð¸ US</button>
-              <button class="region-btn" data-region="uk">ð¬ð§ UK</button>
-              <button class="region-btn" data-region="eu">ðªðº EU</button>
-              <button class="region-btn" data-region="au">ð¦ðº AU</button>
-              <button class="region-btn" data-region="th">ð¹ð­ TH</button>
-              <button class="region-btn" data-region="my">ð²ð¾ SG/MY</button>
-              <button class="region-btn" data-region="jp">ð¯ðµ JP</button>
-              <button class="region-btn" data-region="other">ð Other</button>
+              <button class="region-btn selected" data-region="us">º¸ US</button>
+              <button class="region-btn" data-region="uk">¬§ UK</button>
+              <button class="region-btn" data-region="eu">ªº EU</button>
+              <button class="region-btn" data-region="au">¦º AU</button>
+              <button class="region-btn" data-region="th">¹­ TH</button>
+              <button class="region-btn" data-region="my">²¾ SG/MY</button>
+              <button class="region-btn" data-region="jp">¯µ JP</button>
+              <button class="region-btn" data-region="other"> Other</button>
             </div>
           </div>
 
@@ -202,22 +203,22 @@
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
-              <optgroup label="ðºð¸ US / Canada">
-                <option value="153x203x30" data-price="2095">Queen  -  153Ã203Ã30cm (60Ã80Ã12in)</option>
-                <option value="193x203x30" data-price="2295">King  -  193Ã203Ã30cm (76Ã80Ã12in)</option>
-                <option value="183x203x30" data-price="2295">CA King  -  183Ã203Ã30cm (72Ã80Ã12in)</option>
+              <optgroup label="º¸ US / Canada">
+                <option value="153x203x30" data-price="2095">Queen  -  153  203  30cm (60  80  12in)</option>
+                <option value="193x203x30" data-price="2295">King  -  193  203  30cm (76  80  12in)</option>
+                <option value="183x203x30" data-price="2295">CA King  -  183  203  30cm (72  80  12in)</option>
               </optgroup>
-              <optgroup label="ð¬ð§ UK">
-                <option value="150x200x30" data-price="2095">King  -  150Ã200Ã30cm</option>
-                <option value="183x198x30" data-price="2295">Super King  -  183Ã198Ã30cm</option>
+              <optgroup label="¬§ UK">
+                <option value="150x200x30" data-price="2095">King  -  150  200  30cm</option>
+                <option value="183x198x30" data-price="2295">Super King  -  183  198  30cm</option>
               </optgroup>
-              <optgroup label="ðªðº EU">
-                <option value="160x200x30" data-price="2095">King  -  160Ã200Ã30cm</option>
-                <option value="180x200x30" data-price="2295">Super King  -  180Ã200Ã30cm</option>
+              <optgroup label="ªº EU">
+                <option value="160x200x30" data-price="2095">King  -  160  200  30cm</option>
+                <option value="180x200x30" data-price="2295">Super King  -  180  200  30cm</option>
               </optgroup>
-              <optgroup label="ð¹ð­ Thailand">
-                <option value="120x200x30" data-price="1895">6ft Queen  -  120Ã200Ã30cm</option>
-                <option value="152x198x30" data-price="2095">King  -  152Ã198Ã30cm</option>
+              <optgroup label="¹­ Thailand">
+                <option value="120x200x30" data-price="1895">6ft Queen  -  120  200  30cm</option>
+                <option value="152x198x30" data-price="2095">King  -  152  198  30cm</option>
               </optgroup>
               <optgroup label="Custom Size">
                 <option value="custom">Custom dimensions â</option>
@@ -341,7 +342,7 @@
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Mattress Protectors</h3>
-          <p>Designed for Queen, King, CA King, and Super King mattresses. The protector skirt depth is 30cm (12 inch). Measure your mattress width Ã length Ã depth to confirm fit.</p>
+          <p>Designed for Queen, King, CA King, and Super King mattresses. The protector skirt depth is 30cm (12 inch). Measure your mattress width    length    depth to confirm fit.</p>
           <p>Select your region above to see standard family sizes. For custom dimensions, use the "Custom Size" option.</p>
           <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
@@ -368,7 +369,7 @@
         <div class="reviews-summary">
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars">âââââ</div>
+            <div class="summary-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <div class="summary-text">Based on 2 verified reviews</div>
           </div>
         </div>
@@ -380,7 +381,7 @@
                 <div class="review-name">Sarah J.</div>
                 <div class="review-country">United States</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Perfect for our king size bed. We have two kids who sometimes wet the bed and this protector has saved our mattress multiple times. Easy to wash and fits well."</div>
             <div class="review-product">Verified purchase: Waterproof Mattress Protector  -  Family Â· King / Pure White</div>
@@ -392,7 +393,7 @@
                 <div class="review-name">Amy W.</div>
                 <div class="review-country">Australia</div>
               </div>
-              <div class="review-stars">âââââ</div>
+              <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"We co-sleep with our toddler and needed something that would protect our mattress. The TPU layer works perfectly and it's held up well after many washes."</div>
             <div class="review-product">Verified purchase: Waterproof Mattress Protector  -  Family Â· Queen / Sand</div>
@@ -480,10 +481,10 @@
     });
 
     const SIZES_BY_REGION = {
-      us: { '153x203x30': { label: 'Queen  -  153Ã203Ã30cm', price: 2095 }, '193x203x30': { label: 'King  -  193Ã203Ã30cm', price: 2295 }, '183x203x30': { label: 'CA King  -  183Ã203Ã30cm', price: 2295 } },
-      uk: { '150x200x30': { label: 'King  -  150Ã200Ã30cm', price: 2095 }, '183x198x30': { label: 'Super King  -  183Ã198Ã30cm', price: 2295 } },
-      eu: { '160x200x30': { label: 'King  -  160Ã200Ã30cm', price: 2095 }, '180x200x30': { label: 'Super King  -  180Ã200Ã30cm', price: 2295 } },
-      th: { '120x200x30': { label: '6ft Queen  -  120Ã200Ã30cm', price: 1895 }, '152x198x30': { label: 'King  -  152Ã198Ã30cm', price: 2095 } }
+      us: { '153x203x30': { label: 'Queen  -  153  203  30cm', price: 2095 }, '193x203x30': { label: 'King  -  193  203  30cm', price: 2295 }, '183x203x30': { label: 'CA King  -  183  203  30cm', price: 2295 } },
+      uk: { '150x200x30': { label: 'King  -  150  200  30cm', price: 2095 }, '183x198x30': { label: 'Super King  -  183  198  30cm', price: 2295 } },
+      eu: { '160x200x30': { label: 'King  -  160  200  30cm', price: 2095 }, '180x200x30': { label: 'Super King  -  180  200  30cm', price: 2295 } },
+      th: { '120x200x30': { label: '6ft Queen  -  120  200  30cm', price: 1895 }, '152x198x30': { label: 'King  -  152  198  30cm', price: 2095 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {
