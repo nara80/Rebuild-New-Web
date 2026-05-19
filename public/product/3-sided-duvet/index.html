@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -120,7 +120,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
-    .region-btn {
+    .region-btn { padding: 8px 6px; border: 2px solid var(--color-border); border-radius: 6px; background: #fff; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); cursor: pointer; text-align: center; transition: all 0.15s; font-family: var(--font-main); }
       padding: 8px 6px;
       border: 2px solid var(--color-border);
       border-radius: 6px;
@@ -561,14 +561,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn" data-region="us"> US</button>
-              <button class="region-btn" data-region="uk"> UK</button>
-              <button class="region-btn" data-region="eu"> EU</button>
-              <button class="region-btn" data-region="au"> AU</button>
-              <button class="region-btn selected" data-region="th"> TH</button>
-              <button class="region-btn" data-region="my"> SG/MY</button>
-              <button class="region-btn" data-region="jp"> JP</button>
-              <button class="region-btn" data-region="other">Other</button>
+              <button class="region-btn selected" data-region="us">🇺🇸 US</button>
+              <button class="region-btn" data-region="uk">🇬🇧 UK</button>
+              <button class="region-btn" data-region="eu">🇪🇺 EU</button>
+              <button class="region-btn" data-region="au">🇦🇺 AU</button>
+              <button class="region-btn" data-region="th">🇹🇭 TH</button>
+              <button class="region-btn" data-region="my">🇲🇾 SG/MY</button>
+              <button class="region-btn" data-region="jp">🇯🇵 JP</button>
+              <button class="region-btn" data-region="other">🌍 Other</button>
             </div>
           </div>
 
@@ -1089,5 +1089,6 @@
       });
     });
   </script>
+<script src="/js/reviews-carousel.js"></script>
 </body>
 </html>

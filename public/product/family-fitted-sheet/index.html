@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -161,14 +161,14 @@
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
-              <button class="region-btn" data-region="us"> US</button>
-              <button class="region-btn" data-region="uk"> UK</button>
-              <button class="region-btn" data-region="eu"> EU</button>
-              <button class="region-btn" data-region="au"> AU</button>
-              <button class="region-btn selected" data-region="th"> TH</button>
-              <button class="region-btn" data-region="my"> SG/MY</button>
-              <button class="region-btn" data-region="jp"> JP</button>
-              <button class="region-btn" data-region="other"> Other</button>
+              <button class="region-btn selected" data-region="us">🇺🇸 US</button>
+              <button class="region-btn" data-region="uk">🇬🇧 UK</button>
+              <button class="region-btn" data-region="eu">🇪🇺 EU</button>
+              <button class="region-btn" data-region="au">🇦🇺 AU</button>
+              <button class="region-btn" data-region="th">🇹🇭 TH</button>
+              <button class="region-btn" data-region="my">🇲🇾 SG/MY</button>
+              <button class="region-btn" data-region="jp">🇯🇵 JP</button>
+              <button class="region-btn" data-region="other">🌍 Other</button>
             </div>
           </div>
           <div class="panel-section">
@@ -374,5 +374,6 @@
     document.getElementById('add-to-cart').addEventListener('click', () => { const btn = document.getElementById('add-to-cart'); btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!'; btn.style.background = '#16a34a'; setTimeout(() => { btn.innerHTML = btn.innerHTML; btn.style.background = ''; btn.disabled = true; }, 2000); });
     document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open')); btn.classList.add('active'); document.getElementById('tab-' + btn.dataset.tab).classList.add('open'); }); });
   </script>
+<script src="/js/reviews-carousel.js"></script>
 </body>
 </html>
