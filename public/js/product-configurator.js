@@ -2,18 +2,22 @@
    MildMate Product Configurator — Phase 4+
    Fitted sheet real pricing formula
    Hybrid: standard size presets + custom W×L×D
-   Applies to: standard-fitted-sheet, deep-pocket-fitted-sheet, dorm-fitted-sheet
+   Applies to: standard-fitted-sheet, deep-pocket-fitted-sheet, dorm-fitted-sheet, rv-truck-fitted-sheet
    ============================================ */
 
 (function () {
+  // ── Detect product variant ──
+  var path = window.location.pathname;
+  var isRVTruck = path.indexOf('rv-truck') !== -1;
+
   // ── Pricing constants (THB) ──
   var SQCM_PER_YARD = 23744;
   var PACKING = 100;
   var DELIVERY = 50;
   var OP_RATE = 0.15;
   var MKT_RATE = 0.20;
-  var MARGIN_RATE = 0.30;
-  var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE; // 1.65
+  var MARGIN_RATE = isRVTruck ? 0.45 : 0.30;
+  var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE; // 1.65 or 1.80
   var THB_TO_USD = 30;
   var MAX_W = 220;
 
@@ -82,7 +86,9 @@
 
   var state = {
     unit: 'cm',
-    fabric: 'cloudsoft'
+    fabric: 'cloudsoft',
+    quotePriceThb: 0,
+    quotePriceUsd: 0
   };
 
   if (!fabricSelect && !sizeSelect) return; // Not a configurator page — exit
@@ -104,6 +110,10 @@
             '<input type="text" id="qf-address" placeholder="Optional"></label>' +
           '<label class="quote-field">Telephone' +
             '<input type="text" id="qf-phone" placeholder="Optional"></label>' +
+          '<!-- honeypot -->' +
+          '<div style="position:absolute;left:-9999px" aria-hidden="true">' +
+            '<label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off"></label>' +
+          '</div>' +
           '<button type="submit" class="quote-submit-btn" id="qf-submit">Submit</button>' +
           '<p class="quote-form-note">We\'ll email you within 24 hours.</p>' +
         '</form>' +
@@ -210,6 +220,8 @@
       return;
     }
     var result = calcFittedSheet(wCm, lCm, dCm, state.fabric);
+    state.quotePriceThb = result.thb;
+    state.quotePriceUsd = result.usd;
     customPrice.textContent = formatPrice(result.thb, result.usd);
   }
 
@@ -322,16 +334,24 @@
     if (!valid) return;
 
     // Collect dimensions
-    var wCm = 0, lCm = 0, dCm = 0, dimDisplay = '—';
+    var wCm = 0, lCm = 0, dCm = 0, dimDisplay = '';
     if (dimW && dimL && dimD) {
       wCm = parseFloat(dimW.value) || 0;
       lCm = parseFloat(dimL.value) || 0;
       dCm = parseFloat(dimD.value) || 0;
       if (state.unit === 'in') { wCm = inchToCm(wCm); lCm = inchToCm(lCm); dCm = inchToCm(dCm); }
-      if (wCm && lCm && dCm) {
-        dimDisplay = Math.round(wCm) + ' \u00D7 ' + Math.round(lCm) + ' \u00D7 ' + Math.round(dCm) + ' cm';
-      }
     }
+
+    if (!wCm || !lCm || !dCm) {
+      document.getElementById('qf-submit').disabled = false;
+      document.getElementById('qf-submit').textContent = 'Submit';
+      if (customDims && !customDims.classList.contains('open')) {
+        customDims.classList.add('open');
+      }
+      alert('Please enter your mattress dimensions (W × L × D) before submitting the quote. Click "Custom Size" first.');
+      return;
+    }
+    dimDisplay = Math.round(wCm) + ' \u00D7 ' + Math.round(lCm) + ' \u00D7 ' + Math.round(dCm) + ' cm';
 
     var fabricName = (fabricSelect && fabricSelect.options[fabricSelect.selectedIndex])
       ? fabricSelect.options[fabricSelect.selectedIndex].text
@@ -349,12 +369,15 @@
       body: JSON.stringify({
         customer_name: name,
         email: email,
-        address: (document.getElementById('qf-address') as HTMLInputElement).value.trim() || undefined,
-        telephone: (document.getElementById('qf-phone') as HTMLInputElement).value.trim() || undefined,
+        address: (document.getElementById('qf-address') ? document.getElementById('qf-address').value.trim() : '') || undefined,
+        telephone: (document.getElementById('qf-phone') ? document.getElementById('qf-phone').value.trim() : '') || undefined,
         product_slug: productSlug,
         dimensions: { w: wCm, l: lCm, d: dCm, unit: 'cm' },
         fabric: state.fabric,
-        color: document.querySelector('.color-option.selected') ? document.querySelector('.color-option.selected').getAttribute('data-color') : undefined
+        color: document.querySelector('.color-option.selected') ? document.querySelector('.color-option.selected').getAttribute('data-color') : undefined,
+        quoted_price_thb: state.quotePriceThb,
+        quoted_price_usd: state.quotePriceUsd,
+        _website: (document.querySelector('[name="_website"]') ? document.querySelector('[name="_website"]').value : '') || undefined
       })
     })
     .then(function (r) { return r.json(); })

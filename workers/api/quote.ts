@@ -1,6 +1,19 @@
 // MildMate Quote API
 // POST /api/quote — submit custom quote request
-// Stores in custom_quotes + subscribers (dedup) + emails contact@mildmate.com
+// Stores in custom_quotes + subscribers (dedup) + emails contact@mildmate.com via Resend
+// Anti-spam: honeypot field + IP rate limit (3/hour)
+
+import { sendEmail } from "./email";
+
+const QUOTE_RATE_LIMIT = 3; // max per hour per IP
+const QUOTE_RATE_WINDOW = "-1 hour";
+
+async function checkRateLimit(db: any, ip: string, endpoint: string, max: number): Promise<boolean> {
+  const row = await db.prepare(
+    `SELECT COUNT(*) as cnt FROM rate_limits WHERE ip_address = ? AND endpoint = ? AND created_at > datetime('now', ?)`
+  ).bind(ip, endpoint, QUOTE_RATE_WINDOW).first();
+  return (row?.cnt || 0) >= max;
+}
 
 export async function handleQuote(request: Request, env: any): Promise<Response> {
   if (request.method !== "POST") {
@@ -12,7 +25,27 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
 
   try {
     const body: any = await request.json();
-    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color } = body;
+    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+
+    // ── Honeypot check — bots auto-fill hidden fields ──
+    if (_website && _website.length > 0) {
+      // Silently accept to not tip off the bot
+      return new Response(JSON.stringify({ success: true, message: "Quote submitted." }), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // ── IP rate limit ──
+    const ip = request.headers.get("cf-connecting-ip") || "unknown";
+    if (await checkRateLimit(env.DB, ip, "quote", QUOTE_RATE_LIMIT)) {
+      return new Response(JSON.stringify({
+        error: "Too many requests. Please try again later."
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     if (!customer_name || !customer_name.trim()) {
       return new Response(JSON.stringify({ error: "Customer name is required" }), {
@@ -57,12 +90,13 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     const cleanSlug = product_slug;
 
     await env.DB.prepare(`
-      INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       quoteId, cleanName, cleanEmail,
       address?.trim() || null, telephone?.trim() || null,
-      cleanSlug, dimsJson, fabric || null, color || null
+      cleanSlug, dimsJson, fabric || null, color || null,
+      quoted_price_thb || null
     ).run();
 
     // Also save email to subscribers (dedup via UNIQUE constraint)
@@ -70,9 +104,20 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
       `INSERT OR IGNORE INTO subscribers (email, source, language) VALUES (?, 'quote', 'en')`
     ).bind(cleanEmail).run();
 
-    // Fire-and-forget: notify contact@mildmate.com via MailChannels
-    sendQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId).catch(e => {
-      console.error("Quote email failed:", e.message);
+    // Record rate limit entry
+    await env.DB.prepare(
+      `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'quote')`
+    ).bind(ip).run();
+
+    // Fire-and-forget: notify contact@mildmate.com via Resend
+    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd);
+    sendEmail(env, {
+      to: "contact@mildmate.com",
+      replyTo: cleanEmail,
+      subject: `[Quote Request] ${quoteId} — ${cleanName} (${cleanSlug})`,
+      text: emailBody,
+    }).catch(e => {
+      console.error("Quote email failed:", e);
     });
 
     return new Response(JSON.stringify({
@@ -93,10 +138,11 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
   }
 }
 
-async function sendQuoteEmail(
+function buildQuoteEmail(
   name: string, email: string, address: string, phone: string,
-  slug: string, dimsJson: string, fabric: string, color: string, quoteId: string
-): Promise<void> {
+  slug: string, dimsJson: string, fabric: string, color: string,
+  quoteId: string, priceThb: number | null, priceUsd: number | null
+): string {
   let dimStr = "—";
   try {
     const d = JSON.parse(dimsJson);
@@ -105,7 +151,14 @@ async function sendQuoteEmail(
     }
   } catch { dimStr = dimsJson; }
 
-  const body = `New custom quote submitted from MildMate website:
+  let priceLine = "—";
+  if (priceUsd != null && priceUsd > 0) {
+    const usd = Number(priceUsd).toFixed(2);
+    const thb = priceThb != null ? ` (฿${priceThb.toLocaleString()})` : "";
+    priceLine = `$${usd} USD${thb}`;
+  }
+
+  return `New custom quote submitted from MildMate website:
 
 Quote ID: ${quoteId}
 Product: ${slug}
@@ -120,22 +173,6 @@ Telephone: ${phone}
 Dimensions: ${dimStr}
 Fabric: ${fabric}
 Color: ${color}
-
-━━━ Info ━━━
-Date: ${new Date().toISOString()}
+Price: ${priceLine}
 `;
-
-  await fetch("https://api.mailchannels.net/tx/v1/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      personalizations: [{
-        to: [{ email: "contact@mildmate.com", name: "MildMate" }],
-        reply_to: { email, name },
-      }],
-      from: { email: "noreply@mildmate-new.pages.dev", name: "MildMate Quotes" },
-      subject: `[Quote Request] ${quoteId} — ${name} (${slug})`,
-      content: [{ type: "text/plain", value: body }],
-    }),
-  });
 }

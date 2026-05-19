@@ -7,7 +7,7 @@ export interface Product {
   title_en: string;
   title_th: string | null;
   category: string;
-  fabric_options: string | null;  -- e.g. 'BreezePlus,CloudSoft'
+  fabric_options: string | null;  // e.g. 'BreezePlus,CloudSoft'
   price_usd: number | null;
   price_thb: number | null;
   description_en: string | null;
@@ -18,7 +18,7 @@ export interface Product {
   base_price_thb: number | null;
   rate_per_cm2_usd: number | null;
   rate_per_cm2_thb: number | null;
-  tags: string | null;  -- comma-separated cross-sell tags, e.g. 'Family, Duvet, Marine, Pets'
+  tags: string | null;  // comma-separated cross-sell tags, e.g. 'Family, Duvet, Marine, Pets'
 }
 
 export async function listProducts(env: any, filters: { category?: string; fabric?: string; search?: string }): Promise<Product[]> {

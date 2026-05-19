@@ -515,6 +515,10 @@
         <p>Join our newsletter for exclusive offers, new product alerts, and bedding tips.</p>
         <form class="email-form" id="email-signup-form" action="/api/subscribe" method="post">
           <input type="email" name="email" placeholder="Enter your email" required aria-label="Email address" id="email-signup-input">
+          <!-- honeypot -->
+          <div style="position:absolute;left:-9999px" aria-hidden="true">
+            <label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off" id="_hp-website"></label>
+          </div>
           <button type="submit" id="email-signup-btn">Subscribe</button>
         </form>
         <p class="email-form-msg" id="email-signup-msg" aria-live="polite"></p>
@@ -654,7 +658,7 @@
           const res = await fetch('/api/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, source: 'homepage', language: lang }),
+            body: JSON.stringify({ email: email, source: 'homepage', language: lang, _website: (document.getElementById('_hp-website') || {}).value || '' }),
           });
 
           const data = await res.json();

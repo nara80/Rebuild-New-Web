@@ -617,8 +617,12 @@
         <div class="blog-newsletter">
           <h2>Get Bedding Tips &amp; Guides</h2>
           <p>Join 4,200+ readers. One email per month  -  no spam, unsubscribe anytime.</p>
-          <form class="newsletter-form" action="/api/subscribe" method="post">
-            <input type="email" name="email" placeholder="your@email.com" required aria-label="Email address">
+          <form class="newsletter-form" id="blog-newsletter-form">
+            <input type="email" name="email" placeholder="your@email.com" required aria-label="Email address" id="blog-nl-input">
+            <!-- honeypot -->
+            <div style="position:absolute;left:-9999px" aria-hidden="true">
+              <label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off" id="blog-nl-hp"></label>
+            </div>
             <button type="submit">Subscribe</button>
           </form>
         </div>
@@ -686,5 +690,38 @@
   </footer>
 
   <script src="/js/nav.js"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('blog-newsletter-form');
+      var input = document.getElementById('blog-nl-input');
+      var hp = document.getElementById('blog-nl-hp');
+      if (!form || !input) return;
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = 'Subscribing...';
+        try {
+          var res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: input.value.trim(), source: 'blog', language: 'en', _website: hp ? hp.value : '' })
+          });
+          var data = await res.json();
+          btn.textContent = data.success ? 'Subscribed!' : 'Error';
+          btn.style.background = data.success ? '#16a34a' : '#ef4444';
+          if (data.success) input.value = '';
+        } catch (err) {
+          btn.textContent = 'Try again';
+          btn.style.background = '#ef4444';
+        }
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.textContent = 'Subscribe';
+          btn.style.background = '';
+        }, 3000);
+      });
+    })();
+  </script>
 </body>
 </html>

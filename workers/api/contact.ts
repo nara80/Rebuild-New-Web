@@ -1,5 +1,7 @@
 // MildMate Contact Form API
-// Sends contact form submissions via MailChannels to contact@mildmate.com
+// Sends contact form submissions via Resend to contact@mildmate.com
+
+import { sendEmail } from "./email";
 
 export interface ContactInput {
   name: string;
@@ -52,9 +54,6 @@ export async function handleContact(request: Request, env: any): Promise<Respons
     );
   }
 
-  // MailChannels API endpoint (free, no API key needed via Cloudflare Workers)
-  const mailchannelsUrl = "https://api.mailchannels.net/tx/v1/send";
-
   const emailBody = `New contact form submission from MildMate website:
 
 Name: ${name}
@@ -68,52 +67,25 @@ ${message}
 Sent from: ${request.headers.get("cf-connecting-ip") || "unknown"}
 User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
 
-  try {
-    const mailResponse = await fetch(mailchannelsUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: "contact@mildmate.com", name: "MildMate Support" }],
-            reply_to: { email, name },
-          },
-        ],
-        from: {
-          email: "noreply@mildmate-new.pages.dev",
-          name: "MildMate Contact Form",
-        },
-        subject: `[MildMate Contact] ${subject}`,
-        content: [
-          {
-            type: "text/plain",
-            value: emailBody,
-          },
-        ],
-      }),
-    });
+  const result = await sendEmail(env, {
+    to: "contact@mildmate.com",
+    replyTo: email,
+    subject: `[MildMate Contact] ${subject}`,
+    text: emailBody,
+  });
 
-    if (!mailResponse.ok) {
-      const errorText = await mailResponse.text();
-      console.error("MailChannels error:", errorText);
-      return new Response(
-        JSON.stringify({ error: "Failed to send message. Please try again later." }),
-        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Thank you! Your message has been sent. We typically reply within 24 hours.",
-      }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
-  } catch (e: any) {
-    console.error("Contact send error:", e.message);
+  if (!result.success) {
     return new Response(
       JSON.stringify({ error: "Failed to send message. Please try again later." }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: "Thank you! Your message has been sent. We typically reply within 24 hours.",
+    }),
+    { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+  );
 }
