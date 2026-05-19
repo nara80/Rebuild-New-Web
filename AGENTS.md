@@ -83,7 +83,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions (US/CA, UK, EU, AU, TH, MY/SG, India, JP) — Family/Co-Sleep expanded for all, Duvet tables corrected, Thailand uses Bed Size/Duvet Cover Size column headers, Dakimakura body pillow added to all pillow tables except Thailand, all footers now full 4-col global. All 12 EN+TH product/category pages complete with brand-hero (CI Blue gradient + blueprint grid), dual-path hero messaging (standard sizes + custom quote), "View Options" CTA (EN) / "ดูตัวเลือก" (TH), all real product photos in place. Blog index (`/blogs/`) + blog post template (`/blogs/template/index.html`) — hero image, article body, author box, social share, related products section |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **Fitted sheet pricing formula** implemented in `workers/api/pricing.ts` + `public/js/product-configurator.js` (shared configurator on 3 product pages: standard/deep-pocket/dorm). Formula: fabric dimensions W_fabric=W+2D+14, L_fabric=L+2D+14; fabric cost (area×rate/23,744)×1.20; tiered sewing (120–500 THB); 15% Op + 20% Mkt + 30% Margin markup; round to 100 THB; USD=THB/30. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → MailChannels email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **USD-only pricing** on EN pages, THB-only on TH pages. Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
@@ -131,58 +131,65 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 ### Primary Navigation — Product Type (SEO discoverability)
 | Category | URL | Products |
 |---|---|---|
-| Sheets | `/sheets/` | Marine, Family, Pet Owner, Adjustable (Fitted) + Standard, Extra Deep Pocket (Flat) |
-| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper, Pet Owner |
-| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
-| Protection | `/protection/` | Mattress Protectors + Pillow Protectors |
-| Accessories | `/accessories/` | BedBridge Connector |
+| Sheets | `/sheets/` | Standard, Deep Pocket, Marine, Dorm, RV & Truck, Family, Pet Owner (Fitted) + Standard, Extra Deep Pocket (Flat) — 9 products |
+| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper, Pet Owner, Marine, RV, Dorm, Duvet Insert — 6 products |
+| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham — 3 products |
+| Protection | `/protection/` | Standard, Family, Deep Pocket, Pet-Proof, 6-Sided Encasement, RV & Truck Encasement, Pillow Protector — 7 products |
+| Accessories | `/accessories/` | BedBridge Connector, Bed Lifter — 2 products |
 
 ### SEO Landing Pages — Use Case (high-conversion)
 | Category | URL | Cross-links to Product Type |
 |---|---|---|
-| Marine & Yacht | `/marine/` | `/sheets/` — Marine Fitted Sheet |
-| Family & Co-Sleep | `/family/` | `/sheets/` — Family Fitted Sheet |
-| Deep Pocket | `/deep-pocket/` | `/sheets/` — Adjustable Fitted Sheet, Extra Deep Pocket Flat |
-| Boarding Dorm | `/boarding-dorm/` | `/duvet-covers/` — 3-Sided Zipper Duvet |
-| Pet Owner Bedding | `/pets/` | `/sheets/`, `/duvet-covers/` — BreezePlus anti-fur |
-| RV & Truck Cab | `/rv-truck/` | `/sheets/`, `/protection/` — CloudSoft quick-dry |
+| Marine & Yacht | `/marine/` | `/sheets/` — Marine Fitted Sheet; `/duvet-covers/` — Marine Duvet Cover |
+| Family & Co-Sleep | `/family/` | `/sheets/` — Family Fitted Sheet; `/accessories/` — BedBridge Connector |
+| Deep Pocket | `/deep-pocket/` | `/sheets/` — Deep Pocket Fitted Sheet, Extra Deep Pocket Flat; `/protection/` — Deep Pocket Protector |
+| Boarding Dorm | `/boarding-dorm/` | `/sheets/` — Dorm Fitted Sheet; `/duvet-covers/` — 3-Sided Zipper, Dorm Duvet Cover |
+| Pet Owner Bedding | `/pets/` | `/sheets/` — Pet Owner Fitted Sheet; `/duvet-covers/` — Pet Owner Duvet Cover; `/protection/` — Pet-Proof Protector |
+| RV & Truck Cab | `/rv-truck/` | `/sheets/` — RV & Truck Fitted Sheet; `/protection/` — RV & Truck Encasement |
 
-### Product Detail Pages (22 product listings with clean slugs)
+### Product Detail Pages (27 product listings with clean slugs)
 | Product | URL | Category |
 |---|---|---|
-| 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Cover, Pets |
-| Custom Family Fitted Sheet | `/product/family-fitted-sheet/` | Fitted Sheet, Family |
-| Marine Fitted Sheet (V-Berth) | `/product/marine-fitted-sheet/` | Fitted Sheet, Marine |
-| Pet-Proof Mattress Protector | `/product/mattress-protector-pet/` | Protector, Pets |
-| 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protector, Protection, RV-Truck, Marine |
-| BedBridge Connector | `/product/bedbridge-connector/` | Accessory, Family |
-| Pillow Protector | `/product/pillow-protector-general/` | Protector, Protection |
-| Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Fitted Sheet, Pets |
-| Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Cover, Pets |
-| Adjustable Mattress Fitted Sheet | `/product/adjustable-fitted-sheet/` | Fitted Sheet |
-| Flat Sheet — Standard | `/product/flat-sheet-standard/` | Flat Sheet |
-| Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Flat Sheet |
-| Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcase |
-| Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcase |
-| Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcase |
-| Waterproof Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection |
-| Waterproof Mattress Protector — Family | `/product/mattress-protector-family/` | Protection, Family |
-| Waterproof Mattress Protector — Dorm | `/product/mattress-protector-dorm/` | Protection, Dorm |
+| Standard Fitted Sheet | `/product/standard-fitted-sheet/` | Sheets |
+| Deep Pocket Fitted Sheet | `/product/deep-pocket-fitted-sheet/` | Sheets, Deep Pocket |
+| Marine Fitted Sheet (V-Berth) | `/product/marine-fitted-sheet/` | Sheets, Marine |
+| Dorm Fitted Sheet | `/product/dorm-fitted-sheet/` | Sheets, Boarding Dorm |
+| RV & Truck Fitted Sheet | `/product/rv-truck-fitted-sheet/` | Sheets, RV-Truck |
+| Family Fitted Sheet | `/product/family-fitted-sheet/` | Sheets, Family |
+| Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Sheets, Pets |
+| Flat Sheet — Standard | `/product/flat-sheet-standard/` | Sheets |
+| Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Sheets, Deep Pocket |
+| 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Covers, Boarding Dorm |
+| Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Covers, Pets |
+| Duvet Cover — Marine | `/product/duvet-cover-marine/` | Duvet Covers, Marine |
+| Duvet Cover — RV | `/product/duvet-cover-rv/` | Duvet Covers, RV-Truck |
+| Duvet Cover — Dorm | `/product/duvet-cover-dorm/` | Duvet Covers, Boarding Dorm |
+| Duvet Insert | `/product/duvet-insert/` | Duvet Covers |
+| Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcases |
+| Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcases |
+| Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcases |
+| Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection |
+| Mattress Protector — Family | `/product/mattress-protector-family/` | Protection, Family |
+| Mattress Protector — Deep Pocket | `/product/mattress-protector-deep-pocket/` | Protection, Deep Pocket |
+| Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protection, Pets |
+| 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protection, Marine, RV-Truck, Boarding Dorm |
 | RV & Truck Mattress Encasement | `/product/rv-truck-mattress-encasement/` | Protection, RV-Truck |
-| RV & Truck Pillow Protector | `/product/rv-truck-pillow-protector/` | Protection, RV-Truck |
-| Custom Pet-Proof Mattress Protector | `/product/custom-pet-proof-mattress-protector/` | Protection, Pets |
-| BedBridge (Thai version) | `/product/bedbridge-connector-th/` | Accessory, Family |
+| Pillow Protector | `/product/pillow-protector-general/` | Protection |
+| BedBridge Connector | `/product/bedbridge-connector/` | Accessories, Family |
+| Bed Lifter (38 cm) | `/product/mattress-lift-helper/` | Accessories |
 
 ---
 
-## Database Schema (4 tables)
+## Database Schema (6 tables, 5 active)
 
 - `products` — product catalog
 - `orders` — customer orders with custom dimensions
+- `custom_quotes` — quote requests (name, email, dimensions, fabric, status)
 - `abandoned_carts` — email + cart JSON for recovery
-- `subscribers` — email signup list
+- `subscribers` — email signup list (dedup: quote form also inserts here)
+- `standard_prices` (planned) — pre-calculated prices per product × size × fabric for admin-controlled standard-size pricing
 
-See `migrations/001_initial.sql` for full schema.
+See `migrations/001_initial.sql` + `migrations/003_quote_fields.sql` for current schema.
 
 ---
 
@@ -205,7 +212,8 @@ D:\00_MildMate\Re-Bulit_Web\
 │   └── admin\                        ← Admin dashboard API
 ├── admin\                            ← Admin dashboard HTML
 ├── migrations\                       ← Database migrations
-│   └── 001_initial.sql
+│   ├── 001_initial.sql
+│   └── 003_quote_fields.sql
 └── MildMateDataBase\                  ← Knowledge base files
     └── ExistingWeb\
 ```

@@ -196,7 +196,7 @@
           </div>
           <div class="panel-section">
             <div class="panel-label">Fabric</div>
-            <div class="fabric-badge">CloudSoft  -  OEKO-TEX Certified</div>
+            <select class="fabric-select" id="fabric-select" style="width:100%; padding:12px 14px; border:2px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); font-size:0.9375rem; color:var(--color-text); background:#fff; cursor:pointer; appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center;"><option value="cloudsoft">CloudSoft — Everyday comfort · OEKO-TEX</option><option value="breezeplus">BreezePlus — Anti-fur · Pet-proof · Siriraj certified</option><option value="premacotton">PremaCotton — Premium long-staple · OEKO-TEX</option><option value="ecoluxe">EcoLuxe — Natural unbleached cotton</option></select>
           </div>
           <div class="panel-section">
             <div class="panel-label">Color  -  CloudSoft</div>
@@ -243,7 +243,7 @@
               <span class="price-label">Estimated price</span>
               <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote →</button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Custom Quote</button>
           </div>
           <div class="payment-badges">
             <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Visa / MC</span>
@@ -357,25 +357,7 @@
   <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
-  <script>
-    document.querySelectorAll('.gallery-thumb').forEach(thumb => { thumb.addEventListener('click', () => { document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active')); thumb.classList.add('active'); document.getElementById('gallery-main-img').src = thumb.dataset.img; }); });
-    let selectedRegion = 'us', selectedSize = '', selectedColor = 'pure-white';
-    document.querySelectorAll('.region-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedRegion = btn.dataset.region; selectedSize = ''; document.getElementById('add-to-cart').disabled = true; }); });
-    const SIZES_BY_REGION = { us: { '99x191x30': { label: 'Twin  -  99×191×30cm', price: 1695 }, '137x191x30': { label: 'Full  -  137×191×30cm', price: 1895 }, '153x203x30': { label: 'Queen  -  153×203×30cm', price: 2095 }, '183x203x30': { label: 'King  -  183×203×30cm', price: 2295 } }, th: { '107x191x30': { label: '3.5ft  -  107×191×30cm', price: 1695 }, '120x200x30': { label: '6ft Queen  -  120×200×30cm', price: 1895 }, '152x198x30': { label: 'King  -  152×198×30cm', price: 2095 } }, uk: { '90x190x30': { label: 'Single  -  90×190×30cm', price: 1645 }, '135x190x30': { label: 'Double  -  135×190×30cm', price: 1895 }, '150x200x30': { label: 'King  -  150×200×30cm', price: 2095 } }, eu: { '90x200x30': { label: 'Single  -  90×200×30cm', price: 1695 }, '140x200x30': { label: 'Double  -  140×200×30cm', price: 1895 }, '160x200x30': { label: 'King  -  160×200×30cm', price: 2095 } } };
-    document.getElementById('size-select').addEventListener('change', function() { selectedSize = this.value; if (selectedSize && selectedSize !== 'custom') { const regionSizes = SIZES_BY_REGION[selectedRegion] || {}; const sizeData = regionSizes[selectedSize]; if (sizeData) { const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }); document.getElementById('price-display').textContent = fmt.format(sizeData.price / 35); document.getElementById('add-to-cart').disabled = false; } } else if (selectedSize === 'custom') { document.getElementById('custom-dimensions').classList.add('open'); document.getElementById('add-to-cart').disabled = true; } else { document.getElementById('price-display').textContent = ' - '; document.getElementById('add-to-cart').disabled = true; } });
-    document.querySelectorAll('.color-option').forEach(c => { c.addEventListener('click', () => { document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected')); c.classList.add('selected'); selectedColor = c.dataset.color; }); });
-    document.getElementById('custom-quote-btn').addEventListener('click', () => { document.getElementById('custom-dimensions').classList.toggle('open'); });
-    let unit = 'cm';
-    document.getElementById('unit-cm').addEventListener('click', () => { unit = 'cm'; document.getElementById('unit-cm').classList.add('active'); document.getElementById('unit-in').classList.remove('active'); });
-    document.getElementById('unit-in').addEventListener('click', () => { unit = 'in'; document.getElementById('unit-in').classList.add('active'); document.getElementById('unit-cm').classList.remove('active'); });
-    function updateCustomPrice() { const w = parseFloat(document.getElementById('dim-width').value); const l = parseFloat(document.getElementById('dim-length').value); const d = parseFloat(document.getElementById('dim-depth').value); if (w && l && d) { let area = w * l; if (unit === 'in') { area = w * 2.54 * l * 2.54; } const basePrice = Math.round(area * 0.055 + 800); const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }); document.getElementById('custom-price').textContent = fmt.format(basePrice / 35); } else { document.getElementById('custom-price').textContent = ' - '; } }
-    document.getElementById('dim-width').addEventListener('input', updateCustomPrice);
-    document.getElementById('dim-length').addEventListener('input', updateCustomPrice);
-    document.getElementById('dim-depth').addEventListener('input', updateCustomPrice);
-    document.getElementById('submit-custom-quote').addEventListener('click', () => { alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + document.getElementById('dim-width').value + ' × ' + document.getElementById('dim-length').value + ' × ' + document.getElementById('dim-depth').value + ' ' + unit); });
-    document.getElementById('add-to-cart').addEventListener('click', () => { const btn = document.getElementById('add-to-cart'); btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!'; btn.style.background = '#16a34a'; setTimeout(() => { btn.innerHTML = btn.innerHTML; btn.style.background = ''; btn.disabled = true; }, 2000); });
-    document.querySelectorAll('.tab-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open')); btn.classList.add('active'); document.getElementById('tab-' + btn.dataset.tab).classList.add('open'); }); });
-  </script>
+  <script src="/js/product-configurator.js"></script>
 <script src="/js/reviews-carousel.js"></script>
 </body>
 </html>

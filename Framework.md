@@ -77,11 +77,11 @@
 **Shop by Product — 5 categories (primary navigation, SEO discoverability)**
 | Category | URL | Products |
 |---|---|---|
-| Sheets | `/sheets/` | Fitted (Marine, Family, Pet, Adjustable) + Flat (Standard, Deep Pocket) |
-| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper + Pet Owner Duvet |
-| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham |
-| Protection | `/protection/` | Mattress Protectors + Pillow Protectors |
-| Accessories | `/accessories/` | BedBridge Connector |
+| Sheets | `/sheets/` | Standard, Deep Pocket, Marine, Dorm, RV & Truck, Family, Pet Owner (Fitted) + Standard, Extra Deep Pocket (Flat) — 9 products |
+| Duvet Covers | `/duvet-covers/` | 3-Sided Zipper, Pet Owner, Marine, RV, Dorm, Duvet Insert — 6 products |
+| Pillowcases | `/pillowcases/` | Envelope, Zipper, Sham — 3 products |
+| Protection | `/protection/` | Standard, Family, Deep Pocket, Pet-Proof, 6-Sided Encasement, RV & Truck Encasement, Pillow Protector — 7 products |
+| Accessories | `/accessories/` | BedBridge Connector, Bed Lifter — 2 products |
 
 **Shop by Niche — 6 categories (use-case landing pages, high-conversion)**
 | Category | URL | Cross-links to |
@@ -195,35 +195,35 @@ The configurator appears in two places: the **Homepage** (conversion preview) an
 
 ## Custom Quote-to-Cart Workflow (Custom Sizes)
 
-For non-standard sizes (marine V-berths, truck cabs, family co-sleep, RVs), customers cannot add directly to cart. Instead they submit a quote request, you manually price it, and they add the locked price via a magic link.
+For non-standard sizes (marine V-berths, truck cabs, family co-sleep, RVs), customers submit a quote request via popup form. Admin reviews, prices manually, and customer receives a magic link to add the locked price to cart.
 
-### Step-by-Step Flow
+### Step-by-Step Flow (Implemented 2026-05-19)
 
 ```
-Customer on Product Page (Custom Configurator)
+Customer on Product Page (Fitted Sheet Configurator)
        ↓
-Enters dimensions + selects fabric + extras
+Enters custom W×L×D + selects fabric
        ↓
-Clicks "Submit for Custom Quote"
+Clicks "Custom Quote" (inside custom dimensions panel)
        ↓
-POST /api/quote  →  D1 custom_quotes table (status='pending')
-                     + MailChannels email to admin
+Popup Form: Name* + Email* + Address + Telephone
        ↓
-Customer sees: "Quote submitted. We'll reply within 24 hours."
+[Submit] → POST /api/quote → D1 custom_quotes (status='pending')
+                            → D1 subscribers (INSERT OR IGNORE dedup)
+                            → MailChannels email to contact@mildmate.com
        ↓
-ADMIN: Review in dashboard → set quoted_price → approve
+Confirmation popup: "We'll email you@... within 24 hours."
+  Dimension: W × L × D cm   Fabric: CloudSoft   Quote ID: QT-250519-001
        ↓
-Customer receives email: "Your quote QT-250512-001 is ready — $89.00"
+[OK] dismisses popup
        ↓
-Magic link: /quote/QT-250512-001
+ADMIN: Receives email → Review in dashboard → set quoted_price → approve
+       ↓
+Customer receives email: "Your quote QT-250519-001 is ready — $89.00"
+       ↓
+Magic link: /quote/QT-250519-001  (Phase 5+)
        ↓
 Customer opens link → sees locked quote with "Add to Cart — $89.00"
-       ↓
-Quote item added to cart with type='custom_quote', price frozen
-       ↓
-Standard checkout (Phase 5 Stripe flow)
-       ↓
-Order stored with quote_id reference + full dimensions
 ```
 
 ### Quote Item in Cart JSON
@@ -671,8 +671,10 @@ mildmate-web/
 │   │   └── admin.css                ← Admin dashboard styles
 │   ├── js/
 │   │   ├── cart.js                  ← localStorage cart logic
-│   │   ├── configurator.js          ← Price calculator (both modes)
-│   │   └── geo.js                   ← Currency toggle
+│   │   ├── configurator.js          ← Homepage price calculator (both modes)
+│   │   ├── product-configurator.js  ← Product page configurator (fitted sheet formula, standard/custom hybrid)
+│   │   ├── geo.js                   ← Currency toggle
+│   │   └── cookie-consent.js        ← GDPR consent banner
 │   ├── images/
 │   │   ├── logo.png                 ← Main logo (transparent PNG)
 │   │   ├── Hero01.jpg               ← Homepage hero background
@@ -817,18 +819,20 @@ CREATE TABLE orders (
 
 -- Custom Quotes (custom-size orders requiring manual pricing)
 CREATE TABLE custom_quotes (
-  id INTEGER PRIMARY KEY,
-  quote_id TEXT UNIQUE NOT NULL,   -- e.g., "QT-250512-001"
-  customer_email TEXT NOT NULL,
-  product_type TEXT,               -- 'marine', 'truck_cab', 'family_cosleep', 'rv', 'other'
-  dimensions TEXT,                 -- JSON: {"w":183,"l":198,"h":15,"unit":"cm"}
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  quote_id TEXT NOT NULL UNIQUE,     -- e.g., "QT-250519-001"
+  customer_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  address TEXT,
+  telephone TEXT,
+  product_slug TEXT NOT NULL,
+  dimensions TEXT NOT NULL,          -- JSON: {"w":183,"l":198,"d":51,"unit":"cm"}
   fabric TEXT,
   color TEXT,
-  extras TEXT,                     -- JSON array: ["embroidery_name", "tpu_liner"]
   status TEXT DEFAULT 'pending',     -- pending | approved | rejected | expired
-  quoted_price INTEGER,            -- cents, NULL until admin approves
-  expires_at TEXT,                 -- ISO timestamp, 7 days from created
-  created_at TEXT DEFAULT (datetime('now'))
+  quoted_price INTEGER,              -- cents, NULL until admin approves
+  expires_at DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Abandoned Carts
@@ -889,6 +893,75 @@ CREATE TABLE customers (
 - Shipping costs are calculated separately at checkout based on destination country
 - Import tariffs are the customer's responsibility and are NOT included in any displayed price
 - This note appears on every price display: *"Price excludes shipping & import tariff"*
+- **Currency display:** EN pages (`/product/.../`) show USD only; TH pages (`/th/product/.../`) show THB only
+
+### Fitted Sheet Pricing Formula (Implemented 2026-05-19)
+
+Active for 3 products: Standard, Deep Pocket, Dorm Fitted Sheets.
+
+**Fabric dimensions (cm):**
+```
+W_fabric = W + 2D + 14
+L_fabric = L + 2D + 14
+```
+
+**Fabric rates per yard (91.44cm × 260cm bolt = 23,774.4 cm²):**
+| Fabric | Rate (THB/yd) | After 20% waste |
+|---|---|---|
+| CloudSoft | 100 | area × 1.20 × 100/23,744 |
+| BreezePlus, PremaCotton, EcoLuxe | 180 | area × 1.20 × 180/23,744 |
+
+**Sewing cost — tiered by fabric area (cm²):**
+| Area Range | Cost (THB) |
+|---|---|
+| ≤ 51,600 | 120 |
+| ≤ 71,000 | 200 |
+| ≤ 91,200 | 300 |
+| ≤ 120,000 | 400 |
+| > 120,000 | 500 |
+
+**Accessories:** 10% of fabric cost
+
+**Markups (on subtotal = fabric + sewing + accessories + packing 100 + delivery 50):**
+- +15% Operations
+- +20% Marketing
+- +30% Margin
+
+**Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30.
+
+**Max width:** 220cm — above trigger directs to Family/Co-Sleep custom quote.
+
+**Implementation files:**
+- `workers/api/pricing.ts` — server-side (3 fitted products use real formula; others use placeholder)
+- `public/js/configurator.js` — homepage configurator with same formula
+- `public/js/product-configurator.js` — shared configurator on product detail pages
+
+### Hybrid Pricing Architecture (Future — D1 standard_prices)
+
+When all 27 product formulas are ready:
+
+```
+Standard Size selected → GET /api/pricing?product=...&size=153x203x30&fabric=cloudsoft
+                       → D1 standard_prices lookup → return admin-managed price
+
+Custom W×L×D entered  → POST /api/pricing { w, l, d, fabric }
+                       → Formula calculates → return live price
+```
+
+**D1 `standard_prices` table schema (planned):**
+```sql
+CREATE TABLE standard_prices (
+  id INTEGER PRIMARY KEY,
+  product_slug TEXT NOT NULL,
+  size_key TEXT NOT NULL,     -- '153x203x30'
+  fabric TEXT NOT NULL,
+  label_en TEXT,
+  price_thb INTEGER NOT NULL,
+  price_usd REAL NOT NULL,
+  UNIQUE(product_slug, size_key, fabric)
+);
+```
+Admin seeds via formula initially, can override any price for business control.
 
 ---
 
@@ -1192,7 +1265,7 @@ Every product detail page (`/product/[slug]/`) uses this layout:
     │   │   ├── Width / Length / Depth inputs
     │   │   ├── Unit toggle (cm / inch)
     │   │   ├── Live price estimate
-    │   │   └── Submit for Custom Quote button
+    │   │   └── [Custom Quote] button → popup form (Name*, Email*, Address, Telephone)
     │   └── Payment badges (Visa/MC, Apple Pay, Secure checkout)
     ├── Trust Signals (2×2 grid of icons)
     └── Trust Badges row
@@ -1268,11 +1341,18 @@ Selected dot gets primary-color border ring.
 - 4 cards in responsive grid
 - Card: image (4:3) + title + price + price note
 
-### Custom Quote Flow
+### Custom Quote Flow (Implemented 2026-05-19)
 
 Custom dimensions panel expands on "Custom Size" button click.
 Unit toggle (cm/inch) converts all input labels.
-Submit button triggers alert (mock) — real flow: POST to `/api/quote` → admin approves → magic link email.
+"Custom Quote" button (renamed from "Submit for Custom Quote →") opens a popup modal form:
+- Name* + Email* + Address + Telephone + [Submit]
+- Validates required fields client-side
+- POSTs to `/api/quote`
+- Quote stored in `custom_quotes` table + email saved to `subscribers` (dedup)
+- MailChannels notification sent to `contact@mildmate.com`
+- Confirmation popup shows email, dimensions, fabric, quote ID
+- [OK] dismisses
 
 ### Add to Cart Flow (Phase 5 stub)
 
@@ -1282,9 +1362,9 @@ Real cart logic stored in `cart.js` localStorage with product details + dimensio
 
 ---
 
-## Updated File Structure (2026-05-18)
+## Updated File Structure (2026-05-19)
 
-New catalog system files added:
+New catalog system files + configurator:
 
 ```
 ├── data/
@@ -1294,6 +1374,9 @@ New catalog system files added:
 ├── scripts/
 │   ├── build-products.js          ← Full page generator (initial build)
 │   └── regenerate-products.js     ← Incremental updater (run after JSON changes)
+├── public/js/
+│   ├── configurator.js            ← Homepage configurator
+│   └── product-configurator.js    ← Shared product page configurator (3 fitted sheet products)
 ```
 
 All existing pages remain in `public/`. The regenerator overwrites only the product grid sections in each page — hero, descriptions, footer, and all other content is preserved.

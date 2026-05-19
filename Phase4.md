@@ -1188,6 +1188,22 @@ The existing D1 `products` table (from Phase 1) stores **catalog metadata for th
 | D1 `products` | Admin CRUD, Phase 5+ order processing | Phase 7 Admin Dashboard |
 | `data/products.json` | All storefront catalog pages | `scripts/regenerate-products.js` |
 
+### Additional Updates (2026-05-19)
+
+| Item | Status | Notes |
+|---|---|---|
+| Product inventory verified | ✅ | 27 products confirmed across 5 categories (Sheets:9, Duvet Covers:6, Pillowcases:3, Protection:7, Accessories:2). All 28 product directories and 5 category pages cross-referenced. |
+| Fitted sheet pricing formula | ✅ Implemented | Real formula in `workers/api/pricing.ts` for 3 products (Standard, Deep Pocket, Dorm). Fabric dimensions: W_fabric=W+2D+14, L_fabric=L+2D+14. Area-based fabric cost with 20% waste: CloudSoft 100 THB/yd, others 180 THB/yd. Tiered sewing: 120–500 THB by area. Markups: +15% Op, +20% Mkt, +30% Margin. Round to 100 THB. USD ÷ 30. Max W=220cm (above → Family/Co-Sleep). |
+| Homepage configurator formula | ✅ Updated | `public/js/configurator.js` uses same fitted sheet formula constants |
+| Product page configurators | ✅ Built | `public/js/product-configurator.js` — shared configurator on 3 product detail pages. Standard size dropdown → parse W×L×D → formula. Custom W×L×D → formula. Fabric dropdown (4 collections). Unit toggle (cm/inch). |
+| Product detail pages enhanced | ✅ | `standard-fitted-sheet`: fabric badge → dropdown + external JS reference. `dorm-fitted-sheet`: same upgrade. `deep-pocket-fitted-sheet`: full configurator panel (gallery, pricing-panel, fabric dropdown, custom dimensions, tabs, reviews, related products, brand-hero styling, full CSS). |
+| Hybrid pricing architecture designed | ✅ Documented | Future: D1 `standard_prices` table for admin-controlled standard-size pricing. Standard sizes → API D1 lookup. Custom dimensions → live formula. Implementation deferred until all 27 formulas ready. Design documented in `pricing.ts` header comment + Framework.md. |
+| USD-only pricing (EN pages) | ✅ Implemented | EN product pages show `$XX.XX` only. TH pages (when built) show THB only. Detected via URL path `/th/` prefix. |
+| Custom quote popup flow | ✅ Implemented | "Custom Quote" button (renamed from "Submit for Custom Quote →") → modal popup: Name*, Email*, Address, Telephone → [Submit] → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → MailChannels email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). |
+| Quote API worker | ✅ Created | `workers/api/quote.ts` — validates, generates QT-YYMMDD-NNN ID, inserts to D1, fire-and-forget MailChannels notification |
+| Custom quotes D1 table | ✅ Created | `migrations/003_quote_fields.sql` — `custom_quotes` table: quote_id, customer_name, email, address, telephone, product_slug, dimensions (JSON), fabric, color, status |
+| AGENTS.md + Framework.md updated | ✅ | 27-product table, pricing formula docs, standard_prices D1 schema, file structure (product-configurator.js, quote.ts), quote flow documentation, Phase 4 notes expanded |
+
 No D1 schema change is needed. The JSON file is the build-time source; D1 is the runtime/order database.
 
 ---

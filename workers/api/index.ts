@@ -8,6 +8,7 @@ import { handleGeo } from "./geo-currency";
 import { handleSubscribe } from "./subscribe";
 import handleUnsubscribe from "./unsubscribe";
 import { handleContact } from "./contact";
+import { handleQuote } from "./quote";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -49,6 +50,11 @@ export default {
     // Contact form API
     if (path === "/api/contact" || path === "/api/contact/") {
       return handleContact(request, env);
+    }
+
+    // Custom Quote API
+    if (path === "/api/quote" || path === "/api/quote/") {
+      return handleQuote(request, env);
     }
 
     return new Response(JSON.stringify({ error: "Not Found" }), {

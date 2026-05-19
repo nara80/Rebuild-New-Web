@@ -581,7 +581,7 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 
 ---
 
-## Phase 4 Completion Status ✅ (2026-05-16)
+## Phase 4 Completion Status ✅ (2026-05-19)
 
 All build steps completed. Phase 4 is done.
 
@@ -592,10 +592,11 @@ All build steps completed. Phase 4 is done.
 | Static Pages TH | 22 pages total (6 static + 16 product/category) | ✅ Complete |
 | Blog | Index + pagination page 2 + template + 1 real post (17 posts) | ✅ Complete |
 | Product/Category Pages | 12 pages (5 primary + 6 SEO landing + 1 listing) | ✅ Complete |
+| Product Inventory Verified | 27 products across 5 categories (9/6/3/7/2) | ✅ Verified |
 | Size Guide Pages | 4 pages with comprehensive tables | ✅ Complete |
 | Header/Nav | EN + TH with search overlay + mobile drawer | ✅ Complete |
 | Global Footer | 4-col restored on all pages | ✅ Complete |
-| Workers API | products, pricing, geo-currency, subscribe, unsubscribe | ✅ Complete |
+| Workers API | products, pricing (real fitted sheet formula), geo-currency, subscribe, unsubscribe, quote (popup form + MailChannels), contact | ✅ Complete |
 | Cookie Consent | GDPR banner with modal, GA4 conditional load | ✅ Complete |
 | Font System | Quicksand (EN) + Sarabun (TH) bilingual | ✅ Complete |
 | Image Compression | 92.5% size reduction | ✅ Complete |
@@ -603,7 +604,9 @@ All build steps completed. Phase 4 is done.
 | Product Detail Pages | All with configurator, tabs, related products | ✅ Complete |
 | Fabric Pages | 4-tab showcase with comparison table | ✅ Complete |
 | Redirects | `_redirects` file with WordPress 301s | ✅ Complete |
-- BreezePlus color palette (9 swatches): Dark Grey #4D545B, Silver #B7BEC8, Sand #D9D1C1, Sky #9CCAE1, Emerald #618283, Sea #5A7DA2, Pure White #FFFFFF, Baby Pink #E9B7BF, Ivory #F1EFE1
-- Product Catalog System | `data/products.json` + `scripts/regenerate-products.js` | ✅ Complete
-- If any page shows 404, confirm the folder exists in `public/` (e.g., `public/about/index.html`)
-- If styles look broken, hard-refresh or check that `main.css` loaded in DevTools Network tab
+| Product Catalog System | `data/products.json` + `scripts/regenerate-products.js` | ✅ Complete |
+| Fitted Sheet Pricing Formula | Real formula in `pricing.ts` + `product-configurator.js` (3 products) | ✅ Implemented |
+| D1 standard_prices Design | Hybrid pricing architecture documented (future) | ✅ Designed |
+| Custom Quote Popup | Modal form (Name/Email/Address/Phone) → `/api/quote` → D1 + MailChannels | ✅ Implemented |
+| Custom Quotes D1 Table | Migration 003: `custom_quotes` (10 fields, quote_id, dimensions JSON) | ✅ Created |
+| USD-only Pricing (EN) | EN pages show `$XX.XX` only; TH pages THB-only | ✅ Implemented |
