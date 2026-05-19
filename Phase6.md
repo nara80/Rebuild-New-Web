@@ -15,11 +15,11 @@ Phase 6 has the fewest decisions of any phase — most of the build is Droid wri
 
 ### Requirement 1 — Confirm Phase 5 Is Complete
 
-Phase 6 builds on top of the checkout and MailChannels email system from Phase 5. If Phase 5 is not complete, the recovery email cannot be sent.
+Phase 6 builds on top of the checkout and Resend email system from Phase 5. If Phase 5 is not complete, the recovery email cannot be sent.
 
 **Confirm before starting:**
 - [ ] A full test purchase in Phase 5 succeeded (order appeared in D1 and emails were received)
-- [ ] MailChannels DNS TXT record is active — customer confirmation email was successfully received in your inbox
+- [ ] Resend domain verified + `RESEND_API_KEY` secret set — customer confirmation email was successfully received
 - [ ] `workers/api/email.ts` exists (built in Phase 5)
 
 **If any item is missing:** Go back and complete Phase 5 before continuing.
@@ -119,7 +119,7 @@ Cloudflare Cron Trigger runs every hour (automatically)
            ↓
 Checks D1: "Any carts older than 24 hours with recovered = 0?"
            ↓
-     YES → Sends recovery email via MailChannels
+     YES → Sends recovery email via Resend
             Updates recovered = 1 (never sends again)
       NO → Does nothing, waits for next hour
            ↓
@@ -239,7 +239,7 @@ Once all 4 requirements are ready, hand off to Droid.
 **Tell Droid:**
 > "Phase 5 is complete. Please build Phase 6 — the abandoned cart recovery system.
 >
-> **Requirement 1:** Phase 5 confirmed complete — test purchase succeeded, MailChannels emails working.
+> **Requirement 1:** Phase 5 confirmed complete — test purchase succeeded, Resend emails working.
 > **Requirement 2 — Subject line:** [your chosen subject line]
 > **Requirement 3 — Email body:**
 > - Opening: [your opening line]
@@ -392,7 +392,7 @@ After deployment, confirm Cloudflare has registered and is running your Cron Tri
 Go through this checklist before moving to Phase 7:
 
 **Initial Requirements:**
-- [ ] Phase 5 confirmed complete (test purchase worked, MailChannels emails received)
+- [ ] Phase 5 confirmed complete (test purchase worked, Resend emails received)
 - [ ] Recovery email subject line chosen and written down
 - [ ] Recovery email body text written (opening, button, closing, sign-off)
 - [ ] Discount decision made (no discount / code + percentage)
@@ -416,7 +416,7 @@ Go through this checklist before moving to Phase 7:
 
 | Problem | Solution |
 |---|---|
-| Phase 5 MailChannels email was never tested | Go back and complete Phase 5 Step 5.11 (test purchase + confirm emails received) before starting Phase 6. |
+| Phase 5 Resend email was never tested | Go back and complete Phase 5 Step 5.11 (test purchase + confirm emails received) before starting Phase 6. |
 | Not sure what to write for the email body | Use the example email in Step 6.1 exactly as written — it is already proven to work. Change the sign-off name only. |
 | Want to use a discount but no Stripe coupon code exists | Go to Stripe dashboard → **Products** → **Coupons** → **Create coupon** → set percentage off → name your code (e.g., `COMEBACK5`). Then give the code to Droid. |
 | Email not saved to D1 after entering in checkout | Tell Droid: "The cart is not being saved to D1 when I enter email in checkout Step 2." |

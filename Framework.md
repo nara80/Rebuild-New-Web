@@ -5,7 +5,7 @@
 - **Backend:** Cloudflare Workers (TypeScript)
 - **Database:** Cloudflare D1 + Storage R2
 - **Deploy:** `mildmate-new.pages.dev` → cutover to `www.mildmate.com` when 100% done
-- **Email:** MailChannels (free, built into Workers — no signup needed)
+- **Email:** Resend (free tier: 100/day, `RESEND_API_KEY` required as Pages secret)
 - **Payments:** Stripe (USD + PromptPay THB natively)
 - **Admin auth:** Cloudflare Access (Google login)
 - **Parcel tracking:** AfterShip (FedEx, UPS, DHL, Thai Post + 100+ carriers) — tracking page at `/track/[tracking]` via AfterShip embedded widget or API
@@ -210,7 +210,7 @@ Popup Form: Name* + Email* + Address + Telephone
        ↓
 [Submit] → POST /api/quote → D1 custom_quotes (status='pending')
                             → D1 subscribers (INSERT OR IGNORE dedup)
-                            → MailChannels email to contact@mildmate.com
+                            → Resend email to contact@mildmate.com
        ↓
 Confirmation popup: "We'll email you@... within 24 hours."
   Dimension: W × L × D cm   Fabric: CloudSoft   Quote ID: QT-250519-001
@@ -531,7 +531,7 @@ Step 3: Pick Your Size
 
 ```
 Standard GDPR-compatible privacy policy
-Covers: data collected, usage, cookies, third parties (Stripe, MailChannels), rights
+Covers: data collected, usage, cookies, third parties (Stripe, Resend), rights
 ```
 
 ### 12. Customer Reviews (`/reviews/`)
@@ -630,6 +630,10 @@ mildmate-web/
 ├── blog-mockup.html           ← Blog template design reference
 ├── mockup.html                ← Homepage design reference
 │
+├── functions/                        ← Pages Functions (local dev bridge)
+│   └── api/
+│       └── [[path]].ts               ← API catch-all → Worker handlers
+│
 ├── public/                          ← Cloudflare Pages static files
 │   ├── index.html                   ← Homepage EN
 │   ├── th/index.html                ← Homepage TH
@@ -672,7 +676,7 @@ mildmate-web/
 │   ├── js/
 │   │   ├── cart.js                  ← localStorage cart logic
 │   │   ├── configurator.js          ← Homepage price calculator (both modes)
-│   │   ├── product-configurator.js  ← Product page configurator (fitted sheet formula, standard/custom hybrid)
+│   │   ├── product-configurator.js  ← Product page configurator (fitted sheet formula, 4 products incl. RV/Truck 45% margin)
 │   │   ├── geo.js                   ← Currency toggle
 │   │   └── cookie-consent.js        ← GDPR consent banner
 │   ├── images/
@@ -739,7 +743,8 @@ mildmate-web/
 │   │   ├── checkout.ts
 │   │   ├── webhook.ts
 │   │   ├── email.ts
-│   │   ├── subscribers.ts
+│   │   ├── email.ts                  ← Shared Resend email helper
+│   ├── subscribers.ts
 │   │   ├── auth.ts                  ← Social login (Google, Facebook, LINE, Apple)
 │   │   ├── customers.ts             ← Customer profile, order history, saved addresses
 │   │   └── quote.ts                 ← Custom quote: submit, approve, fetch by ID
@@ -758,7 +763,9 @@ mildmate-web/
 │   └── subscribers.html
 │
 └── migrations/
-    └── 001_initial.sql
+    ├── 001_initial.sql
+    ├── 003_quote_fields.sql
+    └── 004_rate_limits.sql
 ```
 
 ---
@@ -852,6 +859,14 @@ CREATE TABLE subscribers (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Rate Limits (anti-spam)
+CREATE TABLE rate_limits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ip_address TEXT NOT NULL,
+  endpoint TEXT NOT NULL,         -- 'quote' | 'subscribe'
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Customers (social login accounts — optional)
 CREATE TABLE customers (
   id INTEGER PRIMARY KEY,
@@ -876,7 +891,7 @@ CREATE TABLE customers (
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
 | **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling | ✅ Complete |
 | **5** | Checkout + Stripe + Social Login | Guest checkout + Stripe payments + optional social login (Google, Facebook, LINE, Apple) + My Account page with AfterShip parcel tracking | ⏸️ Pending |
-| **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → MailChannels | ⏸️ Pending |
+| **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → Resend | ⏸️ Pending |
 | **7** | Admin Dashboard | Orders (V-Berth fields + tracking_number + carrier), AfterShip tracking display, product CRUD, R2 uploader, CSV export | ⏸️ Pending |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏸️ Pending |
@@ -897,7 +912,7 @@ CREATE TABLE customers (
 
 ### Fitted Sheet Pricing Formula (Implemented 2026-05-19)
 
-Active for 3 products: Standard, Deep Pocket, Dorm Fitted Sheets.
+Active for 4 products: Standard, Deep Pocket, Dorm, RV & Truck Fitted Sheets.
 
 **Fabric dimensions (cm):**
 ```
@@ -925,7 +940,7 @@ L_fabric = L + 2D + 14
 **Markups (on subtotal = fabric + sewing + accessories + packing 100 + delivery 50):**
 - +15% Operations
 - +20% Marketing
-- +30% Margin
+- +30% Margin (45% for RV & Truck Fitted Sheet)
 
 **Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30.
 
@@ -934,7 +949,7 @@ L_fabric = L + 2D + 14
 **Implementation files:**
 - `workers/api/pricing.ts` — server-side (3 fitted products use real formula; others use placeholder)
 - `public/js/configurator.js` — homepage configurator with same formula
-- `public/js/product-configurator.js` — shared configurator on product detail pages
+- `public/js/product-configurator.js` — shared configurator on product detail pages (auto-detects rv-truck page for 45% margin)
 
 ### Hybrid Pricing Architecture (Future — D1 standard_prices)
 
@@ -1350,7 +1365,7 @@ Unit toggle (cm/inch) converts all input labels.
 - Validates required fields client-side
 - POSTs to `/api/quote`
 - Quote stored in `custom_quotes` table + email saved to `subscribers` (dedup)
-- MailChannels notification sent to `contact@mildmate.com`
+- Resend notification sent to `contact@mildmate.com`
 - Confirmation popup shows email, dimensions, fabric, quote ID
 - [OK] dismisses
 
@@ -1376,7 +1391,7 @@ New catalog system files + configurator:
 │   └── regenerate-products.js     ← Incremental updater (run after JSON changes)
 ├── public/js/
 │   ├── configurator.js            ← Homepage configurator
-│   └── product-configurator.js    ← Shared product page configurator (3 fitted sheet products)
+│   └── product-configurator.js    ← Shared product page configurator (4 fitted sheet products)
 ```
 
 All existing pages remain in `public/`. The regenerator overwrites only the product grid sections in each page — hero, descriptions, footer, and all other content is preserved.

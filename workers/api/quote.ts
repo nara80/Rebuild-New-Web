@@ -5,7 +5,7 @@
 
 import { sendEmail } from "./email";
 
-const QUOTE_RATE_LIMIT = 3; // max per hour per IP
+const QUOTE_RATE_LIMIT = 5; // max per hour per IP
 const QUOTE_RATE_WINDOW = "-1 hour";
 
 async function checkRateLimit(db: any, ip: string, endpoint: string, max: number): Promise<boolean> {

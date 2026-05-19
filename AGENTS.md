@@ -22,7 +22,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | Backend | Cloudflare Workers (TypeScript) |
 | Database | Cloudflare D1 (`mildmate-db`) |
 | Storage | Cloudflare R2 (`mildmate-assets`) |
-| Email | MailChannels (free, via Workers `fetch()`) |
+| Email | Resend (free tier: 100/day, `RESEND_API_KEY` secret) |
 | Payments | Stripe (USD + PromptPay THB) |
 | Admin Auth | Cloudflare Access (Google login) |
 | Deploy | Cloudflare Pages |
@@ -83,7 +83,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **Fitted sheet pricing formula** implemented in `workers/api/pricing.ts` + `public/js/product-configurator.js` (shared configurator on 3 product pages: standard/deep-pocket/dorm). Formula: fabric dimensions W_fabric=W+2D+14, L_fabric=L+2D+14; fabric cost (area×rate/23,744)×1.20; tiered sewing (120–500 THB); 15% Op + 20% Mkt + 30% Margin markup; round to 100 THB; USD=THB/30. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → MailChannels email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **USD-only pricing** on EN pages, THB-only on TH pages. Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **Fitted sheet pricing formula** implemented in `workers/api/pricing.ts` + `public/js/product-configurator.js` (shared configurator on 4 product pages: standard/deep-pocket/dorm/rv-truck). Formula: fabric dimensions W_fabric=W+2D+14, L_fabric=L+2D+14; fabric cost (area×rate/23,744)×1.20; tiered sewing (120–500 THB); markup: 15% Op + 20% Mkt + 30% Margin (45% for RV/Truck); round to 100 THB; USD=THB/30. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). **USD-only pricing** on EN pages, THB-only on TH pages. Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
@@ -97,7 +97,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | Decision | Value |
 |---|---|
 | Payment gateway | Stripe (PromptPay for TH, cards for global) |
-| Email service | MailChannels (free, no signup) |
+| Email service | Resend (free tier: 100/day, `RESEND_API_KEY` secret) |
 | Admin access | Cloudflare Access (Google login) |
 | Dev domain | `mildmate-new.pages.dev` |
 | Cutover trigger | 100% completion, not before |
@@ -180,16 +180,17 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 
 ---
 
-## Database Schema (6 tables, 5 active)
+## Database Schema (7 tables, 6 active)
 
 - `products` — product catalog
 - `orders` — customer orders with custom dimensions
 - `custom_quotes` — quote requests (name, email, dimensions, fabric, status)
 - `abandoned_carts` — email + cart JSON for recovery
 - `subscribers` — email signup list (dedup: quote form also inserts here)
+- `rate_limits` — IP-based rate limiting for anti-spam (quote: 3/hr, subscribe: 5/hr)
 - `standard_prices` (planned) — pre-calculated prices per product × size × fabric for admin-controlled standard-size pricing
 
-See `migrations/001_initial.sql` + `migrations/003_quote_fields.sql` for current schema.
+See `migrations/001_initial.sql` through `migrations/004_rate_limits.sql` for current schema.
 
 ---
 
@@ -207,13 +208,19 @@ D:\00_MildMate\Re-Bulit_Web\
 │   ├── images\                       ← Logo, product photos
 │   ├── _redirects                     ← SEO redirects (Phase 2)
 │   └── _headers                       ← Security headers
+├── functions\                         ← Pages Functions (local dev)
+│   └── api\
+│       └── [[path]].ts                 ← API catch-all router
 ├── workers\                           ← Cloudflare Workers
 │   ├── api\                          ← Public API endpoints
+│   │   ├── email.ts                  ← Shared Resend email helper
+│   │   └── ...
 │   └── admin\                        ← Admin dashboard API
 ├── admin\                            ← Admin dashboard HTML
 ├── migrations\                       ← Database migrations
 │   ├── 001_initial.sql
-│   └── 003_quote_fields.sql
+│   ├── 003_quote_fields.sql
+│   └── 004_rate_limits.sql
 └── MildMateDataBase\                  ← Knowledge base files
     └── ExistingWeb\
 ```

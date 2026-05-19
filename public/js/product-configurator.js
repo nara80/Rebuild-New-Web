@@ -285,7 +285,7 @@
     });
   }
 
-  // ── "Custom Quote" button → opens popup form ──
+  // ── "Custom Quote" button → validate dimensions then open popup ──
   var quoteOverlay = document.getElementById('quote-overlay');
   var confirmOverlay = document.getElementById('confirm-overlay');
 
@@ -293,6 +293,22 @@
   if (submitQuoteBtn) {
     submitQuoteBtn.addEventListener('click', function (e) {
       e.preventDefault();
+
+      // Validate dimensions are filled before showing popup
+      var w = parseFloat(dimW && dimW.value) || 0;
+      var l = parseFloat(dimL && dimL.value) || 0;
+      var d = parseFloat(dimD && dimD.value) || 0;
+      if (state.unit === 'in') { w = inchToCm(w); l = inchToCm(l); d = inchToCm(d); }
+      if (!w || !l || !d) {
+        // Ensure custom dimensions panel is visible
+        if (customDims && !customDims.classList.contains('open')) {
+          customDims.classList.add('open');
+        }
+        alert('Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+        if (dimW) dimW.focus();
+        return;
+      }
+
       quoteOverlay.classList.add('open');
       document.getElementById('qf-name').focus();
     });

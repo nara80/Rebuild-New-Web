@@ -179,7 +179,7 @@ Check off items one-by-one as you verify them in your browser at `http://127.0.0
 - [x] 14 sections: Introduction, Data Collection, Usage, Marketing & Communications, Third Parties, Cookies & Tracking, Data Retention, Your Rights, California CCPA, Security, Children's Privacy, Data Breach Notification, Account Deletion, International Transfers, Changes, Contact
 - [x] Cookie inventory table: Essential / Analytics (GA4) / Advertising (disabled until Pixel added)
 - [x] Unsubscribe mechanism linked: `/unsubscribe/` page + API endpoint
-- [x] Third-party services listed: Stripe, MailChannels, shipping carriers, Cloudflare, Google Analytics 4, Meta (placeholder)
+- [x] Third-party services listed: Stripe, Resend, shipping carriers, Cloudflare, Google Analytics 4, Meta (placeholder)
 - [x] Data retention: 7 years for orders, 14 months for analytics, 30 days for abandoned carts
 - [x] CCPA section for California buyers
 - [x] 72-hour data breach notification commitment
@@ -581,7 +581,7 @@ All 8 regional size guide pages updated with JS-based interactive tables:
 
 ---
 
-## Phase 4 Completion Status ✅ (2026-05-19)
+## Phase 4 Completion Status ✅ (2026-05-20)
 
 All build steps completed. Phase 4 is done.
 
@@ -596,7 +596,7 @@ All build steps completed. Phase 4 is done.
 | Size Guide Pages | 4 pages with comprehensive tables | ✅ Complete |
 | Header/Nav | EN + TH with search overlay + mobile drawer | ✅ Complete |
 | Global Footer | 4-col restored on all pages | ✅ Complete |
-| Workers API | products, pricing (real fitted sheet formula), geo-currency, subscribe, unsubscribe, quote (popup form + MailChannels), contact | ✅ Complete |
+| Workers API | products, pricing (real fitted sheet formula), geo-currency, subscribe, unsubscribe, quote (popup form + Resend), contact, email | ✅ Complete |
 | Cookie Consent | GDPR banner with modal, GA4 conditional load | ✅ Complete |
 | Font System | Quicksand (EN) + Sarabun (TH) bilingual | ✅ Complete |
 | Image Compression | 92.5% size reduction | ✅ Complete |
@@ -607,6 +607,10 @@ All build steps completed. Phase 4 is done.
 | Product Catalog System | `data/products.json` + `scripts/regenerate-products.js` | ✅ Complete |
 | Fitted Sheet Pricing Formula | Real formula in `pricing.ts` + `product-configurator.js` (3 products) | ✅ Implemented |
 | D1 standard_prices Design | Hybrid pricing architecture documented (future) | ✅ Designed |
-| Custom Quote Popup | Modal form (Name/Email/Address/Phone) → `/api/quote` → D1 + MailChannels | ✅ Implemented |
+| Custom Quote Popup | Modal form (Name/Email/Address/Phone) → `/api/quote` → D1 + Resend | ✅ Implemented |
 | Custom Quotes D1 Table | Migration 003: `custom_quotes` (10 fields, quote_id, dimensions JSON) | ✅ Created |
 | USD-only Pricing (EN) | EN pages show `$XX.XX` only; TH pages THB-only | ✅ Implemented |
+| MailChannels → Resend Migration | Shared `workers/api/email.ts` helper; `RESEND_API_KEY` secret | ✅ Complete |
+| Anti-Spam (Honeypot + Rate Limit) | `_website` honeypot + D1 `rate_limits` table (quote 3/hr, subscribe 5/hr) | ✅ Implemented |
+| RV & Truck Configurator | Shared configurator with 45% margin (vs 30%), CloudSoft locked | ✅ Implemented |
+| Pages Functions (local dev) | `functions/api/[[path]].ts` catch-all router | ✅ Created |

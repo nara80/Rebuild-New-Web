@@ -94,7 +94,7 @@ Every time a customer completes a payment, one "New Order" notification email is
 
 ### Requirement 6 — Your Email Sender Name and Address
 
-MailChannels sends emails on behalf of your domain. The "From" field in all customer emails will use this name and address.
+Resend sends emails on behalf of your domain. The "From" field in all customer emails will use this name and address.
 
 **Decide and write down:**
 - Sender name: `[e.g. MildMate Bedding]`
@@ -145,8 +145,8 @@ Payment successful
 Stripe sends a signal to your Worker (webhook)
        ↓
 Worker saves order to D1 database              ← appears in your Admin dashboard
-Worker sends email to customer (MailChannels)  ← order confirmation receipt
-Worker sends email to you (MailChannels)       ← "New Order" notification
+Worker sends email to customer (Resend)  ← order confirmation receipt
+Worker sends email to you (Resend)       ← "New Order" notification
        ↓
 Customer redirected back to your site
 Shows: "Order Confirmed" page
@@ -198,7 +198,7 @@ Order confirmation email sent
 | `public/track/index.html` | Parcel tracking page — AfterShip embedded widget (auto-detects carrier from tracking number) |
 | `workers/api/checkout.ts` | Creates a Stripe payment session |
 | `workers/api/webhook.ts` | Receives Stripe payment confirmation → saves order → sends emails |
-| `workers/api/email.ts` | MailChannels email helper (customer receipt + team notification) |
+| `workers/api/email.ts` | Resend email helper (customer receipt + team notification) |
 | `workers/api/subscribers.ts` | Saves email signups to D1 subscribers table |
 | `workers/api/auth.ts` | Social login handler (Google, Facebook, LINE, Apple OAuth) |
 | `workers/api/customers.ts` | Customer profile API — order history, saved addresses, re-order |
@@ -351,7 +351,7 @@ Write it down — you will give it to Droid in the next step.
 
 ### Step 5.7 — Decide Your Email Sender Name and Address
 
-MailChannels sends emails on your behalf. You need to decide what the "From" field says in emails customers receive.
+Resend sends emails on your behalf. You need to decide what the "From" field says in emails customers receive.
 
 **Examples:**
 - From: `MildMate Bedding <orders@mildmate.com>`
@@ -379,7 +379,7 @@ Once all requirements are ready and your Stripe keys are stored as Cloudflare se
 > **Requirement 6 — Email sender:** [Sender Name] <[sender address]>
 > **Requirement 7 — Social login:** [Build with Google + LINE / Skip for now — add later]
 >
-> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, MailChannels email system, My Account page with AfterShip parcel tracking, and the Parcel Tracking page.
+> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, Resend email system, My Account page with AfterShip parcel tracking, and the Parcel Tracking page.
 
 **Phase 5 Additional Requirements:**
 
@@ -403,7 +403,7 @@ Customer order tracking (FedEx, UPS, DHL, Thai Post, 100+ carriers) via AfterShi
 3. `public/track/index.html` — Parcel tracking page — AfterShip widget auto-detects FedEx/UPS/DHL/Thai Post + 100+ carriers from tracking number
 3. `workers/api/checkout.ts` — Stripe session creator
 4. `workers/api/webhook.ts` — payment confirmation handler
-5. `workers/api/email.ts` — MailChannels email sender
+5. `workers/api/email.ts` — Resend email sender
 6. `workers/api/auth.ts` — Social login handler (Google, Facebook, LINE, Apple)
 7. `workers/api/customers.ts` — Customer profile and order history API
 8. `public/order-confirmed/index.html` — success page
@@ -411,26 +411,15 @@ Customer order tracking (FedEx, UPS, DHL, Thai Post, 100+ carriers) via AfterShi
 
 ---
 
-### Step 5.9 — Add the MailChannels DNS Record
+### Step 5.9 — Verify Resend API Key
 
-Before emails can be sent, you need to add one DNS record to prove your domain owns the sending address.
+The `RESEND_API_KEY` secret must be set on your Pages project (already done in Phase 4). Droid will verify this is in place.
 
-**Droid will give you a record that looks like this:**
+**Domain verification:** Done via Resend dashboard auto-configuration (connects to Cloudflare, pushes DNS records). No manual DNS TXT records needed.
 
-```
-Type:  TXT
-Name:  _mailchannels
-Value: v=mc1 cfid=mildmate-web.pages.dev
-```
-
-**How to add it:**
-1. Go to your domain registrar (where you bought `mildmate.com`)
-   - Common registrars: GoDaddy, Namecheap, Google Domains, Cloudflare
-2. Find **DNS Management** or **DNS Records**
-3. Add a new TXT record with the values Droid gives you
-4. Save — DNS changes take 5–30 minutes to activate
-
-> **If your domain is already on Cloudflare:** Go to Cloudflare dashboard → your domain → **DNS** → **Add record** → fill in the values.
+**To verify:**
+1. Go to https://resend.com/domains — confirm `mildmate.com` shows "Verified"
+2. Confirm `RESEND_API_KEY` is set: `npx wrangler pages secret list` shows the secret
 
 ---
 
@@ -541,7 +530,7 @@ Go through this checklist before moving to Phase 6:
 **Build Steps:**
 - [ ] All 3 Stripe keys stored as Cloudflare secrets (`npx wrangler secret list` confirms all 3)
 - [ ] Webhook endpoint created in Stripe dashboard pointing to `mildmate-new.pages.dev/api/webhook/stripe`
-- [ ] MailChannels DNS TXT record added to your domain
+- [ ] Resend domain verified in dashboard (https://resend.com/domains) + `RESEND_API_KEY` secret set
 - [ ] Site deployed to `mildmate-new.pages.dev` with `npx wrangler pages deploy public`
 - [ ] Test purchase completed with test card `4242 4242 4242 4242`
 - [ ] "Order Confirmed" page appears after payment
@@ -569,12 +558,12 @@ Go through this checklist before moving to Phase 6:
 | Webhook secret not yet available | You can only get the webhook secret **after** creating the webhook endpoint in Step 5.4. Complete Step 5.4 first, then come back and store the webhook secret. |
 | "Payment failed" on test card | Confirm you are using exactly `4242 4242 4242 4242` with a future expiry. Tell Droid the exact error message shown on screen. |
 | Stripe payment page never loads | Tell Droid: "Clicking Pay Now does not redirect to Stripe." The checkout Worker may not be deployed. |
-| No confirmation email received | Check spam folder first. If not there, tell Droid: "No confirmation email received after test purchase — MailChannels DNS record was added [X] minutes ago." |
+| No confirmation email received | Check spam folder first. If not there, tell Droid: "No confirmation email received after test purchase — Resend DNS record was added [X] minutes ago." |
 | No team notification email | Tell Droid: "No New Order notification email received at [your notification email]." |
 | Order not in D1 after payment | Tell Droid: "Order not in D1 after successful test payment." The webhook may not be reaching your Worker. |
 | Webhook shows "Failed" in Stripe dashboard | Go to Stripe → Developers → Webhooks → click your endpoint → copy the error message → tell Droid. |
 | PromptPay not showing on payment page | Tell Droid: "PromptPay is not appearing on the Stripe payment page even though it is enabled in Stripe settings." |
-| MailChannels DNS not yet active | DNS changes take 5–30 minutes. Wait and retry. If still failing after 1 hour, tell Droid the exact DNS record you added. |
+| Resend DNS not yet active | DNS changes take 5–30 minutes. Wait and retry. If still failing after 1 hour, tell Droid the exact DNS record you added. |
 
 ---
 

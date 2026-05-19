@@ -628,7 +628,7 @@ When `https://www.mildmate.com` loads your new site with a padlock, Stripe is ac
 - A private admin dashboard for your manufacturing and marketing teams
 - Performance score 90+, security headers grade A+
 
-**The website will now run automatically.** Orders save to D1. Emails send via MailChannels. Abandoned carts recover themselves. Your team manages everything from the admin dashboard — no code required.
+**The website will now run automatically.** Orders save to D1. Emails send via Resend. Abandoned carts recover themselves. Your team manages everything from the admin dashboard — no code required.
 
 ---
 
