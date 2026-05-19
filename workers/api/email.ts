@@ -12,7 +12,7 @@ export async function sendEmail(env: any, options: {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("RESEND_API_KEY not set");
-    return { success: false, error: "Email service not configured" };
+    throw new Error("RESEND_API_KEY not configured");
   }
 
   try {

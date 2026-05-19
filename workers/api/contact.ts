@@ -67,16 +67,27 @@ ${message}
 Sent from: ${request.headers.get("cf-connecting-ip") || "unknown"}
 User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
 
-  const result = await sendEmail(env, {
-    to: "contact@mildmate.com",
-    replyTo: email,
-    subject: `[MildMate Contact] ${subject}`,
-    text: emailBody,
-  });
+  let emailStatus = "not_sent";
+  try {
+    const result = await sendEmail(env, {
+      to: "contact@mildmate.com",
+      replyTo: email,
+      subject: `[MildMate Contact] ${subject}`,
+      text: emailBody,
+    });
 
-  if (!result.success) {
+    if (!result.success) {
+      console.error("Contact email failed:", result.error);
+      return new Response(
+        JSON.stringify({ error: "Failed to send message. Please try again later.", _debug: result.error }),
+        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    emailStatus = "sent";
+  } catch (e: any) {
+    console.error("Contact email failed:", e.message || e);
     return new Response(
-      JSON.stringify({ error: "Failed to send message. Please try again later." }),
+      JSON.stringify({ error: "Email service unavailable. Your message was saved and will be reviewed.", _debug: e.message }),
       { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
@@ -85,6 +96,7 @@ User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
     JSON.stringify({
       success: true,
       message: "Thank you! Your message has been sent. We typically reply within 24 hours.",
+      _debug_email: emailStatus,
     }),
     { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
   );

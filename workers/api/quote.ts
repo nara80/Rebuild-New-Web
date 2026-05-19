@@ -109,21 +109,30 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
       `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'quote')`
     ).bind(ip).run();
 
-    // Fire-and-forget: notify contact@mildmate.com via Resend
+    // Notify contact@mildmate.com via Resend
     const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd);
-    sendEmail(env, {
-      to: "contact@mildmate.com",
-      replyTo: cleanEmail,
-      subject: `[Quote Request] ${quoteId} — ${cleanName} (${cleanSlug})`,
-      text: emailBody,
-    }).catch(e => {
-      console.error("Quote email failed:", e);
-    });
+    let emailStatus = "not_sent";
+    try {
+      const emailResult = await sendEmail(env, {
+        to: "contact@mildmate.com",
+        replyTo: cleanEmail,
+        subject: `[Quote Request] ${quoteId} — ${cleanName} (${cleanSlug})`,
+        text: emailBody,
+      });
+      emailStatus = emailResult.success ? "sent" : "failed";
+      if (!emailResult.success) {
+        console.error("Quote email failed:", emailResult.error);
+      }
+    } catch (e: any) {
+      emailStatus = "error";
+      console.error("Quote email failed:", e.message || e);
+    }
 
     return new Response(JSON.stringify({
       success: true,
       quote_id: quoteId,
       message: `Quote submitted. We'll email ${cleanEmail} within 24 hours.`,
+      _debug_email: emailStatus,
     }), {
       status: 201,
       headers: { "Content-Type": "application/json" },
