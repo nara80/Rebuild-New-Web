@@ -1,7 +1,10 @@
-// MildMate Subscribe API
+﻿// MildMate Subscribe API
 // Phase 4: Accepts email signup from homepage/footer form
 // Phase 5+: Will issue discount codes and validate at checkout
-// Anti-spam: honeypot field + IP rate limit (5/hour)
+// Anti-spam: honeypot field + IP rate limit (2/hour)
+// Emails: confirmation to subscriber + notification to contact@mildmate.com
+
+import { sendEmail } from "./email";
 
 export interface SubscribeInput {
   email: string;
@@ -14,7 +17,7 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const SUBSCRIBE_RATE_LIMIT = 5;
+const SUBSCRIBE_RATE_LIMIT = 2;
 
 export async function handleSubscribe(request: Request, env: any): Promise<Response> {
   const corsHeaders = {
@@ -77,28 +80,52 @@ export async function handleSubscribe(request: Request, env: any): Promise<Respo
   }
 
   try {
-    // Insert subscriber — D1 UNIQUE constraint on email prevents duplicates.
-    // ON CONFLICT IGNORE lets us silently swallow re-subscriptions.
-    await db
-      .prepare(
-        `INSERT OR IGNORE INTO subscribers (email, source, language, created_at)
-         VALUES (?, ?, ?, datetime('now'))`
-      )
-      .bind(email, source, language)
-      .run();
-
-    // Record rate limit entry
-    await db.prepare(
-      `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'subscribe')`
-    ).bind(ip).run();
-
-    // Check if it was actually inserted or ignored
+    // ── Duplicate check: query first to give the right message ──
     const existing = await db
       .prepare(`SELECT id, created_at FROM subscribers WHERE email = ?`)
       .bind(email)
       .first<{ id: number; created_at: string }>();
 
-    const isNew = existing !== null;
+    const isNew = !existing;
+
+    if (isNew) {
+      // Insert new subscriber
+      await db
+        .prepare(
+          `INSERT INTO subscribers (email, source, language, created_at)
+           VALUES (?, ?, ?, datetime('now'))`
+        )
+        .bind(email, source, language)
+        .run();
+
+      // Send confirmation email to subscriber + notify contact@mildmate.com
+      // Await both in parallel — do NOT block the response on email failures
+      const emailResults = await Promise.allSettled([
+        sendEmail(env, {
+          to: email,
+          subject: language === 'th'
+            ? 'ยินดีต้อนรับสู่ MildMate — ส่วนลด 15% สำหรับคุณ'
+            : 'Welcome to MildMate — 15% Off Your First Order',
+          text: language === 'th'
+            ? 'ขอบคุณที่สมัครรับข่าวสารจาก MildMate! ใช้โค้ด WELCOME15 เพื่อรับส่วนลด 15% สำหรับคำสั่งซื้อแรกของคุณ\n\nยกเลิกการสมัครได้ตลอดเวลาที่ mildmate.com/unsubscribe/'
+            : 'Thanks for subscribing to MildMate! Use code WELCOME15 for 15% off your first order.\n\nUnsubscribe anytime at mildmate.com/unsubscribe/',
+        }),
+        sendEmail(env, {
+          to: 'contact@mildmate.com',
+          subject: `New Subscriber: ${email}`,
+          text: `New subscriber signed up.\n\nEmail: ${email}\nSource: ${source}\nLanguage: ${language}\nDate: ${new Date().toISOString()}`,
+        }),
+      ]);
+      // Log any email failures for debugging
+      emailResults.forEach((r, i) => {
+        if (r.status === 'rejected') console.error(`Subscribe email ${i === 0 ? 'confirmation' : 'notification'} failed:`, r.reason);
+      });
+    }
+
+    // Record rate limit entry (always — for duplicate attempts too)
+    await db.prepare(
+      `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'subscribe')`
+    ).bind(ip).run();
 
     const msgNew = language === 'th'
       ? "ขอบคุณที่สมัคร! ตรวจสอบอีเมลต้อนรับในกล่องจดหมายของคุณ ยกเลิกการสมัครได้ตลอดเวลาที่ mildmate.com/unsubscribe/"

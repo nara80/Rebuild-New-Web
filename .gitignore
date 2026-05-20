@@ -1,4 +1,4 @@
-# Local tooling configs
+﻿# Local tooling configs
 .gemini/
 .factory/
 .wrangler/
@@ -12,6 +12,7 @@ node_modules/
 .env
 .env.local
 .env.production
+.dev.vars
 
 # Local backups
 *.backup

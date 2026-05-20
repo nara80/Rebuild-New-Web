@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -664,7 +664,7 @@
           const data = await res.json();
           if (data.success) {
             msg.textContent = data.message;
-            msg.style.color = '#22c55e'; // success green
+            msg.style.color = '#ffffff'; // white on blue gradient
             input.value = '';
           } else {
             msg.textContent = data.error || 'Something went wrong. Please try again.';
