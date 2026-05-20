@@ -912,7 +912,7 @@ CREATE TABLE customers (
 
 ### Fitted Sheet Pricing Formula (Implemented 2026-05-19)
 
-Active for 4 products: Standard, Deep Pocket, Dorm, RV & Truck Fitted Sheets.
+Active for 6 products: Standard, Deep Pocket, Dorm, RV & Truck Fitted Sheets + Standard, Extra Deep Pocket Flat Sheets.
 
 **Fabric dimensions (cm):**
 ```
@@ -938,9 +938,8 @@ L_fabric = L + 2D + 14
 **Accessories:** 10% of fabric cost
 
 **Markups (on subtotal = fabric + sewing + accessories + packing 100 + delivery 50):**
-- +15% Operations
-- +20% Marketing
-- +30% Margin (45% for RV & Truck Fitted Sheet)
+- Fitted Sheet: +15% Operations, +20% Marketing, +30% Margin (45% for RV & Truck)
+- Flat Sheet: +15% Operations, +20% Marketing, +30% Margin (no accessories, sewing = flat 250 THB)
 
 **Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30.
 

@@ -48,6 +48,8 @@ const SEWING_TIERS: { maxArea: number; cost: number }[] = [
   { maxArea: Infinity, cost: 500 },
 ];
 
+const FLAT_SHEET_SEWING_COST = 250; // flat sheet sewing is flat-rate (no elastic)
+
 // ── Fixed costs (THB) ──
 const PACKING_COST = 100;
 const DOMESTIC_DELIVERY_COST = 50;
@@ -189,6 +191,82 @@ function calculateFittedSheetPrice(
 }
 
 /**
+ * Flat sheet pricing formula (Flat Sheet — Standard, Extra Deep Pocket)
+ *
+ * Fabric dimensions:
+ *   W_fabric = W + 2D + 50  (25cm each side for underneath tuck + sewing)
+ *   L_fabric = L + 2D + 50
+ *
+ * Costs (all in THB):
+ *   Fabric  = (area × rate_per_yard / SQCM_PER_YARD) × 1.20  (20% waste)
+ *   Sewing  = 250 THB flat (no elastic)
+ *   Packing = 100
+ *   Domestic delivery = 50
+ *   Subtotal = Fabric + Sewing + Packing + Delivery
+ *   +15% Operating, +20% Marketing, +30% Margin
+ *   Round up to nearest 100 THB
+ *   USD = THB / 30
+ */
+function calculateFlatSheetPrice(
+  wCm: number,
+  lCm: number,
+  dCm: number,
+  fabric: string,
+): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
+  // Fabric dimensions — 25cm each side for tuck + sewing allowance
+  const fabricW = wCm + 2 * dCm + 50;
+  const fabricL = lCm + 2 * dCm + 50;
+  const fabricArea = fabricW * fabricL;
+
+  // Fabric cost
+  const yardRate = FABRIC_COST_PER_YARD_THB[fabric] || FABRIC_COST_PER_YARD_THB.cloudsoft;
+  const fabricCost = (fabricArea * yardRate / SQCM_PER_YARD) * 1.20;
+
+  // Sewing cost — flat rate
+  const sewingCost = FLAT_SHEET_SEWING_COST;
+
+  // Fixed costs
+  const packing = PACKING_COST;
+  const delivery = DOMESTIC_DELIVERY_COST;
+
+  // Subtotal (no accessories for flat sheet)
+  const subtotal = fabricCost + sewingCost + packing + delivery;
+
+  // Markups
+  const operating = subtotal * OPERATING_RATE;
+  const marketing = subtotal * MARKETING_RATE;
+  const margin = subtotal * MARGIN_RATE;
+
+  // Total
+  const total = subtotal + operating + marketing + margin;
+
+  // Round up to nearest 100 THB
+  const rounded = Math.ceil(total / 100) * 100;
+
+  // USD
+  const usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+
+  return {
+    priceThb: rounded,
+    priceUsd: usd,
+    breakdown: {
+      fabricAreaSqCm: Math.round(fabricArea * 100) / 100,
+      fabricCostThb: Math.round(fabricCost * 100) / 100,
+      sewingCostThb: sewingCost,
+      accessoriesThb: 0,
+      packingThb: packing,
+      deliveryThb: delivery,
+      subtotalThb: Math.round(subtotal * 100) / 100,
+      operatingThb: Math.round(operating * 100) / 100,
+      marketingThb: Math.round(marketing * 100) / 100,
+      marginThb: Math.round(margin * 100) / 100,
+      totalThb: Math.round(total * 100) / 100,
+      roundedThb: rounded,
+    },
+  };
+}
+
+/**
  * Legacy simplified pricing (V-Berth placeholder — will be replaced with real formula)
  */
 function calculateLegacyPrice(
@@ -231,12 +309,19 @@ function calculateLegacyPrice(
  * Check if a product uses the fitted sheet formula
  */
 function isFittedSheetProduct(product: string): boolean {
-  const fittedSheetProducts = [
+  return [
     "standard-fitted-sheet",
     "deep-pocket-fitted-sheet",
     "dorm-fitted-sheet",
-  ];
-  return fittedSheetProducts.includes(product);
+    "rv-truck-fitted-sheet",
+  ].includes(product);
+}
+
+function isFlatSheetProduct(product: string): boolean {
+  return [
+    "flat-sheet-standard",
+    "flat-sheet-extra-deep-pocket",
+  ].includes(product);
 }
 
 export function calculatePrice(
@@ -247,7 +332,29 @@ export function calculatePrice(
   const mode = input.mode || "sheet";
   const fabric = input.fabric || "cloudsoft";
 
-  // Use fitted sheet formula for the 3 products OR when mode=sheet and no specific product given (homepage configurator)
+  // Flat sheet formula (2 products)
+  if (isFlatSheetProduct(product)) {
+    let w = input.width || 0;
+    let l = input.length || 0;
+    let d = input.depth || 0;
+
+    if (input.unit === "inch") {
+      w = inchToCm(w);
+      l = inchToCm(l);
+      d = inchToCm(d);
+    }
+
+    if (w > 0 && l > 0 && d > 0) {
+      const result = calculateFlatSheetPrice(w, l, d, fabric);
+      return {
+        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        breakdown: result.breakdown,
+      };
+    }
+    return { price: 0 };
+  }
+
+  // Fitted sheet formula (4 products + homepage configurator)
   if (isFittedSheetProduct(product) || (mode === "sheet" && !product)) {
     let w = input.width || 0;
     let l = input.length || 0;
@@ -328,6 +435,13 @@ export async function handlePricing(request: Request, env: any): Promise<Respons
       const resultUsd = calculatePrice(body, "USD");
       const resultThb = calculatePrice(body, "THB");
 
+      let formulaType = "legacy";
+      if (isFlatSheetProduct(body.product || "")) {
+        formulaType = "flat-sheet";
+      } else if (isFittedSheetProduct(body.product || "") || (!body.product && body.mode !== "vberth")) {
+        formulaType = "fitted-sheet";
+      }
+
       const response: any = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
@@ -335,9 +449,7 @@ export async function handlePricing(request: Request, env: any): Promise<Respons
         mode: body.mode || "sheet",
         fabric: body.fabric || "cloudsoft",
         unit: body.unit || "cm",
-        formula: isFittedSheetProduct(body.product || "") || (!body.product && body.mode !== "vberth")
-          ? "fitted-sheet"
-          : "legacy",
+        formula: formulaType,
       };
 
       if (resultUsd.breakdown) {

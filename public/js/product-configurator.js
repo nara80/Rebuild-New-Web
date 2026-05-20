@@ -9,6 +9,7 @@
   // ── Detect product variant ──
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
+  var isFlatSheet = path.indexOf('flat-sheet') !== -1;
 
   // ── Pricing constants (THB) ──
   var SQCM_PER_YARD = 23744;
@@ -48,6 +49,24 @@
       if (area <= SEWING_TIERS[i].max) return SEWING_TIERS[i].cost;
     }
     return 500;
+  }
+
+  // ── Flat sheet constants ──
+  var FLAT_TUCK = 25;   // cm each side for underneath tuck + sewing allowance
+  var FLAT_SEWING = 250; // fixed sewing cost (no elastic)
+
+  function calcFlatSheet(wCm, lCm, dCm, fabric) {
+    var fw = wCm + 2 * dCm + FLAT_TUCK * 2;
+    var fl = lCm + 2 * dCm + FLAT_TUCK * 2;
+    var area = fw * fl;
+    var yardRate = FABRIC_RATES[fabric] || 100;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD) * 1.20;
+    var sewingCost = FLAT_SEWING;
+    var subtotal = fabricCost + sewingCost + PACKING + DELIVERY;
+    var total = subtotal * MARKUP;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100, fw: fw, fl: fl };
   }
 
   function calcFittedSheet(wCm, lCm, dCm, fabric) {
@@ -193,8 +212,8 @@
       return;
     }
     if (customDims) customDims.classList.remove('open');
-    var result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
-    if (dims.w > MAX_W) {
+    var result = isFlatSheet ? calcFlatSheet(dims.w, dims.l, dims.d, state.fabric) : calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
+    if (!isFlatSheet && dims.w > MAX_W) {
       priceDisplay.textContent = 'Custom quote — Co-Sleep size';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
@@ -215,11 +234,11 @@
     }
     var wCm = w, lCm = l, dCm = d;
     if (state.unit === 'in') { wCm = inchToCm(w); lCm = inchToCm(l); dCm = inchToCm(d); }
-    if (wCm > MAX_W) {
+    if (!isFlatSheet && wCm > MAX_W) {
       customPrice.textContent = 'Custom quote — Co-Sleep size';
       return;
     }
-    var result = calcFittedSheet(wCm, lCm, dCm, state.fabric);
+    var result = isFlatSheet ? calcFlatSheet(wCm, lCm, dCm, state.fabric) : calcFittedSheet(wCm, lCm, dCm, state.fabric);
     state.quotePriceThb = result.thb;
     state.quotePriceUsd = result.usd;
     customPrice.textContent = formatPrice(result.thb, result.usd);
