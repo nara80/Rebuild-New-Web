@@ -239,10 +239,10 @@
                 <option value="200x220" data-price="2695">King  -  200 — 220cm</option>
               </optgroup>
               <optgroup label="Custom Size">
-                <option value="custom">Custom dimensions →</option>
+                <option value="custom">Custom dimensions </option>
               </optgroup>
             </select>
-            <div class="size-hint">Enter your duvet's exact dimensions  -  <a href="/sizeguide/">view size guide →</a></div>
+            <div class="size-hint">Enter your duvet's exact dimensions  -  <a href="/sizeguide/">view size guide </a></div>
           </div>
 
           <!-- Step 3: Fabric (BreezePlus only) -->
@@ -312,7 +312,7 @@
               <span class="price-label">Estimated price</span>
               <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote →</button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Custom Quote </button>
           </div>
 
           <div class="payment-badges">
@@ -363,13 +363,13 @@
             <li>OEKO-TEX certified  -  no toxic dye or finish</li>
             <li>Wrinkle-resistant  -  looks neat without ironing</li>
           </ul>
-          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections →</a></p>
+          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections </a></p>
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Duvet Covers</h3>
           <p>Duvet cover sizes should match your duvet's exact dimensions (width  —  length). Measure your duvet directly  -  do not assume standard sizes as they vary between manufacturers.</p>
           <p>Select your region above to see standard sizes. For custom dimensions  -  including non-standard or oversized duvets  -  use the "Custom Size" option to enter your exact measurements.</p>
-          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide →</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
+          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide </a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
           <h3>Care Instructions</h3>
@@ -486,109 +486,7 @@
   <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
-  <script>
-    // Gallery
-    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
-      thumb.addEventListener('click', () => {
-        if (thumb.dataset.video) { window.open(thumb.dataset.video, '_blank'); return; }
-        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-        document.getElementById('gallery-main-img').src = thumb.dataset.img;
-      });
-    });
-
-    let selectedRegion = 'us', selectedSize = '', selectedColor = 'pure-white';
-
-    document.querySelectorAll('.region-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedRegion = btn.dataset.region;
-        selectedSize = '';
-        document.getElementById('add-to-cart').disabled = true;
-      });
-    });
-
-    const SIZES_BY_REGION = {
-      us: { '173x224': { label: 'Twin  -  173 — 224cm', price: 2295 }, '224x224': { label: 'Full/Queen  -  224 — 224cm', price: 2495 }, '270x244': { label: 'King  -  270 — 244cm', price: 2695 } },
-      uk: { '140x200': { label: 'Single  -  140 — 200cm', price: 2245 }, '200x200': { label: 'Double  -  200 — 200cm', price: 2495 }, '225x220': { label: 'King  -  225 — 220cm', price: 2695 } },
-      eu: { '140x200': { label: 'Single  -  140 — 200cm', price: 2245 }, '200x200': { label: 'Double  -  200 — 200cm', price: 2495 }, '240x220': { label: 'King  -  240 — 220cm', price: 2695 } },
-      th: { '160x210': { label: '3.5ft  -  160 — 210cm', price: 2245 }, '180x210': { label: '6ft Queen  -  180 — 210cm', price: 2495 }, '200x220': { label: 'King  -  200 — 220cm', price: 2695 } }
-    };
-
-    document.getElementById('size-select').addEventListener('change', function() {
-      selectedSize = this.value;
-      if (selectedSize && selectedSize !== 'custom') {
-        const regionSizes = SIZES_BY_REGION[selectedRegion] || {};
-        const sizeData = regionSizes[selectedSize];
-        if (sizeData) {
-          document.getElementById('price-display').textContent = '\u0e3f' + sizeData.price.toLocaleString();
-          document.getElementById('add-to-cart').disabled = false;
-        }
-      } else if (selectedSize === 'custom') {
-        document.getElementById('custom-dimensions').classList.add('open');
-        document.getElementById('add-to-cart').disabled = true;
-      } else {
-        document.getElementById('price-display').textContent = '\u2014';
-        document.getElementById('add-to-cart').disabled = true;
-      }
-    });
-
-    document.querySelectorAll('.color-option').forEach(c => {
-      c.addEventListener('click', () => {
-        document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-        c.classList.add('selected');
-        selectedColor = c.dataset.color;
-      });
-    });
-
-    document.getElementById('custom-quote-btn').addEventListener('click', () => {
-      document.getElementById('custom-dimensions').classList.toggle('open');
-    });
-
-    let unit = 'cm';
-    document.getElementById('unit-cm').addEventListener('click', () => { unit = 'cm'; document.getElementById('unit-cm').classList.add('active'); document.getElementById('unit-in').classList.remove('active'); });
-    document.getElementById('unit-in').addEventListener('click', () => { unit = 'in'; document.getElementById('unit-in').classList.add('active'); document.getElementById('unit-cm').classList.remove('active'); });
-
-    function updateCustomPrice() {
-      const w = parseFloat(document.getElementById('dim-width').value);
-      const l = parseFloat(document.getElementById('dim-length').value);
-      if (w && l) {
-        let area = w * l;
-        if (unit === 'in') { area = w * 2.54 * l * 2.54; }
-        const rate = 0.055;
-        const basePrice = Math.round(area * rate + 800);
-        document.getElementById('custom-price').textContent = '\u0e3f' + basePrice.toLocaleString();
-      } else {
-        document.getElementById('custom-price').textContent = '\u2014';
-      }
-    }
-    document.getElementById('dim-width').addEventListener('input', updateCustomPrice);
-    document.getElementById('dim-length').addEventListener('input', updateCustomPrice);
-
-    document.getElementById('submit-custom-quote').addEventListener('click', () => {
-      const w = document.getElementById('dim-width').value;
-      const l = document.getElementById('dim-length').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + w + ' \u00d7 ' + l + ' ' + unit);
-    });
-
-    document.getElementById('add-to-cart').addEventListener('click', () => {
-      const btn = document.getElementById('add-to-cart');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
-      btn.style.background = '#16a34a';
-      setTimeout(() => { btn.innerHTML = originalText; btn.style.background = ''; btn.disabled = true; btn.textContent = 'Added to Cart'; }, 2000);
-    });
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('open');
-      });
-    });
-  </script>
+  <script src="/js/product-sizes.js"></script><script src="/js/product-configurator.js"></script>
 <script src="/js/reviews-carousel.js"></script>
 </body>
 </html>

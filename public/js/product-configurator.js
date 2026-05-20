@@ -13,6 +13,14 @@
   var isEncasement = path.indexOf('encasement') !== -1;
   var isPetOwner = path.indexOf('pet-owner') !== -1;
   var isFamily = path.indexOf('family-fitted-sheet') !== -1;
+  var isDuvet = path.indexOf('duvet') !== -1;
+  var isPillowProtector = path.indexOf('pillow-protector') !== -1;
+  var isPillowcase = path.indexOf('pillowcase') !== -1;
+  var pillowVariant = 'envelope';
+  if (isPillowcase) {
+    if (path.indexOf('zipper') !== -1) pillowVariant = 'zipper';
+    else if (path.indexOf('sham') !== -1) pillowVariant = 'sham';
+  }
 
   // ── Pricing constants (THB) ──
   var SQCM_PER_YARD = 23744;
@@ -47,11 +55,30 @@
     { max: Infinity, cost: 500 }
   ];
 
+  var DUVET_SEWING_TIERS = [
+    { max: 139200, cost: 300 },
+    { max: 170400, cost: 400 },
+    { max: Infinity, cost: 600 }
+  ];
+
+  // ── Pillow constants ──
+  var PILLOW_WASTE = 1.60;      // 60% waste
+  var PILLOW_SEWING = 40;       // THB
+  var MAX_PILLOW = 120;         // max W or L cm
+  var TPU_COST_PER_SQCM = 120 / 21000; // 120 THB/lm ÷ 21,000 cm²/lm
+
   function getSewingCost(area) {
     for (var i = 0; i < SEWING_TIERS.length; i++) {
       if (area <= SEWING_TIERS[i].max) return SEWING_TIERS[i].cost;
     }
     return 500;
+  }
+
+  function getDuvetSewingCost(area) {
+    for (var i = 0; i < DUVET_SEWING_TIERS.length; i++) {
+      if (area <= DUVET_SEWING_TIERS[i].max) return DUVET_SEWING_TIERS[i].cost;
+    }
+    return 600;
   }
 
   // ── Flat sheet constants ──
@@ -82,6 +109,55 @@
     var subtotal = fabricCost + sewingCost + zipperCost + PACKING + DELIVERY;
     // Markup
     var total = subtotal * ENC_MARKUP;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
+  }
+
+  function calcDuvet(wCm, lCm, fabric) {
+    // 2 pieces × (W+5) × (L+5) — 5cm sewing allowance on each edge, +20% waste
+    var rawArea = 2 * (wCm + 5) * (lCm + 5);
+    var area = rawArea * 1.20;
+    var yardRate = FABRIC_RATES[fabric] || 100;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD);
+    // Zipper: 0.4 THB/cm × (2L + W)
+    var zipperCost = 0.4 * (2 * lCm + wCm);
+    var sewingCost = getDuvetSewingCost(rawArea);
+    var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
+    var total = subtotal * MARKUP;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
+  }
+
+  function calcPillowProtector(wCm, lCm) {
+    // 2 pieces × (W+5) × (L+5) + 60% waste, TPU fabric
+    var rawArea = 2 * (wCm + 5) * (lCm + 5);
+    var area = rawArea * PILLOW_WASTE;
+    // TPU fabric cost: 120 THB/lm, 210cm bolt
+    var fabricCost = area * TPU_COST_PER_SQCM;
+    // Zipper: 0.4 THB/cm on longest side
+    var zipperCost = 0.4 * Math.max(wCm, lCm);
+    var sewingCost = PILLOW_SEWING;
+    var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
+    // 15/25/35% markup = 1.75
+    var total = subtotal * (1 + OP_RATE + MKT_RATE + 0.35);
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
+  }
+
+  function calcPillowcase(wCm, lCm, fabric, variant) {
+    var rawArea = 2 * (wCm + 5) * (lCm + 5);
+    if (variant === 'sham') rawArea *= 1.15;
+    var area = rawArea * PILLOW_WASTE;
+    var yardRate = FABRIC_RATES[fabric] || 100;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD);
+    var zipperCost = variant === 'zipper' ? 0.4 * Math.max(wCm, lCm) : 0;
+    var sewingCost = variant === 'sham' ? 50 : PILLOW_SEWING;
+    var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
+    // 15/25/15% markup = 1.55
+    var total = subtotal * (1 + OP_RATE + MKT_RATE + 0.15);
     var rounded = Math.ceil(total / 100) * 100;
     var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
     return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
@@ -145,6 +221,49 @@
   if (!fabricSelect && !sizeSelect) return; // Not a configurator page — exit
 
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
+  if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
+  if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
+
+  // Duvet covers & pillow protectors only need W×L — hide the depth input
+  if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
+    var dimDGroup = dimD.closest('.dim-field') || dimD.closest('.input-group');
+    if (dimDGroup) dimDGroup.style.display = 'none';
+  }
+
+  // ── Populate size-select from centralized size data ──
+  function populateSizeSelect() {
+    if (!sizeSelect || typeof PRODUCT_SIZES === 'undefined') return;
+    var typeKey = isDuvet ? 'duvet' : (isPillowcase || isPillowProtector) ? 'pillow' : 'fitted-sheet';
+    var sizes = PRODUCT_SIZES[typeKey];
+    if (!sizes) return;
+
+    var regionLabels = { us: 'US / Canada', uk: 'UK', eu: 'EU', th: 'Thailand', au: 'AU', my: 'MY / SG', jp: 'Japan' };
+    sizeSelect.innerHTML = '<option value="">\u2014 Choose size \u2014</option>';
+
+    for (var region in sizes) {
+      if (!sizes.hasOwnProperty(region)) continue;
+      var items = sizes[region];
+      var label = regionLabels[region] || region.toUpperCase();
+      var optgroup = document.createElement('optgroup');
+      optgroup.label = label;
+      for (var i = 0; i < items.length; i++) {
+        var s = items[i];
+        var option = document.createElement('option');
+        option.value = typeKey === 'fitted-sheet' ? s.w + 'x' + s.l + 'x' + s.d : s.w + 'x' + s.l;
+        option.textContent = s.label + ' \u2014 ' + s.cm + (s.inch ? ' (' + s.inch + ')' : '');
+        optgroup.appendChild(option);
+      }
+      sizeSelect.appendChild(optgroup);
+    }
+    var customGrp = document.createElement('optgroup');
+    customGrp.label = 'Custom Size';
+    var customOpt = document.createElement('option');
+    customOpt.value = 'custom';
+    customOpt.textContent = 'Custom dimensions \u2192';
+    customGrp.appendChild(customOpt);
+    sizeSelect.appendChild(customGrp);
+  }
+  populateSizeSelect();
 
   // ── Inject quote popup HTML ──
   var popupHTML = '' +
@@ -219,19 +338,22 @@
     if (parts.length === 3) {
       return { w: parseFloat(parts[0]), l: parseFloat(parts[1]), d: parseFloat(parts[2]) };
     }
+    if (parts.length === 2) {
+      return { w: parseFloat(parts[0]), l: parseFloat(parts[1]), d: 0 };
+    }
     return null;
   }
 
   // ── Price formatter: USD-only for EN, THB-only for TH ──
   var isEN = window.location.pathname.indexOf('/th/') === -1;
   function formatPrice(thb, usd) {
-    if (isEN) return '$' + usd.toFixed(2);
+    if (isEN) return '$' + Math.round(usd);
     return '\u0E3F' + thb.toLocaleString();
   }
 
   // ── Update price from standard size ──
   function updateStandardPrice() {
-    if (!sizeSelect || !priceDisplay || !fabricSelect) return;
+    if (!sizeSelect || !priceDisplay) return;
     var val = sizeSelect.value;
     if (val === 'custom') {
       if (customDims) customDims.classList.add('open');
@@ -249,12 +371,21 @@
     var result;
     if (isEncasement) {
       result = calcEncasement(dims.w, dims.l, dims.d);
+    } else if (isPillowProtector || isPillowcase) {
+      if (dims.w > MAX_PILLOW || dims.l > MAX_PILLOW) {
+        priceDisplay.textContent = 'Max 120cm';
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        return;
+      }
+      result = isPillowProtector ? calcPillowProtector(dims.w, dims.l) : calcPillowcase(dims.w, dims.l, state.fabric, pillowVariant);
+    } else if (isDuvet) {
+      result = calcDuvet(dims.w, dims.l, state.fabric);
     } else if (isFlatSheet) {
       result = calcFlatSheet(dims.w, dims.l, dims.d, state.fabric);
     } else {
       result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
     }
-    if (!isFlatSheet && dims.w > MAX_W) {
+    if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && dims.w > MAX_W) {
       priceDisplay.textContent = 'Custom quote — Co-Sleep size';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
@@ -265,23 +396,33 @@
 
   // ── Update price from custom dimensions ──
   function updateCustomPrice() {
-    if (!customPrice || !fabricSelect) return;
+    if (!customPrice) return;
     var w = parseFloat(dimW && dimW.value) || 0;
     var l = parseFloat(dimL && dimL.value) || 0;
-    var d = parseFloat(dimD && dimD.value) || 0;
-    if (!w || !l || !d) {
-      customPrice.textContent = '—';
+    var d = (isDuvet || isPillowProtector || isPillowcase) ? 0 : (parseFloat(dimD && dimD.value) || 0);
+    if (!w || !l || (!isDuvet && !isPillowProtector && !isPillowcase && !d)) {
+      customPrice.textContent = '\u2014';
       return;
     }
     var wCm = w, lCm = l, dCm = d;
     if (state.unit === 'in') { wCm = inchToCm(w); lCm = inchToCm(l); dCm = inchToCm(d); }
-    if (!isFlatSheet && wCm > MAX_W) {
-      customPrice.textContent = 'Custom quote — Co-Sleep size';
+    if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && wCm > MAX_W) {
+      customPrice.textContent = 'Custom quote \u2014 Co-Sleep size';
+      return;
+    }
+    if ((isPillowProtector || isPillowcase) && (wCm > MAX_PILLOW || lCm > MAX_PILLOW)) {
+      customPrice.textContent = 'Max 120cm';
       return;
     }
     var result;
     if (isEncasement) {
       result = calcEncasement(wCm, lCm, dCm);
+    } else if (isPillowProtector) {
+      result = calcPillowProtector(wCm, lCm);
+    } else if (isPillowcase) {
+      result = calcPillowcase(wCm, lCm, state.fabric, pillowVariant);
+    } else if (isDuvet) {
+      result = calcDuvet(wCm, lCm, state.fabric);
     } else if (isFlatSheet) {
       result = calcFlatSheet(wCm, lCm, dCm, state.fabric);
     } else {
@@ -364,14 +505,16 @@
       // Validate dimensions are filled before showing popup
       var w = parseFloat(dimW && dimW.value) || 0;
       var l = parseFloat(dimL && dimL.value) || 0;
-      var d = parseFloat(dimD && dimD.value) || 0;
+      var d = (isDuvet || isPillowProtector || isPillowcase) ? 0 : (parseFloat(dimD && dimD.value) || 0);
       if (state.unit === 'in') { w = inchToCm(w); l = inchToCm(l); d = inchToCm(d); }
-      if (!w || !l || !d) {
-        // Ensure custom dimensions panel is visible
+      var dimValid = (isDuvet || isPillowProtector || isPillowcase) ? (w > 0 && l > 0) : (w > 0 && l > 0 && d > 0);
+      if (!dimValid) {
         if (customDims && !customDims.classList.contains('open')) {
           customDims.classList.add('open');
         }
-        alert('Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+        alert((isDuvet || isPillowProtector || isPillowcase)
+          ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
+          : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
         if (dimW) dimW.focus();
         return;
       }
@@ -418,23 +561,28 @@
 
     // Collect dimensions
     var wCm = 0, lCm = 0, dCm = 0, dimDisplay = '';
-    if (dimW && dimL && dimD) {
+    if (dimW && dimL) {
       wCm = parseFloat(dimW.value) || 0;
       lCm = parseFloat(dimL.value) || 0;
-      dCm = parseFloat(dimD.value) || 0;
+      dCm = (isDuvet || isPillowProtector || isPillowcase || !dimD) ? 0 : (parseFloat(dimD.value) || 0);
       if (state.unit === 'in') { wCm = inchToCm(wCm); lCm = inchToCm(lCm); dCm = inchToCm(dCm); }
     }
 
-    if (!wCm || !lCm || !dCm) {
+    var dimsValid = (isDuvet || isPillowProtector || isPillowcase) ? (wCm > 0 && lCm > 0) : (wCm > 0 && lCm > 0 && dCm > 0);
+    if (!dimsValid) {
       document.getElementById('qf-submit').disabled = false;
       document.getElementById('qf-submit').textContent = 'Submit';
       if (customDims && !customDims.classList.contains('open')) {
         customDims.classList.add('open');
       }
-      alert('Please enter your mattress dimensions (W × L × D) before submitting the quote. Click "Custom Size" first.');
+      alert((isDuvet || isPillowProtector || isPillowcase)
+        ? 'Please enter your dimensions (W \u00D7 L) before submitting the quote.'
+        : 'Please enter your mattress dimensions (W \u00D7 L \u00D7 D) before submitting the quote. Click "Custom Size" first.');
       return;
     }
-    dimDisplay = Math.round(wCm) + ' \u00D7 ' + Math.round(lCm) + ' \u00D7 ' + Math.round(dCm) + ' cm';
+    dimDisplay = (isDuvet || isPillowProtector || isPillowcase)
+      ? Math.round(wCm) + ' \u00D7 ' + Math.round(lCm) + ' cm'
+      : Math.round(wCm) + ' \u00D7 ' + Math.round(lCm) + ' \u00D7 ' + Math.round(dCm) + ' cm';
 
     var fabricName = (fabricSelect && fabricSelect.options[fabricSelect.selectedIndex])
       ? fabricSelect.options[fabricSelect.selectedIndex].text

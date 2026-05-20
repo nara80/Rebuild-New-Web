@@ -83,7 +83,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **8 of 27 products have live configurator pricing formulas** — see Configurator Status below. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). **USD-only pricing** on EN pages, THB-only on TH pages. Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **19 of 27 products have live configurator pricing formulas** — see Configurator Status below. **USD whole-dollar pricing** on EN pages, THB-only on TH pages. **Centralized size system** (`product-sizes.js`, 174 entries, 8 regions) auto-populates all product page size dropdowns — synced from `/sizeguide/`. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). **USD-only pricing** on EN pages, THB-only on TH pages. Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
@@ -180,11 +180,15 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 
 ---
 
-## Configurator Pricing Status (8 of 27 products verified)
+## Configurator Pricing Status (19 of 27 products verified)
 
-All product detail pages use the shared `public/js/product-configurator.js` which auto-detects the product type from the URL path and applies the correct pricing formula. The full workflow is: [Custom Size] → enter W×L×D → live price → [Custom Quote] → popup form (Name/Email) → POST `/api/quote` → Resend email to contact@mildmate.com.
+All product detail pages use the shared `public/js/product-configurator.js` which auto-detects the product type from the URL path and applies the correct pricing formula. The full workflow is: [Custom Size] → enter dimensions → live price → [Custom Quote] → popup form (Name/Email) → POST `/api/quote` → Resend email to contact@mildmate.com.
 
-### Products with Live Pricing Formula (8)
+Size dropdowns on all product pages are auto-populated from `public/js/product-sizes.js` (174 entries across 8 regions). To update sizes across all pages, edit `/sizeguide/` then sync `product-sizes.js`.
+
+USD prices displayed as whole dollars (no decimals).
+
+### Products with Live Pricing Formula (19)
 
 | Product | Formula | Server Function | Markup |
 |---|---|---|---|
@@ -192,16 +196,33 @@ All product detail pages use the shared `public/js/product-configurator.js` whic
 | Deep Pocket Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/30% |
 | Dorm Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/30% |
 | RV & Truck Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/45% |
+| Pet Owner Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/30% |
+| Family Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/50% |
 | Flat Sheet — Standard | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
 | Flat Sheet — Extra Deep Pocket | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
 | 6-Sided Mattress Encasement | Encasement (TPU) | `calculateEncasementPrice()` | 15/25/50% |
 | RV & Truck Mattress Encasement | Encasement (TPU) | `calculateEncasementPrice()` | 15/25/50% |
+| 3-Sided Zipper Duvet Cover | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
+| Duvet Cover — Dorm | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
+| Duvet Cover — RV | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
+| Duvet Cover — Marine | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
+| Pet Owner Duvet Cover | Duvet cover | `calculateDuvetPrice()` | 15/20/30% |
+| Envelope Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
+| Zipper Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
+| Sham Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
+| Pillow Protector | Pillow protector (TPU) | `calculatePillowProtectorPrice()` | 15/25/35% |
 
 **Fitted sheet formula:** W_fabric=W+2D+14, L_fabric=L+2D+14; tiered sewing (120–500 THB); accessories = fabric×0.10. Fabric cost: (area×rate/23,744)×1.20.
 
 **Flat sheet formula:** W_fabric=W+2D+50, L_fabric=L+2D+50; flat sewing 250 THB (no elastic, no accessories). Fabric cost same as fitted.
 
 **Encasement formula:** Area = 2(W×L + W×D + L×D); TPU fabric (120 THB/linear metre, 210cm bolt) ×1.20 waste; sewing 300 THB flat; zipper 0.4 THB/cm × (2L+W); packing 100; delivery 50; markup 15/25/50%. Round to nearest 100 THB, USD = THB/30.
+
+**Duvet cover formula:** floorArea = 2×(W+5)×(L+5)×1.20 (2 pieces, 5cm seam, 20% waste); zipper 0.4×(2L+W); tiered sewing (≤139,200→300, ≤170,400→400, >170,400→600); packing 100; delivery 50; markup 15/20/30%. No depth input.
+
+**Pillowcase formula:** area = 2×(W+5)×(L+5)×1.60 (60% waste); Sham +15% fabric; sewing 40 THB (50 for Sham); Zipper: 0.4×max(W,L); packing 100; delivery 50; markup 15/25/15%. Max W,L=120cm. No depth input.
+
+**Pillow protector formula:** Same geometry as pillowcase-zipper but TPU fabric (120 THB/lm ÷ 21,000 cm²/lm); markup 15/25/35%. No depth input.
 
 ### Products NOT Requiring Configurator (2)
 
@@ -210,27 +231,16 @@ All product detail pages use the shared `public/js/product-configurator.js` whic
 | BedBridge Connector | Fixed-price accessory, no custom dimensions |
 | Bed Lifter (38 cm) | Fixed-price accessory, no custom dimensions |
 
-### Products Awaiting Configurator Verification (17)
+### Products Awaiting Configurator (6)
 
 | Product | Category |
 |---|---|
 | Marine Fitted Sheet (V-Berth) | Sheets, Marine |
-| Family Fitted Sheet | Sheets, Family |
-| Pet Owner Fitted Sheet | Sheets, Pets |
-| 3-Sided Zipper Duvet Cover | Duvet Covers, Boarding Dorm |
-| Pet Owner Duvet Cover | Duvet Covers, Pets |
-| Duvet Cover — Marine | Duvet Covers, Marine |
-| Duvet Cover — RV | Duvet Covers, RV-Truck |
-| Duvet Cover — Dorm | Duvet Covers, Boarding Dorm |
 | Duvet Insert | Duvet Covers |
-| Envelope Pillowcase | Pillowcases |
-| Zipper Pillowcase | Pillowcases |
-| Sham Pillowcase | Pillowcases |
 | Mattress Protector — Standard | Protection |
 | Mattress Protector — Family | Protection, Family |
 | Mattress Protector — Deep Pocket | Protection, Deep Pocket |
 | Pet-Proof Mattress Protector | Protection, Pets |
-| Pillow Protector | Protection |
 
 ---
 

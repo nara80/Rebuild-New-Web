@@ -607,25 +607,7 @@
           <!-- Step 3: Fabric -->
           <div class="panel-section">
             <div class="panel-label">Fabric</div>
-            <div class="fabric-selector" id="fabric-selector">
-              <label class="fabric-option">
-                <div class="fabric-swatch selected" data-fabric="breezeplus" style="background:linear-gradient(135deg,#5A7DA2,#9CCAE1);"></div>
-                <span>BreezePlus</span>
-              </label>
-              <label class="fabric-option">
-                <div class="fabric-swatch" data-fabric="cloudsoft" style="background:linear-gradient(135deg,#d4c5b0,#e8dcc8);"></div>
-                <span>CloudSoft</span>
-              </label>
-              <label class="fabric-option">
-                <div class="fabric-swatch" data-fabric="premacotton" style="background:linear-gradient(135deg,#f5f0e8,#fff);"></div>
-                <span>PremaCotton</span>
-              </label>
-              <label class="fabric-option">
-                <div class="fabric-swatch" data-fabric="ecoluxe" style="background:linear-gradient(135deg,#d8cfc0,#e8e0d4);"></div>
-                <span>EcoLuxe</span>
-              </label>
-            </div>
-            <div class="fabric-note" style="margin-top:8px;">BreezePlus: 3 - 5&deg;C cooler than cotton  -  Pet hair slides off  -  OEKO-TEX certified</div>
+            <select class="fabric-select" id="fabric-select" style="width:100%; padding:12px 14px; border:2px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); font-size:0.9375rem; color:var(--color-text); background:#fff; cursor:pointer; appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center;"><option value="cloudsoft">CloudSoft</option><option value="breezeplus">BreezePlus</option><option value="premacotton">PremaCotton</option><option value="ecoluxe">EcoLuxe</option></select>
           </div>
 
           <!-- Step 4: Color -->
@@ -689,7 +671,7 @@
               <span class="price-label">Estimated price</span>
               <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote </button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Custom Quote </button>
           </div>
 
           <!-- Payment badges -->
@@ -915,180 +897,7 @@
   <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
-  <script>
-    // ─── Gallery Thumbnails ────────────────────
-    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
-      thumb.addEventListener('click', () => {
-        if (thumb.dataset.video) {
-          window.open(thumb.dataset.video, '_blank');
-          return;
-        }
-        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-        document.getElementById('gallery-main-img').src = thumb.dataset.img;
-      });
-    });
-
-    // ─── Region Selection ───────────────────────
-    let selectedRegion = 'th';
-    let selectedSize = '';
-    let selectedFabric = 'breezeplus';
-    let selectedColor = 'pure-white';
-
-    document.querySelectorAll('.region-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedRegion = btn.dataset.region;
-        selectedSize = '';
-        document.getElementById('add-to-cart').disabled = true;
-      });
-    });
-
-    // ─── Size Selection ─────────────────────────
-    const SIZES_BY_REGION = {
-      th: {
-        '107x191': { label: '3.5ft  -  107 &times; 191cm (42 &times; 75in)', price: 2295 },
-        '120x200': { label: '6ft Queen  -  120 &times; 200cm (47 &times; 79in)', price: 2495 },
-        '152x198': { label: 'King  -  152 &times; 198cm (60 &times; 78in)', price: 2695 }
-      },
-      us: {
-        '99x191': { label: 'Twin  -  99 &times; 191cm (39 &times; 75in)', price: 2295 },
-        '137x191': { label: 'Full  -  137 &times; 191cm (54 &times; 75in)', price: 2495 },
-        '153x203': { label: 'Queen  -  153 &times; 203cm (60 &times; 80in)', price: 2695 }
-      },
-      uk: {
-        '90x190': { label: 'Single  -  90 &times; 190cm', price: 2245 },
-        '135x190': { label: 'Double  -  135 &times; 190cm', price: 2495 },
-        '150x200': { label: 'King  -  150 &times; 200cm', price: 2695 }
-      },
-      eu: {
-        '90x200': { label: 'Single  -  90 &times; 200cm', price: 2295 },
-        '140x200': { label: 'Double  -  140 &times; 200cm', price: 2495 },
-        '160x200': { label: 'King  -  160 &times; 200cm', price: 2695 }
-      },
-      au: {
-        '92x188': { label: 'Single  -  92 &times; 188cm', price: 2295 },
-        '137x188': { label: 'Double  -  137 &times; 188cm', price: 2495 },
-        '153x203': { label: 'Queen  -  153 &times; 203cm', price: 2695 }
-      },
-      my: {
-        '107x191': { label: 'Super Single  -  107 &times; 191cm (42 &times; 75in)', price: 2295 },
-        '152x198': { label: 'Queen  -  152 &times; 198cm (60 &times; 78in)', price: 2695 }
-      },
-      jp: {
-        '100x200': { label: 'Single  -  100 &times; 200cm (39.4 &times; 78.7in)', price: 2345 },
-        '120x200': { label: 'Semi-Double  -  120 &times; 200cm (47 &times; 79in)', price: 2545 },
-        '140x200': { label: 'Double  -  140 &times; 200cm (55 &times; 79in)', price: 2695 }
-      }
-    };
-
-    document.getElementById('size-select').addEventListener('change', function() {
-      selectedSize = this.value;
-      if (selectedSize && selectedSize !== 'custom') {
-        const regionSizes = SIZES_BY_REGION[selectedRegion] || {};
-        const sizeData = regionSizes[selectedSize];
-        if (sizeData) {
-          document.getElementById('price-display').textContent = 'USD  ' + sizeData.price.toLocaleString();
-          document.getElementById('add-to-cart').disabled = false;
-        }
-      } else if (selectedSize === 'custom') {
-        document.getElementById('custom-dimensions').classList.add('open');
-        document.getElementById('add-to-cart').disabled = true;
-      } else {
-        document.getElementById('price-display').textContent = ' - ';
-        document.getElementById('add-to-cart').disabled = true;
-      }
-    });
-
-    // ─── Fabric Selection ───────────────────────
-    document.querySelectorAll('.fabric-swatch').forEach(swatch => {
-      swatch.addEventListener('click', () => {
-        document.querySelectorAll('.fabric-swatch').forEach(s => s.classList.remove('selected'));
-        swatch.classList.add('selected');
-        selectedFabric = swatch.dataset.fabric;
-      });
-    });
-
-    // ─── Color Selection ───────────────────────
-    document.querySelectorAll('.color-option').forEach(color => {
-      color.addEventListener('click', () => {
-        document.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected'));
-        color.classList.add('selected');
-        selectedColor = color.dataset.color;
-      });
-    });
-
-    // ─── Custom Dimensions Toggle ────────────────
-    document.getElementById('custom-quote-btn').addEventListener('click', () => {
-      document.getElementById('custom-dimensions').classList.toggle('open');
-    });
-
-    // ─── Unit Toggle ────────────────────────────
-    let unit = 'cm';
-    document.getElementById('unit-cm').addEventListener('click', () => {
-      unit = 'cm';
-      document.getElementById('unit-cm').classList.add('active');
-      document.getElementById('unit-in').classList.remove('active');
-    });
-    document.getElementById('unit-in').addEventListener('click', () => {
-      unit = 'in';
-      document.getElementById('unit-in').classList.add('active');
-      document.getElementById('unit-cm').classList.remove('active');
-    });
-
-    // Custom dimensions price estimate
-    function updateCustomPrice() {
-      const w = parseFloat(document.getElementById('dim-width').value);
-      const l = parseFloat(document.getElementById('dim-length').value);
-      const d = parseFloat(document.getElementById('dim-depth').value);
-      if (w && l && d) {
-        // Simple price formula for duvet cover: area-based
-        let area = w * l;
-        if (unit === 'in') { area = w * 2.54 * l * 2.54; }
-        const rate = 0.065; // USD   per cmÂ²
-        const basePrice = Math.round(area * rate + 1200);
-        document.getElementById('custom-price').textContent = 'USD  ' + basePrice.toLocaleString();
-      } else {
-        document.getElementById('custom-price').textContent = ' - ';
-      }
-    }
-    document.getElementById('dim-width').addEventListener('input', updateCustomPrice);
-    document.getElementById('dim-length').addEventListener('input', updateCustomPrice);
-    document.getElementById('dim-depth').addEventListener('input', updateCustomPrice);
-
-    // Submit custom quote
-    document.getElementById('submit-custom-quote').addEventListener('click', () => {
-      const w = document.getElementById('dim-width').value;
-      const l = document.getElementById('dim-length').value;
-      const d = document.getElementById('dim-depth').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + '  &times;  ' + l + '  &times;  ' + d + ' ' + unit);
-    });
-
-    // ─── Add to Cart ────────────────────────────
-    document.getElementById('add-to-cart').addEventListener('click', () => {
-      const btn = document.getElementById('add-to-cart');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
-      btn.style.background = '#16a34a';
-      setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.background = '';
-        btn.disabled = true;
-        btn.textContent = 'Added to Cart';
-      }, 2000);
-    });
-
-    // ─── Tabs ────────────────────────────────────
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('open'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('open');
-      });
-    });
-  </script>
+  <script src="/js/product-sizes.js"></script><script src="/js/product-configurator.js"></script>
 <script src="/js/reviews-carousel.js"></script>
 </body>
 </html>

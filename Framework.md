@@ -676,7 +676,8 @@ mildmate-web/
 │   ├── js/
 │   │   ├── cart.js                  ← localStorage cart logic
 │   │   ├── configurator.js          ← Homepage price calculator (both modes)
-│   │   ├── product-configurator.js  ← Product page configurator (fitted sheet formula, 4 products incl. RV/Truck 45% margin)
+│   │   ├── product-configurator.js  ← Shared product page configurator (19 products, 6 formula types)
+│   │   ├── product-sizes.js         ← Centralized size data (174 entries, 8 regions — synced from /sizeguide/)
 │   │   ├── geo.js                   ← Currency toggle
 │   │   └── cookie-consent.js        ← GDPR consent banner
 │   ├── images/
@@ -976,13 +977,82 @@ fabricCost = (120 × area / 21,000) × 1.20  (20% waste factor)
 - `workers/api/pricing.ts` — `calculateEncasementPrice()` + `isEncasementProduct()`
 - `public/js/product-configurator.js` — auto-detects `encasement` in URL path
 
-### Configurator Pricing Status (2026-05-20)
+### Duvet Cover Pricing Formula (Implemented 2026-05-21)
+
+Active for 5 products: 3-Sided Zipper, Pet Owner, Marine, RV, Dorm Duvet Covers.
+
+**Fabric dimensions — 2 pieces (cm²):**
+```
+rawArea = 2 × (W + 5) × (L + 5)   (5cm sewing allowance each edge)
+floorArea = rawArea × 1.20          (20% waste)
+```
+
+**Zipper:** 0.4 THB/cm × (2L + W) — 3-sided zipper
+
+**Sewing cost — tiered by raw area (cm²):**
+| Area Range | Cost (THB) |
+|---|---|
+| ≤ 139,200 | 300 |
+| ≤ 170,400 | 400 |
+| > 170,400 | 600 |
+
+**Fixed costs:** Packing 100 + Delivery 50
+
+**Markups (on subtotal = fabric + zipper + sewing + packing + delivery):**
+- +15% Operations, +20% Marketing, +30% Margin (65% total)
+
+**Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30, rounded whole.
+
+**No depth input** — duvet covers use W×L only.
+
+### Pillowcase Pricing Formula (Implemented 2026-05-21)
+
+Active for 3 products: Envelope, Zipper, Sham Pillowcases.
+
+**Fabric dimensions (cm²):**
+```
+rawArea = 2 × (W + 5) × (L + 5)   (5cm sewing allowance)
+Sham: rawArea × 1.15                (+15% fabric for flange)
+floorArea = rawArea × 1.60          (60% waste)
+```
+
+**Sewing:** 40 THB flat (50 THB for Sham)
+
+**Zipper (pillowcase-zipper only):** 0.4 THB/cm × max(W, L) — one side
+
+**Fixed costs:** Packing 100 + Delivery 50
+
+**Markups:** +15% Operations, +25% Marketing, +15% Margin (55% total)
+
+**Max dimensions:** W, L ≤ 120cm each
+
+**Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30, rounded whole.
+
+### Pillow Protector Pricing Formula (Implemented 2026-05-21)
+
+Active for 1 product: Pillow Protector (TPU waterproof).
+
+Same geometry as pillowcase-zipper (2 pieces, 60% waste, zipper on longest side).
+
+**TPU fabric cost:** 120 THB/linear metre ÷ 21,000 cm²/lm (210cm bolt)
+
+**Markups:** +15% Operations, +25% Marketing, +35% Margin (75% total)
+
+**Max dimensions:** W, L ≤ 120cm each
+
+### Centralized Size System (Implemented 2026-05-21)
+
+`public/js/product-sizes.js` — 174 size entries across fitted-sheet/duvet/pillow types, 8 regions.
+All product page size-selects are auto-populated from this data by `product-configurator.js`.
+To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`.
+
+### Configurator Pricing Status (2026-05-21)
 
 | Status | Count | Products |
 |---|---|---|
-| Live formula | 8 | 4 fitted + 2 flat + 2 encasement |
+| Live formula | 19 | 6 fitted + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector |
 | No configurator needed | 2 | BedBridge Connector, Bed Lifter (fixed-price accessories) |
-| Awaiting verification | 17 | Marine/V-Berth, Family, Pet Owner fitted sheets; 6 duvet covers; 3 pillowcases; 5 mattress protectors; 1 pillow protector |
+| Awaiting | 6 | Marine/V-Berth fitted sheet, Duvet Insert, 4 mattress protectors |
 
 **Implementation files:**
 - `workers/api/pricing.ts` — server-side (fitted, flat, encasement products use real formulas; others use placeholder)
