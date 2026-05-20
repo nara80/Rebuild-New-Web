@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    /* âââ Page Layout âââââââââââââââââââââââââââ */
+    /* ─── Page Layout ─────────────────────────── */
     .product-page { background: #f0f7ff; }
     .product-layout {
       max-width: 1280px;
@@ -22,7 +22,7 @@
       gap: 56px;
       align-items: start;
     }
-    /* âââ Left: Gallery âââââââââââââââââââââââââ */
+    /* ─── Left: Gallery ───────────────────────── */
     .product-gallery { position: sticky; top: 90px; }
     .gallery-main {
       border-radius: var(--radius);
@@ -65,7 +65,7 @@
       background: #1a1a2e;
     }
     .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
-    /* âââ Right: Product Info âââââââââââââââââââââ */
+    /* ─── Right: Product Info ───────────────────── */
     .product-info {}
     .product-breadcrumb {
       font-size: 0.8125rem;
@@ -97,7 +97,7 @@
     .rating-text { font-size: 0.875rem; color: #555; }
     .rating-text strong { color: var(--color-primary); cursor: pointer; }
     .rating-text strong:hover { text-decoration: underline; }
-    /* âââ Pricing Panel âââââââââââââââââââââââââââ */
+    /* ─── Pricing Panel ─────────────────────────── */
     .pricing-panel {
       background: #fff;
       border: 1px solid var(--color-border);
@@ -262,7 +262,7 @@
       color: #888;
     }
     .payment-badge { display: flex; align-items: center; gap: 4px; }
-    /* âââ Trust Signals ââââââââââââââââââââââââââ */
+    /* ─── Trust Signals ────────────────────────── */
     .trust-signals {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -280,7 +280,7 @@
       border-radius: 6px;
     }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
-    /* âââ Custom Dimensions Toggle âââââââââââââââ */
+    /* ─── Custom Dimensions Toggle ─────────────── */
     .custom-toggle {
       margin-top: 16px;
       text-align: center;
@@ -353,7 +353,7 @@
       transition: background 0.2s;
     }
     .custom-quote-btn:hover { background: var(--color-primary-dark); }
-    /* âââ Accordion Tabs âââââââââââââââââââââââââ */
+    /* ─── Accordion Tabs ───────────────────────── */
     .product-tabs { position: relative; margin-top: 40px; }
     .tab-list {
       display: flex;
@@ -385,7 +385,7 @@
     .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
-    /* âââ Reviews Section âââââââââââââââââââââââââ */
+    /* ─── Reviews Section ───────────────────────── */
     .reviews-section { margin-top: 48px; }
     .reviews-header {
       display: flex;
@@ -433,7 +433,7 @@
     .review-stars { color: #f59e0b; font-size: 0.875rem; }
     .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
     .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
-    /* âââ Related Products ââââââââââââââââââââââââ */
+    /* ─── Related Products ──────────────────────── */
     .related-section { margin-top: 64px; }
     .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
     .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -451,7 +451,7 @@
     .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
     .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
-    /* âââ Responsive ââââââââââââââââââââââââââââââ */
+    /* ─── Responsive ────────────────────────────── */
     @media (max-width: 1024px) {
       .product-layout { grid-template-columns: 1fr; gap: 32px; }
       .product-gallery { position: static; }
@@ -470,7 +470,7 @@
     .reviews-grid { grid-template-columns: 1fr; }
       .dim-inputs { grid-template-columns: 1fr; }
     }
-    /* âââ Global Tags âââââââââââââââââââââââââââ */
+    /* ─── Global Tags ─────────────────────────── */
     .tag-pill {
       display: inline-flex;
       align-items: center;
@@ -544,7 +544,7 @@
         <!-- Rating -->
         <div class="product-rating">
           <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-          <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">72 reviews</strong></span>
+          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">72 reviews</strong></span>
         </div>
 
         <!-- Pricing Panel -->
@@ -571,44 +571,44 @@
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
               <optgroup label="¹­ Thailand">
-                <option value="107x191" data-price="2495">3.5ft  -  107  191cm (42  75in)</option>
-                <option value="120x200" data-price="2695">6ft Queen  -  120  200cm (47  79in)</option>
-                <option value="152x198" data-price="2895">King  -  152  198cm (60  78in)</option>
+                <option value="107x191" data-price="2495">3.5ft  -  107 — 191cm (42 — 75in)</option>
+                <option value="120x200" data-price="2695">6ft Queen  -  120 — 200cm (47 — 79in)</option>
+                <option value="152x198" data-price="2895">King  -  152 — 198cm (60 — 78in)</option>
               </optgroup>
               <optgroup label="º¸ US / Canada">
-                <option value="99x191" data-price="2495">Twin  -  99  191cm (39  75in)</option>
-                <option value="137x191" data-price="2695">Full  -  137  191cm (54  75in)</option>
-                <option value="153x203" data-price="2895">Queen  -  153  203cm (60  80in)</option>
+                <option value="99x191" data-price="2495">Twin  -  99 — 191cm (39 — 75in)</option>
+                <option value="137x191" data-price="2695">Full  -  137 — 191cm (54 — 75in)</option>
+                <option value="153x203" data-price="2895">Queen  -  153 — 203cm (60 — 80in)</option>
               </optgroup>
               <optgroup label="¬§ UK">
-                <option value="90x190" data-price="2445">Single  -  90  190cm</option>
-                <option value="135x190" data-price="2695">Double  -  135  190cm</option>
-                <option value="150x200" data-price="2895">King  -  150  200cm</option>
+                <option value="90x190" data-price="2445">Single  -  90 — 190cm</option>
+                <option value="135x190" data-price="2695">Double  -  135 — 190cm</option>
+                <option value="150x200" data-price="2895">King  -  150 — 200cm</option>
               </optgroup>
               <optgroup label="ªº EU">
-                <option value="90x200" data-price="2495">Single  -  90  200cm</option>
-                <option value="140x200" data-price="2695">Double  -  140  200cm</option>
-                <option value="160x200" data-price="2895">King  -  160  200cm</option>
+                <option value="90x200" data-price="2495">Single  -  90 — 200cm</option>
+                <option value="140x200" data-price="2695">Double  -  140 — 200cm</option>
+                <option value="160x200" data-price="2895">King  -  160 — 200cm</option>
               </optgroup>
               <optgroup label="¦º AU">
-                <option value="92x188" data-price="2495">Single  -  92  188cm</option>
-                <option value="137x188" data-price="2695">Double  -  137  188cm</option>
-                <option value="153x203" data-price="2895">Queen  -  153  203cm</option>
+                <option value="92x188" data-price="2495">Single  -  92 — 188cm</option>
+                <option value="137x188" data-price="2695">Double  -  137 — 188cm</option>
+                <option value="153x203" data-price="2895">Queen  -  153 — 203cm</option>
               </optgroup>
               <optgroup label="²¾ MY / SG">
-                <option value="107x191" data-price="2495">Super Single  -  107  191cm (42  75in)</option>
-                <option value="152x198" data-price="2895">Queen  -  152  198cm (60  78in)</option>
+                <option value="107x191" data-price="2495">Super Single  -  107 — 191cm (42 — 75in)</option>
+                <option value="152x198" data-price="2895">Queen  -  152 — 198cm (60 — 78in)</option>
               </optgroup>
               <optgroup label="¯µ JP">
-                <option value="100x200" data-price="2545">Single  -  100  200cm (39.4  78.7in)</option>
-                <option value="120x200" data-price="2745">Semi-Double  -  120  200cm (47  79in)</option>
-                <option value="140x200" data-price="2895">Double  -  140  200cm (55  79in)</option>
+                <option value="100x200" data-price="2545">Single  -  100 — 200cm (39.4 — 78.7in)</option>
+                <option value="120x200" data-price="2745">Semi-Double  -  120 — 200cm (47 — 79in)</option>
+                <option value="140x200" data-price="2895">Double  -  140 — 200cm (55 — 79in)</option>
               </optgroup>
               <optgroup label="Custom Size">
-                <option value="custom">Custom dimensions â</option>
+                <option value="custom">Custom dimensions →</option>
               </optgroup>
             </select>
-            <div class="size-hint">Not sure of your duvet size? <a href="/sizeguide/">View Size Guide â</a></div>
+            <div class="size-hint">Not sure of your duvet size? <a href="/sizeguide/">View Size Guide →</a></div>
           </div>
 
           <!-- Step 3: Fabric  -  CloudSoft only -->
@@ -620,7 +620,7 @@
                 <span>CloudSoft</span>
               </div>
             </div>
-            <div class="fabric-note" style="margin-top:8px;">CloudSoft: Quick-dry microfiber Â· Ultra-soft feel Â· Ideal for mobile living</div>
+            <div class="fabric-note" style="margin-top:8px;">CloudSoft: Quick-dry microfiber · Ultra-soft feel · Ideal for mobile living</div>
           </div>
 
           <!-- Step 4: Color -->
@@ -682,7 +682,7 @@
               <span class="price-label">Estimated price</span>
               <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote â</button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote →</button>
           </div>
 
           <!-- Payment badges -->
@@ -750,19 +750,19 @@
             <li>Wrinkle-resistant  -  looks neat without ironing</li>
             <li>Lightweight  -  ideal for trucks and RVs where weight matters</li>
           </ul>
-          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections â</a></p>
+          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections →</a></p>
         </div>
 
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Duvet Covers</h3>
-          <p>RV and truck cab mattresses often use non-standard sizes. The size dropdown above includes common sizes, but if your cab mattress is an unusual dimension, use the "Custom Size" option to enter your exact W    L    D.</p>
-          <p>Not sure of your duvet size? <a href="/sizeguide/" style="color:var(--color-primary);">View our full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a>  -  we'll help you get the right size.</p>
+          <p>RV and truck cab mattresses often use non-standard sizes. The size dropdown above includes common sizes, but if your cab mattress is an unusual dimension, use the "Custom Size" option to enter your exact W  —  L  —  D.</p>
+          <p>Not sure of your duvet size? <a href="/sizeguide/" style="color:var(--color-primary);">View our full size guide →</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a>  -  we'll help you get the right size.</p>
         </div>
 
         <div class="tab-content" id="tab-care" role="tabpanel">
           <h3>Care Instructions</h3>
           <ul>
-            <li>Machine wash cold (30Â°C / 86Â°F)  -  gentle cycle</li>
+            <li>Machine wash cold (30°C / 86°F)  -  gentle cycle</li>
             <li>Do not bleach  -  use mild detergent only</li>
             <li>Tumble dry low or hang dry  -  CloudSoft dries very quickly</li>
             <li>No ironing needed  -  wrinkle-resistant by design</li>
@@ -798,7 +798,7 @@
               <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"I long-haul truck and CloudSoft is perfect for cab living. Dries overnight even with the cab heater on low. The zipper makes it easy to swap when I stop for the night. Highly recommend for OTR drivers."</div>
-            <div class="review-product">Verified purchase: RV Duvet Cover Â· CloudSoft</div>
+            <div class="review-product">Verified purchase: RV Duvet Cover · CloudSoft</div>
           </div>
           <div class="review-card">
             <div class="review-header">
@@ -810,7 +810,7 @@
               <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"We full-time in our RV and these sheets have been a game changer. CloudSoft dries so fast which is crucial when you're traveling between locations. Great quality, fits our RV mattress perfectly."</div>
-            <div class="review-product">Verified purchase: RV Duvet Cover Â· CloudSoft Sea</div>
+            <div class="review-product">Verified purchase: RV Duvet Cover · CloudSoft Sea</div>
           </div>
         </div>
       </div>
@@ -828,7 +828,7 @@
             <div class="card-body">
               <div class="card-title">RV & Truck Mattress Encasement</div>
               <div class="card-price">From USD  1,695</div>
-              <div class="card-price-note">CloudSoft Â· 6-sided protection</div>
+              <div class="card-price-note">CloudSoft · 6-sided protection</div>
             </div>
           </a>
           <a href="/product/pillow-protector-general/" class="related-card">
@@ -838,7 +838,7 @@
             <div class="card-body">
               <div class="card-title">RV & Truck Pillow Protector</div>
               <div class="card-price">USD  540</div>
-              <div class="card-price-note">CloudSoft Â· TPU waterproof</div>
+              <div class="card-price-note">CloudSoft · TPU waterproof</div>
             </div>
           </a>
           <a href="/product/duvet-cover-dorm/" class="related-card">
@@ -848,7 +848,7 @@
             <div class="card-body">
               <div class="card-title">Duvet Cover  -  Dorm</div>
               <div class="card-price">From USD  2,295</div>
-              <div class="card-price-note">BreezePlus Â· 3-sided zipper</div>
+              <div class="card-price-note">BreezePlus · 3-sided zipper</div>
             </div>
           </a>
           <a href="/product/mattress-protector-standard/" class="related-card">
@@ -858,7 +858,7 @@
             <div class="card-body">
               <div class="card-title">Mattress Protector</div>
               <div class="card-price">From USD  1,495</div>
-              <div class="card-price-note">Waterproof Â· All sizes</div>
+              <div class="card-price-note">Waterproof · All sizes</div>
             </div>
           </a>
         </div>
@@ -882,7 +882,7 @@
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
-    // âââ Gallery Thumbnails ââââââââââââââââââââ
+    // ─── Gallery Thumbnails ────────────────────
     document.querySelectorAll('.gallery-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
         if (thumb.dataset.video) {
@@ -895,7 +895,7 @@
       });
     });
 
-    // âââ Region Selection âââââââââââââââââââââââ
+    // ─── Region Selection ───────────────────────
     let selectedRegion = 'th';
     let selectedSize = '';
     let selectedFabric = 'cloudsoft';
@@ -911,41 +911,41 @@
       });
     });
 
-    // âââ Size Selection âââââââââââââââââââââââââ
+    // ─── Size Selection ─────────────────────────
     const SIZES_BY_REGION = {
       th: {
-        '107x191': { label: '3.5ft  -  107  191cm (42  75in)', price: 2495 },
-        '120x200': { label: '6ft Queen  -  120  200cm (47  79in)', price: 2695 },
-        '152x198': { label: 'King  -  152  198cm (60  78in)', price: 2895 }
+        '107x191': { label: '3.5ft  -  107 — 191cm (42 — 75in)', price: 2495 },
+        '120x200': { label: '6ft Queen  -  120 — 200cm (47 — 79in)', price: 2695 },
+        '152x198': { label: 'King  -  152 — 198cm (60 — 78in)', price: 2895 }
       },
       us: {
-        '99x191': { label: 'Twin  -  99  191cm (39  75in)', price: 2495 },
-        '137x191': { label: 'Full  -  137  191cm (54  75in)', price: 2695 },
-        '153x203': { label: 'Queen  -  153  203cm (60  80in)', price: 2895 }
+        '99x191': { label: 'Twin  -  99 — 191cm (39 — 75in)', price: 2495 },
+        '137x191': { label: 'Full  -  137 — 191cm (54 — 75in)', price: 2695 },
+        '153x203': { label: 'Queen  -  153 — 203cm (60 — 80in)', price: 2895 }
       },
       uk: {
-        '90x190': { label: 'Single  -  90  190cm', price: 2445 },
-        '135x190': { label: 'Double  -  135  190cm', price: 2695 },
-        '150x200': { label: 'King  -  150  200cm', price: 2895 }
+        '90x190': { label: 'Single  -  90 — 190cm', price: 2445 },
+        '135x190': { label: 'Double  -  135 — 190cm', price: 2695 },
+        '150x200': { label: 'King  -  150 — 200cm', price: 2895 }
       },
       eu: {
-        '90x200': { label: 'Single  -  90  200cm', price: 2495 },
-        '140x200': { label: 'Double  -  140  200cm', price: 2695 },
-        '160x200': { label: 'King  -  160  200cm', price: 2895 }
+        '90x200': { label: 'Single  -  90 — 200cm', price: 2495 },
+        '140x200': { label: 'Double  -  140 — 200cm', price: 2695 },
+        '160x200': { label: 'King  -  160 — 200cm', price: 2895 }
       },
       au: {
-        '92x188': { label: 'Single  -  92  188cm', price: 2495 },
-        '137x188': { label: 'Double  -  137  188cm', price: 2695 },
-        '153x203': { label: 'Queen  -  153  203cm', price: 2895 }
+        '92x188': { label: 'Single  -  92 — 188cm', price: 2495 },
+        '137x188': { label: 'Double  -  137 — 188cm', price: 2695 },
+        '153x203': { label: 'Queen  -  153 — 203cm', price: 2895 }
       },
       my: {
-        '107x191': { label: 'Super Single  -  107  191cm (42  75in)', price: 2495 },
-        '152x198': { label: 'Queen  -  152  198cm (60  78in)', price: 2895 }
+        '107x191': { label: 'Super Single  -  107 — 191cm (42 — 75in)', price: 2495 },
+        '152x198': { label: 'Queen  -  152 — 198cm (60 — 78in)', price: 2895 }
       },
       jp: {
-        '100x200': { label: 'Single  -  100  200cm (39.4  78.7in)', price: 2545 },
-        '120x200': { label: 'Semi-Double  -  120  200cm (47  79in)', price: 2745 },
-        '140x200': { label: 'Double  -  140  200cm (55  79in)', price: 2895 }
+        '100x200': { label: 'Single  -  100 — 200cm (39.4 — 78.7in)', price: 2545 },
+        '120x200': { label: 'Semi-Double  -  120 — 200cm (47 — 79in)', price: 2745 },
+        '140x200': { label: 'Double  -  140 — 200cm (55 — 79in)', price: 2895 }
       }
     };
 
@@ -967,7 +967,7 @@
       }
     });
 
-    // âââ Color Selection âââââââââââââââââââââââ
+    // ─── Color Selection ───────────────────────
     document.querySelectorAll('.color-option').forEach(color => {
       color.addEventListener('click', () => {
         document.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected'));
@@ -976,12 +976,12 @@
       });
     });
 
-    // âââ Custom Dimensions Toggle ââââââââââââââââ
+    // ─── Custom Dimensions Toggle ────────────────
     document.getElementById('custom-quote-btn').addEventListener('click', () => {
       document.getElementById('custom-dimensions').classList.toggle('open');
     });
 
-    // âââ Unit Toggle ââââââââââââââââââââââââââââ
+    // ─── Unit Toggle ────────────────────────────
     let unit = 'cm';
     document.getElementById('unit-cm').addEventListener('click', () => {
       unit = 'cm';
@@ -1016,10 +1016,10 @@
       const w = document.getElementById('dim-width').value;
       const l = document.getElementById('dim-length').value;
       const d = document.getElementById('dim-depth').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + '    ' + l + '    ' + d + ' ' + unit);
+      alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + '  —  ' + l + '  —  ' + d + ' ' + unit);
     });
 
-    // âââ Add to Cart ââââââââââââââââââââââââââââ
+    // ─── Add to Cart ────────────────────────────
     document.getElementById('add-to-cart').addEventListener('click', () => {
       const btn = document.getElementById('add-to-cart');
       const originalText = btn.innerHTML;
@@ -1033,7 +1033,7 @@
       }, 2000);
     });
 
-    // âââ Tabs ââââââââââââââââââââââââââââââââââââ
+    // ─── Tabs ────────────────────────────────────
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

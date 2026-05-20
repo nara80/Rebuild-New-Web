@@ -1,4 +1,4 @@
-// MildMate Pricing API
+﻿// MildMate Pricing API
 //
 // CURRENT: Real fitted sheet formula for Standard, Deep Pocket, Dorm (3 products).
 //          Both standard sizes and custom dimensions use the formula.
@@ -58,6 +58,7 @@ const DOMESTIC_DELIVERY_COST = 50;
 const OPERATING_RATE = 0.15;
 const MARKETING_RATE = 0.20;
 const MARGIN_RATE = 0.30;
+const FAMILY_MARGIN_RATE = 0.50;
 
 // ── Currency ──
 const THB_TO_USD = 30;
@@ -133,6 +134,7 @@ function calculateFittedSheetPrice(
   lCm: number,
   dCm: number,
   fabric: string,
+  marginRate: number = MARGIN_RATE,
 ): { priceThb: number; priceUsd: number; breakdown: PriceBreakdown["breakdown"] } {
   // Fabric dimensions
   const fabricW = wCm + 2 * dCm + 14;
@@ -159,7 +161,7 @@ function calculateFittedSheetPrice(
   // Markups
   const operating = subtotal * OPERATING_RATE;
   const marketing = subtotal * MARKETING_RATE;
-  const margin = subtotal * MARGIN_RATE;
+  const margin = subtotal * marginRate;
 
   // Total
   const total = subtotal + operating + marketing + margin;
@@ -235,7 +237,7 @@ function calculateFlatSheetPrice(
   // Markups
   const operating = subtotal * OPERATING_RATE;
   const marketing = subtotal * MARKETING_RATE;
-  const margin = subtotal * MARGIN_RATE;
+  const margin = subtotal * marginRate;
 
   // Total
   const total = subtotal + operating + marketing + margin;
@@ -314,6 +316,8 @@ function isFittedSheetProduct(product: string): boolean {
     "deep-pocket-fitted-sheet",
     "dorm-fitted-sheet",
     "rv-truck-fitted-sheet",
+    "pet-owner-fitted-sheet",
+    "family-fitted-sheet",
   ].includes(product);
 }
 
@@ -368,7 +372,7 @@ export function calculatePrice(
 
     if (w > 0 && l > 0 && d > 0) {
       // Constraint: W > 220 cm → redirect to Family/Co-Sleep
-      if (w > MAX_WIDTH_CM) {
+      if (product !== "family-fitted-sheet" && w > MAX_WIDTH_CM) {
         const result = calculateFittedSheetPrice(w, l, d, fabric);
         return {
           price: currency === "THB" ? result.priceThb : result.priceUsd,
@@ -376,7 +380,8 @@ export function calculatePrice(
         };
       }
 
-      const result = calculateFittedSheetPrice(w, l, d, fabric);
+      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : MARGIN_RATE;
+      const result = calculateFittedSheetPrice(w, l, d, fabric, marginRate);
       return {
         price: currency === "THB" ? result.priceThb : result.priceUsd,
         breakdown: result.breakdown,

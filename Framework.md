@@ -945,10 +945,49 @@ L_fabric = L + 2D + 14
 
 **Max width:** 220cm — above trigger directs to Family/Co-Sleep custom quote.
 
+### Encasement Pricing Formula (Implemented 2026-05-20)
+
+Active for 2 products: 6-Sided Mattress Encasement + RV & Truck Mattress Encasement. TPU-only (no fabric selector).
+
+**Fabric dimensions — 6-sided surface area (cm²):**
+```
+Area = 2(W×L + W×D + L×D)
+```
+
+**TPU fabric cost:**
+```
+TPU bolt width: 210 cm
+1 linear metre = 100 × 210 = 21,000 cm² → costs 120 THB
+fabricCost = (120 × area / 21,000) × 1.20  (20% waste factor)
+```
+
+**Sewing:** 300 THB flat rate
+
+**Zipper:** 0.4 THB/cm on 3 sides: L + W + L = 2L + W
+
+**Fixed costs:** Packing 100 + Delivery 50
+
+**Markups (on subtotal = fabric + sewing + zipper + packing + delivery):**
+- +15% Operations, +25% Marketing, +50% Margin (90% total — higher than cotton bedding)
+
+**Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30.
+
 **Implementation files:**
-- `workers/api/pricing.ts` — server-side (3 fitted products use real formula; others use placeholder)
-- `public/js/configurator.js` — homepage configurator with same formula
-- `public/js/product-configurator.js` — shared configurator on product detail pages (auto-detects rv-truck page for 45% margin)
+- `workers/api/pricing.ts` — `calculateEncasementPrice()` + `isEncasementProduct()`
+- `public/js/product-configurator.js` — auto-detects `encasement` in URL path
+
+### Configurator Pricing Status (2026-05-20)
+
+| Status | Count | Products |
+|---|---|---|
+| Live formula | 8 | 4 fitted + 2 flat + 2 encasement |
+| No configurator needed | 2 | BedBridge Connector, Bed Lifter (fixed-price accessories) |
+| Awaiting verification | 17 | Marine/V-Berth, Family, Pet Owner fitted sheets; 6 duvet covers; 3 pillowcases; 5 mattress protectors; 1 pillow protector |
+
+**Implementation files:**
+- `workers/api/pricing.ts` — server-side (fitted, flat, encasement products use real formulas; others use placeholder)
+- `public/js/configurator.js` — homepage configurator with fitted sheet formula
+- `public/js/product-configurator.js` — shared configurator on product detail pages (auto-detects product type from URL path)
 
 ### Hybrid Pricing Architecture (Future — D1 standard_prices)
 

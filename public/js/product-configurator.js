@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    MildMate Product Configurator — Phase 4+
    Fitted sheet real pricing formula
    Hybrid: standard size presets + custom W×L×D
@@ -10,6 +10,9 @@
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
   var isFlatSheet = path.indexOf('flat-sheet') !== -1;
+  var isEncasement = path.indexOf('encasement') !== -1;
+  var isPetOwner = path.indexOf('pet-owner') !== -1;
+  var isFamily = path.indexOf('family-fitted-sheet') !== -1;
 
   // ── Pricing constants (THB) ──
   var SQCM_PER_YARD = 23744;
@@ -17,10 +20,10 @@
   var DELIVERY = 50;
   var OP_RATE = 0.15;
   var MKT_RATE = 0.20;
-  var MARGIN_RATE = isRVTruck ? 0.45 : 0.30;
-  var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE; // 1.65 or 1.80
+  var MARGIN_RATE = isRVTruck ? 0.45 : isFamily ? 0.50 : 0.30;
+  var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE; // 1.65 standard, 1.80 RV, 1.85 family
   var THB_TO_USD = 30;
-  var MAX_W = 220;
+  var MAX_W = isFamily ? 9999 : 220;
 
   var FABRIC_RATES = {
     cloudsoft: 100,
@@ -54,6 +57,35 @@
   // ── Flat sheet constants ──
   var FLAT_TUCK = 25;   // cm each side for underneath tuck + sewing allowance
   var FLAT_SEWING = 250; // fixed sewing cost (no elastic)
+
+  // ── Encasement constants (TPU) ──
+  var TPU_COST_PER_LM = 120;       // THB per linear metre (210cm bolt)
+  var TPU_BOLT_W = 210;            // cm
+  var TPU_SQCM_PER_LM = 100 * TPU_BOLT_W; // 21,000
+  var ENC_SEWING = 300;            // flat rate THB
+  var ZIPPER_RATE = 0.4;           // THB/cm
+  var ENC_OP = 0.15;
+  var ENC_MKT = 0.25;
+  var ENC_MARGIN = 0.50;
+  var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN; // 1.90
+
+  function calcEncasement(wCm, lCm, dCm) {
+    // 6-sided surface area
+    var area = 2 * (wCm * lCm + wCm * dCm + lCm * dCm);
+    // TPU fabric cost
+    var fabricCost = (TPU_COST_PER_LM * area / TPU_SQCM_PER_LM) * 1.20;
+    // Sewing
+    var sewingCost = ENC_SEWING;
+    // Zipper on 3 sides: L + W + L = 2L + W
+    var zipperCost = (2 * lCm + wCm) * ZIPPER_RATE;
+    // Subtotal
+    var subtotal = fabricCost + sewingCost + zipperCost + PACKING + DELIVERY;
+    // Markup
+    var total = subtotal * ENC_MARKUP;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
+  }
 
   function calcFlatSheet(wCm, lCm, dCm, fabric) {
     var fw = wCm + 2 * dCm + FLAT_TUCK * 2;
@@ -111,6 +143,8 @@
   };
 
   if (!fabricSelect && !sizeSelect) return; // Not a configurator page — exit
+
+  if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
 
   // ── Inject quote popup HTML ──
   var popupHTML = '' +
@@ -212,7 +246,14 @@
       return;
     }
     if (customDims) customDims.classList.remove('open');
-    var result = isFlatSheet ? calcFlatSheet(dims.w, dims.l, dims.d, state.fabric) : calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
+    var result;
+    if (isEncasement) {
+      result = calcEncasement(dims.w, dims.l, dims.d);
+    } else if (isFlatSheet) {
+      result = calcFlatSheet(dims.w, dims.l, dims.d, state.fabric);
+    } else {
+      result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
+    }
     if (!isFlatSheet && dims.w > MAX_W) {
       priceDisplay.textContent = 'Custom quote — Co-Sleep size';
       if (addToCartBtn) addToCartBtn.disabled = true;
@@ -238,7 +279,14 @@
       customPrice.textContent = 'Custom quote — Co-Sleep size';
       return;
     }
-    var result = isFlatSheet ? calcFlatSheet(wCm, lCm, dCm, state.fabric) : calcFittedSheet(wCm, lCm, dCm, state.fabric);
+    var result;
+    if (isEncasement) {
+      result = calcEncasement(wCm, lCm, dCm);
+    } else if (isFlatSheet) {
+      result = calcFlatSheet(wCm, lCm, dCm, state.fabric);
+    } else {
+      result = calcFittedSheet(wCm, lCm, dCm, state.fabric);
+    }
     state.quotePriceThb = result.thb;
     state.quotePriceUsd = result.usd;
     customPrice.textContent = formatPrice(result.thb, result.usd);

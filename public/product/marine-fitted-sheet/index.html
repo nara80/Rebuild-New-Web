@@ -1,4 +1,4 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    /* âââ Page Layout âââââââââââââââââââââââââââ */
+    /* ─── Page Layout ─────────────────────────── */
     .product-page { background: #f0f7ff; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
     .product-gallery { position: sticky; top: 90px; }
@@ -23,7 +23,7 @@
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gallery-thumb.video-thumb { display: flex; align-items: center; justify-content: center; background: #1a1a2e; }
     .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
-    /* âââ Right: Product Info âââââââââââââââââââââ */
+    /* ─── Right: Product Info ───────────────────── */
     .product-info {}
     .product-breadcrumb { font-size: 0.8125rem; color: #888; margin-bottom: 16px; }
     .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
@@ -35,7 +35,7 @@
     .rating-text { font-size: 0.875rem; color: #555; }
     .rating-text strong { color: var(--color-primary); cursor: pointer; }
     .rating-text strong:hover { text-decoration: underline; }
-    /* âââ Pricing Panel âââââââââââââââââââââââââââ */
+    /* ─── Pricing Panel ─────────────────────────── */
     .pricing-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
     .panel-section { margin-bottom: 20px; }
     .panel-section:last-child { margin-bottom: 0; }
@@ -71,11 +71,11 @@
     .btn-custom-quote:hover { background: #e8f4fd; }
     .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #888; }
     .payment-badge { display: flex; align-items: center; gap: 4px; }
-    /* âââ Trust Signals ââââââââââââââââââââââââââ */
+    /* ─── Trust Signals ────────────────────────── */
     .trust-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
     .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #555; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
-    /* âââ Custom Dimensions Toggle âââââââââââââââ */
+    /* ─── Custom Dimensions Toggle ─────────────── */
     .custom-toggle { margin-top: 16px; text-align: center; }
     .custom-toggle button { background: none; border: none; font-size: 0.875rem; color: var(--color-primary); cursor: pointer; font-weight: 600; font-family: var(--font-main); text-decoration: underline; }
     .custom-toggle button:hover { color: var(--color-primary-dark); }
@@ -91,7 +91,7 @@
     .unit-btn.active { background: var(--color-primary); color: #fff; }
     .custom-quote-btn { width: 100%; padding: 14px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .custom-quote-btn:hover { background: var(--color-primary-dark); }
-    /* âââ Accordion Tabs âââââââââââââââââââââââââ */
+    /* ─── Accordion Tabs ───────────────────────── */
     .product-tabs { position: relative; margin-top: 40px; }
     .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
     .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
@@ -103,7 +103,7 @@
     .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
-    /* âââ Reviews Section âââââââââââââââââââââââââ */
+    /* ─── Reviews Section ───────────────────────── */
     .reviews-section { margin-top: 48px; }
     .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
@@ -121,7 +121,7 @@
     .review-stars { color: #f59e0b; font-size: 0.875rem; }
     .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
     .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
-    /* âââ Related Products ââââââââââââââââââââââââ */
+    /* ─── Related Products ──────────────────────── */
     .related-section { margin-top: 64px; }
     .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
     .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -133,12 +133,12 @@
     .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
     .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
-    /* âââ Responsive ââââââââââââââââââââââââââââââ */
+    /* ─── Responsive ────────────────────────────── */
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } .reviews-header { flex-direction: column; align-items: start; } }
     @media (max-width: 480px) {
     .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
-    /* âââ Global Tags âââââââââââââââââââââââââââ */
+    /* ─── Global Tags ─────────────────────────── */
     .tag-pill {
       display: inline-flex;
       align-items: center;
@@ -210,7 +210,7 @@
 
         <div class="product-rating">
           <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-          <span class="rating-text">5.0 Â· <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">42 reviews</strong></span>
+          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">42 reviews</strong></span>
         </div>
 
         <div class="pricing-panel">
@@ -235,29 +235,29 @@
             <select class="size-select" id="size-select">
               <option value=""> -  Choose size  - </option>
               <optgroup label="¹­ Thailand">
-                <option value="90x190x20" data-price="1595">Single  -  90  190  20cm (8in depth for boat/RV)</option>
-                <option value="107x191x20" data-price="1695">3.5ft  -  107  191  20cm</option>
-                <option value="120x200x20" data-price="1795">6ft Queen  -  120  200  20cm</option>
+                <option value="90x190x20" data-price="1595">Single  -  90 — 190 — 20cm (8in depth for boat/RV)</option>
+                <option value="107x191x20" data-price="1695">3.5ft  -  107 — 191 — 20cm</option>
+                <option value="120x200x20" data-price="1795">6ft Queen  -  120 — 200 — 20cm</option>
               </optgroup>
               <optgroup label="º¸ US / Canada">
-                <option value="99x191x20" data-price="1595">Twin  -  99  191  20cm (8in depth)</option>
-                <option value="137x191x20" data-price="1695">Full  -  137  191  20cm</option>
+                <option value="99x191x20" data-price="1595">Twin  -  99 — 191 — 20cm (8in depth)</option>
+                <option value="137x191x20" data-price="1695">Full  -  137 — 191 — 20cm</option>
               </optgroup>
               <optgroup label="¬§ UK">
-                <option value="90x190x20" data-price="1545">Single  -  90  190  20cm</option>
-                <option value="135x190x20" data-price="1695">Double  -  135  190  20cm</option>
+                <option value="90x190x20" data-price="1545">Single  -  90 — 190 — 20cm</option>
+                <option value="135x190x20" data-price="1695">Double  -  135 — 190 — 20cm</option>
               </optgroup>
               <optgroup label="Custom Size">
-                <option value="custom">Custom dimensions â</option>
+                <option value="custom">Custom dimensions →</option>
               </optgroup>
             </select>
-            <div class="size-hint">Depth (pocket) max 20cm for standard boat/RV mattresses  -  <a href="/sizeguide/">view size guide â</a></div>
+            <div class="size-hint">Depth (pocket) max 20cm for standard boat/RV mattresses  -  <a href="/sizeguide/">view size guide →</a></div>
           </div>
 
           <!-- Step 3: Fabric -->
           <div class="panel-section">
             <div class="panel-label">Fabric</div>
-            <div class="fabric-badge">CloudSoft  -  Quick-Dry Â· Moisture-Wicking Â· OEKO-TEX</div>
+            <div class="fabric-badge">CloudSoft</div>
           </div>
 
           <!-- Step 4: Color -->
@@ -316,7 +316,7 @@
               <span class="price-label">Estimated price</span>
               <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote â</button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Submit for Custom Quote →</button>
           </div>
 
           <div class="payment-badges">
@@ -349,7 +349,7 @@
           <p>Boat mattresses are anything but standard  -  V-berths, sailboat bunks, and yacht cabins demand custom-fitted sheets that won't slip, bunch, or come loose when the seas get rough. CloudSoft is engineered to handle the marine environment: quick-dry, moisture-wicking, and stays secure with our full-perimeter elastic.</p>
           <p>Maximum 20cm pocket depth fits standard boat and RV mattress thicknesses. Available in marine-appropriate colors including Navy and Sea Grass Green.</p>
           <ul>
-            <li>Custom-made to your exact W    L    D mattress dimensions</li>
+            <li>Custom-made to your exact W  —  L  —  D mattress dimensions</li>
             <li>Full-perimeter elastic for a secure, non-slip fit</li>
             <li>Quick-dry after washing  -  ready by morning</li>
             <li>Moisture-wicking for damp marine environments</li>
@@ -367,18 +367,18 @@
             <li>OEKO-TEX certified  -  no toxic chemicals</li>
             <li>Lightweight construction  -  easy to stow</li>
           </ul>
-          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections â</a></p>
+          <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections →</a></p>
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide  -  Boat Fitted Sheets</h3>
           <p>Boat mattresses vary widely. Our sheets are custom-made to your exact dimensions so they fit snugly without clips or straps. Standard boat/RV mattress depth is 15 - 20cm.</p>
           <p>For non-standard V-berth angles or custom shapes, use the "Custom Size" option to enter your exact measurements  -  we'll accommodate most shapes including tapered bunks.</p>
-          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide â</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
+          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide →</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
           <h3>Care Instructions</h3>
           <ul>
-            <li>Machine wash cold (30Â°C / 86Â°F)  -  gentle cycle</li>
+            <li>Machine wash cold (30°C / 86°F)  -  gentle cycle</li>
             <li>Do not bleach  -  mild detergent only</li>
             <li>Tumble dry low or hang dry</li>
             <li>No ironing needed  -  wrinkle-resistant by design</li>
@@ -413,7 +413,7 @@
               <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Perfect fit for my sailboat V-berth. No more waking up with the sheet bunched up at the foot of the bunk. Washes and dries overnight  -  exactly what I needed."</div>
-            <div class="review-product">Verified purchase: Boat Fitted Sheet Â· Custom / CloudSoft Navy</div>
+            <div class="review-product">Verified purchase: Boat Fitted Sheet · Custom / CloudSoft Navy</div>
           </div>
           <div class="review-card">
             <div class="review-header">
@@ -425,7 +425,7 @@
               <div class="review-stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             </div>
             <div class="review-text">"Finally a sheet that fits my yacht master berth properly. The custom dimensions were spot-on and the quick-dry fabric is a lifesaver at sea. Highly recommend."</div>
-            <div class="review-product">Verified purchase: Boat Fitted Sheet Â· King / CloudSoft Sea Grass Green</div>
+            <div class="review-product">Verified purchase: Boat Fitted Sheet · King / CloudSoft Sea Grass Green</div>
           </div>
         </div>
       </div>
@@ -441,7 +441,7 @@
             <div class="card-body">
               <div class="card-title">Marine Fitted Sheet</div>
               <div class="card-price">From USD 55.00</div>
-              <div class="card-price-note">CloudSoft Â· custom fit</div>
+              <div class="card-price-note">CloudSoft · custom fit</div>
             </div>
           </a>
           <a href="/product/mattress-encasement-general/" class="related-card">
@@ -449,7 +449,7 @@
             <div class="card-body">
               <div class="card-title">6-Sided Mattress Encasement</div>
               <div class="card-price">From USD 68.00</div>
-              <div class="card-price-note">Waterproof Â· full protection</div>
+              <div class="card-price-note">Waterproof · full protection</div>
             </div>
           </a>
           <a href="/product/rv-truck-mattress-encasement/" class="related-card">
@@ -457,7 +457,7 @@
             <div class="card-body">
               <div class="card-title">RV &amp; Truck Mattress Encasement</div>
               <div class="card-price">From USD 58.00</div>
-              <div class="card-price-note">Waterproof Â· quick-dry</div>
+              <div class="card-price-note">Waterproof · quick-dry</div>
             </div>
           </a>
           <a href="/product/pillow-protector-general/" class="related-card">
@@ -511,10 +511,10 @@
     });
 
     const SIZES_BY_REGION = {
-      th: { '90x190x20': { label: 'Single  -  90  190  20cm', price: 1595 }, '107x191x20': { label: '3.5ft  -  107  191  20cm', price: 1695 }, '120x200x20': { label: '6ft Queen  -  120  200  20cm', price: 1795 } },
-      us: { '99x191x20': { label: 'Twin  -  99  191  20cm', price: 1595 }, '137x191x20': { label: 'Full  -  137  191  20cm', price: 1695 } },
-      uk: { '90x190x20': { label: 'Single  -  90  190  20cm', price: 1545 }, '135x190x20': { label: 'Double  -  135  190  20cm', price: 1695 } },
-      eu: { '90x200x20': { label: 'Single  -  90  200  20cm', price: 1595 }, '140x200x20': { label: 'Double  -  140  200  20cm', price: 1695 } }
+      th: { '90x190x20': { label: 'Single  -  90 — 190 — 20cm', price: 1595 }, '107x191x20': { label: '3.5ft  -  107 — 191 — 20cm', price: 1695 }, '120x200x20': { label: '6ft Queen  -  120 — 200 — 20cm', price: 1795 } },
+      us: { '99x191x20': { label: 'Twin  -  99 — 191 — 20cm', price: 1595 }, '137x191x20': { label: 'Full  -  137 — 191 — 20cm', price: 1695 } },
+      uk: { '90x190x20': { label: 'Single  -  90 — 190 — 20cm', price: 1545 }, '135x190x20': { label: 'Double  -  135 — 190 — 20cm', price: 1695 } },
+      eu: { '90x200x20': { label: 'Single  -  90 — 200 — 20cm', price: 1595 }, '140x200x20': { label: 'Double  -  140 — 200 — 20cm', price: 1695 } }
     };
 
     document.getElementById('size-select').addEventListener('change', function() {
@@ -573,7 +573,7 @@
       const w = document.getElementById('dim-width').value;
       const l = document.getElementById('dim-length').value;
       const d = document.getElementById('dim-depth').value;
-      alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + w + '    ' + l + '    ' + d + ' ' + unit);
+      alert('Custom quote submitted! We\'ll contact you within 24 hours.\n\nDimensions: ' + w + '  —  ' + l + '  —  ' + d + ' ' + unit);
     });
 
     document.getElementById('add-to-cart').addEventListener('click', () => {

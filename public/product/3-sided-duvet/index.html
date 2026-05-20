@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    /* âââ Page Layout âââââââââââââââââââââââââââ */
+    /* ─── Page Layout ─────────────────────────── */
     .product-page { background: #f0f7ff; }
     .product-layout {
       max-width: 1280px;
@@ -22,7 +22,7 @@
       gap: 56px;
       align-items: start;
     }
-    /* âââ Left: Gallery âââââââââââââââââââââââââ */
+    /* ─── Left: Gallery ───────────────────────── */
     .product-gallery { position: sticky; top: 90px; }
     .gallery-main {
       border-radius: var(--radius);
@@ -65,7 +65,7 @@
       background: #1a1a2e;
     }
     .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
-    /* âââ Right: Product Info âââââââââââââââââââââ */
+    /* ─── Right: Product Info ───────────────────── */
     .product-info {}
     .product-breadcrumb {
       font-size: 0.8125rem;
@@ -97,7 +97,7 @@
     .rating-text { font-size: 0.875rem; color: #555; }
     .rating-text strong { color: var(--color-primary); cursor: pointer; }
     .rating-text strong:hover { text-decoration: underline; }
-    /* âââ Pricing Panel âââââââââââââââââââââââââââ */
+    /* ─── Pricing Panel ─────────────────────────── */
     .pricing-panel {
       background: #fff;
       border: 1px solid var(--color-border);
@@ -262,7 +262,7 @@
       color: #888;
     }
     .payment-badge { display: flex; align-items: center; gap: 4px; }
-    /* âââ Trust Signals ââââââââââââââââââââââââââ */
+    /* ─── Trust Signals ────────────────────────── */
     .trust-signals {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -280,7 +280,7 @@
       border-radius: 6px;
     }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
-    /* âââ Custom Dimensions Toggle âââââââââââââââ */
+    /* ─── Custom Dimensions Toggle ─────────────── */
     .custom-toggle {
       margin-top: 16px;
       text-align: center;
@@ -353,7 +353,7 @@
       transition: background 0.2s;
     }
     .custom-quote-btn:hover { background: var(--color-primary-dark); }
-    /* âââ Accordion Tabs âââââââââââââââââââââââââ */
+    /* ─── Accordion Tabs ───────────────────────── */
     .product-tabs { position: relative; margin-top: 40px; }
     .tab-list {
       display: flex;
@@ -385,7 +385,7 @@
     .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
-    /* âââ Reviews Section âââââââââââââââââââââââââ */
+    /* ─── Reviews Section ───────────────────────── */
     .reviews-section { margin-top: 48px; }
     .reviews-header {
       display: flex;
@@ -433,7 +433,7 @@
     .review-stars { color: #f59e0b; font-size: 0.875rem; }
     .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
     .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
-    /* âââ Related Products ââââââââââââââââââââââââ */
+    /* ─── Related Products ──────────────────────── */
     .related-section { margin-top: 64px; }
     .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
     .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -451,7 +451,7 @@
     .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
     .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
-    /* âââ Responsive ââââââââââââââââââââââââââââââ */
+    /* ─── Responsive ────────────────────────────── */
     @media (max-width: 1024px) {
       .product-layout { grid-template-columns: 1fr; gap: 32px; }
       .product-gallery { position: static; }
@@ -470,7 +470,7 @@
     .reviews-grid { grid-template-columns: 1fr; }
       .dim-inputs { grid-template-columns: 1fr; }
     }
-    /* âââ Global Tags âââââââââââââââââââââââââââ */
+    /* ─── Global Tags ─────────────────────────── */
     .tag-pill {
       display: inline-flex;
       align-items: center;
@@ -916,7 +916,7 @@
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
-    // âââ Gallery Thumbnails ââââââââââââââââââââ
+    // ─── Gallery Thumbnails ────────────────────
     document.querySelectorAll('.gallery-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
         if (thumb.dataset.video) {
@@ -929,7 +929,7 @@
       });
     });
 
-    // âââ Region Selection âââââââââââââââââââââââ
+    // ─── Region Selection ───────────────────────
     let selectedRegion = 'th';
     let selectedSize = '';
     let selectedFabric = 'breezeplus';
@@ -945,7 +945,7 @@
       });
     });
 
-    // âââ Size Selection âââââââââââââââââââââââââ
+    // ─── Size Selection ─────────────────────────
     const SIZES_BY_REGION = {
       th: {
         '107x191': { label: '3.5ft  -  107 &times; 191cm (42 &times; 75in)', price: 2295 },
@@ -1001,7 +1001,7 @@
       }
     });
 
-    // âââ Fabric Selection âââââââââââââââââââââââ
+    // ─── Fabric Selection ───────────────────────
     document.querySelectorAll('.fabric-swatch').forEach(swatch => {
       swatch.addEventListener('click', () => {
         document.querySelectorAll('.fabric-swatch').forEach(s => s.classList.remove('selected'));
@@ -1010,7 +1010,7 @@
       });
     });
 
-    // âââ Color Selection âââââââââââââââââââââââ
+    // ─── Color Selection ───────────────────────
     document.querySelectorAll('.color-option').forEach(color => {
       color.addEventListener('click', () => {
         document.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected'));
@@ -1019,12 +1019,12 @@
       });
     });
 
-    // âââ Custom Dimensions Toggle ââââââââââââââââ
+    // ─── Custom Dimensions Toggle ────────────────
     document.getElementById('custom-quote-btn').addEventListener('click', () => {
       document.getElementById('custom-dimensions').classList.toggle('open');
     });
 
-    // âââ Unit Toggle ââââââââââââââââââââââââââââ
+    // ─── Unit Toggle ────────────────────────────
     let unit = 'cm';
     document.getElementById('unit-cm').addEventListener('click', () => {
       unit = 'cm';
@@ -1065,7 +1065,7 @@
       alert('Custom quote submitted! We\'ll contact you within 24 hours with the final price.\n\nDimensions: ' + w + '  &times;  ' + l + '  &times;  ' + d + ' ' + unit);
     });
 
-    // âââ Add to Cart ââââââââââââââââââââââââââââ
+    // ─── Add to Cart ────────────────────────────
     document.getElementById('add-to-cart').addEventListener('click', () => {
       const btn = document.getElementById('add-to-cart');
       const originalText = btn.innerHTML;
@@ -1079,7 +1079,7 @@
       }, 2000);
     });
 
-    // âââ Tabs ââââââââââââââââââââââââââââââââââââ
+    // ─── Tabs ────────────────────────────────────
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
