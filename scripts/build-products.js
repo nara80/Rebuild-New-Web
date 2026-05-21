@@ -193,10 +193,13 @@ function buildColorsHTML(p) {
     ]
   };
 
-  // Build each fabric color group (hidden by default except cloudsoft)
+  // Determine which fabric color group to show by default
+  const defaultFabric = p.lockedFabric || (p.fabrics && p.fabrics[0]) || 'cloudsoft';
+
+  // Build each fabric color group (hidden by default except defaultFabric)
   let html = '';
   for (const [fab, colors] of Object.entries(fabricColors)) {
-    const display = fab === 'cloudsoft' ? '' : ' style="display:none"';
+    const display = fab === defaultFabric ? '' : ' style="display:none"';
     html += '<div class="panel-section fabric-color-group" data-fabric="' + fab + '"' + display + '>';
     html += '<div class="panel-label">Color — ' + fabricNames[fab] + '</div>';
     html += '<div class="color-selector">';
