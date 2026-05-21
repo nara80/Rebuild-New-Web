@@ -374,12 +374,9 @@
       "breadcrumbCategoryLabel": "Fitted Sheets",
       "breadcrumbName": "Pet Owner Fitted Sheet",
       "fabrics": [
-        "breezeplus",
-        "cloudsoft",
-        "premacotton",
-        "ecoluxe"
+        "breezeplus"
       ],
-      "lockedFabric": null,
+      "lockedFabric": "breezeplus",
       "needsDepth": true,
       "tags": [
         {

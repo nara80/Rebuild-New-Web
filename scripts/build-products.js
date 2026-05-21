@@ -79,6 +79,21 @@ function getContent(slug) {
 
 // Generate fabric HTML
 function buildFabricHTML(p) {
+  // BreezePlus-exclusive products — show fabric feature specs
+  if (p.lockedFabric === 'breezeplus') {
+    const specs = [
+      { label: 'Fabric', value: 'BreezePlus' },
+      { label: 'Surface', value: 'Pet Hair Resistant' },
+      { label: 'Cooling', value: '3-5°C Cooler Than Cotton' },
+      { label: 'Blend', value: '50/50 Cotton-Microfiber' }
+    ];
+    let grid = '<div class="panel-label">Fabric</div><div class="specs-grid">';
+    specs.forEach(s => {
+      grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
+    });
+    grid += '</div>';
+    return grid;
+  }
   // Mattress protectors — 3-layer construction specs
   if (p.productType === 'protector') {
     const specs = [
