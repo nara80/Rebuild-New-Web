@@ -292,6 +292,16 @@
     var dimFootW = document.getElementById('dim-foot-width');
     
     if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = 'Head Width (HW)'; }
+    if (dimL) {
+      var dimLLabel = dimL.parentElement.querySelector('label');
+      if (dimLLabel) {
+        dimLLabel.innerHTML = 'Centerline Length (L) <span class="dim-tooltip"><span class="dim-tooltip-icon">i</span><span class="dim-tooltip-text"><strong>How to measure V-Berth Length:</strong> Run your tape measure flat down the exact middle of the mattress from the head to the foot at a right angle (90\u00B0). Measuring from corner to corner along the slanted outside edge will result in a mattress that is too short.</span></span>';
+      }
+      var dimLHelper = document.createElement('span');
+      dimLHelper.className = 'dim-helper';
+      dimLHelper.textContent = 'Measure straight down the middle from head to foot. Do not measure the slanted sides.';
+      dimL.parentElement.appendChild(dimLHelper);
+    }
 
     if (shapeSelect) {
       shapeSelect.addEventListener('change', function () {

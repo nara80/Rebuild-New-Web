@@ -85,10 +85,17 @@
     .dim-diagram-caption { font-size: 0.75rem; color: #64748b; margin-top: 6px; }
 
     .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .dim-inputs.vberth { grid-template-columns: 1fr 1fr 1fr 1fr; }
     .dim-field { display: flex; flex-direction: column; gap: 4px; }
-    .dim-field label { font-size: 0.75rem; font-weight: 600; color: #64748b; }
+    .dim-field label { font-size: 0.75rem; font-weight: 600; color: #64748b; display: flex; align-items: center; gap: 4px; }
     .dim-field input { padding: 10px 12px; border: 2px solid var(--color-border); border-radius: 6px; font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); width: 100%; box-sizing: border-box; }
     .dim-field input:focus { outline: none; border-color: var(--color-primary); }
+    .dim-helper { font-size: 0.6875rem; color: #94a3b8; margin-top: 2px; line-height: 1.4; }
+    .dim-tooltip { position: relative; display: inline-flex; cursor: help; }
+    .dim-tooltip-icon { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; color: #fff; font-size: 0.625rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dim-tooltip:hover .dim-tooltip-icon { background: var(--color-primary); }
+    .dim-tooltip-text { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1E293B; color: #fff; font-size: 0.75rem; font-weight: 400; padding: 10px 14px; border-radius: 6px; white-space: normal; width: 260px; text-align: left; line-height: 1.5; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.15s ease, visibility 0.15s ease; z-index: 10; }
+    .dim-tooltip:hover .dim-tooltip-text { opacity: 1; visibility: visible; }
     .unit-toggle { display: flex; gap: 0; border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; width: fit-content; }
     .unit-btn { padding: 8px 16px; border: none; background: #fff; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #64748b; font-family: var(--font-main); transition: all 0.15s; }
     .unit-btn.active { background: var(--color-primary); color: #fff; }
@@ -153,6 +160,7 @@
       .product-layout { grid-template-columns: 1fr; gap: 32px; }
       .product-gallery { position: static; }
       .related-grid { grid-template-columns: repeat(2, 1fr); }
+      .dim-inputs.vberth { grid-template-columns: 1fr 1fr; }
 
     }
 
@@ -161,6 +169,7 @@
       .product-gallery { position: static; width: 100%; }
       .product-title { font-size: 1.75rem; }
       .dim-inputs { grid-template-columns: 1fr 1fr; }
+      .dim-inputs.vberth { grid-template-columns: 1fr 1fr; }
       .add-to-cart-row { flex-direction: column; }
       .add-to-cart-row .btn-add-cart { display: none; }
       .add-to-cart-row .btn-custom-quote { width: 100%; }
@@ -180,6 +189,7 @@
     @media (max-width: 480px) {
       .reviews-grid { grid-template-columns: 1fr; }
       .dim-inputs { grid-template-columns: 1fr; }
+      .dim-inputs.vberth { grid-template-columns: 1fr; }
       .related-grid { grid-template-columns: 1fr; }
     }
   </style>

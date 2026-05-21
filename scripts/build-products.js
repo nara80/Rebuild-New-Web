@@ -306,8 +306,10 @@ function buildCustomizable(slug, p, prod) {
   // Dim diagram image: V-Berth for marine, standard mattress for all others
   if (slug === 'marine-fitted-sheet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
+    replacements['{{DIM_INPUTS_CLASS}}'] = ' vberth';
   } else {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram.jpg';
+    replacements['{{DIM_INPUTS_CLASS}}'] = '';
   }
 
   for (const [key, value] of Object.entries(replacements)) {
