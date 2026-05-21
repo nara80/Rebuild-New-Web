@@ -59,6 +59,17 @@
     .related-card .card-price-note { font-size: 0.75rem; color: #888; }
     .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: var(--color-surface); border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
     .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #e8f4fd; }
+    .product-tabs { position: relative; margin-top: 40px; }
+    .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
+    .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
+    .tab-btn:hover { color: var(--color-text); }
+    .tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+    .tab-content { display: none; padding: 24px 0; }
+    .tab-content.open { display: block; }
+    .tab-content h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-bottom: 12px; }
+    .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
+    .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
+    .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-layout { grid-template-columns: 1fr; gap: 24px; } .product-title { font-size: 1.75rem; } }
   </style>
@@ -85,7 +96,7 @@
         <div class="pricing-panel"><div class="fabric-badge">Microfiber 200g/m²</div><div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> — Choose size — </option><option value="3ft" data-thb="990">3FT, 3.5FT — 178×229cm</option><option value="5ft" data-thb="1480">5FT, 6FT — 229×254cm</option><option value="7ft" data-thb="1690">7FT — 279×254cm</option><option value="9ft" data-thb="1790">9FT, 9.5FT — 318×254cm</option></select></div><div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From ฿990</span></div><div class="price-sub">Thailand only · Excludes shipping</div></div><button class="add-to-cart-btn" id="add-to-cart">Add to Cart</button><script>(function(){var s=document.getElementById("duvet-size"),p=document.getElementById("price-display");s.addEventListener("change",function(){var o=s.selectedOptions[0];if(o&&o.value){var t=parseFloat(o.dataset.thb||"0");p.textContent="฿"+Math.round(t).toLocaleString()}else{p.textContent="From ฿990"}})})();</script></div>
         <div class="trust-signals"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div></div>
       </div>
-      <div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><h2 style="margin-bottom:16px;">Microfiber 200g/m² Filling</h2><p style="color:#555; line-height:1.7;">Premium microfiber fill at 200 grams per square metre — the ideal weight for Thailand's climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p><p style="color:#555; line-height:1.7; margin-top:12px;">Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p><h3 style="margin-top:24px; margin-bottom:12px;">Care Instructions</h3><ul style="padding-left:20px; margin-bottom:16px;"><li style="margin-bottom:6px; color:#555;">Machine wash warm (40°C / 104°F) — gentle cycle</li><li style="margin-bottom:6px; color:#555;">Do not bleach — mild detergent only</li><li style="margin-bottom:6px; color:#555;">Tumble dry low or hang dry — microfiber dries quickly</li><li style="margin-bottom:6px; color:#555;">Fluff after drying to restore loft</li></ul></div></div>
+      <div class="container" style="max-width:1280px; padding:0 24px;"><div class="product-tabs"><div class="tab-list" role="tablist"><button class="tab-btn active" role="tab" data-tab="description">Description</button><button class="tab-btn" role="tab" data-tab="care">Care</button></div><div class="tab-content open" id="tab-description" role="tabpanel"><h3>Microfiber 200g/m² Filling</h3><p>Premium microfiber fill at 200 grams per square metre — the ideal weight for Thailand's climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p><p>Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p></div><div class="tab-content" id="tab-care" role="tabpanel"><h3>Care Instructions</h3><ul><li>Machine wash warm (40°C / 104°F) — gentle cycle</li><li>Do not bleach — mild detergent only</li><li>Tumble dry low or hang dry — microfiber dries quickly</li><li>Fluff after drying to restore loft</li></ul></div></div></div>
     </div>
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="related-section">
@@ -107,5 +118,21 @@
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script src="/js/reviews-carousel.js"></script>
+  <script>
+    (function () {
+      var tabs = document.querySelectorAll('.tab-btn');
+      if (!tabs.length) return;
+      tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var target = this.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+          document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('open'); });
+          this.classList.add('active');
+          var content = document.getElementById('tab-' + target);
+          if (content) content.classList.add('open');
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -461,8 +461,27 @@ function buildTrustSignalsHTML() {
 
 function buildFixedContentHTML(slug, p) {
   if (slug === 'duvet-insert') {
-    // Duvet insert content — Microfiber 200g/sq.m fill, Thai duvet sizes
-    return '<div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><h2 style="margin-bottom:16px;">Microfiber 200g/m² Filling</h2><p style="color:#555; line-height:1.7;">Premium microfiber fill at 200 grams per square metre — the ideal weight for Thailand\'s climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p><p style="color:#555; line-height:1.7; margin-top:12px;">Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p><h3 style="margin-top:24px; margin-bottom:12px;">Care Instructions</h3><ul style="padding-left:20px; margin-bottom:16px;"><li style="margin-bottom:6px; color:#555;">Machine wash warm (40°C / 104°F) — gentle cycle</li><li style="margin-bottom:6px; color:#555;">Do not bleach — mild detergent only</li><li style="margin-bottom:6px; color:#555;">Tumble dry low or hang dry — microfiber dries quickly</li><li style="margin-bottom:6px; color:#555;">Fluff after drying to restore loft</li></ul></div></div>';
+    return '<div class="container" style="max-width:1280px; padding:0 24px;">'
+      + '<div class="product-tabs">'
+      + '<div class="tab-list" role="tablist">'
+      + '<button class="tab-btn active" role="tab" data-tab="description">Description</button>'
+      + '<button class="tab-btn" role="tab" data-tab="care">Care</button>'
+      + '</div>'
+      + '<div class="tab-content open" id="tab-description" role="tabpanel">'
+      + '<h3>Microfiber 200g/m² Filling</h3>'
+      + '<p>Premium microfiber fill at 200 grams per square metre — the ideal weight for Thailand\'s climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p>'
+      + '<p>Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p>'
+      + '</div>'
+      + '<div class="tab-content" id="tab-care" role="tabpanel">'
+      + '<h3>Care Instructions</h3>'
+      + '<ul>'
+      + '<li>Machine wash warm (40°C / 104°F) — gentle cycle</li>'
+      + '<li>Do not bleach — mild detergent only</li>'
+      + '<li>Tumble dry low or hang dry — microfiber dries quickly</li>'
+      + '<li>Fluff after drying to restore loft</li>'
+      + '</ul>'
+      + '</div>'
+      + '</div></div>';
   }
 
   if (slug === 'bedbridge-connector') {
