@@ -85,7 +85,7 @@ function buildFabricHTML(p) {
       { label: 'Top Layer', value: 'Cotton Quilted' },
       { label: 'Layer 2 (Core)', value: 'Polyester Filling' },
       { label: 'Layer 3 (Backing)', value: 'TPU Waterproof' },
-      { label: 'Protection', value: '100% Fluid Barrier' }
+      { label: 'Protects', value: 'Water Spills &amp; Accidents' }
     ];
     let grid = '<div class="panel-label">3-Layer Construction</div><div class="specs-grid">';
     specs.forEach(s => {
@@ -98,8 +98,7 @@ function buildFabricHTML(p) {
   if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
     const tpuSpecs = [
       { label: 'Material', value: 'TPU Waterproof Membrane' },
-      { label: 'Protection', value: '100% Fluid Barrier' },
-      { label: 'Spills', value: 'Protects Against Water Spills' },
+      { label: 'Protects', value: 'Water Spills &amp; Accidents' },
       { label: 'Breathability', value: 'Moisture-Vapor Permeable' }
     ];
     let grid = '<div class="panel-label">Material</div><div class="specs-grid">';
