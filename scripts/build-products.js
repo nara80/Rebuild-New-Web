@@ -156,10 +156,58 @@ function buildFabricHTML(p) {
 // Generate colors HTML (empty for now)
 function buildColorsHTML(p) {
   // Only render color selector for fitted-sheet and flat-sheet types with "all" fabric mode
-  if (['fitted-sheet', 'flat-sheet'].includes(p.productType) && p.fabricMode === 'all') {
-    return '<div class="panel-section"><div class="panel-label">Color — CloudSoft</div><div class="color-selector" id="color-selector"><div class="color-option selected" data-color="pure-white" style="background:#fff; border:2px solid #ddd;" title="Pure White"></div><div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div><div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div><div class="color-option" data-color="sea" style="background:#5A7DA2;" title="Sea"></div><div class="color-option" data-color="emerald" style="background:#618283;" title="Emerald"></div><div class="color-option" data-color="dark-grey" style="background:#4D545B;" title="Dark Grey"></div><div class="color-option" data-color="silver" style="background:#B7BEC8;" title="Silver"></div><div class="color-option" data-color="baby-pink" style="background:#E9B7BF;" title="Baby Pink"></div><div class="color-option" data-color="ivory" style="background:#F1EFE1;" title="Ivory"></div></div></div>';
+  if (!['fitted-sheet', 'flat-sheet'].includes(p.productType) || p.fabricMode !== 'all') return '';
+
+  // Per-fabric color data matching /fabric/ page
+  const fabricColors = {
+    breezeplus: [
+      { hex: '#4D545B', name: 'Dark Grey' },
+      { hex: '#B7BEC8', name: 'Silver' },
+      { hex: '#D9D1C1', name: 'Sand' },
+      { hex: '#9CCAE1', name: 'Sky' },
+      { hex: '#618283', name: 'Emerald' },
+      { hex: '#5A7DA2', name: 'Sea' },
+      { hex: '#FFFFFF', name: 'Pure White', border: '#ccc' },
+      { hex: '#E9B7BF', name: 'Baby Pink' },
+      { hex: '#F1EFE1', name: 'Ivory' }
+    ],
+    cloudsoft: [
+      { hex: '#67E4D3', name: 'Mint' },
+      { hex: '#5E5E5E', name: 'Charcoal' },
+      { hex: '#A5A9B4', name: 'Grey' },
+      { hex: '#385E9D', name: 'Sapphire' },
+      { hex: '#486C6A', name: 'Forest' },
+      { hex: '#1E4477', name: 'Denim' },
+      { hex: '#D48C98', name: 'RoseGold' },
+      { hex: '#E1D1B1', name: 'Beige' },
+      { hex: '#B99F87', name: 'Ovaltine' },
+      { hex: '#FFFFFF', name: 'White' },
+      { hex: '#9581B1', name: 'Lavender' },
+      { hex: '#93B09D', name: 'Olive' }
+    ],
+    premacotton: [
+      { hex: '#ffffff', name: 'Snow White', border: '#ccc' }
+    ],
+    ecoluxe: [
+      { hex: '#f3e5ab', name: 'Vanilla Linen' }
+    ]
+  };
+
+  // Build each fabric color group (hidden by default except cloudsoft)
+  let html = '';
+  for (const [fab, colors] of Object.entries(fabricColors)) {
+    const display = fab === 'cloudsoft' ? '' : ' style="display:none"';
+    html += '<div class="panel-section fabric-color-group" data-fabric="' + fab + '"' + display + '>';
+    html += '<div class="panel-label">Color — ' + fabricNames[fab] + '</div>';
+    html += '<div class="color-selector">';
+    colors.forEach((c, i) => {
+      const selected = (i === 0 ? ' selected' : '');
+      const border = c.border ? ' border:2px solid ' + c.border + ';' : '';
+      html += '<div class="color-option' + selected + '" data-color="' + c.name.toLowerCase().replace(/\s/g, '-') + '" style="background:' + c.hex + ';' + border + '" title="' + c.name + '"></div>';
+    });
+    html += '</div></div>';
   }
-  return '';
+  return html;
 }
 
 // Generate bullets HTML

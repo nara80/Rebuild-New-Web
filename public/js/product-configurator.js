@@ -445,6 +445,18 @@
     fabricSelect.addEventListener('change', function () {
       state.fabric = fabricSelect.value;
       updateAllPrices();
+      // Swap fabric color group
+      var groups = document.querySelectorAll('.fabric-color-group');
+      groups.forEach(function (g) {
+        g.style.display = g.dataset.fabric === state.fabric ? '' : 'none';
+      });
+      // Reset selection to first color of the new fabric
+      var activeGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
+      if (activeGroup) {
+        var opts = activeGroup.querySelectorAll('.color-option');
+        opts.forEach(function (o) { o.classList.remove('selected'); });
+        if (opts.length > 0) opts[0].classList.add('selected');
+      }
     });
   }
 
