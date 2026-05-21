@@ -245,7 +245,7 @@
   }
 
   // V-Berth fitted sheet: uses max(HW,FW) as width, 100% margin
-  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + 4.0; // 5.35
+  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + 5.0; // 6.35
   function calcVBerthFitted(hwCm, fwCm, lCm, dCm, fabric) {
     var w = Math.max(hwCm, fwCm) + 2 * dCm + 14;
     var fl = lCm + 2 * dCm + 14;
