@@ -307,7 +307,7 @@ function buildCustomizable(slug, p, prod) {
   if (slug === 'marine-fitted-sheet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
   } else {
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram.png';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram.jpg';
   }
 
   for (const [key, value] of Object.entries(replacements)) {

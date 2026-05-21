@@ -12,8 +12,9 @@
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
     .product-page { background: #F8FAFC; }
-    .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
-    .product-gallery { position: sticky; top: 90px; }
+    .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; overflow: hidden; }
+    .product-gallery { position: sticky; top: 90px; min-width: 0; }
+    .product-info { min-width: 0; }
     .gallery-main { border-radius: var(--radius); overflow: hidden; background: var(--color-surface); margin-bottom: 12px; position: relative; border: 1px solid var(--color-border); }
     .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; cursor: zoom-in; }
     .gallery-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
@@ -76,12 +77,11 @@
     .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #64748b; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
 
-    .custom-dimensions { display: none; margin-top: 16px; padding: 20px; background: var(--color-surface); border-radius: var(--radius); border: 1px solid #e2e8f0; overflow: hidden; }
+    .custom-dimensions { display: none; margin-top: 16px; padding: 20px; background: var(--color-surface); border-radius: var(--radius); border: 1px solid #e2e8f0; }
     .custom-dimensions.open { display: block; }
 
-    /* Phase 3: Dimension Assist Micro-Illustration */
-    .dim-diagram { background: #fff; border-radius: var(--radius); padding: 16px; margin-top: 12px; margin-bottom: 16px; text-align: center; border: 1px solid #e2e8f0; }
-    .dim-diagram img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+    .dim-diagram { background: #fff; border-radius: var(--radius); padding: 12px; margin-top: 12px; margin-bottom: 16px; text-align: center; border: 1px solid #e2e8f0; }
+    .dim-diagram img { width: 100%; height: auto; display: block; margin: 0 auto; }
     .dim-diagram-caption { font-size: 0.75rem; color: #64748b; margin-top: 6px; }
 
     .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
@@ -254,7 +254,7 @@
               </div>
             </div>
             <div class="dim-diagram">
-              <img src="/images/products/common/measure-mattress-diagram.png" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)">
+              <img src="/images/products/common/measure-mattress-diagram.jpg" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)">
               <p class="dim-diagram-caption">Measure your mattress at its widest, longest, and deepest points</p>
             </div>
             <div class="dim-inputs">
