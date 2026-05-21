@@ -250,7 +250,9 @@
         var s = items[i];
         var option = document.createElement('option');
         option.value = typeKey === 'fitted-sheet' ? s.w + 'x' + s.l + 'x' + s.d : s.w + 'x' + s.l;
-        option.textContent = s.label + ' \u2014 ' + s.cm + (s.inch ? ' (' + s.inch + ')' : '');
+        option.textContent = region === 'us'
+          ? s.label + ' ' + s.inch + '\u2033'
+          : s.label + ' \u2014 ' + s.cm + ' cm';
         optgroup.appendChild(option);
       }
       sizeSelect.appendChild(optgroup);
