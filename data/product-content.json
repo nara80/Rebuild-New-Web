@@ -249,13 +249,7 @@
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
       "breadcrumbName": "RV & Truck Fitted Sheet",
-      "fabrics": [
-        "cloudsoft",
-        "breezeplus",
-        "premacotton",
-        "ecoluxe"
-      ],
-      "lockedFabric": null,
+      "fabrics": ["cloudsoft"], "lockedFabric": "cloudsoft",
       "needsDepth": true,
       "tags": [
         {

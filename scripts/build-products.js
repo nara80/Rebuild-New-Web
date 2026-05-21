@@ -94,6 +94,21 @@ function buildFabricHTML(p) {
     grid += '</div>';
     return grid;
   }
+  // CloudSoft-exclusive products — marine/RV fabric specs
+  if (p.lockedFabric === 'cloudsoft') {
+    const specs = [
+      { label: 'Fabric', value: 'CloudSoft' },
+      { label: 'Drying', value: 'Quick-Dry' },
+      { label: 'Climate', value: 'Moisture-Wicking' },
+      { label: 'Material', value: '100% Long-Staple Cotton' }
+    ];
+    let grid = '<div class="panel-label">Fabric</div><div class="specs-grid">';
+    specs.forEach(s => {
+      grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
+    });
+    grid += '</div>';
+    return grid;
+  }
   // Mattress protectors — 3-layer construction specs
   if (p.productType === 'protector') {
     const specs = [
