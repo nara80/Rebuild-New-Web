@@ -31,10 +31,6 @@
     .panel-section { margin-bottom: 20px; }
     .panel-section:last-child { margin-bottom: 0; }
     .panel-label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .region-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .region-btn { padding: 8px 6px; border: 2px solid var(--color-border); border-radius: 6px; background: #fff; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); cursor: pointer; text-align: center; transition: all 0.15s; font-family: var(--font-main); }
-    .region-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
-    .region-btn.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
     .size-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
     .size-select:focus { outline: none; border-color: var(--color-primary); }
     .size-hint { font-size: 0.75rem; color: #888; margin-top: 6px; }
@@ -120,7 +116,7 @@
     .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: var(--color-surface); border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
     .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #e8f4fd; }
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
+    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
     @media (max-width: 480px) { .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -149,18 +145,6 @@
         <h1 class="product-title">6-Sided Mattress Encasement  -  </h1>
         <p class="product-tagline">Full 6-sided encasement  -  complete waterproof protection from all angles. TPU inner layer. OEKO-TEX certified.</p>
         <div class="pricing-panel">
-          <div class="panel-section">
-            <div class="region-grid" id="region-grid">
-              <button class="region-btn selected" data-region="us">🇺🇸 US</button>
-              <button class="region-btn" data-region="uk">🇬🇧 UK</button>
-              <button class="region-btn" data-region="eu">🇪🇺 EU</button>
-              <button class="region-btn" data-region="au">🇦🇺 AU</button>
-              <button class="region-btn" data-region="th">🇹🇭 TH</button>
-              <button class="region-btn" data-region="my">🇲🇾 SG/MY</button>
-              <button class="region-btn" data-region="jp">🇯🇵 JP</button>
-              <button class="region-btn" data-region="other">🌍 Other</button>
-            </div>
-          </div>
           <div class="panel-section">
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
