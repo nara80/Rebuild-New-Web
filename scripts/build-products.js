@@ -155,8 +155,11 @@ function buildFabricHTML(p) {
 
 // Generate colors HTML (empty for now)
 function buildColorsHTML(p) {
-  // Only render color selector for fitted-sheet and flat-sheet types with "all" fabric mode
-  if (!['fitted-sheet', 'flat-sheet'].includes(p.productType) || p.fabricMode !== 'all') return '';
+  // Only render color selector for products that have fabric choices
+  const colorProductTypes = ['fitted-sheet', 'flat-sheet', 'duvet', 'pillowcase', 'pillow-protector'];
+  if (!colorProductTypes.includes(p.productType)) return '';
+  // Show colors if product has fabric options (all mode) or a locked fabric
+  if (p.fabricMode !== 'all' && !p.lockedFabric) return '';
 
   // Per-fabric color data matching /fabric/ page
   const fabricColors = {
