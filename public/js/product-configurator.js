@@ -245,7 +245,7 @@
   }
 
   // V-Berth fitted sheet: uses max(HW,FW) as width, 100% margin
-  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + 1.0; // 2.35
+  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + 4.0; // 5.35
   function calcVBerthFitted(hwCm, fwCm, lCm, dCm, fabric) {
     var w = Math.max(hwCm, fwCm) + 2 * dCm + 14;
     var fl = lCm + 2 * dCm + 14;
@@ -324,7 +324,6 @@
         var opt = shapeSelect.selectedOptions[0];
         if (!opt || !opt.value) {
           if (shapeHint) shapeHint.textContent = '';
-          if (footField) footField.classList.remove('visible');
           priceDisplay.textContent = 'Select shape above';
           return;
         }
@@ -338,7 +337,9 @@
           priceDisplay.textContent = 'Custom Quote';
           if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
         } else {
-          priceDisplay.textContent = isEN ? 'Enter dimensions below' : '\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07';
+          var price = parseFloat(opt.dataset.price) || 0;
+          var thb = Math.round(price * THB_TO_USD);
+          priceDisplay.textContent = formatPrice(thb, price);
           if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
         }
 

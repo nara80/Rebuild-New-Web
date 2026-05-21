@@ -370,7 +370,7 @@ function buildShapeSelectorHTML(p) {
   html += '<option value=""> — Select shape — </option>';
   const shapes = p.marineShapes;
   shapes.forEach(s => {
-    const priceLabel = s.quoteOnly ? 'Custom Quote' : ('$' + s.priceUsd.toFixed(2));
+    const priceLabel = s.quoteOnly ? 'Custom Quote' : ('$' + s.priceUsd);
     html += '<option value="' + s.code + '"'
       + (s.quoteOnly ? ' data-quote-only="1"' : ' data-price="' + s.priceUsd + '"')
       + ' data-length-min="' + (s.lengthMin || '') + '"'
