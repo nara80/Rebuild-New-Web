@@ -75,40 +75,53 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + d + '"/></svg>';
   }
 
+  function getCardsPerView(opts) {
+    var w = window.innerWidth;
+    if (opts.mobileBreak && w <= opts.mobileBreak) return opts.mobileCards || 1;
+    if (opts.tabletBreak && w <= opts.tabletBreak) return opts.tabletCards || (opts.cardsPerView || 2);
+    return opts.cardsPerView || 3;
+  }
+
   function initCarousel(wrapper, trackSelector, cardSelector, opts) {
     opts = opts || {};
-    var cardsPerView = opts.cardsPerView || 3;
     var track = wrapper.querySelector(trackSelector);
     if (!track) return;
     var cards = track.querySelectorAll(cardSelector);
-    if (cards.length <= cardsPerView) {
-      // Not enough cards — hide arrows/dots
-      var arrows = wrapper.querySelectorAll('[class*="-arrow"]');
-      for (var a = 0; a < arrows.length; a++) arrows[a].style.display = 'none';
-      return;
-    }
+    if (cards.length <= 1) return;
 
     var prevBtn = wrapper.querySelector(opts.prevSelector || '.rc-prev');
     var nextBtn = wrapper.querySelector(opts.nextSelector || '.rc-next');
     var dotsContainer = wrapper.querySelector(opts.dotsSelector || '.rc-dots');
     var dotClass = opts.dotClass || 'rc-dot';
 
-    // Create dots
-    var totalSlides = Math.ceil(cards.length / cardsPerView);
-    for (var d = 0; d < totalSlides; d++) {
-      var dot = document.createElement('button');
-      dot.className = dotClass;
-      if (d === 0) dot.classList.add('active');
-      dot.setAttribute('aria-label', 'Go to slide ' + (d + 1));
-      (function (idx) {
-        dot.addEventListener('click', function () { scrollToSlide(track, cards, idx, cardsPerView); });
-      })(d);
-      if (dotsContainer) dotsContainer.appendChild(dot);
-    }
-
     var currentSlide = 0;
 
+    function getTotalSlides() {
+      return Math.max(1, Math.ceil(cards.length / getCardsPerView(opts)));
+    }
+
+    function buildDots() {
+      if (!dotsContainer) return;
+      dotsContainer.innerHTML = '';
+      var totalSlides = getTotalSlides();
+      if (totalSlides <= 1) { dotsContainer.style.display = 'none'; return; }
+      dotsContainer.style.display = '';
+      for (var d = 0; d < totalSlides; d++) {
+        var dot = document.createElement('button');
+        dot.className = dotClass;
+        if (d === 0) dot.classList.add('active');
+        dot.setAttribute('aria-label', 'Go to slide ' + (d + 1));
+        (function (idx) {
+          dot.addEventListener('click', function () { scrollToSlide(track, cards, idx); });
+        })(d);
+        dotsContainer.appendChild(dot);
+      }
+    }
+
     function updateUI() {
+      var totalSlides = getTotalSlides();
+      if (prevBtn) prevBtn.style.display = totalSlides <= 1 ? 'none' : '';
+      if (nextBtn) nextBtn.style.display = totalSlides <= 1 ? 'none' : '';
       if (prevBtn) prevBtn.disabled = currentSlide === 0;
       if (nextBtn) nextBtn.disabled = currentSlide >= totalSlides - 1;
       if (dotsContainer) {
@@ -119,11 +132,12 @@
       }
     }
 
-    function scrollToSlide(trk, crds, idx, cPerView) {
+    function scrollToSlide(trk, crds, idx) {
+      var cpv = getCardsPerView(opts);
       currentSlide = idx;
       var cardWidth = crds[0].offsetWidth;
       var gap = parseInt(getComputedStyle(trk).gap) || 20;
-      var offset = idx * (cardWidth + gap) * cPerView;
+      var offset = idx * (cardWidth + gap) * cpv;
       trk.scrollTo({ left: offset, behavior: 'smooth' });
       updateUI();
     }
@@ -133,10 +147,12 @@
     track.addEventListener('scroll', function () {
       clearTimeout(scrollTimer);
       scrollTimer = setTimeout(function () {
+        var cpv = getCardsPerView(opts);
         var cardWidth = cards[0].offsetWidth;
         var gap = parseInt(getComputedStyle(track).gap) || 20;
-        var slideWidth = (cardWidth + gap) * cardsPerView;
+        var slideWidth = (cardWidth + gap) * cpv;
         var newSlide = Math.round(track.scrollLeft / slideWidth);
+        var totalSlides = getTotalSlides();
         if (newSlide !== currentSlide) {
           currentSlide = Math.min(newSlide, totalSlides - 1);
           updateUI();
@@ -146,15 +162,29 @@
 
     if (prevBtn) {
       prevBtn.addEventListener('click', function () {
-        if (currentSlide > 0) scrollToSlide(track, cards, currentSlide - 1, cardsPerView);
+        var totalSlides = getTotalSlides();
+        if (currentSlide > 0) scrollToSlide(track, cards, currentSlide - 1);
       });
     }
     if (nextBtn) {
       nextBtn.addEventListener('click', function () {
-        if (currentSlide < totalSlides - 1) scrollToSlide(track, cards, currentSlide + 1, cardsPerView);
+        var totalSlides = getTotalSlides();
+        if (currentSlide < totalSlides - 1) scrollToSlide(track, cards, currentSlide + 1);
       });
     }
 
+    // Rebuild dots on resize
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        currentSlide = 0;
+        buildDots();
+        updateUI();
+      }, 200);
+    });
+
+    buildDots();
     updateUI();
   }
 
@@ -202,6 +232,10 @@
     if (wrapper) {
       initCarousel(wrapper, '.rc-track', '.rc-card, .review-card', {
         cardsPerView: 3,
+        tabletBreak: 900,
+        tabletCards: 2,
+        mobileBreak: 640,
+        mobileCards: 1,
         prevSelector: '.rc-prev',
         nextSelector: '.rc-next',
         dotsSelector: '.rc-dots',
@@ -257,6 +291,10 @@
     if (relWrapper) {
       initCarousel(relWrapper, '.rel-track', '.rel-card', {
         cardsPerView: 4,
+        tabletBreak: 900,
+        tabletCards: 3,
+        mobileBreak: 640,
+        mobileCards: 2,
         prevSelector: '.rel-prev',
         nextSelector: '.rel-next',
         dotsSelector: '.rel-dots',
