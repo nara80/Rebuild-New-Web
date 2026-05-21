@@ -237,7 +237,7 @@
     var sizes = PRODUCT_SIZES[typeKey];
     if (!sizes) return;
 
-    var regionLabels = { us: 'US / Canada', uk: 'UK', eu: 'EU', th: 'Thailand', au: 'AU', my: 'MY / SG', jp: 'Japan' };
+    var regionLabels = { us: '\uD83C\uDDFA\uD83C\uDDF8 US / Canada', uk: '\uD83C\uDDEC\uD83C\uDDE7 UK', eu: '\uD83C\uDDEA\uD83C\uDDFA EU', th: '\uD83C\uDDF9\uD83C\uDDED Thailand', au: '\uD83C\uDDE6\uD83C\uDDFA AU', my: '\uD83C\uDDF2\uD83C\uDDFE MY / SG', jp: '\uD83C\uDDEF\uD83C\uDDF5 Japan' };
     sizeSelect.innerHTML = '<option value="">\u2014 Choose size \u2014</option>';
 
     for (var region in sizes) {
