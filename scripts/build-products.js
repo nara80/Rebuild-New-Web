@@ -83,8 +83,8 @@ function buildFabricHTML(p) {
   if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
     const tpuSpecs = [
       { label: 'Material', value: 'TPU Waterproof Membrane' },
-      { label: 'Certification', value: 'OEKO-TEX Certified' },
       { label: 'Protection', value: '100% Fluid Barrier' },
+      { label: 'Spills', value: 'Protects Against Water Spills' },
       { label: 'Breathability', value: 'Moisture-Vapor Permeable' }
     ];
     let grid = '<div class="panel-label">Material</div><div class="specs-grid">';
