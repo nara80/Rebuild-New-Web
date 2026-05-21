@@ -15,6 +15,11 @@
   var isFamily = path.indexOf('family-fitted-sheet') !== -1;
   var isDuvet = path.indexOf('duvet') !== -1;
   var isPillowProtector = path.indexOf('pillow-protector') !== -1;
+  var isMattressProtector = (path.indexOf('mattress-protector') !== -1 || path.indexOf('pet-proof-mattress-protector') !== -1) && path.indexOf('pillow-protector') === -1;
+  var isProtectorStandard = path.indexOf('mattress-protector-standard') !== -1;
+  var isProtectorFamily = path.indexOf('mattress-protector-family') !== -1;
+  var isProtectorDeepPocket = path.indexOf('mattress-protector-deep-pocket') !== -1;
+  var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
   var pillowVariant = 'envelope';
   if (isPillowcase) {
@@ -95,6 +100,52 @@
   var ENC_MKT = 0.25;
   var ENC_MARGIN = 0.50;
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN; // 1.90
+
+  // ── Mattress Protector constants ──
+  // Fabric tier cost based on W×L area in sq.inch
+  var PROTECTOR_FABRIC_TIERS = [
+    { maxSqInch: 3200, cost: 550 },
+    { maxSqInch: 6620, cost: 670 },
+    { maxSqInch: 8000, cost: 920 },
+    { maxSqInch: 9000, cost: 980 },
+    { maxSqInch: 10300, cost: 1100 },
+    { maxSqInch: 11300, cost: 1200 },
+    { maxSqInch: Infinity, cost: 1300 }
+  ];
+  var PROTECTOR_PACKING = 200;  // THB
+  var PROTECTOR_DELIVERY = 80;  // THB
+  var PROTECTOR_OP = 0.15;
+  var PROTECTOR_MKT = 0.20;
+  var SQCM_PER_SQINCH = 6.4516;
+  var PROTECTOR_MAX_DIM = 210;   // max W/L cm for non-family
+
+  function getProtectorFabricCost(areaSqInch) {
+    for (var i = 0; i < PROTECTOR_FABRIC_TIERS.length; i++) {
+      if (areaSqInch <= PROTECTOR_FABRIC_TIERS[i].maxSqInch) return PROTECTOR_FABRIC_TIERS[i].cost;
+    }
+    return 1300;
+  }
+
+  function getProtectorDepthCost(dCm) {
+    if (dCm > 56) return 600;
+    if (dCm >= 52) return 400;
+    if (dCm >= 30) return 200;
+    return 0;
+  }
+
+  function calcMattressProtector(wCm, lCm, dCm) {
+    var areaSqCm = wCm * lCm;
+    var areaSqInch = areaSqCm / SQCM_PER_SQINCH;
+    var fabricCost = getProtectorFabricCost(areaSqInch);
+    var depthCost = getProtectorDepthCost(dCm);
+    var protectorMargin = isProtectorFamily ? 0.50 : (isProtectorDeepPocket ? 0.25 : 0.15);
+    var markup = 1 + PROTECTOR_OP + PROTECTOR_MKT + protectorMargin;
+    var subtotal = fabricCost + depthCost + PROTECTOR_PACKING + PROTECTOR_DELIVERY;
+    var total = subtotal * markup;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd };
+  }
 
   function calcEncasement(wCm, lCm, dCm) {
     // 6-sided surface area
@@ -373,6 +424,13 @@
     var result;
     if (isEncasement) {
       result = calcEncasement(dims.w, dims.l, dims.d);
+    } else if (isMattressProtector) {
+      if (!isProtectorFamily && (dims.w > PROTECTOR_MAX_DIM || dims.l > PROTECTOR_MAX_DIM)) {
+        priceDisplay.textContent = 'Over 210cm \u2014 see Family Protector';
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        return;
+      }
+      result = calcMattressProtector(dims.w, dims.l, dims.d);
     } else if (isPillowProtector || isPillowcase) {
       if (dims.w > MAX_PILLOW || dims.l > MAX_PILLOW) {
         priceDisplay.textContent = 'Max 120cm';
@@ -387,7 +445,7 @@
     } else {
       result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
     }
-    if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && dims.w > MAX_W) {
+    if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && dims.w > MAX_W) {
       priceDisplay.textContent = 'Custom quote — Co-Sleep size';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
@@ -402,13 +460,13 @@
     var w = parseFloat(dimW && dimW.value) || 0;
     var l = parseFloat(dimL && dimL.value) || 0;
     var d = (isDuvet || isPillowProtector || isPillowcase) ? 0 : (parseFloat(dimD && dimD.value) || 0);
-    if (!w || !l || (!isDuvet && !isPillowProtector && !isPillowcase && !d)) {
+    if (!w || !l || (!isDuvet && !isPillowProtector && !isPillowcase && !d && !isMattressProtector)) {
       customPrice.textContent = '\u2014';
       return;
     }
     var wCm = w, lCm = l, dCm = d;
     if (state.unit === 'in') { wCm = inchToCm(w); lCm = inchToCm(l); dCm = inchToCm(d); }
-    if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && wCm > MAX_W) {
+    if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && wCm > MAX_W) {
       customPrice.textContent = 'Custom quote \u2014 Co-Sleep size';
       return;
     }
@@ -419,6 +477,12 @@
     var result;
     if (isEncasement) {
       result = calcEncasement(wCm, lCm, dCm);
+    } else if (isMattressProtector) {
+      if (!isProtectorFamily && (wCm > PROTECTOR_MAX_DIM || lCm > PROTECTOR_MAX_DIM)) {
+        customPrice.textContent = 'Over 210cm \u2014 see Family Protector';
+        return;
+      }
+      result = calcMattressProtector(wCm, lCm, dCm);
     } else if (isPillowProtector) {
       result = calcPillowProtector(wCm, lCm);
     } else if (isPillowcase) {
