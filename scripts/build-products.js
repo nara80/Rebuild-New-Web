@@ -79,7 +79,22 @@ function getContent(slug) {
 
 // Generate fabric HTML
 function buildFabricHTML(p) {
-  // TPU products — show material specs grid (like bedbridge-connector)
+  // Mattress protectors — 3-layer construction specs
+  if (p.productType === 'protector') {
+    const specs = [
+      { label: 'Top Layer', value: 'Cotton Quilted' },
+      { label: 'Layer 2 (Core)', value: 'Polyester Filling' },
+      { label: 'Layer 3 (Backing)', value: 'TPU Waterproof' },
+      { label: 'Protection', value: '100% Fluid Barrier' }
+    ];
+    let grid = '<div class="panel-label">3-Layer Construction</div><div class="specs-grid">';
+    specs.forEach(s => {
+      grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
+    });
+    grid += '</div>';
+    return grid;
+  }
+  // TPU encasement / pillow protector — single-layer TPU specs
   if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
     const tpuSpecs = [
       { label: 'Material', value: 'TPU Waterproof Membrane' },
