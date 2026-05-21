@@ -244,6 +244,23 @@
     return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100, fw: fw, fl: fl };
   }
 
+  // V-Berth fitted sheet: uses max(HW,FW) as width, 100% margin
+  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + 1.0; // 2.35
+  function calcVBerthFitted(hwCm, fwCm, lCm, dCm, fabric) {
+    var w = Math.max(hwCm, fwCm) + 2 * dCm + 14;
+    var fl = lCm + 2 * dCm + 14;
+    var area = w * fl;
+    var yardRate = FABRIC_RATES[fabric] || 100;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD) * 1.20;
+    var sewingCost = getSewingCost(area);
+    var accessories = fabricCost * 0.10;
+    var subtotal = fabricCost + sewingCost + accessories + PACKING + DELIVERY;
+    var total = subtotal * VERTH_MARKUP;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100, fw: w, fl: fl };
+  }
+
   function inchToCm(v) { return v * 2.54; }
   function cmToInch(v) { return v * 0.393701; }
 
@@ -286,11 +303,14 @@
   // ── Marine Fitted Sheet — shape-based pricing ──
   if (isMarineFitted) {
     state.fabric = 'cloudsoft';
+    // Hide "Select Mattress Size" — marine uses "Choose Your Berth Shape" instead
+    if (sizeSelect) {
+      var sizeSection = sizeSelect.closest('.panel-section');
+      if (sizeSection) sizeSection.style.display = 'none';
+    }
     var shapeSelect = document.getElementById('marine-shape-select');
     var shapeHint = document.getElementById('shape-dims-hint');
-    var footField = document.getElementById('field-foot-width');
-    var dimFootW = document.getElementById('dim-foot-width');
-    
+
     if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = 'Head Width (HW)'; }
     if (dimL) {
       var dimLLabel = dimL.parentElement.querySelector('label');
@@ -309,7 +329,6 @@
           return;
         }
         var quoteOnly = opt.dataset.quoteOnly === '1';
-        var price = opt.dataset.price ? parseFloat(opt.dataset.price) : null;
         var lMin = opt.dataset.lengthMin, lMax = opt.dataset.lengthMax;
         var hMin = opt.dataset.headMin, hMax = opt.dataset.headMax;
         var fMin = opt.dataset.footMin, fMax = opt.dataset.footMax;
@@ -319,8 +338,7 @@
           priceDisplay.textContent = 'Custom Quote';
           if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
         } else {
-          var thb = Math.round(price * THB_TO_USD);
-          priceDisplay.textContent = formatPrice(thb, price);
+          priceDisplay.textContent = isEN ? 'Enter dimensions below' : '\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07';
           if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
         }
 
@@ -331,12 +349,6 @@
           if (hMin) parts.push('HW: ' + hMin + '\u2013' + hMax + ' cm');
           if (fMin) parts.push('FW: ' + fMin + '\u2013' + fMax + ' cm');
           shapeHint.textContent = parts.length ? 'Valid range: ' + parts.join('  |  ') : 'Custom dimensions only — request a quote below';
-        }
-
-        // Foot width visibility
-        if (footField) {
-          if (fMin && fMax) footField.classList.add('visible');
-          else footField.classList.remove('visible');
         }
       });
     }
@@ -468,6 +480,8 @@
   // ── Update price from standard size ──
   function updateStandardPrice() {
     if (!sizeSelect || !priceDisplay) return;
+    // Marine has no standard size dropdown — pricing handled by shape selector + custom dims
+    if (isMarineFitted) return;
     var val = sizeSelect.value;
     if (val === 'custom') {
       if (customDims) customDims.classList.add('open');
@@ -483,18 +497,7 @@
     }
     if (customDims) customDims.classList.remove('open');
 
-    // Marine fitted sheet: shape-based fixed price (no formula)
-    if (isMarineFitted) {
-      var ms = document.getElementById('marine-shape-select');
-      var mOpt = ms && ms.selectedOptions[0];
-      if (mOpt && mOpt.value && !mOpt.dataset.quoteOnly) {
-        var price = parseFloat(mOpt.dataset.price);
-        var thb = Math.round(price * THB_TO_USD);
-        priceDisplay.textContent = formatPrice(thb, price);
-        if (addToCartBtn) addToCartBtn.disabled = false;
-        return;
-      }
-    }
+    // V-Berth: no standard-size dropdown — handled by "Choose Your Berth Shape" + custom dims
 
     var result;
     if (isEncasement) {
@@ -550,33 +553,20 @@
       return;
     }
 
-    // Marine fitted sheet: shape-based fixed price
+    // V-Berth fitted sheet: formula-based pricing
     if (isMarineFitted) {
-      var ms = document.getElementById('marine-shape-select');
-      var mOpt = ms && ms.selectedOptions[0];
-      if (!mOpt || !mOpt.value) { customPrice.textContent = 'Select shape first'; return; }
-      if (mOpt.dataset.quoteOnly) { customPrice.textContent = 'Custom Quote'; return; }
-      var price = parseFloat(mOpt.dataset.price);
-      var lMin = parseFloat(mOpt.dataset.lengthMin) || 0, lMax = parseFloat(mOpt.dataset.lengthMax) || 999;
-      var hMin = parseFloat(mOpt.dataset.headMin) || 0, hMax = parseFloat(mOpt.dataset.headMax) || 999;
-      var fMin = parseFloat(mOpt.dataset.footMin) || 0, fMax = parseFloat(mOpt.dataset.footMax) || 999;
-      if (wCm < hMin || wCm > hMax || lCm < lMin || lCm > lMax) {
-        customPrice.textContent = 'Out of range for ' + mOpt.textContent.split('\u2014')[0].trim() + ' \u2014 request quote';
-        return;
-      }
       var dimFootW = document.getElementById('dim-foot-width');
       var fw = parseFloat(dimFootW && dimFootW.value) || 0;
-      if (fMin && fMax && fw > 0) {
-        if (state.unit === 'in') fw = inchToCm(fw);
-        if (fw < fMin || fw > fMax) {
-          customPrice.textContent = 'Foot width out of range \u2014 request quote';
-          return;
-        }
+      if (state.unit === 'in') fw = inchToCm(fw);
+      if (fw <= 0) { customPrice.textContent = 'Enter Foot Width (FW)'; return; }
+      if (!dCm) {
+        // Default depth to 7 inches (17.78 cm) if user hasn't entered one, per spec
+        dCm = state.unit === 'in' ? 7 : 17.78;
       }
-      var thb = Math.round(price * THB_TO_USD);
-      state.quotePriceThb = thb;
-      state.quotePriceUsd = price;
-      customPrice.textContent = formatPrice(thb, price);
+      var result = calcVBerthFitted(wCm, fw, lCm, dCm, state.fabric);
+      state.quotePriceThb = result.thb;
+      state.quotePriceUsd = result.usd;
+      customPrice.textContent = formatPrice(result.thb, result.usd);
       return;
     }
 
