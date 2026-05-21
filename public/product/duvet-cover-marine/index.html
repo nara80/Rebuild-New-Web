@@ -1,449 +1,115 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Duvet Cover  -  Marine & Yacht by MildMate. CloudSoft quick-dry fabric built for marine environments. 3-sided zipper for easy change on the boat. Made to measure worldwide.">
-  <title>Duvet Cover  -  Marine & Yacht  -  MildMate</title>
+  <title>Duvet Cover — Marine — MildMate</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Page Layout <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>—— */
     .product-page { background: #f0f7ff; }
-    .product-layout {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 40px 24px 80px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 56px;
-      align-items: start;
-    }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Left: Gallery <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> */
+    .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; }
     .product-gallery { position: sticky; top: 90px; }
-    .gallery-main {
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--color-surface);
-      margin-bottom: 12px;
-      position: relative;
-    }
-    .gallery-main img {
-      width: 100%;
-      aspect-ratio: 4/3;
-      object-fit: cover;
-      display: block;
-      cursor: zoom-in;
-    }
-    .gallery-nav {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-    .gallery-thumb {
-      width: 72px;
-      height: 72px;
-      border-radius: 6px;
-      overflow: hidden;
-      cursor: pointer;
-      border: 2px solid transparent;
-      flex-shrink: 0;
-      transition: border-color 0.15s;
-      background: var(--color-surface);
-    }
-    .gallery-thumb:hover,
-    .gallery-thumb.active { border-color: var(--color-primary); }
+    .gallery-main { border-radius: var(--radius); overflow: hidden; background: var(--color-surface); margin-bottom: 12px; position: relative; }
+    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; cursor: zoom-in; }
+    .gallery-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .gallery-thumb { width: 72px; height: 72px; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; flex-shrink: 0; transition: border-color 0.15s; background: var(--color-surface); }
+    .gallery-thumb:hover, .gallery-thumb.active { border-color: var(--color-primary); }
     .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .gallery-thumb.video-thumb {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #1a1a2e;
-    }
-    .gallery-thumb.video-thumb svg { width: 24px; height: 24px; fill: #fff; opacity: 0.8; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Right: Product Info <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>— */
     .product-info {}
-    .product-breadcrumb {
-      font-size: 0.8125rem;
-      color: #888;
-      margin-bottom: 16px;
-    }
+    .product-breadcrumb { font-size: 0.8125rem; color: #888; margin-bottom: 16px; }
     .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
     .product-breadcrumb a:hover { text-decoration: underline; }
-    .product-title {
-      font-size: 2.25rem;
-      font-weight: 700;
-      color: var(--color-text);
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-    .product-tagline {
-      font-size: 1rem;
-      color: #666;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-    .product-rating {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
+    .product-title { font-size: 2.25rem; font-weight: 700; color: var(--color-text); line-height: 1.2; margin-bottom: 8px; }
+    .product-tagline { font-size: 1rem; color: #666; margin-bottom: 20px; line-height: 1.5; }
+    .product-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
     .stars { color: #f59e0b; font-size: 1rem; letter-spacing: 1px; }
     .rating-text { font-size: 0.875rem; color: #555; }
     .rating-text strong { color: var(--color-primary); cursor: pointer; }
     .rating-text strong:hover { text-decoration: underline; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Pricing Panel <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>—— */
-    .pricing-panel {
-      background: #fff;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 24px;
-    }
+    .pricing-panel { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
     .panel-section { margin-bottom: 20px; }
     .panel-section:last-child { margin-bottom: 0; }
-    .panel-label {
-      font-size: 0.8125rem;
-      font-weight: 700;
-      color: var(--color-text);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-    .region-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
+    .panel-label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .region-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .region-btn { padding: 8px 6px; border: 2px solid var(--color-border); border-radius: 6px; background: #fff; font-size: 0.8125rem; font-weight: 600; color: var(--color-text); cursor: pointer; text-align: center; transition: all 0.15s; font-family: var(--font-main); }
-      padding: 8px 6px;
-      border: 2px solid var(--color-border);
-      border-radius: 6px;
-      background: #fff;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--color-text);
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-      font-family: var(--font-main);
-    }
     .region-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
     .region-btn.selected { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
-    .size-select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius);
-      font-family: var(--font-main);
-      font-size: 0.9375rem;
-      color: var(--color-text);
-      background: #fff;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-    }
+    .size-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
     .size-select:focus { outline: none; border-color: var(--color-primary); }
-    .size-hint {
-      font-size: 0.75rem;
-      color: #888;
-      margin-top: 6px;
-    }
+    .size-hint { font-size: 0.75rem; color: #888; margin-top: 6px; }
     .size-hint a { color: var(--color-primary); text-decoration: none; }
     .size-hint a:hover { text-decoration: underline; }
-    /* Fabric Selector */
-    .fabric-selector { display: flex; gap: 10px; flex-wrap: wrap; }
-    .fabric-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-    }
-    .fabric-swatch {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      transition: border-color 0.15s;
-      position: relative;
-    }
-    .fabric-swatch.selected { border-color: var(--color-primary); }
-    .fabric-swatch:not(.selected) { opacity: 0.6; }
-    .fabric-swatch:hover { opacity: 1; }
-    .fabric-option span { font-size: 0.6875rem; color: #666; font-weight: 600; }
-    .fabric-note {
-      font-size: 0.75rem;
-      color: var(--color-primary);
-      background: #e8f4fd;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-    /* Color Selector */
+    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 16px; }
     .color-selector { display: flex; gap: 8px; flex-wrap: wrap; }
-    .color-option {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      cursor: pointer;
-      transition: border-color 0.15s;
-      position: relative;
-    }
+    .color-option { width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: border-color 0.15s; }
     .color-option.selected { border-color: var(--color-primary); }
     .color-option:not(.selected) { opacity: 0.5; }
     .color-option:hover { opacity: 1; }
-    /* Price Display */
-    .price-block {
-      border-top: 1px solid var(--color-border);
-      padding-top: 20px;
-      margin-top: 20px;
-    }
-    .price-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
+    .price-block { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+    .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
     .price-label { font-size: 0.8125rem; color: #888; }
     .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
     .price-sub { font-size: 0.75rem; color: #999; }
-    .price-note { font-size: 0.75rem; color: #999; margin-top: 4px; }
-    /* Add to Cart */
     .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
-    .btn-add-cart {
-      flex: 1;
-      padding: 16px 24px;
-      background: var(--color-primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-family: var(--font-main);
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
+    .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-add-cart:hover { background: var(--color-primary-dark); }
     .btn-add-cart:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-custom-quote {
-      padding: 16px 20px;
-      background: #fff;
-      color: var(--color-primary);
-      border: 2px solid var(--color-primary);
-      border-radius: var(--radius);
-      font-family: var(--font-main);
-      font-size: 0.9375rem;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
+    .btn-custom-quote { padding: 16px 20px; background: #fff; color: var(--color-primary); border: 2px solid var(--color-primary); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
     .btn-custom-quote:hover { background: #e8f4fd; }
-    /* Payment badges */
-    .payment-badges {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-      font-size: 0.75rem;
-      color: #888;
-    }
+    .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #888; }
     .payment-badge { display: flex; align-items: center; gap: 4px; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Trust Signals <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>— */
-    .trust-signals {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 24px;
-    }
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.8125rem;
-      color: #555;
-      background: var(--color-surface);
-      padding: 10px 12px;
-      border-radius: 6px;
-    }
+    .trust-signals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+    .trust-item { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: #555; background: var(--color-surface); padding: 10px 12px; border-radius: 6px; }
     .trust-item svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Custom Dimensions Toggle <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> */
-    .custom-toggle {
-      margin-top: 16px;
-      text-align: center;
-    }
-    .custom-toggle button {
-      background: none;
-      border: none;
-      font-size: 0.875rem;
-      color: var(--color-primary);
-      cursor: pointer;
-      font-weight: 600;
-      font-family: var(--font-main);
-      text-decoration: underline;
-    }
-    .custom-toggle button:hover { color: var(--color-primary-dark); }
-    .custom-dimensions {
-      display: none;
-      margin-top: 16px;
-      padding: 20px;
-      background: var(--color-surface);
-      border-radius: var(--radius);
-      border: 1px solid var(--color-border);
-    }
+    .custom-dimensions { display: none; margin-top: 16px; padding: 20px; background: var(--color-surface); border-radius: var(--radius); border: 1px solid var(--color-border); }
     .custom-dimensions.open { display: block; }
-    .dim-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .dim-field { display: flex; flex-direction: column; gap: 4px; }
     .dim-field label { font-size: 0.75rem; font-weight: 600; color: #555; }
-    .dim-field input {
-      padding: 10px 12px;
-      border: 2px solid var(--color-border);
-      border-radius: 6px;
-      font-family: var(--font-main);
-      font-size: 0.9375rem;
-      color: var(--color-text);
-      width: 100%;
-      box-sizing: border-box;
-    }
+    .dim-field input { padding: 10px 12px; border: 2px solid var(--color-border); border-radius: 6px; font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); width: 100%; box-sizing: border-box; }
     .dim-field input:focus { outline: none; border-color: var(--color-primary); }
-    .unit-toggle {
-      display: flex;
-      gap: 0;
-      border: 2px solid var(--color-border);
-      border-radius: 6px;
-      overflow: hidden;
-      width: fit-content;
-    }
-    .unit-btn {
-      padding: 8px 16px;
-      border: none;
-      background: #fff;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: #666;
-      font-family: var(--font-main);
-      transition: all 0.15s;
-    }
+    .unit-toggle { display: flex; gap: 0; border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; width: fit-content; }
+    .unit-btn { padding: 8px 16px; border: none; background: #fff; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #666; font-family: var(--font-main); transition: all 0.15s; }
     .unit-btn.active { background: var(--color-primary); color: #fff; }
-    .custom-quote-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--color-primary);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-family: var(--font-main);
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+    .custom-quote-btn { width: 100%; padding: 14px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .custom-quote-btn:hover { background: var(--color-primary-dark); }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Accordion Tabs <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> */
     .product-tabs { position: relative; margin-top: 40px; }
-    .tab-list {
-      display: flex;
-      border-bottom: 2px solid var(--color-border);
-      gap: 0;
-      margin-bottom: 0;
-    }
-    .tab-btn {
-      padding: 12px 20px;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      font-family: var(--font-main);
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: #888;
-      cursor: pointer;
-      transition: all 0.15s;
-      margin-bottom: -2px;
-    }
+    .tab-list { display: flex; border-bottom: 2px solid var(--color-border); gap: 0; }
+    .tab-btn { padding: 12px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-family: var(--font-main); font-size: 0.9375rem; font-weight: 600; color: #888; cursor: pointer; transition: all 0.15s; margin-bottom: -2px; }
     .tab-btn:hover { color: var(--color-text); }
     .tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
-    .tab-content {
-      display: none;
-      padding: 24px 0;
-    }
+    .tab-content { display: none; padding: 24px 0; }
     .tab-content.open { display: block; }
     .tab-content h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-text); margin-bottom: 12px; }
     .tab-content p { color: #555; line-height: 1.7; margin-bottom: 12px; }
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #555; line-height: 1.5; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Reviews Section <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> */
     .reviews-section { margin-top: 48px; }
-    .reviews-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
+    .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
     .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
-    .reviews-summary {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: var(--color-surface);
-      padding: 20px 24px;
-      border-radius: var(--radius);
-      margin-bottom: 32px;
-    }
+    .reviews-summary { display: flex; align-items: center; gap: 16px; background: var(--color-surface); padding: 20px 24px; border-radius: var(--radius); margin-bottom: 32px; width: 100%; box-sizing: border-box; }
     .summary-score { font-size: 3rem; font-weight: 700; color: var(--color-text); line-height: 1; }
     .summary-detail { flex: 1; }
     .summary-stars { color: #f59e0b; font-size: 1.25rem; margin-bottom: 4px; }
     .summary-text { font-size: 0.875rem; color: #666; }
-    .review-card {
-      background: #fff;
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow);
-    }
+    .review-card { background: #fff; border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
     .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .review-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--color-primary);
-      color: #fff;
-      font-weight: 700;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .review-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--color-primary); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
     .review-meta { flex: 1; }
     .review-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
     .review-country { font-size: 0.8125rem; color: #888; }
     .review-stars { color: #f59e0b; font-size: 0.875rem; }
     .review-text { color: #555; line-height: 1.7; font-size: 0.9375rem; }
     .review-product { font-size: 0.8125rem; color: #888; margin-top: 8px; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Related Products <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>— */
     .related-section { margin-top: 64px; }
     .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
     .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .related-card {
-      background: #fff;
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+    .related-card { background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s; }
     .related-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
     .related-card .card-image { position: relative; overflow: hidden; }
     .related-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
@@ -451,82 +117,27 @@
     .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
     .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
     .related-card .card-price-note { font-size: 0.75rem; color: #999; }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Responsive <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> */
-    @media (max-width: 1024px) {
-      .product-layout { grid-template-columns: 1fr; gap: 32px; }
-      .product-gallery { position: static; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 640px) {
-      .product-title { font-size: 1.75rem; }
-      .region-grid { grid-template-columns: repeat(2, 1fr); }
-      .dim-inputs { grid-template-columns: 1fr 1fr; }
-      .add-to-cart-row { flex-direction: column; }
-      .btn-custom-quote { text-align: center; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .reviews-header { flex-direction: column; align-items: start; gap: 12px; }
-    }
-    @media (max-width: 480px) {
-    .reviews-grid { grid-template-columns: 1fr; }
-      .dim-inputs { grid-template-columns: 1fr; }
-    }
-    /* <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Global Tags <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>—— */
-    .tag-pill {
-      display: inline-flex;
-      align-items: center;
-      padding: 5px 12px;
-      background: var(--color-surface);
-      border: 1.5px solid var(--color-border);
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-text);
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .tag-pill:hover {
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-      background: #e8f4fd;
-    }
+    .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: var(--color-surface); border: 1.5px solid var(--color-border); border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
+    .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #e8f4fd; }
+    @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .region-grid { grid-template-columns: repeat(2, 1fr); } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
+    @media (max-width: 480px) { .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body class="product-page">
-
-  <header class="site-header">
-    <div class="container header-inner">
-      <button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <a href="/" class="logo-link" aria-label="MildMate Home"><picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></picture></a>
-      <nav class="main-nav" aria-label="Main navigation"><ul class="nav-list"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li><li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li><li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li></ul></nav>
-      <div class="header-actions">
-        <button class="search-btn" aria-label="Search products" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
-        <a href="/account/" class="account-btn" aria-label="My account"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
-        <a href="/checkout/" class="cart-btn" aria-label="Shopping cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a>
-        <div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/product/duvet-cover-marine/'" style="cursor:pointer">TH</span></div>
-      </div>
-    </div>
-    <div class="mobile-overlay" aria-hidden="true"></div>
-    <div class="mobile-drawer" aria-label="Mobile menu"><div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/">Home</a></li><li><a href="/products/">Shop</a></li><li><a href="/fabric/">Fabrics</a></li><li><a href="/sizeguide/">Size Guide</a></li></ul></div>
-    <div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="Close search"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div>
-  </header>
-
+  <header class="site-header"><div class="container header-inner"><button class="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button><a href="/" class="logo-link" aria-label="MildMate Home"><picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></picture></a><nav class="main-nav" aria-label="Main navigation"><ul class="nav-list"><li class="nav-item"><a href="/" class="nav-link">Home</a></li><li class="nav-item"><a href="/products/" class="nav-link">Shop</a></li><li class="nav-item"><a href="/fabric/" class="nav-link">Fabrics</a></li><li class="nav-item"><a href="/sizeguide/" class="nav-link">Size Guide</a></li></ul></nav><div class="header-actions"><button class="search-btn" aria-label="Search products" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button><a href="/account/" class="account-btn" aria-label="My account"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a><a href="/checkout/" class="cart-btn" aria-label="Shopping cart"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-count">0</span></a><div class="lang-toggle" role="group" aria-label="Language switch"><span data-lang="en" class="active">EN</span><span>/</span><span data-lang="th" onclick="window.location.href='/th/product/duvet-cover-marine/'" style="cursor:pointer">TH</span></div></div></div><div class="mobile-overlay" aria-hidden="true"></div><div class="mobile-drawer" aria-label="Mobile menu"><div class="mobile-drawer-search"><form action="/products/" method="get" class="drawer-search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div><ul class="mobile-nav-list"><li><a href="/">Home</a></li><li><a href="/products/">Shop</a></li><li><a href="/fabric/">Fabrics</a></li><li><a href="/sizeguide/">Size Guide</a></li></ul></div><div class="search-overlay" aria-hidden="true"><div class="search-overlay-inner"><button class="search-close" aria-label="Close search"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><form action="/products/" method="get" class="search-form"><input type="search" name="q" placeholder="Search bedding..." aria-label="Search" autocomplete="off"><button type="submit" aria-label="Submit search"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button></form></div></div></header>
   <main>
-    <!-- Breadcrumb -->
     <div class="container" style="padding-top:24px;">
       <nav class="product-breadcrumb" aria-label="Breadcrumb">
         <a href="/">Home</a> &rsaquo;
         <a href="/duvet-covers/">Duvet Covers</a> &rsaquo;
-        <span>Duvet Cover  -  Marine & Yacht</span>
+        <span>Duvet Cover — Marine</span>
       </nav>
     </div>
-
-    <!-- Product Layout -->
     <div class="product-layout">
-
-      <!-- LEFT: Gallery -->
       <div class="product-gallery">
         <div class="gallery-main">
-          <img src="/images/products/duvet-cover-marine/main.jpg" alt="Duvet Cover  -  Marine & Yacht" id="gallery-main-img" width="800" height="600" loading="eager">
+          <img src="/images/products/duvet-cover-marine/main.jpg" alt="Duvet Cover — Marine" id="gallery-main-img" width="800" height="600" loading="eager">
         </div>
         <div class="gallery-nav">
           <div class="gallery-thumb active" data-img="/images/products/duvet-cover-marine/main.jpg">
@@ -534,23 +145,14 @@
           </div>
         </div>
       </div>
-
-      <!-- RIGHT: Product Info -->
       <div class="product-info">
-
-        <h1 class="product-title">Duvet Cover  -  Marine & Yacht</h1>
+        <h1 class="product-title">Duvet Cover — Marine  -  </h1>
         <p class="product-tagline">CloudSoft fabric with quick-dry performance for marine environments. 3-sided zipper for easy change on the boat.</p>
-
-        <!-- Rating -->
         <div class="product-rating">
-          <span class="stars"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-          <span class="rating-text">5.0 – <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">84 reviews</strong></span>
+          <span class="stars">★★★★★</span>
+          <span class="rating-text">5.0 · <strong onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">84 reviews</strong></span>
         </div>
-
-        <!-- Pricing Panel -->
         <div class="pricing-panel">
-
-          <!-- Step 1: Region -->
           <div class="panel-section">
             <div class="panel-label">Where are you shipping?</div>
             <div class="region-grid" id="region-grid">
@@ -564,89 +166,22 @@
               <button class="region-btn" data-region="other">🌍 Other</button>
             </div>
           </div>
-
-          <!-- Step 2: Size -->
           <div class="panel-section">
-            <div class="panel-label">Select Size</div>
+            <div class="panel-label">Select Duvet Size</div>
             <select class="size-select" id="size-select">
-              <option value=""> -  Choose size  - </option>
-              <optgroup label=" Thailand">
-                <option value="107x191" data-price="2495">3.5ft  -  107 — 191cm (42 — 75in)</option>
-                <option value="120x200" data-price="2695">6ft Queen  -  120 — 200cm (47 — 79in)</option>
-                <option value="152x198" data-price="2895">King  -  152 — 198cm (60 — 78in)</option>
-              </optgroup>
-              <optgroup label=" US / Canada">
-                <option value="99x191" data-price="2495">Twin  -  99 — 191cm (39 — 75in)</option>
-                <option value="137x191" data-price="2695">Full  -  137 — 191cm (54 — 75in)</option>
-                <option value="153x203" data-price="2895">Queen  -  153 — 203cm (60 — 80in)</option>
-              </optgroup>
-              <optgroup label=" UK">
-                <option value="90x190" data-price="2445">Single  -  90 — 190cm</option>
-                <option value="135x190" data-price="2695">Double  -  135 — 190cm</option>
-                <option value="150x200" data-price="2895">King  -  150 — 200cm</option>
-              </optgroup>
-              <optgroup label=" EU">
-                <option value="90x200" data-price="2495">Single  -  90 — 200cm</option>
-                <option value="140x200" data-price="2695">Double  -  140 — 200cm</option>
-                <option value="160x200" data-price="2895">King  -  160 — 200cm</option>
-              </optgroup>
-              <optgroup label=" AU">
-                <option value="92x188" data-price="2495">Single  -  92 — 188cm</option>
-                <option value="137x188" data-price="2695">Double  -  137 — 188cm</option>
-                <option value="153x203" data-price="2895">Queen  -  153 — 203cm</option>
-              </optgroup>
-              <optgroup label=" MY / SG">
-                <option value="107x191" data-price="2495">Super Single  -  107 — 191cm (42 — 75in)</option>
-                <option value="152x198" data-price="2895">Queen  -  152 — 198cm (60 — 78in)</option>
-              </optgroup>
-              <optgroup label=" JP">
-                <option value="100x200" data-price="2545">Single  -  100 — 200cm (39.4 — 78.7in)</option>
-                <option value="120x200" data-price="2745">Semi-Double  -  120 — 200cm (47 — 79in)</option>
-                <option value="140x200" data-price="2895">Double  -  140 — 200cm (55 — 79in)</option>
-              </optgroup>
-              <optgroup label="Custom Size">
-                <option value="custom">Custom dimensions </option>
-              </optgroup>
+              <option value=""> — Choose duvet size — </option>
             </select>
-            <div class="size-hint">Not sure of your duvet size? <a href="/sizeguide/">View Size Guide </a></div>
+            <div class="size-hint"><a href="/sizeguide/">View full size guide →</a></div>
           </div>
-
-          <!-- Step 3: Fabric  -  CloudSoft only, not selectable -->
-          <div class="panel-section">
-            <div class="panel-label">Fabric</div>
-            <div class="fabric-selector" id="fabric-selector">
-              <div class="fabric-option" style="cursor:default;">
-                <div class="fabric-swatch selected" style="background:linear-gradient(135deg,#d4c5b0,#e8dcc8); cursor:default;"></div>
-                <span>CloudSoft</span>
-              </div>
-            </div>
-            <div class="fabric-note" style="margin-top:8px;">CloudSoft: Quick-dry microfiber – Ultra-soft feel – Ideal for marine humidity</div>
-          </div>
-
-          <!-- Step 4: Color -->
-          <div class="panel-section">
-            <div class="panel-label">Color  -  CloudSoft</div>
-            <div class="color-selector" id="color-selector">
-              <div class="color-option selected" data-color="pure-white" style="background:#fff; border:2px solid #ddd;" title="Pure White"></div>
-              <div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div>
-              <div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div>
-              <div class="color-option" data-color="sea" style="background:#5A7DA2;" title="Sea"></div>
-              <div class="color-option" data-color="grey" style="background:#9CA3AF;" title="Grey"></div>
-              <div class="color-option" data-color="navy" style="background:#1E3A5F;" title="Navy"></div>
-              <div class="color-option" data-color="ivory" style="background:#F1EFE1;" title="Ivory"></div>
-            </div>
-          </div>
-
-          <!-- Price Display -->
+          <div class="panel-section"><div class="panel-label">Fabric</div><div class="fabric-badge">CloudSoft</div></div>
+          
           <div class="price-block">
             <div class="price-row">
               <span class="price-label">Price</span>
-              <span class="price-value" id="price-display">USD  2,495</span>
+              <span class="price-value" id="price-display">USD 65.00</span>
             </div>
-            <div class="price-sub">Excludes shipping & import tariff</div>
+            <div class="price-sub">Excludes shipping &amp; import tariff</div>
           </div>
-
-          <!-- Add to Cart -->
           <div class="add-to-cart-row">
             <button class="btn-add-cart" id="add-to-cart" disabled>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -654,8 +189,6 @@
             </button>
             <button class="btn-custom-quote" id="custom-quote-btn">Custom Size</button>
           </div>
-
-          <!-- Custom Dimensions Panel -->
           <div class="custom-dimensions" id="custom-dimensions">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
               <strong style="font-size:0.9375rem;">Enter your exact duvet dimensions</strong>
@@ -665,55 +198,30 @@
               </div>
             </div>
             <div class="dim-inputs">
-              <div class="dim-field">
-                <label for="dim-width">Width (W)</label>
-                <input type="number" id="dim-width" placeholder="e.g. 152" min="30" max="300">
-              </div>
-              <div class="dim-field">
-                <label for="dim-length">Length (L)</label>
-                <input type="number" id="dim-length" placeholder="e.g. 203" min="30" max="300">
-              </div>
+              <div class="dim-field"><label for="dim-width">Width (W)</label><input type="number" id="dim-width" placeholder="e.g. 153" min="30" max="120"></div>
+              <div class="dim-field"><label for="dim-length">Length (L)</label><input type="number" id="dim-length" placeholder="e.g. 203" min="30" max="120"></div>
               
             </div>
             <div class="price-row" style="margin-bottom:12px;">
               <span class="price-label">Estimated price</span>
-              <span class="price-value" id="custom-price" style="font-size:1.5rem;"> - </span>
+              <span class="price-value" id="custom-price" style="font-size:1.5rem;"> — </span>
             </div>
-            <button class="custom-quote-btn" id="submit-custom-quote">Custom Quote </button>
+            <button class="custom-quote-btn" id="submit-custom-quote">Custom Quote</button>
           </div>
-
-          <!-- Payment badges -->
           <div class="payment-badges">
             <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Visa / MC</span>
             <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Apple Pay</span>
             <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Secure checkout</span>
           </div>
         </div>
-
-        <!-- Trust Signals -->
         <div class="trust-signals">
-          <div class="trust-item">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            OEKO-TEX Certified
-          </div>
-          <div class="trust-item">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
-            Top-Rated Etsy Boutique
-          </div>
-          <div class="trust-item">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Ships from Thailand
-          </div>
-          <div class="trust-item">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            +66 (0)87 236 2364
-          </div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div>
         </div>
-
       </div>
     </div>
-
-    <!-- Accordion Tabs -->
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="product-tabs">
         <div class="tab-list" role="tablist">
@@ -725,74 +233,68 @@
         <div class="tab-content open" id="tab-description" role="tabpanel">
           <h3>Marine Duvet Cover</h3>
           <p>Designed for marine and yacht use with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in tight cabin spaces. Custom-made to your exact duvet dimensions. OEKO-TEX certified. The 3-sided zipper opens on two long edges and one short edge, making duvet cover changes effortless even in confined spaces.</p>
-          <ul><li>3-sided YKK zipper - easy duvet changes in tight spaces</li><li>CloudSoft quick-dry fabric - ideal for marine environments</li><li>Custom-made to your exact W x L dimensions</li><li>OEKO-TEX certified - no toxic chemicals</li><li>Wrinkle-resistant and quick-dry</li></ul>
+          <ul>
+            <li>3-sided YKK zipper - easy duvet changes in tight spaces</li><li>CloudSoft quick-dry fabric - ideal for marine environments</li><li>Custom-made to your exact W x L dimensions</li><li>OEKO-TEX certified - no toxic chemicals</li><li>Wrinkle-resistant and quick-dry</li>
+          </ul>
         </div>
         <div class="tab-content" id="tab-fabric" role="tabpanel">
-          <h3>CloudSoft - Quick-Dry Marine Edition</h3>
-          <p>Available in CloudSoft (fixed) fabric options. All OEKO-TEX certified with no toxic dyes or finishes.</p>
-          <ul><li>CloudSoft - 100% long-staple cotton, smooth and breathable</li><li>BreezePlus - Anti-fur weave, Siriraj Anti-Dust Mite certified</li><li>PremaCotton - Premium long-staple, ultra-soft hand feel</li><li>EcoLuxe - Natural unbleached cotton, eco-friendly</li></ul>
+          <h3>CloudSoft — Marine Edition</h3>
+          <p>CloudSoft quick-dry fabric built for marine environments. 3-sided zipper for easy linen changes in tight cabin spaces. Custom-made to your exact duvet dimensions.</p>
+          <ul>
+            <li>Quick-dry — ideal for marine</li><li>3-sided YKK zipper</li><li>Custom-made to your duvet</li><li>OEKO-TEX certified</li><li>Wrinkle-resistant</li>
+          </ul>
           <p><a href="/fabric/" style="color:var(--color-primary); font-weight:600;">Explore all fabric collections →</a></p>
         </div>
         <div class="tab-content" id="tab-sizing" role="tabpanel">
           <h3>Size Guide</h3>
-          <p>Duvet sizes available across US, UK, Thailand, EU, Australia, Japan, Malaysia/Singapore, and India. Standard duvet dimensions range from Twin (175x220cm) to Super King (260x230cm). Custom sizes available for any dimension.</p>
-          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide →</a></p>
+          <p>Our products are custom-made to your exact dimensions. Sizes available for US, UK, Thailand, EU, AU, Japan, Malaysia/Singapore, and India.</p>
+          <p><a href="/sizeguide/" style="color:var(--color-primary);">View full size guide →</a> or <a href="/contact/" style="color:var(--color-primary);">contact us before ordering</a> if unsure.</p>
         </div>
         <div class="tab-content" id="tab-care" role="tabpanel">
           <h3>Care Instructions</h3>
-          <ul><li>Machine wash warm (40C / 104F) - regular cycle</li><li>Do not bleach - mild detergent only</li><li>Tumble dry medium or hang dry</li><li>No ironing needed - wrinkle-resistant by design</li><li>Quick-dry - ready within hours</li></ul>
+          <ul>
+            <li>Machine wash warm (40C / 104F) - regular cycle</li><li>Do not bleach - mild detergent only</li><li>Tumble dry medium or hang dry</li><li>No ironing needed - wrinkle-resistant by design</li><li>Quick-dry - ready within hours</li>
+          </ul>
         </div>
       </div>
     </div>
-
-    <!-- Reviews Section -->
     <div class="container" id="reviews" style="max-width:1280px; padding:0 24px;">
       <div class="reviews-section">
         <div class="reviews-header"><h2>Customer Reviews</h2></div>
         <div class="reviews-summary">
           <div class="summary-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <div class="summary-text">Based on 75 verified reviews</div>
+            <div class="summary-stars">★★★★★</div>
+            <div class="summary-text">Based on 84 verified reviews</div>
           </div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
           <div class="review-card"><div class="review-header"><div class="review-avatar">R</div><div class="review-meta"><div class="review-name">Robert C.</div><div class="review-country">United States</div></div><div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div></div><div class="review-text">"Perfect for our boat. The duvet cover fits our V-berth duvet exactly and the CloudSoft fabric handles the marine environment beautifully. Quick-dry is a real advantage."</div><div class="review-product">Verified purchase: Marine Duvet Cover x CloudSoft</div></div>
-          <div class="review-card"><div class="review-header"><div class="review-avatar">L</div><div class="review-meta"><div class="review-name">Lisa T.</div><div class="review-country">Australia</div></div><div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div></div><div class="review-text">"Ordered for our yacht and the quality exceeded expectations. The zipper is robust and the custom sizing was spot-on."</div><div class="review-product">Verified purchase: Marine Duvet Cover x CloudSoft Navy</div></div>
+          <div class="review-card"><div class="review-header"><div class="review-avatar">L</div><div class="review-meta"><div class="review-name">Lisa T.</div><div class="review-country">Australia</div></div><div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div></div><div class="review-text">"Ordered for our yacht and the quality exceeded expectations. The zipper is robust and the custom sizing was spot-on."</div><div class="review-product">Verified purchase: Marine Duvet Cover x CloudSoft Navy</div>
         </div>
       </div>
     </div>
-
-    <!-- Related Products -->
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="related-section">
         <h2>You might also like</h2>
         <div class="related-grid">
-          <a href="/product/3-sided-duvet/" class="related-card"><div class="card-image"><img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">3-Sided Zipper Duvet Cover</div><div class="card-price">From USD 58</div><div class="card-price-note">CloudSoft x easy laundry</div></div></a>
-          <a href="/product/flat-sheet-standard/" class="related-card"><div class="card-image"><img src="/images/products/flat-sheet-standard/main.jpg" alt="Flat Sheet" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Flat Sheet - Standard</div><div class="card-price">From USD 38</div><div class="card-price-note">All fabrics available</div></div></a>
-          <a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">USD 16</div><div class="card-price-note">All fabrics available</div></div></a>
-          <a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 38</div><div class="card-price-note">TPU waterproof</div></div></a>
+          <a href="/product/3-sided-duvet/" class="related-card"><div class="card-image"><img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">3-Sided Zipper Duvet Cover</div><div class="card-price">From USD 65.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/flat-sheet-standard/" class="related-card"><div class="card-image"><img src="/images/products/flat-sheet-standard/main.jpg" alt="Flat Sheet — Standard" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Flat Sheet — Standard</div><div class="card-price">From USD 38.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">From USD 16.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a>
         </div>
       </div>
     </div>
-
-    <!-- Global Tags -->
     <div class="container" style="max-width:1280px; padding:0 24px 64px;">
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">Tags:</span>
-        <a href="/duvet-covers/" class="tag-pill">Duvet Covers</a>
-        <a href="/marine/" class="tag-pill">Marine & Yacht</a>
-        <a href="/rv-truck/" class="tag-pill">RV & Truck</a>
+        <a href="/duvet-covers/" class="tag-pill">Duvet Covers</a><a href="/marine/" class="tag-pill">Marine & Yacht</a><a href="/rv-truck/" class="tag-pill">RV & Truck</a>
       </div>
     </div>
   </main>
-
   <footer class="site-footer"><div class="container"><div class="footer-grid"><div class="footer-col"><h3>Quick Links</h3><ul><li><a href="/about/">About Us</a></li><li><a href="/contact/">Contact Us</a></li><li><a href="/reviews/">Reviews</a></li></ul></div><div class="footer-col"><h3>Customer Service</h3><ul><li><a href="/faq/">FAQ</a></li><li><a href="/sizeguide/">Size Guide</a></li><li><a href="/blogs/">Blog</a></li></ul></div><div class="footer-col"><h3>Shop With Us</h3><div class="footer-icons-grid"><a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle"><img src="/images/Logo/Etsy.png" alt=""></a><a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle"><img src="/images/Logo/eBay.png" alt=""></a><a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle"><img src="/images/Logo/Shopee.png" alt=""></a><a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle"><img src="/images/Logo/Lazada.png" alt=""></a></div></div><div class="footer-col"><h3>Contact</h3><ul><li><a href="mailto:contact@mildmate.com"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>contact@mildmate.com</a></li><li><a href="tel:+66872362364"><svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</a></li></ul><div class="footer-icons-grid contact-icons"><a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle"><img src="/images/Logo/WhatsAPP.png" alt=""></a><a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle"><img src="/images/Logo/LineOA.png" alt=""></a></div></div></div><div class="footer-social-center"><a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon"><img src="/images/Logo/Facebook.png" alt=""></a><a href="https://www.instagram.com/mild_mate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="footer-social-icon"><img src="/images/Logo/Instagram.png" alt=""></a><a href="https://www.tiktok.com/@bt.mildmate" target="_blank" rel="noopener noreferrer" aria-label="TikTok" class="footer-social-icon"><img src="/images/Logo/TikTok.png" alt=""></a><a href="https://www.pinterest.com/mildmateshop/" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" class="footer-social-icon"><img src="/images/Logo/Pinterest.png" alt=""></a><a href="https://www.youtube.com/channel/UCnxunfprych7pMss4zr6Qcw" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="footer-social-icon"><img src="/images/Logo/YouTube.png" alt=""></a></div><div class="footer-bottom"><p>&copy; MildMate 2026</p><div class="footer-bottom-links"><a href="/policy/">Privacy Policy</a><a href="/shipping/">Returns &amp; Delivery</a></div></div></div></footer>
-
   <script src="/js/nav.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
-  <script src="/js/product-sizes.js"></script><script src="/js/product-configurator.js"></script>
-<script src="/js/reviews-carousel.js"></script>
+  <script src="/js/product-sizes.js"></script>
+  <script src="/js/product-configurator.js"></script>
+  <script src="/js/reviews-carousel.js"></script>
 </body>
 </html>
