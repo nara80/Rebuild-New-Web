@@ -230,19 +230,19 @@ USD prices displayed as whole dollars (no decimals).
 
 **Mattress protector formula:** Area-based fabric tier (W×L in sq.inch → 550-1,300 THB via tiered lookup) + depth surcharge (<30cm:0, ≥30:200, ≥52:400, >56:600 THB) + packing 200 + delivery 80, × markup (ops 15% + mkt 20% + margin 15-50%). Max W/L=210cm for non-family; over 210 redirects to Family Protector.
 
-### Products NOT Requiring Configurator (2)
+### Products NOT Requiring Configurator (3)
 
 | Product | Reason |
 |---|---|
 | BedBridge Connector | Fixed-price accessory, no custom dimensions |
 | Bed Lifter (38 cm) | Fixed-price accessory, no custom dimensions |
+| Duvet Insert | Thailand-only, fixed Thai duvet sizes (Microfiber 200g/m²) |
 
-### Products Awaiting Configurator (2)
+### Products Awaiting Configurator (1)
 
 | Product | Category |
 |---|---|
 | Marine Fitted Sheet | Sheets, Marine |
-| Duvet Insert | Duvet Covers |
 
 ---
 

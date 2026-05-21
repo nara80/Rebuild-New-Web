@@ -26,7 +26,7 @@ const fabricNames = {
   bamboo: 'Bamboo',
   tpu: 'TPU Waterproof',
   polyester: 'Polyester Hollow Fiber',
-  microfiber: 'High-Density Microfiber',
+  microfiber: 'Microfiber 200g/m²',
   abs: 'ABS Plastic'
 };
 
@@ -343,14 +343,12 @@ function buildFixedPricingHTML(slug, p, prod) {
   let html = '<div class="pricing-panel">';
 
   if (slug === 'duvet-insert') {
-    // Duvet insert: size selector + fill weight + price calculation
-    const fabricName = fabricNames[p.lockedFabric] || p.lockedFabric;
-    html += '<div class="fabric-badge">' + fabricName + '</div>';
-    html += '<div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> — Choose size — </option><option value="single" data-thb="1290" data-usd="18">Single — 150×200cm</option><option value="queen" data-thb="1490" data-usd="22">Queen — 200×230cm</option><option value="king" data-thb="1690" data-usd="26">King — 230×250cm</option></select></div>';
-    html += '<div class="panel-section"><div class="panel-label">Fill Weight</div><select class="size-select" id="fill-weight"><option value=""> — Choose fill weight — </option><option value="light" data-mult="1.0">Light</option><option value="medium" data-mult="1.15" selected>Medium</option><option value="heavy" data-mult="1.3">Heavy</option></select></div>';
-    html += '<div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From ฿1,290</span></div><div class="price-sub">Thailand only · Excludes shipping</div></div>';
+    // Duvet insert: Thai-only standard sizes, Microfiber 200g/sq.m fixed fill
+    html += '<div class="fabric-badge">Microfiber 200g/m²</div>';
+    html += '<div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> — Choose size — </option><option value="3ft" data-thb="990">3FT, 3.5FT — 178×229cm</option><option value="5ft" data-thb="1480">5FT, 6FT — 229×254cm</option><option value="7ft" data-thb="1690">7FT — 279×254cm</option><option value="9ft" data-thb="1790">9FT, 9.5FT — 318×254cm</option></select></div>';
+    html += '<div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From ฿990</span></div><div class="price-sub">Thailand only · Excludes shipping</div></div>';
     html += '<button class="add-to-cart-btn" id="add-to-cart">Add to Cart</button>';
-    html += '<script>(function(){var s=document.getElementById("duvet-size"),f=document.getElementById("fill-weight"),p=document.getElementById("price-display"),b=document.getElementById("add-to-cart");function u(){var sv=s.selectedOptions[0],fv=f.selectedOptions[0];if(sv&&fv&&sv.value){var t=parseFloat(sv.dataset.thb||"0")*parseFloat(fv.dataset.mult||"1");p.textContent="฿"+Math.round(t).toLocaleString()}else{p.textContent="From ฿1,290"}}s.addEventListener("change",u);f.addEventListener("change",u)})();</script>';
+    html += '<script>(function(){var s=document.getElementById("duvet-size"),p=document.getElementById("price-display");s.addEventListener("change",function(){var o=s.selectedOptions[0];if(o&&o.value){var t=parseFloat(o.dataset.thb||"0");p.textContent="฿"+Math.round(t).toLocaleString()}else{p.textContent="From ฿990"}})})();</script>';
   } else {
     // BedBridge or Bed Lifter: simple price display
     html += '<div class="one-size-badge">One Size</div>';
@@ -379,8 +377,8 @@ function buildTrustSignalsHTML() {
 
 function buildFixedContentHTML(slug, p) {
   if (slug === 'duvet-insert') {
-    // Duvet insert has simple tabs below the product layout
-    return '<div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><h2 style="margin-bottom:16px;">Polyester Hollow Fiber Filling</h2><p style="color:#555; line-height:1.7;">Hypoallergenic polyester hollow fiber filling stays fluffy wash after wash. The hollow core traps air for warmth without weight, and dries quickly after washing. Made in Thailand.</p><h3 style="margin-top:24px; margin-bottom:12px;">Care Instructions</h3><ul style="padding-left:20px; margin-bottom:16px;"><li style="margin-bottom:6px; color:#555;">Machine wash warm (40°C / 104°F) — gentle cycle</li><li style="margin-bottom:6px; color:#555;">Do not bleach — mild detergent only</li><li style="margin-bottom:6px; color:#555;">Tumble dry low or hang dry — hollow fiber dries quickly</li><li style="margin-bottom:6px; color:#555;">Fluff after drying to restore loft</li></ul></div></div>';
+    // Duvet insert content — Microfiber 200g/sq.m fill, Thai duvet sizes
+    return '<div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><h2 style="margin-bottom:16px;">Microfiber 200g/m² Filling</h2><p style="color:#555; line-height:1.7;">Premium microfiber fill at 200 grams per square metre — the ideal weight for Thailand\'s climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p><p style="color:#555; line-height:1.7; margin-top:12px;">Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p><h3 style="margin-top:24px; margin-bottom:12px;">Care Instructions</h3><ul style="padding-left:20px; margin-bottom:16px;"><li style="margin-bottom:6px; color:#555;">Machine wash warm (40°C / 104°F) — gentle cycle</li><li style="margin-bottom:6px; color:#555;">Do not bleach — mild detergent only</li><li style="margin-bottom:6px; color:#555;">Tumble dry low or hang dry — microfiber dries quickly</li><li style="margin-bottom:6px; color:#555;">Fluff after drying to restore loft</li></ul></div></div>';
   }
 
   if (slug === 'bedbridge-connector') {

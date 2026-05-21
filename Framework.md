@@ -1070,8 +1070,8 @@ To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`
 | Status | Count | Products |
 |---|---|---|
 | Live formula | 23 | 6 fitted + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
-| No configurator needed | 2 | BedBridge Connector, Bed Lifter (fixed-price accessories) |
-| Awaiting | 2 | Marine Fitted Sheet (V-Berth), Duvet Insert |
+| No configurator needed | 3 | BedBridge Connector, Bed Lifter, Duvet Insert (Thai fixed-size) |
+| Awaiting | 1 | Marine Fitted Sheet (V-Berth) |
 
 **Implementation files:**
 - `workers/api/pricing.ts` — server-side (fitted, flat, encasement products use real formulas; others use placeholder)
@@ -1453,7 +1453,7 @@ padding: 72px 24px 56px;
 | Mattress Protectors (4) | 3-layer specs grid (Cotton Quilted + Polyester Filling + TPU Waterproof), no fabric selection |
 | Mattress Encasements (2) | TPU specs grid (TPU Waterproof Membrane + Water Spills & Accidents), no fabric selection |
 | Pillow Protector | TPU specs grid, no fabric selection |
-| BedBridge Connector, Bed Lifter | Fixed-price, no fabric selection |
+| BedBridge Connector, Bed Lifter, Duvet Insert | Fixed-price, no fabric selection |
 
 ### Color Selector
 

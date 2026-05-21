@@ -1616,14 +1616,14 @@
     },
     "duvet-insert": {
       "productType": "fixed",
-      "tagline": "Polyester hollow fiber filling — hypoallergenic, quick-dry, stays fluffy. Thailand only.",
-      "metaDescription": "Duvet Insert by MildMate — polyester hollow fiber filling, hypoallergenic, stays fluffy. Thailand only. Made in Thailand.",
+      "tagline": "Microfiber 200g/m² fill — light, warm, made for Thailand. Standard Thai duvet sizes.",
+      "metaDescription": "Duvet Insert by MildMate — Microfiber 200g/m² filling, hypoallergenic, quick-dry. Thai standard sizes (3FT–9.5FT). Thailand only. Made in Thailand.",
       "ratingCount": 45,
       "breadcrumbCategoryUrl": "/duvet-covers/",
       "breadcrumbCategoryLabel": "Duvet Covers",
       "breadcrumbName": "Duvet Insert",
       "fabrics": [],
-      "lockedFabric": "polyester",
+      "lockedFabric": "microfiber",
       "needsDepth": false,
       "tags": [
         {
@@ -1647,9 +1647,9 @@
       "review1Html": null,
       "review2Html": null,
       "fabricMode": "badge",
-      "priceDisplay": "From ฿1,290",
-      "priceUsd": 18,
-      "priceThb": 635,
+      "priceDisplay": "From ฿990",
+      "priceUsd": null,
+      "priceThb": 990,
       "fixedSections": [
         "size-fill"
       ]

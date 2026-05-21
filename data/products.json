@@ -192,10 +192,10 @@
     {
       "slug": "duvet-insert",
       "name": "Duvet Insert",
-      "nameTh": "ใส้ผ้าสวย (Duvet Insert)",
+      "nameTh": "ไส้ผ้านวม (Duvet Insert)",
       "categories": ["duvet-covers"],
-      "priceUsd": 18,
-      "priceThb": 635,
+      "priceUsd": null,
+      "priceThb": 990,
       "image": "/images/products/duvet-insert/main.jpg",
       "url": "/product/duvet-insert/",
       "urlTh": "/th/product/duvet-insert/",
