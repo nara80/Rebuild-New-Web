@@ -1,0 +1,152 @@
+-- MildMate D1 Migration 005 — Dynamic pricing parameters + DIY prices + exchange rates
+-- Run with: npx wrangler d1 execute mildmate-db --file=migrations/005_pricing_params.sql
+
+-- All adjustable formula constants (Super Admin only)
+CREATE TABLE IF NOT EXISTS pricing_params (
+  key TEXT PRIMARY KEY,
+  value REAL NOT NULL,
+  label TEXT,
+  category TEXT NOT NULL,       -- 'fabric' | 'margin' | 'sewing' | 'fixed' | 'marketing' | 'operations'
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- DIY pricing table — spreadsheet import/export (product × size × shape)
+CREATE TABLE IF NOT EXISTS diy_prices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_slug TEXT NOT NULL,
+  shape_code TEXT,              -- NULL for rectangular products, 'A'-'I' for marine shapes
+  size_key TEXT,                -- '153x203x30' format, NULL for shapes without size
+  price_thb INTEGER NOT NULL,
+  price_usd REAL NOT NULL,
+  label TEXT,                   -- Human-readable label, e.g. "Marine Shape A — V-Berth Narrow Foot"
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_diy_product ON diy_prices(product_slug, shape_code);
+
+-- Exchange rates per currency (Super Admin only)
+CREATE TABLE IF NOT EXISTS exchange_rates (
+  currency TEXT PRIMARY KEY,     -- 'USD', 'EUR', 'GBP', 'JPY', 'MYR', 'CAD', 'AUD', 'SGD'
+  rate_per_thb REAL NOT NULL,   -- e.g. 0.033 for USD (1 THB = 0.033 USD)
+  label TEXT,                   -- "US Dollar"
+  symbol TEXT,                  -- "$", "€", "£", "¥", "RM", "C$", "A$", "S$"
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- ── Seed data: current pricing parameters ──
+
+-- Fabric rates (THB per yard, 91.44cm × 260cm bolt = 23,744 cm²)
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('fabric_rate_cloudsoft', 100, 'CloudSoft Rate (THB/yd)', 'fabric'),
+  ('fabric_rate_breezeplus', 180, 'BreezePlus Rate (THB/yd)', 'fabric'),
+  ('fabric_rate_premacotton', 180, 'PremaCotton Rate (THB/yd)', 'fabric'),
+  ('fabric_rate_ecoluxe', 180, 'EcoLuxe Rate (THB/yd)', 'fabric'),
+  ('fabric_rate_tpu', 120, 'TPU Rate (THB/linear metre)', 'fabric');
+
+-- Fabric waste factor
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('waste_factor_fabric', 1.20, 'Fabric Waste Factor (×)', 'fabric'),
+  ('waste_factor_pillowcase', 1.60, 'Pillowcase Waste Factor (×)', 'fabric');
+
+-- Bolt dimensions
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('sqcm_per_yard', 23744, 'cm² per Fabric Yard', 'fabric'),
+  ('tpu_bolt_width_cm', 210, 'TPU Bolt Width (cm)', 'fabric'),
+  ('tpu_sqcm_per_lm', 21000, 'TPU cm² per Linear Metre', 'fabric');
+
+-- Margin rates (multiplier portion, e.g. 0.30 = 30%)
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('margin_rate_standard', 0.30, 'Standard Margin Rate', 'margin'),
+  ('margin_rate_rv_truck', 0.45, 'RV & Truck Margin Rate', 'margin'),
+  ('margin_rate_family', 0.50, 'Family Margin Rate', 'margin'),
+  ('margin_rate_marine', 6.80, 'Marine V-Berth Margin Rate', 'margin'),
+  ('margin_rate_encasement', 0.50, 'Encasement Margin Rate', 'margin'),
+  ('margin_rate_duvet', 0.30, 'Duvet Cover Margin Rate', 'margin'),
+  ('margin_rate_pillow', 0.15, 'Pillowcase Margin Rate', 'margin'),
+  ('margin_rate_pillow_protector', 0.35, 'Pillow Protector Margin Rate', 'margin'),
+  ('margin_rate_protector_standard', 0.15, 'Protector Standard Margin', 'margin'),
+  ('margin_rate_protector_deep', 0.25, 'Protector Deep Pocket Margin', 'margin'),
+  ('margin_rate_protector_family', 0.50, 'Protector Family Margin', 'margin');
+
+-- Operations & Marketing rates (shared across most products)
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('ops_rate', 0.15, 'Operations Rate', 'operations'),
+  ('mkt_rate', 0.20, 'Marketing Rate', 'marketing');
+
+-- Sewing cost tiers (THB, by fabric area thresholds in cm²)
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('sewing_tier1_max', 51600, 'Sewing Tier 1 Max Area (cm²)', 'sewing'),
+  ('sewing_tier1_cost', 120, 'Sewing Tier 1 Cost (THB)', 'sewing'),
+  ('sewing_tier2_max', 71000, 'Sewing Tier 2 Max Area (cm²)', 'sewing'),
+  ('sewing_tier2_cost', 200, 'Sewing Tier 2 Cost (THB)', 'sewing'),
+  ('sewing_tier3_max', 91200, 'Sewing Tier 3 Max Area (cm²)', 'sewing'),
+  ('sewing_tier3_cost', 300, 'Sewing Tier 3 Cost (THB)', 'sewing'),
+  ('sewing_tier4_max', 120000, 'Sewing Tier 4 Max Area (cm²)', 'sewing'),
+  ('sewing_tier4_cost', 400, 'Sewing Tier 4 Cost (THB)', 'sewing'),
+  ('sewing_tier5_cost', 500, 'Sewing Tier 5 Cost (THB, >120,000)', 'sewing');
+
+-- Duvet sewing tiers
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('duvet_sewing_tier1_max', 139200, 'Duvet Sewing Tier 1 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier1_cost', 300, 'Duvet Sewing Tier 1 Cost (THB)', 'sewing'),
+  ('duvet_sewing_tier2_max', 170400, 'Duvet Sewing Tier 2 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier2_cost', 400, 'Duvet Sewing Tier 2 Cost (THB)', 'sewing'),
+  ('duvet_sewing_tier3_cost', 600, 'Duvet Sewing Tier 3 Cost (THB, >170,400)', 'sewing');
+
+-- Flat sewing & pillow sewing
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('flat_sewing_cost', 250, 'Flat Sheet Sewing Cost (THB)', 'sewing'),
+  ('pillow_sewing_cost', 40, 'Pillowcase Sewing Cost (THB)', 'sewing'),
+  ('pillow_sham_sewing_cost', 50, 'Sham Pillowcase Sewing Cost (THB)', 'sewing'),
+  ('encasement_sewing_cost', 300, 'Encasement Sewing Cost (THB)', 'sewing');
+
+-- Fixed costs
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('packing_cost', 100, 'Packing Cost (THB)', 'fixed'),
+  ('delivery_cost', 50, 'Delivery Cost (THB)', 'fixed'),
+  ('protector_packing', 200, 'Protector Packing Cost (THB)', 'fixed'),
+  ('protector_delivery', 80, 'Protector Delivery Cost (THB)', 'fixed');
+
+-- Zipper rate
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('zipper_rate', 0.4, 'Zipper Rate (THB/cm)', 'fixed');
+
+-- Accessories rate (fraction of fabric cost)
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('accessories_rate', 0.10, 'Accessories Rate (× fabric cost)', 'fixed');
+
+-- Flat sheet tuck allowance
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('flat_tuck_cm', 25, 'Flat Sheet Tuck Allowance per side (cm)', 'fixed');
+
+-- Max dimensions
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('max_width_cm', 220, 'Max Fitted Sheet Width (cm)', 'fixed'),
+  ('max_pillow_cm', 120, 'Max Pillowcase Dimension (cm)', 'fixed'),
+  ('max_protector_cm', 210, 'Max Protector Dimension (cm, non-family)', 'fixed');
+
+-- Sewing allowance
+INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
+  ('sewing_allowance_cm', 14, 'Sewing Allowance (cm)', 'fixed');
+
+-- ── Seed data: exchange rates ──
+INSERT OR IGNORE INTO exchange_rates (currency, rate_per_thb, label, symbol) VALUES
+  ('USD', 0.033, 'US Dollar', '$'),
+  ('EUR', 0.031, 'Euro', '€'),
+  ('GBP', 0.026, 'British Pound', '£'),
+  ('JPY', 4.95, 'Japanese Yen', '¥'),
+  ('MYR', 0.15, 'Malaysian Ringgit', 'RM'),
+  ('CAD', 0.045, 'Canadian Dollar', 'C$'),
+  ('AUD', 0.052, 'Australian Dollar', 'A$'),
+  ('SGD', 0.044, 'Singapore Dollar', 'S$');
+
+-- ── Seed data: DIY prices (current marine shape prices) ──
+INSERT OR IGNORE INTO diy_prices (product_slug, shape_code, price_thb, price_usd, label) VALUES
+  ('marine-fitted-sheet', 'A', 2820, 94, 'Shape A — V-Berth Narrow Foot'),
+  ('marine-fitted-sheet', 'B', 3330, 111, 'Shape B — V-Berth Wide Foot'),
+  ('marine-fitted-sheet', 'C', 3750, 125, 'Shape C — V-Berth King Size'),
+  ('marine-fitted-sheet', 'D', 3750, 125, 'Shape D — Double Round End'),
+  ('marine-fitted-sheet', 'E', 4140, 138, 'Shape E — King Size Round End'),
+  ('marine-fitted-sheet', 'F', 3300, 110, 'Shape F — Single Quarter Berth'),
+  ('marine-fitted-sheet', 'G', 3240, 108, 'Shape G — Cut Off Corner'),
+  ('marine-fitted-sheet', 'H', 3960, 132, 'Shape H — Octagonal Berth');

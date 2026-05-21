@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MildMate Super Admin — Sandbox Preview</title>
+<style>
+:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#334155;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--c-dark);color:#fff;padding:24px 0;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-brand{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:1.125rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.sidebar-brand .dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue)}
+.sidebar-nav{flex:1;padding:16px 0}
+.sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.875rem;transition:all 0.15s}
+.sidebar-nav a:hover,.sidebar-nav a.active{color:#fff;background:rgba(255,255,255,0.08)}
+.sidebar-nav a .icon{width:18px;height:18px;flex-shrink:0}
+.sidebar-badge{font-size:0.625rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto}
+.sidebar-badge.amber{background:rgba(217,119,6,0.2);color:#fbbf24}
+.main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+.toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.toolbar h2{font-size:1.125rem;font-weight:600}
+.toolbar-actions{display:flex;gap:8px;align-items:center}
+.role-badge{font-size:0.75rem;padding:4px 12px;border-radius:4px;font-weight:600}
+.role-badge.super{background:#fef2f2;color:var(--c-red);border:1px solid #fecaca}
+.content{padding:24px;flex:1}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.9375rem;display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);padding:20px}
+.stat-label{font-size:0.75rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.stat-value{font-size:1.75rem;font-weight:700;color:var(--c-dark)}
+.stat-sub{font-size:0.75rem;color:var(--c-muted);margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:0.875rem}
+th{text-align:left;padding:10px 14px;background:var(--c-surface);font-weight:600;color:var(--c-muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--c-border)}
+td{padding:10px 14px;border-bottom:1px solid var(--c-border);color:var(--c-text)}
+tr:hover td{background:#f8fafc}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
+.btn-outline{background:transparent;border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.btn-sm{padding:4px 10px;font-size:0.75rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
+.badge-fabric{background:#dbeafe;color:#1e40af}
+.badge-margin{background:#fce7f3;color:#9d174d}
+.badge-sewing{background:#dcfce7;color:#166534}
+.badge-fixed{background:#fef3c7;color:#92400e}
+.badge-ops{background:#e0e7ff;color:#3730a3}
+.upload-zone{border:2px dashed var(--c-border);border-radius:var(--radius);padding:40px;text-align:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s}
+.upload-zone:hover{border-color:var(--c-blue);color:var(--c-blue);background:#f0f7ff}
+.upload-zone.dragover{border-color:var(--c-blue);background:#eff6ff}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
+@keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%;padding:12px}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand"><span class="dot"></span> MildMate Admin</div>
+  <nav class="sidebar-nav">
+    <a href="#" class="active" data-page="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Dashboard</a>
+    <a href="#" data-page="pricing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pricing Params <span class="sidebar-badge amber">SUPER</span></a>
+    <a href="#" data-page="diy"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> DIY Prices <span class="sidebar-badge amber">SUPER</span></a>
+    <a href="#" data-page="exchange"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Exchange Rates <span class="sidebar-badge amber">SUPER</span></a>
+    <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
+    <a href="#" data-page="subscribers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Subscribers</a>
+  </nav>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="toolbar">
+    <h2 id="page-title">Dashboard</h2>
+    <div class="toolbar-actions">
+      <span class="role-badge super">SANDBOX — No Data Connected</span>
+    </div>
+  </div>
+  <div class="content" id="page-content"></div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+// ── Page Router ──
+var pages = ['dashboard','pricing','diy','exchange','orders','subscribers'];
+var currentPage = 'dashboard';
+
+function showPage(name) {
+  currentPage = name;
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a){ a.classList.remove('active'); });
+  var link = document.querySelector('[data-page="'+name+'"]');
+  if(link) link.classList.add('active');
+  document.getElementById('page-title').textContent = {
+    dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
+    exchange:'Exchange Rates',orders:'Orders',subscribers:'Subscribers'
+  }[name];
+  document.getElementById('page-content').innerHTML = renderPage(name);
+}
+
+function toast(msg, bg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  t.style.background = bg || 'var(--c-dark)';
+  setTimeout(function(){ t.style.display = 'none'; }, 3000);
+}
+
+// ── Nav clicks ──
+document.querySelectorAll('.sidebar-nav a').forEach(function(a){
+  a.addEventListener('click',function(e){ e.preventDefault(); showPage(this.dataset.page); });
+});
+
+// ── Render Pages ──
+
+function renderPage(name) {
+  switch(name) {
+    case 'dashboard': return renderDashboard();
+    case 'pricing': return renderPricingParams();
+    case 'diy': return renderDiyPrices();
+    case 'exchange': return renderExchange();
+    case 'orders': return renderOrders();
+    case 'subscribers': return renderSubscribers();
+    default: return '';
+  }
+}
+
+function renderDashboard() {
+  return '<div class="stats-grid">'+
+    '<div class="stat-card"><div class="stat-label">Pricing Params</div><div class="stat-value">49</div><div class="stat-sub">Active parameters</div></div>'+
+    '<div class="stat-card"><div class="stat-label">DIY Prices</div><div class="stat-value">8</div><div class="stat-sub">Marine shape entries</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Currencies</div><div class="stat-value">8</div><div class="stat-sub">Exchange rates tracked</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">27</div><div class="stat-sub">All configurators live</div></div>'+
+  '</div>'+
+  '<div class="card"><div class="card-header">Quick Actions</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:16px">This sandbox shows the admin dashboard layout. Data is static preview — not connected to D1.</p>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn btn-primary" onclick="showPage(\'pricing\')">Edit Pricing Params</button>'+
+      '<button class="btn btn-outline" onclick="showPage(\'diy\')">Upload DIY Prices</button>'+
+      '<button class="btn btn-outline" onclick="showPage(\'exchange\')">Update Exchange Rates</button>'+
+    '</div>'+
+  '</div></div>';
+}
+
+// ── Pricing Parameters Page ──
+function renderPricingParams() {
+  var categories = {
+    fabric: { label:'Fabric Rates & Waste', badge:'badge-fabric' },
+    margin: { label:'Margin Rates', badge:'badge-margin' },
+    sewing: { label:'Sewing Costs & Tiers', badge:'badge-sewing' },
+    fixed: { label:'Fixed Costs & Constants', badge:'badge-fixed' },
+    operations: { label:'Operations Rate', badge:'badge-ops' },
+    marketing: { label:'Marketing Rate', badge:'badge-ops' }
+  };
+
+  var sample = [
+    {key:'fabric_rate_cloudsoft',value:100,label:'CloudSoft Rate (THB/yd)',category:'fabric'},
+    {key:'fabric_rate_breezeplus',value:180,label:'BreezePlus Rate (THB/yd)',category:'fabric'},
+    {key:'fabric_rate_premacotton',value:180,label:'PremaCotton Rate (THB/yd)',category:'fabric'},
+    {key:'fabric_rate_ecoluxe',value:180,label:'EcoLuxe Rate (THB/yd)',category:'fabric'},
+    {key:'fabric_rate_tpu',value:120,label:'TPU Rate (THB/lm)',category:'fabric'},
+    {key:'waste_factor_fabric',value:1.20,label:'Fabric Waste Factor',category:'fabric'},
+    {key:'margin_rate_standard',value:0.30,label:'Standard Margin',category:'margin'},
+    {key:'margin_rate_marine',value:6.80,label:'Marine V-Berth Margin',category:'margin'},
+    {key:'margin_rate_family',value:0.50,label:'Family Margin',category:'margin'},
+    {key:'margin_rate_rv_truck',value:0.45,label:'RV & Truck Margin',category:'margin'},
+    {key:'margin_rate_encasement',value:0.50,label:'Encasement Margin',category:'margin'},
+    {key:'margin_rate_duvet',value:0.30,label:'Duvet Cover Margin',category:'margin'},
+    {key:'sewing_tier1_cost',value:120,label:'Sewing Tier 1 (≤51,600 cm²)',category:'sewing'},
+    {key:'sewing_tier2_cost',value:200,label:'Sewing Tier 2 (≤71,000 cm²)',category:'sewing'},
+    {key:'sewing_tier3_cost',value:300,label:'Sewing Tier 3 (≤91,200 cm²)',category:'sewing'},
+    {key:'sewing_tier4_cost',value:400,label:'Sewing Tier 4 (≤120,000 cm²)',category:'sewing'},
+    {key:'sewing_tier5_cost',value:500,label:'Sewing Tier 5 (>120,000 cm²)',category:'sewing'},
+    {key:'encasement_sewing_cost',value:300,label:'Encasement Sewing',category:'sewing'},
+    {key:'flat_sewing_cost',value:250,label:'Flat Sheet Sewing',category:'sewing'},
+    {key:'pillow_sewing_cost',value:40,label:'Pillowcase Sewing',category:'sewing'},
+    {key:'packing_cost',value:100,label:'Packing Cost',category:'fixed'},
+    {key:'delivery_cost',value:50,label:'Delivery Cost',category:'fixed'},
+    {key:'zipper_rate',value:0.4,label:'Zipper Rate (THB/cm)',category:'fixed'},
+    {key:'accessories_rate',value:0.10,label:'Accessories Rate',category:'fixed'},
+    {key:'sqcm_per_yard',value:23744,label:'cm² per Yard',category:'fixed'},
+    {key:'ops_rate',value:0.15,label:'Operations Rate',category:'operations'},
+    {key:'mkt_rate',value:0.20,label:'Marketing Rate',category:'marketing'}
+  ];
+
+  var catKeys = Object.keys(categories);
+  var html = '';
+  for(var c = 0; c < catKeys.length; c++) {
+    var cat = catKeys[c];
+    var items = sample.filter(function(r){ return r.category === cat; });
+    if(!items.length) continue;
+    html += '<div class="card"><div class="card-header"><span>'+categories[cat].label+' <span class="badge '+categories[cat].badge+'">'+items.length+'</span></span></div>';
+    html += '<div class="card-body"><div style="overflow-x:auto"><table><thead><tr><th>Key</th><th>Label</th><th>Value</th><th></th></tr></thead><tbody>';
+    for(var i = 0; i < items.length; i++) {
+      html += '<tr><td style="font-family:monospace;font-size:0.75rem">'+items[i].key+'</td><td>'+items[i].label+'</td><td><strong>'+items[i].value+'</strong></td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit: '+items[i].key+' (sandbox — no save)\')">Edit</button></td></tr>';
+    }
+    html += '</tbody></table></div></div></div>';
+  }
+  html += '<div class="card"><div class="card-header">Add New Parameter</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Key</label><input type="text" placeholder="e.g. margin_rate_new_product"></div>'+
+    '<div class="form-group"><label>Category</label><select><option>fabric</option><option>margin</option><option>sewing</option><option>fixed</option><option>operations</option><option>marketing</option></select></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Value</label><input type="number" step="any" placeholder="0.00"></div>'+
+    '<div class="form-group"><label>Label</label><input type="text" placeholder="Human-readable label"></div></div>'+
+    '<button class="btn btn-primary" onclick="toast(\'Parameter saved (sandbox — preview only)\')">Add Parameter</button>'+
+  '</div></div>';
+  return html;
+}
+
+// ── DIY Prices Page ──
+function renderDiyPrices() {
+  var shapes = [
+    {code:'A',name:'V-Berth Narrow Foot',thb:2820,usd:94},
+    {code:'B',name:'V-Berth Wide Foot',thb:3330,usd:111},
+    {code:'C',name:'V-Berth King Size',thb:3750,usd:125},
+    {code:'D',name:'Double Round End',thb:3750,usd:125},
+    {code:'E',name:'King Size Round End',thb:4140,usd:138},
+    {code:'F',name:'Single Quarter Berth',thb:3300,usd:110},
+    {code:'G',name:'Cut Off Corner',thb:3240,usd:108},
+    {code:'H',name:'Octagonal Berth',thb:3960,usd:132}
+  ];
+  var html = '<div class="card"><div class="card-header"><span>Marine Fitted Sheet — Shape Prices</span>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm" onclick="toast(\'CSV downloaded (sandbox)\')">⬇ Export CSV</button>'+
+    '<button class="btn btn-primary btn-sm" onclick="toast(\'CSV uploaded (sandbox)\')">⬆ Upload CSV</button></div></div>'+
+    '<div class="card-body"><table><thead><tr><th>Code</th><th>Shape</th><th>THB</th><th>USD</th><th></th></tr></thead><tbody>';
+  for(var i = 0; i < shapes.length; i++) {
+    html += '<tr><td><strong>'+shapes[i].code+'</strong></td><td>'+shapes[i].name+'</td><td>฿'+shapes[i].thb.toLocaleString()+'</td><td>$'+shapes[i].usd+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit Shape '+shapes[i].code+' (sandbox)\')">Edit</button></td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '<div class="card"><div class="card-header">CSV Upload</div><div class="card-body">'+
+    '<div class="upload-zone" id="csv-drop" onclick="toast(\'CSV upload (sandbox — file select simulated)\')">'+
+    '<p style="font-size:1.5rem;margin-bottom:8px">📄</p>'+
+    '<p><strong>Drop CSV file here</strong> or click to browse</p>'+
+    '<p style="font-size:0.75rem;margin-top:4px">Columns: product_slug, shape_code, price_thb, price_usd, label</p>'+
+    '</div></div></div>';
+
+  html += '<div class="card"><div class="card-header">CSV Export Format</div><div class="card-body">'+
+    '<pre style="background:var(--c-surface);padding:16px;border-radius:var(--radius);font-size:0.75rem;overflow-x:auto">'+
+'product_slug,shape_code,price_thb,price_usd,label\n'+
+'marine-fitted-sheet,A,2820,94,"Shape A — V-Berth Narrow Foot"\n'+
+'marine-fitted-sheet,B,3330,111,"Shape B — V-Berth Wide Foot"\n'+
+'marine-fitted-sheet,C,3750,125,"Shape C — V-Berth King Size"</pre>'+
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:8px">Download current data, edit in Excel/Sheets, re-upload CSV to bulk update D1.</p>'+
+  '</div></div>';
+  return html;
+}
+
+// ── Exchange Rates Page ──
+function renderExchange() {
+  var rates = [
+    {currency:'USD',rate:0.033,label:'US Dollar',symbol:'$'},
+    {currency:'EUR',rate:0.031,label:'Euro',symbol:'€'},
+    {currency:'GBP',rate:0.026,label:'British Pound',symbol:'£'},
+    {currency:'JPY',rate:4.95,label:'Japanese Yen',symbol:'¥'},
+    {currency:'MYR',rate:0.15,label:'Malaysian Ringgit',symbol:'RM'},
+    {currency:'CAD',rate:0.045,label:'Canadian Dollar',symbol:'C$'},
+    {currency:'AUD',rate:0.052,label:'Australian Dollar',symbol:'A$'},
+    {currency:'SGD',rate:0.044,label:'Singapore Dollar',symbol:'S$'}
+  ];
+  var html = '<div class="card"><div class="card-header">Exchange Rates (1 THB = X currency)</div><div class="card-body"><table><thead><tr><th>Currency</th><th>Label</th><th>Symbol</th><th>Rate (per THB)</th><th></th></tr></thead><tbody>';
+  for(var i = 0; i < rates.length; i++) {
+    html += '<tr><td><strong>'+rates[i].currency+'</strong></td><td>'+rates[i].label+'</td><td>'+rates[i].symbol+'</td><td><strong>'+rates[i].rate+'</strong></td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit '+rates[i].currency+' rate (sandbox)\')">Edit</button></td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '<div class="card"><div class="card-header">How Exchange Rates Flow</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:12px">Rates are fetched by <code>product-configurator.js</code> via <code>GET /api/pricing-params</code>. The frontend converts THB to the user\'s local currency using the IP-geo-detected region.</p>'+
+    '<p style="color:var(--c-muted)">Current regions: Canada, EU, UK, Japan, Malaysia, Australia, Singapore, United States (THB→USD default)</p>'+
+  '</div></div>';
+  return html;
+}
+
+// ── Orders Page ──
+function renderOrders() {
+  var html = '<div class="card"><div class="card-header">Orders — Sandbox Preview</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:16px">Connected to D1 <code>orders</code> table. Shows manufacturer-ready order details with dimensions, fabric, and status. (Sandbox — no live data)</p>'+
+    '<table><thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Dimensions</th><th>Fabric</th><th>Status</th></tr></thead><tbody>'+
+    '<tr><td>#001</td><td>2026-05-21</td><td>john@email.com</td><td>Standard Fitted Sheet</td><td>153×203×30 cm</td><td>CloudSoft</td><td><span class="badge badge-sewing">Pending</span></td></tr>'+
+    '<tr><td>#002</td><td>2026-05-20</td><td>sarah@email.com</td><td>Marine Fitted Sheet</td><td>HW:145 FW:70 L:120 D:20</td><td>CloudSoft</td><td><span class="badge badge-fixed">In Production</span></td></tr>'+
+    '<tr><td>#003</td><td>2026-05-19</td><td>mike@email.com</td><td>Family Fitted Sheet</td><td>250×220×35 cm</td><td>BreezePlus</td><td><span class="badge badge-margin">Shipped</span></td></tr>'+
+    '</tbody></table></div></div>';
+  return html;
+}
+
+// ── Subscribers Page ──
+function renderSubscribers() {
+  var html = '<div class="card"><div class="card-header">Email Subscribers — Sandbox Preview</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:16px">Connected to D1 <code>subscribers</code> table. Export as CSV. (Sandbox — no live data)</p>'+
+    '<table><thead><tr><th>Email</th><th>Source</th><th>Date</th></tr></thead><tbody>'+
+    '<tr><td>customer1@email.com</td><td>footer</td><td>2026-05-21</td></tr>'+
+    '<tr><td>customer2@email.com</td><td>checkout</td><td>2026-05-20</td></tr>'+
+    '<tr><td>customer3@email.com</td><td>quote</td><td>2026-05-19</td></tr>'+
+    '</tbody></table></div></div>';
+  return html;
+}
+
+// ── Init ──
+showPage('dashboard');
+</script>
+</body>
+</html>

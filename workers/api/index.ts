@@ -9,6 +9,7 @@ import { handleSubscribe } from "./subscribe";
 import handleUnsubscribe from "./unsubscribe";
 import { handleContact } from "./contact";
 import { handleQuote } from "./quote";
+import { handlePricingParams } from "./pricing-params";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -55,6 +56,11 @@ export default {
     // Custom Quote API
     if (path === "/api/quote" || path === "/api/quote/") {
       return handleQuote(request, env);
+    }
+
+    // Pricing Parameters API (public read-only)
+    if (path.startsWith("/api/pricing-params") || path.startsWith("/api/diy-prices")) {
+      return handlePricingParams(request, env);
     }
 
     return new Response(JSON.stringify({ error: "Not Found" }), {

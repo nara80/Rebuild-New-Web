@@ -5,7 +5,7 @@
    Applies to: standard-fitted-sheet, deep-pocket-fitted-sheet, dorm-fitted-sheet, rv-truck-fitted-sheet
    ============================================ */
 
-(function () {
+(async function () {
   // ── Detect product variant ──
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
@@ -28,50 +28,94 @@
     else if (path.indexOf('sham') !== -1) pillowVariant = 'sham';
   }
 
-  // ── Pricing constants (THB) ──
-  var SQCM_PER_YARD = 23744;
-  var PACKING = 100;
-  var DELIVERY = 50;
-  var OP_RATE = 0.15;
-  var MKT_RATE = 0.20;
-  var MARGIN_RATE = isRVTruck ? 0.45 : isFamily ? 0.50 : 0.30;
-  var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE; // 1.65 standard, 1.80 RV, 1.85 family
-  var THB_TO_USD = 30;
-  var MAX_W = isFamily ? 9999 : 220;
+  // ── Fetch dynamic pricing params from API (with hardcoded fallback) ──
+  var apiParams = null;
+  try {
+    var resp = await fetch('/api/pricing-params');
+    if (resp.ok) apiParams = await resp.json();
+  } catch(e) { /* offline/local — use hardcoded defaults */ }
+
+  function pVal(key, fallback) {
+    if (apiParams && apiParams.fixed_costs && apiParams.fixed_costs[key] !== undefined)
+      return apiParams.fixed_costs[key];
+    if (apiParams && apiParams.fabric_rates && apiParams.fabric_rates[key] !== undefined)
+      return apiParams.fabric_rates[key];
+    if (apiParams && apiParams.margins && apiParams.margins[key] !== undefined)
+      return apiParams.margins[key];
+    return fallback;
+  }
+
+  // ── Pricing constants (from API or hardcoded fallbacks) ──
+  var SQCM_PER_YARD = pVal('sqcm_per_yard', 23744);
+  var PACKING = pVal('packing_cost', 100);
+  var DELIVERY = pVal('delivery_cost', 50);
+  var OP_RATE = pVal('ops_rate', 0.15);
+  var MKT_RATE = pVal('mkt_rate', 0.20);
+  var MARGIN_RATE = isMarineFitted ? pVal('marine', 6.80)
+    : isRVTruck ? pVal('rv_truck', 0.45)
+    : isFamily ? pVal('family', 0.50)
+    : isEncasement ? pVal('encasement', 0.50)
+    : isDuvet ? pVal('duvet', 0.30)
+    : isPillowcase ? pVal('pillow', 0.15)
+    : isPillowProtector ? pVal('pillow_protector', 0.35)
+    : isMattressProtector ? (
+        isProtectorFamily ? pVal('protector_family', 0.50)
+        : isProtectorDeepPocket ? pVal('protector_deep', 0.25)
+        : pVal('protector_standard', 0.15)
+      )
+    : pVal('standard', 0.30);
+  var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE;
+  var THB_TO_USD = pVal('exchange_usd', 30);   // default: 1/rate_per_thb for USD
+
+  // Fetch exchange rates from API
+  var EXCHANGE_RATES = null;
+  if (apiParams && apiParams.exchange_rates) {
+    EXCHANGE_RATES = {};
+    for (var i = 0; i < apiParams.exchange_rates.length; i++) {
+      var er = apiParams.exchange_rates[i];
+      EXCHANGE_RATES[er.currency] = 1 / er.rate_per_thb; // THB → currency
+    }
+  }
+
+  var MAX_W = isFamily ? 9999 : pVal('max_width_cm', 220);
 
   var FABRIC_RATES = {
-    cloudsoft: 100,
-    breezeplus: 180,
-    premacotton: 180,
-    ecoluxe: 180
+    cloudsoft: pVal('cloudsoft', 100),
+    breezeplus: pVal('breezeplus', 180),
+    premacotton: pVal('premacotton', 180),
+    ecoluxe: pVal('ecoluxe', 180)
   };
 
-  var FABRIC_LABELS = {
-    cloudsoft: 'CloudSoft — Everyday comfort · OEKO-TEX',
-    breezeplus: 'BreezePlus — Anti-fur · Pet-proof · Siriraj certified',
-    premacotton: 'PremaCotton — Premium long-staple · OEKO-TEX',
-    ecoluxe: 'EcoLuxe — Natural unbleached cotton'
-  };
+  // ── Sewing tiers (from API or fallback) ──
+  var SEWING_TIERS = [];
+  if (apiParams && apiParams.sewing_tiers && apiParams.sewing_tiers.length) {
+    SEWING_TIERS = apiParams.sewing_tiers;
+  } else {
+    SEWING_TIERS = [
+      { max: 51600, cost: 120 },
+      { max: 71000, cost: 200 },
+      { max: 91200, cost: 300 },
+      { max: 120000, cost: 400 },
+      { max: Infinity, cost: 500 }
+    ];
+  }
 
-  var SEWING_TIERS = [
-    { max: 51600, cost: 120 },
-    { max: 71000, cost: 200 },
-    { max: 91200, cost: 300 },
-    { max: 120000, cost: 400 },
-    { max: Infinity, cost: 500 }
-  ];
-
-  var DUVET_SEWING_TIERS = [
-    { max: 139200, cost: 300 },
-    { max: 170400, cost: 400 },
-    { max: Infinity, cost: 600 }
-  ];
+  var DUVET_SEWING_TIERS = [];
+  if (apiParams && apiParams.duvet_sewing_tiers && apiParams.duvet_sewing_tiers.length) {
+    DUVET_SEWING_TIERS = apiParams.duvet_sewing_tiers;
+  } else {
+    DUVET_SEWING_TIERS = [
+      { max: 139200, cost: 300 },
+      { max: 170400, cost: 400 },
+      { max: Infinity, cost: 600 }
+    ];
+  }
 
   // ── Pillow constants ──
-  var PILLOW_WASTE = 1.60;      // 60% waste
-  var PILLOW_SEWING = 40;       // THB
-  var MAX_PILLOW = 120;         // max W or L cm
-  var TPU_COST_PER_SQCM = 120 / 21000; // 120 THB/lm ÷ 21,000 cm²/lm
+  var PILLOW_WASTE = pVal('waste_factor_pillowcase', 1.60);
+  var PILLOW_SEWING = pVal('pillow_sewing_cost', 40);
+  var MAX_PILLOW = pVal('max_pillow_cm', 120);
+  var TPU_COST_PER_SQCM = (pVal('fabric_rate_tpu', 120) / pVal('tpu_sqcm_per_lm', 21000));
 
   function getSewingCost(area) {
     for (var i = 0; i < SEWING_TIERS.length; i++) {
@@ -88,15 +132,15 @@
   }
 
   // ── Flat sheet constants ──
-  var FLAT_TUCK = 25;   // cm each side for underneath tuck + sewing allowance
-  var FLAT_SEWING = 250; // fixed sewing cost (no elastic)
+  var FLAT_TUCK = pVal('flat_tuck_cm', 25);
+  var FLAT_SEWING = pVal('flat_sewing_cost', 250);
 
   // ── Encasement constants (TPU) ──
-  var TPU_COST_PER_LM = 120;       // THB per linear metre (210cm bolt)
-  var TPU_BOLT_W = 210;            // cm
-  var TPU_SQCM_PER_LM = 100 * TPU_BOLT_W; // 21,000
-  var ENC_SEWING = 300;            // flat rate THB
-  var ZIPPER_RATE = 0.4;           // THB/cm
+  var TPU_COST_PER_LM = pVal('fabric_rate_tpu', 120);
+  var TPU_BOLT_W = pVal('tpu_bolt_width_cm', 210);
+  var TPU_SQCM_PER_LM = 100 * TPU_BOLT_W;
+  var ENC_SEWING = pVal('encasement_sewing_cost', 300);
+  var ZIPPER_RATE = pVal('zipper_rate', 0.4);
   var ENC_OP = 0.15;
   var ENC_MKT = 0.25;
   var ENC_MARGIN = 0.50;
@@ -113,8 +157,8 @@
     { maxSqInch: 11300, cost: 1200 },
     { maxSqInch: Infinity, cost: 1300 }
   ];
-  var PROTECTOR_PACKING = 200;  // THB
-  var PROTECTOR_DELIVERY = 80;  // THB
+  var PROTECTOR_PACKING = pVal('protector_packing', 200);
+  var PROTECTOR_DELIVERY = pVal('protector_delivery', 80);
   var PROTECTOR_OP = 0.15;
   var PROTECTOR_MKT = 0.20;
   var SQCM_PER_SQINCH = 6.4516;
@@ -245,7 +289,7 @@
   }
 
   // V-Berth fitted sheet: uses max(HW,FW) as width, 100% margin
-  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + 6.80; // 8.15
+  var VERTH_MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE; // uses marine margin from API
   function calcVBerthFitted(hwCm, fwCm, lCm, dCm, fabric) {
     var w = Math.max(hwCm, fwCm) + 2 * dCm + 14;
     var fl = lCm + 2 * dCm + 14;
