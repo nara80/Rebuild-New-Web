@@ -288,6 +288,7 @@ function buildCustomizable(slug, p, prod) {
   // Build dynamic HTML parts
   replacements['{{FABRIC_HTML}}'] = buildFabricHTML(p);
   replacements['{{COLORS_HTML}}'] = buildColorsHTML(p);
+  replacements['{{SHAPE_SELECTOR_HTML}}'] = buildShapeSelectorHTML(p);
 
   // Depth field
   if (p.needsDepth) {
@@ -295,6 +296,11 @@ function buildCustomizable(slug, p, prod) {
     replacements['{{DEPTH_FIELD_HTML}}'] = '<div class="dim-field"><label for="dim-depth">Depth (D)</label><input type="number" id="dim-depth" placeholder="e.g. 30" min="5" max="' + maxDepth + '"></div>';
   } else {
     replacements['{{DEPTH_FIELD_HTML}}'] = '';
+  }
+  if (p.marineShapes && p.marineShapes.length > 0) {
+    replacements['{{FOOT_WIDTH_FIELD_HTML}}'] = '<div class="dim-field field-foot" id="field-foot-width"><label for="dim-foot-width">Foot Width (FW)</label><input type="number" id="dim-foot-width" placeholder="e.g. 75" min="10" max="200"></div>';
+  } else {
+    replacements['{{FOOT_WIDTH_FIELD_HTML}}'] = '';
   }
 
   for (const [key, value] of Object.entries(replacements)) {
@@ -335,6 +341,84 @@ function buildFixed(slug, p, prod) {
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);
   }
+
+  return html;
+}
+
+function buildShapeSelectorHTML(p) {
+  if (!p.marineShapes || p.marineShapes.length === 0) return '';
+
+  let html = '<div class="panel-section marine-shape-section">';
+  html += '<div class="panel-label">Choose Your Berth Shape</div>';
+
+  // Inline SVG shape guide (replaceable with 005-Measure-04.jpg)
+  html += '<div class="shape-guide" style="margin-bottom:16px; border:1px solid var(--color-border); border-radius:var(--radius); overflow:hidden; background:#f8f9fa;">';
+  html += '<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block;">';
+  html += '<rect width="600" height="400" fill="#f8f9fa"/>';
+  html += '<text x="300" y="30" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#999">Shape Guide — 005-Measure-04.jpg (replace with real image)</text>';
+
+  // Grid layout: 5 cols × 2 rows for shapes A-H, I below
+  const shapes = p.marineShapes;
+  const cx = [60, 175, 290, 405, 520];
+  const cy = [110, 260];
+  const labels = ['A','B','C','D','E','F','G','H','I'];
+  const colors = ['#2c96f4','#2c96f4','#2c96f4','#f59e0b','#f59e0b','#10b981','#10b981','#8b5cf6','#ef4444'];
+
+  // Draw 8 shapes in 5×2 grid (positions 0-7)
+  for (let i = 0; i < 8; i++) {
+    const x = cx[i % 5];
+    const y = cy[Math.floor(i / 5)];
+    const w = 90;
+    const h = 55;
+    // Different shape outlines
+    if (i < 3) {
+      // V-Berth: trapezoid
+      html += '<polygon points="'+(x-w*0.35)+','+(y-h*0.45)+' '+(x+w*0.35)+','+(y-h*0.45)+' '+(x+w*0.5)+','+(y+h*0.45)+' '+(x-w*0.5)+','+(y+h*0.45)+'" fill="none" stroke="'+colors[i]+'" stroke-width="2"/>';
+    } else if (i < 5) {
+      // Round end: rectangle with one curved end
+      html += '<rect x="'+(x-w*0.3)+'" y="'+(y-h*0.45)+'" width="'+(w*0.6)+'" height="'+(h*0.9)+'" rx="'+(h*0.45)+'" fill="none" stroke="'+colors[i]+'" stroke-width="2"/>';
+    } else if (i === 5) {
+      // F: L-shape
+      html += '<path d="M'+(x-w*0.4)+','+(y-h*0.45)+' L'+(x+w*0.4)+','+(y-h*0.45)+' L'+(x+w*0.4)+','+(y+h*0.1)+' L'+(x-w*0.1)+','+(y+h*0.1)+' L'+(x-w*0.1)+','+(y+h*0.45)+' L'+(x-w*0.4)+','+(y+h*0.45)+' Z" fill="none" stroke="'+colors[i]+'" stroke-width="2"/>';
+    } else if (i === 6) {
+      // G: cut-off corner (polygon 5 sides)
+      html += '<polygon points="'+(x-w*0.4)+','+(y-h*0.45)+' '+(x+w*0.2)+','+(y-h*0.45)+' '+(x+w*0.45)+','+(y-h*0.1)+' '+(x+w*0.45)+','+(y+h*0.45)+' '+(x-w*0.4)+','+(y+h*0.45)+'" fill="none" stroke="'+colors[i]+'" stroke-width="2"/>';
+    } else {
+      // H: octagonal
+      html += '<polygon points="'+(x-w*0.2)+','+(y-h*0.45)+' '+(x+w*0.2)+','+(y-h*0.45)+' '+(x+w*0.4)+','+(y-h*0.15)+' '+(x+w*0.4)+','+(y+h*0.15)+' '+(x+w*0.2)+','+(y+h*0.45)+' '+(x-w*0.2)+','+(y+h*0.45)+' '+(x-w*0.4)+','+(y+h*0.15)+' '+(x-w*0.4)+','+(y-h*0.15)+'" fill="none" stroke="'+colors[i]+'" stroke-width="2"/>';
+    }
+    html += '<text x="'+x+'" y="'+(y+h*0.55+16)+'" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="'+colors[i]+'">'+labels[i]+'</text>';
+  }
+  // I: custom — below grid
+  html += '<rect x="'+(cx[0]-45)+'" y="'+(cy[1]+120)+'" width="90" height="55" rx="4" fill="none" stroke="'+colors[8]+'" stroke-width="2" stroke-dasharray="4,3"/>';
+  html += '<text x="'+cx[0]+'" y="'+(cy[1]+120+28)+'" text-anchor="middle" font-family="sans-serif" font-size="11" fill="'+colors[8]+'">?</text>';
+  html += '<text x="'+cx[0]+'" y="'+(cy[1]+120+55+16)+'" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="bold" fill="'+colors[8]+'">I</text>';
+
+  html += '</svg>';
+  html += '<p style="text-align:center; font-size:0.75rem; color:#999; padding:4px 8px; margin:0;">Shape Guide — Match your mattress to a shape above, then select it below. Not sure? Choose Shape I for a custom template.</p>';
+  html += '</div>';
+
+  // Shape selector dropdown
+  html += '<select class="shape-select" id="marine-shape-select" style="width:100%; padding:12px 14px; border:2px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); font-size:0.9375rem; color:var(--color-text); background:#fff; cursor:pointer; appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center;">';
+  html += '<option value=""> — Select shape — </option>';
+
+  shapes.forEach(s => {
+    const priceLabel = s.quoteOnly ? 'Custom Quote' : ('$' + s.priceUsd.toFixed(2));
+    html += '<option value="' + s.code + '"'
+      + (s.quoteOnly ? ' data-quote-only="1"' : ' data-price="' + s.priceUsd + '"')
+      + ' data-length-min="' + (s.lengthMin || '') + '"'
+      + ' data-length-max="' + (s.lengthMax || '') + '"'
+      + ' data-head-min="' + (s.headWidthMin || '') + '"'
+      + ' data-head-max="' + (s.headWidthMax || '') + '"'
+      + ' data-foot-min="' + (s.footWidthMin || '') + '"'
+      + ' data-foot-max="' + (s.footWidthMax || '') + '"'
+      + ' data-type="' + (s.type || '') + '"'
+      + '>' + s.code + '  —  ' + s.name + ' (' + priceLabel + ')</option>';
+  });
+
+  html += '</select>';
+  html += '<div class="shape-dims-hint" id="shape-dims-hint" style="font-size:0.8125rem; color:#888; margin-top:8px;"></div>';
+  html += '</div>';
 
   return html;
 }

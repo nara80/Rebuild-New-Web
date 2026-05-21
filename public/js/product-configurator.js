@@ -21,6 +21,7 @@
   var isProtectorDeepPocket = path.indexOf('mattress-protector-deep-pocket') !== -1;
   var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
+  var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
   var pillowVariant = 'envelope';
   if (isPillowcase) {
     if (path.indexOf('zipper') !== -1) pillowVariant = 'zipper';
@@ -259,6 +260,7 @@
   var dimW = document.getElementById('dim-width');
   var dimL = document.getElementById('dim-length');
   var dimD = document.getElementById('dim-depth');
+  var dimFootW = document.getElementById('dim-foot-width');
   var unitCmBtn = document.getElementById('unit-cm');
   var unitInBtn = document.getElementById('unit-in');
 
@@ -279,6 +281,59 @@
   if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
     var dimDGroup = dimD.closest('.dim-field') || dimD.closest('.input-group');
     if (dimDGroup) dimDGroup.style.display = 'none';
+  }
+
+  // ── Marine Fitted Sheet — shape-based pricing ──
+  if (isMarineFitted) {
+    state.fabric = 'cloudsoft';
+    var shapeSelect = document.getElementById('marine-shape-select');
+    var shapeHint = document.getElementById('shape-dims-hint');
+    var footField = document.getElementById('field-foot-width');
+    var dimFootW = document.getElementById('dim-foot-width');
+    
+    if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = 'Head Width (HW)'; }
+
+    if (shapeSelect) {
+      shapeSelect.addEventListener('change', function () {
+        var opt = shapeSelect.selectedOptions[0];
+        if (!opt || !opt.value) {
+          if (shapeHint) shapeHint.textContent = '';
+          if (footField) footField.classList.remove('visible');
+          priceDisplay.textContent = 'Select shape above';
+          return;
+        }
+        var quoteOnly = opt.dataset.quoteOnly === '1';
+        var price = opt.dataset.price ? parseFloat(opt.dataset.price) : null;
+        var lMin = opt.dataset.lengthMin, lMax = opt.dataset.lengthMax;
+        var hMin = opt.dataset.headMin, hMax = opt.dataset.headMax;
+        var fMin = opt.dataset.footMin, fMax = opt.dataset.footMax;
+
+        // Price display
+        if (quoteOnly) {
+          priceDisplay.textContent = 'Custom Quote';
+          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
+        } else {
+          var thb = Math.round(price * THB_TO_USD);
+          priceDisplay.textContent = '฿' + thb.toLocaleString() + ' / $' + Math.round(price);
+          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
+        }
+
+        // Dimension hints
+        if (shapeHint) {
+          var parts = [];
+          if (lMin) parts.push('L: ' + lMin + '\u2013' + lMax + ' cm');
+          if (hMin) parts.push('HW: ' + hMin + '\u2013' + hMax + ' cm');
+          if (fMin) parts.push('FW: ' + fMin + '\u2013' + fMax + ' cm');
+          shapeHint.textContent = parts.length ? 'Valid range: ' + parts.join('  |  ') : 'Custom dimensions only — request a quote below';
+        }
+
+        // Foot width visibility
+        if (footField) {
+          if (fMin && fMax) footField.classList.add('visible');
+          else footField.classList.remove('visible');
+        }
+      });
+    }
   }
 
   // ── Populate size-select from centralized size data ──
@@ -421,6 +476,20 @@
       return;
     }
     if (customDims) customDims.classList.remove('open');
+
+    // Marine fitted sheet: shape-based fixed price (no formula)
+    if (isMarineFitted) {
+      var ms = document.getElementById('marine-shape-select');
+      var mOpt = ms && ms.selectedOptions[0];
+      if (mOpt && mOpt.value && !mOpt.dataset.quoteOnly) {
+        var price = parseFloat(mOpt.dataset.price);
+        var thb = Math.round(price * THB_TO_USD);
+        priceDisplay.textContent = '฿' + thb.toLocaleString() + ' / $' + Math.round(price);
+        if (addToCartBtn) addToCartBtn.disabled = false;
+        return;
+      }
+    }
+
     var result;
     if (isEncasement) {
       result = calcEncasement(dims.w, dims.l, dims.d);
@@ -474,6 +543,37 @@
       customPrice.textContent = 'Max 120cm';
       return;
     }
+
+    // Marine fitted sheet: shape-based fixed price
+    if (isMarineFitted) {
+      var ms = document.getElementById('marine-shape-select');
+      var mOpt = ms && ms.selectedOptions[0];
+      if (!mOpt || !mOpt.value) { customPrice.textContent = 'Select shape first'; return; }
+      if (mOpt.dataset.quoteOnly) { customPrice.textContent = 'Custom Quote'; return; }
+      var price = parseFloat(mOpt.dataset.price);
+      var lMin = parseFloat(mOpt.dataset.lengthMin) || 0, lMax = parseFloat(mOpt.dataset.lengthMax) || 999;
+      var hMin = parseFloat(mOpt.dataset.headMin) || 0, hMax = parseFloat(mOpt.dataset.headMax) || 999;
+      var fMin = parseFloat(mOpt.dataset.footMin) || 0, fMax = parseFloat(mOpt.dataset.footMax) || 999;
+      if (wCm < hMin || wCm > hMax || lCm < lMin || lCm > lMax) {
+        customPrice.textContent = 'Out of range for ' + mOpt.textContent.split('\u2014')[0].trim() + ' \u2014 request quote';
+        return;
+      }
+      var dimFootW = document.getElementById('dim-foot-width');
+      var fw = parseFloat(dimFootW && dimFootW.value) || 0;
+      if (fMin && fMax && fw > 0) {
+        if (state.unit === 'in') fw = inchToCm(fw);
+        if (fw < fMin || fw > fMax) {
+          customPrice.textContent = 'Foot width out of range \u2014 request quote';
+          return;
+        }
+      }
+      var thb = Math.round(price * THB_TO_USD);
+      state.quotePriceThb = thb;
+      state.quotePriceUsd = price;
+      customPrice.textContent = '\u0E3F' + thb.toLocaleString() + ' / $' + Math.round(price);
+      return;
+    }
+
     var result;
     if (isEncasement) {
       result = calcEncasement(wCm, lCm, dCm);
@@ -684,6 +784,12 @@
         dimensions: { w: wCm, l: lCm, d: dCm, unit: 'cm' },
         fabric: state.fabric,
         color: document.querySelector('.color-option.selected') ? document.querySelector('.color-option.selected').getAttribute('data-color') : undefined,
+        marine_shape: (function () {
+          if (!isMarineFitted) return undefined;
+          var sm = document.getElementById('marine-shape-select');
+          var so = sm && sm.selectedOptions[0];
+          return so && so.value ? { code: so.value, name: so.textContent.split('\u2014').slice(1).join('\u2014').split('(')[0].trim() } : undefined;
+        })(),
         quoted_price_thb: state.quotePriceThb,
         quoted_price_usd: state.quotePriceUsd,
         _website: (document.querySelector('[name="_website"]') ? document.querySelector('[name="_website"]').value : '') || undefined

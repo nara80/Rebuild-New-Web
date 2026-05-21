@@ -118,6 +118,11 @@
     @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-gallery { position: static; } .related-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .product-title { font-size: 1.75rem; } .dim-inputs { grid-template-columns: 1fr 1fr; } .add-to-cart-row { flex-direction: column; } }
     @media (max-width: 480px) { .reviews-grid { grid-template-columns: 1fr; } .dim-inputs { grid-template-columns: 1fr; } }
+    .marine-shape-section { margin-bottom: 20px; }
+    .shape-guide img, .shape-guide svg { display: block; }
+    .shape-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+    .field-foot { display: none; }
+    .field-foot.visible { display: block; }
   </style>
 </head>
 <body class="product-page">
@@ -152,6 +157,7 @@
             </select>
             <div class="size-hint"><a href="/sizeguide/">View full size guide →</a></div>
           </div>
+          {{SHAPE_SELECTOR_HTML}}
           {{FABRIC_HTML}}
           {{COLORS_HTML}}
           <div class="price-block">
@@ -180,6 +186,7 @@
               <div class="dim-field"><label for="dim-width">Width (W)</label><input type="number" id="dim-width" placeholder="e.g. 153" min="30" max="{{MAX_WIDTH}}"></div>
               <div class="dim-field"><label for="dim-length">Length (L)</label><input type="number" id="dim-length" placeholder="e.g. 203" min="30" max="{{MAX_LENGTH}}"></div>
               {{DEPTH_FIELD_HTML}}
+              {{FOOT_WIDTH_FIELD_HTML}}
             </div>
             <div class="price-row" style="margin-bottom:12px;">
               <span class="price-label">Estimated price</span>
