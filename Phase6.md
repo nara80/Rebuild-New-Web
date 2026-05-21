@@ -1,5 +1,6 @@
 # Phase 6 — Abandoned Cart Recovery
-**Goal:** Automatically catch customers who started checkout but did not finish, and send them a single friendly recovery email 24 hours later with a direct link back to their saved cart.
+**Status (2026-05-21): ⏸️ PENDING**
+**Goal:** Automatically catch customers who started checkout but did not finish.
 
 **End Result:** A fully automated background system that runs every hour without you doing anything. When a customer enters their email at checkout but does not complete payment, they receive one recovery email the next day. Based on your Etsy data (8 abandoned carts = $1,005 in lost revenue), this system pays for itself immediately.
 

@@ -1,5 +1,6 @@
 # Phase 5 — Checkout + Stripe Payments + Social Login
-**Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase. Thai visitors pay via PromptPay QR code. International visitors pay by card, Apple Pay, or Google Pay. Every successful payment automatically saves the order to your database and sends confirmation emails. Customers can check out as guests or log in via social accounts (Google, Facebook, LINE, Apple) to save their order history and shipping addresses. Customers can also track their parcel status via AfterShip — FedEx, UPS, DHL, Thai Post and 100+ carriers supported.
+**Status (2026-05-21): ⏸️ PENDING**
+**Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase.
 
 **End Result:** A complete 3-step guest checkout with optional social login. You can do a real test purchase and see the order appear in your database, receive a "New Order" notification email, and the customer receives an order confirmation — all automatically. Logged-in customers can view their order history and re-order custom sizes quickly.
 

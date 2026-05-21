@@ -14,18 +14,22 @@
 
 ## Frontend Design System
 
-### Brand Tokens (CSS Variables)
+### Brand Tokens (CSS Variables) — Updated 2026-05-21
 ```css
---color-primary: #2c96f4;       /* CI Blue */
+--color-primary: #2c96f4;       /* CI Blue — interactive elements only */
 --color-primary-dark: #1a7fd4;
---color-text: #333333;
+--color-text: #1E293B;
+--color-heading: #0F172A;
 --color-bg: #ffffff;
---color-surface: #f8f9fa;
---color-border: #e5e7eb;
+--color-surface: #F8FAFC;
+--color-border: #e2e8f0;
+--color-muted: #64748b;
 --font-main: 'Quicksand', sans-serif;
 --radius: 8px;
---shadow: 0 2px 12px rgba(0,0,0,0.08);
+--shadow: 0 1px 3px rgba(0,0,0,0.06);
+--shadow-md: 0 4px 12px rgba(0,0,0,0.06);
 ```
+**Color rule:** #2c96f4 restricted to links, buttons, active states, hover borders. Never used as decorative color.
 
 ### Typography Scale
 | Element | Size | Weight |
@@ -294,40 +298,39 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 
 ## Page-by-Page Layout
 
-### 1. Homepage (`/index.html`)
+### 1. Homepage (`/index.html`) — Redesigned 2026-05-21
 
 ```
-[HERO]
-  Headline: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
-  Sub: Brand CI Blue strip with 3 value props
-  CTA: "Shop Custom Bedding" + "Measure My Mattress"
-  Background: lifestyle image (boat/family bed)
+[HEADER]  ← sticky, 95% opacity + backdrop-blur on scroll
+  Logo left | Home / Shop / Fabrics / Size Guide center | Search / Account / Cart / EN-TH right
 
-[TRUST BAR]  ← single row, 4 icons
-  OEKO-TEX Certified | Siriraj Dust-Mite Certified | 5★ Reviews | Ships Worldwide
+[HERO]  ← full-bleed lifestyle image + light gradient overlay
+  Headline: "Bedding Made Easy Again" + "Any Size, Any Shape" (dark text)
+  CTA: "Shop All Products" (centered, 5px below heading)
+  Mobile: 1:1 square image first, text below (30px lower, 10px gap)
 
-[SHOP BY NICHE]  ← 6 cards, image + label
-  Marine & Yacht | Family Co-Sleep | Pet Owner | Deep Pocket | Boarding Dorm | RV & Truck
+[TRUST BAR]  ← 4 icons on #F8FAFC background
+  Precision Fit | Global Delivery | Top-Rated | Sensitive Skin Friendly
 
-[TOP PRODUCTS]  ← horizontal scroll on mobile, 3-col grid desktop
-  Based on Etsy top 5 performers
+[SHOP BY PRODUCT]  ← 5 cards, 4-col grid
+  Sheets | Duvet Covers | Pillowcases | Protection | Accessories
 
-[CUSTOM CONFIGURATOR PREVIEW]  ← conversion focus
-  Tab: [🛏 Fitted Bed Sheet] [⚓ V-Berth Boat Sheet]
-  Unit toggle: cm / inch
-  Bed Sheet mode: Width / Length / Depth + Fabric selector
-  V-Berth mode: Head Width / Foot Width / Length / Depth + Fabric selector
-  Measurement diagram shown beside inputs
-  Live price display — note: "Excludes shipping & import tariff"
+[SHOP BY NICHE]  ← 6 cards, 3-col grid, 8px radius + 2px border
+  Marine & Yacht | Family & Co-Sleep | Pet Owner | Deep Pocket | Boarding Dorm | RV & Truck
+  Mobile: horizontal swipe strip, 220px min-width cards
 
-[FABRIC SHOWCASE]  ← 4 tabs (BreezePlus / CloudSoft / PremaCotton / EcoLuxe)
+[FABRIC INTELLIGENCE]  ← lateral comparison grid (2026-05-21)
+  4-column comparison: Feature | BreezePlus | CloudSoft | PremaCotton | EcoLuxe
+  Rows: Material | Cooling | Best For | Colors (swatches)
+  No tabs — all fabrics visible side-by-side for instant scanning
 
-[SOCIAL PROOF]  ← 2 Etsy reviews + 5★ badge
+[MOST POPULAR]  ← horizontal scroll carousel, 5 product cards
 
-[EMAIL SIGNUP]  ← abandoned cart recovery hook
-  "Get 10% off your first order"
+[SOCIAL PROOF]  ← reviews carousel + 5★ Etsy badge
 
-[FOOTER]
+[EMAIL SIGNUP]  ← blue gradient, "Get 15% Off Your First Order"
+
+[FOOTER]  ← 4-col global, deep navy #001d3d
 ```
 
 ### 2. Blog Index (`/blogs/`)
@@ -1065,18 +1068,21 @@ Active for 4 products: Standard, Deep Pocket, Family, Pet-Proof Mattress Protect
 All product page size-selects are auto-populated from this data by `product-configurator.js`.
 To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`.
 
-### Configurator Pricing Status (2026-05-21)
+### Configurator Pricing Status (2026-05-21 — All 27 Complete)
 
 | Status | Count | Products |
 |---|---|---|
-| Live formula | 23 | 6 fitted + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
+| Live formula | 20 | 7 fitted (incl. Marine V-Berth) + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
 | No configurator needed | 3 | BedBridge Connector, Bed Lifter, Duvet Insert (Thai fixed-size) |
-| Awaiting | 1 | Marine Fitted Sheet (V-Berth) |
+| Awaiting | 0 | — |
+
+**All 27 products now have live pricing formulas or don't require configurators.**
+
+**V-Berth formula (Marine Fitted Sheet):** `calcVBerthFitted()` — width = max(HW,FW)+2D+14, length = L+2D+14. CloudSoft fabric. Same sewing tiers as fitted sheet. Shape selector (8 shapes A-H with discounted prices). VERTH_MARKUP = 8.15 (680% margin). 4-field custom layout: HW, FW, Centerline L (tooltip), D. "Select Mattress Size" hidden — replaced by shape selector.
 
 **Implementation files:**
-- `workers/api/pricing.ts` — server-side (fitted, flat, encasement products use real formulas; others use placeholder)
-- `public/js/configurator.js` — homepage configurator with fitted sheet formula
-- `public/js/product-configurator.js` — shared configurator on product detail pages (auto-detects product type from URL path)
+- `workers/api/pricing.ts` — server-side formulas
+- `public/js/product-configurator.js` — shared configurator on product detail pages (auto-detects product type, includes VBerth formula)
 
 ### Hybrid Pricing Architecture (Future — D1 standard_prices)
 

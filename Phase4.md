@@ -3,7 +3,7 @@
 
 **End Result:** A fully functional shopping experience. Visitors can land on the homepage, browse products by category, enter their mattress dimensions, and see a live price update — all before Phase 5 adds the actual payment step.
 
-**Time Estimate:** 60–90 minutes (you provide content decisions + images; Droid builds everything)
+**Status (2026-05-21): ✅ COMPLETE — Homepage redesigned per Brand CI, all 27 product configurators live (including Marine V-Berth formula). See AGENTS.md for full details.**
 
 ---
 

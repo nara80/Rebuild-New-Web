@@ -53,14 +53,19 @@ This file is read by Droid at the start of every session. It contains all critic
 ```css
 --color-primary: #2c96f4;
 --color-primary-dark: #1a7fd4;
---color-text: #333333;
+--color-text: #1E293B;
+--color-heading: #0F172A;
 --color-bg: #ffffff;
---color-surface: #f8f9fa;
---color-border: #e5e7eb;
+--color-surface: #F8FAFC;
+--color-border: #e2e8f0;
+--color-muted: #64748b;
 --font-main: 'Quicksand', sans-serif;
 --radius: 8px;
---shadow: 0 2px 12px rgba(0,0,0,0.08);
+--shadow: 0 1px 3px rgba(0,0,0,0.06);
+--shadow-md: 0 4px 12px rgba(0,0,0,0.06);
 ```
+
+**Color usage rules:** #2c96f4 restricted to interactive elements (links, buttons, active states, hover borders). Headings use #0F172A. Section backgrounds use #F8FAFC. Body text #1E293B.
 
 ### Font System (Bilingual EN/TH)
 | Language | Font | Source |
@@ -83,7 +88,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **23 of 27 products have live configurator pricing formulas** — see Configurator Status below. **Centralized product template system** (2 templates, build script, content data — all 27 pages regenerated from source). **Fabric specs grids** replace dropdowns for locked-fabric products (BreezePlus, CloudSoft, TPU, 3-layer protectors). **Fabric color selector** updates per-fabric (4 color sets matching /fabric/), 6-col grid with visible borders. **Responsive carousel dots** on reviews + related products (desktop/tablet/mobile). **UI simplifications**: region grid removed, Apple Pay removed, star ratings removed, size dropdown region-aware (US imperial, others metric). **USD whole-dollar pricing** on EN pages, THB-only on TH pages. **Centralized size system** (`product-sizes.js`, 174 entries, 8 regions) auto-populates all product page size dropdowns — synced from `/sizeguide/`. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. **Homepage redesigned per Brand CI** (2026-05-21): color system (#1E293B text, #F8FAFC surfaces, #e2e8f0 borders), header sticky 95% opacity + backdrop blur, hero full-bleed with light overlay + dark text + mobile 1:1 square image first, niche hub 8px border-radius cards + mobile horizontal swipe, fabric intelligence lateral comparison grid replacing tab panels, shadows softened. Product inventory verified at 27 products (9/6/3/7/2). **All 27 of 27 products have live configurator pricing formulas** — see Configurator Status below. **Centralized product template system** (2 templates, build script, content data — all 27 pages regenerated from source). **Fabric specs grids** replace dropdowns for locked-fabric products (BreezePlus, CloudSoft, TPU, 3-layer protectors). **Fabric color selector** updates per-fabric (4 color sets matching /fabric/), 6-col grid with visible borders. **Responsive carousel dots** on reviews + related products (desktop/tablet/mobile). **UI simplifications**: region grid removed, Apple Pay removed, star ratings removed, size dropdown region-aware (US imperial, others metric). **USD whole-dollar pricing** on EN pages, THB-only on TH pages. **Centralized size system** (`product-sizes.js`, 174 entries, 8 regions) auto-populates all product page size dropdowns — synced from `/sizeguide/`. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
@@ -188,7 +193,7 @@ Size dropdowns on all product pages are auto-populated from `public/js/product-s
 
 USD prices displayed as whole dollars (no decimals).
 
-### Products with Live Pricing Formula (19)
+### Products with Live Pricing Formula (20)
 
 | Product | Formula | Server Function | Markup |
 |---|---|---|---|
@@ -198,6 +203,7 @@ USD prices displayed as whole dollars (no decimals).
 | RV & Truck Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/45% |
 | Pet Owner Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/30% |
 | Family Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/50% |
+| Marine Fitted Sheet | V-Berth formula | `calcVBerthFitted()` | 680% margin |
 | Flat Sheet — Standard | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
 | Flat Sheet — Extra Deep Pocket | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
 | 6-Sided Mattress Encasement | Encasement (TPU) | `calculateEncasementPrice()` | 15/25/50% |
@@ -217,6 +223,8 @@ USD prices displayed as whole dollars (no decimals).
 | Pet-Proof Mattress Protector | Protector (3-layer) | `calcMattressProtector()` | 15/15/20/15% |
 
 **Fitted sheet formula:** W_fabric=W+2D+14, L_fabric=L+2D+14; tiered sewing (120–500 THB); accessories = fabric×0.10. Fabric cost: (area×rate/23,744)×1.20.
+
+**V-Berth fitted sheet formula:** width=max(HW,FW)+2D+14, length=L+2D+14; fabric/accessories/packing/delivery same as fitted sheet; CloudSoft fabric only; VERTH_MARKUP=8.15 (1+0.15+0.20+6.80). Shape selector shows discounted fixed prices (A-H), custom dimensions use live formula. 4-field layout: HW, FW, Centerline L (tooltip), D. Mobile responsive 4→2→1.
 
 **Flat sheet formula:** W_fabric=W+2D+50, L_fabric=L+2D+50; flat sewing 250 THB (no elastic, no accessories). Fabric cost same as fitted.
 
@@ -238,11 +246,17 @@ USD prices displayed as whole dollars (no decimals).
 | Bed Lifter (38 cm) | Fixed-price accessory, no custom dimensions |
 | Duvet Insert | Thailand-only, fixed Thai duvet sizes (Microfiber 200g/m²) |
 
-### Products Awaiting Configurator (1)
+### Marine Fitted Sheet — V-Berth Configurator (Live)
 
-| Product | Category |
-|---|---|
-| Marine Fitted Sheet | Sheets, Marine |
+Marine Fitted Sheet uses a **V-Berth-specific configurator** with hybrid pricing:
+- **Choose Your Berth Shape** dropdown (8 shapes A-H + custom quote I) with discounted fixed prices
+- **4-field custom dimension layout**: Head Width (HW), Foot Width (FW), Centerline Length (L) with tooltip, Mattress Depth (D)
+- **V-Berth formula** (`calcVBerthFitted()`): `width = max(HW,FW) + 2D + 14`, `length = L + 2D + 14`, CloudSoft fabric, same sewing tiers as fitted sheet, **680% margin** (VERTH_MARKUP = 8.15)
+- "Select Mattress Size" dropdown hidden — replaced by shape selector
+- Shape prices discounted 30% from original: A=$94, B=$111, C=$125, D=$125, E=$138, F=$110, G=$108, H=$132
+- Responsive: desktop 4-col, tablet 2×2, mobile 1-col stack
+
+All 27 products now have live pricing formulas or don't require configurators.
 
 ---
 

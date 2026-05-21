@@ -1,5 +1,6 @@
 # Phase 8 — Polish + Launch
-**Goal:** Make everything production-ready — fix all mobile issues, hit a performance score of 90+/100, add security headers, switch Stripe to live mode, then flip the DNS switch that moves `www.mildmate.com` from your old WordPress site to the new MildMate website.
+**Status (2026-05-21): ⏸️ PENDING**
+**Goal:** Make everything production-ready — fix all mobile issues, hit 90+/100 performance, DNS cutover.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
 

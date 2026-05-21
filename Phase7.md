@@ -1,5 +1,6 @@
 # Phase 7 — Admin Dashboard
-**Goal:** Build a private management interface for your team — protected by Google login — where you can view orders with custom dimensions for manufacturing, edit products and prices, upload images, and export subscriber emails. No coding knowledge required to use it.
+**Status (2026-05-21): ⏸️ PENDING**
+**Goal:** Build a private management interface for your team — protected by Google login.
 
 **End Result:** A clean, password-protected web dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can enter tracking numbers and monitor delivery status via AfterShip (FedEx, UPS, DHL, Thai Post + 100+ carriers).
 

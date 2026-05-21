@@ -1,4 +1,5 @@
 # Phase 2 — SEO URL Preservation
+**Status (2026-05-21): ⏸️ DEFERRED — runs pre-launch after Phase 7**
 **Goal:** Make sure every existing page on `www.mildmate.com` has a matching page on the new site so Google never loses your rankings when you launch.
 
 **End Result:** 258 HTML placeholder pages — one for every URL from your WordPress site — plus a `_redirects` file that handles duplicate and broken old URLs with 301 redirects.
