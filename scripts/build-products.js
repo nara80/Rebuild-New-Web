@@ -461,7 +461,7 @@ function buildTrustSignalsHTML() {
 
 function buildFixedContentHTML(slug, p) {
   if (slug === 'duvet-insert') {
-    return '<div class="container" style="max-width:1280px; padding:0 24px; grid-column:1/-1;">'
+    return '<div class="container" style="max-width:1280px; padding:0 24px;">'
       + '<div class="product-tabs">'
       + '<div class="tab-list" role="tablist">'
       + '<button class="tab-btn active" role="tab" data-tab="description">Description</button>'
@@ -486,7 +486,7 @@ function buildFixedContentHTML(slug, p) {
 
   if (slug === 'bedbridge-connector') {
     let html = '';
-    html += '<div class="container" style="max-width:1280px; padding:0 24px; grid-column:1/-1;">';
+    html += '<div class="container" style="max-width:1280px; padding:0 24px;">';
     html += '<div style="padding:32px 0;">';
     // How it works
     html += '<div style="background:var(--color-surface); border-radius:var(--radius); padding:24px; margin-bottom:24px;"><h3 style="margin-bottom:12px;">How It Works</h3><ol style="padding-left:20px;"><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Place the T-shaped wedge</strong> between two mattresses — the crossbar of the T goes under both mattresses, the stem fills the gap.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Push mattresses together</strong> — the high-density microfiber compresses slightly to create a firm bridge.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Cover with a fitted sheet</strong> — a family-size fitted sheet covers both mattresses and the BedBridge as one seamless surface.</li></ol></div>';
@@ -505,7 +505,7 @@ function buildFixedContentHTML(slug, p) {
 
   if (slug === 'mattress-lift-helper') {
     let html = '';
-    html += '<div class="container" style="max-width:1280px; padding:0 24px; grid-column:1/-1;">';
+    html += '<div class="container" style="max-width:1280px; padding:0 24px;">';
     html += '<div style="padding:32px 0;">';
     html += '<h3 style="margin-bottom:12px;">Features</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">';
     const features = ['38cm height — lifts mattress easily','Ergonomic ABS design — no back strain','Ideal for elderly, seniors, and caregivers','High-quality ABS plastic — lightweight and strong','Simple one-handed operation'];
