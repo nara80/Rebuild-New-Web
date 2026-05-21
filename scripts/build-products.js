@@ -156,7 +156,7 @@ function buildFabricHTML(p) {
 // Generate colors HTML (empty for now)
 function buildColorsHTML(p) {
   // Only render color selector for products that have fabric choices
-  const colorProductTypes = ['fitted-sheet', 'flat-sheet', 'duvet', 'pillowcase', 'pillow-protector'];
+  const colorProductTypes = ['fitted-sheet', 'flat-sheet', 'duvet', 'pillowcase'];
   if (!colorProductTypes.includes(p.productType)) return '';
   // Show colors if product has fabric options (all mode) or a locked fabric
   if (p.fabricMode !== 'all' && !p.lockedFabric) return '';
@@ -259,7 +259,7 @@ function buildCustomizable(slug, p, prod) {
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
     '{{IMAGE_PATH}}': prod.image || '/images/placeholder.jpg',
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
-    '{{SHORT_TITLE}}': shortTitle,
+    '{{SHORT_TITLE}}': shortTitle ? '  -  ' + shortTitle : '',
     '{{TAGLINE}}': p.tagline || '',
     '{{RATING_COUNT}}': String(p.ratingCount || 0),
     '{{TH_REDIRECT_PATH}}': (prod.urlTh || '/th' + prod.url),
