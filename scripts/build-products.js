@@ -79,6 +79,21 @@ function getContent(slug) {
 
 // Generate fabric HTML
 function buildFabricHTML(p) {
+  // TPU products — show material specs grid (like bedbridge-connector)
+  if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
+    const tpuSpecs = [
+      { label: 'Material', value: 'TPU Waterproof Membrane' },
+      { label: 'Certification', value: 'OEKO-TEX Certified' },
+      { label: 'Protection', value: '100% Fluid Barrier' },
+      { label: 'Breathability', value: 'Moisture-Vapor Permeable' }
+    ];
+    let grid = '<div class="panel-label">Material</div><div class="specs-grid">';
+    tpuSpecs.forEach(s => {
+      grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
+    });
+    grid += '</div>';
+    return grid;
+  }
   if (p.fabricMode === 'badge') {
     const fabricName = fabricNames[p.lockedFabric] || p.lockedFabric;
     return '<div class="panel-section"><div class="panel-label">Fabric</div><div class="fabric-badge">' + fabricName + '</div></div>';

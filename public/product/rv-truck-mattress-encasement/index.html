@@ -43,6 +43,10 @@
     .size-select:focus { outline: none; border-color: var(--color-primary); }
     .size-hint { font-size: 0.75rem; color: #888; margin-top: 6px; }
     .size-hint a { color: var(--color-primary); text-decoration: none; }
+    .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .spec-item { background: var(--color-surface); padding: 12px 14px; border-radius: var(--radius); }
+    .spec-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 4px; }
+    .spec-value { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
     .size-hint a:hover { text-decoration: underline; }
     .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 16px; }
     .color-selector { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -173,7 +177,7 @@
             </select>
             <div class="size-hint"><a href="/sizeguide/">View full size guide →</a></div>
           </div>
-          <div class="panel-section"><div class="panel-label">Fabric</div><div class="fabric-badge">TPU Waterproof</div></div>
+          <div class="panel-label">Material</div><div class="specs-grid"><div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">TPU Waterproof Membrane</div></div><div class="spec-item"><div class="spec-label">Certification</div><div class="spec-value">OEKO-TEX Certified</div></div><div class="spec-item"><div class="spec-label">Protection</div><div class="spec-value">100% Fluid Barrier</div></div><div class="spec-item"><div class="spec-label">Breathability</div><div class="spec-value">Moisture-Vapor Permeable</div></div></div>
           
           <div class="price-block">
             <div class="price-row">

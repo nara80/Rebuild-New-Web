@@ -43,6 +43,10 @@
     .size-select:focus { outline: none; border-color: var(--color-primary); }
     .size-hint { font-size: 0.75rem; color: #888; margin-top: 6px; }
     .size-hint a { color: var(--color-primary); text-decoration: none; }
+    .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .spec-item { background: var(--color-surface); padding: 12px 14px; border-radius: var(--radius); }
+    .spec-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 4px; }
+    .spec-value { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
     .size-hint a:hover { text-decoration: underline; }
     .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #e8f4fd; margin-bottom: 16px; }
     .color-selector { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -173,7 +177,7 @@
             </select>
             <div class="size-hint"><a href="/sizeguide/">View full size guide →</a></div>
           </div>
-          <div class="panel-section"><div class="panel-label">Fabric</div><select class="fabric-select" id="fabric-select" style="width:100%; padding:12px 14px; border:2px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); font-size:0.9375rem; color:var(--color-text); background:#fff; cursor:pointer; appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center;"><option value="cloudsoft">CloudSoft</option><option value="breezeplus">BreezePlus</option><option value="premacotton">PremaCotton</option><option value="ecoluxe">EcoLuxe</option></select></div>
+          <div class="panel-label">Material</div><div class="specs-grid"><div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">TPU Waterproof Membrane</div></div><div class="spec-item"><div class="spec-label">Certification</div><div class="spec-value">OEKO-TEX Certified</div></div><div class="spec-item"><div class="spec-label">Protection</div><div class="spec-value">100% Fluid Barrier</div></div><div class="spec-item"><div class="spec-label">Breathability</div><div class="spec-value">Moisture-Vapor Permeable</div></div></div>
           
           <div class="price-block">
             <div class="price-row">
