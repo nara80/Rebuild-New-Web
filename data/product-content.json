@@ -142,8 +142,6 @@
         {"code":"D","name":"Double Round End","priceUsd":178.80,"lengthMin":180,"lengthMax":220,"headWidthMin":115,"headWidthMax":175,"footWidthMin":null,"footWidthMax":null,"type":"round"},
         {"code":"E","name":"King Size Round End","priceUsd":197.80,"lengthMin":180,"lengthMax":230,"headWidthMin":135,"headWidthMax":210,"footWidthMin":null,"footWidthMax":null,"type":"round"},
         {"code":"F","name":"Single Quarter Berth","priceUsd":157.80,"lengthMin":180,"lengthMax":220,"headWidthMin":60,"headWidthMax":120,"footWidthMin":30,"footWidthMax":70,"type":"complex","subtype":"single"},
-        {"code":"F","name":"Double Quarter Berth","priceUsd":null,"lengthMin":180,"lengthMax":220,"headWidthMin":125,"headWidthMax":190,"footWidthMin":90,"footWidthMax":155,"type":"complex","subtype":"double","quoteOnly":true},
-        {"code":"-","name":"Double Narrow Rectangle","priceUsd":132.80,"lengthMin":180,"lengthMax":220,"headWidthMin":120,"headWidthMax":180,"footWidthMin":120,"footWidthMax":180,"type":"complex","subtype":"rectangle"},
         {"code":"G","name":"Cut Off Corner","priceUsd":153.80,"lengthMin":180,"lengthMax":220,"headWidthMin":120,"headWidthMax":180,"footWidthMin":125,"footWidthMax":190,"type":"complex"},
         {"code":"H","name":"Octagonal Berth","priceUsd":188.80,"lengthMin":180,"lengthMax":220,"headWidthMin":50,"headWidthMax":180,"footWidthMin":50,"footWidthMax":100,"type":"complex"},
         {"code":"I","name":"Custom / Template","priceUsd":null,"lengthMin":null,"lengthMax":null,"headWidthMin":null,"headWidthMax":null,"footWidthMin":null,"footWidthMax":null,"type":"custom","quoteOnly":true}
