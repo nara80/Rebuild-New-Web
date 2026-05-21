@@ -303,6 +303,13 @@ function buildCustomizable(slug, p, prod) {
     replacements['{{FOOT_WIDTH_FIELD_HTML}}'] = '';
   }
 
+  // Dim diagram image: V-Berth for marine, standard mattress for all others
+  if (slug === 'marine-fitted-sheet') {
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
+  } else {
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram.png';
+  }
+
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);
   }
