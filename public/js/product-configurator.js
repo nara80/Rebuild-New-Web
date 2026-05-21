@@ -314,7 +314,7 @@
           if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
         } else {
           var thb = Math.round(price * THB_TO_USD);
-          priceDisplay.textContent = '฿' + thb.toLocaleString() + ' / $' + Math.round(price);
+          priceDisplay.textContent = formatPrice(thb, price);
           if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
         }
 
@@ -484,7 +484,7 @@
       if (mOpt && mOpt.value && !mOpt.dataset.quoteOnly) {
         var price = parseFloat(mOpt.dataset.price);
         var thb = Math.round(price * THB_TO_USD);
-        priceDisplay.textContent = '฿' + thb.toLocaleString() + ' / $' + Math.round(price);
+        priceDisplay.textContent = formatPrice(thb, price);
         if (addToCartBtn) addToCartBtn.disabled = false;
         return;
       }
@@ -570,7 +570,7 @@
       var thb = Math.round(price * THB_TO_USD);
       state.quotePriceThb = thb;
       state.quotePriceUsd = price;
-      customPrice.textContent = '\u0E3F' + thb.toLocaleString() + ' / $' + Math.round(price);
+      customPrice.textContent = formatPrice(thb, price);
       return;
     }
 
