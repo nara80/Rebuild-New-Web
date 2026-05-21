@@ -282,12 +282,15 @@ D:\00_MildMate\Re-Bulit_Web\
 │   └── admin\                        ← Admin dashboard API
 ├── templates\                        ← Product page master templates
 │   ├── product-customizable.html      ← Template for 24 configurable products
-│   └── product-fixed.html             ← Template for 3 non-customizable products
+│   ├── product-fixed.html             ← Template for 3 non-customizable products
+│   └── blog-post.html                 ← Template for blog post pages
 ├── scripts\                           ← Build & utility scripts
-│   └── build-products.js              ← Node.js script — generates all 27 product pages from templates + data
+│   ├── build-products.js              ← Node.js script — generates all 27 product pages
+│   └── build-blogs.js                 ← Node.js script — generates blog post pages
 ├── data\                              ← Data files (single source of truth)
-│   ├── products.json                  ← Product catalog (names, prices, URLs, categories)
-│   └── product-content.json           ← Tab content, reviews, tags, taglines (1667 lines)
+│   ├── products.json                  ← Product catalog (names, prices, URLs)
+│   ├── product-content.json           ← Tab content, reviews, tags (1667 lines)
+│   └── blog-posts.json                ← Blog post content (articles, authors, related products)
 ├── admin\                            ← Admin dashboard HTML
 ├── migrations\                       ← Database migrations
 │   ├── 001_initial.sql
@@ -317,6 +320,7 @@ D:\00_MildMate\Re-Bulit_Web\
 
 - **ALWAYS read `Framework.md` at the start of every session** — it contains the full site blueprint, page layouts, design system, database schema, and build phases. AGENTS.md is summary memory; Framework.md is the complete specification.
 - **Centralized Product Template System:** All 27 product pages are generated from two templates (`templates/product-customizable.html` and `templates/product-fixed.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
+- **Centralized Blog Template System:** Blog posts are generated from `templates/blog-post.html` via `scripts/build-blogs.js`. Data source: `data/blog-posts.json`. To add a new blog post: add a JSON entry + run `node scripts/build-blogs.js`. To update blog UI: edit the template and rebuild. The blog post template uses the same 4-col footer as product pages.
 - Always check `wrangler.toml` before running `npx wrangler` commands
 - Database ID is hardcoded in `wrangler.toml` — do not change without confirming
 - R2 bucket name is `mildmate-assets` — consistent everywhere
