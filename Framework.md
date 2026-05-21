@@ -388,21 +388,15 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 [PRODUCT INFO]
   Title (TH/EN toggle)
   Fabric badge + short description
-  ★★★★★ (Siriraj certified badge if BreezePlus/TPU)
 
 [STANDARD SIZE SELECTOR]
-  Step 1: Country / Region
-    [🇺🇸 US/Canada ▼]  [🇬🇧 UK ▼]  [🇪🇺 EU ▼]  [🇹🇭 Thailand ▼] ...
+  Step 1: Size (dropdown with region optgroups — US/CA: imperial, others: metric)
+    [○] Twin/Single 39×75″      [○] Full/Double 54×75″
+    [●] Queen 60×80″            [○] King 76×80″
 
-  Step 2: Size (filtered to that country's standards)
-    [○] Twin      99×191 cm / 39×75 in   $35
-    [○] Full     137×191 cm / 54×75 in   $42
-    [●] Queen    153×203 cm / 60×80 in   $49
-    [○] King     193×203 cm / 76×80 in   $55
-
-  Step 3: Fabric & Color
+  Step 2: Fabric & Color
     [●] PremaCotton  [○] BreezePlus  [○] CloudSoft  [○] EcoLuxe
-    Color swatches
+    Color swatches (follow fabric selection, 6 per row)
 
   Price: $49.00     [         Add to Cart          ]
 ```
@@ -566,7 +560,7 @@ Covers: data collected, usage, cookies, third parties (Stripe, Resend), rights
 [STEP 3: PAYMENT]
   → Stripe Checkout (hosted, redirects to Stripe)
   TH visitors: PromptPay QR via Stripe
-  Global: Card / Apple Pay / Google Pay
+  Global: Card / Google Pay
 ```
 
 **Social Login (Optional — No Forced Login):**
@@ -1040,6 +1034,31 @@ Same geometry as pillowcase-zipper (2 pieces, 60% waste, zipper on longest side)
 
 **Max dimensions:** W, L ≤ 120cm each
 
+### Mattress Protector Pricing Formula (Implemented 2026-05-21)
+
+Active for 4 products: Standard, Deep Pocket, Family, Pet-Proof Mattress Protectors. 3-layer construction (Cotton Quilted + Polyester Filling + TPU Waterproof), customer inputs W×L×D in cm.
+
+**Fabric cost — area-based tiered (W×L in sq.inch):**
+| Area Range (sq.inch) | Cost (THB) |
+|---|---|
+| ≤ 3,200 | 550 |
+| ≤ 6,620 | 670 |
+| ≤ 8,000 | 920 |
+| ≤ 9,000 | 980 |
+| ≤ 10,300 | 1,100 |
+| ≤ 11,300 | 1,200 |
+| > 11,300 | 1,300 |
+
+**Depth surcharge:** <30cm: 0, 30-51cm: 200, 52-56cm: 400, >56cm: 600 THB.
+
+**Fixed costs:** Packing 200 + Delivery 80
+
+**Markups (on subtotal):** +15% Ops, +20% Mkt, +15% Margin (Standard+Pet-Proof), +25% (Deep Pocket), +50% (Family).
+
+**Constraints:** Max W/L = 210 cm for non-family; over 210 → redirects to Family Protector.
+
+**Rounding:** Final THB rounded up to nearest 100 THB. USD = THB ÷ 30.
+
 ### Centralized Size System (Implemented 2026-05-21)
 
 `public/js/product-sizes.js` — 174 size entries across fitted-sheet/duvet/pillow types, 8 regions.
@@ -1050,9 +1069,9 @@ To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`
 
 | Status | Count | Products |
 |---|---|---|
-| Live formula | 19 | 6 fitted + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector |
+| Live formula | 23 | 6 fitted + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
 | No configurator needed | 2 | BedBridge Connector, Bed Lifter (fixed-price accessories) |
-| Awaiting | 6 | Marine/V-Berth fitted sheet, Duvet Insert, 4 mattress protectors |
+| Awaiting | 2 | Marine Fitted Sheet (V-Berth), Duvet Insert |
 
 **Implementation files:**
 - `workers/api/pricing.ts` — server-side (fitted, flat, encasement products use real formulas; others use placeholder)
@@ -1376,20 +1395,18 @@ Every product detail page (`/product/[slug]/`) uses this layout:
     ├── Breadcrumb
     ├── Product Title (H1)
     ├── Tagline
-    ├── Rating (★★★★★ + review count link)
     ├── Pricing Panel (bordered card)
-    │   ├── Step 1: Region (grid of country buttons)
-    │   ├── Step 2: Size (dropdown with optgroups by region)
-    │   ├── Step 3: Fabric (swatch selector OR fabric badge for restricted categories)
-    │   ├── Step 4: Color (color dot selector)
-    │   ├── Price Display (฿X,XXX)
+    │   ├── Step 1: Size (dropdown with optgroups by region, region-aware formatting)
+    │   ├── Step 2: Fabric (swatch selector OR fabric specs grid for locked-fabric products)
+    │   ├── Step 3: Color (per-fabric color dots in 6-col grid, follows fabric selection)
+    │   ├── Price Display (฿X,XXX / $XX)
     │   ├── Add to Cart + Custom Size buttons
     │   ├── Custom Dimensions panel (toggle expand)
     │   │   ├── Width / Length / Depth inputs
     │   │   ├── Unit toggle (cm / inch)
     │   │   ├── Live price estimate
     │   │   └── [Custom Quote] button → popup form (Name*, Email*, Address, Telephone)
-    │   └── Payment badges (Visa/MC, Apple Pay, Secure checkout)
+    │   └── Payment badges (Visa/MC, Secure checkout)
     ├── Trust Signals (2×2 grid of icons)
     └── Trust Badges row
 
@@ -1416,7 +1433,7 @@ padding: 72px 24px 56px;
 ### Pricing Panel (`.pricing-panel`)
 
 - White background, bordered card, 28px padding
-- **Region selector**: Grid of 8 country buttons (US, UK, EU, AU, TH, MY/SG, JP, Other). Selected state: blue background, white text.
+- **Size selector**: Single dropdown with optgroups per region. Flag emoji on optgroup labels. Region-aware formatting: US/CA shows imperial only ("39×75″"), all others show metric ("90×190 cm").
 - **Size dropdown**: Shows optgroups per country/region. Selected size updates price instantly.
 - **Custom Size toggle**: Button reveals custom dimension inputs (W × L × D + unit toggle + live estimate + Submit for Custom Quote)
 - **Add to Cart button**: Blue filled, disabled until size selected. Shows "Added!" with green background for 2 seconds after click.
@@ -1426,21 +1443,28 @@ padding: 72px 24px 56px;
 
 | Product | Fabric Options |
 |---|---|
-| Duvet Covers | BreezePlus only (fabric badge, no swatch selector) |
-| Pet Owner (Fitted/Duvet) | BreezePlus only (fabric badge) |
-| Marine & Yacht | CloudSoft only (fabric badge) |
-| RV & Truck | CloudSoft only (fabric badge) |
-| Fitted Sheets | All 4: BreezePlus, CloudSoft, PremaCotton, EcoLuxe (swatch selector) |
-| Flat Sheets | All 4: swatch selector |
-| Pillowcases | All 4: swatch selector |
-| Mattress Protectors | TPU badge + BreezePlus outer (badge) |
-| Pillow Protectors | TPU badge + BreezePlus outer (badge) |
-| Boarding Dorm products | BreezePlus only (fabric badge) |
+| Pet Owner (Fitted/Duvet) | BreezePlus only (specs grid: Pet Hair Resistant, 3-5°C Cooler, 50/50 Blend) |
+| Marine & Yacht (Fitted/Duvet) | CloudSoft only (specs grid: Quick-Dry, Moisture-Wicking, 100% Cotton) |
+| RV & Truck (Fitted/Duvet) | CloudSoft only (specs grid) |
+| Fitted Sheets (other) | All 4: fabric dropdown + per-fabric color selector |
+| Flat Sheets | All 4: fabric dropdown + per-fabric color selector |
+| Duvet Covers (other) | All 4: fabric dropdown + per-fabric color selector |
+| Pillowcases | All 4: fabric dropdown + per-fabric color selector |
+| Mattress Protectors (4) | 3-layer specs grid (Cotton Quilted + Polyester Filling + TPU Waterproof), no fabric selection |
+| Mattress Encasements (2) | TPU specs grid (TPU Waterproof Membrane + Water Spills & Accidents), no fabric selection |
+| Pillow Protector | TPU specs grid, no fabric selection |
+| BedBridge Connector, Bed Lifter | Fixed-price, no fabric selection |
 
-### Color Selector (BreezePlus only)
+### Color Selector
 
-9 color dots: Pure White, Sand, Sky, Sea, Emerald, Dark Grey, Silver, Baby Pink, Ivory.
-Selected dot gets primary-color border ring.
+Per-fabric color swatches matching `/fabric/` data in a 6-column CSS grid:
+- **BreezePlus** (9): Dark Grey, Silver, Sand, Sky, Emerald, Sea, Pure White, Baby Pink, Ivory
+- **CloudSoft** (12): Mint, Charcoal, Grey, Sapphire, Forest, Denim, RoseGold, Beige, Ovaltine, White, Lavender, Olive
+- **PremaCotton** (1): Snow White
+- **EcoLuxe** (1): Vanilla Linen
+
+All swatches have visible border + inset shadow for white/light color visibility.
+Selected dot gets 3px blue border + glow ring. Swatches swap when fabric selection changes. Default visible set matches product's locked fabric or first fabric.
 
 ### Gallery
 

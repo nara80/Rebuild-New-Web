@@ -83,7 +83,7 @@ This file is read by Droid at the start of every session. It contains all critic
 | 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
 | 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **19 of 27 products have live configurator pricing formulas** — see Configurator Status below. **USD whole-dollar pricing** on EN pages, THB-only on TH pages. **Centralized size system** (`product-sizes.js`, 174 entries, 8 regions) auto-populates all product page size dropdowns — synced from `/sizeguide/`. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). **USD-only pricing** on EN pages, THB-only on TH pages. Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
+| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. Product inventory verified at 27 products (9/6/3/7/2). **23 of 27 products have live configurator pricing formulas** — see Configurator Status below. **Centralized product template system** (2 templates, build script, content data — all 27 pages regenerated from source). **Fabric specs grids** replace dropdowns for locked-fabric products (BreezePlus, CloudSoft, TPU, 3-layer protectors). **Fabric color selector** updates per-fabric (4 color sets matching /fabric/), 6-col grid with visible borders. **Responsive carousel dots** on reviews + related products (desktop/tablet/mobile). **UI simplifications**: region grid removed, Apple Pay removed, star ratings removed, size dropdown region-aware (US imperial, others metric). **USD whole-dollar pricing** on EN pages, THB-only on TH pages. **Centralized size system** (`product-sizes.js`, 174 entries, 8 regions) auto-populates all product page size dropdowns — synced from `/sizeguide/`. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
 | 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
 | 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
 | 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
@@ -152,7 +152,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 |---|---|---|
 | Standard Fitted Sheet | `/product/standard-fitted-sheet/` | Sheets |
 | Deep Pocket Fitted Sheet | `/product/deep-pocket-fitted-sheet/` | Sheets, Deep Pocket |
-| Marine Fitted Sheet (V-Berth) | `/product/marine-fitted-sheet/` | Sheets, Marine |
+| Marine Fitted Sheet | `/product/marine-fitted-sheet/` | Sheets, Marine |
 | Dorm Fitted Sheet | `/product/dorm-fitted-sheet/` | Sheets, Boarding Dorm |
 | RV & Truck Fitted Sheet | `/product/rv-truck-fitted-sheet/` | Sheets, RV-Truck |
 | Family Fitted Sheet | `/product/family-fitted-sheet/` | Sheets, Family |
@@ -180,7 +180,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 
 ---
 
-## Configurator Pricing Status (19 of 27 products verified)
+## Configurator Pricing Status (23 of 27 products verified)
 
 All product detail pages use the shared `public/js/product-configurator.js` which auto-detects the product type from the URL path and applies the correct pricing formula. The full workflow is: [Custom Size] → enter dimensions → live price → [Custom Quote] → popup form (Name/Email) → POST `/api/quote` → Resend email to contact@mildmate.com.
 
@@ -211,6 +211,10 @@ USD prices displayed as whole dollars (no decimals).
 | Zipper Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
 | Sham Pillowcase | Pillowcase | `calculatePillowcasePrice()` | 15/25/15% |
 | Pillow Protector | Pillow protector (TPU) | `calculatePillowProtectorPrice()` | 15/25/35% |
+| Mattress Protector — Standard | Protector (3-layer) | `calcMattressProtector()` | 15/15/20/15% |
+| Mattress Protector — Deep Pocket | Protector (3-layer) | `calcMattressProtector()` | 15/15/20/25% |
+| Mattress Protector — Family | Protector (3-layer) | `calcMattressProtector()` | 15/15/20/50% |
+| Pet-Proof Mattress Protector | Protector (3-layer) | `calcMattressProtector()` | 15/15/20/15% |
 
 **Fitted sheet formula:** W_fabric=W+2D+14, L_fabric=L+2D+14; tiered sewing (120–500 THB); accessories = fabric×0.10. Fabric cost: (area×rate/23,744)×1.20.
 
@@ -224,6 +228,8 @@ USD prices displayed as whole dollars (no decimals).
 
 **Pillow protector formula:** Same geometry as pillowcase-zipper but TPU fabric (120 THB/lm ÷ 21,000 cm²/lm); markup 15/25/35%. No depth input.
 
+**Mattress protector formula:** Area-based fabric tier (W×L in sq.inch → 550-1,300 THB via tiered lookup) + depth surcharge (<30cm:0, ≥30:200, ≥52:400, >56:600 THB) + packing 200 + delivery 80, × markup (ops 15% + mkt 20% + margin 15-50%). Max W/L=210cm for non-family; over 210 redirects to Family Protector.
+
 ### Products NOT Requiring Configurator (2)
 
 | Product | Reason |
@@ -231,16 +237,12 @@ USD prices displayed as whole dollars (no decimals).
 | BedBridge Connector | Fixed-price accessory, no custom dimensions |
 | Bed Lifter (38 cm) | Fixed-price accessory, no custom dimensions |
 
-### Products Awaiting Configurator (6)
+### Products Awaiting Configurator (2)
 
 | Product | Category |
 |---|---|
-| Marine Fitted Sheet (V-Berth) | Sheets, Marine |
+| Marine Fitted Sheet | Sheets, Marine |
 | Duvet Insert | Duvet Covers |
-| Mattress Protector — Standard | Protection |
-| Mattress Protector — Family | Protection, Family |
-| Mattress Protector — Deep Pocket | Protection, Deep Pocket |
-| Pet-Proof Mattress Protector | Protection, Pets |
 
 ---
 
@@ -320,6 +322,8 @@ D:\00_MildMate\Re-Bulit_Web\
 
 - **ALWAYS read `Framework.md` at the start of every session** — it contains the full site blueprint, page layouts, design system, database schema, and build phases. AGENTS.md is summary memory; Framework.md is the complete specification.
 - **Centralized Product Template System:** All 27 product pages are generated from two templates (`templates/product-customizable.html` and `templates/product-fixed.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
+- **Fabric Specs Grids (replacing dropdowns):** Products with locked/exclusive fabrics show a material specs grid instead of a fabric dropdown. TPU products (encasements, pillow protector): TPU Waterproof Membrane + Water Spills & Accidents. 3-layer protectors: Cotton Quilted + Polyester Filling + TPU Waterproof. BreezePlus-only (pet products): Pet Hair Resistant + 3-5°C Cooler + 50/50 Blend. CloudSoft-only (marine/RV): Quick-Dry + Moisture-Wicking + 100% Cotton.
+- **Fabric Color Selector:** Products with fabric choices show per-fabric color swatches in a 6-column CSS grid. Each fabric has its own color set matching `/fabric/` data (BreezePlus: 9, CloudSoft: 12, PremaCotton: 1, EcoLuxe: 1). Label updates and swatches swap when fabric selection changes. White/light colors are visible via border + inset shadow.
 - **Centralized Blog Template System:** Blog posts are generated from `templates/blog-post.html` via `scripts/build-blogs.js`. Data source: `data/blog-posts.json`. To add a new blog post: add a JSON entry + run `node scripts/build-blogs.js`. To update blog UI: edit the template and rebuild. The blog post template uses the same 4-col footer as product pages.
 - Always check `wrangler.toml` before running `npx wrangler` commands
 - Database ID is hardcoded in `wrangler.toml` — do not change without confirming
