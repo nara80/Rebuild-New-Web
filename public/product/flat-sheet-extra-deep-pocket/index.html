@@ -141,18 +141,7 @@
     .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
     .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #eff6ff; }
 
-    /* Phase 5: Fabric Comparison Grid */
-    .fabric-compare { max-width: 1280px; margin: 48px auto 0; padding: 0 24px; }
-    .fabric-compare h2 { text-align: center; margin-bottom: 24px; font-size: 1.375rem; font-weight: 700; color: var(--color-text); }
-    .fabric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .fabric-card { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius); padding: 20px; transition: box-shadow 0.2s; }
-    .fabric-card:hover { box-shadow: var(--shadow); }
-    .fabric-card h4 { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); margin-bottom: 12px; }
-    .fabric-card ul { list-style: none; padding: 0; }
-    .fabric-card ul li { padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 0.8125rem; color: #64748b; }
-    .fabric-card ul li:last-child { border-bottom: none; }
-
-    /* Marine shape selector — preserved */
+    /* Marine shape selector */
     .marine-shape-section { margin-bottom: 20px; }
     .shape-guide img, .shape-guide svg { display: block; }
     .shape-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
@@ -164,7 +153,7 @@
       .product-layout { grid-template-columns: 1fr; gap: 32px; }
       .product-gallery { position: static; }
       .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .fabric-grid { grid-template-columns: repeat(2, 1fr); }
+
     }
 
     @media (max-width: 640px) {
@@ -177,7 +166,7 @@
       .add-to-cart-row .btn-custom-quote { width: 100%; }
       .color-selector { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 4px; max-width: none; }
       .color-option { flex-shrink: 0; }
-      .fabric-grid { grid-template-columns: repeat(2, 1fr); }
+
       .related-grid { grid-template-columns: repeat(2, 1fr); }
       .trust-signals { grid-template-columns: 1fr; }
 
@@ -192,7 +181,6 @@
       .reviews-grid { grid-template-columns: 1fr; }
       .dim-inputs { grid-template-columns: 1fr; }
       .related-grid { grid-template-columns: 1fr; }
-      .fabric-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -317,47 +305,6 @@
           </ul>
         </div>
       </div>
-        <div class="fabric-compare">
-      <h2>Compare Our Fabrics</h2>
-      <div class="fabric-grid">
-        <div class="fabric-card">
-          <h4>BreezePlus</h4>
-          <ul>
-            <li>Pet Hair Resistant</li>
-            <li>3–5°C Cooler Sleep</li>
-            <li>50/50 Cotton-Poly Blend</li>
-            <li>Breathable &amp; Wrinkle-Free</li>
-          </ul>
-        </div>
-        <div class="fabric-card">
-          <h4>CloudSoft</h4>
-          <ul>
-            <li>Quick-Dry Technology</li>
-            <li>Moisture-Wicking</li>
-            <li>100% Natural Cotton</li>
-            <li>Ultra-Soft Hand Feel</li>
-          </ul>
-        </div>
-        <div class="fabric-card">
-          <h4>PremaCotton</h4>
-          <ul>
-            <li>Long-Staple Cotton</li>
-            <li>300 Thread Count</li>
-            <li>Sateen Weave</li>
-            <li>Hotel-Grade Luxury</li>
-          </ul>
-        </div>
-        <div class="fabric-card">
-          <h4>EcoLuxe</h4>
-          <ul>
-            <li>100% Organic Cotton</li>
-            <li>GOTS Certified</li>
-            <li>Chemical-Free Finish</li>
-            <li>Sustainable &amp; Ethical</li>
-          </ul>
-        </div>
-      </div>
-    </div>
     </div>
     <div class="container" id="reviews" style="max-width:1280px; padding:0 24px;">
       <div class="reviews-section">

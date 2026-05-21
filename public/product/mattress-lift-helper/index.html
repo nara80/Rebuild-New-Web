@@ -66,16 +66,7 @@
     .tab-content ul { padding-left: 20px; margin-bottom: 16px; }
     .tab-content ul li { margin-bottom: 6px; color: #64748b; line-height: 1.5; }
 
-    /* Phase 5: Fabric Comparison Grid */
-    .fabric-compare { max-width: 1280px; margin: 48px auto 0; padding: 0 24px; }
-    .fabric-compare h2 { text-align: center; margin-bottom: 24px; font-size: 1.375rem; font-weight: 700; color: var(--color-text); }
-    .fabric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .fabric-card { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius); padding: 20px; transition: box-shadow 0.2s; }
-    .fabric-card:hover { box-shadow: var(--shadow); }
-    .fabric-card h4 { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); margin-bottom: 12px; }
-    .fabric-card ul { list-style: none; padding: 0; }
-    .fabric-card ul li { padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 0.8125rem; color: #64748b; }
-    .fabric-card ul li:last-child { border-bottom: none; }
+    /* Phase 5: Fabric Comparison Grid — removed */
 
     .related-section { grid-column: 1 / -1; border-top: 1px solid #e2e8f0; padding-top: 32px; margin-top: 48px; }
     .related-section h2 { font-size: 1.25rem; font-weight: 700; color: var(--color-text); margin-bottom: 20px; }
@@ -97,7 +88,6 @@
       .product-layout { grid-template-columns: 1fr; gap: 32px; }
       .product-gallery { position: static; }
       .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .fabric-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 640px) {
@@ -107,7 +97,6 @@
       .add-to-cart-btn { display: none; }
       .trust-signals { grid-template-columns: 1fr; }
       .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .fabric-grid { grid-template-columns: repeat(2, 1fr); }
 
       /* Mobile sticky CTA bar */
       .mobile-cta-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e2e8f0; padding: 12px 16px; z-index: 100; display: flex; gap: 12px; align-items: center; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); }
@@ -118,7 +107,6 @@
 
     @media (max-width: 480px) {
       .related-grid { grid-template-columns: 1fr; }
-      .fabric-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -146,47 +134,6 @@
       </div>
     </div>
     <div class="container" style="max-width:1280px; padding:0 24px;"><div style="padding:32px 0;"><h3 style="margin-bottom:12px;">Features</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;"><div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>38cm height — lifts mattress easily</div><div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>Ergonomic ABS design — no back strain</div><div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>Ideal for elderly, seniors, and caregivers</div><div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>High-quality ABS plastic — lightweight and strong</div><div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>Simple one-handed operation</div></div><p style="color:#555; line-height:1.7;">The Bed Lifter makes changing fitted sheets effortless. Simply slide it under the mattress corner, lift, and tuck — no more struggling with heavy mattresses. Perfect for elderly users, caregivers, and anyone who wants to make bed changes easier.</p></div></div>
-    <div class="fabric-compare">
-      <h2>Compare Our Fabrics</h2>
-      <div class="fabric-grid">
-        <div class="fabric-card">
-          <h4>BreezePlus</h4>
-          <ul>
-            <li>Pet Hair Resistant</li>
-            <li>3–5°C Cooler Sleep</li>
-            <li>50/50 Cotton-Poly Blend</li>
-            <li>Breathable &amp; Wrinkle-Free</li>
-          </ul>
-        </div>
-        <div class="fabric-card">
-          <h4>CloudSoft</h4>
-          <ul>
-            <li>Quick-Dry Technology</li>
-            <li>Moisture-Wicking</li>
-            <li>100% Natural Cotton</li>
-            <li>Ultra-Soft Hand Feel</li>
-          </ul>
-        </div>
-        <div class="fabric-card">
-          <h4>PremaCotton</h4>
-          <ul>
-            <li>Long-Staple Cotton</li>
-            <li>300 Thread Count</li>
-            <li>Sateen Weave</li>
-            <li>Hotel-Grade Luxury</li>
-          </ul>
-        </div>
-        <div class="fabric-card">
-          <h4>EcoLuxe</h4>
-          <ul>
-            <li>100% Organic Cotton</li>
-            <li>GOTS Certified</li>
-            <li>Chemical-Free Finish</li>
-            <li>Sustainable &amp; Ethical</li>
-          </ul>
-        </div>
-      </div>
-    </div>
     <div class="container" style="max-width:1280px; padding:0 24px;">
       <div class="related-section">
         <h2>You might also like</h2>
