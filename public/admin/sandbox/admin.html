@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MildMate Admin — Sandbox</title>
+<style>
+:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#334155;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--c-dark);color:#fff;padding:24px 0;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-brand{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:1.125rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.sidebar-brand .dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue)}
+.sidebar-nav{flex:1;padding:16px 0}
+.sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.875rem;transition:all 0.15s}
+.sidebar-nav a:hover,.sidebar-nav a.active{color:#fff;background:rgba(255,255,255,0.08)}
+.sidebar-nav a .icon{width:18px;height:18px;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+.toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.toolbar h2{font-size:1.125rem;font-weight:600}
+.role-badge{font-size:0.75rem;padding:4px 12px;border-radius:4px;font-weight:600;background:#eff6ff;color:var(--c-blue);border:1px solid #bfdbfe}
+.content{padding:24px;flex:1}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.9375rem;display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:20px}
+table{width:100%;border-collapse:collapse;font-size:0.875rem}
+th{text-align:left;padding:10px 14px;background:var(--c-surface);font-weight:600;color:var(--c-muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--c-border)}
+td{padding:10px 14px;border-bottom:1px solid var(--c-border);color:var(--c-text)}
+tr:hover td{background:#f8fafc}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff;font-family:inherit}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
+.btn-outline{background:transparent;border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.btn-sm{padding:4px 10px;font-size:0.75rem}
+.btn-danger{background:var(--c-red);color:#fff}.btn-danger:hover{background:#b91c1c}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-production{background:#dbeafe;color:#1e40af}
+.badge-shipped{background:#dcfce7;color:#166534}
+.badge-cancelled{background:#fee2e2;color:#991b1b}
+/* Product editor 2-col */
+.editor-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
+.product-list{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);overflow:hidden}
+.product-list-header{padding:14px 18px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.875rem}
+.product-list-item{padding:12px 18px;border-bottom:1px solid var(--c-border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.1s}
+.product-list-item:hover{background:#f8fafc}
+.product-list-item.active{background:#eff6ff;border-left:3px solid var(--c-blue)}
+.product-list-item .thumb{width:40px;height:40px;border-radius:6px;background:var(--c-surface);border:1px solid var(--c-border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--c-muted);overflow:hidden}
+.product-list-item .thumb img{width:100%;height:100%;object-fit:cover}
+.product-list-item .name{font-size:0.8125rem;font-weight:500;flex:1}
+.product-list-item .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.active{background:var(--c-green)}
+.status-dot.inactive{background:var(--c-border)}
+.editor-panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border)}
+.editor-empty{padding:60px 20px;text-align:center;color:var(--c-muted)}
+.image-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
+.image-slot:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.image-slot.has-image{border-style:solid;border-color:var(--c-border)}
+.image-slot.has-image img{width:100%;height:100%;object-fit:cover}
+.image-slot .remove-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;font-size:0.625rem;display:none;align-items:center;justify-content:center;cursor:pointer;border:none}
+.image-slot.has-image:hover .remove-btn{display:flex}
+.add-image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s;font-size:1.5rem}
+.add-image-slot:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
+@keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
+.tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
+.tag-chip .remove-tag{cursor:pointer;opacity:0.5;font-size:0.75rem}.tag-chip .remove-tag:hover{opacity:1}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand"><span class="dot"></span> MildMate Admin</div>
+  <nav class="sidebar-nav">
+    <a href="index.html" style="border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:12px;padding-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Hub</a>
+    <a href="#" class="active" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
+    <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
+    <a href="#" data-page="subscribers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Subscribers</a>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="toolbar">
+    <h2 id="page-title">Orders</h2>
+    <div class="role-badge">ADMIN</div>
+  </div>
+  <div class="content" id="page-content"></div>
+</main>
+
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+var currentPage = 'orders';
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
+
+document.querySelectorAll('.sidebar-nav a[data-page]').forEach(function(a){
+  a.addEventListener('click',function(e){e.preventDefault();showPage(this.dataset.page);});
+});
+
+function showPage(name){
+  currentPage=name;
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a){a.classList.remove('active');});
+  document.querySelector('[data-page="'+name+'"]').classList.add('active');
+  document.getElementById('page-title').textContent={orders:'Orders',products:'Products',subscribers:'Subscribers'}[name];
+  document.getElementById('page-content').innerHTML={orders:rOrders,products:rProducts,subscribers:rSubscribers}[name]();
+}
+
+// ── Mock data ──
+var sampleOrders = [
+  {id:'#001',date:'2026-05-21',customer:'john@email.com',product:'Standard Fitted Sheet',dims:'153×203×30 cm',fabric:'CloudSoft',status:'pending',total:'฿1,250'},
+  {id:'#002',date:'2026-05-20',customer:'sarah@email.com',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',fabric:'CloudSoft',status:'production',total:'$94'},
+  {id:'#003',date:'2026-05-19',customer:'mike@email.com',product:'Family Fitted Sheet',dims:'250×220×35 cm',fabric:'BreezePlus',status:'shipped',total:'฿2,100'},
+  {id:'#004',date:'2026-05-18',customer:'anna@email.com',product:'Duvet Cover — 3-Sided',dims:'200×200 cm',fabric:'PremaCotton',status:'cancelled',total:'$55'},
+  {id:'#005',date:'2026-05-17',customer:'tom@email.com',product:'Pet Owner Fitted Sheet',dims:'120×60×15 cm',fabric:'BreezePlus',status:'pending',total:'฿880'}
+];
+
+var sampleProducts = [
+  {slug:'standard-fitted-sheet',name:'Standard Fitted Sheet',active:true,category:'Sheets',fabric:'CloudSoft / BreezePlus / PremaCotton / EcoLuxe',
+    titleEN:'Standard Fitted Sheet',titleTH:'ผ้าปูที่นอนรัดมุมมาตรฐาน',
+    descEN:'Custom-fitted sheet with deep pockets. OEKO-TEX certified. Made for your mattress dimensions.',
+    descTH:'ผ้าปูที่นอนรัดมุมแบบสั่งตัดตามขนาด',
+    images:4,video:'',tags:['custom-size','fitted','standard']},
+  {slug:'marine-fitted-sheet',name:'Marine Fitted Sheet — V-Berth',active:true,category:'Sheets / Marine',fabric:'CloudSoft',
+    titleEN:'Marine Fitted Sheet — V-Berth Configurator',titleTH:'ผ้าปูที่นอนทางทะเล — รูปตัว V',
+    descEN:'Custom V-Berth fitted sheet for yachts and boats. Quick-dry CloudSoft fabric.',
+    descTH:'ผ้าปูที่นอนสำหรับเรือยอชท์',
+    images:3,video:'https://www.youtube.com/embed/example',tags:['marine','yacht','v-berth','boat']},
+  {slug:'bedbridge-connector',name:'BedBridge Connector',active:true,category:'Accessories',fabric:'N/A (accessory)',
+    titleEN:'BedBridge Connector',titleTH:'ตัวเชื่อมเตียง',
+    descEN:'Seamlessly connects two mattresses. Eliminates the gap.',
+    descTH:'เชื่อมต่อที่นอนสองชิ้นเข้าด้วยกัน',
+    images:2,video:'',tags:['accessory','family','co-sleep']}
+];
+
+var selectedProductIndex = -1;
+
+function selectProduct(idx){
+  selectedProductIndex=idx;
+  var items=document.querySelectorAll('.product-list-item');
+  items.forEach(function(item,i){item.classList.toggle('active',i===idx);});
+  showProductEditor();
+}
+
+function showProductEditor(){
+  var panel=document.getElementById('editor-panel');
+  if(!panel)return;
+  if(selectedProductIndex<0){
+    panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';
+    return;
+  }
+  var p=sampleProducts[selectedProductIndex];
+  panel.innerHTML=
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0">'+
+      '<span>Edit: '+p.name+'</span>'+
+      '<span style="display:flex;gap:6px">'+
+        (p.active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
+        '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">'+(p.active?'Deactivate':'Activate')+'</button>'+
+      '</span>'+
+    '</div>'+
+    '<div class="card-body">'+
+      '<div class="form-row">'+
+        '<div class="form-group"><label>Title (EN)</label><input value="'+p.titleEN+'"></div>'+
+        '<div class="form-group"><label>Title (TH)</label><input value="'+p.titleTH+'"></div>'+
+      '</div>'+
+      '<div class="form-row">'+
+        '<div class="form-group"><label>Description (EN)</label><textarea rows="3">'+p.descEN+'</textarea></div>'+
+        '<div class="form-group"><label>Description (TH)</label><textarea rows="3">'+p.descTH+'</textarea></div>'+
+      '</div>'+
+      '<div class="form-group"><label>Fabric Assignment</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Set via Super Admin — Pricing Params</small></div>'+
+      '<div class="form-group"><label>Video Embed URL</label><input value="'+p.video+'" placeholder="YouTube / Vimeo embed URL">'+
+        (p.video?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)" onclick="window.open(\''+p.video+'\')" style="cursor:pointer">🔗 Open: '+p.video+'</p>':'')+
+      '</div>'+
+      '<div class="form-group">'+
+        '<label>Product Images ('+(p.images||0)+' slots)</label>'+
+        '<div class="image-grid">'+
+          (function(){var h='';for(var i=0;i<Math.max(p.images||0,4);i++){
+            h+='<div class="image-slot'+(i<(p.images||0)?' has-image':'')+'" onclick="toast(\'Upload image slot '+(i+1)+' (sandbox)\')">'+
+              (i<(p.images||0)?'<span style="font-size:0.75rem;color:var(--c-muted)">📷</span><div class="remove-btn" onclick="event.stopPropagation();toast(\'Remove image '+ (i+1)+' (sandbox)\')">✕</div>':'<span>+</span>')+
+            '</div>';
+          }return h;})()+
+          '<div class="add-image-slot" onclick="toast(\'Add image (sandbox)\')">+</div>'+
+        '</div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload, hover to remove. Images: JPEG/PNG, max 5MB.</small>'+
+      '</div>'+
+      '<div class="form-group">'+
+        '<label>Tags / Niches</label>'+
+        '<div class="tags-row">'+
+          (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
+          '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;margin-top:16px">'+
+        '<button class="btn btn-primary" onclick="toast(\'Product saved (sandbox — preview only)\')">Save Product</button>'+
+        '<button class="btn btn-outline" onclick="toast(\'Preview product page (sandbox)\')">Preview</button>'+
+      '</div>'+
+    '</div>';
+}
+
+function rOrders(){
+  var h='<div class="card">'+
+    '<div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+sampleOrders.length+' orders</span></div>'+
+    '<div class="card-body">'+
+    '<table><thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Dimensions</th><th>Fabric</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+  sampleOrders.forEach(function(o){
+    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled'}[o.status];
+    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+o.customer+'</td><td>'+o.product+'</td><td style="font-size:0.8125rem">'+o.dims+'</td><td>'+o.fabric+'</td><td><strong>'+o.total+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Orders appear here when a customer submits via the Customer sandbox. Sandbox — no live data.</p>';
+  return h;
+}
+
+function rProducts(){
+  var h='<div class="editor-layout">';
+  h+='<div class="product-list">';
+  h+='<div class="product-list-header">'+sampleProducts.length+' Products</div>';
+  sampleProducts.forEach(function(p,i){
+    h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')">';
+    h+='<div class="thumb">📷</div>';
+    h+='<div class="name">'+p.name+'</div>';
+    h+='<span class="status-dot '+(p.active?'active':'inactive')+'"></span>';
+    h+='</div>';
+  });
+  h+='<div style="padding:12px 18px"><button class="btn btn-outline btn-sm" style="width:100%" onclick="toast(\'Add new product (sandbox)\')">+ New Product</button></div>';
+  h+='</div>';
+  h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div>';
+  h+='</div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — manage titles, descriptions, images, video, and tags. <strong>Price is formula-driven — cannot be edited here.</strong> Sandbox — no live data.</p>';
+  return h;
+}
+
+function rSubscribers(){
+  var subs=[{email:'customer1@email.com',source:'footer',date:'2026-05-21'},{email:'customer2@email.com',source:'checkout',date:'2026-05-20'},{email:'customer3@email.com',source:'quote',date:'2026-05-19'}];
+  var h='<div class="card"><div class="card-header">Email Subscribers</div><div class="card-body">';
+  h+='<table><thead><tr><th>Email</th><th>Source</th><th>Date</th></tr></thead><tbody>';
+  subs.forEach(function(s){h+='<tr><td>'+s.email+'</td><td>'+s.source+'</td><td>'+s.date+'</td></tr>';});
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Sandbox — no live data.</p>';
+  return h;
+}
+
+showPage('orders');
+</script>
+</body>
+</html>

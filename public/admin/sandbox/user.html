@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MildMate Customer — Sandbox</title>
+<style>
+:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#334155;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+.top-bar{background:var(--c-dark);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.top-bar a{color:#fff;text-decoration:none;font-size:0.8125rem;opacity:0.8}.top-bar a:hover{opacity:1}
+.top-bar .title{font-weight:700;font-size:1rem}
+.cart-badge{background:var(--c-blue);color:#fff;padding:2px 10px;border-radius:20px;font-size:0.75rem;font-weight:700}.cart-badge:empty{display:none}
+.layout{max-width:800px;margin:0 auto;padding:32px 24px;width:100%}
+.steps-indicator{display:flex;align-items:center;justify-content:center;margin-bottom:32px;gap:0}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8125rem;border:2px solid var(--c-border);color:var(--c-muted);background:#fff;transition:all 0.2s}
+.step-dot.active{background:var(--c-blue);border-color:var(--c-blue);color:#fff}
+.step-dot.done{background:var(--c-green);border-color:var(--c-green);color:#fff}
+.step-line{flex:1;height:2px;background:var(--c-border);margin:0 8px;transition:all 0.2s}.step-line.done{background:var(--c-green)}
+.step-label-row{display:flex;justify-content:space-between;margin-top:8px;padding:0 24px}
+.step-label-row span{font-size:0.6875rem;color:var(--c-muted)}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.9375rem}
+.card-body{padding:20px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff;font-family:inherit}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.btn{padding:10px 20px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
+.btn-outline{background:transparent;border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.btn-success{background:var(--c-green);color:#fff}.btn-success:hover{background:#15803d}
+.btn-block{width:100%;display:block}
+.price-display{font-size:1.5rem;font-weight:700;color:var(--c-dark);padding:12px 16px;background:var(--c-surface);border-radius:var(--radius);text-align:center}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--c-border);font-size:0.875rem}
+.summary-total{display:flex;justify-content:space-between;padding:12px 0;font-weight:700;font-size:1rem}
+.empty-state{padding:60px 20px;text-align:center;color:var(--c-muted)}
+.success-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:24px;text-align:center}
+.success-box .icon{font-size:2.5rem;margin-bottom:12px}
+.success-box h3{font-size:1.125rem;color:var(--c-green);margin-bottom:4px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
+@keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:640px){.form-row,.form-row-3{grid-template-columns:1fr}}
+.cart-item{display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--c-border)}
+.cart-item img{width:60px;height:60px;border-radius:6px;background:var(--c-surface);flex-shrink:0}
+.cart-item-detail{flex:1}
+.cart-item-name{font-weight:600;font-size:0.875rem}
+.cart-item-spec{font-size:0.75rem;color:var(--c-muted)}
+.cart-item-price{font-weight:700;text-align:right}
+.cart-item-remove{color:var(--c-muted);cursor:pointer;font-size:1.25rem}.cart-item-remove:hover{color:var(--c-red)}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html">← Back to Hub</a>
+  <span class="title">MildMate — Customer Sandbox</span>
+  <span class="cart-badge" id="cart-count">0</span>
+</div>
+
+<div class="layout" id="main-content"></div>
+
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+var step=1; // 1=configure, 2=address, 3=review, 4=confirm
+var cart=[];
+var currentConfig=null;
+
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
+
+function updateCartBadge(){
+  var count=cart.length;
+  document.getElementById('cart-count').textContent=count||'';
+}
+updateCartBadge();
+
+// ── Mock price lookup ──
+var products=[
+  {slug:'standard-fitted-sheet',name:'Standard Fitted Sheet',category:'Sheets',fabrics:['CloudSoft','BreezePlus','PremaCotton','EcoLuxe'],hasDepth:true,hasSize:true,sizes:[
+    {label:'Single (91×198 cm)',w:91,l:198},{label:'Twin XL (96×203 cm)',w:96,l:203},
+    {label:'Full/Double (137×191 cm)',w:137,l:191},{label:'Queen (153×203 cm)',w:153,l:203},
+    {label:'King (193×203 cm)',w:193,l:203},{label:'California King (183×213 cm)',w:183,l:213},
+    {label:'Super King (240×210 cm)',w:240,l:210},{label:'Custom Size — Enter Below →',w:0,l:0}]},
+  {slug:'marine-fitted-sheet',name:'Marine Fitted Sheet — V-Berth',category:'Marine',fabrics:['CloudSoft'],hasDepth:true,hasSize:false,isVBerth:true},
+  {slug:'family-fitted-sheet',name:'Family Fitted Sheet',category:'Family',fabrics:['CloudSoft','BreezePlus'],hasDepth:true,hasSize:true,sizes:[
+    {label:'Family XL (250×220 cm)',w:250,l:220},{label:'Family 2X (300×250 cm)',w:300,l:250},{label:'Custom Size',w:0,l:0}]},
+  {slug:'pocket-duvet',name:'3-Sided Zipper Duvet Cover',category:'Duvet Covers',fabrics:['CloudSoft','BreezePlus','PremaCotton','EcoLuxe'],hasDepth:false,hasSize:true,sizes:[
+    {label:'Single (150×200 cm)',w:150,l:200},{label:'Queen (200×200 cm)',w:200,l:200},{label:'King (220×220 cm)',w:220,l:220},{label:'Super King (250×220 cm)',w:250,l:220},{label:'Custom Size',w:0,l:0}]},
+  {slug:'pillowcase-envelope',name:'Envelope Pillowcase',category:'Pillowcases',fabrics:['CloudSoft','BreezePlus','PremaCotton','EcoLuxe'],hasDepth:false,hasSize:true,sizes:[
+    {label:'Standard (50×75 cm)',w:50,l:75},{label:'King (50×90 cm)',w:50,l:90},{label:'Custom Size',w:0,l:0}]}
+];
+
+function calcPrice(prod,w,l,d,fabric){
+  var area=(w+2*d+14)*(l+2*d+14);
+  var rate={CloudSoft:100,BreezePlus:180,PremaCotton:180,EcoLuxe:180}[fabric]||100;
+  var fc=area*rate/23744*1.20;
+  var sewing=area<=51600?120:area<=71000?200:area<=91200?300:area<=120000?400:500;
+  var acc=fc*0.10;
+  var subtotal=fc+sewing+acc+100+50;
+  var margin=prod.isVBerth?8.15:1.65;
+  var thb=Math.ceil(subtotal*margin/100)*100;
+  var usd=Math.round(thb/30);
+  return {thb:thb,usd:usd};
+}
+
+function gotoStep(n){step=n;render();}
+
+function render(){
+  var el=document.getElementById('main-content');
+  el.innerHTML=rSteps()+rContent();
+}
+
+function rSteps(){
+  var dots='';
+  for(var i=1;i<=4;i++){
+    var cls=i<step?'done':i===step?'active':'';
+    dots+='<div style="display:flex;align-items:center;flex:1">';
+    if(i>1){dots+='<div class="step-line'+(i<=step?' done':'')+'"></div>';}
+    dots+='<div class="step-dot '+cls+'">'+(i<step?'✓':i)+'</div>';
+    if(i<4){dots+='<div class="step-line'+(i<step?' done':'')+'"></div>';}
+    dots+='</div>';
+  }
+  var labels='<div class="step-label-row"><span>Configure</span><span>Address</span><span>Review</span><span>Confirmation</span></div>';
+  return dots+labels;
+}
+
+function rContent(){
+  switch(step){
+    case 1: return rConfigure();
+    case 2: return rAddress();
+    case 3: return rReview();
+    case 4: return rConfirm();
+    default: return '';
+  }
+}
+
+function rConfigure(){
+  var h='<div class="card"><div class="card-header">Step 1 — Choose Your Product</div><div class="card-body">';
+
+  h+='<div class="form-group"><label>Product</label><select id="cfg-product" onchange="onProductChange()"><option value="">— Select a product —</option>';
+  products.forEach(function(p,i){h+='<option value="'+i+'">'+p.name+' ('+p.category+')</option>';});
+  h+='</select></div>';
+
+  h+='<div id="cfg-body"></div>';
+
+  h+='<div style="display:flex;gap:8px;margin-top:16px">';
+  h+='<button class="btn btn-primary" id="cfg-add-btn" disabled onclick="addToCart()">Add to Cart</button>';
+  h+='<span id="cfg-price" class="price-display" style="flex:1"></span>';
+  h+='</div>';
+
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:8px">Price is formula-driven — same as live product pages. No actual payment in sandbox.</p>';
+
+  h+='</div></div>';
+  return h;
+}
+
+function onProductChange(){
+  var sel=document.getElementById('cfg-product');
+  var idx=parseInt(sel.value);
+  if(isNaN(idx)||idx<0){document.getElementById('cfg-body').innerHTML='';document.getElementById('cfg-add-btn').disabled=true;return;}
+  var p=products[idx];
+  currentConfig={product:p,sizeIdx:-1,w:0,l:0,d:20,fabric:p.fabrics[0]};
+  var body='';
+
+  if(p.fabrics.length>1){
+    body+='<div class="form-group"><label>Fabric</label><select id="cfg-fabric" onchange="currentConfig.fabric=this.value;updatePrice()">';
+    p.fabrics.forEach(function(f){body+='<option>'+f+'</option>';});
+    body+='</select></div>';
+  }else{
+    body+='<div class="form-group"><label>Fabric</label><input value="'+p.fabrics[0]+'" readonly style="background:var(--c-surface);color:var(--c-muted)"></div>';
+  }
+
+  if(p.hasSize&&p.sizes){
+    body+='<div class="form-group"><label>Size</label><select id="cfg-size" onchange="onSizeChange()"><option value="">— Select size —</option>';
+    p.sizes.forEach(function(s,i){body+='<option value="'+i+'">'+s.label+'</option>';});
+    body+='</select></div>';
+  }
+
+  if(p.isVBerth){
+    body+='<div class="form-row-3"><div class="form-group"><label>Head Width (cm)</label><input type="number" id="cfg-hw" value="145" min="50" max="400" onchange="updatePrice()"></div>';
+    body+='<div class="form-group"><label>Foot Width (cm)</label><input type="number" id="cfg-fw" value="70" min="30" max="300" onchange="updatePrice()"></div>';
+    body+='<div class="form-group"><label>Length (cm)</label><input type="number" id="cfg-l-cm" value="120" min="50" max="500" onchange="updatePrice()"></div></div>';
+  }else if(p.hasSize){
+    body+='<div id="cfg-custom-dims" style="display:none">';
+    body+='<div class="form-row"><div class="form-group"><label>Width (cm)</label><input type="number" id="cfg-w" placeholder="e.g. 153" min="30" max="500" onchange="updatePrice()"></div>';
+    body+='<div class="form-group"><label>Length (cm)</label><input type="number" id="cfg-l" placeholder="e.g. 203" min="30" max="500" onchange="updatePrice()"></div></div>';
+    if(p.hasDepth){
+      body+='<div class="form-group"><label>Mattress Depth (cm)</label><input type="number" id="cfg-d" value="25" min="5" max="90" onchange="updatePrice()"></div>';
+    }
+    body+='</div>';
+  }
+
+  if(p.hasDepth&&!p.hasSize&&!p.isVBerth){
+    body+='<div class="form-row"><div class="form-group"><label>Width (cm)</label><input type="number" id="cfg-w" placeholder="e.g. 153" min="30" max="500" onchange="updatePrice()"></div>';
+    body+='<div class="form-group"><label>Length (cm)</label><input type="number" id="cfg-l" placeholder="e.g. 203" min="30" max="500" onchange="updatePrice()"></div></div>';
+    body+='<div class="form-group"><label>Mattress Depth (cm)</label><input type="number" id="cfg-d" value="25" min="5" max="90" onchange="updatePrice()"></div>';
+  }
+
+  document.getElementById('cfg-body').innerHTML=body;
+  updatePrice();
+}
+
+function onSizeChange(){
+  var sel=document.getElementById('cfg-size');
+  var idx=parseInt(sel.value);
+  currentConfig.sizeIdx=idx;
+  var customDiv=document.getElementById('cfg-custom-dims');
+  if(customDiv){
+    if(idx===currentConfig.product.sizes.length-1){
+      customDiv.style.display='block';
+      currentConfig.w=0;currentConfig.l=0;
+    }else{
+      customDiv.style.display='none';
+      var s=currentConfig.product.sizes[idx];
+      currentConfig.w=s.w;currentConfig.l=s.l;
+    }
+  }
+  updatePrice();
+}
+
+function updatePrice(){
+  if(!currentConfig)return;
+  var p=currentConfig.product;
+  var w,l,d,fabric;
+  if(p.isVBerth){
+    var hw=parseFloat(document.getElementById('cfg-hw')?.value)||0;
+    var fw=parseFloat(document.getElementById('cfg-fw')?.value)||0;
+    l=parseFloat(document.getElementById('cfg-l-cm')?.value)||0;
+    d=parseFloat(document.getElementById('cfg-d')?.value)||0;
+    w=Math.max(hw,fw);
+    fabric=document.getElementById('cfg-fabric')?.value||p.fabrics[0];
+  }else{
+    w=parseFloat(document.getElementById('cfg-w')?.value)||currentConfig.w||0;
+    l=parseFloat(document.getElementById('cfg-l')?.value)||currentConfig.l||0;
+    d=parseFloat(document.getElementById('cfg-d')?.value)||currentConfig.d||25;
+    fabric=document.getElementById('cfg-fabric')?.value||p.fabrics[0];
+  }
+  if(w<=0||l<=0){
+    document.getElementById('cfg-price').textContent='Enter dimensions ↑';
+    document.getElementById('cfg-add-btn').disabled=true;
+    return;
+  }
+  var price=calcPrice(p,w,l,d,fabric);
+  document.getElementById('cfg-price').textContent='฿'+price.thb.toLocaleString()+' ≈ $'+price.usd;
+  document.getElementById('cfg-add-btn').disabled=false;
+  currentConfig.w=w;currentConfig.l=l;currentConfig.d=d;currentConfig.fabric=fabric;
+  currentConfig.price=price;
+}
+
+function addToCart(){
+  if(!currentConfig||!currentConfig.price)return;
+  var p=currentConfig.product;
+  var dims=p.isVBerth
+    ?'HW:'+currentConfig.hw+' FW:'+currentConfig.fw+' L:'+currentConfig.l+' D:'+currentConfig.d+' cm'
+    :currentConfig.w+'×'+currentConfig.l+(p.hasDepth?'×'+currentConfig.d+' cm':' cm');
+  cart.push({
+    name:p.name,slug:p.slug,fabric:currentConfig.fabric,dims:dims,
+    thb:currentConfig.price.thb,usd:currentConfig.price.usd
+  });
+  updateCartBadge();
+  toast('Added to cart: '+p.name);
+  currentConfig=null;
+  document.getElementById('cfg-product').value='';
+  document.getElementById('cfg-body').innerHTML='';
+  document.getElementById('cfg-add-btn').disabled=true;
+  document.getElementById('cfg-price').textContent='';
+}
+
+function rAddress(){
+  var h='<div class="card"><div class="card-header">Step 2 — Shipping Address</div><div class="card-body">';
+  h+='<div class="form-row"><div class="form-group"><label>First Name *</label><input id="addr-first" placeholder="John"></div>';
+  h+='<div class="form-group"><label>Last Name *</label><input id="addr-last" placeholder="Doe"></div></div>';
+  h+='<div class="form-group"><label>Email *</label><input id="addr-email" type="email" placeholder="john@email.com"></div>';
+  h+='<div class="form-group"><label>Phone</label><input id="addr-phone" placeholder="+66 812 345 678"></div>';
+  h+='<div class="form-group"><label>Address *</label><textarea id="addr-address" rows="3" placeholder="123 Sukhumvit Road, Watthana, Bangkok 10110"></textarea></div>';
+  h+='<div class="form-row"><div class="form-group"><label>City *</label><input id="addr-city" placeholder="Bangkok"></div>';
+  h+='<div class="form-group"><label>Country *</label><select id="addr-country"><option>Thailand</option><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Australia</option><option>Singapore</option><option>Malaysia</option><option>Japan</option><option>Other</option></select></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-outline" onclick="gotoStep(1)">← Back</button><button class="btn btn-primary" style="margin-left:auto" onclick="validateAndProceed()">Continue →</button></div>';
+  h+='</div></div>';
+  return h;
+}
+
+function validateAndProceed(){
+  var fields=['addr-first','addr-last','addr-email','addr-address','addr-city'];
+  for(var i=0;i<fields.length;i++){
+    var v=document.getElementById(fields[i]).value.trim();
+    if(!v){toast('Please fill all required fields (*)');return;}
+  }
+  var email=document.getElementById('addr-email').value.trim();
+  if(!email.includes('@')){toast('Please enter a valid email');return;}
+  gotoStep(3);
+}
+
+function rReview(){
+  var h='<div class="card"><div class="card-header">Step 3 — Review Order</div><div class="card-body">';
+
+  h+='<h4 style="margin-bottom:12px;font-size:0.9375rem;color:var(--c-muted)">CART ('+cart.length+' items)</h4>';
+  cart.forEach(function(item,i){
+    h+='<div class="cart-item">';
+    h+='<div style="width:60px;height:60px;border-radius:6px;background:var(--c-surface);display:flex;align-items:center;justify-content:center;font-size:1.25rem">📦</div>';
+    h+='<div class="cart-item-detail"><div class="cart-item-name">'+item.name+'</div><div class="cart-item-spec">'+item.dims+' · '+item.fabric+'</div></div>';
+    h+='<div class="cart-item-price">฿'+item.thb.toLocaleString()+'<br><span style="font-size:0.75rem;color:var(--c-muted)">$'+item.usd+'</span></div>';
+    h+='<span class="cart-item-remove" onclick="cart.splice('+i+',1);updateCartBadge();gotoStep(3);if(cart.length===0)gotoStep(1)">✕</span>';
+    h+='</div>';
+  });
+  if(cart.length===0){
+    h+='<div class="empty-state">Cart is empty. <a href="#" onclick="gotoStep(1);return false" style="color:var(--c-blue)">Add a product</a></div>';
+  }
+
+  var totalThb=cart.reduce(function(s,i){return s+i.thb;},0);
+  var totalUsd=Math.round(totalThb/30);
+  h+='<div class="summary-total"><span>Total</span><span>฿'+totalThb.toLocaleString()+' ≈ $'+totalUsd+'</span></div>';
+
+  h+='<h4 style="margin-top:24px;margin-bottom:12px;font-size:0.9375rem;color:var(--c-muted)">SHIPPING TO</h4>';
+  h+='<div style="background:var(--c-surface);padding:12px 16px;border-radius:var(--radius);font-size:0.875rem;line-height:1.6">';
+  h+=document.getElementById('addr-first').value+' '+document.getElementById('addr-last').value+'<br>';
+  h+=document.getElementById('addr-email').value+'<br>';
+  h+=document.getElementById('addr-address').value+'<br>';
+  h+=document.getElementById('addr-city').value+', '+document.getElementById('addr-country').value;
+  if(document.getElementById('addr-phone').value)h+='<br>'+document.getElementById('addr-phone').value;
+  h+='</div>';
+
+  h+='<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-outline" onclick="gotoStep(2)">← Edit Address</button>';
+  h+='<button class="btn btn-success" style="margin-left:auto" onclick="submitOrder()" '+(cart.length===0?'disabled':'')+'>Place Order (Sandbox)</button></div>';
+
+  h+='</div></div>';
+  return h;
+}
+
+function submitOrder(){
+  gotoStep(4);
+}
+
+function rConfirm(){
+  var h='<div class="success-box">';
+  h+='<div class="icon">✅</div>';
+  h+='<h3>Order Submitted! (Sandbox)</h3>';
+  h+='<p style="color:var(--c-muted);margin-top:4px">Your order has been simulated. In production, this would create a real order in D1 and notify the Admin dashboard.</p>';
+  h+='<p style="color:var(--c-muted);margin-top:8px;font-size:0.8125rem">Next: Switch to <strong>Admin</strong> sandbox to verify the order appears in the orders list.</p>';
+  h+='<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">';
+  h+='<a href="admin.html" class="btn btn-outline">Open Admin Dashboard</a>';
+  h+='<button class="btn btn-primary" onclick="cart=[];updateCartBadge();gotoStep(1)">New Order</button>';
+  h+='</div></div>';
+  return h;
+}
+
+gotoStep(1);
+</script>
+</body>
+</html>
