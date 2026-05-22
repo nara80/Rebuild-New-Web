@@ -8,15 +8,16 @@
 :root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#334155;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;display:flex;min-height:100vh}
-.sidebar{width:240px;background:var(--c-dark);color:#fff;padding:24px 0;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar{width:260px;background:var(--c-dark);color:#fff;padding:24px 0;flex-shrink:0;display:flex;flex-direction:column}
 .sidebar-brand{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:1.125rem;font-weight:700;display:flex;align-items:center;gap:8px}
 .sidebar-brand .dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue)}
-.sidebar-nav{flex:1;padding:16px 0}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
 .sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.875rem;transition:all 0.15s}
 .sidebar-nav a:hover,.sidebar-nav a.active{color:#fff;background:rgba(255,255,255,0.08)}
 .sidebar-nav a .icon{width:18px;height:18px;flex-shrink:0}
 .sidebar-badge{font-size:0.625rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto}
 .sidebar-badge.amber{background:rgba(217,119,6,0.2);color:#fbbf24}
+.sidebar-section{font-size:0.625rem;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.35);padding:12px 20px 6px}
 .main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
 .toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 .toolbar h2{font-size:1.125rem;font-weight:600}
@@ -38,25 +39,57 @@ td{padding:10px 14px;border-bottom:1px solid var(--c-border);color:var(--c-text)
 tr:hover td{background:#f8fafc}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
-.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff;font-family:inherit}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .btn{padding:8px 16px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
 .btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
 .btn-outline{background:transparent;border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
 .btn-sm{padding:4px 10px;font-size:0.75rem}
 .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
-.badge-fabric{background:#dbeafe;color:#1e40af}
-.badge-margin{background:#fce7f3;color:#9d174d}
-.badge-sewing{background:#dcfce7;color:#166534}
-.badge-fixed{background:#fef3c7;color:#92400e}
-.badge-ops{background:#e0e7ff;color:#3730a3}
+.badge-fabric{background:#dbeafe;color:#1e40af}.badge-margin{background:#fce7f3;color:#9d174d}
+.badge-sewing{background:#dcfce7;color:#166534}.badge-fixed{background:#fef3c7;color:#92400e}.badge-ops{background:#e0e7ff;color:#3730a3}
+.badge-pending{background:#fef3c7;color:#92400e}.badge-production{background:#dbeafe;color:#1e40af}
+.badge-shipped{background:#dcfce7;color:#166534}.badge-cancelled{background:#fee2e2;color:#991b1b}
 .upload-zone{border:2px dashed var(--c-border);border-radius:var(--radius);padding:40px;text-align:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s}
 .upload-zone:hover{border-color:var(--c-blue);color:var(--c-blue);background:#f0f7ff}
 .upload-zone.dragover{border-color:var(--c-blue);background:#eff6ff}
+.editor-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
+.product-list{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);overflow:hidden}
+.product-list-header{padding:14px 18px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.875rem}
+.product-list-item{padding:12px 18px;border-bottom:1px solid var(--c-border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.1s}
+.product-list-item:hover{background:#f8fafc}
+.product-list-item.active{background:#eff6ff;border-left:3px solid var(--c-blue)}
+.product-list-item .thumb{width:40px;height:40px;border-radius:6px;background:var(--c-surface);border:1px solid var(--c-border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--c-muted);overflow:hidden}
+.product-list-item .thumb img{width:100%;height:100%;object-fit:cover}
+.product-list-item .name{font-size:0.8125rem;font-weight:500;flex:1}
+.product-list-item .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.active{background:var(--c-green)}.status-dot.inactive{background:var(--c-border)}
+.editor-panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border)}
+.editor-empty{padding:60px 20px;text-align:center;color:var(--c-muted)}
+.image-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
+.image-slot:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.image-slot.has-image{border-style:solid;border-color:var(--c-border)}
+.image-slot.has-image img{width:100%;height:100%;object-fit:cover}
+.image-slot .remove-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;font-size:0.625rem;display:none;align-items:center;justify-content:center;cursor:pointer;border:none}
+.image-slot.has-image:hover .remove-btn{display:flex}
+.add-image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s;font-size:1.5rem}
+.add-image-slot:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
+.tag-chip .remove-tag{cursor:pointer;opacity:0.5;font-size:0.75rem}.tag-chip .remove-tag:hover{opacity:1}
+.timeline{padding-left:24px;border-left:2px solid var(--c-border);margin:16px 0}
+.timeline-item{margin-bottom:20px;position:relative}
+.timeline-dot{position:absolute;left:-29px;top:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--c-border);background:#fff}
+.timeline-dot.done{background:var(--c-green);border-color:var(--c-green)}
+.timeline-dot.current{background:var(--c-blue);border-color:var(--c-blue)}
+.timeline-date{font-size:0.6875rem;color:var(--c-muted)}
+.timeline-text{font-size:0.8125rem;margin-top:2px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%;padding:12px}.stats-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
+@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.stats-grid{grid-template-columns:repeat(2,1fr)}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -67,10 +100,14 @@ tr:hover td{background:#f8fafc}
   <nav class="sidebar-nav">
     <a href="index.html" style="border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:12px;padding-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Hub</a>
     <a href="#" class="active" data-page="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Dashboard</a>
-    <a href="#" data-page="pricing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pricing Params <span class="sidebar-badge amber">SUPER</span></a>
-    <a href="#" data-page="diy"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> DIY Prices <span class="sidebar-badge amber">SUPER</span></a>
-    <a href="#" data-page="exchange"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Exchange Rates <span class="sidebar-badge amber">SUPER</span></a>
+    <div class="sidebar-section">Super Admin Only</div>
+    <a href="#" data-page="pricing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pricing Params</a>
+    <a href="#" data-page="diy"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> DIY Prices</a>
+    <a href="#" data-page="exchange"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Exchange Rates</a>
+    <div class="sidebar-section">Admin Features</div>
+    <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
     <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
+    <a href="#" data-page="customers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Customers</a>
     <a href="#" data-page="subscribers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Subscribers</a>
   </nav>
 </aside>
@@ -91,7 +128,7 @@ tr:hover td{background:#f8fafc}
 
 <script>
 // ── Page Router ──
-var pages = ['dashboard','pricing','diy','exchange','orders','subscribers'];
+var pages = ['dashboard','pricing','diy','exchange','products','orders','customers','subscribers'];
 var currentPage = 'dashboard';
 
 function showPage(name) {
@@ -101,7 +138,8 @@ function showPage(name) {
   if(link) link.classList.add('active');
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
-    exchange:'Exchange Rates',orders:'Orders',subscribers:'Subscribers'
+    exchange:'Exchange Rates',products:'Products',orders:'Orders',
+    customers:'Customers',subscribers:'Subscribers'
   }[name];
   document.getElementById('page-content').innerHTML = renderPage(name);
 }
@@ -126,7 +164,9 @@ function renderPage(name) {
     case 'pricing': return renderPricingParams();
     case 'diy': return renderDiyPrices();
     case 'exchange': return renderExchange();
-    case 'orders': return renderOrders();
+    case 'products': return rProducts();
+    case 'orders': return rOrders();
+    case 'customers': return rCustomers();
     case 'subscribers': return renderSubscribers();
     default: return '';
   }
@@ -277,28 +317,136 @@ function renderExchange() {
   return html;
 }
 
-// ── Orders Page ──
-function renderOrders() {
-  var html = '<div class="card"><div class="card-header">Orders — Sandbox Preview</div><div class="card-body">'+
-    '<p style="color:var(--c-muted);margin-bottom:16px">Connected to D1 <code>orders</code> table. Shows manufacturer-ready order details with dimensions, fabric, and status. (Sandbox — no live data)</p>'+
-    '<table><thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Dimensions</th><th>Fabric</th><th>Status</th></tr></thead><tbody>'+
-    '<tr><td>#001</td><td>2026-05-21</td><td>john@email.com</td><td>Standard Fitted Sheet</td><td>153×203×30 cm</td><td>CloudSoft</td><td><span class="badge badge-sewing">Pending</span></td></tr>'+
-    '<tr><td>#002</td><td>2026-05-20</td><td>sarah@email.com</td><td>Marine Fitted Sheet</td><td>HW:145 FW:70 L:120 D:20</td><td>CloudSoft</td><td><span class="badge badge-fixed">In Production</span></td></tr>'+
-    '<tr><td>#003</td><td>2026-05-19</td><td>mike@email.com</td><td>Family Fitted Sheet</td><td>250×220×35 cm</td><td>BreezePlus</td><td><span class="badge badge-margin">Shipped</span></td></tr>'+
-    '</tbody></table></div></div>';
-  return html;
+// ── Orders (enhanced with status badges) ──
+var sampleOrders = [
+  {id:'#001',date:'2026-05-21',customer:'john@email.com',product:'Standard Fitted Sheet',dims:'153×203×30 cm',fabric:'CloudSoft',status:'pending',total:'฿1,250'},
+  {id:'#002',date:'2026-05-20',customer:'sarah@email.com',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',fabric:'CloudSoft',status:'production',total:'$94'},
+  {id:'#003',date:'2026-05-19',customer:'mike@email.com',product:'Family Fitted Sheet',dims:'250×220×35 cm',fabric:'BreezePlus',status:'shipped',total:'฿2,100'}
+];
+
+function rOrders(){
+  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+sampleOrders.length+' orders</span></div><div class="card-body"><table><thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Dimensions</th><th>Fabric</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+  sampleOrders.forEach(function(o){
+    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled'}[o.status];
+    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+o.customer+'</td><td>'+o.product+'</td><td style="font-size:0.8125rem">'+o.dims+'</td><td>'+o.fabric+'</td><td><strong>'+o.total+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Orders appear when customers submit via the Customer sandbox. Sandbox — no live data.</p>';
+  return h;
 }
 
-// ── Subscribers Page ──
-function renderSubscribers() {
-  var html = '<div class="card"><div class="card-header">Email Subscribers — Sandbox Preview</div><div class="card-body">'+
-    '<p style="color:var(--c-muted);margin-bottom:16px">Connected to D1 <code>subscribers</code> table. Export as CSV. (Sandbox — no live data)</p>'+
-    '<table><thead><tr><th>Email</th><th>Source</th><th>Date</th></tr></thead><tbody>'+
-    '<tr><td>customer1@email.com</td><td>footer</td><td>2026-05-21</td></tr>'+
-    '<tr><td>customer2@email.com</td><td>checkout</td><td>2026-05-20</td></tr>'+
-    '<tr><td>customer3@email.com</td><td>quote</td><td>2026-05-19</td></tr>'+
-    '</tbody></table></div></div>';
-  return html;
+// ── Product Editor (inherited from Admin) ──
+var sampleProducts = [
+  {slug:'standard-fitted-sheet',name:'Standard Fitted Sheet',active:true,category:'Sheets',fabric:'CloudSoft / BreezePlus / PremaCotton / EcoLuxe',
+    titleEN:'Standard Fitted Sheet',titleTH:'ผ้าปูที่นอนรัดมุมมาตรฐาน',
+    descEN:'Custom-fitted sheet with deep pockets. OEKO-TEX certified.',descTH:'ผ้าปูที่นอนรัดมุมแบบสั่งตัดตามขนาด',
+    images:4,video:'',tags:['custom-size','fitted','standard']},
+  {slug:'marine-fitted-sheet',name:'Marine Fitted Sheet — V-Berth',active:true,category:'Sheets / Marine',fabric:'CloudSoft',
+    titleEN:'Marine Fitted Sheet — V-Berth',titleTH:'ผ้าปูที่นอนทางทะเล — รูปตัว V',
+    descEN:'Custom V-Berth fitted sheet for yachts and boats.',descTH:'ผ้าปูที่นอนสำหรับเรือยอชท์',
+    images:3,video:'https://www.youtube.com/embed/example',tags:['marine','yacht','v-berth']},
+  {slug:'bedbridge-connector',name:'BedBridge Connector',active:true,category:'Accessories',fabric:'N/A',
+    titleEN:'BedBridge Connector',titleTH:'ตัวเชื่อมเตียง',
+    descEN:'Connects two mattresses. Eliminates the gap.',descTH:'เชื่อมต่อที่นอนสองชิ้นเข้าด้วยกัน',
+    images:2,video:'',tags:['accessory','family']}
+];
+
+var selectedProductIndex = -1;
+
+function selectProduct(idx){
+  selectedProductIndex=idx;
+  var items=document.querySelectorAll('.product-list-item');
+  items.forEach(function(item,i){item.classList.toggle('active',i===idx);});
+  showProductEditor();
+}
+
+function showProductEditor(){
+  var panel=document.getElementById('editor-panel');
+  if(!panel)return;
+  if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
+  var p=sampleProducts[selectedProductIndex];
+  panel.innerHTML=
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
+      '<span style="display:flex;gap:6px">'+
+        (p.active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
+        '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">'+(p.active?'Deactivate':'Activate')+'</button></span></div>'+
+    '<div class="card-body">'+
+      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input value="'+p.titleEN+'"></div>'+
+      '<div class="form-group"><label>Title (TH)</label><input value="'+p.titleTH+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea rows="3">'+p.descEN+'</textarea></div>'+
+      '<div class="form-group"><label>Description (TH)</label><textarea rows="3">'+p.descTH+'</textarea></div></div>'+
+      '<div class="form-group"><label>Fabric Assignment</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Set via Super Admin — Pricing Params</small></div>'+
+      '<div class="form-group"><label>Video Embed URL</label><input value="'+p.video+'" placeholder="YouTube / Vimeo embed URL">'+
+        (p.video?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)">🔗 <a href="'+p.video+'" target="_blank" style="color:var(--c-blue)">'+p.video+'</a></p>':'')+'</div>'+
+      '<div class="form-group"><label>Product Images ('+(p.images||0)+' slots)</label><div class="image-grid">'+
+        (function(){var h='';for(var i=0;i<Math.max(p.images||0,4);i++)h+='<div class="image-slot'+(i<(p.images||0)?' has-image':'')+'" onclick="toast(\'Upload image slot '+(i+1)+' (sandbox)\')">'+(i<(p.images||0)?'<span style="font-size:0.75rem;color:var(--c-muted)">📷</span><div class="remove-btn" onclick="event.stopPropagation();toast(\'Remove image '+(i+1)+' (sandbox)\')">✕</div>':'<span>+</span>')+'</div>';return h;})()+
+        '<div class="add-image-slot" onclick="toast(\'Add image (sandbox)\')">+</div></div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload, hover to remove. JPEG/PNG, max 5MB.</small></div>'+
+      '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
+        (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
+        '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="toast(\'Product saved (sandbox)\')">Save Product</button>'+
+        '<button class="btn btn-outline" onclick="toast(\'Preview product page (sandbox)\')">Preview</button></div></div>';
+}
+
+function rProducts(){
+  var h='<div class="editor-layout"><div class="product-list"><div class="product-list-header">'+sampleProducts.length+' Products</div>';
+  sampleProducts.forEach(function(p,i){
+    h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
+  });
+  h+='<div style="padding:12px 18px"><button class="btn btn-outline btn-sm" style="width:100%" onclick="toast(\'Add new product (sandbox)\')">+ New Product</button></div></div>';
+  h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images, video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Sandbox — no live data.</p>';
+  return h;
+}
+
+// ── Customers ──
+var sampleCustomers = [
+  {name:'John Doe',email:'john@email.com',phone:'+1 555-0101',country:'United States',address:'123 Main St, Austin TX 78701',
+    orders:[{id:'#001',date:'2026-05-21',product:'Standard Fitted Sheet',dims:'153×203×30 cm',total:'฿1,250',status:'pending'},
+            {id:'#007',date:'2026-04-10',product:'Envelope Pillowcase',dims:'50×75 cm',total:'$18',status:'shipped'}]},
+  {name:'Sarah Chen',email:'sarah@email.com',phone:'+66 812 345 678',country:'Thailand',address:'123 Sukhumvit Rd, Bangkok 10110',
+    orders:[{id:'#002',date:'2026-05-20',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',total:'$94',status:'production'},
+            {id:'#006',date:'2026-03-15',product:'Duvet Cover — Marine',dims:'200×200 cm',total:'฿1,800',status:'shipped'}]},
+  {name:'Mike Ross',email:'mike@email.com',phone:'+44 7911 123456',country:'United Kingdom',address:'45 Oxford St, London W1D 2DZ',
+    orders:[{id:'#003',date:'2026-05-19',product:'Family Fitted Sheet',dims:'250×220×35 cm',total:'฿2,100',status:'shipped'}]}
+];
+
+var selectedCustomerIdx = -1;
+
+function rCustomers(){
+  if(selectedCustomerIdx>=0){return rCustomerDetail(selectedCustomerIdx);}
+  var h='<div class="stats-grid"><div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">'+sampleCustomers.length+'</div><div class="stat-sub">Sandbox sample</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">'+sampleCustomers.reduce(function(s,c){return s+c.orders.length;},0)+'</div><div class="stat-sub">Across all customers</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Countries</div><div class="stat-value">'+([].concat.apply([],sampleCustomers.map(function(c){return c.country;})).filter(function(v,i,a){return a.indexOf(v)===i;}).length)+'</div><div class="stat-sub">International reach</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value">$98</div><div class="stat-sub">Estimated USD</div></div></div>'+
+    '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-muted)">Click row to see detail</span></div><div class="card-body"><table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Orders</th><th></th></tr></thead><tbody>';
+  sampleCustomers.forEach(function(c,i){
+    h+='<tr style="cursor:pointer" onclick="selectedCustomerIdx='+i+';rCustomersDraw()"><td><strong>'+c.name+'</strong></td><td>'+c.email+'</td><td>'+c.country+'</td><td>'+c.orders.length+'</td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();selectedCustomerIdx='+i+';rCustomersDraw()">View →</button></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Customer view — name, address, order history, order status. Sandbox — no live data.</p>';
+  return h;
+}
+
+function rCustomersDraw(){document.getElementById('page-content').innerHTML=rCustomers();}
+
+function rCustomerDetail(idx){
+  var c=sampleCustomers[idx];
+  var h='<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCustomerIdx=-1;rCustomersDraw()">← Back to Customers</button>'+
+    '<div class="card"><div class="card-header">'+c.name+'</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Name</label><input value="'+c.name+'" readonly style="background:var(--c-surface)"></div>'+
+    '<div class="form-group"><label>Email</label><input value="'+c.email+'" readonly style="background:var(--c-surface)"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Phone</label><input value="'+c.phone+'" readonly style="background:var(--c-surface)"></div>'+
+    '<div class="form-group"><label>Country</label><input value="'+c.country+'" readonly style="background:var(--c-surface)"></div></div>'+
+    '<div class="form-group"><label>Address</label><textarea rows="2" readonly style="background:var(--c-surface)">'+c.address+'</textarea></div></div></div>'+
+    '<div class="card"><div class="card-header">Order History ('+c.orders.length+' orders)</div><div class="card-body"><table><thead><tr><th>ID</th><th>Date</th><th>Product</th><th>Dimensions</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+  c.orders.forEach(function(o){
+    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled'}[o.status];
+    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+o.product+'</td><td style="font-size:0.8125rem">'+o.dims+'</td><td><strong>'+o.total+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  return h;
 }
 
 // ── Init ──
