@@ -33,7 +33,25 @@
   try {
     var resp = await fetch('/api/pricing-params');
     if (resp.ok) apiParams = await resp.json();
-  } catch(e) { /* offline/local � use hardcoded defaults */ }
+  } catch(e) { /* offline/local — check sandbox */ }
+
+  // Sandbox localStorage fallback: Super Admin changes flow to product pages
+  if (!apiParams) {
+    try {
+      var sb = localStorage.getItem("sandbox_params");
+      if (sb) {
+        var sa = JSON.parse(sb);
+        apiParams = { fixed_costs: {}, fabric_rates: {}, margins: {}, sewing_tiers: [], duvet_sewing_tiers: [] };
+        sa.forEach(function(p) {
+          if (p.category === "margin") apiParams.margins[p.key] = p.value;
+          else if (p.key.indexOf("sewing_tier") === 0) apiParams.sewing_tiers.push({max:9999999,cost:p.value});
+          else if (p.key.indexOf("duvet_tier") === 0) apiParams.duvet_sewing_tiers.push({max:9999999,cost:p.value});
+          else if (p.key.indexOf("fabric_rate_") === 0) apiParams.fabric_rates[p.key.replace("fabric_rate_","")] = p.value;
+          else apiParams.fixed_costs[p.key] = p.value;
+        });
+      }
+    } catch(e2) {}
+  }
 
   function pVal(key, fallback) {
     if (apiParams && apiParams.fixed_costs && apiParams.fixed_costs[key] !== undefined)
