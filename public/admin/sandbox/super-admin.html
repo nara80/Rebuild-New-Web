@@ -152,7 +152,7 @@ tr:hover td{background:#f8fafc}
 var pages = ['dashboard','pricing','diy','exchange','marketing','products','orders','customers','subscribers','accounts'];
 var currentPage = 'dashboard';
 
-function showPage(name) {
+async function showPage(name) {
   currentPage = name;
   document.querySelectorAll('.sidebar-nav a').forEach(function(a){ a.classList.remove('active'); });
   var link = document.querySelector('[data-page="'+name+'"]');
@@ -162,7 +162,12 @@ function showPage(name) {
     exchange:'Exchange Rates',marketing:'Marketing',products:'Products',orders:'Orders',
     customers:'Customers',subscribers:'Subscribers',accounts:'Admin Accounts'
   }[name];
-  document.getElementById('page-content').innerHTML = renderPage(name);
+  var result = renderPage(name);
+  if (result && typeof result.then === 'function') {
+    document.getElementById('page-content').innerHTML = await result;
+  } else {
+    document.getElementById('page-content').innerHTML = result;
+  }
 }
 
 function toast(msg, bg) {
@@ -614,16 +619,15 @@ async function uploadImage(slotIndex) {
       });
       var data = await resp.json();
       if (data.success) {
-        var p = getProducts()[selectedProductIndex];
+        var ps = await getProducts();
+        var p = ps[selectedProductIndex];
         if (!p) return;
-        // Parse images JSON array
         var imgs = [];
         try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
-        // Pad array to 10 slots
         while (imgs.length < 10) imgs.push("");
         imgs[slotIndex] = data.url;
         p.images = JSON.stringify(imgs);
-        saveProducts_toLocal(getProducts());
+        saveProducts_toLocal(ps);
         toast("Image " + (slotIndex + 1) + " uploaded: " + data.url);
         showProductEditor(); // refresh
       } else {
@@ -638,7 +642,8 @@ async function uploadImage(slotIndex) {
 
 // ── Save Product to D1 ──
 async function saveProductToD1() {
-  var p = getProducts()[selectedProductIndex];
+  var ps = await getProducts();
+  var p = ps[selectedProductIndex];
   if (!p) return;
 
   // Read current form values by ID
@@ -694,11 +699,12 @@ function selectProduct(idx){
   showProductEditor();
 }
 
-function showProductEditor(){
+async function showProductEditor(){
   var panel=document.getElementById('editor-panel');
   if(!panel)return;
   if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
-  var p=getProducts()[selectedProductIndex];
+  var ps = await getProducts();
+  var p=ps[selectedProductIndex];
   // Parse images array
   var imgs=[];
   try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
@@ -738,15 +744,16 @@ function showProductEditor(){
   }, 0);
 }
 
-function removeImageSlot(idx) {
-  var p = getProducts()[selectedProductIndex];
+async function removeImageSlot(idx) {
+  var ps = await getProducts();
+  var p = ps[selectedProductIndex];
   if (!p) return;
   var imgs = [];
   try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
   imgs[idx] = '';
   while (imgs.length > 0 && !imgs[imgs.length - 1]) imgs.pop();
   p.images = JSON.stringify(imgs);
-  saveProducts_toLocal(getProducts());
+  saveProducts_toLocal(ps);
   showProductEditor();
 }
 
@@ -758,13 +765,13 @@ function hideNewProductModal() {
   var ov = document.getElementById("product-modal-overlay");
   if (ov) ov.classList.remove("open");
 }
-function saveNewProduct() {
+async function saveNewProduct() {
   var name = (document.getElementById("np-name")||{}).value || "";
   var slug = (document.getElementById("np-slug")||{}).value || "";
   var cat = (document.getElementById("np-category")||{}).value || "Sheets";
   var fType = (document.getElementById("np-formula")||{}).value || "fitted";
   if (!name || !slug) { toast("Name and slug required"); return; }
-  var ps = getProducts();
+  var ps = await getProducts();
   if (ps.some(function(p){ return p.slug === slug; })) { toast("Slug already exists"); return; }
   ps.push({slug:slug, name:name, active:true, category:cat, fabric:"TBD", formulaType:fType,
     titleEN:name, titleTH:name, descEN:"", descTH:"", images:1, video:"", tags:[]});
@@ -777,9 +784,10 @@ function saveNewProduct() {
   if (pp && typeof renderPricingParams === "function") pp.innerHTML = renderPricingParams();
 }
 
-function rProducts(){
-  var h='<div class="editor-layout"><div class="product-list"><div class="product-list-header">'+getProducts().length+' Products</div>';
-  getProducts().forEach(function(p,i){
+async function rProducts(){
+  var ps = await getProducts();
+  var h='<div class="editor-layout"><div class="product-list"><div class="product-list-header">'+ps.length+' Products</div>';
+  ps.forEach(function(p,i){
     h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
   });
   h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
