@@ -464,26 +464,20 @@ function showNewCampaignForm(){
   div.innerHTML='<div class="card"><div class="card-header">New Sale Campaign</div><div class="card-body">'+
     '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" placeholder="e.g. Songkran Flash Sale"></div>'+
     '<div class="form-group"><label>Discount % *</label><input type="number" id="camp-discount" value="15" min="1" max="90"></div></div>'+
-    '<div class="form-group"><label>Products *</label>'+
-    '<select id="camp-products" multiple style="width:100%;min-height:180px;padding:8px;border:1px solid var(--c-border);border-radius:var(--radius);font-family:inherit;font-size:0.8125rem;color:var(--c-text);background:#fff">'+
-    '<optgroup label="Sheets (9)">'+
-    allProductSlugs.slice(0,9).map(function(s){return'<option value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</option>';}).join('')+
-    '</optgroup>'+
-    '<optgroup label="Duvet Covers (6)">'+
-    allProductSlugs.slice(9,15).map(function(s){return'<option value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</option>';}).join('')+
-    '</optgroup>'+
-    '<optgroup label="Pillowcases (3)">'+
-    allProductSlugs.slice(15,18).map(function(s){return'<option value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</option>';}).join('')+
-    '</optgroup>'+
-    '<optgroup label="Protection (7)">'+
-    allProductSlugs.slice(18,25).map(function(s){return'<option value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</option>';}).join('')+
-    '</optgroup>'+
-    '<optgroup label="Accessories (2)">'+
-    allProductSlugs.slice(25,27).map(function(s){return'<option value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</option>';}).join('')+
-    '</optgroup>'+
-    '<option value="ALL" style="font-weight:700;border-top:1px solid var(--c-border);padding-top:6px;margin-top:4px">-- All Products --</option>'+
-    '</select>'+
-    '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:4px">Hold Ctrl/Cmd to select multiple products</p></div>'+
+    '<div class="form-group"><label>Products * <span style="font-weight:400;font-size:0.75rem;color:var(--c-muted)">— click to multi-select</span></label>'+
+    '<div style="display:flex;gap:6px;margin-bottom:6px"><button type="button" class="btn btn-sm btn-outline" onclick="toggleCampProds(true)">Select All</button><button type="button" class="btn btn-sm btn-outline" onclick="toggleCampProds(false)">Clear All</button></div>'+
+    '<div class="camp-checkboxes" style="max-height:220px;overflow-y:auto;border:1px solid var(--c-border);border-radius:var(--radius);padding:4px;background:#fff">'+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:6px 8px 2px">Sheets (9)</div>'+
+    allProductSlugs.slice(0,9).map(function(s){return'<label style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:0.8125rem;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:6px 8px 2px;border-top:1px solid var(--c-border)">Duvet Covers (6)</div>'+
+    allProductSlugs.slice(9,15).map(function(s){return'<label style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:0.8125rem;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:6px 8px 2px;border-top:1px solid var(--c-border)">Pillowcases (3)</div>'+
+    allProductSlugs.slice(15,18).map(function(s){return'<label style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:0.8125rem;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:6px 8px 2px;border-top:1px solid var(--c-border)">Protection (7)</div>'+
+    allProductSlugs.slice(18,25).map(function(s){return'<label style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:0.8125rem;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:6px 8px 2px;border-top:1px solid var(--c-border)">Accessories (2)</div>'+
+    allProductSlugs.slice(25,27).map(function(s){return'<label style="display:flex;align-items:center;gap:6px;padding:4px 8px;font-size:0.8125rem;cursor:pointer;border-radius:4px" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '</div></div>'+
     '<div class="form-row"><div class="form-group"><label>Start Date</label><input type="date" id="camp-start"></div>'+
     '<div class="form-group"><label>End Date (max 15 days)</label><input type="date" id="camp-end"></div></div>'+
     '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Maximum 15 days. Product pages show strike-through price + countdown timer.</p>'+
@@ -508,6 +502,10 @@ var allProductSlugs=[
   'rv-truck-mattress-encasement','pillow-protector-general','bedbridge-connector','mattress-lift-helper'
 ];
 
+function toggleCampProds(checked) {
+  document.querySelectorAll('.camp-prod').forEach(function(cb) { cb.checked = checked; });
+}
+
 function createCampaign(){
   var name=document.getElementById('camp-name').value.trim();
   var discount=parseInt(document.getElementById('camp-discount').value)||15;
@@ -517,12 +515,8 @@ function createCampaign(){
   var days=(new Date(end)-new Date(start))/86400000;
   if(days<0){toast('End date must be after start date');return;}
   if(days>15){toast('Maximum campaign duration is 15 days');return;}
-  var sel = document.getElementById('camp-products');
   var slugs = [];
-  for (var i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].selected) slugs.push(sel.options[i].value);
-  }
-  if (slugs.includes('ALL')) { slugs = ['ALL']; }
+  document.querySelectorAll('.camp-prod:checked').forEach(function(cb) { slugs.push(cb.value); });
   if (slugs.length === 0) { toast('Select at least one product'); return; }
   MildMateCampaigns.addCampaign({name:name,discount:discount,productSlugs:slugs,startDate:start,endDate:end});
   toast('Campaign created: '+name+' ('+discount+'% off)');
