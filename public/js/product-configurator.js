@@ -144,8 +144,8 @@
   var ZIPPER_RATE = pVal('zipper_rate', 0.4);
   var ENC_OP = 0.15;
   var ENC_MKT = 0.25;
-  var ENC_MARGIN = 0.50;
-  var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN; // 1.90
+  var ENC_MARGIN = pVal('encasement', 0.50);
+  var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN;
 
   // -- Mattress Protector constants --
   // Fabric tier cost based on W�L area in sq.inch
@@ -184,7 +184,7 @@
     var areaSqInch = areaSqCm / SQCM_PER_SQINCH;
     var fabricCost = getProtectorFabricCost(areaSqInch);
     var depthCost = getProtectorDepthCost(dCm);
-    var protectorMargin = isProtectorFamily ? 0.50 : (isProtectorDeepPocket ? 0.25 : 0.15);
+    var protectorMargin = MARGIN_RATE;
     var markup = 1 + PROTECTOR_OP + PROTECTOR_MKT + protectorMargin;
     var subtotal = fabricCost + depthCost + PROTECTOR_PACKING + PROTECTOR_DELIVERY;
     var total = subtotal * markup;
@@ -237,8 +237,7 @@
     var zipperCost = 0.4 * Math.max(wCm, lCm);
     var sewingCost = PILLOW_SEWING;
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
-    // 15/25/35% markup = 1.75
-    var total = subtotal * (1 + OP_RATE + MKT_RATE + 0.35);
+    var total = subtotal * MARKUP;
     var rounded = Math.ceil(total / 100) * 100;
     var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
     return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
@@ -253,8 +252,7 @@
     var zipperCost = variant === 'zipper' ? 0.4 * Math.max(wCm, lCm) : 0;
     var sewingCost = variant === 'sham' ? 50 : PILLOW_SEWING;
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
-    // 15/25/15% markup = 1.55
-    var total = subtotal * (1 + OP_RATE + MKT_RATE + 0.15);
+    var total = subtotal * MARKUP;
     var rounded = Math.ceil(total / 100) * 100;
     var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
     return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100 };
