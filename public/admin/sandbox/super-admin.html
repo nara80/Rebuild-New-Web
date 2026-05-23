@@ -217,6 +217,7 @@ function editParam(idx) {
   if (isNaN(num)) { toast("Invalid number"); return; }
   p.value = num;
   saveParams(ps);
+  syncParamToD1(p);
   toast("Saved: " + p.key + " = " + num + suffix);
   document.getElementById("page-pricing").innerHTML = renderPricingParams();
 }
@@ -238,8 +239,24 @@ function addParam() {
   if (ps.some(function(p){ return p.key === key; })) { toast("Key already exists"); return; }
   ps.push({key:key, value:val, label:lbl, category:cat, products:prod});
   saveParams(ps);
+  syncParamToD1(newP);
   toast(key + " added (" + val + "). Live in product formulas.");
   document.getElementById("page-pricing").innerHTML = renderPricingParams();
+}
+
+
+async function syncParamToD1(p) {
+  try {
+    var secret = localStorage.getItem("sandbox_admin_secret") || "";
+    var resp = await fetch("/api/admin/pricing-params", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Admin-Secret": secret },
+      body: JSON.stringify({ key: p.key, value: p.value, label: p.label, category: p.category })
+    });
+    if (resp.ok) toast(p.key + " synced to D1");
+    else if (resp.status === 401) toast("Set Admin Secret to sync to D1 (401)");
+    else console.warn("D1 sync failed:", resp.status);
+  } catch(e) { /* offline */ }
 }
 
 function renderPricingParams() {

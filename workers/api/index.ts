@@ -10,6 +10,7 @@ import handleUnsubscribe from "./unsubscribe";
 import { handleContact } from "./contact";
 import { handleQuote } from "./quote";
 import { handlePricingParams } from "./pricing-params";
+import { handleAdminPricingParams } from "./admin-pricing";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -56,6 +57,11 @@ export default {
     // Custom Quote API
     if (path === "/api/quote" || path === "/api/quote/") {
       return handleQuote(request, env);
+    }
+
+    // Admin API — pricing params management (write)
+    if (path === "/api/admin/pricing-params" || path === "/api/admin/pricing-params/") {
+      return handleAdminPricingParams(request, env);
     }
 
     // Pricing Parameters API (public read-only)
