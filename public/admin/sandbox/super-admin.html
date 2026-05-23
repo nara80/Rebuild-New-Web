@@ -198,7 +198,8 @@ function renderDashboard() {
 // ── Pricing Parameters Page ──
 function renderPricingParams() {
   var categories = {
-    fabric: { label:'Fabric Rates & Waste', badge:'badge-fabric' },
+    fabric: { label:'Fabric Rates', badge:'badge-fabric' },
+    waste: { label:'Fabric Waste Factors', badge:'badge-waste' },
     margin: { label:'Margin Rates', badge:'badge-margin' },
     sewing: { label:'Fitted Sheet Sewing Tiers', badge:'badge-sewing' },
     duvet_sewing: { label:'Duvet Cover Sewing Tiers', badge:'badge-sewing' },
@@ -214,7 +215,8 @@ function renderPricingParams() {
     {key:'fabric_rate_premacotton',value:180,label:'PremaCotton Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Duvet,Pillow'},
     {key:'fabric_rate_ecoluxe',value:180,label:'EcoLuxe Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Duvet,Pillow'},
     {key:'fabric_rate_tpu',value:120,label:'TPU Rate (THB/lm)',category:'fabric',products:'Encasement,Protector,PillowProtect'},
-    {key:'waste_factor_fabric',value:1.20,label:'Fabric Waste Factor',category:'fabric',products:'All fitted,flat,duvet'},
+    {key:'waste_factor_fabric',value:1.20,label:'Fabric Waste (×)',category:'waste',products:'Fitted,Flat,Duvet,Encase'},
+    {key:'waste_factor_pillowcase',value:1.60,label:'Pillow Waste (×)',category:'waste',products:'Pillowcase,PillowProtect'},
     {key:'margin_rate_standard',value:0.30,label:'Standard Fitted Margin',category:'margin',products:'Standard,DeepPkt,Dorm,Pets'},
     {key:'margin_rate_marine',value:6.80,label:'Marine V-Berth Margin',category:'margin',products:'Marine'},
     {key:'margin_rate_family',value:0.50,label:'Family Fitted Margin',category:'margin',products:'Family'},
