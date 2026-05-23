@@ -26,6 +26,15 @@
     .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
     .product-breadcrumb a:hover { text-decoration: underline; }
     .product-title { font-size: 2.25rem; font-weight: 700; color: #1E293B; line-height: 1.2; margin-bottom: 8px; }
+    .product-title-row { display: flex; align-items: center; gap: 12px; }
+    .favorite-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--color-border); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all var(--transition); flex-shrink: 0; padding: 0; }
+    .favorite-btn:hover { border-color: #dc2626; transform: scale(1.1); }
+    .favorite-btn.active { border-color: #dc2626; background: #fef2f2; }
+    .favorite-toast { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; min-height: 1.2em; }
+    .sale-badge { display: inline-block; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; }
+    .sale-countdown { font-size: 0.75rem; color: #dc2626; font-weight: 600; margin-bottom: 8px; }
+    .price-strike { text-decoration: line-through; color: var(--color-muted); font-size: 1rem; margin-right: 8px; }
+    .price-sale { font-size: 2rem; font-weight: 700; color: #16a34a; }
     .product-tagline { font-size: 1rem; color: #64748b; margin-bottom: 20px; line-height: 1.5; }
 
     .pricing-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius); padding: 28px; margin-bottom: 24px; }
@@ -221,10 +230,15 @@
         </div>
       </div>
       <div class="product-info">
-        <h1 class="product-title">Standard Fitted Sheet  -  12 inch Deep Pocket</h1>
+        <div class="product-title-row">
+          <h1 class="product-title">Standard Fitted Sheet  -  12 inch Deep Pocket</h1>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
+        </div>
+        <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">12-inch / 30cm deep pocket for standard mattresses. OEKO-TEX certified. Custom-fitted so it won't slip.</p>
         <div class="pricing-panel">
           <div class="panel-section">
+            <div id="sale-info"></div>
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> — Choose size — </option>
@@ -361,6 +375,7 @@
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script src="/js/product-sizes.js"></script>
+  <script src="/js/campaign-state.js"></script>
   <script src="/js/product-configurator.js"></script>
   <script src="/js/reviews-carousel.js"></script>
     <div class="mobile-cta-bar" style="display:none;">
@@ -408,6 +423,64 @@
           });
         }
       })();
+
+      // ── Favorite Toggle ──
+      var productSlug = '{{PRODUCT_SLUG}}';
+      var productName = 'Standard Fitted Sheet';
+
+      function updateFavUI() {
+        var btn = document.getElementById('fav-btn');
+        var toast = document.getElementById('fav-toast');
+        if (!btn) return;
+        var isFav = MildMateCampaigns.isFavorite(productSlug);
+        btn.innerHTML = isFav ? '♥' : '♡';
+        btn.className = isFav ? 'favorite-btn active' : 'favorite-btn';
+        btn.title = isFav ? 'Remove from favorites' : 'Save to favorites';
+      }
+
+      window.toggleFavoriteProduct = function() {
+        var isFav = MildMateCampaigns.toggleFavorite(productSlug, productName);
+        updateFavUI();
+        var toast = document.getElementById('fav-toast');
+        if (toast) {
+          if (isFav) {
+            var offer = MildMateCampaigns.getOffers().favorite || 15;
+            toast.textContent = '♥ Saved! Sign up to receive ' + offer + '% off via email.';
+            toast.style.color = '#dc2626';
+          } else {
+            toast.textContent = '';
+          }
+        }
+      };
+
+      // ── Sale Price + Countdown ──
+      function updateSaleDisplay() {
+        var el = document.getElementById('sale-info');
+        var priceEl = document.getElementById('price-display');
+        if (!el || !priceEl) return;
+        var discount = MildMateCampaigns.getDiscountForProduct(productSlug);
+        if (!discount || !discount.discount || !discount.campaign) {
+          el.innerHTML = '';
+          return;
+        }
+        var countdown = MildMateCampaigns.getCampaignCountdown(productSlug);
+        var cdStr = countdown ? (countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left') : '';
+        var html = '<div class="sale-badge">-' + discount.discount + '% SALE</div>';
+        if (cdStr) html += '<div class="sale-countdown">⏳ ' + cdStr + '</div>';
+        el.innerHTML = html;
+
+        // Poll countdown every 60s
+        if (!window._saleTimer) {
+          window._saleTimer = setInterval(function() {
+            var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
+            if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
+            el.innerHTML = '<div class="sale-badge">-' + discount.discount + '% SALE</div><div class="sale-countdown">⏳ ' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left</div>';
+          }, 60000);
+        }
+      }
+
+      updateFavUI();
+      updateSaleDisplay();
     </script>
 </body>
 </html>

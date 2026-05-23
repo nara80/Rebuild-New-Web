@@ -91,6 +91,7 @@ tr:hover td{background:#f8fafc}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.stats-grid{grid-template-columns:repeat(2,1fr)}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
 </style>
+<script src="../../js/campaign-state.js"></script>
 </head>
 <body>
 
@@ -104,6 +105,7 @@ tr:hover td{background:#f8fafc}
     <a href="#" data-page="pricing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Pricing Params</a>
     <a href="#" data-page="diy"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> DIY Prices</a>
     <a href="#" data-page="exchange"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Exchange Rates</a>
+    <a href="#" data-page="marketing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Marketing</a>
     <div class="sidebar-section">Admin Features</div>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
     <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
@@ -128,7 +130,7 @@ tr:hover td{background:#f8fafc}
 
 <script>
 // ── Page Router ──
-var pages = ['dashboard','pricing','diy','exchange','products','orders','customers','subscribers'];
+var pages = ['dashboard','pricing','diy','exchange','marketing','products','orders','customers','subscribers'];
 var currentPage = 'dashboard';
 
 function showPage(name) {
@@ -138,7 +140,7 @@ function showPage(name) {
   if(link) link.classList.add('active');
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
-    exchange:'Exchange Rates',products:'Products',orders:'Orders',
+    exchange:'Exchange Rates',marketing:'Marketing',products:'Products',orders:'Orders',
     customers:'Customers',subscribers:'Subscribers'
   }[name];
   document.getElementById('page-content').innerHTML = renderPage(name);
@@ -164,6 +166,7 @@ function renderPage(name) {
     case 'pricing': return renderPricingParams();
     case 'diy': return renderDiyPrices();
     case 'exchange': return renderExchange();
+    case 'marketing': return rMarketing();
     case 'products': return rProducts();
     case 'orders': return rOrders();
     case 'customers': return rCustomers();
@@ -333,6 +336,174 @@ function rOrders(){
   h+='</tbody></table></div></div>';
   h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Orders appear when customers submit via the Customer sandbox. Sandbox — no live data.</p>';
   return h;
+}
+
+// ── Marketing Tab (Campaigns + Offers) ──
+var marketingSub = 'campaigns'; // 'campaigns' or 'offers'
+
+function rMarketing(){
+  var tabs='<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--c-border)">'+
+    '<a href="#" onclick="marketingSub=\'campaigns\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='campaigns'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🏷 Run a Sale</a>'+
+    '<a href="#" onclick="marketingSub=\'offers\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
+  '</div>';
+  return tabs + (marketingSub==='offers' ? rOffers() : rCampaigns());
+}
+
+function rCampaigns(){
+  var campaigns=[];
+  try{ campaigns=JSON.parse(localStorage.getItem(MildMateCampaigns.STORAGE_KEY)||'[]'); }catch(e){}
+  var now=Date.now();
+
+  var h='<div class="card"><div class="card-header"><span>Active Sales</span><button class="btn btn-primary btn-sm" onclick="showNewCampaignForm()">+ New Sale</button></div><div class="card-body">';
+
+  var activeCampaigns=campaigns.filter(function(c){return now>=new Date(c.startDate).getTime()&&now<=new Date(c.endDate).getTime();});
+  var upcoming=campaigns.filter(function(c){return now<new Date(c.startDate).getTime();});
+  var expired=campaigns.filter(function(c){return now>new Date(c.endDate).getTime();});
+
+  if(campaigns.length===0){
+    h+='<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🏷</p><p>No campaigns yet. Create your first sale.</p></div>';
+  } else {
+    if(activeCampaigns.length>0){
+      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Active ('+activeCampaigns.length+')</h4>';
+      h+=renderCampaignTable(activeCampaigns, 'active');
+    }
+    if(upcoming.length>0){
+      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Upcoming ('+upcoming.length+')</h4>';
+      h+=renderCampaignTable(upcoming, 'upcoming');
+    }
+    if(expired.length>0){
+      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Expired ('+expired.length+')</h4>';
+      h+=renderCampaignTable(expired, 'expired');
+    }
+  }
+  h+='</div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Campaigns apply to product pages — strike-through original price + countdown timer. Valid 1-15 days.</p>';
+  return h;
+}
+
+function renderCampaignTable(items, type){
+  var h='<table><thead><tr><th>Name</th><th>Discount</th><th>Products</th><th>Period</th><th>Status</th><th></th></tr></thead><tbody>';
+  items.forEach(function(c){
+    var statusTag=type==='active'?'<span class="badge badge-shipped">Live</span>':type==='upcoming'?'<span class="badge badge-production">Scheduled</span>':'<span class="badge badge-cancelled">Ended</span>';
+    h+='<tr><td><strong>'+c.name+'</strong></td><td><strong style="color:var(--c-red)">'+c.discount+'% off</strong></td><td>'+c.productSlugs.join(', ')+'</td><td>'+c.startDate+' → '+c.endDate+'</td><td>'+statusTag+'</td><td><button class="btn btn-sm btn-outline" onclick="deleteCampaign(\''+c.id+'\')" style="color:var(--c-red)">Delete</button></td></tr>';
+  });
+  h+='</tbody></table>';
+  return h;
+}
+
+function showNewCampaignForm(){
+  var existing=document.getElementById('new-campaign-form');
+  if(existing){ existing.style.display=existing.style.display==='none'?'block':'none'; return; }
+  var div=document.createElement('div');
+  div.id='new-campaign-form';
+  div.style.cssText='margin-bottom:20px';
+  div.innerHTML='<div class="card"><div class="card-header">New Sale Campaign</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" placeholder="e.g. Songkran Flash Sale"></div>'+
+    '<div class="form-group"><label>Discount % *</label><input type="number" id="camp-discount" value="15" min="1" max="90"></div></div>'+
+    '<div class="form-group"><label>Products *</label><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
+    '<label style="display:flex;align-items:center;gap:4px;font-size:0.8125rem;cursor:pointer"><input type="checkbox" id="camp-all" onchange="toggleAllProducts()"> All Products</label>'+
+    allProductSlugs.map(function(s){return'<label style="display:flex;align-items:center;gap:4px;font-size:0.8125rem;cursor:pointer"><input type="checkbox" class="camp-prod" value="'+s+'"> '+s.replace(/-/g,' ')+'</label>';}).join('')+
+    '</div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Start Date</label><input type="date" id="camp-start"></div>'+
+    '<div class="form-group"><label>End Date (max 15 days)</label><input type="date" id="camp-end"></div></div>'+
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Maximum 15 days. Product pages show strike-through price + countdown timer.</p>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="createCampaign()">Create Campaign</button>'+
+    '<button class="btn btn-outline" onclick="document.getElementById(\'new-campaign-form\').remove()">Cancel</button></div>'+
+  '</div></div>';
+  var content=document.getElementById('page-content');
+  content.insertBefore(div, content.firstChild);
+  var today=new Date().toISOString().split('T')[0];
+  var end=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+  document.getElementById('camp-start').value=today;
+  document.getElementById('camp-end').value=end;
+}
+
+var allProductSlugs=[
+  'standard-fitted-sheet','deep-pocket-fitted-sheet','marine-fitted-sheet','dorm-fitted-sheet',
+  'rv-truck-fitted-sheet','family-fitted-sheet','pet-owner-fitted-sheet','flat-sheet-standard',
+  'flat-sheet-extra-deep-pocket','3-sided-duvet','pet-owner-duvet-cover','duvet-cover-marine',
+  'duvet-cover-rv','duvet-cover-dorm','duvet-insert','pillowcase-envelope','pillowcase-zipper',
+  'pillowcase-sham','mattress-protector-standard','mattress-protector-family',
+  'mattress-protector-deep-pocket','pet-proof-mattress-protector','mattress-encasement-general',
+  'rv-truck-mattress-encasement','pillow-protector-general','bedbridge-connector','mattress-lift-helper'
+];
+
+function toggleAllProducts(){
+  var all=document.getElementById('camp-all').checked;
+  document.querySelectorAll('.camp-prod').forEach(function(cb){cb.checked=all;});
+}
+
+function createCampaign(){
+  var name=document.getElementById('camp-name').value.trim();
+  var discount=parseInt(document.getElementById('camp-discount').value)||15;
+  var start=document.getElementById('camp-start').value;
+  var end=document.getElementById('camp-end').value;
+  if(!name){toast('Enter campaign name');return;}
+  var days=(new Date(end)-new Date(start))/86400000;
+  if(days<0){toast('End date must be after start date');return;}
+  if(days>15){toast('Maximum campaign duration is 15 days');return;}
+  var all=document.getElementById('camp-all').checked;
+  var slugs=[];
+  if(all){slugs=['ALL'];}
+  else {
+    document.querySelectorAll('.camp-prod:checked').forEach(function(cb){slugs.push(cb.value);});
+    if(slugs.length===0){toast('Select at least one product');return;}
+  }
+  MildMateCampaigns.addCampaign({name:name,discount:discount,productSlugs:slugs,startDate:start,endDate:end});
+  toast('Campaign created: '+name+' ('+discount+'% off)');
+  document.getElementById('page-content').innerHTML=rMarketing();
+}
+
+function deleteCampaign(id){
+  MildMateCampaigns.deleteCampaign(id);
+  toast('Campaign deleted');
+  document.getElementById('page-content').innerHTML=rMarketing();
+}
+
+// ── Offers View ──
+function rOffers(){
+  var offers=MildMateCampaigns.getOffers();
+  var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:20px">Configure discount percentages for 3 automated email offer types. These send automatically when triggered — no manual action needed.</p>';
+
+  h+=offerCard('favorite','❤️ Favorited Item','cart');
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-favorite" value="'+offers.favorite+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('When a shopper favorites an item, automatically send a discount offer. Expires 60 days after sent.')+
+  '</div></div>';
+
+  h+='<div class="card"><div class="card-body">';
+  h+=offerCard('cart','🛒 Abandoned Cart','cart');
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-cart" value="'+offers.cart+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('When a shopper adds to cart but doesn\'t check out, send a recovery discount. Expires 60 days after sent.')+
+  '</div></div>';
+
+  h+='<div class="card"><div class="card-body">';
+  h+=offerCard('thankyou','🎉 Thank You (Repeat Buyer)','thankyou');
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou" value="'+offers.thankyou+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('After an order ships, send a thank-you discount to encourage repeat purchase. Expires 1 year after sent.')+
+  '</div></div>';
+
+  h+='<button class="btn btn-primary" style="margin-top:16px" onclick="saveAllOffers()">Save Offers</button>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:12px">In production, offers are sent via Resend email to customers who trigger the event. Sandbox: simulated.</p>';
+  return h;
+}
+
+function offerCard(id,title,icon){
+  return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><span style="font-size:1.5rem">'+icon+'</span><span style="font-weight:600;font-size:0.9375rem">'+title+'</span></div>';
+}
+
+function offerDesc(text){
+  return '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:4px;padding-top:8px;border-top:1px solid var(--c-border)">'+text+'</p>';
+}
+
+function saveAllOffers(){
+  var offers={
+    favorite:parseInt(document.getElementById('offer-favorite').value)||15,
+    cart:parseInt(document.getElementById('offer-cart').value)||20,
+    thankyou:parseInt(document.getElementById('offer-thankyou').value)||20
+  };
+  MildMateCampaigns.saveOffers(offers);
+  toast('Offers saved: Favorite '+offers.favorite+'% | Cart '+offers.cart+'% | Thank You '+offers.thankyou+'%');
 }
 
 // ── Product Editor (inherited from Admin) ──

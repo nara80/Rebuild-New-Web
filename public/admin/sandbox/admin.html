@@ -70,6 +70,9 @@ tr:hover td{background:#f8fafc}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
+</style>
+<script src="../../js/campaign-state.js"></script>
+</head>
 .tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
 .tag-chip .remove-tag{cursor:pointer;opacity:0.5;font-size:0.75rem}.tag-chip .remove-tag:hover{opacity:1}
@@ -102,6 +105,7 @@ tr:hover td{background:#f8fafc}
     <a href="index.html" style="border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:12px;padding-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Hub</a>
     <a href="#" class="active" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
+    <a href="#" data-page="marketing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Marketing</a>
     <a href="#" data-page="customers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Customers</a>
     <a href="#" data-page="subscribers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Subscribers</a>
   </nav>
@@ -129,8 +133,8 @@ function showPage(name){
   currentPage=name;
   document.querySelectorAll('.sidebar-nav a').forEach(function(a){a.classList.remove('active');});
   document.querySelector('[data-page="'+name+'"]').classList.add('active');
-  document.getElementById('page-title').textContent={orders:'Orders',products:'Products',customers:'Customers',subscribers:'Subscribers'}[name];
-  document.getElementById('page-content').innerHTML={orders:rOrders,products:rProducts,customers:rCustomers,subscribers:rSubscribers}[name]();
+  document.getElementById('page-title').textContent={orders:'Orders',products:'Products',marketing:'Marketing',customers:'Customers',subscribers:'Subscribers'}[name];
+  document.getElementById('page-content').innerHTML={orders:rOrders,products:rProducts,marketing:rMarketing,customers:rCustomers,subscribers:rSubscribers}[name]();
 }
 
 // ── Mock data ──
@@ -268,6 +272,90 @@ function rSubscribers(){
 }
 
 showPage('orders');
+
+// ── Marketing Tab ──
+var marketingSub = 'campaigns';
+var allProductSlugs=['standard-fitted-sheet','deep-pocket-fitted-sheet','marine-fitted-sheet','dorm-fitted-sheet','rv-truck-fitted-sheet','family-fitted-sheet','pet-owner-fitted-sheet','flat-sheet-standard','flat-sheet-extra-deep-pocket','3-sided-duvet','pet-owner-duvet-cover','duvet-cover-marine','duvet-cover-rv','duvet-cover-dorm','duvet-insert','pillowcase-envelope','pillowcase-zipper','pillowcase-sham','mattress-protector-standard','mattress-protector-family','mattress-protector-deep-pocket','pet-proof-mattress-protector','mattress-encasement-general','rv-truck-mattress-encasement','pillow-protector-general','bedbridge-connector','mattress-lift-helper'];
+
+function rMarketing(){
+  var tabs='<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--c-border)">'+
+    '<a href="#" onclick="marketingSub=\'campaigns\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='campaigns'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🏷 Run a Sale</a>'+
+    '<a href="#" onclick="marketingSub=\'offers\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
+  '</div>';
+  return tabs+(marketingSub==='offers'?rOffers():rCampaigns());
+}
+
+function rCampaigns(){
+  var campaigns=[];try{campaigns=JSON.parse(localStorage.getItem('mildmate_campaigns')||'[]');}catch(e){}
+  var now=Date.now();
+  var h='<div class="card"><div class="card-header"><span>Active Sales</span><button class="btn btn-primary btn-sm" onclick="showNewCampaignForm()">+ New Sale</button></div><div class="card-body">';
+  if(campaigns.length===0){h+='<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🏷</p><p>No campaigns yet.</p></div>';}
+  else {
+    campaigns.forEach(function(c){
+      var active=now>=new Date(c.startDate).getTime()&&now<=new Date(c.endDate).getTime();
+      var tag=active?'<span class="badge badge-shipped">Live</span>':now<new Date(c.startDate).getTime()?'<span class="badge badge-production">Scheduled</span>':'<span class="badge badge-cancelled">Ended</span>';
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--c-border)"><div><strong>'+c.name+'</strong> <span style="color:var(--c-red);font-weight:600">('+c.discount+'% off)</span><br><span style="font-size:0.75rem;color:var(--c-muted)">'+c.productSlugs.join(', ')+'</span><br><span style="font-size:0.6875rem;color:var(--c-muted)">'+c.startDate+' → '+c.endDate+'</span></div><div style="text-align:right">'+tag+'<br><button class="btn btn-sm btn-outline" onclick="MildMateCampaigns.deleteCampaign(\''+c.id+'\');document.getElementById(\'page-content\').innerHTML=rMarketing()" style="color:var(--c-red);margin-top:4px">Delete</button></div></div>';
+    });
+  }
+  h+='</div></div><p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Campaigns apply to product pages — strike-through price + countdown. Max 15 days.</p>';
+  return h;
+}
+
+function showNewCampaignForm(){
+  var existing=document.getElementById('new-campaign-form');
+  if(existing){existing.remove();return;}
+  var div=document.createElement('div');div.id='new-campaign-form';div.style.cssText='margin-bottom:20px';
+  div.innerHTML='<div class="card"><div class="card-header">New Sale Campaign</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" placeholder="e.g. Flash Sale"></div>'+
+    '<div class="form-group"><label>Discount % *</label><input type="number" id="camp-discount" value="15" min="1" max="90"></div></div>'+
+    '<div class="form-group"><label>Products *</label><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
+    '<label style="display:flex;align-items:center;gap:4px;font-size:0.8125rem;cursor:pointer"><input type="checkbox" id="camp-all" onchange="var c=this.checked;document.querySelectorAll(\'.camp-prod\').forEach(function(cb){cb.checked=c})"> All Products</label>'+
+    allProductSlugs.map(function(s){return'<label style="display:flex;align-items:center;gap:4px;font-size:0.8125rem;cursor:pointer"><input type="checkbox" class="camp-prod" value="'+s+'"> '+s.replace(/-/g,' ')+'</label>';}).join('')+'</div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Start Date</label><input type="date" id="camp-start"></div>'+
+    '<div class="form-group"><label>End Date (max 15 days)</label><input type="date" id="camp-end"></div></div>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="createCampaign()">Create</button><button class="btn btn-outline" onclick="document.getElementById(\'new-campaign-form\').remove()">Cancel</button></div></div></div>';
+  document.getElementById('page-content').insertBefore(div, document.getElementById('page-content').firstChild);
+  document.getElementById('camp-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('camp-end').value=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+}
+
+function createCampaign(){
+  var name=document.getElementById('camp-name').value.trim();
+  var discount=parseInt(document.getElementById('camp-discount').value)||15;
+  var start=document.getElementById('camp-start').value;
+  var end=document.getElementById('camp-end').value;
+  if(!name){toast('Enter campaign name');return;}
+  if((new Date(end)-new Date(start))/86400000>15){toast('Max 15 days');return;}
+  var all=document.getElementById('camp-all').checked;
+  var slugs=all?['ALL']:Array.from(document.querySelectorAll('.camp-prod:checked')).map(function(c){return c.value});
+  if(slugs.length===0){toast('Select at least one product');return;}
+  MildMateCampaigns.addCampaign({name:name,discount:discount,productSlugs:slugs,startDate:start,endDate:end});
+  toast('Created: '+name);document.getElementById('page-content').innerHTML=rMarketing();
+}
+
+function rOffers(){
+  var offers=MildMateCampaigns.getOffers();
+  var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';
+  [{id:'favorite',icon:'❤️',label:'Favorited Item',exp:'60 days',def:15,desc:'When a shopper favorites an item, send a discount offer.'},
+   {id:'cart',icon:'🛒',label:'Abandoned Cart',exp:'60 days',def:20,desc:'When items left in cart without checkout, send a recovery offer.'},
+   {id:'thankyou',icon:'🎉',label:'Thank You (Repeat)',exp:'1 year',def:20,desc:'After order ships, send thank-you discount to encourage repeat purchase.'}].forEach(function(o){
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--c-border)">'+
+      '<div><span style="font-size:1.25rem">'+o.icon+'</span> <strong>'+o.label+'</strong><br><span style="font-size:0.75rem;color:var(--c-muted)">'+o.desc+' Expires '+o.exp+'.</span></div>'+
+      '<div style="text-align:right"><input type="number" id="offer-'+o.id+'" value="'+offers[o.id]+'" min="5" max="50" style="width:64px;padding:6px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"><span style="font-size:0.875rem;color:var(--c-muted)">%</span></div></div>';
+  });
+  h+='<button class="btn btn-primary" style="margin-top:12px" onclick="saveOffers()">Save Offers</button></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Sandbox — simulated. Production: Resend email API.</p>';
+  return h;
+}
+
+function saveOffers(){
+  MildMateCampaigns.saveOffers({
+    favorite:parseInt(document.getElementById('offer-favorite').value)||15,
+    cart:parseInt(document.getElementById('offer-cart').value)||20,
+    thankyou:parseInt(document.getElementById('offer-thankyou').value)||20
+  });
+  toast('Offers saved');
+}
 
 // ── Customer data ──
 var sampleCustomers = [

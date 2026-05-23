@@ -1,12 +1,12 @@
-﻿/* ============================================
-   MildMate Product Configurator — Phase 4+
+/* ============================================
+   MildMate Product Configurator � Phase 4+
    Fitted sheet real pricing formula
-   Hybrid: standard size presets + custom W×L×D
+   Hybrid: standard size presets + custom W�L�D
    Applies to: standard-fitted-sheet, deep-pocket-fitted-sheet, dorm-fitted-sheet, rv-truck-fitted-sheet
    ============================================ */
 
 (async function () {
-  // ── Detect product variant ──
+  // -- Detect product variant --
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
   var isFlatSheet = path.indexOf('flat-sheet') !== -1;
@@ -28,12 +28,12 @@
     else if (path.indexOf('sham') !== -1) pillowVariant = 'sham';
   }
 
-  // ── Fetch dynamic pricing params from API (with hardcoded fallback) ──
+  // -- Fetch dynamic pricing params from API (with hardcoded fallback) --
   var apiParams = null;
   try {
     var resp = await fetch('/api/pricing-params');
     if (resp.ok) apiParams = await resp.json();
-  } catch(e) { /* offline/local — use hardcoded defaults */ }
+  } catch(e) { /* offline/local � use hardcoded defaults */ }
 
   function pVal(key, fallback) {
     if (apiParams && apiParams.fixed_costs && apiParams.fixed_costs[key] !== undefined)
@@ -45,7 +45,7 @@
     return fallback;
   }
 
-  // ── Pricing constants (from API or hardcoded fallbacks) ──
+  // -- Pricing constants (from API or hardcoded fallbacks) --
   var SQCM_PER_YARD = pVal('sqcm_per_yard', 23744);
   var PACKING = pVal('packing_cost', 100);
   var DELIVERY = pVal('delivery_cost', 50);
@@ -73,7 +73,7 @@
     EXCHANGE_RATES = {};
     for (var i = 0; i < apiParams.exchange_rates.length; i++) {
       var er = apiParams.exchange_rates[i];
-      EXCHANGE_RATES[er.currency] = 1 / er.rate_per_thb; // THB → currency
+      EXCHANGE_RATES[er.currency] = 1 / er.rate_per_thb; // THB ? currency
     }
   }
 
@@ -86,7 +86,7 @@
     ecoluxe: pVal('ecoluxe', 180)
   };
 
-  // ── Sewing tiers (from API or fallback) ──
+  // -- Sewing tiers (from API or fallback) --
   var SEWING_TIERS = [];
   if (apiParams && apiParams.sewing_tiers && apiParams.sewing_tiers.length) {
     SEWING_TIERS = apiParams.sewing_tiers;
@@ -111,7 +111,7 @@
     ];
   }
 
-  // ── Pillow constants ──
+  // -- Pillow constants --
   var PILLOW_WASTE = pVal('waste_factor_pillowcase', 1.60);
   var PILLOW_SEWING = pVal('pillow_sewing_cost', 40);
   var MAX_PILLOW = pVal('max_pillow_cm', 120);
@@ -131,11 +131,11 @@
     return 600;
   }
 
-  // ── Flat sheet constants ──
+  // -- Flat sheet constants --
   var FLAT_TUCK = pVal('flat_tuck_cm', 25);
   var FLAT_SEWING = pVal('flat_sewing_cost', 250);
 
-  // ── Encasement constants (TPU) ──
+  // -- Encasement constants (TPU) --
   var TPU_COST_PER_LM = pVal('fabric_rate_tpu', 120);
   var TPU_BOLT_W = pVal('tpu_bolt_width_cm', 210);
   var TPU_SQCM_PER_LM = 100 * TPU_BOLT_W;
@@ -146,8 +146,8 @@
   var ENC_MARGIN = 0.50;
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN; // 1.90
 
-  // ── Mattress Protector constants ──
-  // Fabric tier cost based on W×L area in sq.inch
+  // -- Mattress Protector constants --
+  // Fabric tier cost based on W�L area in sq.inch
   var PROTECTOR_FABRIC_TIERS = [
     { maxSqInch: 3200, cost: 550 },
     { maxSqInch: 6620, cost: 670 },
@@ -211,12 +211,12 @@
   }
 
   function calcDuvet(wCm, lCm, fabric) {
-    // 2 pieces × (W+5) × (L+5) — 5cm sewing allowance on each edge, +20% waste
+    // 2 pieces � (W+5) � (L+5) � 5cm sewing allowance on each edge, +20% waste
     var rawArea = 2 * (wCm + 5) * (lCm + 5);
     var area = rawArea * 1.20;
     var yardRate = FABRIC_RATES[fabric] || 100;
     var fabricCost = (area * yardRate / SQCM_PER_YARD);
-    // Zipper: 0.4 THB/cm × (2L + W)
+    // Zipper: 0.4 THB/cm � (2L + W)
     var zipperCost = 0.4 * (2 * lCm + wCm);
     var sewingCost = getDuvetSewingCost(rawArea);
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
@@ -227,7 +227,7 @@
   }
 
   function calcPillowProtector(wCm, lCm) {
-    // 2 pieces × (W+5) × (L+5) + 60% waste, TPU fabric
+    // 2 pieces � (W+5) � (L+5) + 60% waste, TPU fabric
     var rawArea = 2 * (wCm + 5) * (lCm + 5);
     var area = rawArea * PILLOW_WASTE;
     // TPU fabric cost: 120 THB/lm, 210cm bolt
@@ -308,7 +308,7 @@
   function inchToCm(v) { return v * 2.54; }
   function cmToInch(v) { return v * 0.393701; }
 
-  // ── DOM refs ──
+  // -- DOM refs --
   var sizeSelect = document.getElementById('size-select');
   var fabricSelect = document.getElementById('fabric-select');
   var priceDisplay = document.getElementById('price-display');
@@ -332,22 +332,22 @@
     quotePriceUsd: 0
   };
 
-  if (!fabricSelect && !sizeSelect) return; // Not a configurator page — exit
+  if (!fabricSelect && !sizeSelect) return; // Not a configurator page � exit
 
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
 
-  // Duvet covers & pillow protectors only need W×L — hide the depth input
+  // Duvet covers & pillow protectors only need W�L � hide the depth input
   if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
     var dimDGroup = dimD.closest('.dim-field') || dimD.closest('.input-group');
     if (dimDGroup) dimDGroup.style.display = 'none';
   }
 
-  // ── Marine Fitted Sheet — shape-based pricing ──
+  // -- Marine Fitted Sheet � shape-based pricing --
   if (isMarineFitted) {
     state.fabric = 'cloudsoft';
-    // Hide "Select Mattress Size" — marine uses "Choose Your Berth Shape" instead
+    // Hide "Select Mattress Size" � marine uses "Choose Your Berth Shape" instead
     if (sizeSelect) {
       var sizeSection = sizeSelect.closest('.panel-section');
       if (sizeSection) sizeSection.style.display = 'none';
@@ -383,7 +383,7 @@
         } else {
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
-          priceDisplay.textContent = formatPrice(thb, price);
+          priceDisplay.innerHTML = displayPrice(thb, price);
           if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
         }
 
@@ -393,13 +393,13 @@
           if (lMin) parts.push('L: ' + lMin + '\u2013' + lMax + ' cm');
           if (hMin) parts.push('HW: ' + hMin + '\u2013' + hMax + ' cm');
           if (fMin) parts.push('FW: ' + fMin + '\u2013' + fMax + ' cm');
-          shapeHint.textContent = parts.length ? 'Valid range: ' + parts.join('  |  ') : 'Custom dimensions only — request a quote below';
+          shapeHint.textContent = parts.length ? 'Valid range: ' + parts.join('  |  ') : 'Custom dimensions only � request a quote below';
         }
       });
     }
   }
 
-  // ── Populate size-select from centralized size data ──
+  // -- Populate size-select from centralized size data --
   function populateSizeSelect() {
     if (!sizeSelect || typeof PRODUCT_SIZES === 'undefined') return;
     var typeKey = isDuvet ? 'duvet' : (isPillowcase || isPillowProtector) ? 'pillow' : 'fitted-sheet';
@@ -436,7 +436,7 @@
   }
   populateSizeSelect();
 
-  // ── Inject quote popup HTML ──
+  // -- Inject quote popup HTML --
   var popupHTML = '' +
     '<div class="quote-overlay" id="quote-overlay">' +
       '<div class="quote-popup">' +
@@ -502,7 +502,7 @@
     '.quote-confirm-details strong{color:#333}';
   document.head.appendChild(styleEl);
 
-  // ── Parse "WxLxD" string from option value ──
+  // -- Parse "WxLxD" string from option value --
   function parseSizeVal(val) {
     if (!val || val === 'custom') return null;
     var parts = val.split('x');
@@ -515,34 +515,66 @@
     return null;
   }
 
-  // ── Price formatter: USD-only for EN, THB-only for TH ──
+  // -- Price formatter: USD-only for EN, THB-only for TH --
   var isEN = window.location.pathname.indexOf('/th/') === -1;
   function formatPrice(thb, usd) {
     if (isEN) return '$' + Math.round(usd);
     return '\u0E3F' + thb.toLocaleString();
   }
 
-  // ── Update price from standard size ──
+  // -- Campaign discount helper --
+  function applyCampaignDiscount(thb, usd) {
+    var discount = 0;
+    if (typeof MildMateCampaigns !== 'undefined') {
+      var path = window.location.pathname;
+      var slug = path.split('/').filter(function(s){return s;}).pop();
+      discount = MildMateCampaigns.getDiscountForProduct(slug).discount || 0;
+    }
+    var dThb = Math.round(thb * (1 - discount / 100));
+    var dUsd = Math.round((dThb / THB_TO_USD) * 100) / 100;
+    return { thb: dThb, usd: dUsd, discount: discount, originalThb: thb, originalUsd: usd };
+  }
+
+  function updateSaleInfoDiv(discount, originalThb, originalUsd) {
+    var el = document.getElementById('sale-info');
+    if (!el) return;
+    if (!discount) { el.innerHTML = ''; return; }
+    var countdown = typeof MildMateCampaigns !== 'undefined' ? MildMateCampaigns.getCampaignCountdown(window.location.pathname.split('/').filter(function(s){return s;}).pop()) : null;
+    var html = '<div class="sale-badge">-' + discount + '% SALE</div>';
+    if (countdown) html += '<div class="sale-countdown">(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)</div>';
+    el.innerHTML = html;
+  }
+
+  function displayPrice(thb, usd, priceEl) {
+    var result = applyCampaignDiscount(thb, usd);
+    updateSaleInfoDiv(result.discount, result.originalThb, result.originalUsd);
+    if (result.discount > 0) {
+      return '<span class="price-strike">' + formatPrice(result.originalThb, result.originalUsd) + '</span><span class="price-sale">' + formatPrice(result.thb, result.usd) + '</span>';
+    }
+    return formatPrice(thb, usd);
+  }
+
+  // -- Update price from standard size --
   function updateStandardPrice() {
     if (!sizeSelect || !priceDisplay) return;
-    // Marine has no standard size dropdown — pricing handled by shape selector + custom dims
+    // Marine has no standard size dropdown � pricing handled by shape selector + custom dims
     if (isMarineFitted) return;
     var val = sizeSelect.value;
     if (val === 'custom') {
       if (customDims) customDims.classList.add('open');
       if (addToCartBtn) addToCartBtn.disabled = true;
-      priceDisplay.textContent = '—';
+      priceDisplay.textContent = '�';
       return;
     }
     var dims = parseSizeVal(val);
     if (!dims) {
-      priceDisplay.textContent = '—';
+      priceDisplay.textContent = '�';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
     if (customDims) customDims.classList.remove('open');
 
-    // V-Berth: no standard-size dropdown — handled by "Choose Your Berth Shape" + custom dims
+    // V-Berth: no standard-size dropdown � handled by "Choose Your Berth Shape" + custom dims
 
     var result;
     if (isEncasement) {
@@ -569,15 +601,15 @@
       result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
     }
     if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && dims.w > MAX_W) {
-      priceDisplay.textContent = 'Custom quote — Co-Sleep size';
+      priceDisplay.textContent = 'Custom quote � Co-Sleep size';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
-    priceDisplay.textContent = formatPrice(result.thb, result.usd);
+    priceDisplay.innerHTML = displayPrice(result.thb, result.usd);
     if (addToCartBtn) addToCartBtn.disabled = false;
   }
 
-  // ── Update price from custom dimensions ──
+  // -- Update price from custom dimensions --
   function updateCustomPrice() {
     if (!customPrice) return;
     var w = parseFloat(dimW && dimW.value) || 0;
@@ -611,7 +643,7 @@
       var result = calcVBerthFitted(wCm, fw, lCm, dCm, state.fabric);
       state.quotePriceThb = result.thb;
       state.quotePriceUsd = result.usd;
-      customPrice.textContent = formatPrice(result.thb, result.usd);
+      customPrice.innerHTML = displayPrice(result.thb, result.usd);
       return;
     }
 
@@ -637,7 +669,7 @@
     }
     state.quotePriceThb = result.thb;
     state.quotePriceUsd = result.usd;
-    customPrice.textContent = formatPrice(result.thb, result.usd);
+    customPrice.innerHTML = displayPrice(result.thb, result.usd);
   }
 
   function updateAllPrices() {
@@ -645,7 +677,7 @@
     updateCustomPrice();
   }
 
-  // ── Fabric dropdown change ──
+  // -- Fabric dropdown change --
   if (fabricSelect) {
     fabricSelect.addEventListener('change', function () {
       state.fabric = fabricSelect.value;
@@ -665,26 +697,26 @@
     });
   }
 
-  // ── Size dropdown change ──
+  // -- Size dropdown change --
   if (sizeSelect) {
     sizeSelect.addEventListener('change', function () {
       updateStandardPrice();
     });
   }
 
-  // ── Custom dimension inputs ──
+  // -- Custom dimension inputs --
   if (dimW) dimW.addEventListener('input', updateCustomPrice);
   if (dimL) dimL.addEventListener('input', updateCustomPrice);
   if (dimD) dimD.addEventListener('input', updateCustomPrice);
 
-  // ── Unit toggle ──
+  // -- Unit toggle --
   if (unitCmBtn) {
     unitCmBtn.addEventListener('click', function () {
       if (state.unit === 'cm') return;
       state.unit = 'cm';
       unitCmBtn.classList.add('active');
       if (unitInBtn) unitInBtn.classList.remove('active');
-      // Convert inch → cm
+      // Convert inch ? cm
       if (dimW && dimW.value) dimW.value = (inchToCm(parseFloat(dimW.value))).toFixed(1);
       if (dimL && dimL.value) dimL.value = (inchToCm(parseFloat(dimL.value))).toFixed(1);
       if (dimD && dimD.value) dimD.value = (inchToCm(parseFloat(dimD.value))).toFixed(1);
@@ -697,7 +729,7 @@
       state.unit = 'in';
       unitInBtn.classList.add('active');
       if (unitCmBtn) unitCmBtn.classList.remove('active');
-      // Convert cm → inch
+      // Convert cm ? inch
       if (dimW && dimW.value) dimW.value = (cmToInch(parseFloat(dimW.value))).toFixed(1);
       if (dimL && dimL.value) dimL.value = (cmToInch(parseFloat(dimL.value))).toFixed(1);
       if (dimD && dimD.value) dimD.value = (cmToInch(parseFloat(dimD.value))).toFixed(1);
@@ -705,14 +737,14 @@
     });
   }
 
-  // ── Custom quote toggle (existing — unchanged) ──
+  // -- Custom quote toggle (existing � unchanged) --
   if (customQuoteBtn) {
     customQuoteBtn.addEventListener('click', function () {
       if (customDims) customDims.classList.toggle('open');
     });
   }
 
-  // ── "Custom Quote" button → validate dimensions then open popup ──
+  // -- "Custom Quote" button ? validate dimensions then open popup --
   var quoteOverlay = document.getElementById('quote-overlay');
   var confirmOverlay = document.getElementById('confirm-overlay');
 
@@ -743,7 +775,7 @@
     });
   }
 
-  // ── Close popups ──
+  // -- Close popups --
   document.getElementById('quote-close').addEventListener('click', function () {
     quoteOverlay.classList.remove('open');
   });
@@ -760,7 +792,7 @@
     if (e.target === confirmOverlay) confirmOverlay.classList.remove('open');
   });
 
-  // ── Form submit → POST /api/quote ──
+  // -- Form submit ? POST /api/quote --
   document.getElementById('quote-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -867,7 +899,7 @@
     return d.innerHTML;
   }
 
-  // ── Add to cart (stub — Phase 5) ──
+  // -- Add to cart (stub � Phase 5) --
   if (addToCartBtn) {
     addToCartBtn.addEventListener('click', function () {
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
@@ -880,7 +912,7 @@
     });
   }
 
-  // ── Color selector ──
+  // -- Color selector --
   var colorOptions = document.querySelectorAll('.color-option');
   colorOptions.forEach(function (c) {
     c.addEventListener('click', function () {
@@ -889,7 +921,7 @@
     });
   });
 
-  // ── Product tabs ──
+  // -- Product tabs --
   var tabBtns = document.querySelectorAll('.tab-btn');
   tabBtns.forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -901,7 +933,7 @@
     });
   });
 
-  // ── Gallery thumbnails ──
+  // -- Gallery thumbnails --
   document.querySelectorAll('.gallery-thumb').forEach(function (thumb) {
     thumb.addEventListener('click', function () {
       document.querySelectorAll('.gallery-thumb').forEach(function (t) { t.classList.remove('active'); });
@@ -911,6 +943,6 @@
     });
   });
 
-  // ── Init: default price ──
+  // -- Init: default price --
   updateAllPrices();
 })();
