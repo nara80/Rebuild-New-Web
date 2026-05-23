@@ -397,7 +397,7 @@
         var sentinel = document.createElement('div');
         sentinel.id = 'cta-sentinel';
         sentinel.style.cssText = 'position:absolute;height:1px;width:1px;pointer-events:none';
-        var priceSection = (priceDisplay && priceDisplay.closest('.configurator-price')) || priceDisplay;
+        var priceSection = (priceDisplay && priceDisplay.closest('.pricing-panel')) || priceDisplay;
         if (priceSection && priceSection.parentNode) {
           priceSection.parentNode.insertBefore(sentinel, priceSection.nextSibling);
         }
