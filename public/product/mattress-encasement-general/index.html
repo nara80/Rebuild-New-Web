@@ -31,8 +31,8 @@
     .favorite-btn:hover { border-color: #dc2626; transform: scale(1.1); }
     .favorite-btn.active { border-color: #dc2626; background: #fef2f2; }
     .favorite-toast { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; min-height: 1.2em; }
-    .sale-badge { display: inline-block; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; }
-    .sale-countdown { font-size: 0.75rem; color: #dc2626; font-weight: 600; margin-bottom: 8px; }
+    .sale-badge { display: inline; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 4px }
+    .sale-countdown { display: inline; font-size: 0.75rem; color: #dc2626; font-weight: 600 }
     .price-strike { text-decoration: line-through; color: var(--color-muted); font-size: 1rem; margin-right: 8px; }
     .price-sale { font-size: 2rem; font-weight: 700; color: #16a34a; }
     .product-tagline { font-size: 1rem; color: #64748b; margin-bottom: 20px; line-height: 1.5; }
@@ -70,7 +70,7 @@
     .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
     .price-label { font-size: 0.8125rem; color: #64748b; }
     .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
-    .price-sub { font-size: 0.75rem; color: #94a3b8; }
+    .price-sub { font-size: 0.75rem; min-height: 1.2em }
 
     .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
     .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -242,7 +242,6 @@
         <p class="product-tagline">Full 6-sided encasement  -  complete waterproof protection from all angles. TPU inner layer. OEKO-TEX certified.</p>
         <div class="pricing-panel">
           <div class="panel-section">
-            <div id="sale-info"></div>
             <div class="panel-label">Select Mattress Size</div>
             <select class="size-select" id="size-select">
               <option value=""> — Choose size — </option>
@@ -257,7 +256,7 @@
               <span class="price-label">Price</span>
               <span class="price-value" id="price-display">USD 55.00</span>
             </div>
-            <div class="price-sub">Excludes shipping &amp; import tariff</div>
+            <div class="price-sub" id="sale-info"></div>
           </div>
           <div class="add-to-cart-row">
             <button class="btn-add-cart" id="add-to-cart" disabled>
@@ -502,20 +501,17 @@
           return;
         }
         var countdown = MildMateCampaigns.getCampaignCountdown(productSlug);
-        var cdStr = countdown ? (countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left') : '';
-        var html = '<div class="sale-badge">-' + discount.discount + '% SALE</div>';
-        if (cdStr) html += '<div class="sale-countdown">⏳ ' + cdStr + '</div>';
+        var cdStr = countdown ? (' (' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)') : '';
+        var html = '<span class="sale-badge">-' + discount.discount + '% SALE</span>' + cdStr;
         el.innerHTML = html;
 
-        // Poll countdown every 60s
         if (!window._saleTimer) {
           window._saleTimer = setInterval(function() {
             var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
             if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
-            el.innerHTML = '<div class="sale-badge">-' + discount.discount + '% SALE</div><div class="sale-countdown">⏳ ' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left</div>';
+            el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span> (' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
           }, 60000);
         }
-      }
 
       updateFavUI();
       updateSaleDisplay();
