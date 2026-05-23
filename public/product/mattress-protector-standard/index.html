@@ -475,7 +475,7 @@
           return;
         }
         var countdown = MildMateCampaigns.getCampaignCountdown(productSlug);
-        var cdStr = countdown ? (' (' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)') : '';
+        var cdStr = countdown ? ('  (' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)') : '';
         var html = '<span class="sale-badge">-' + discount.discount + '% SALE</span>' + cdStr;
         el.innerHTML = html;
 
@@ -483,7 +483,7 @@
           window._saleTimer = setInterval(function() {
             var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
             if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
-            el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span> (' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
+            el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span>  (' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
           }, 60000);
         }        }
       }
