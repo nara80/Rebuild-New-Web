@@ -416,9 +416,11 @@
         var ticking = false;
 
         function updateStickyBar() {
-          var isMobile = window.innerWidth <= 640;
-          var btnRect = desktopBtn.getBoundingClientRect();
-          var scrolledPast = btnRect.bottom < 0; // scrolled past the desktop button
+          var isMobile = window.innerWidth <= 920;
+          var pd = document.getElementById('price-display');
+          if (!pd) return;
+          var pdRect = pd.getBoundingClientRect();
+          var scrolledPast = pdRect.bottom < 0;
 
           if (isMobile && scrolledPast) {
             bar.classList.add('visible');
