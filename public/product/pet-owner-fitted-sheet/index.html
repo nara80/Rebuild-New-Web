@@ -403,7 +403,7 @@
       </button>
     </div>
     <script>
-      /* Mobile CTA — scroll-aware sticky bar */
+      /* Mobile CTA — simple scroll-aware sticky bar */
       (function() {
         var bar = document.getElementById('mobile-cta-bar');
         var desktopBtn = document.getElementById('add-to-cart');
@@ -411,20 +411,10 @@
         var priceDisplay = document.getElementById('price-display');
         var mobilePrice = document.getElementById('mobile-cta-price');
         if (!bar || !desktopBtn || !mobileBtn) return;
-        // 1. Show bar when scrolled past the pricing panel
-        var pricingPanel = (priceDisplay && priceDisplay.closest('.pricing-panel'));
-        var ticking = false;
-        function updateStickyBar() {
-          if (pricingPanel) {
-            var panelBottom = pricingPanel.getBoundingClientRect().bottom;
-            bar.classList.toggle('visible', panelBottom < 0);
-          }
-        }
+        // 1. Show bar after scrolling 300px past top
         window.addEventListener('scroll', function() {
-          if (!ticking) { window.requestAnimationFrame(function() { updateStickyBar(); ticking = false; }); ticking = true; }
+          bar.classList.toggle('visible', window.pageYOffset > 300);
         }, { passive: true });
-        window.addEventListener('resize', updateStickyBar);
-        updateStickyBar();
         // 2. Sync price from desktop (including sale HTML)
         if (priceDisplay && mobilePrice) {
           var priceObserver = new MutationObserver(function() {
