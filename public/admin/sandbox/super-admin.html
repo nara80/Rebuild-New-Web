@@ -239,27 +239,6 @@ function editParam(idx) {
   document.getElementById("page-pricing").innerHTML = renderPricingParams();
 }
 
-function addParam() {
-  var ps = getParams();
-  var keyEl = document.getElementById("new-param-key");
-  var catEl = document.getElementById("new-param-cat");
-  var valEl = document.getElementById("new-param-val");
-  var lblEl = document.getElementById("new-param-label");
-  var prodEl = document.getElementById("new-param-products");
-  var key = (keyEl ? keyEl.value : "").trim();
-  var cat = (catEl ? catEl.value : "margin");
-  var lbl = (lblEl ? lblEl.value : key);
-  var prod = (prodEl ? prodEl.value : "");
-  if (!key) { toast("Key is required"); return; }
-  var val = parseFloat(valEl ? valEl.value : "0");
-  if (isNaN(val)) { toast("Invalid value"); return; }
-  if (ps.some(function(p){ return p.key === key; })) { toast("Key already exists"); return; }
-  ps.push({key:key, value:val, label:lbl, category:cat, products:prod});
-  saveParams(ps);
-  syncParamToD1(newP);
-  toast(key + " added (" + val + "). Live in product formulas.");
-  document.getElementById("page-pricing").innerHTML = renderPricingParams();
-}
 
 
 async function syncParamToD1(p) {
@@ -311,14 +290,7 @@ function renderPricingParams() {
     }
     html += "</tbody></table></div></div></div>";
   }
-  html += "<div class=\"card\"><div class=\"card-header\">Add New Parameter</div><div class=\"card-body\">"+
-    "<div class=\"form-row\"><div class=\"form-group\"><label>Key</label><input type=\"text\" id=\"new-param-key\" placeholder=\"e.g. margin_rate_new_product\"></div>"+
-    "<div class=\"form-group\"><label>Category</label><select id=\"new-param-cat\"><option value=\"fabric\">fabric</option><option value=\"waste\">waste</option><option value=\"margin\">margin</option><option value=\"sewing\">sewing</option><option value=\"duvet_sewing\">duvet_sewing</option><option value=\"flat_sewing\">flat_sewing</option><option value=\"fixed\">fixed</option><option value=\"operations\">operations</option><option value=\"marketing\">marketing</option></select></div></div>"+
-    "<div class=\"form-row\"><div class=\"form-group\"><label>Value</label><input type=\"number\" id=\"new-param-val\" step=\"any\" placeholder=\"0.00\"></div>"+
-    "<div class=\"form-group\"><label>Label</label><input type=\"text\" id=\"new-param-label\" placeholder=\"Human-readable label\"></div></div>"+
-    "<div class=\"form-row\"><div class=\"form-group\" style=\"flex:1\"><label>Products (comma-separated tags)</label><input type=\"text\" id=\"new-param-products\" placeholder=\"e.g. Fitted,Duvet\"></div></div>"+
-    "<button class=\"btn btn-primary\" onclick=\"addParam()\">Add Parameter</button>"+
-  "</div></div>";
+
   return html;
 }
 // ── DIY Prices Page ──
