@@ -111,6 +111,8 @@ tr:hover td{background:#f8fafc}
     <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
     <a href="#" data-page="customers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Customers</a>
     <a href="#" data-page="subscribers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Subscribers</a>
+    <div class="sidebar-section">Super Admin Only</div>
+    <a href="#" data-page="accounts"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Admin Accounts <span class="sidebar-badge amber">SUPER</span></a>
   </nav>
 </aside>
 
@@ -130,7 +132,7 @@ tr:hover td{background:#f8fafc}
 
 <script>
 // ── Page Router ──
-var pages = ['dashboard','pricing','diy','exchange','marketing','products','orders','customers','subscribers'];
+var pages = ['dashboard','pricing','diy','exchange','marketing','products','orders','customers','subscribers','accounts'];
 var currentPage = 'dashboard';
 
 function showPage(name) {
@@ -141,7 +143,7 @@ function showPage(name) {
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
     exchange:'Exchange Rates',marketing:'Marketing',products:'Products',orders:'Orders',
-    customers:'Customers',subscribers:'Subscribers'
+    customers:'Customers',subscribers:'Subscribers',accounts:'Admin Accounts'
   }[name];
   document.getElementById('page-content').innerHTML = renderPage(name);
 }
@@ -171,6 +173,7 @@ function renderPage(name) {
     case 'orders': return rOrders();
     case 'customers': return rCustomers();
     case 'subscribers': return renderSubscribers();
+    case 'accounts': return rAccounts();
     default: return '';
   }
 }
@@ -618,6 +621,87 @@ function rCustomerDetail(idx){
   });
   h+='</tbody></table></div></div>';
   return h;
+}
+
+// ── Admin Accounts ──
+var ACCOUNTS_KEY = 'mildmate_admin_accounts';
+
+function getAdminAccounts(){
+  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveAdminAccounts(list){
+  try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+function rAccounts(){
+  var accounts = getAdminAccounts();
+  if(accounts.length===0){
+    // seed defaults
+    accounts = [
+      {email:'super@mildmate.com',password:'admin123',role:'Super Admin',lastActive:'—',createdAt:'2026-05-21'},
+      {email:'admin@mildmate.com',password:'admin456',role:'Admin',lastActive:'—',createdAt:'2026-05-22'}
+    ];
+    saveAdminAccounts(accounts);
+  }
+
+  var h='<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat-card"><div class="stat-label">Total Admins</div><div class="stat-value">'+accounts.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Super Admins</div><div class="stat-value">'+accounts.filter(function(a){return a.role==='Super Admin';}).length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Regular Admins</div><div class="stat-value">'+accounts.filter(function(a){return a.role==='Admin';}).length+'</div></div></div>'+
+    '<div class="card"><div class="card-header"><span>Admin Accounts</span><button class="btn btn-primary btn-sm" onclick="showAddAccountForm()">+ Add Admin</button></div><div class="card-body"><table><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Created</th><th>Last Active</th><th></th></tr></thead><tbody>';
+
+  accounts.forEach(function(a,i){
+    h+='<tr><td><strong>'+a.email+'</strong></td><td><span class="badge '+(a.role==='Super Admin'?'badge-margin':'badge-sewing')+'">'+a.role+'</span></td><td style="font-family:monospace;font-size:0.75rem">••••••••</td><td>'+a.createdAt+'</td><td>'+a.lastActive+'</td>'+
+      '<td><button class="btn btn-sm btn-outline" onclick="deleteAccount('+i+')" style="color:var(--c-red)">'+(accounts.length<=1?'':'Delete')+'</button></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Manage admin accounts. Super Admin can add/delete. In production, authentication is via Cloudflare Access (Google login). Sandbox — localStorage.</p>';
+  return h;
+}
+
+function showAddAccountForm(){
+  var existing=document.getElementById('add-account-form');
+  if(existing){existing.remove();return;}
+  var div=document.createElement('div');
+  div.id='add-account-form';
+  div.style.cssText='margin-bottom:20px';
+  div.innerHTML='<div class="card"><div class="card-header">Add Admin Account</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Email *</label><input id="acct-email" type="email" placeholder="admin@mildmate.com"></div>'+
+    '<div class="form-group"><label>Role</label><select id="acct-role"><option>Admin</option><option>Super Admin</option></select></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Password *</label><input id="acct-password" type="password" placeholder="Min 6 characters"></div>'+
+    '<div class="form-group"><label>Confirm Password *</label><input id="acct-confirm" type="password" placeholder="Re-enter password"></div></div>'+
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Password stored locally for sandbox only. Production uses Cloudflare Access Gmail OAuth — no passwords stored.</p>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="addAccount()">Add Admin</button>'+
+    '<button class="btn btn-outline" onclick="document.getElementById(\'add-account-form\').remove()">Cancel</button></div></div></div>';
+  var content=document.getElementById('page-content');
+  content.insertBefore(div, content.firstChild);
+}
+
+function addAccount(){
+  var email=document.getElementById('acct-email').value.trim();
+  var role=document.getElementById('acct-role').value;
+  var pw=document.getElementById('acct-password').value;
+  var confirm=document.getElementById('acct-confirm').value;
+  if(!email||!pw){toast('Fill all fields');return;}
+  if(!email.includes('@')){toast('Invalid email');return;}
+  if(pw.length<6){toast('Password must be 6+ characters');return;}
+  if(pw!==confirm){toast('Passwords do not match');return;}
+  var accounts=getAdminAccounts();
+  if(accounts.some(function(a){return a.email===email;})){toast('Email already exists');return;}
+  accounts.push({email:email,role:role,password:pw,lastActive:'—',createdAt:new Date().toISOString().split('T')[0]});
+  saveAdminAccounts(accounts);
+  toast('Admin added: '+email);
+  document.getElementById('page-content').innerHTML=rAccounts();
+}
+
+function deleteAccount(index){
+  var accounts=getAdminAccounts();
+  if(accounts.length<=1){toast('Cannot delete last admin account');return;}
+  var name=accounts[index].email;
+  accounts.splice(index,1);
+  saveAdminAccounts(accounts);
+  toast('Deleted: '+name);
+  document.getElementById('page-content').innerHTML=rAccounts();
 }
 
 // ── Init ──
