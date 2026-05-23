@@ -150,8 +150,8 @@
   var TPU_SQCM_PER_LM = 100 * TPU_BOLT_W;
   var ENC_SEWING = pVal('encasement_sewing_cost', 300);
   var ZIPPER_RATE = pVal('zipper_rate', 0.4);
-  var ENC_OP = 0.15;
-  var ENC_MKT = 0.25;
+  var ENC_OP = OP_RATE;
+  var ENC_MKT = pctVal('encasement_mkt', 25);
   var ENC_MARGIN = pctVal('encasement', 50);
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN;
 
@@ -168,8 +168,8 @@
   ];
   var PROTECTOR_PACKING = pVal('protector_packing', 200);
   var PROTECTOR_DELIVERY = pVal('protector_delivery', 80);
-  var PROTECTOR_OP = 0.15;
-  var PROTECTOR_MKT = 0.20;
+  var PROTECTOR_OP = OP_RATE;
+  var PROTECTOR_MKT = MKT_RATE;
   var SQCM_PER_SQINCH = 6.4516;
   var PROTECTOR_MAX_DIM = 210;   // max W/L cm for non-family
 

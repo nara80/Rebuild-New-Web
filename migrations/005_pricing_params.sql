@@ -60,6 +60,7 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
   ('margin_rate_family', 50, 'Family Margin Rate', 'margin'),
   ('margin_rate_marine', 680, 'Marine V-Berth Margin Rate', 'margin'),
   ('margin_rate_encasement', 50, 'Encasement Margin Rate', 'margin'),
+  ('encasement_mkt_rate', 25, 'Encasement Marketing Rate', 'margin'),
   ('margin_rate_duvet', 30, 'Duvet Cover Margin Rate', 'margin'),
   ('margin_rate_pillow', 15, 'Pillowcase Margin Rate', 'margin'),
   ('margin_rate_pillow_protector', 35, 'Pillow Protector Margin Rate', 'margin'),
