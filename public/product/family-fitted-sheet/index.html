@@ -400,7 +400,7 @@
         // 1. Visual trigger: IntersectionObserver on sentinel after price section
         var sentinel = document.createElement('div');
         sentinel.id = 'cta-sentinel';
-        sentinel.style.cssText = 'position:absolute;height:1px;width:1px;pointer-events:none';
+        sentinel.style.cssText = 'height:0;pointer-events:none';
         var priceSection = (priceDisplay && priceDisplay.closest('.pricing-panel')) || priceDisplay;
         if (priceSection && priceSection.parentNode) {
           priceSection.parentNode.insertBefore(sentinel, priceSection.nextSibling);
