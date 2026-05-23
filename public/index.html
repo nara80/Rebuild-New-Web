@@ -249,8 +249,8 @@
           <p>Compare our four fabric families side-by-side to find your perfect match.</p>
         </div>
         <style>
-          .fabric-compare{overflow-x:auto;margin:0 -24px;padding:0 24px}
-          .fabric-compare-grid{display:grid;grid-template-columns:140px repeat(4,1fr);gap:0;min-width:700px;border:1px solid var(--color-border);border-radius:8px;overflow:hidden}
+          .fabric-compare{position:relative}
+          .fabric-compare-grid{display:grid;grid-template-columns:140px repeat(4,1fr);gap:0;min-width:700px;border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden}
           .fabric-compare-grid>*{padding:16px 14px;font-size:0.875rem;border-bottom:1px solid var(--color-border);display:flex;align-items:center}
           .fabric-compare-grid .fc-head{background:var(--color-heading);color:#fff;font-weight:700;justify-content:center;text-align:center;border-bottom:2px solid var(--color-heading)}
           .fabric-compare-grid .fc-label{background:var(--color-surface);font-weight:600;color:var(--color-text);border-right:1px solid var(--color-border)}
@@ -260,6 +260,16 @@
           .fc-swatch{width:14px;height:14px;border-radius:50%}
           .fc-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:0.75rem;font-weight:600;background:#dcfce7;color:#166534}
           .fc-link{color:var(--color-primary);font-weight:600}
+          .fabric-compare-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
+          .fabric-cards{display:none;flex-direction:column;gap:16px}
+          .fabric-card{background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden}
+          .fabric-card-head{background:var(--color-heading);color:#fff;font-weight:700;font-size:0.9375rem;padding:14px 16px;text-align:center}
+          .fabric-card-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--color-border);font-size:0.8125rem}
+          .fabric-card-row:last-child{border-bottom:none}
+          .fabric-card-row>span:first-child{font-weight:600;color:var(--color-text);min-width:70px}
+          .fabric-card-row>span:last-child{color:var(--color-muted);text-align:right}
+          .fabric-card-row .fc-swatch{display:inline-block;vertical-align:middle;width:14px;height:14px;border-radius:50%;margin:1px}
+          @media (max-width:768px){.fabric-compare-grid{display:none}.fabric-cards{display:flex}}
         </style>
         <div class="fabric-compare">
           <div class="fabric-compare-grid">
@@ -288,6 +298,36 @@
             <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#67E4D3"></span><span class="fc-swatch" style="background:#5E5E5E"></span><span class="fc-swatch" style="background:#A5A9B4"></span><span class="fc-swatch" style="background:#385E9D"></span><span class="fc-swatch" style="background:#486C6A"></span><span class="fc-swatch" style="background:#1E4477"></span><span class="fc-swatch" style="background:#D48C98"></span><span class="fc-swatch" style="background:#E1D1B1"></span><span class="fc-swatch" style="background:#B99F87"></span><span class="fc-swatch" style="background:#FFFFFF"></span><span class="fc-swatch" style="background:#9581B1"></span><span class="fc-swatch" style="background:#93B09D"></span></div></div>
             <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#ffffff;border:1px solid #ccc"></span></div></div>
             <div class="fc-cell"><div class="fc-colors"><span class="fc-swatch" style="background:#f3e5ab"></span></div></div>
+          </div>
+          <div class="fabric-cards">
+            <div class="fabric-card">
+              <div class="fabric-card-head">BreezePlus</div>
+              <div class="fabric-card-row"><span>Material</span><span>50/50 Cotton-Microfiber</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>3-5&deg;C cooler</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Hot sleepers &amp; pets</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#4D545B"></span><span class="fc-swatch" style="background:#B7BEC8"></span><span class="fc-swatch" style="background:#D9D1C1"></span><span class="fc-swatch" style="background:#9CCAE1"></span><span class="fc-swatch" style="background:#618283"></span><span class="fc-swatch" style="background:#5A7DA2"></span><span class="fc-swatch" style="background:#FFFFFF;border:1px solid #ccc"></span><span class="fc-swatch" style="background:#E9B7BF"></span><span class="fc-swatch" style="background:#F1EFE1"></span></span></div>
+            </div>
+            <div class="fabric-card">
+              <div class="fabric-card-head">CloudSoft</div>
+              <div class="fabric-card-row"><span>Material</span><span>120 GSM Microfiber</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Quick-Dry</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Marine, RV, yachts</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#67E4D3"></span><span class="fc-swatch" style="background:#5E5E5E"></span><span class="fc-swatch" style="background:#A5A9B4"></span><span class="fc-swatch" style="background:#385E9D"></span><span class="fc-swatch" style="background:#486C6A"></span><span class="fc-swatch" style="background:#1E4477"></span><span class="fc-swatch" style="background:#D48C98"></span><span class="fc-swatch" style="background:#E1D1B1"></span><span class="fc-swatch" style="background:#B99F87"></span><span class="fc-swatch" style="background:#FFFFFF"></span><span class="fc-swatch" style="background:#9581B1"></span><span class="fc-swatch" style="background:#93B09D"></span></span></div>
+            </div>
+            <div class="fabric-card">
+              <div class="fabric-card-head">PremaCotton</div>
+              <div class="fabric-card-row"><span>Material</span><span>100% Long-Staple Cotton</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Breathable</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Sensitive skin</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#ffffff;border:1px solid #ccc"></span></span></div>
+            </div>
+            <div class="fabric-card">
+              <div class="fabric-card-head">EcoLuxe</div>
+              <div class="fabric-card-row"><span>Material</span><span>Natural Calico Cotton</span></div>
+              <div class="fabric-card-row"><span>Cooling</span><span>Natural airflow</span></div>
+              <div class="fabric-card-row"><span>Best For</span><span>Eco-conscious</span></div>
+              <div class="fabric-card-row"><span>Colors</span><span><span class="fc-swatch" style="background:#f3e5ab"></span></span></div>
+            </div>
           </div>
         </div>
         <div style="text-align:center; margin-top:28px;">
