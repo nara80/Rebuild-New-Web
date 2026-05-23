@@ -200,7 +200,9 @@ function renderPricingParams() {
   var categories = {
     fabric: { label:'Fabric Rates & Waste', badge:'badge-fabric' },
     margin: { label:'Margin Rates', badge:'badge-margin' },
-    sewing: { label:'Sewing Costs & Tiers', badge:'badge-sewing' },
+    sewing: { label:'Fitted Sheet Sewing Tiers', badge:'badge-sewing' },
+    duvet_sewing: { label:'Duvet Cover Sewing Tiers', badge:'badge-sewing' },
+    flat_sewing: { label:'Other Sewing Costs', badge:'badge-sewing' },
     fixed: { label:'Fixed Costs & Constants', badge:'badge-fixed' },
     operations: { label:'Operations Rate', badge:'badge-ops' },
     marketing: { label:'Marketing Rate', badge:'badge-ops' }
@@ -219,14 +221,17 @@ function renderPricingParams() {
     {key:'margin_rate_rv_truck',value:0.45,label:'RV & Truck Margin',category:'margin'},
     {key:'margin_rate_encasement',value:0.50,label:'Encasement Margin',category:'margin'},
     {key:'margin_rate_duvet',value:0.30,label:'Duvet Cover Margin',category:'margin'},
-    {key:'sewing_tier1_cost',value:120,label:'Sewing Tier 1 (≤51,600 cm²)',category:'sewing'},
-    {key:'sewing_tier2_cost',value:200,label:'Sewing Tier 2 (≤71,000 cm²)',category:'sewing'},
-    {key:'sewing_tier3_cost',value:300,label:'Sewing Tier 3 (≤91,200 cm²)',category:'sewing'},
-    {key:'sewing_tier4_cost',value:400,label:'Sewing Tier 4 (≤120,000 cm²)',category:'sewing'},
-    {key:'sewing_tier5_cost',value:500,label:'Sewing Tier 5 (>120,000 cm²)',category:'sewing'},
-    {key:'encasement_sewing_cost',value:300,label:'Encasement Sewing',category:'sewing'},
-    {key:'flat_sewing_cost',value:250,label:'Flat Sheet Sewing',category:'sewing'},
-    {key:'pillow_sewing_cost',value:40,label:'Pillowcase Sewing',category:'sewing'},
+    {key:'sewing_tier1_cost',value:120,label:'Fitted 3.5 F (≤51,600 cm²)',category:'sewing'},
+    {key:'sewing_tier2_cost',value:200,label:'Fitted 5,6 F (≤71,000 cm²)',category:'sewing'},
+    {key:'sewing_tier3_cost',value:300,label:'Fitted 8F, 6F+Extend (≤91,200 cm²)',category:'sewing'},
+    {key:'sewing_tier4_cost',value:400,label:'Fitted 10F, 8F+Extend (≤120,000 cm²)',category:'sewing'},
+    {key:'sewing_tier5_cost',value:500,label:'Fitted 10F+Extend (>120,000 cm²)',category:'sewing'},
+    {key:'duvet_tier1_cost',value:300,label:'Duvet ≤139,200 cm²',category:'duvet_sewing'},
+    {key:'duvet_tier2_cost',value:400,label:'Duvet ≤170,400 cm²',category:'duvet_sewing'},
+    {key:'duvet_tier3_cost',value:600,label:'Duvet >170,400 cm²',category:'duvet_sewing'},
+    {key:'encasement_sewing_cost',value:300,label:'Encasement Sewing (flat rate)',category:'flat_sewing'},
+    {key:'flat_sewing_cost',value:250,label:'Flat Sheet Sewing (flat rate)',category:'flat_sewing'},
+    {key:'pillow_sewing_cost',value:40,label:'Pillowcase Sewing (per piece)',category:'flat_sewing'},
     {key:'packing_cost',value:100,label:'Packing Cost',category:'fixed'},
     {key:'delivery_cost',value:50,label:'Delivery Cost',category:'fixed'},
     {key:'zipper_rate',value:0.4,label:'Zipper Rate (THB/cm)',category:'fixed'},
@@ -251,7 +256,7 @@ function renderPricingParams() {
   }
   html += '<div class="card"><div class="card-header">Add New Parameter</div><div class="card-body">'+
     '<div class="form-row"><div class="form-group"><label>Key</label><input type="text" placeholder="e.g. margin_rate_new_product"></div>'+
-    '<div class="form-group"><label>Category</label><select><option>fabric</option><option>margin</option><option>sewing</option><option>fixed</option><option>operations</option><option>marketing</option></select></div></div>'+
+    '<div class="form-group"><label>Category</label><select><option>fabric</option><option>margin</option><option>sewing</option><option>duvet_sewing</option><option>flat_sewing</option><option>fixed</option><option>operations</option><option>marketing</option></select></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Value</label><input type="number" step="any" placeholder="0.00"></div>'+
     '<div class="form-group"><label>Label</label><input type="text" placeholder="Human-readable label"></div></div>'+
     '<button class="btn btn-primary" onclick="toast(\'Parameter saved (sandbox — preview only)\')">Add Parameter</button>'+

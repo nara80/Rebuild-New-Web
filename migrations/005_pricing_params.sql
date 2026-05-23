@@ -73,25 +73,25 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
   ('ops_rate', 0.15, 'Operations Rate', 'operations'),
   ('mkt_rate', 0.20, 'Marketing Rate', 'marketing');
 
--- Sewing cost tiers (THB, by fabric area thresholds in cm²)
+-- Fitted sheet sewing cost tiers (THB, by fabric area thresholds in cm²)
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('sewing_tier1_max', 51600, 'Sewing Tier 1 Max Area (cm²)', 'sewing'),
-  ('sewing_tier1_cost', 120, 'Sewing Tier 1 Cost (THB)', 'sewing'),
-  ('sewing_tier2_max', 71000, 'Sewing Tier 2 Max Area (cm²)', 'sewing'),
-  ('sewing_tier2_cost', 200, 'Sewing Tier 2 Cost (THB)', 'sewing'),
-  ('sewing_tier3_max', 91200, 'Sewing Tier 3 Max Area (cm²)', 'sewing'),
-  ('sewing_tier3_cost', 300, 'Sewing Tier 3 Cost (THB)', 'sewing'),
-  ('sewing_tier4_max', 120000, 'Sewing Tier 4 Max Area (cm²)', 'sewing'),
-  ('sewing_tier4_cost', 400, 'Sewing Tier 4 Cost (THB)', 'sewing'),
-  ('sewing_tier5_cost', 500, 'Sewing Tier 5 Cost (THB, >120,000)', 'sewing');
+  ('sewing_tier1_max', 51600, 'Fitted 3.5F Max Area (cm²)', 'sewing'),
+  ('sewing_tier1_cost', 120, 'Fitted 3.5F Cost (THB)', 'sewing'),
+  ('sewing_tier2_max', 71000, 'Fitted 5,6F Max Area (cm²)', 'sewing'),
+  ('sewing_tier2_cost', 200, 'Fitted 5,6F Cost (THB)', 'sewing'),
+  ('sewing_tier3_max', 91200, 'Fitted 8F, 6F+Extend Max Area (cm²)', 'sewing'),
+  ('sewing_tier3_cost', 300, 'Fitted 8F, 6F+Extend Cost (THB)', 'sewing'),
+  ('sewing_tier4_max', 120000, 'Fitted 10F, 8F+Extend Max Area (cm²)', 'sewing'),
+  ('sewing_tier4_cost', 400, 'Fitted 10F, 8F+Extend Cost (THB)', 'sewing'),
+  ('sewing_tier5_cost', 500, 'Fitted 10F+Extend Cost (THB, >120,000)', 'sewing');
 
--- Duvet sewing tiers
+-- Duvet cover sewing tiers
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('duvet_sewing_tier1_max', 139200, 'Duvet Sewing Tier 1 Max Area (cm²)', 'sewing'),
-  ('duvet_sewing_tier1_cost', 300, 'Duvet Sewing Tier 1 Cost (THB)', 'sewing'),
-  ('duvet_sewing_tier2_max', 170400, 'Duvet Sewing Tier 2 Max Area (cm²)', 'sewing'),
-  ('duvet_sewing_tier2_cost', 400, 'Duvet Sewing Tier 2 Cost (THB)', 'sewing'),
-  ('duvet_sewing_tier3_cost', 600, 'Duvet Sewing Tier 3 Cost (THB, >170,400)', 'sewing');
+  ('duvet_sewing_tier1_max', 139200, 'Duvet Tier 1 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier1_cost', 300, 'Duvet Tier 1 Cost (THB, ≤139,200)', 'sewing'),
+  ('duvet_sewing_tier2_max', 170400, 'Duvet Tier 2 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier2_cost', 400, 'Duvet Tier 2 Cost (THB, ≤170,400)', 'sewing'),
+  ('duvet_sewing_tier3_cost', 600, 'Duvet Tier 3 Cost (THB, >170,400)', 'sewing');
 
 -- Flat sewing & pillow sewing
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
