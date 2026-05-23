@@ -54,24 +54,24 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
   ('tpu_bolt_width_cm', 210, 'TPU Bolt Width (cm)', 'fabric'),
   ('tpu_sqcm_per_lm', 21000, 'TPU cm² per Linear Metre', 'fabric');
 
--- Margin rates (multiplier portion, e.g. 0.30 = 30%)
+-- Margin rates (stored as integer %, e.g. 30 = 30%)
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('margin_rate_standard', 0.30, 'Standard Margin Rate', 'margin'),
-  ('margin_rate_rv_truck', 0.45, 'RV & Truck Margin Rate', 'margin'),
-  ('margin_rate_family', 0.50, 'Family Margin Rate', 'margin'),
-  ('margin_rate_marine', 6.80, 'Marine V-Berth Margin Rate', 'margin'),
-  ('margin_rate_encasement', 0.50, 'Encasement Margin Rate', 'margin'),
-  ('margin_rate_duvet', 0.30, 'Duvet Cover Margin Rate', 'margin'),
-  ('margin_rate_pillow', 0.15, 'Pillowcase Margin Rate', 'margin'),
-  ('margin_rate_pillow_protector', 0.35, 'Pillow Protector Margin Rate', 'margin'),
-  ('margin_rate_protector_standard', 0.15, 'Protector Standard Margin', 'margin'),
-  ('margin_rate_protector_deep', 0.25, 'Protector Deep Pocket Margin', 'margin'),
-  ('margin_rate_protector_family', 0.50, 'Protector Family Margin', 'margin');
+  ('margin_rate_standard', 30, 'Standard Margin Rate', 'margin'),
+  ('margin_rate_rv_truck', 45, 'RV & Truck Margin Rate', 'margin'),
+  ('margin_rate_family', 50, 'Family Margin Rate', 'margin'),
+  ('margin_rate_marine', 680, 'Marine V-Berth Margin Rate', 'margin'),
+  ('margin_rate_encasement', 50, 'Encasement Margin Rate', 'margin'),
+  ('margin_rate_duvet', 30, 'Duvet Cover Margin Rate', 'margin'),
+  ('margin_rate_pillow', 15, 'Pillowcase Margin Rate', 'margin'),
+  ('margin_rate_pillow_protector', 35, 'Pillow Protector Margin Rate', 'margin'),
+  ('margin_rate_protector_standard', 15, 'Protector Standard Margin', 'margin'),
+  ('margin_rate_protector_deep', 25, 'Protector Deep Pocket Margin', 'margin'),
+  ('margin_rate_protector_family', 50, 'Protector Family Margin', 'margin');
 
 -- Operations & Marketing rates (shared across most products)
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('ops_rate', 0.15, 'Operations Rate', 'operations'),
-  ('mkt_rate', 0.20, 'Marketing Rate', 'marketing');
+  ('ops_rate', 15, 'Operations Rate', 'operations'),
+  ('mkt_rate', 20, 'Marketing Rate', 'marketing');
 
 -- Fitted sheet sewing cost tiers (THB, by fabric area thresholds in cm²)
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
@@ -115,7 +115,7 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
 
 -- Accessories rate (fraction of fabric cost)
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('accessories_rate', 0.10, 'Accessories Rate (× fabric cost)', 'fixed');
+  ('accessories_rate', 10, 'Accessories Rate (%)', 'fixed');
 
 -- Flat sheet tuck allowance
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES

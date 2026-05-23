@@ -45,27 +45,32 @@
     return fallback;
   }
 
+  // pctVal: same as pVal but divides by 100 — for params stored as integer %
+  function pctVal(key, fallback) {
+    return pVal(key, fallback) / 100;
+  }
+
   // -- Pricing constants (from API or hardcoded fallbacks) --
   var SQCM_PER_YARD = pVal('sqcm_per_yard', 23744);
   var PACKING = pVal('packing_cost', 100);
   var DELIVERY = pVal('delivery_cost', 50);
-  var OP_RATE = pVal('ops_rate', 0.15);
-  var MKT_RATE = pVal('mkt_rate', 0.20);
+  var OP_RATE = pctVal('ops_rate', 15);
+  var MKT_RATE = pctVal('mkt_rate', 20);
   var WASTE_FABRIC = 1 + pVal('waste_factor_fabric', 20) / 100;
-  var ACCESSORIES_RATE = pVal('accessories_rate', 0.10);
-  var MARGIN_RATE = isMarineFitted ? pVal('marine', 6.80)
-    : isRVTruck ? pVal('rv_truck', 0.45)
-    : isFamily ? pVal('family', 0.50)
-    : isEncasement ? pVal('encasement', 0.50)
-    : isDuvet ? pVal('duvet', 0.30)
-    : isPillowcase ? pVal('pillow', 0.15)
-    : isPillowProtector ? pVal('pillow_protector', 0.35)
+  var ACCESSORIES_RATE = pctVal('accessories_rate', 10);
+  var MARGIN_RATE = isMarineFitted ? pctVal('marine', 680)
+    : isRVTruck ? pctVal('rv_truck', 45)
+    : isFamily ? pctVal('family', 50)
+    : isEncasement ? pctVal('encasement', 50)
+    : isDuvet ? pctVal('duvet', 30)
+    : isPillowcase ? pctVal('pillow', 15)
+    : isPillowProtector ? pctVal('pillow_protector', 35)
     : isMattressProtector ? (
-        isProtectorFamily ? pVal('protector_family', 0.50)
-        : isProtectorDeepPocket ? pVal('protector_deep', 0.25)
-        : pVal('protector_standard', 0.15)
+        isProtectorFamily ? pctVal('protector_family', 50)
+        : isProtectorDeepPocket ? pctVal('protector_deep', 25)
+        : pctVal('protector_standard', 15)
       )
-    : pVal('standard', 0.30);
+    : pctVal('standard', 30);
   var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE;
   var THB_TO_USD = pVal('exchange_usd', 30);   // default: 1/rate_per_thb for USD
 
@@ -147,7 +152,7 @@
   var ZIPPER_RATE = pVal('zipper_rate', 0.4);
   var ENC_OP = 0.15;
   var ENC_MKT = 0.25;
-  var ENC_MARGIN = pVal('encasement', 0.50);
+  var ENC_MARGIN = pctVal('encasement', 50);
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN;
 
   // -- Mattress Protector constants --

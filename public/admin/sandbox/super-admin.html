@@ -217,17 +217,17 @@ function renderPricingParams() {
     {key:'fabric_rate_tpu',value:120,label:'TPU Rate (THB/lm)',category:'fabric',products:'Encasement,Protector,PillowProtect'},
     {key:'waste_factor_fabric',value:20,label:'Fabric Waste (%)',category:'waste',products:'Fitted,Flat,Duvet,Encase'},
     {key:'waste_factor_pillowcase',value:60,label:'Pillow Waste (%)',category:'waste',products:'Pillowcase,PillowProtect'},
-    {key:'margin_rate_standard',value:0.30,label:'Standard Fitted Margin',category:'margin',products:'Standard,DeepPkt,Dorm,Pets'},
-    {key:'margin_rate_marine',value:6.80,label:'Marine V-Berth Margin',category:'margin',products:'Marine'},
-    {key:'margin_rate_family',value:0.50,label:'Family Fitted Margin',category:'margin',products:'Family'},
-    {key:'margin_rate_rv_truck',value:0.45,label:'RV & Truck Fitted Margin',category:'margin',products:'RV,Truck'},
-    {key:'margin_rate_encasement',value:0.50,label:'Encasement Margin',category:'margin',products:'Encasement,RV Encase'},
-    {key:'margin_rate_duvet',value:0.30,label:'Duvet Cover Margin',category:'margin',products:'3-Sided,Pet,Marine,RV,Dorm'},
-    {key:'margin_rate_pillow',value:0.15,label:'Pillowcase Margin',category:'margin',products:'Envelope,Zipper,Sham'},
-    {key:'margin_rate_pillow_protector',value:0.35,label:'Pillow Protector Margin',category:'margin',products:'Pillow Protect'},
-    {key:'margin_rate_protector_standard',value:0.15,label:'Protector Standard Margin',category:'margin',products:'Std,PetProof'},
-    {key:'margin_rate_protector_deep',value:0.25,label:'Protector Deep Pocket Margin',category:'margin',products:'DeepPkt'},
-    {key:'margin_rate_protector_family',value:0.50,label:'Protector Family Margin',category:'margin',products:'Family'},
+    {key:'margin_rate_standard',value:30,label:'Standard Fitted Margin',category:'margin',products:'Standard,DeepPkt,Dorm,Pets'},
+    {key:'margin_rate_marine',value:680,label:'Marine V-Berth Margin',category:'margin',products:'Marine'},
+    {key:'margin_rate_family',value:50,label:'Family Fitted Margin',category:'margin',products:'Family'},
+    {key:'margin_rate_rv_truck',value:45,label:'RV & Truck Fitted Margin',category:'margin',products:'RV,Truck'},
+    {key:'margin_rate_encasement',value:50,label:'Encasement Margin',category:'margin',products:'Encasement,RV Encase'},
+    {key:'margin_rate_duvet',value:30,label:'Duvet Cover Margin',category:'margin',products:'3-Sided,Pet,Marine,RV,Dorm'},
+    {key:'margin_rate_pillow',value:15,label:'Pillowcase Margin',category:'margin',products:'Envelope,Zipper,Sham'},
+    {key:'margin_rate_pillow_protector',value:35,label:'Pillow Protector Margin',category:'margin',products:'Pillow Protect'},
+    {key:'margin_rate_protector_standard',value:15,label:'Protector Standard Margin',category:'margin',products:'Std,PetProof'},
+    {key:'margin_rate_protector_deep',value:25,label:'Protector Deep Pocket Margin',category:'margin',products:'DeepPkt'},
+    {key:'margin_rate_protector_family',value:50,label:'Protector Family Margin',category:'margin',products:'Family'},
     {key:'sewing_tier1_cost',value:120,label:'Fitted 3.5F (≤51,600 cm²)',category:'sewing',products:'All 7 fitted sheets'},
     {key:'sewing_tier2_cost',value:200,label:'Fitted 5,6F (≤71,000 cm²)',category:'sewing',products:'All 7 fitted sheets'},
     {key:'sewing_tier3_cost',value:300,label:'Fitted 8F, 6F+Ext (≤91,200 cm²)',category:'sewing',products:'All 7 fitted sheets'},
@@ -244,10 +244,10 @@ function renderPricingParams() {
     {key:'packing_cost',value:100,label:'Packing Cost',category:'fixed',products:'All products'},
     {key:'delivery_cost',value:50,label:'Delivery Cost',category:'fixed',products:'All products'},
     {key:'zipper_rate',value:0.4,label:'Zipper Rate (THB/cm)',category:'fixed',products:'Duvets,Encasement,Zipper Pillow'},
-    {key:'accessories_rate',value:0.10,label:'Accessories Rate',category:'fixed',products:'All fitted sheets'},
+    {key:'accessories_rate',value:10,label:'Accessories Rate',category:'fixed',products:'All fitted sheets'},
     {key:'sqcm_per_yard',value:23744,label:'cm² per Yard',category:'fixed',products:'All fabric products'},
-    {key:'ops_rate',value:0.15,label:'Operations Rate',category:'operations',products:'All products'},
-    {key:'mkt_rate',value:0.20,label:'Marketing Rate',category:'marketing',products:'All products'}
+    {key:'ops_rate',value:15,label:'Operations Rate',category:'operations',products:'All products'},
+    {key:'mkt_rate',value:20,label:'Marketing Rate',category:'marketing',products:'All products'}
   ];
 
   var catKeys = Object.keys(categories);
@@ -265,7 +265,8 @@ function renderPricingParams() {
           productBadges += '<span class="prod-pill" style="display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap">'+p.trim()+'</span>';
         });
       }
-      html += '<tr><td style="font-family:monospace;font-size:0.75rem">'+items[i].key+'</td><td>'+items[i].label+'</td><td><strong>'+items[i].value+(items[i].category==='waste'?'%':'')+'</strong></td><td>'+productBadges+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit: '+items[i].key+' (sandbox — no save)\')">Edit</button></td></tr>';
+      var pctCats = ['waste','margin','operations','marketing'];
+      html += '<tr><td style="font-family:monospace;font-size:0.75rem">'+items[i].key+'</td><td>'+items[i].label+'</td><td><strong>'+items[i].value+(pctCats.indexOf(items[i].category)!==-1?'%':'')+'</strong></td><td>'+productBadges+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit: '+items[i].key+' (sandbox — no save)\')">Edit</button></td></tr>';
     }
     html += '</tbody></table></div></div></div>';
   }
