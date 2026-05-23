@@ -195,7 +195,7 @@
       </button>
     </div>
     <script>
-      /* Mobile CTA — IntersectionObserver sticky bar */
+      /* Mobile CTA — scroll-aware sticky bar */
       (function() {
         var bar = document.getElementById('mobile-cta-bar');
         var desktopBtn = document.getElementById('add-to-cart');
@@ -203,28 +203,18 @@
         var priceDisplay = document.getElementById('price-display');
         var mobilePrice = document.getElementById('mobile-cta-price');
         if (!bar || !desktopBtn || !mobileBtn) return;
-        // 1. Visual trigger: IntersectionObserver on sentinel after price section
-        var sentinel = document.createElement('div');
-        sentinel.id = 'cta-sentinel';
-        sentinel.style.cssText = 'position:absolute;height:1px;width:1px;pointer-events:none';
-        var priceSection = (priceDisplay && priceDisplay.closest('.configurator-price')) || priceDisplay;
-        if (priceSection && priceSection.parentNode) {
-          priceSection.parentNode.insertBefore(sentinel, priceSection.nextSibling);
+
+        function updateStickyBar() {
+          if (!priceDisplay) return;
+          var r = priceDisplay.getBoundingClientRect();
+          bar.classList.toggle('visible', r.bottom < 0);
         }
-        if (!('IntersectionObserver' in window)) {
-          window.addEventListener('scroll', function() {
-            bar.classList.toggle('visible', window.pageYOffset > 300);
-          }, { passive: true });
-        } else {
-          var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(e) {
-              bar.classList.toggle('visible', !e.isIntersecting);
-            });
-          }, { threshold: 0 });
-          observer.observe(sentinel);
-        }
-        // 2. Sync price from desktop (including sale HTML)
-        if (priceDisplay && mobilePrice) {
+
+        window.addEventListener('scroll', updateStickyBar, { passive: true });
+        window.addEventListener('resize', updateStickyBar);
+        updateStickyBar();
+
+                if (priceDisplay && mobilePrice) {
           var priceObserver = new MutationObserver(function() {
             mobilePrice.innerHTML = priceDisplay.innerHTML;
           });

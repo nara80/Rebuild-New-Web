@@ -31,7 +31,7 @@
     .favorite-btn:hover { border-color: #dc2626; transform: scale(1.1); }
     .favorite-btn.active { border-color: #dc2626; background: #fef2f2; }
     .favorite-toast { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; min-height: 1.2em; }
-    .sale-badge { display: inline; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; }
+    .sale-badge { display: inline-block; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; }
     .sale-countdown { font-size: 0.75rem; color: #dc2626; font-weight: 600; margin-bottom: 8px; }
     .price-strike { text-decoration: line-through; color: var(--color-muted); font-size: 1rem; margin-right: 8px; }
     .price-sale { font-size: 2rem; font-weight: 700; color: #16a34a; }
@@ -257,7 +257,7 @@
               <span class="price-label">Price</span>
               <span class="price-value" id="price-display">USD 55.00</span>
             </div>
-            <div class="price-sub" id="sale-info"></div>
+            <div class="price-sub">Excludes shipping &amp; import tariff</div>
           </div>
           <div class="add-to-cart-row">
             <button class="btn-add-cart" id="add-to-cart" disabled>
@@ -404,7 +404,7 @@
       </button>
     </div>
     <script>
-      /* Mobile CTA — IntersectionObserver sticky bar */
+      /* Mobile CTA — scroll-aware sticky bar */
       (function() {
         var bar = document.getElementById('mobile-cta-bar');
         var desktopBtn = document.getElementById('add-to-cart');
@@ -412,27 +412,18 @@
         var priceDisplay = document.getElementById('price-display');
         var mobilePrice = document.getElementById('mobile-cta-price');
         if (!bar || !desktopBtn || !mobileBtn) return;
-        // 1. Visual trigger: IntersectionObserver on sentinel after price section
-        var sentinel = document.createElement('div');
-        sentinel.id = 'cta-sentinel';
-        sentinel.style.cssText = 'position:absolute;height:1px;width:1px;pointer-events:none';
-        var priceSection = (priceDisplay && priceDisplay.closest('.configurator-price')) || priceDisplay;
-        if (priceSection && priceSection.parentNode) {
-          priceSection.parentNode.insertBefore(sentinel, priceSection.nextSibling);
+
+        function updateStickyBar() {
+          if (!priceDisplay) return;
+          var r = priceDisplay.getBoundingClientRect();
+          bar.classList.toggle('visible', r.bottom < 0);
         }
-        if (!('IntersectionObserver' in window)) {
-          window.addEventListener('scroll', function() {
-            bar.classList.toggle('visible', window.pageYOffset > 300);
-          }, { passive: true });
-        } else {
-          var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(e) {
-              bar.classList.toggle('visible', !e.isIntersecting);
-            });
-          }, { threshold: 0 });
-          observer.observe(sentinel);
-        }
-        // 2. Sync price from desktop (including sale HTML)
+
+        window.addEventListener('scroll', updateStickyBar, { passive: true });
+        window.addEventListener('resize', updateStickyBar);
+        updateStickyBar();
+
+                // 2. Sync price from desktop (including sale HTML)
         if (priceDisplay && mobilePrice) {
           var priceObserver = new MutationObserver(function() {
             mobilePrice.innerHTML = priceDisplay.innerHTML;
@@ -502,8 +493,9 @@
           return;
         }
         var countdown = MildMateCampaigns.getCampaignCountdown(productSlug);
-        var cdStr = countdown ? (' (' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)') : '';
-        var html = '<span class="sale-badge">-' + discount.discount + '% SALE</span>' + cdStr;
+        var cdStr = countdown ? (countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left') : '';
+        var html = '<div class="sale-badge">-' + discount.discount + '% SALE</div>';
+        if (cdStr) html += '<div class="sale-countdown">⏳ ' + cdStr + '</div>';
         el.innerHTML = html;
 
         // Poll countdown every 60s
@@ -511,9 +503,8 @@
           window._saleTimer = setInterval(function() {
             var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
             if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
-            el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span> (' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
+            el.innerHTML = '<div class="sale-badge">-' + discount.discount + '% SALE</div><div class="sale-countdown">⏳ ' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left</div>';
           }, 60000);
-        }, 60000);
         }
       }
 
