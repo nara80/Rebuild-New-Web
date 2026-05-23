@@ -215,8 +215,8 @@ function renderPricingParams() {
     {key:'fabric_rate_premacotton',value:180,label:'PremaCotton Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Duvet,Pillow'},
     {key:'fabric_rate_ecoluxe',value:180,label:'EcoLuxe Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Duvet,Pillow'},
     {key:'fabric_rate_tpu',value:120,label:'TPU Rate (THB/lm)',category:'fabric',products:'Encasement,Protector,PillowProtect'},
-    {key:'waste_factor_fabric',value:1.20,label:'Fabric Waste (×)',category:'waste',products:'Fitted,Flat,Duvet,Encase'},
-    {key:'waste_factor_pillowcase',value:1.60,label:'Pillow Waste (×)',category:'waste',products:'Pillowcase,PillowProtect'},
+    {key:'waste_factor_fabric',value:20,label:'Fabric Waste (%)',category:'waste',products:'Fitted,Flat,Duvet,Encase'},
+    {key:'waste_factor_pillowcase',value:60,label:'Pillow Waste (%)',category:'waste',products:'Pillowcase,PillowProtect'},
     {key:'margin_rate_standard',value:0.30,label:'Standard Fitted Margin',category:'margin',products:'Standard,DeepPkt,Dorm,Pets'},
     {key:'margin_rate_marine',value:6.80,label:'Marine V-Berth Margin',category:'margin',products:'Marine'},
     {key:'margin_rate_family',value:0.50,label:'Family Fitted Margin',category:'margin',products:'Family'},
@@ -265,7 +265,7 @@ function renderPricingParams() {
           productBadges += '<span class="prod-pill" style="display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap">'+p.trim()+'</span>';
         });
       }
-      html += '<tr><td style="font-family:monospace;font-size:0.75rem">'+items[i].key+'</td><td>'+items[i].label+'</td><td><strong>'+items[i].value+'</strong></td><td>'+productBadges+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit: '+items[i].key+' (sandbox — no save)\')">Edit</button></td></tr>';
+      html += '<tr><td style="font-family:monospace;font-size:0.75rem">'+items[i].key+'</td><td>'+items[i].label+'</td><td><strong>'+items[i].value+(items[i].category==='waste'?'%':'')+'</strong></td><td>'+productBadges+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit: '+items[i].key+' (sandbox — no save)\')">Edit</button></td></tr>';
     }
     html += '</tbody></table></div></div></div>';
   }

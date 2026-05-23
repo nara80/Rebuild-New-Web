@@ -51,7 +51,7 @@
   var DELIVERY = pVal('delivery_cost', 50);
   var OP_RATE = pVal('ops_rate', 0.15);
   var MKT_RATE = pVal('mkt_rate', 0.20);
-  var WASTE_FABRIC = pVal('waste_factor_fabric', 1.20);
+  var WASTE_FABRIC = 1 + pVal('waste_factor_fabric', 20) / 100;
   var ACCESSORIES_RATE = pVal('accessories_rate', 0.10);
   var MARGIN_RATE = isMarineFitted ? pVal('marine', 6.80)
     : isRVTruck ? pVal('rv_truck', 0.45)
@@ -115,7 +115,7 @@
   }
 
   // -- Pillow constants --
-  var PILLOW_WASTE = pVal('waste_factor_pillowcase', 1.60);
+  var PILLOW_WASTE = 1 + pVal('waste_factor_pillowcase', 60) / 100;
   var PILLOW_SEWING = pVal('pillow_sewing_cost', 40);
   var SHAM_SEWING = pVal('pillow_sham_sewing_cost', 50);
   var MAX_PILLOW = pVal('max_pillow_cm', 120);

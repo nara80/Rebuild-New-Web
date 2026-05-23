@@ -45,8 +45,8 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
 
 -- Fabric waste factor
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('waste_factor_fabric', 1.20, 'Fabric Waste Factor (×)', 'fabric'),
-  ('waste_factor_pillowcase', 1.60, 'Pillowcase Waste Factor (×)', 'fabric');
+  ('waste_factor_fabric', 20, 'Fabric Waste (%)', 'waste'),
+  ('waste_factor_pillowcase', 60, 'Pillow Waste (%)', 'waste'),
 
 -- Bolt dimensions
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
