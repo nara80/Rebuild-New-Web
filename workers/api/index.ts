@@ -11,6 +11,8 @@ import { handleContact } from "./contact";
 import { handleQuote } from "./quote";
 import { handlePricingParams } from "./pricing-params";
 import { handleAdminPricingParams } from "./admin-pricing";
+import { handleAdminProducts } from "./admin-products";
+import { handleAdminUpload } from "./admin-upload";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -59,6 +61,16 @@ export default {
       return handleQuote(request, env);
     }
 
+    // Admin API — image upload to R2
+    if (path === "/api/admin/upload" || path === "/api/admin/upload/") {
+      return handleAdminUpload(request, env);
+    }
+
+    // Admin API — products management (CRUD)
+    if (path.startsWith("/api/admin/products")) {
+      return handleAdminProducts(request, env);
+    }
+
     // Admin API — pricing params management (write)
     if (path === "/api/admin/pricing-params" || path === "/api/admin/pricing-params/") {
       return handleAdminPricingParams(request, env);
@@ -69,7 +81,23 @@ export default {
       return handlePricingParams(request, env);
     }
 
-    return new Response(JSON.stringify({ error: "Not Found" }), {
+    // R2 asset proxy — serves uploaded product images
+    if (path.startsWith("/r2/")) {
+      const key = path.substring(4);
+      const bucket = env.MILDMATE_ASSETS as R2Bucket;
+      const obj = await bucket.get(key);
+      if (obj) {
+        return new Response(obj.body, {
+          headers: {
+            "Content-Type": obj.httpMetadata?.contentType || "image/jpeg",
+            "Cache-Control": "public, max-age=31536000, immutable"
+          }
+        });
+      }
+      return new Response("Not Found", { status: 404 });
+    }
+
+        return new Response(JSON.stringify({ error: "Not Found" }), {
       status: 404,
       headers: { "Content-Type": "application/json" },
     });

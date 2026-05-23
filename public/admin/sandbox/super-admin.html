@@ -147,6 +147,7 @@ tr:hover td{background:#f8fafc}
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
+  var ADMIN_SECRET = localStorage.getItem("admin_secret") || "";
 // ── Page Router ──
 var pages = ['dashboard','pricing','diy','exchange','marketing','products','orders','customers','subscribers','accounts'];
 var currentPage = 'dashboard';
@@ -576,13 +577,139 @@ function saveAllOffers(){
 }
 
 // ── Product Editor (inherited from Admin) ──
-function getProducts() {
+var _productsCache = null;
+
+async function getProducts() {
+  if (_productsCache) return _productsCache;
+  try {
+    var resp = await fetch("/api/admin/products", { headers: { "X-Admin-Secret": ADMIN_SECRET } });
+    if (resp.ok) {
+      var list = await resp.json();
+      // Normalize D1 fields for editor compatibility
+      _productsCache = list.map(function(r) {
+        return {
+          slug: r.slug,
+          name: r.title_en || r.slug,
+          active: !!r.is_active,
+          category: r.category || "",
+          fabric: r.fabric_options || "",
+          formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
+          titleEN: r.title_en || "",
+          titleTH: r.title_th || "",
+          descEN: r.description_en || "",
+          descTH: r.description_th || "",
+          images: (function() { try { return JSON.parse(r.images||"[]"); } catch(e) { return []; } })(),
+          imagesRaw: r.images || "[]",
+          video: r.youtube_url || "",
+          youtube_url: r.youtube_url || "",
+          tags: (r.tags||"").split(",").filter(Boolean),
+          is_active: r.is_active,
+          title_en: r.title_en,
+          title_th: r.title_th,
+          description_en: r.description_en,
+          description_th: r.description_th,
+          id: r.id
+        };
+      });
+      return _productsCache;
+    }
+  } catch(e) {}
+  // Fallback to localStorage for sandbox offline
   var raw = localStorage.getItem("sandbox_products");
   if (raw) return JSON.parse(raw);
-  var def = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"Sheets","fabric":"CloudSoft / BreezePlus / PremaCotton / EcoLuxe","formulaType":"fitted","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูที่นอนรัดมุมมาตรฐาน","descEN":"Custom-fitted sheet with deep pockets. OEKO-TEX certified.","descTH":"ผ้าปูที่นอนรัดมุมแบบสั่งตัดตามขนาด","images":4,"video":"","tags":["custom-size","fitted","standard"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet — V-Berth","active":true,"category":"Sheets / Marine","fabric":"CloudSoft","formulaType":"vberth","titleEN":"Marine Fitted Sheet — V-Berth","titleTH":"ผ้าปูที่นทางทะเล — รูปตัว V","descEN":"Custom V-Berth fitted sheet for yachts and boats.","descTH":"ผ้าปูที่นสำหรับเรือยอชท์","images":3,"video":"https://www.youtube.com/embed/example","tags":["marine","yacht","v-berth"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"Accessories","fabric":"N/A","formulaType":"fixed","titleEN":"BedBridge Connector","titleTH":"ตัวเชื่อมเตียง","descEN":"Connects two mattresses. Eliminates the gap.","descTH":"เชื่อมต่อที่นอนสองชิ้นเข้าด้วยกัน","images":2,"video":"","tags":["accessory","family"]}];
-  localStorage.setItem("sandbox_products", JSON.stringify(def));
-  return def;
+  return [];
 }
+
+// ── Image Upload ──
+async function uploadImage(slotIndex) {
+  var input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/jpeg,image/png,image/webp,image/gif";
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast("File too large: " + (file.size / 1024 / 1024).toFixed(1) + "MB. Max 5MB."); return; }
+
+    toast("Uploading image " + (slotIndex + 1) + "...");
+    var form = new FormData();
+    form.append("file", file);
+
+    try {
+      var resp = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "X-Admin-Secret": ADMIN_SECRET },
+        body: form
+      });
+      var data = await resp.json();
+      if (data.success) {
+        var p = getProducts()[selectedProductIndex];
+        if (!p) return;
+        // Parse images JSON array
+        var imgs = [];
+        try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
+        // Pad array to 10 slots
+        while (imgs.length < 10) imgs.push("");
+        imgs[slotIndex] = data.url;
+        p.images = JSON.stringify(imgs);
+        saveProducts_toLocal(getProducts());
+        toast("Image " + (slotIndex + 1) + " uploaded: " + data.url);
+        showProductEditor(); // refresh
+      } else {
+        toast("Upload failed: " + (data.error || "Unknown error"));
+      }
+    } catch(e) {
+      toast("Upload failed: " + e.message);
+    }
+  };
+  input.click();
+}
+
+// ── Save Product to D1 ──
+async function saveProductToD1() {
+  var p = getProducts()[selectedProductIndex];
+  if (!p) return;
+
+  // Read current form values by ID
+  var titleEN = (document.getElementById("ed-title-en") || {}).value || "";
+  var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
+  var descEN = (document.getElementById("ed-desc-en") || {}).value || "";
+  var descTH = (document.getElementById("ed-desc-th") || {}).value || "";
+  var youtube = (document.getElementById("ed-youtube") || {}).value || "";
+
+  try {
+    var resp = await fetch("/api/admin/products/" + p.slug, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Secret": ADMIN_SECRET
+      },
+      body: JSON.stringify({
+        title_en: titleEN,
+        title_th: titleTH,
+        description_en: descEN,
+        description_th: descTH,
+        youtube_url: youtube,
+        images: p.images || "[]",
+        tags: (p.tags || []).join(",")
+      })
+    });
+    var data = await resp.json();
+    if (data.success) {
+      toast("Product saved to D1: " + p.name);
+      _productsCache = null; // invalidate cache
+    } else {
+      toast("Save failed: " + (data.error || "Unknown"));
+    }
+  } catch(e) {
+    toast("Save failed: " + e.message);
+  }
+}
+
+function saveProducts_toLocal(ps) {
+  localStorage.setItem("sandbox_products", JSON.stringify(ps));
+  _productsCache = null;
+}
+
 function saveProducts(ps) { localStorage.setItem("sandbox_products", JSON.stringify(ps)); }
 
 var selectedProductIndex = -1;
@@ -600,28 +727,55 @@ function showProductEditor(){
   if(!panel)return;
   if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
   var p=getProducts()[selectedProductIndex];
+  // Parse images array
+  var imgs=[];
+  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
+  while(imgs.length<10)imgs.push('');
+  var hasYoutube=p.youtube_url||p.video||'';
+
   panel.innerHTML=
-    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+(p.title_en||p.titleEN||p.slug)+'</span>'+
       '<span style="display:flex;gap:6px">'+
-        (p.active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
-        '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">'+(p.active?'Deactivate':'Activate')+'</button></span></div>'+
+        (p.is_active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
+        '</span></div>'+
     '<div class="card-body">'+
-      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input value="'+p.titleEN+'"></div>'+
-      '<div class="form-group"><label>Title (TH)</label><input value="'+p.titleTH+'"></div></div>'+
-      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea rows="3">'+p.descEN+'</textarea></div>'+
-      '<div class="form-group"><label>Description (TH)</label><textarea rows="3">'+p.descTH+'</textarea></div></div>'+
-      '<div class="form-group"><label>Fabric Assignment</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Set via Super Admin — Pricing Params</small></div>'+
-      '<div class="form-group"><label>Video Embed URL</label><input value="'+p.video+'" placeholder="YouTube / Vimeo embed URL">'+
-        (p.video?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)">🔗 <a href="'+p.video+'" target="_blank" style="color:var(--c-blue)">'+p.video+'</a></p>':'')+'</div>'+
-      '<div class="form-group"><label>Product Images ('+(p.images||0)+' slots)</label><div class="image-grid">'+
-        (function(){var h='';for(var i=0;i<Math.max(p.images||0,4);i++)h+='<div class="image-slot'+(i<(p.images||0)?' has-image':'')+'" onclick="toast(\'Upload image slot '+(i+1)+' (sandbox)\')">'+(i<(p.images||0)?'<span style="font-size:0.75rem;color:var(--c-muted)">📷</span><div class="remove-btn" onclick="event.stopPropagation();toast(\'Remove image '+(i+1)+' (sandbox)\')">✕</div>':'<span>+</span>')+'</div>';return h;})()+
-        '<div class="add-image-slot" onclick="toast(\'Add image (sandbox)\')">+</div></div>'+
-        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload, hover to remove. JPEG/PNG, max 5MB.</small></div>'+
+      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+(p.title_en||p.titleEN||'')+'"></div>'+
+      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+(p.title_th||p.titleTH||'')+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+(p.description_en||p.descEN||'')+'</textarea></div>'+
+      '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+(p.description_th||p.descTH||'')+'</textarea></div></div>'+
+      '<div class="form-group"><label>Fabric Details</label><input value="'+(p.fabric_options||p.fabric||'')+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
+      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
+        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
+      '<div class="form-group"><label>Product Images (10 slots)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
+        imgs.map(function(url,i){return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+i+')" title="Slot '+(i+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+i+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
+        '</div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove.</small></div>'+
       '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
         (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
         '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
-      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="toast(\'Product saved (sandbox)\')">Save Product</button>'+
-        '<button class="btn btn-outline" onclick="toast(\'Preview product page (sandbox)\')">Preview</button></div></div>';
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProductToD1()">Save to D1</button>'+
+        '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
+
+  // Set form field values by ID for the save function to read
+  setTimeout(function(){
+    var f = document.getElementById('ed-title-en'); if(f) f.value = p.title_en || p.titleEN || '';
+    f = document.getElementById('ed-title-th'); if(f) f.value = p.title_th || p.titleTH || '';
+    f = document.getElementById('ed-desc-en'); if(f) f.value = p.description_en || p.descEN || '';
+    f = document.getElementById('ed-desc-th'); if(f) f.value = p.description_th || p.descTH || '';
+    f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
+  }, 0);
+}
+
+function removeImageSlot(idx) {
+  var p = getProducts()[selectedProductIndex];
+  if (!p) return;
+  var imgs = [];
+  try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+  imgs[idx] = '';
+  while (imgs.length > 0 && !imgs[imgs.length - 1]) imgs.pop();
+  p.images = JSON.stringify(imgs);
+  saveProducts_toLocal(getProducts());
+  showProductEditor();
 }
 
 function showNewProductModal() {
@@ -642,10 +796,10 @@ function saveNewProduct() {
   if (ps.some(function(p){ return p.slug === slug; })) { toast("Slug already exists"); return; }
   ps.push({slug:slug, name:name, active:true, category:cat, fabric:"TBD", formulaType:fType,
     titleEN:name, titleTH:name, descEN:"", descTH:"", images:1, video:"", tags:[]});
-  saveProducts(ps);
+  saveProducts_toLocal(ps);
   hideNewProductModal();
   syncBadgesForProduct(slug, fType, name);
-  toast("Product added: " + name + " (" + fType + "). Pill badges auto-updated.");
+  toast("Product added to sandbox: " + name + " (" + fType + "). Save to D1 via editor.");
   document.getElementById("page-content").innerHTML = rProducts();
   var pp = document.getElementById("page-pricing");
   if (pp && typeof renderPricingParams === "function") pp.innerHTML = renderPricingParams();
@@ -657,7 +811,7 @@ function rProducts(){
     h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
   });
   h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images, video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Sandbox — no live data.</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves to D1 via API.</p>';
   return h;
 }
 

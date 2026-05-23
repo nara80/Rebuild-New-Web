@@ -98,6 +98,7 @@ tr:hover td{background:#f8fafc}
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
+  var ADMIN_SECRET = localStorage.getItem("admin_secret") || "";
 var currentPage = 'orders';
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
 
