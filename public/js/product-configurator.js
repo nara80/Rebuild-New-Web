@@ -1,7 +1,7 @@
 /* ============================================
-   MildMate Product Configurator — Phase 4+
+   MildMate Product Configurator ï¿½ Phase 4+
    Fitted sheet real pricing formula
-   Hybrid: standard size presets + custom W×L×D
+   Hybrid: standard size presets + custom Wï¿½Lï¿½D
    Applies to: standard-fitted-sheet, deep-pocket-fitted-sheet, dorm-fitted-sheet, rv-truck-fitted-sheet
    ============================================ */
 
@@ -33,7 +33,7 @@
   try {
     var resp = await fetch('/api/pricing-params');
     if (resp.ok) apiParams = await resp.json();
-  } catch(e) { /* offline/local — use hardcoded defaults */ }
+  } catch(e) { /* offline/local ï¿½ use hardcoded defaults */ }
 
   function pVal(key, fallback) {
     if (apiParams && apiParams.fixed_costs && apiParams.fixed_costs[key] !== undefined)
@@ -105,8 +105,9 @@
     DUVET_SEWING_TIERS = apiParams.duvet_sewing_tiers;
   } else {
     DUVET_SEWING_TIERS = [
-      { max: 139200, cost: 300 },
-      { max: 170400, cost: 400 },
+      { max: 98000, cost: 300 },
+      { max: 139000, cost: 400 },
+      { max: 170000, cost: 500 },
       { max: Infinity, cost: 600 }
     ];
   }
@@ -147,7 +148,7 @@
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN; // 1.90
 
   // -- Mattress Protector constants --
-  // Fabric tier cost based on W×L area in sq.inch
+  // Fabric tier cost based on Wï¿½L area in sq.inch
   var PROTECTOR_FABRIC_TIERS = [
     { maxSqInch: 3200, cost: 550 },
     { maxSqInch: 6620, cost: 670 },
@@ -211,12 +212,12 @@
   }
 
   function calcDuvet(wCm, lCm, fabric) {
-    // 2 pieces × (W+5) × (L+5) — 5cm sewing allowance on each edge, +20% waste
+    // 2 pieces ï¿½ (W+5) ï¿½ (L+5) ï¿½ 5cm sewing allowance on each edge, +20% waste
     var rawArea = 2 * (wCm + 5) * (lCm + 5);
     var area = rawArea * 1.20;
     var yardRate = FABRIC_RATES[fabric] || 100;
     var fabricCost = (area * yardRate / SQCM_PER_YARD);
-    // Zipper: 0.4 THB/cm × (2L + W)
+    // Zipper: 0.4 THB/cm ï¿½ (2L + W)
     var zipperCost = 0.4 * (2 * lCm + wCm);
     var sewingCost = getDuvetSewingCost(rawArea);
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
@@ -227,7 +228,7 @@
   }
 
   function calcPillowProtector(wCm, lCm) {
-    // 2 pieces × (W+5) × (L+5) + 60% waste, TPU fabric
+    // 2 pieces ï¿½ (W+5) ï¿½ (L+5) + 60% waste, TPU fabric
     var rawArea = 2 * (wCm + 5) * (lCm + 5);
     var area = rawArea * PILLOW_WASTE;
     // TPU fabric cost: 120 THB/lm, 210cm bolt
@@ -332,22 +333,22 @@
     quotePriceUsd: 0
   };
 
-  if (!fabricSelect && !sizeSelect) return; // Not a configurator page — exit
+  if (!fabricSelect && !sizeSelect) return; // Not a configurator page ï¿½ exit
 
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
 
-  // Duvet covers & pillow protectors only need W×L — hide the depth input
+  // Duvet covers & pillow protectors only need Wï¿½L ï¿½ hide the depth input
   if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
     var dimDGroup = dimD.closest('.dim-field') || dimD.closest('.input-group');
     if (dimDGroup) dimDGroup.style.display = 'none';
   }
 
-  // -- Marine Fitted Sheet — shape-based pricing --
+  // -- Marine Fitted Sheet ï¿½ shape-based pricing --
   if (isMarineFitted) {
     state.fabric = 'cloudsoft';
-    // Hide "Select Mattress Size" — marine uses "Choose Your Berth Shape" instead
+    // Hide "Select Mattress Size" ï¿½ marine uses "Choose Your Berth Shape" instead
     if (sizeSelect) {
       var sizeSection = sizeSelect.closest('.panel-section');
       if (sizeSection) sizeSection.style.display = 'none';
@@ -393,7 +394,7 @@
           if (lMin) parts.push('L: ' + lMin + '\u2013' + lMax + ' cm');
           if (hMin) parts.push('HW: ' + hMin + '\u2013' + hMax + ' cm');
           if (fMin) parts.push('FW: ' + fMin + '\u2013' + fMax + ' cm');
-          shapeHint.textContent = parts.length ? 'Valid range: ' + parts.join('  |  ') : 'Custom dimensions only — request a quote below';
+          shapeHint.textContent = parts.length ? 'Valid range: ' + parts.join('  |  ') : 'Custom dimensions only ï¿½ request a quote below';
         }
       });
     }
@@ -557,24 +558,24 @@
   // -- Update price from standard size --
   function updateStandardPrice() {
     if (!sizeSelect || !priceDisplay) return;
-    // Marine has no standard size dropdown — pricing handled by shape selector + custom dims
+    // Marine has no standard size dropdown ï¿½ pricing handled by shape selector + custom dims
     if (isMarineFitted) return;
     var val = sizeSelect.value;
     if (val === 'custom') {
       if (customDims) customDims.classList.add('open');
       if (addToCartBtn) addToCartBtn.disabled = true;
-      priceDisplay.textContent = '—';
+      priceDisplay.textContent = 'ï¿½';
       return;
     }
     var dims = parseSizeVal(val);
     if (!dims) {
-      priceDisplay.textContent = '—';
+      priceDisplay.textContent = 'ï¿½';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
     if (customDims) customDims.classList.remove('open');
 
-    // V-Berth: no standard-size dropdown — handled by "Choose Your Berth Shape" + custom dims
+    // V-Berth: no standard-size dropdown ï¿½ handled by "Choose Your Berth Shape" + custom dims
 
     var result;
     if (isEncasement) {
@@ -601,7 +602,7 @@
       result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
     }
     if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && dims.w > MAX_W) {
-      priceDisplay.textContent = 'Custom quote — Co-Sleep size';
+      priceDisplay.textContent = 'Custom quote ï¿½ Co-Sleep size';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
@@ -737,7 +738,7 @@
     });
   }
 
-  // -- Custom quote toggle (existing — unchanged) --
+  // -- Custom quote toggle (existing ï¿½ unchanged) --
   if (customQuoteBtn) {
     customQuoteBtn.addEventListener('click', function () {
       if (customDims) customDims.classList.toggle('open');
@@ -899,7 +900,7 @@
     return d.innerHTML;
   }
 
-  // -- Add to cart (stub — Phase 5) --
+  // -- Add to cart (stub ï¿½ Phase 5) --
   if (addToCartBtn) {
     addToCartBtn.addEventListener('click', function () {
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';

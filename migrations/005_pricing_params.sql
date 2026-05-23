@@ -85,13 +85,15 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
   ('sewing_tier4_cost', 400, 'Fitted 10F, 8F+Extend Cost (THB)', 'sewing'),
   ('sewing_tier5_cost', 500, 'Fitted 10F+Extend Cost (THB, >120,000)', 'sewing');
 
--- Duvet cover sewing tiers
+-- Duvet cover sewing tiers (5 products: 3-sided, pet-owner, marine, RV, dorm)
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('duvet_sewing_tier1_max', 139200, 'Duvet Tier 1 Max Area (cm²)', 'sewing'),
-  ('duvet_sewing_tier1_cost', 300, 'Duvet Tier 1 Cost (THB, ≤139,200)', 'sewing'),
-  ('duvet_sewing_tier2_max', 170400, 'Duvet Tier 2 Max Area (cm²)', 'sewing'),
-  ('duvet_sewing_tier2_cost', 400, 'Duvet Tier 2 Cost (THB, ≤170,400)', 'sewing'),
-  ('duvet_sewing_tier3_cost', 600, 'Duvet Tier 3 Cost (THB, >170,400)', 'sewing');
+  ('duvet_sewing_tier1_max', 98000, 'Duvet Tier 1 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier1_cost', 300, 'Duvet Tier 1 Cost (THB, ≤98,000)', 'sewing'),
+  ('duvet_sewing_tier2_max', 139000, 'Duvet Tier 2 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier2_cost', 400, 'Duvet Tier 2 Cost (THB, ≤139,000)', 'sewing'),
+  ('duvet_sewing_tier3_max', 170000, 'Duvet Tier 3 Max Area (cm²)', 'sewing'),
+  ('duvet_sewing_tier3_cost', 500, 'Duvet Tier 3 Cost (THB, ≤170,000)', 'sewing'),
+  ('duvet_sewing_tier4_cost', 600, 'Duvet Tier 4 Cost (THB, >170,000)', 'sewing');
 
 -- Flat sewing & pillow sewing
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
