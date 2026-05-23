@@ -92,6 +92,19 @@ tr:hover td{background:#f8fafc}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.stats-grid{grid-template-columns:repeat(2,1fr)}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
+.quote-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center}
+.quote-overlay.open{display:flex}
+.quote-popup{background:#fff;border-radius:var(--radius);padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative}
+.quote-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5rem;color:var(--c-muted);cursor:pointer;padding:0;line-height:1}
+.quote-close:hover{color:var(--c-dark)}
+.quote-popup-title{font-size:1.125rem;font-weight:700;color:var(--c-dark);margin-bottom:20px}
+.quote-field{margin-bottom:16px}
+.quote-field label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
+.quote-field input,.quote-field select{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);font-family:inherit}
+.quote-field input:focus,.quote-field select:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.quote-req{color:var(--c-red)}
+.quote-submit-btn{width:100%;padding:12px;background:var(--c-blue);color:#fff;border:none;border-radius:var(--radius);font-size:0.9375rem;font-weight:600;cursor:pointer;font-family:inherit}
+.quote-submit-btn:hover{background:#1a7fd4}
 </style>
 <script src="../../js/campaign-state.js"></script>
 </head>
