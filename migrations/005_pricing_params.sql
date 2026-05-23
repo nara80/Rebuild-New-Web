@@ -50,7 +50,6 @@ INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
 
 -- Bolt dimensions
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
-  ('sqcm_per_yard', 23744, 'cm² per Fabric Yard', 'fabric'),
   ('tpu_bolt_width_cm', 210, 'TPU Bolt Width (cm)', 'fabric'),
   ('tpu_sqcm_per_lm', 21000, 'TPU cm² per Linear Metre', 'fabric');
 
