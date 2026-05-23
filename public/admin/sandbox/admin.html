@@ -70,6 +70,15 @@ tr:hover td{background:#f8fafc}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
+.image-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;color:var(--c-muted);position:relative;transition:border-color 0.15s;background:var(--c-surface);overflow:hidden}
+.image-slot:hover{border-color:var(--c-blue)}
+.image-slot.has-image{border-style:solid}
+.image-slot.has-bg{background-size:cover;background-position:center;background-repeat:no-repeat}
+.remove-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.15s;z-index:1}
+.image-slot:hover .remove-btn{opacity:1}
+.add-image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;color:var(--c-muted);transition:border-color 0.15s}
+.add-image-slot:hover{border-color:var(--c-blue)}
 </style>
 <script src="../../js/campaign-state.js"></script>
 </head>
@@ -123,7 +132,7 @@ var sampleOrders = [
   {id:'#005',date:'2026-05-17',customer:'tom@email.com',product:'Pet Owner Fitted Sheet',dims:'120×60×15 cm',fabric:'BreezePlus',status:'pending',total:'฿880'}
 ];
 
-var sampleProducts = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"sheets","fabric":"","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":4,"video":"","tags":["sheets"]},{"slug":"deep-pocket-fitted-sheet","name":"Deep Pocket Fitted Sheet","active":true,"category":"sheets, deep-pocket","fabric":"","titleEN":"Deep Pocket Fitted Sheet","titleTH":"ผ้าปูความลึกพิเศษ","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","deep-pocket"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet","active":true,"category":"sheets, marine","fabric":"","titleEN":"Marine Fitted Sheet","titleTH":"ผ้าปูที่นอน Marine (V-Berth)","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","marine"]},{"slug":"dorm-fitted-sheet","name":"Dorm Fitted Sheet","active":true,"category":"sheets, boarding-dorm","fabric":"","titleEN":"Dorm Fitted Sheet","titleTH":"ผ้าปูหอพัก","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","boarding-dorm"]},{"slug":"rv-truck-fitted-sheet","name":"RV & Truck Fitted Sheet","active":true,"category":"sheets, rv-truck","fabric":"","titleEN":"RV & Truck Fitted Sheet","titleTH":"ผ้าปูที่นอน RV & Truck","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","rv-truck"]},{"slug":"family-fitted-sheet","name":"Family Fitted Sheet","active":true,"category":"sheets, family","fabric":"","titleEN":"Family Fitted Sheet","titleTH":"ผ้าปูครอบครัว Co-Sleep","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","family"]},{"slug":"pet-owner-fitted-sheet","name":"Pet Owner Fitted Sheet","active":true,"category":"sheets, pets","fabric":"","titleEN":"Pet Owner Fitted Sheet","titleTH":"ผ้าปูที่นอนสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","pets"]},{"slug":"flat-sheet-standard","name":"Flat Sheet — Standard","active":true,"category":"sheets","fabric":"","titleEN":"Flat Sheet — Standard","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":4,"video":"","tags":["sheets"]},{"slug":"flat-sheet-extra-deep-pocket","name":"Flat Sheet — Extra Deep Pocket","active":true,"category":"sheets, deep-pocket","fabric":"","titleEN":"Flat Sheet — Extra Deep Pocket","titleTH":"ผ้าปูราบความลึกพิเศษ","descEN":"","descTH":"","images":4,"video":"","tags":["sheets","deep-pocket"]},{"slug":"3-sided-duvet","name":"3-Sided Zipper Duvet Cover","active":true,"category":"duvet-covers, family","fabric":"","titleEN":"3-Sided Zipper Duvet Cover","titleTH":"ผ้าคลุมผ้าสวย 3 ด้านซิป","descEN":"","descTH":"","images":4,"video":"","tags":["duvet-covers","family"]},{"slug":"pet-owner-duvet-cover","name":"Pet Owner Duvet Cover","active":true,"category":"duvet-covers, pets","fabric":"","titleEN":"Pet Owner Duvet Cover","titleTH":"ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":4,"video":"","tags":["duvet-covers","pets"]},{"slug":"duvet-cover-marine","name":"Duvet Cover — Marine","active":true,"category":"duvet-covers, marine","fabric":"","titleEN":"Duvet Cover — Marine","titleTH":"ผ้าคลุมผ้าสวย Marine","descEN":"","descTH":"","images":4,"video":"","tags":["duvet-covers","marine"]},{"slug":"duvet-cover-rv","name":"Duvet Cover — RV","active":true,"category":"duvet-covers, rv-truck","fabric":"","titleEN":"Duvet Cover — RV","titleTH":"ผ้าคลุมผ้าสวย RV","descEN":"","descTH":"","images":4,"video":"","tags":["duvet-covers","rv-truck"]},{"slug":"duvet-cover-dorm","name":"Duvet Cover — Dorm","active":true,"category":"duvet-covers, boarding-dorm","fabric":"","titleEN":"Duvet Cover — Dorm","titleTH":"ผ้าคลุมผ้าสวยหอพัก","descEN":"","descTH":"","images":4,"video":"","tags":["duvet-covers","boarding-dorm"]},{"slug":"duvet-insert","name":"Duvet Insert","active":true,"category":"duvet-covers","fabric":"","titleEN":"Duvet Insert","titleTH":"ไส้ผ้านวม (Duvet Insert)","descEN":"","descTH":"","images":4,"video":"","tags":["duvet-covers"]},{"slug":"pillowcase-envelope","name":"Envelope Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Envelope Pillowcase","titleTH":"ถุงหมอนแบบซอง","descEN":"","descTH":"","images":4,"video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-zipper","name":"Zipper Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Zipper Pillowcase","titleTH":"ถุงหมอนซิป","descEN":"","descTH":"","images":4,"video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-sham","name":"Sham Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Sham Pillowcase","titleTH":"ถุงหมอน Sham","descEN":"","descTH":"","images":4,"video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"mattress-protector-standard","name":"Mattress Protector — Standard","active":true,"category":"protection","fabric":"","titleEN":"Mattress Protector — Standard","titleTH":"ผ้าปูกันเปื้อนมาตรฐาน","descEN":"","descTH":"","images":4,"video":"","tags":["protection"]},{"slug":"mattress-protector-family","name":"Mattress Protector — Family","active":true,"category":"protection, family","fabric":"","titleEN":"Mattress Protector — Family","titleTH":"ผ้าปูกันเปื้อนครอบครัว","descEN":"","descTH":"","images":4,"video":"","tags":["protection","family"]},{"slug":"mattress-protector-deep-pocket","name":"Mattress Protector — Deep Pocket","active":true,"category":"protection, deep-pocket","fabric":"","titleEN":"Mattress Protector — Deep Pocket","titleTH":"ผ้าปูกันเปื้อนความลึกพิเศษ","descEN":"","descTH":"","images":4,"video":"","tags":["protection","deep-pocket"]},{"slug":"pet-proof-mattress-protector","name":"Pet-Proof Mattress Protector","active":true,"category":"protection, pets","fabric":"","titleEN":"Pet-Proof Mattress Protector","titleTH":"ผ้าปูกันเปื้อนสัตว์เลี้ยง","descEN":"","descTH":"","images":4,"video":"","tags":["protection","pets"]},{"slug":"mattress-encasement-general","name":"6-Sided Mattress Encasement","active":true,"category":"protection, marine, rv-truck","fabric":"","titleEN":"6-Sided Mattress Encasement","titleTH":"ผ้าห่อที่นอน 6 ด้าน","descEN":"","descTH":"","images":4,"video":"","tags":["protection","marine","rv-truck"]},{"slug":"rv-truck-mattress-encasement","name":"RV & Truck Mattress Encasement","active":true,"category":"protection, rv-truck","fabric":"","titleEN":"RV & Truck Mattress Encasement","titleTH":"ผ้าห่อที่นอน RV & Truck","descEN":"","descTH":"","images":4,"video":"","tags":["protection","rv-truck"]},{"slug":"pillow-protector-general","name":"Pillow Protector","active":true,"category":"protection, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Pillow Protector","titleTH":"ผ้ากันเปื้อนหมอน","descEN":"","descTH":"","images":4,"video":"","tags":["protection","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"accessories, family","fabric":"","titleEN":"BedBridge Connector","titleTH":"BedBridge Connector","descEN":"","descTH":"","images":4,"video":"","tags":["accessories","family"]},{"slug":"mattress-lift-helper","name":"Bed Lifter (38 cm)","active":true,"category":"accessories","fabric":"","titleEN":"Bed Lifter (38 cm)","titleTH":"ตัวยกที่นอนขนาดใหญ่ (38 ซม.)","descEN":"","descTH":"","images":4,"video":"","tags":["accessories"]}];
+var sampleProducts = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"sheets","fabric":"","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets"]},{"slug":"deep-pocket-fitted-sheet","name":"Deep Pocket Fitted Sheet","active":true,"category":"sheets, deep-pocket","fabric":"","titleEN":"Deep Pocket Fitted Sheet","titleTH":"ผ้าปูความลึกพิเศษ","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","deep-pocket"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet","active":true,"category":"sheets, marine","fabric":"","titleEN":"Marine Fitted Sheet","titleTH":"ผ้าปูที่นอน Marine (V-Berth)","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","marine"]},{"slug":"dorm-fitted-sheet","name":"Dorm Fitted Sheet","active":true,"category":"sheets, boarding-dorm","fabric":"","titleEN":"Dorm Fitted Sheet","titleTH":"ผ้าปูหอพัก","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","boarding-dorm"]},{"slug":"rv-truck-fitted-sheet","name":"RV & Truck Fitted Sheet","active":true,"category":"sheets, rv-truck","fabric":"","titleEN":"RV & Truck Fitted Sheet","titleTH":"ผ้าปูที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","rv-truck"]},{"slug":"family-fitted-sheet","name":"Family Fitted Sheet","active":true,"category":"sheets, family","fabric":"","titleEN":"Family Fitted Sheet","titleTH":"ผ้าปูครอบครัว Co-Sleep","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","family"]},{"slug":"pet-owner-fitted-sheet","name":"Pet Owner Fitted Sheet","active":true,"category":"sheets, pets","fabric":"","titleEN":"Pet Owner Fitted Sheet","titleTH":"ผ้าปูที่นอนสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","pets"]},{"slug":"flat-sheet-standard","name":"Flat Sheet — Standard","active":true,"category":"sheets","fabric":"","titleEN":"Flat Sheet — Standard","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets"]},{"slug":"flat-sheet-extra-deep-pocket","name":"Flat Sheet — Extra Deep Pocket","active":true,"category":"sheets, deep-pocket","fabric":"","titleEN":"Flat Sheet — Extra Deep Pocket","titleTH":"ผ้าปูราบความลึกพิเศษ","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","deep-pocket"]},{"slug":"3-sided-duvet","name":"3-Sided Zipper Duvet Cover","active":true,"category":"duvet-covers, family","fabric":"","titleEN":"3-Sided Zipper Duvet Cover","titleTH":"ผ้าคลุมผ้าสวย 3 ด้านซิป","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","family"]},{"slug":"pet-owner-duvet-cover","name":"Pet Owner Duvet Cover","active":true,"category":"duvet-covers, pets","fabric":"","titleEN":"Pet Owner Duvet Cover","titleTH":"ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","pets"]},{"slug":"duvet-cover-marine","name":"Duvet Cover — Marine","active":true,"category":"duvet-covers, marine","fabric":"","titleEN":"Duvet Cover — Marine","titleTH":"ผ้าคลุมผ้าสวย Marine","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","marine"]},{"slug":"duvet-cover-rv","name":"Duvet Cover — RV","active":true,"category":"duvet-covers, rv-truck","fabric":"","titleEN":"Duvet Cover — RV","titleTH":"ผ้าคลุมผ้าสวย RV","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","rv-truck"]},{"slug":"duvet-cover-dorm","name":"Duvet Cover — Dorm","active":true,"category":"duvet-covers, boarding-dorm","fabric":"","titleEN":"Duvet Cover — Dorm","titleTH":"ผ้าคลุมผ้าสวยหอพัก","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","boarding-dorm"]},{"slug":"duvet-insert","name":"Duvet Insert","active":true,"category":"duvet-covers","fabric":"","titleEN":"Duvet Insert","titleTH":"ไส้ผ้านวม (Duvet Insert)","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers"]},{"slug":"pillowcase-envelope","name":"Envelope Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Envelope Pillowcase","titleTH":"ถุงหมอนแบบซอง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-zipper","name":"Zipper Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Zipper Pillowcase","titleTH":"ถุงหมอนซิป","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-sham","name":"Sham Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Sham Pillowcase","titleTH":"ถุงหมอน Sham","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"mattress-protector-standard","name":"Mattress Protector — Standard","active":true,"category":"protection","fabric":"","titleEN":"Mattress Protector — Standard","titleTH":"ผ้าปูกันเปื้อนมาตรฐาน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection"]},{"slug":"mattress-protector-family","name":"Mattress Protector — Family","active":true,"category":"protection, family","fabric":"","titleEN":"Mattress Protector — Family","titleTH":"ผ้าปูกันเปื้อนครอบครัว","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","family"]},{"slug":"mattress-protector-deep-pocket","name":"Mattress Protector — Deep Pocket","active":true,"category":"protection, deep-pocket","fabric":"","titleEN":"Mattress Protector — Deep Pocket","titleTH":"ผ้าปูกันเปื้อนความลึกพิเศษ","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","deep-pocket"]},{"slug":"pet-proof-mattress-protector","name":"Pet-Proof Mattress Protector","active":true,"category":"protection, pets","fabric":"","titleEN":"Pet-Proof Mattress Protector","titleTH":"ผ้าปูกันเปื้อนสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","pets"]},{"slug":"mattress-encasement-general","name":"6-Sided Mattress Encasement","active":true,"category":"protection, marine, rv-truck","fabric":"","titleEN":"6-Sided Mattress Encasement","titleTH":"ผ้าห่อที่นอน 6 ด้าน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","marine","rv-truck"]},{"slug":"rv-truck-mattress-encasement","name":"RV & Truck Mattress Encasement","active":true,"category":"protection, rv-truck","fabric":"","titleEN":"RV & Truck Mattress Encasement","titleTH":"ผ้าห่อที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","rv-truck"]},{"slug":"pillow-protector-general","name":"Pillow Protector","active":true,"category":"protection, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Pillow Protector","titleTH":"ผ้ากันเปื้อนหมอน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"accessories, family","fabric":"","titleEN":"BedBridge Connector","titleTH":"BedBridge Connector","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["accessories","family"]},{"slug":"mattress-lift-helper","name":"Bed Lifter (38 cm)","active":true,"category":"accessories","fabric":"","titleEN":"Bed Lifter (38 cm)","titleTH":"ตัวยกที่นอนขนาดใหญ่ (38 ซม.)","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["accessories"]}];
 
 var selectedProductIndex = -1;
 
@@ -137,57 +146,145 @@ function selectProduct(idx){
 function showProductEditor(){
   var panel=document.getElementById('editor-panel');
   if(!panel)return;
-  if(selectedProductIndex<0){
-    panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';
-    return;
-  }
+  if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
   var p=sampleProducts[selectedProductIndex];
+  var imgs=[];
+  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
+  while(imgs.length<10)imgs.push('');
+  var hasYoutube=p.youtube_url||p.video||'';
+
   panel.innerHTML=
-    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0">'+
-      '<span>Edit: '+p.name+'</span>'+
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
       '<span style="display:flex;gap:6px">'+
         (p.active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
         '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">'+(p.active?'Deactivate':'Activate')+'</button>'+
-      '</span>'+
-    '</div>'+
+      '</span></div>'+
     '<div class="card-body">'+
-      '<div class="form-row">'+
-        '<div class="form-group"><label>Title (EN)</label><input value="'+p.titleEN+'"></div>'+
-        '<div class="form-group"><label>Title (TH)</label><input value="'+p.titleTH+'"></div>'+
-      '</div>'+
-      '<div class="form-row">'+
-        '<div class="form-group"><label>Description (EN)</label><textarea rows="3">'+p.descEN+'</textarea></div>'+
-        '<div class="form-group"><label>Description (TH)</label><textarea rows="3">'+p.descTH+'</textarea></div>'+
-      '</div>'+
-      '<div class="form-group"><label>Fabric Assignment</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Set via Super Admin — Pricing Params</small></div>'+
-      '<div class="form-group"><label>Video Embed URL</label><input value="'+p.video+'" placeholder="YouTube / Vimeo embed URL">'+
-        (p.video?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)" onclick="window.open(\''+p.video+'\')" style="cursor:pointer">🔗 Open: '+p.video+'</p>':'')+
-      '</div>'+
-      '<div class="form-group">'+
-        '<label>Product Images ('+(p.images||0)+' slots)</label>'+
-        '<div class="image-grid">'+
-          (function(){var h='';for(var i=0;i<Math.max(p.images||0,4);i++){
-            h+='<div class="image-slot'+(i<(p.images||0)?' has-image':'')+'" onclick="toast(\'Upload image slot '+(i+1)+' (sandbox)\')">'+
-              (i<(p.images||0)?'<span style="font-size:0.75rem;color:var(--c-muted)">📷</span><div class="remove-btn" onclick="event.stopPropagation();toast(\'Remove image '+ (i+1)+' (sandbox)\')">✕</div>':'<span>+</span>')+
-            '</div>';
-          }return h;})()+
-          '<div class="add-image-slot" onclick="toast(\'Add image (sandbox)\')">+</div>'+
+      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+p.titleEN+'"></div>'+
+      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+p.titleTH+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+p.descEN+'</textarea></div>'+
+      '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+p.descTH+'</textarea></div></div>'+
+      '<div class="form-group"><label>Fabric Details</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
+      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
+        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
+      '<div class="form-group"><label>Product Images (10 slots)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
+        imgs.map(function(url,i){return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+i+')" title="Slot '+(i+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+i+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
         '</div>'+
-        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload, hover to remove. Images: JPEG/PNG, max 5MB.</small>'+
-      '</div>'+
-      '<div class="form-group">'+
-        '<label>Tags / Niches</label>'+
-        '<div class="tags-row">'+
-          (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
-          '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span>'+
-        '</div>'+
-      '</div>'+
-      '<div style="display:flex;gap:8px;margin-top:16px">'+
-        '<button class="btn btn-primary" onclick="toast(\'Product saved (sandbox — preview only)\')">Save Product</button>'+
-        '<button class="btn btn-outline" onclick="toast(\'Preview product page (sandbox)\')">Preview</button>'+
-      '</div>'+
-    '</div>';
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove.</small></div>'+
+      '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
+        (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
+        '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProductToD1()">Save to D1</button>'+
+        '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
+
+  setTimeout(function(){
+    var f = document.getElementById('ed-title-en'); if(f) f.value = p.titleEN || '';
+    f = document.getElementById('ed-title-th'); if(f) f.value = p.titleTH || '';
+    f = document.getElementById('ed-desc-en'); if(f) f.value = p.descEN || '';
+    f = document.getElementById('ed-desc-th'); if(f) f.value = p.descTH || '';
+    f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
+  }, 0);
 }
+
+
+
+// ── Product API Functions ──
+var _productsCache = null;
+
+async function getProducts() {
+  if (_productsCache) return _productsCache;
+  try {
+    var resp = await fetch("/api/admin/products", { headers: { "X-Admin-Secret": ADMIN_SECRET } });
+    if (resp.ok) {
+      var list = await resp.json();
+      _productsCache = list.map(function(r) {
+        return {
+          slug: r.slug, name: r.title_en || r.slug, active: !!r.is_active,
+          category: r.category || "", fabric: r.fabric_options || "",
+          titleEN: r.title_en || "", titleTH: r.title_th || "",
+          descEN: r.description_en || "", descTH: r.description_th || "",
+          images: r.images || "[]", video: r.youtube_url || "",
+          youtube_url: r.youtube_url || "",
+          tags: (r.tags||"").split(",").filter(Boolean)
+        };
+      });
+      return _productsCache;
+    }
+  } catch(e) {}
+  _productsCache = sampleProducts;
+  return _productsCache;
+}
+
+async function uploadImage(slotIndex) {
+  var input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/jpeg,image/png,image/webp,image/gif";
+  input.onchange = async function() {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast("File too large: " + (file.size / 1024 / 1024).toFixed(1) + "MB. Max 5MB."); return; }
+    toast("Uploading image " + (slotIndex + 1) + "...");
+    var form = new FormData();
+    form.append("file", file);
+    try {
+      var resp = await fetch("/api/admin/upload", { method: "POST", headers: { "X-Admin-Secret": ADMIN_SECRET }, body: form });
+      var data = await resp.json();
+      if (data.success) {
+        var p = sampleProducts[selectedProductIndex];
+        if (!p) return;
+        var imgs = [];
+        try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
+        while (imgs.length < 10) imgs.push("");
+        imgs[slotIndex] = data.url;
+        p.images = JSON.stringify(imgs);
+        _productsCache = null;
+        toast("Image " + (slotIndex + 1) + " uploaded: " + data.url);
+        showProductEditor();
+      } else {
+        toast("Upload failed: " + (data.error || "Unknown error"));
+      }
+    } catch(e) { toast("Upload failed: " + e.message); }
+  };
+  input.click();
+}
+
+function removeImageSlot(idx) {
+  var p = sampleProducts[selectedProductIndex];
+  if (!p) return;
+  var imgs = [];
+  try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+  imgs[idx] = '';
+  while (imgs.length > 0 && !imgs[imgs.length - 1]) imgs.pop();
+  p.images = JSON.stringify(imgs);
+  _productsCache = null;
+  showProductEditor();
+}
+
+async function saveProductToD1() {
+  var p = sampleProducts[selectedProductIndex];
+  if (!p) return;
+  var titleEN = (document.getElementById("ed-title-en") || {}).value || "";
+  var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
+  var descEN = (document.getElementById("ed-desc-en") || {}).value || "";
+  var descTH = (document.getElementById("ed-desc-th") || {}).value || "";
+  var youtube = (document.getElementById("ed-youtube") || {}).value || "";
+  try {
+    var resp = await fetch("/api/admin/products/" + p.slug, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Admin-Secret": ADMIN_SECRET },
+      body: JSON.stringify({
+        title_en: titleEN, title_th: titleTH,
+        description_en: descEN, description_th: descTH,
+        youtube_url: youtube, images: p.images || "[]",
+        tags: (p.tags || []).join(",")
+      })
+    });
+    var data = await resp.json();
+    if (data.success) { toast("Product saved to D1: " + p.name); _productsCache = null; }
+    else { toast("Save failed: " + (data.error || "Unknown")); }
+  } catch(e) { toast("Save failed: " + e.message); }
+}
+
 
 function rOrders(){
   var h='<div class="card">'+
@@ -218,7 +315,7 @@ function rProducts(){
   h+='</div>';
   h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div>';
   h+='</div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — manage titles, descriptions, images, video, and tags. <strong>Price is formula-driven — cannot be edited here.</strong> Sandbox — no live data.</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves to D1 via API.</p>';
   return h;
 }
 
