@@ -196,90 +196,97 @@ function renderDashboard() {
 }
 
 // ── Pricing Parameters Page ──
+function getParams() {
+  var raw = localStorage.getItem("sandbox_params");
+  if (raw) return JSON.parse(raw);
+  var def = [{"key":"fabric_rate_cloudsoft","value":100,"label":"CloudSoft Rate (THB/yd)","category":"fabric","products":"Marine,RV,Dorm,Family,Pets,Flat"},{"key":"fabric_rate_breezeplus","value":180,"label":"BreezePlus Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Dorm,Pets"},{"key":"fabric_rate_premacotton","value":180,"label":"PremaCotton Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Duvet,Pillow"},{"key":"fabric_rate_ecoluxe","value":180,"label":"EcoLuxe Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Duvet,Pillow"},{"key":"fabric_rate_tpu","value":120,"label":"TPU Rate (THB/lm)","category":"fabric","products":"Encasement,Protector,PillowProtect"},{"key":"waste_factor_fabric","value":20,"label":"Fabric Waste (%)","category":"waste","products":"Fitted,Flat,Duvet,Encase"},{"key":"waste_factor_pillowcase","value":60,"label":"Pillow Waste (%)","category":"waste","products":"Pillowcase,PillowProtect"},{"key":"margin_rate_standard","value":30,"label":"Standard Fitted Margin","category":"margin","products":"Standard,DeepPkt,Dorm,Pets"},{"key":"margin_rate_marine","value":680,"label":"Marine V-Berth Margin","category":"margin","products":"Marine"},{"key":"margin_rate_family","value":50,"label":"Family Fitted Margin","category":"margin","products":"Family"},{"key":"margin_rate_rv_truck","value":45,"label":"RV & Truck Fitted Margin","category":"margin","products":"RV,Truck"},{"key":"margin_rate_encasement","value":50,"label":"Encasement Margin","category":"margin","products":"Encasement,RV Encase"},{"key":"encasement_mkt_rate","value":25,"label":"Encasement Marketing Rate","category":"margin","products":"Encasement,RV Encase"},{"key":"margin_rate_duvet","value":30,"label":"Duvet Cover Margin","category":"margin","products":"3-Sided,Pet,Marine,RV,Dorm"},{"key":"margin_rate_pillow","value":15,"label":"Pillowcase Margin","category":"margin","products":"Envelope,Zipper,Sham"},{"key":"margin_rate_pillow_protector","value":35,"label":"Pillow Protector Margin","category":"margin","products":"Pillow Protect"},{"key":"margin_rate_protector_standard","value":15,"label":"Protector Standard Margin","category":"margin","products":"Std,PetProof"},{"key":"margin_rate_protector_deep","value":25,"label":"Protector Deep Pocket Margin","category":"margin","products":"DeepPkt"},{"key":"margin_rate_protector_family","value":50,"label":"Protector Family Margin","category":"margin","products":"Family"},{"key":"sewing_tier1_cost","value":120,"label":"Fitted 3.5F (≤51,600 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier2_cost","value":200,"label":"Fitted 5,6F (≤71,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier3_cost","value":300,"label":"Fitted 8F, 6F+Ext (≤91,200 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier4_cost","value":400,"label":"Fitted 10F, 8F+Ext (≤120,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier5_cost","value":500,"label":"Fitted 10F+Ext (>120,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"duvet_tier1_cost","value":300,"label":"Duvet 70×90 (≤98,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier2_cost","value":400,"label":"Duvet 90×100 (≤139,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier3_cost","value":500,"label":"Duvet 110×100 (≤170,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier4_cost","value":600,"label":"Duvet 125×100 (>170,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"encasement_sewing_cost","value":300,"label":"Encasement Sewing (flat)","category":"flat_sewing","products":"Encasement,RV Encase"},{"key":"flat_sewing_cost","value":250,"label":"Flat Sheet Sewing (flat)","category":"flat_sewing","products":"Flat Std,Flat Deep"},{"key":"pillow_sewing_cost","value":40,"label":"Pillowcase Sewing (per pc)","category":"flat_sewing","products":"Envelope,Zipper"},{"key":"pillow_sham_sewing_cost","value":50,"label":"Sham Sewing (per pc)","category":"flat_sewing","products":"Sham"},{"key":"packing_cost","value":100,"label":"Packing Cost","category":"fixed","products":"All products"},{"key":"delivery_cost","value":50,"label":"Delivery Cost","category":"fixed","products":"All products"},{"key":"zipper_rate","value":0.4,"label":"Zipper Rate (THB/cm)","category":"fixed","products":"Duvets,Encasement,Zipper Pillow"},{"key":"accessories_rate","value":10,"label":"Accessories Rate","category":"fixed","products":"All fitted sheets"},{"key":"ops_rate","value":15,"label":"Operations Rate","category":"operations","products":"All products"},{"key":"mkt_rate","value":20,"label":"Marketing Rate","category":"marketing","products":"All products"}];
+  localStorage.setItem("sandbox_params", JSON.stringify(def));
+  return def;
+}
+function saveParams(ps) { localStorage.setItem("sandbox_params", JSON.stringify(ps)); }
+
+function editParam(idx) {
+  var ps = getParams();
+  var p = ps[idx];
+  if (!p) return;
+  var pctCats = ["waste","margin","operations","marketing"];
+  var suffix = pctCats.indexOf(p.category) !== -1 ? "%" : "";
+  var val = prompt("Edit " + p.label + "\nKey: " + p.key, p.value);
+  if (val === null) return;
+  var num = parseFloat(val);
+  if (isNaN(num)) { toast("Invalid number"); return; }
+  p.value = num;
+  saveParams(ps);
+  toast("Saved: " + p.key + " = " + num + suffix);
+  document.getElementById("page-pricing").innerHTML = renderPricingParams();
+}
+
+function addParam() {
+  var ps = getParams();
+  var keyEl = document.getElementById("new-param-key");
+  var catEl = document.getElementById("new-param-cat");
+  var valEl = document.getElementById("new-param-val");
+  var lblEl = document.getElementById("new-param-label");
+  var prodEl = document.getElementById("new-param-products");
+  var key = (keyEl ? keyEl.value : "").trim();
+  var cat = (catEl ? catEl.value : "margin");
+  var lbl = (lblEl ? lblEl.value : key);
+  var prod = (prodEl ? prodEl.value : "");
+  if (!key) { toast("Key is required"); return; }
+  var val = parseFloat(valEl ? valEl.value : "0");
+  if (isNaN(val)) { toast("Invalid value"); return; }
+  if (ps.some(function(p){ return p.key === key; })) { toast("Key already exists"); return; }
+  ps.push({key:key, value:val, label:lbl, category:cat, products:prod});
+  saveParams(ps);
+  toast(key + " added (" + val + "). Live in product formulas.");
+  document.getElementById("page-pricing").innerHTML = renderPricingParams();
+}
+
 function renderPricingParams() {
   var categories = {
-    fabric: { label:'Fabric Rates', badge:'badge-fabric' },
-    waste: { label:'Fabric Waste Factors', badge:'badge-waste' },
-    margin: { label:'Margin Rates', badge:'badge-margin' },
-    sewing: { label:'Fitted Sheet Sewing Tiers', badge:'badge-sewing' },
-    duvet_sewing: { label:'Duvet Cover Sewing Tiers', badge:'badge-sewing' },
-    flat_sewing: { label:'Other Sewing Costs', badge:'badge-sewing' },
-    fixed: { label:'Fixed Costs & Constants', badge:'badge-fixed' },
-    operations: { label:'Operations Rate', badge:'badge-ops' },
-    marketing: { label:'Marketing Rate', badge:'badge-ops' }
+    fabric: { label:"Fabric Rates", badge:"badge-fabric" },
+    waste: { label:"Fabric Waste Factors", badge:"badge-waste" },
+    margin: { label:"Margin Rates", badge:"badge-margin" },
+    sewing: { label:"Fitted Sheet Sewing Tiers", badge:"badge-sewing" },
+    duvet_sewing: { label:"Duvet Cover Sewing Tiers", badge:"badge-sewing" },
+    flat_sewing: { label:"Other Sewing Costs", badge:"badge-sewing" },
+    fixed: { label:"Fixed Costs \u0026 Constants", badge:"badge-fixed" },
+    operations: { label:"Operations Rate", badge:"badge-ops" },
+    marketing: { label:"Marketing Rate", badge:"badge-ops" }
   };
-
-  var sample = [
-    {key:'fabric_rate_cloudsoft',value:100,label:'CloudSoft Rate (THB/yd)',category:'fabric',products:'Marine,RV,Dorm,Family,Pets,Flat'},
-    {key:'fabric_rate_breezeplus',value:180,label:'BreezePlus Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Dorm,Pets'},
-    {key:'fabric_rate_premacotton',value:180,label:'PremaCotton Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Duvet,Pillow'},
-    {key:'fabric_rate_ecoluxe',value:180,label:'EcoLuxe Rate (THB/yd)',category:'fabric',products:'Standard,DeepPkt,Duvet,Pillow'},
-    {key:'fabric_rate_tpu',value:120,label:'TPU Rate (THB/lm)',category:'fabric',products:'Encasement,Protector,PillowProtect'},
-    {key:'waste_factor_fabric',value:20,label:'Fabric Waste (%)',category:'waste',products:'Fitted,Flat,Duvet,Encase'},
-    {key:'waste_factor_pillowcase',value:60,label:'Pillow Waste (%)',category:'waste',products:'Pillowcase,PillowProtect'},
-    {key:'margin_rate_standard',value:30,label:'Standard Fitted Margin',category:'margin',products:'Standard,DeepPkt,Dorm,Pets'},
-    {key:'margin_rate_marine',value:680,label:'Marine V-Berth Margin',category:'margin',products:'Marine'},
-    {key:'margin_rate_family',value:50,label:'Family Fitted Margin',category:'margin',products:'Family'},
-    {key:'margin_rate_rv_truck',value:45,label:'RV & Truck Fitted Margin',category:'margin',products:'RV,Truck'},
-    {key:'margin_rate_encasement',value:50,label:'Encasement Margin',category:'margin',products:'Encasement,RV Encase'},
-    {key:'encasement_mkt_rate',value:25,label:'Encasement Marketing Rate',category:'margin',products:'Encasement,RV Encase'},
-    {key:'margin_rate_duvet',value:30,label:'Duvet Cover Margin',category:'margin',products:'3-Sided,Pet,Marine,RV,Dorm'},
-    {key:'margin_rate_pillow',value:15,label:'Pillowcase Margin',category:'margin',products:'Envelope,Zipper,Sham'},
-    {key:'margin_rate_pillow_protector',value:35,label:'Pillow Protector Margin',category:'margin',products:'Pillow Protect'},
-    {key:'margin_rate_protector_standard',value:15,label:'Protector Standard Margin',category:'margin',products:'Std,PetProof'},
-    {key:'margin_rate_protector_deep',value:25,label:'Protector Deep Pocket Margin',category:'margin',products:'DeepPkt'},
-    {key:'margin_rate_protector_family',value:50,label:'Protector Family Margin',category:'margin',products:'Family'},
-    {key:'sewing_tier1_cost',value:120,label:'Fitted 3.5F (≤51,600 cm²)',category:'sewing',products:'All 7 fitted sheets'},
-    {key:'sewing_tier2_cost',value:200,label:'Fitted 5,6F (≤71,000 cm²)',category:'sewing',products:'All 7 fitted sheets'},
-    {key:'sewing_tier3_cost',value:300,label:'Fitted 8F, 6F+Ext (≤91,200 cm²)',category:'sewing',products:'All 7 fitted sheets'},
-    {key:'sewing_tier4_cost',value:400,label:'Fitted 10F, 8F+Ext (≤120,000 cm²)',category:'sewing',products:'All 7 fitted sheets'},
-    {key:'sewing_tier5_cost',value:500,label:'Fitted 10F+Ext (>120,000 cm²)',category:'sewing',products:'All 7 fitted sheets'},
-    {key:'duvet_tier1_cost',value:300,label:'Duvet 70×90 (≤98,000 cm²)',category:'duvet_sewing',products:'5 duvet covers'},
-    {key:'duvet_tier2_cost',value:400,label:'Duvet 90×100 (≤139,000 cm²)',category:'duvet_sewing',products:'5 duvet covers'},
-    {key:'duvet_tier3_cost',value:500,label:'Duvet 110×100 (≤170,000 cm²)',category:'duvet_sewing',products:'5 duvet covers'},
-    {key:'duvet_tier4_cost',value:600,label:'Duvet 125×100 (>170,000 cm²)',category:'duvet_sewing',products:'5 duvet covers'},
-    {key:'encasement_sewing_cost',value:300,label:'Encasement Sewing (flat)',category:'flat_sewing',products:'Encasement,RV Encase'},
-    {key:'flat_sewing_cost',value:250,label:'Flat Sheet Sewing (flat)',category:'flat_sewing',products:'Flat Std,Flat Deep'},
-    {key:'pillow_sewing_cost',value:40,label:'Pillowcase Sewing (per pc)',category:'flat_sewing',products:'Envelope,Zipper'},
-    {key:'pillow_sham_sewing_cost',value:50,label:'Sham Sewing (per pc)',category:'flat_sewing',products:'Sham'},
-    {key:'packing_cost',value:100,label:'Packing Cost',category:'fixed',products:'All products'},
-    {key:'delivery_cost',value:50,label:'Delivery Cost',category:'fixed',products:'All products'},
-    {key:'zipper_rate',value:0.4,label:'Zipper Rate (THB/cm)',category:'fixed',products:'Duvets,Encasement,Zipper Pillow'},
-    {key:'accessories_rate',value:10,label:'Accessories Rate',category:'fixed',products:'All fitted sheets'},
-    {key:'ops_rate',value:15,label:'Operations Rate',category:'operations',products:'All products'},
-    {key:'mkt_rate',value:20,label:'Marketing Rate',category:'marketing',products:'All products'}
-  ];
-
+  var sample = getParams();
   var catKeys = Object.keys(categories);
-  var html = '';
+  var html = "";
   for(var c = 0; c < catKeys.length; c++) {
     var cat = catKeys[c];
     var items = sample.filter(function(r){ return r.category === cat; });
     if(!items.length) continue;
-    html += '<div class="card"><div class="card-header"><span>'+categories[cat].label+' <span class="badge '+categories[cat].badge+'">'+items.length+'</span></span></div>';
-    html += '<div class="card-body"><div style="overflow-x:auto"><table><thead><tr><th>Key</th><th>Label</th><th>Value</th><th style="min-width:140px">Products</th><th></th></tr></thead><tbody>';
-    for(var i = 0; i < items.length; i++) {
-      var productBadges = '';
-      if (items[i].products) {
-        items[i].products.split(',').forEach(function(p){
-          productBadges += '<span class="prod-pill" style="display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap">'+p.trim()+'</span>';
+    html += "<div class=\"card\"><div class=\"card-header\"><span>"+categories[cat].label+" <span class=\"badge "+categories[cat].badge+"\">"+items.length+"</span></span></div>";
+    html += "<div class=\"card-body\"><div style=\"overflow-x:auto\"><table><thead><tr><th>Key</th><th>Label</th><th>Value</th><th style=\"min-width:140px\">Products</th><th></th></tr></thead><tbody>";
+    for(var i = 0; i < sample.length; i++) {
+      if (sample[i].category !== cat) continue;
+      var productBadges = "";
+      if (sample[i].products) {
+        sample[i].products.split(",").forEach(function(p){
+          productBadges += "<span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap\">"+p.trim()+"</span>";
         });
       }
-      var pctCats = ['waste','margin','operations','marketing'];
-      html += '<tr><td style="font-family:monospace;font-size:0.75rem">'+items[i].key+'</td><td>'+items[i].label+'</td><td><strong>'+items[i].value+(pctCats.indexOf(items[i].category)!==-1?'%':'')+'</strong></td><td>'+productBadges+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit: '+items[i].key+' (sandbox — no save)\')">Edit</button></td></tr>';
+      var pctCats = ["waste","margin","operations","marketing"];
+      var pctSuffix = pctCats.indexOf(sample[i].category) !== -1 ? "%" : "";
+      html += "<tr><td style=\"font-family:monospace;font-size:0.75rem\">"+sample[i].key+"</td><td>"+sample[i].label+"</td><td><strong>"+sample[i].value+pctSuffix+"</strong></td><td>"+productBadges+"</td><td><button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+i+")\">Edit</button></td></tr>";
     }
-    html += '</tbody></table></div></div></div>';
+    html += "</tbody></table></div></div></div>";
   }
-  html += '<div class="card"><div class="card-header">Add New Parameter</div><div class="card-body">'+
-    '<div class="form-row"><div class="form-group"><label>Key</label><input type="text" placeholder="e.g. margin_rate_new_product"></div>'+
-    '<div class="form-group"><label>Category</label><select><option>fabric</option><option>margin</option><option>sewing</option><option>duvet_sewing</option><option>flat_sewing</option><option>fixed</option><option>operations</option><option>marketing</option></select></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Value</label><input type="number" step="any" placeholder="0.00"></div>'+
-    '<div class="form-group"><label>Label</label><input type="text" placeholder="Human-readable label"></div></div>'+
-    '<button class="btn btn-primary" onclick="toast(\'Parameter saved (sandbox — preview only)\')">Add Parameter</button>'+
-  '</div></div>';
+  html += "<div class=\"card\"><div class=\"card-header\">Add New Parameter</div><div class=\"card-body\">"+
+    "<div class=\"form-row\"><div class=\"form-group\"><label>Key</label><input type=\"text\" id=\"new-param-key\" placeholder=\"e.g. margin_rate_new_product\"></div>"+
+    "<div class=\"form-group\"><label>Category</label><select id=\"new-param-cat\"><option value=\"fabric\">fabric</option><option value=\"waste\">waste</option><option value=\"margin\">margin</option><option value=\"sewing\">sewing</option><option value=\"duvet_sewing\">duvet_sewing</option><option value=\"flat_sewing\">flat_sewing</option><option value=\"fixed\">fixed</option><option value=\"operations\">operations</option><option value=\"marketing\">marketing</option></select></div></div>"+
+    "<div class=\"form-row\"><div class=\"form-group\"><label>Value</label><input type=\"number\" id=\"new-param-val\" step=\"any\" placeholder=\"0.00\"></div>"+
+    "<div class=\"form-group\"><label>Label</label><input type=\"text\" id=\"new-param-label\" placeholder=\"Human-readable label\"></div></div>"+
+    "<div class=\"form-row\"><div class=\"form-group\" style=\"flex:1\"><label>Products (comma-separated tags)</label><input type=\"text\" id=\"new-param-products\" placeholder=\"e.g. Fitted,Duvet\"></div></div>"+
+    "<button class=\"btn btn-primary\" onclick=\"addParam()\">Add Parameter</button>"+
+  "</div></div>";
   return html;
 }
-
 // ── DIY Prices Page ──
 function renderDiyPrices() {
   var shapes = [
@@ -531,22 +538,17 @@ function saveAllOffers(){
 }
 
 // ── Product Editor (inherited from Admin) ──
-var sampleProducts = [
-  {slug:'standard-fitted-sheet',name:'Standard Fitted Sheet',active:true,category:'Sheets',fabric:'CloudSoft / BreezePlus / PremaCotton / EcoLuxe',
-    titleEN:'Standard Fitted Sheet',titleTH:'ผ้าปูที่นอนรัดมุมมาตรฐาน',
-    descEN:'Custom-fitted sheet with deep pockets. OEKO-TEX certified.',descTH:'ผ้าปูที่นอนรัดมุมแบบสั่งตัดตามขนาด',
-    images:4,video:'',tags:['custom-size','fitted','standard']},
-  {slug:'marine-fitted-sheet',name:'Marine Fitted Sheet — V-Berth',active:true,category:'Sheets / Marine',fabric:'CloudSoft',
-    titleEN:'Marine Fitted Sheet — V-Berth',titleTH:'ผ้าปูที่นอนทางทะเล — รูปตัว V',
-    descEN:'Custom V-Berth fitted sheet for yachts and boats.',descTH:'ผ้าปูที่นอนสำหรับเรือยอชท์',
-    images:3,video:'https://www.youtube.com/embed/example',tags:['marine','yacht','v-berth']},
-  {slug:'bedbridge-connector',name:'BedBridge Connector',active:true,category:'Accessories',fabric:'N/A',
-    titleEN:'BedBridge Connector',titleTH:'ตัวเชื่อมเตียง',
-    descEN:'Connects two mattresses. Eliminates the gap.',descTH:'เชื่อมต่อที่นอนสองชิ้นเข้าด้วยกัน',
-    images:2,video:'',tags:['accessory','family']}
-];
+function getProducts() {
+  var raw = localStorage.getItem("sandbox_products");
+  if (raw) return JSON.parse(raw);
+  var def = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"Sheets","fabric":"CloudSoft / BreezePlus / PremaCotton / EcoLuxe","formulaType":"fitted","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูที่นอนรัดมุมมาตรฐาน","descEN":"Custom-fitted sheet with deep pockets. OEKO-TEX certified.","descTH":"ผ้าปูที่นอนรัดมุมแบบสั่งตัดตามขนาด","images":4,"video":"","tags":["custom-size","fitted","standard"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet — V-Berth","active":true,"category":"Sheets / Marine","fabric":"CloudSoft","formulaType":"vberth","titleEN":"Marine Fitted Sheet — V-Berth","titleTH":"ผ้าปูที่นทางทะเล — รูปตัว V","descEN":"Custom V-Berth fitted sheet for yachts and boats.","descTH":"ผ้าปูที่นสำหรับเรือยอชท์","images":3,"video":"https://www.youtube.com/embed/example","tags":["marine","yacht","v-berth"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"Accessories","fabric":"N/A","formulaType":"fixed","titleEN":"BedBridge Connector","titleTH":"ตัวเชื่อมเตียง","descEN":"Connects two mattresses. Eliminates the gap.","descTH":"เชื่อมต่อที่นอนสองชิ้นเข้าด้วยกัน","images":2,"video":"","tags":["accessory","family"]}];
+  localStorage.setItem("sandbox_products", JSON.stringify(def));
+  return def;
+}
+function saveProducts(ps) { localStorage.setItem("sandbox_products", JSON.stringify(ps)); }
 
 var selectedProductIndex = -1;
+
 
 function selectProduct(idx){
   selectedProductIndex=idx;
@@ -559,7 +561,7 @@ function showProductEditor(){
   var panel=document.getElementById('editor-panel');
   if(!panel)return;
   if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
-  var p=sampleProducts[selectedProductIndex];
+  var p=getProducts()[selectedProductIndex];
   panel.innerHTML=
     '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
       '<span style="display:flex;gap:6px">'+
@@ -584,9 +586,36 @@ function showProductEditor(){
         '<button class="btn btn-outline" onclick="toast(\'Preview product page (sandbox)\')">Preview</button></div></div>';
 }
 
+function showNewProductModal() {
+  var ov = document.getElementById("product-modal-overlay");
+  if (ov) ov.classList.add("open");
+}
+function hideNewProductModal() {
+  var ov = document.getElementById("product-modal-overlay");
+  if (ov) ov.classList.remove("open");
+}
+function saveNewProduct() {
+  var name = (document.getElementById("np-name")||{}).value || "";
+  var slug = (document.getElementById("np-slug")||{}).value || "";
+  var cat = (document.getElementById("np-category")||{}).value || "Sheets";
+  var fType = (document.getElementById("np-formula")||{}).value || "fitted";
+  if (!name || !slug) { toast("Name and slug required"); return; }
+  var ps = getProducts();
+  if (ps.some(function(p){ return p.slug === slug; })) { toast("Slug already exists"); return; }
+  ps.push({slug:slug, name:name, active:true, category:cat, fabric:"TBD", formulaType:fType,
+    titleEN:name, titleTH:name, descEN:"", descTH:"", images:1, video:"", tags:[]});
+  saveProducts(ps);
+  hideNewProductModal();
+  syncBadgesForProduct(slug, fType, name);
+  toast("Product added: " + name + " (" + fType + "). Pill badges auto-updated.");
+  document.getElementById("page-content").innerHTML = rProducts();
+  var pp = document.getElementById("page-pricing");
+  if (pp && typeof renderPricingParams === "function") pp.innerHTML = renderPricingParams();
+}
+
 function rProducts(){
-  var h='<div class="editor-layout"><div class="product-list"><div class="product-list-header">'+sampleProducts.length+' Products</div>';
-  sampleProducts.forEach(function(p,i){
+  var h='<div class="editor-layout"><div class="product-list"><div class="product-list-header">'+getProducts().length+' Products</div>';
+  getProducts().forEach(function(p,i){
     h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
   });
   h+='<div style="padding:12px 18px"><button class="btn btn-outline btn-sm" style="width:100%" onclick="toast(\'Add new product (sandbox)\')">+ New Product</button></div></div>';
@@ -609,6 +638,35 @@ var sampleCustomers = [
 
 var selectedCustomerIdx = -1;
 
+var formulaParamKeys = {
+  fitted: ["waste_factor_fabric","margin_rate_standard","accessories_rate","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  flat: ["waste_factor_fabric","flat_sewing_cost","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  duvet: ["waste_factor_fabric","margin_rate_duvet","packing_cost","delivery_cost","zipper_rate","ops_rate","mkt_rate"],
+  pillowcase: ["waste_factor_pillowcase","margin_rate_pillow","pillow_sewing_cost","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  pillow_protector: ["waste_factor_pillowcase","margin_rate_pillow_protector","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  encasement: ["waste_factor_fabric","margin_rate_encasement","encasement_mkt_rate","encasement_sewing_cost","packing_cost","delivery_cost","zipper_rate","ops_rate"],
+  protector: ["margin_rate_protector_standard","protector_packing","protector_delivery","ops_rate","mkt_rate"],
+  vberth: ["waste_factor_fabric","margin_rate_marine","accessories_rate","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  fixed: ["packing_cost","delivery_cost","ops_rate","mkt_rate"]
+};
+
+// Append new product slug to matching param pill badges
+function syncBadgesForProduct(slug, fType, name) {
+  var keys = formulaParamKeys[fType] || [];
+  var params = getParams();
+  var changed = false;
+  var tag = name.split(" ")[0]; // first word as short badge
+  params.forEach(function(p) {
+    if (keys.indexOf(p.key) !== -1) {
+      var existing = (p.products || "").split(",").map(function(s){ return s.trim(); });
+      if (existing.indexOf(tag) === -1) {
+        p.products = (p.products ? p.products + "," : "") + tag;
+        changed = true;
+      }
+    }
+  });
+  if (changed) saveParams(params);
+}
 function rCustomers(){
   if(selectedCustomerIdx>=0){return rCustomerDetail(selectedCustomerIdx);}
   var h='<div class="stats-grid"><div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">'+sampleCustomers.length+'</div><div class="stat-sub">Sandbox sample</div></div>'+
@@ -728,5 +786,22 @@ function deleteAccount(index){
 // ── Init ──
 showPage('dashboard');
 </script>
+<div class="quote-overlay" id="product-modal-overlay">
+  <div class="quote-popup" style="max-width:520px">
+    <button class="quote-close" onclick="hideNewProductModal()">&times;</button>
+    <h3 class="quote-popup-title">+ New Product</h3>
+    <div class="quote-field"><label>Product Name <span class="quote-req">*</span></label>
+      <input id="np-name" placeholder="e.g. Ultra Sheet"></div>
+    <div class="quote-field"><label>URL Slug <span class="quote-req">*</span></label>
+      <input id="np-slug" placeholder="e.g. ultra-sheet"></div>
+    <div class="quote-field"><label>Category</label>
+      <select id="np-category"><option>Sheets</option><option>Duvet Covers</option><option>Pillowcases</option><option>Protection</option><option>Accessories</option></select></div>
+    <div class="quote-field"><label>Formula Type</label>
+      <select id="np-formula"><option value="fitted">Fitted Sheet</option><option value="flat">Flat Sheet</option><option value="duvet">Duvet Cover</option><option value="pillowcase">Pillowcase</option><option value="pillow_protector">Pillow Protector</option><option value="encasement">Encasement (TPU)</option><option value="protector">Mattress Protector</option><option value="vberth">V-Berth (Marine)</option><option value="fixed">Fixed Price</option></select></div>
+    <div style="background:#fef3c7;border-radius:8px;padding:12px;font-size:0.8rem;color:#92400e;margin-bottom:8px">
+      <strong>Workflow:</strong> After save, Pricing Params pill badges auto-update. The new product inherits the formula of its type from product-configurator.js.</div>
+    <button class="quote-submit-btn" onclick="saveNewProduct()">Save Product</button>
+  </div>
+</div>
 </body>
 </html>
