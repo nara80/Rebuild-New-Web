@@ -51,6 +51,8 @@
   var DELIVERY = pVal('delivery_cost', 50);
   var OP_RATE = pVal('ops_rate', 0.15);
   var MKT_RATE = pVal('mkt_rate', 0.20);
+  var WASTE_FABRIC = pVal('waste_factor_fabric', 1.20);
+  var ACCESSORIES_RATE = pVal('accessories_rate', 0.10);
   var MARGIN_RATE = isMarineFitted ? pVal('marine', 6.80)
     : isRVTruck ? pVal('rv_truck', 0.45)
     : isFamily ? pVal('family', 0.50)
@@ -115,6 +117,7 @@
   // -- Pillow constants --
   var PILLOW_WASTE = pVal('waste_factor_pillowcase', 1.60);
   var PILLOW_SEWING = pVal('pillow_sewing_cost', 40);
+  var SHAM_SEWING = pVal('pillow_sham_sewing_cost', 50);
   var MAX_PILLOW = pVal('max_pillow_cm', 120);
   var TPU_COST_PER_SQCM = (pVal('fabric_rate_tpu', 120) / pVal('tpu_sqcm_per_lm', 21000));
 
@@ -197,7 +200,7 @@
     // 6-sided surface area
     var area = 2 * (wCm * lCm + wCm * dCm + lCm * dCm);
     // TPU fabric cost
-    var fabricCost = (TPU_COST_PER_LM * area / TPU_SQCM_PER_LM) * 1.20;
+    var fabricCost = (TPU_COST_PER_LM * area / TPU_SQCM_PER_LM) * WASTE_FABRIC;
     // Sewing
     var sewingCost = ENC_SEWING;
     // Zipper on 3 sides: L + W + L = 2L + W
@@ -214,11 +217,11 @@
   function calcDuvet(wCm, lCm, fabric) {
     // 2 pieces � (W+5) � (L+5) � 5cm sewing allowance on each edge, +20% waste
     var rawArea = 2 * (wCm + 5) * (lCm + 5);
-    var area = rawArea * 1.20;
+    var area = rawArea * WASTE_FABRIC;
     var yardRate = FABRIC_RATES[fabric] || 100;
     var fabricCost = (area * yardRate / SQCM_PER_YARD);
     // Zipper: 0.4 THB/cm � (2L + W)
-    var zipperCost = 0.4 * (2 * lCm + wCm);
+    var zipperCost = ZIPPER_RATE * (2 * lCm + wCm);
     var sewingCost = getDuvetSewingCost(rawArea);
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
     var total = subtotal * MARKUP;
@@ -234,7 +237,7 @@
     // TPU fabric cost: 120 THB/lm, 210cm bolt
     var fabricCost = area * TPU_COST_PER_SQCM;
     // Zipper: 0.4 THB/cm on longest side
-    var zipperCost = 0.4 * Math.max(wCm, lCm);
+    var zipperCost = ZIPPER_RATE * Math.max(wCm, lCm);
     var sewingCost = PILLOW_SEWING;
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
     var total = subtotal * MARKUP;
@@ -249,8 +252,8 @@
     var area = rawArea * PILLOW_WASTE;
     var yardRate = FABRIC_RATES[fabric] || 100;
     var fabricCost = (area * yardRate / SQCM_PER_YARD);
-    var zipperCost = variant === 'zipper' ? 0.4 * Math.max(wCm, lCm) : 0;
-    var sewingCost = variant === 'sham' ? 50 : PILLOW_SEWING;
+    var zipperCost = variant === 'zipper' ? ZIPPER_RATE * Math.max(wCm, lCm) : 0;
+    var sewingCost = variant === 'sham' ? SHAM_SEWING : PILLOW_SEWING;
     var subtotal = fabricCost + zipperCost + sewingCost + PACKING + DELIVERY;
     var total = subtotal * MARKUP;
     var rounded = Math.ceil(total / 100) * 100;
@@ -263,7 +266,7 @@
     var fl = lCm + 2 * dCm + FLAT_TUCK * 2;
     var area = fw * fl;
     var yardRate = FABRIC_RATES[fabric] || 100;
-    var fabricCost = (area * yardRate / SQCM_PER_YARD) * 1.20;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD) * WASTE_FABRIC;
     var sewingCost = FLAT_SEWING;
     var subtotal = fabricCost + sewingCost + PACKING + DELIVERY;
     var total = subtotal * MARKUP;
@@ -277,9 +280,9 @@
     var fl = lCm + 2 * dCm + 14;
     var area = fw * fl;
     var yardRate = FABRIC_RATES[fabric] || 100;
-    var fabricCost = (area * yardRate / SQCM_PER_YARD) * 1.20;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD) * WASTE_FABRIC;
     var sewingCost = getSewingCost(area);
-    var accessories = fabricCost * 0.10;
+    var accessories = fabricCost * ACCESSORIES_RATE;
     var subtotal = fabricCost + sewingCost + accessories + PACKING + DELIVERY;
     var total = subtotal * MARKUP;
     var rounded = Math.ceil(total / 100) * 100;
@@ -294,9 +297,9 @@
     var fl = lCm + 2 * dCm + 14;
     var area = w * fl;
     var yardRate = FABRIC_RATES[fabric] || 100;
-    var fabricCost = (area * yardRate / SQCM_PER_YARD) * 1.20;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD) * WASTE_FABRIC;
     var sewingCost = getSewingCost(area);
-    var accessories = fabricCost * 0.10;
+    var accessories = fabricCost * ACCESSORIES_RATE;
     var subtotal = fabricCost + sewingCost + accessories + PACKING + DELIVERY;
     var total = subtotal * VERTH_MARKUP;
     var rounded = Math.ceil(total / 100) * 100;
