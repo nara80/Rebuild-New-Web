@@ -1,30 +1,4 @@
-
-<script src="../../js/campaign-state.js"></script>
-<style>
-.tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
-.tag-chip .remove-tag{cursor:pointer;opacity:0.5;font-size:0.75rem}.tag-chip .remove-tag:hover{opacity:1}
-.stats-grid{display:grid;gap:16px;margin-bottom:24px}
-.stat-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);padding:20px}
-.stat-label{font-size:0.75rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-.stat-value{font-size:1.75rem;font-weight:700;color:var(--c-dark)}
-.stat-sub{font-size:0.75rem;color:var(--c-muted);margin-top:4px}
-.timeline{padding-left:24px;border-left:2px solid var(--c-border);margin:16px 0}
-.timeline-item{margin-bottom:20px;position:relative}
-.timeline-dot{position:absolute;left:-29px;top:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--c-border);background:#fff}
-.timeline-dot.done{background:var(--c-green);border-color:var(--c-green)}
-.timeline-dot.current{background:var(--c-blue);border-color:var(--c-blue)}
-.timeline-date{font-size:0.6875rem;color:var(--c-muted)}
-.timeline-text{font-size:0.8125rem;margin-top:2px}
-.timeline{padding-left:24px;border-left:2px solid var(--c-border);margin:16px 0}
-.timeline-item{margin-bottom:20px;position:relative}
-.timeline-dot{position:absolute;left:-29px;top:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--c-border);background:#fff}
-.timeline-dot.done{background:var(--c-green);border-color:var(--c-green)}
-.timeline-dot.current{background:var(--c-blue);border-color:var(--c-blue)}
-.timeline-date{font-size:0.6875rem;color:var(--c-muted)}
-.timeline-text{font-size:0.8125rem;margin-top:2px}
-
-YPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -97,6 +71,7 @@ tr:hover td{background:#f8fafc}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
 </style>
+<script src="../../js/campaign-state.js"></script>
 </head>
 <body>
 
