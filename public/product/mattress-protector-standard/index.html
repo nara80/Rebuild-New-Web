@@ -385,7 +385,7 @@
       </button>
     </div>
     <script>
-      /* Mobile CTA — scroll-aware sticky bar */
+      /* Mobile CTA — IntersectionObserver sticky bar */
       (function() {
         var bar = document.getElementById('mobile-cta-bar');
         var desktopBtn = document.getElementById('add-to-cart');
@@ -393,69 +393,55 @@
         var priceDisplay = document.getElementById('price-display');
         var mobilePrice = document.getElementById('mobile-cta-price');
         if (!bar || !desktopBtn || !mobileBtn) return;
-
-        var lastScrollY = 0;
-        var ticking = false;
-
-        function updateStickyBar() {
-          var isMobile = window.innerWidth <= 920;
-          var pd = document.getElementById('price-display');
-          if (!pd) return;
-          var pdRect = pd.getBoundingClientRect();
-          var scrolledPast = pdRect.bottom < 0;
-
-          if (isMobile && scrolledPast) {
-            bar.classList.add('visible');
-          } else {
-            bar.classList.remove('visible');
-          }
+        // 1. Visual trigger: IntersectionObserver on sentinel after price section
+        var sentinel = document.createElement('div');
+        sentinel.id = 'cta-sentinel';
+        sentinel.style.cssText = 'position:absolute;height:1px;width:1px;pointer-events:none';
+        var priceSection = (priceDisplay && priceDisplay.closest('.configurator-price')) || priceDisplay;
+        if (priceSection && priceSection.parentNode) {
+          priceSection.parentNode.insertBefore(sentinel, priceSection.nextSibling);
         }
-
-        window.addEventListener('scroll', function() {
-          if (!ticking) {
-            window.requestAnimationFrame(function() {
-              updateStickyBar();
-              ticking = false;
+        if (!('IntersectionObserver' in window)) {
+          window.addEventListener('scroll', function() {
+            bar.classList.toggle('visible', window.pageYOffset > 300);
+          }, { passive: true });
+        } else {
+          var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+              bar.classList.toggle('visible', !e.isIntersecting);
             });
-            ticking = true;
-          }
-        }, { passive: true });
-
-        window.addEventListener('resize', updateStickyBar);
-        updateStickyBar();
-
-        /* Sync price from desktop (including sale HTML) */
+          }, { threshold: 0 });
+          observer.observe(sentinel);
+        }
+        // 2. Sync price from desktop (including sale HTML)
         if (priceDisplay && mobilePrice) {
-          var observer = new MutationObserver(function() {
+          var priceObserver = new MutationObserver(function() {
             mobilePrice.innerHTML = priceDisplay.innerHTML;
           });
-          observer.observe(priceDisplay, { childList: true, characterData: true, subtree: true });
+          priceObserver.observe(priceDisplay, { childList: true, characterData: true, subtree: true });
           mobilePrice.innerHTML = priceDisplay.innerHTML;
         }
-
-        /* Sync disabled state */
+        // 3. Sync disabled state and button text
         if (desktopBtn && mobileBtn) {
           var disabledObserver = new MutationObserver(function() {
             mobileBtn.disabled = desktopBtn.disabled;
           });
           disabledObserver.observe(desktopBtn, { attributes: true, attributeFilter: ['disabled'] });
           mobileBtn.disabled = desktopBtn.disabled;
-
-          /* Sync button text */
           var textObserver = new MutationObserver(function() {
             mobileBtn.innerHTML = desktopBtn.innerHTML;
           });
           textObserver.observe(desktopBtn, { childList: true, characterData: true, subtree: true });
           mobileBtn.innerHTML = desktopBtn.innerHTML;
         }
-
-        /* Mobile CTA click → trigger desktop Add to Cart */
+        // 4. Mobile CTA click → trigger desktop Add to Cart
         if (mobileBtn && desktopBtn) {
           mobileBtn.addEventListener('click', function() {
             desktopBtn.click();
           });
         }
       })();
+
 
       // ── Favorite Toggle ──
       var productSlug = '{{PRODUCT_SLUG}}';
