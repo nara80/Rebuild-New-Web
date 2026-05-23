@@ -31,8 +31,8 @@
     .favorite-btn:hover { border-color: #dc2626; transform: scale(1.1); }
     .favorite-btn.active { border-color: #dc2626; background: #fef2f2; }
     .favorite-toast { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; min-height: 1.2em; }
-    .sale-badge { display: inline; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 4px }
-    .sale-countdown { display: inline; font-size: 0.75rem; color: #dc2626; font-weight: 600 }
+    .sale-badge { display: inline; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; }
+    .sale-countdown { font-size: 0.75rem; color: #dc2626; font-weight: 600; margin-bottom: 8px; }
     .price-strike { text-decoration: line-through; color: var(--color-muted); font-size: 1rem; margin-right: 8px; }
     .price-sale { font-size: 2rem; font-weight: 700; color: #16a34a; }
     .product-tagline { font-size: 1rem; color: #64748b; margin-bottom: 20px; line-height: 1.5; }
@@ -70,7 +70,7 @@
     .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
     .price-label { font-size: 0.8125rem; color: #64748b; }
     .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
-    .price-sub { font-size: 0.75rem; min-height: 1.2em }
+    .price-sub { font-size: 0.75rem; color: #94a3b8; }
 
     .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
     .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -242,6 +242,7 @@
         <p class="product-tagline">Secure zipper enclosure keeps the pillow perfectly in place. YKK zipper for smooth operation wash after wash.</p>
         <div class="pricing-panel">
           <div class="panel-section">
+            <div id="sale-info"></div>
             <div class="panel-label">Pillow Size</div>
             <select class="size-select" id="size-select">
               <option value=""> — Choose pillow size — </option>
@@ -385,7 +386,7 @@
       </button>
     </div>
     <script>
-      /* Mobile CTA — simple scroll-aware sticky bar */
+      /* Mobile CTA — IntersectionObserver sticky bar */
       (function() {
         var bar = document.getElementById('mobile-cta-bar');
         var desktopBtn = document.getElementById('add-to-cart');
@@ -393,10 +394,26 @@
         var priceDisplay = document.getElementById('price-display');
         var mobilePrice = document.getElementById('mobile-cta-price');
         if (!bar || !desktopBtn || !mobileBtn) return;
-        // 1. Show bar after scrolling 300px past top
-        window.addEventListener('scroll', function() {
-          bar.classList.toggle('visible', window.pageYOffset > 300);
-        }, { passive: true });
+        // 1. Visual trigger: IntersectionObserver on sentinel after price section
+        var sentinel = document.createElement('div');
+        sentinel.id = 'cta-sentinel';
+        sentinel.style.cssText = 'position:absolute;height:1px;width:1px;pointer-events:none';
+        var priceSection = (priceDisplay && priceDisplay.closest('.configurator-price')) || priceDisplay;
+        if (priceSection && priceSection.parentNode) {
+          priceSection.parentNode.insertBefore(sentinel, priceSection.nextSibling);
+        }
+        if (!('IntersectionObserver' in window)) {
+          window.addEventListener('scroll', function() {
+            bar.classList.toggle('visible', window.pageYOffset > 300);
+          }, { passive: true });
+        } else {
+          var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+              bar.classList.toggle('visible', !e.isIntersecting);
+            });
+          }, { threshold: 0 });
+          observer.observe(sentinel);
+        }
         // 2. Sync price from desktop (including sale HTML)
         if (priceDisplay && mobilePrice) {
           var priceObserver = new MutationObserver(function() {
@@ -471,13 +488,16 @@
         var html = '<span class="sale-badge">-' + discount.discount + '% SALE</span>' + cdStr;
         el.innerHTML = html;
 
+        // Poll countdown every 60s
         if (!window._saleTimer) {
           window._saleTimer = setInterval(function() {
             var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
             if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
             el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span> (' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
           }, 60000);
+        }, 60000);
         }
+      }
 
       updateFavUI();
       updateSaleDisplay();
