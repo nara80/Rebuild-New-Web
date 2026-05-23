@@ -792,7 +792,7 @@ async function rProducts(){
   ps.forEach(function(p,i){
     h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
   });
-  h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
+  h+='</div><div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
   h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves to D1 via API.</p>';
   return h;
 }
