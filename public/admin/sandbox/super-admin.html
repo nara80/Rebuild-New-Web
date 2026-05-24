@@ -652,7 +652,9 @@ async function uploadImage(slotIndex) {
         headers: { "X-Admin-Secret": ADMIN_SECRET },
         body: form
       });
-      var data = await resp.json();
+      var text = await resp.text();
+      var data;
+      try { data = JSON.parse(text); } catch(e) { toast("Upload failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
       if (data.success) {
         var ps = await getProducts();
         var p = ps[selectedProductIndex];
@@ -705,7 +707,9 @@ async function saveProductToD1() {
         tags: (p.tags || []).join(",")
       })
     });
-    var data = await resp.json();
+    var text = await resp.text();
+    var data;
+    try { data = JSON.parse(text); } catch(e) { toast("Save failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
     if (data.success) {
       toast("Product saved to D1: " + p.name);
       _productsCache = null; // invalidate cache
