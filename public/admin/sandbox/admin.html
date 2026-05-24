@@ -193,41 +193,6 @@ function showProductEditor(){
   }, 0);
 }
 
-
-function getProducts() { return Promise.resolve(sampleProducts); }
-async function removeImageSlot(idx) {
-  var p = sampleProducts[selectedProductIndex]; if (!p) return;
-  var imgs = []; try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
-  imgs[idx] = ''; while (imgs.length > 0 && !imgs[imgs.length - 1]) imgs.pop();
-  p.images = JSON.stringify(imgs); showProductEditor(); toast('Slot ' + (idx+1) + ' removed');
-}
-async function uploadImage(slotIndex, fileObj) {
-  var p = sampleProducts[selectedProductIndex]; if (!p) return;
-  var imgs = []; try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
-  while (imgs.length < 10) imgs.push('');
-  function processFile(file) {
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var img = new Image();
-      img.onload = function() {
-        var w = img.width, h = img.height, max = 1200;
-        if (w > max || h > max) { var r = Math.min(max/w, max/h); w = Math.round(w*r); h = Math.round(h*r); }
-        var c = document.createElement('canvas'); c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        var d = c.toDataURL('image/jpeg', 0.8);
-        imgs[slotIndex] = d; p.images = JSON.stringify(imgs);
-        showProductEditor(); toast('Image added to slot ' + (slotIndex+1) + ' (' + Math.round(d.length*0.75/1024) + ' KB)');
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  if (fileObj) { processFile(fileObj); return; }
-  var input = document.createElement('input'); input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp';
-  input.onchange = function(e) { var f = e.target.files[0]; if (f) processFile(f); };
-  input.click();
-}
-
 function rOrders(){
   var h='<div class="card">'+
     '<div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+sampleOrders.length+' orders</span></div>'+
