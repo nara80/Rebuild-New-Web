@@ -152,6 +152,7 @@ function showProductEditor(){
   try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
   while(imgs.length<10)imgs.push('');
   var hasYoutube=p.youtube_url||p.video||'';
+  var heroUrl = imgs[0] || '';
 
   panel.innerHTML=
     '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
@@ -165,13 +166,18 @@ function showProductEditor(){
       '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+p.descEN+'</textarea></div>'+
       '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+p.descTH+'</textarea></div></div>'+
       '<div class="form-group"><label>Fabric Details</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
-      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1"><input id="ed-image-url" value="'+p.image_url+'" placeholder="/r2/... or image path"></div></div><small style="color:var(--c-muted);margin-top:4px;display:block">Image for product cards &amp; hero. Upload to any slot, copy URL, paste here.</small></div>'+
+      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start"><div style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background:var(--c-surface);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative"'+
+        (heroUrl?' style="background-image:url(\''+heroUrl+'\');background-size:cover;background-position:center"':'')+
+        ' onclick="uploadImage(0)">'+
+        (heroUrl?'':'<span style="font-size:2rem;color:var(--c-muted)">+</span>')+
+        (heroUrl?'<div style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.875rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1" onclick="event.stopPropagation();removeImageSlot(0)">✕</div>':'')+
+      '</div><div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 8px">Main image for product cards, category pages, and hero banner. Uses slot 1 of 10.</p><div style="display:flex;gap:8px"><button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation();uploadImage(0)">'+(heroUrl?'Change Image':'Upload Image')+'</button>'+(heroUrl?'<button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red)">Remove</button>':'')+'</div></div></div></div>'+
       '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
         (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
-      '<div class="form-group"><label>Product Images (10 slots)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
-        imgs.map(function(url,i){return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+i+')" title="Slot '+(i+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+i+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
+      '<div class="form-group"><label>Gallery Images (slots 2–10)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
+        imgs.slice(1).map(function(url,i){var si=i+1;return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+si+')" title="Slot '+(si+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+si+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
         '</div>'+
-        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove.</small></div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove. <strong style="color:var(--c-amber)">Click Save to persist.</strong></small></div>'+
       '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
         (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
         '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
@@ -183,149 +189,9 @@ function showProductEditor(){
     f = document.getElementById('ed-title-th'); if(f) f.value = p.titleTH || '';
     f = document.getElementById('ed-desc-en'); if(f) f.value = p.descEN || '';
     f = document.getElementById('ed-desc-th'); if(f) f.value = p.descTH || '';
-    f = document.getElementById('ed-image-url'); if(f) f.value = p.image_url || '';
     f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
   }, 0);
 }
-
-
-
-// ── Product API Functions ──
-var _productsCache = null;
-
-async function getProducts() {
-  if (_productsCache) return _productsCache;
-  try {
-    var resp = await fetch("/api/admin/products", { headers: { "X-Admin-Secret": ADMIN_SECRET } });
-    if (resp.ok) {
-      var list = await resp.json();
-      _productsCache = list.map(function(r) {
-        return {
-          slug: r.slug, name: r.title_en || r.slug, active: !!r.is_active,
-          category: r.category || "", fabric: r.fabric_options || "",
-          titleEN: r.title_en || "", titleTH: r.title_th || "",
-          descEN: r.description_en || "", descTH: r.description_th || "",
-          images: r.images || "[]", video: r.youtube_url || "",
-          youtube_url: r.youtube_url || "",
-          tags: (r.tags||"").split(",").filter(Boolean)
-        };
-      });
-      return _productsCache;
-    }
-  } catch(e) {}
-  _productsCache = sampleProducts;
-  return _productsCache;
-}
-
-
-// ── Client-side image optimization ──
-function optimizeImage(file, maxDim) {
-  maxDim = maxDim || 1200;
-  return new Promise(function(resolve, reject) {
-    var img = new Image();
-    var url = URL.createObjectURL(file);
-    img.onload = function() {
-      URL.revokeObjectURL(url);
-      var w = img.naturalWidth, h = img.naturalHeight;
-      if (w <= maxDim && h <= maxDim && file.type === 'image/jpeg') {
-        resolve(file); // already small JPEG, skip
-        return;
-      }
-      if (w > maxDim || h > maxDim) {
-        var ratio = Math.min(maxDim / w, maxDim / h);
-        w = Math.round(w * ratio);
-        h = Math.round(h * ratio);
-      }
-      var canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      canvas.toBlob(function(blob) {
-        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
-      }, 'image/jpeg', 0.8);
-    };
-    img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
-  });
-}
-
-async function uploadImage(slotIndex) {
-  var input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/jpeg,image/png,image/webp,image/gif";
-  input.onchange = async function() {
-    var file = input.files[0];
-    if (!file) return;
-    toast("Optimizing image " + (slotIndex + 1) + "...");
-    var optimized = await optimizeImage(file);
-    if (optimized.size > 5 * 1024 * 1024) { toast("File too large after optimization: " + (optimized.size / 1024 / 1024).toFixed(1) + "MB. Max 5MB."); return; }
-    toast("Uploading image " + (slotIndex + 1) + " (" + (optimized.size / 1024).toFixed(0) + " KB)...");
-    var form = new FormData();
-    form.append("file", optimized);
-    try {
-      var resp = await fetch("/api/admin/upload", { method: "POST", headers: { "X-Admin-Secret": ADMIN_SECRET }, body: form });
-      var text = await resp.text();
-      var data;
-      try { data = JSON.parse(text); } catch(e) { toast("Upload failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
-      if (data.success) {
-        var p = sampleProducts[selectedProductIndex];
-        if (!p) return;
-        var imgs = [];
-        try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
-        while (imgs.length < 10) imgs.push("");
-        imgs[slotIndex] = data.url;
-        p.images = JSON.stringify(imgs);
-        _productsCache = null;
-        toast("Image " + (slotIndex + 1) + " uploaded: " + data.url);
-        showProductEditor();
-      } else {
-        toast("Upload failed: " + (data.error || "Unknown error"));
-      }
-    } catch(e) { toast("Upload failed: " + e.message); }
-  };
-  input.click();
-}
-
-function removeImageSlot(idx) {
-  var p = sampleProducts[selectedProductIndex];
-  if (!p) return;
-  var imgs = [];
-  try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
-  imgs[idx] = '';
-  while (imgs.length > 0 && !imgs[imgs.length - 1]) imgs.pop();
-  p.images = JSON.stringify(imgs);
-  _productsCache = null;
-  showProductEditor();
-}
-
-async function saveProduct() {
-  var p = sampleProducts[selectedProductIndex];
-  if (!p) return;
-  var titleEN = (document.getElementById("ed-title-en") || {}).value || "";
-  var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
-  var descEN = (document.getElementById("ed-desc-en") || {}).value || "";
-  var descTH = (document.getElementById("ed-desc-th") || {}).value || "";
-  var imageUrl = (document.getElementById("ed-image-url") || {}).value || "";
-  var youtube = (document.getElementById("ed-youtube") || {}).value || "";
-  try {
-    var resp = await fetch("/api/admin/products/" + p.slug, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Admin-Secret": ADMIN_SECRET },
-      body: JSON.stringify({
-        title_en: titleEN, title_th: titleTH,
-        description_en: descEN, description_th: descTH,
-        youtube_url: youtube, image_url: imageUrl, images: p.images || "[]",
-        tags: (p.tags || []).join(",")
-      })
-    });
-    var text = await resp.text();
-    var data;
-    try { data = JSON.parse(text); } catch(e) { toast("Save failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
-    if (data.success) { toast("Product saved: " + p.name); _productsCache = null; }
-    else { toast("Save failed: " + (data.error || "Unknown")); }
-  } catch(e) { toast("Save failed: " + e.message); }
-}
-
 
 function rOrders(){
   var h='<div class="card">'+
