@@ -174,7 +174,7 @@ function showProductEditor(){
       '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
         (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
         '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
-      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProductToD1()">Save to D1</button>'+
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>'+
         '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
 
   setTimeout(function(){
@@ -296,7 +296,7 @@ function removeImageSlot(idx) {
   showProductEditor();
 }
 
-async function saveProductToD1() {
+async function saveProduct() {
   var p = sampleProducts[selectedProductIndex];
   if (!p) return;
   var titleEN = (document.getElementById("ed-title-en") || {}).value || "";
@@ -318,7 +318,7 @@ async function saveProductToD1() {
     var text = await resp.text();
     var data;
     try { data = JSON.parse(text); } catch(e) { toast("Save failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
-    if (data.success) { toast("Product saved to D1: " + p.name); _productsCache = null; }
+    if (data.success) { toast("Product saved: " + p.name); _productsCache = null; }
     else { toast("Save failed: " + (data.error || "Unknown")); }
   } catch(e) { toast("Save failed: " + e.message); }
 }
@@ -353,7 +353,7 @@ function rProducts(){
   h+='</div>';
   h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div>';
   h+='</div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves to D1 via API.</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves via API.</p>';
   return h;
 }
 

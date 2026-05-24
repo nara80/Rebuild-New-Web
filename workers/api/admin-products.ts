@@ -133,7 +133,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       return new Response(JSON.stringify({
         success: true,
         slug,
-        message: "Product updated in D1"
+        message: "Product updated"
       }), {
         headers: { "Content-Type": "application/json" },
       });

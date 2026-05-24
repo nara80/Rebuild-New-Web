@@ -208,7 +208,7 @@ function renderDashboard() {
     '<div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">27</div><div class="stat-sub">All configurators live</div></div>'+
   '</div>'+
   '<div class="card"><div class="card-header">Quick Actions</div><div class="card-body">'+
-    '<p style="color:var(--c-muted);margin-bottom:16px">This sandbox shows the admin dashboard layout. Data is static preview — not connected to D1.</p>'+
+    '<p style="color:var(--c-muted);margin-bottom:16px">This sandbox shows the admin dashboard layout. Data is static preview — not connected to database.</p>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
       '<button class="btn btn-primary" onclick="showPage(\'pricing\')">Edit Pricing Params</button>'+
       '<button class="btn btn-outline" onclick="showPage(\'diy\')">Upload DIY Prices</button>'+
@@ -239,14 +239,14 @@ function editParam(idx) {
   if (isNaN(num)) { toast("Invalid number"); return; }
   p.value = num;
   saveParams(ps);
-  syncParamToD1(p);
+  syncParam(p);
   toast("Saved: " + p.key + " = " + num + suffix);
   document.getElementById("page-pricing").innerHTML = renderPricingParams();
 }
 
 
 
-async function syncParamToD1(p) {
+async function syncParam(p) {
   try {
     var secret = localStorage.getItem("sandbox_admin_secret") || "";
     var resp = await fetch("/api/admin/pricing-params", {
@@ -254,8 +254,8 @@ async function syncParamToD1(p) {
       headers: { "Content-Type": "application/json", "X-Admin-Secret": secret },
       body: JSON.stringify({ key: p.key, value: p.value, label: p.label, category: p.category })
     });
-    if (resp.ok) toast(p.key + " synced to D1");
-    else if (resp.status === 401) toast("Set Admin Secret to sync to D1 (401)");
+    if (resp.ok) toast(p.key + " saved");
+    else if (resp.status === 401) toast("Set Admin Secret to save (401)");
     else console.warn("D1 sync failed:", resp.status);
   } catch(e) { /* offline */ }
 }
@@ -332,7 +332,7 @@ function renderDiyPrices() {
 'marine-fitted-sheet,A,2820,94,"Shape A — V-Berth Narrow Foot"\n'+
 'marine-fitted-sheet,B,3330,111,"Shape B — V-Berth Wide Foot"\n'+
 'marine-fitted-sheet,C,3750,125,"Shape C — V-Berth King Size"</pre>'+
-    '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:8px">Download current data, edit in Excel/Sheets, re-upload CSV to bulk update D1.</p>'+
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:8px">Download current data, edit in Excel/Sheets, re-upload CSV to bulk update database.</p>'+
   '</div></div>';
   return html;
 }
@@ -677,8 +677,8 @@ async function uploadImage(slotIndex) {
   input.click();
 }
 
-// ── Save Product to D1 ──
-async function saveProductToD1() {
+// ── Save Product ──
+async function saveProduct() {
   var ps = await getProducts();
   var p = ps[selectedProductIndex];
   if (!p) return;
@@ -711,7 +711,7 @@ async function saveProductToD1() {
     var data;
     try { data = JSON.parse(text); } catch(e) { toast("Save failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
     if (data.success) {
-      toast("Product saved to D1: " + p.name);
+      toast("Product saved: " + p.name);
       _productsCache = null; // invalidate cache
     } else {
       toast("Save failed: " + (data.error || "Unknown"));
@@ -770,7 +770,7 @@ async function showProductEditor(){
       '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
         (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
         '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
-      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProductToD1()">Save to D1</button>'+
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>'+
         '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
 
   // Set form field values by ID for the save function to read
@@ -817,7 +817,7 @@ async function saveNewProduct() {
   saveProducts_toLocal(ps);
   hideNewProductModal();
   syncBadgesForProduct(slug, fType, name);
-  toast("Product added to sandbox: " + name + " (" + fType + "). Save to D1 via editor.");
+  toast("Product added to sandbox: " + name + " (" + fType + "). Save via editor.");
   document.getElementById("page-content").innerHTML = rProducts();
   var pp = document.getElementById("page-pricing");
   if (pp && typeof renderPricingParams === "function") pp.innerHTML = renderPricingParams();
@@ -830,7 +830,7 @@ async function rProducts(){
     h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
   });
   h+='</div><div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves to D1 via API.</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves via API.</p>';
   return h;
 }
 
