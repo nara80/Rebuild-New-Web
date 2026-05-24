@@ -1,8 +1,99 @@
-input.onchange = async function(e) { processSlotFile(slotIndex, e.target.files[0]); };
-  input.click();
+async function showProductEditor(){
+  var panel=document.getElementById('editor-panel');
+  if(!panel)return;
+  if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
+  var ps = await getProducts();
+  var p=ps[selectedProductIndex];
+  var imgs=[];
+  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
+  while(imgs.length<10)imgs.push('');
+  var hasYoutube=p.youtube_url||p.video||'';
+  var heroUrl = imgs[0] || '';
+
+  panel.innerHTML=
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+(p.title_en||p.titleEN||p.slug)+'</span>'+
+      '<span style="display:flex;gap:6px">'+
+        (p.is_active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
+        '</span></div>'+
+    '<div class="card-body">'+
+      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+(p.title_en||p.titleEN||'')+'"></div>'+
+      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+(p.title_th||p.titleTH||'')+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+(p.description_en||p.descEN||'')+'</textarea></div>'+
+      '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+(p.description_th||p.descTH||'')+'</textarea></div></div>'+
+      '<div class="form-group"><label>Fabric Details</label><input value="'+(p.fabric_options||p.fabric||'')+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
+      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start"><div style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background:var(--c-surface);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative"'+
+        (heroUrl?' style="background-image:url(\''+heroUrl+'\');background-size:cover;background-position:center"':'')+
+        ' onclick="uploadImage(0)">'+
+        (heroUrl?'':'<span style="font-size:2rem;color:var(--c-muted)">+</span>')+
+        (heroUrl?'<div style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.875rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1" onclick="event.stopPropagation();removeImageSlot(0)">✕</div>':'')+
+      '</div><div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 8px">Main image for product cards, category pages, and hero banner. Uses slot 1 of 10.</p><div style="display:flex;gap:8px"><button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation();uploadImage(0)">'+(heroUrl?'Change Image':'Upload Image')+'</button>'+(heroUrl?'<button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red)">Remove</button>':'')+'</div></div></div></div>'+
+      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
+        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
+      '<div class="form-group"><label>Gallery Images (slots 2–10)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
+        imgs.slice(1).map(function(url,i){var si=i+1;return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+si+')" title="Slot '+(si+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+si+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
+        '</div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove. <strong style="color:var(--c-amber)">Click Save to persist.</strong></small></div>'+
+      '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
+        (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
+        '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>'+
+        '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
+
+  setTimeout(function(){
+    var f = document.getElementById('ed-title-en'); if(f) f.value = p.title_en || p.titleEN || '';
+    f = document.getElementById('ed-title-th'); if(f) f.value = p.title_th || p.titleTH || '';
+    f = document.getElementById('ed-desc-en'); if(f) f.value = p.description_en || p.descEN || '';
+    f = document.getElementById('ed-desc-th'); if(f) f.value = p.description_th || p.descTH || '';
+    f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
+  }, 0);
+}
+async function showProductEditor(){
+  var panel=document.getElementById('editor-panel');
+  if(!panel)return;
+  if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
+  var ps = await getProducts();
+  var p=ps[selectedProductIndex];
+  // Parse images array
+  var imgs=[];
+  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
+  while(imgs.length<10)imgs.push('');
+  var hasYoutube=p.youtube_url||p.video||'';
+
+  panel.innerHTML=
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+(p.title_en||p.titleEN||p.slug)+'</span>'+
+      '<span style="display:flex;gap:6px">'+
+        (p.is_active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
+        '</span></div>'+
+    '<div class="card-body">'+
+      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+(p.title_en||p.titleEN||'')+'"></div>'+
+      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+(p.title_th||p.titleTH||'')+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+(p.description_en||p.descEN||'')+'</textarea></div>'+
+      '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+(p.description_th||p.descTH||'')+'</textarea></div></div>'+
+      '<div class="form-group"><label>Fabric Details</label><input value="'+(p.fabric_options||p.fabric||'')+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
+      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1"><input id="ed-image-url" value="'+p.image_url+'" placeholder="/r2/... or image path"></div></div><small style="color:var(--c-muted);margin-top:4px;display:block">Image for product cards &amp; hero. Upload to any slot, copy URL, paste here.</small></div>'+
+      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
+        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
+      '<div class="form-group"><label>Product Images (10 slots)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
+        imgs.map(function(url,i){return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+i+')" title="Slot '+(i+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+i+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
+        '</div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove.</small></div>'+
+      '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
+        (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
+        '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
+      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>'+
+        '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
+
+  // Set form field values by ID for the save function to read
+  setTimeout(function(){
+    var f = document.getElementById('ed-title-en'); if(f) f.value = p.title_en || p.titleEN || '';
+    f = document.getElementById('ed-title-th'); if(f) f.value = p.title_th || p.titleTH || '';
+    f = document.getElementById('ed-desc-en'); if(f) f.value = p.description_en || p.descEN || '';
+    f = document.getElementById('ed-desc-th'); if(f) f.value = p.description_th || p.descTH || '';
+    f = document.getElementById('ed-image-url'); if(f) f.value = p.image_url || '';
+    f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
+  }, 0);
 }
 
-async function processSlotFile(slotIndex, file) {
 async function removeImageSlot(idx) {
   var ps = await getProducts();
   var p = ps[selectedProductIndex];
@@ -78,7 +169,7 @@ var formulaParamKeys = {
   protector: ["margin_rate_protector_standard","protector_packing","protector_delivery","ops_rate","mkt_rate"],
   vberth: ["waste_factor_fabric","margin_rate_marine","accessories_rate","packing_cost","delivery_cost","ops_rate","mkt_rate"],
   fixed: ["packing_cost","delivery_cost","ops_rate","mkt_rate"]
-
+};
 
 // Append new product slug to matching param pill badges
 function syncBadgesForProduct(slug, fType, name) {
