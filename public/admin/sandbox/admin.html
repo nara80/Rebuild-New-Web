@@ -144,53 +144,131 @@ function selectProduct(idx){
 }
 
 function showProductEditor(){
-  var panel=document.getElementById('editor-panel');
-  if(!panel)return;
-  if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
-  var p=sampleProducts[selectedProductIndex];
-  var imgs=[];
-  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
-  while(imgs.length<10)imgs.push('');
-  var hasYoutube=p.youtube_url||p.video||'';
-  var heroUrl = imgs[0] || '';
+// showProductEditor for admin (local products, simpler structure)
+// Uses backtick template literals
 
-  panel.innerHTML=
-    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
-      '<span style="display:flex;gap:6px">'+
-        (p.active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
-        '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">'+(p.active?'Deactivate':'Activate')+'</button>'+
-      '</span></div>'+
-    '<div class="card-body">'+
-      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+p.titleEN+'"></div>'+
-      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+p.titleTH+'"></div></div>'+
-      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+p.descEN+'</textarea></div>'+
-      '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+p.descTH+'</textarea></div></div>'+
-      '<div class="form-group"><label>Fabric Details</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
-      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start"><div style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background:var(--c-surface);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative"'+
-        (heroUrl?' style="background-image:url(\''+heroUrl+'\');background-size:cover;background-position:center"':'')+
-        ' onclick="uploadImage(0)">'+
-        (heroUrl?'':'<span style="font-size:2rem;color:var(--c-muted)">+</span>')+
-        (heroUrl?'<div style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.875rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1" onclick="event.stopPropagation();removeImageSlot(0)">✕</div>':'')+
-      '</div><div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 8px">Main image for product cards, category pages, and hero banner. Uses slot 1 of 10.</p><div style="display:flex;gap:8px"><button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation();uploadImage(0)">'+(heroUrl?'Change Image':'Upload Image')+'</button>'+(heroUrl?'<button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red)">Remove</button>':'')+'</div></div></div></div>'+
-      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
-        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
-      '<div class="form-group"><label>Gallery Images (slots 2–10)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
-        imgs.slice(1).map(function(url,i){var si=i+1;return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+si+')" title="Slot '+(si+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+si+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
-        '</div>'+
-        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove. <strong style="color:var(--c-amber)">Click Save to persist.</strong></small></div>'+
-      '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
-        (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
-        '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
-      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>'+
-        '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
+var panel = document.getElementById('editor-panel');
+if (!panel) return;
+if (selectedProductIndex < 0) {
+  panel.innerHTML = '<div class="editor-empty">Select a product from the list to edit</div>';
+  return;
+}
+var p = sampleProducts[selectedProductIndex];
+var imgs = [];
+try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+while (imgs.length < 10) imgs.push('');
+var hasYoutube = p.youtube_url || p.video || '';
+var heroUrl = imgs[0] || '';
 
-  setTimeout(function(){
-    var f = document.getElementById('ed-title-en'); if(f) f.value = p.titleEN || '';
-    f = document.getElementById('ed-title-th'); if(f) f.value = p.titleTH || '';
-    f = document.getElementById('ed-desc-en'); if(f) f.value = p.descEN || '';
-    f = document.getElementById('ed-desc-th'); if(f) f.value = p.descTH || '';
-    f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
-  }, 0);
+var heroThumb = heroUrl
+  ? `<div style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background-image:url(${heroUrl});background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative" onclick="uploadImage(0)" class="drop-target"><div style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.875rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1" onclick="event.stopPropagation();removeImageSlot(0)">&#x2715;</div></div>`
+  : `<div style="width:140px;height:140px;border-radius:var(--radius);border:2px dashed var(--c-border);background:var(--c-surface);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative" onclick="uploadImage(0)" class="drop-target"><span style="font-size:2rem;color:var(--c-muted)">+</span></div>`;
+
+var heroControls = heroUrl
+  ? `<button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation();uploadImage(0)">Change Image</button><button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red)">Remove</button>`
+  : `<button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation();uploadImage(0)">Upload Image</button>`;
+
+var gallerySlots = imgs.slice(1).map(function(url, i) {
+  var si = i + 1;
+  if (url) {
+    return `<div class="image-slot has-image has-bg drop-target" style="background-image:url(${url});background-size:cover;background-position:center" onclick="uploadImage(${si})" data-slot="${si}" title="Slot ${si+1}"><div class="remove-btn" onclick="event.stopPropagation();removeImageSlot(${si})">&#x2715;</div></div>`;
+  }
+  return `<div class="image-slot drop-target" onclick="uploadImage(${si})" data-slot="${si}" title="Slot ${si+1}"><span>+</span></div>`;
+}).join('');
+
+var tagsHtml = (p.tags || []).map(function(t) {
+  return '<span class="tag-chip">' + t + ' <span class="remove-tag" onclick="toast(\'Remove tag: ' + t + ' (sandbox)\')">&#x2715;</span></span>';
+}).join('');
+
+panel.innerHTML =
+  '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: ' + p.name + '</span>' +
+    '<span style="display:flex;gap:6px">' +
+      (p.active ? '<span class="badge badge-shipped">Active</span>' : '<span class="badge badge-cancelled">Inactive</span>') +
+      '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">' + (p.active ? 'Deactivate' : 'Activate') + '</button>' +
+    '</span></div>' +
+  '<div class="card-body">' +
+    '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="' + p.titleEN + '"></div>' +
+    '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="' + p.titleTH + '"></div></div>' +
+    '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">' + p.descEN + '</textarea></div>' +
+    '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">' + p.descTH + '</textarea></div></div>' +
+    '<div class="form-group"><label>Fabric Details</label><input value="' + p.fabric + '" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template</small></div>' +
+    '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start">' +
+      heroThumb +
+      '<div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 8px">Main image for product cards and hero banner. Drag an image here or click to upload. Uses slot 1 of 10.</p><div style="display:flex;gap:8px">' + heroControls + '</div></div></div></div>' +
+    '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="' + hasYoutube + '" placeholder="https://www.youtube.com/watch?v=...">' +
+      (hasYoutube ? '<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="' + hasYoutube + '" target="_blank" style="color:var(--c-blue)">' + hasYoutube + '</a></p>' : '') + '</div>' +
+    '<div class="form-group"><label>Gallery Images (slots 2-10)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">' +
+      gallerySlots +
+      '</div>' +
+      '<small style="color:var(--c-muted);margin-top:6px;display:block">Click or drag to upload (JPEG/PNG/WebP). Hover to remove. <strong style="color:var(--c-amber)">Click Save to persist.</strong></small></div>' +
+    '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">' +
+      tagsHtml +
+      '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>' +
+    '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>' +
+      '<button class="btn btn-outline" onclick="location.href=\'/product/' + p.slug + '/\'">Preview</button></div></div>';
+
+setTimeout(function() {
+  var f = document.getElementById('ed-title-en'); if (f) f.value = p.titleEN || '';
+  f = document.getElementById('ed-title-th'); if (f) f.value = p.titleTH || '';
+  f = document.getElementById('ed-desc-en'); if (f) f.value = p.descEN || '';
+  f = document.getElementById('ed-desc-th'); if (f) f.value = p.descTH || '';
+  f = document.getElementById('ed-youtube'); if (f) f.value = p.youtube_url || p.video || '';
+
+  // Drag-and-drop setup
+  var drops = document.querySelectorAll('.drop-target');
+  drops.forEach(function(el) {
+    el.addEventListener('dragover', function(e) { e.preventDefault(); this.style.outline = '2px solid var(--c-blue)'; });
+    el.addEventListener('dragleave', function(e) { this.style.outline = ''; });
+    el.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.style.outline = '';
+      var f = e.dataTransfer.files[0];
+      if (!f) return;
+      var slotIdx = parseInt(this.getAttribute('data-slot') || '0');
+      uploadImage(slotIdx, f);
+    });
+  });
+}, 0);
+
+}
+
+
+// -- product editor helpers --
+function getProducts() { return Promise.resolve(sampleProducts); }
+async function removeImageSlot(idx) {
+  var p = sampleProducts[selectedProductIndex]; if (!p) return;
+  var imgs = []; try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+  imgs[idx] = ''; while (imgs.length > 0 && !imgs[imgs.length - 1]) imgs.pop();
+  p.images = JSON.stringify(imgs); showProductEditor(); toast('Slot ' + (idx+1) + ' removed');
+}
+async function uploadImage(slotIndex, fileObj) {
+  var p = sampleProducts[selectedProductIndex]; if (!p) return;
+  var imgs = []; try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+  while (imgs.length < 10) imgs.push('');
+  if (fileObj) { processSlotFile(slotIndex, fileObj); return; }
+  var input = document.createElement('input'); input.type = 'file'; input.accept = 'image/jpeg,image/png,image/webp';
+  input.onchange = function(e) { var f = e.target.files[0]; if (f) processSlotFile(slotIndex, f); };
+  input.click();
+}
+async function processSlotFile(slotIndex, file) {
+  var p = sampleProducts[selectedProductIndex]; if (!p) return;
+  var imgs = []; try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+  while (imgs.length < 10) imgs.push('');
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height, max = 1200;
+      if (w > max || h > max) { var r = Math.min(max/w, max/h); w = Math.round(w*r); h = Math.round(h*r); }
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var d = c.toDataURL('image/jpeg', 0.8);
+      imgs[slotIndex] = d; p.images = JSON.stringify(imgs);
+      showProductEditor(); toast('Image added to slot ' + (slotIndex+1) + ' (' + Math.round(d.length*0.75/1024) + ' KB)');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function rOrders(){
