@@ -215,6 +215,38 @@ async function getProducts() {
   return _productsCache;
 }
 
+
+// ── Client-side image optimization ──
+function optimizeImage(file, maxDim) {
+  maxDim = maxDim || 1200;
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (w <= maxDim && h <= maxDim && file.type === 'image/jpeg') {
+        resolve(file); // already small JPEG, skip
+        return;
+      }
+      if (w > maxDim || h > maxDim) {
+        var ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(function(blob) {
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.8);
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 async function uploadImage(slotIndex) {
   var input = document.createElement("input");
   input.type = "file";
@@ -222,10 +254,12 @@ async function uploadImage(slotIndex) {
   input.onchange = async function() {
     var file = input.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast("File too large: " + (file.size / 1024 / 1024).toFixed(1) + "MB. Max 5MB."); return; }
-    toast("Uploading image " + (slotIndex + 1) + "...");
+    toast("Optimizing image " + (slotIndex + 1) + "...");
+    var optimized = await optimizeImage(file);
+    if (optimized.size > 5 * 1024 * 1024) { toast("File too large after optimization: " + (optimized.size / 1024 / 1024).toFixed(1) + "MB. Max 5MB."); return; }
+    toast("Uploading image " + (slotIndex + 1) + " (" + (optimized.size / 1024).toFixed(0) + " KB)...");
     var form = new FormData();
-    form.append("file", file);
+    form.append("file", optimized);
     try {
       var resp = await fetch("/api/admin/upload", { method: "POST", headers: { "X-Admin-Secret": ADMIN_SECRET }, body: form });
       var data = await resp.json();
