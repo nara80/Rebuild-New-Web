@@ -688,6 +688,7 @@ async function saveProduct() {
   var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
   var descEN = (document.getElementById("ed-desc-en") || {}).value || "";
   var descTH = (document.getElementById("ed-desc-th") || {}).value || "";
+  var imageUrl = (document.getElementById("ed-image-url") || {}).value || "";
   var youtube = (document.getElementById("ed-youtube") || {}).value || "";
 
   try {
@@ -761,6 +762,7 @@ async function showProductEditor(){
       '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+(p.description_en||p.descEN||'')+'</textarea></div>'+
       '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+(p.description_th||p.descTH||'')+'</textarea></div></div>'+
       '<div class="form-group"><label>Fabric Details</label><input value="'+(p.fabric_options||p.fabric||'')+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
+      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1"><input id="ed-image-url" value="'+p.image_url+'" placeholder="/r2/... or image path"></div></div><small style="color:var(--c-muted);margin-top:4px;display:block">Image for product cards &amp; hero. Upload to any slot, copy URL, paste here.</small></div>'+
       '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
         (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
       '<div class="form-group"><label>Product Images (10 slots)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
@@ -779,6 +781,7 @@ async function showProductEditor(){
     f = document.getElementById('ed-title-th'); if(f) f.value = p.title_th || p.titleTH || '';
     f = document.getElementById('ed-desc-en'); if(f) f.value = p.description_en || p.descEN || '';
     f = document.getElementById('ed-desc-th'); if(f) f.value = p.description_th || p.descTH || '';
+    f = document.getElementById('ed-image-url'); if(f) f.value = p.image_url || '';
     f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
   }, 0);
 }

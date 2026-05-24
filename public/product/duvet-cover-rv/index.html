@@ -491,5 +491,22 @@
       updateFavUI();
       updateSaleDisplay();
     </script>
+
+<script>
+(function(){
+  var slug = location.pathname.split('/').filter(Boolean).pop();
+  fetch('/api/products/' + slug)
+    .then(function(r){ return r.json(); })
+    .then(function(p){
+      if (p && p.image_url) {
+        var hero = document.querySelector('.hero-bg');
+        if (hero) hero.src = p.image_url;
+        var cards = document.querySelectorAll('[src*="/images/products/' + slug + '/main"]');
+        cards.forEach(function(img){ img.src = p.image_url; });
+      }
+    })
+    .catch(function(){});
+})();
+</script>
 </body>
 </html>

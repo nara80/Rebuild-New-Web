@@ -103,7 +103,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       // Build update query dynamically from allowed fields
       const allowed = [
         "title_en", "title_th", "description_en", "description_th",
-        "tags", "youtube_url", "images"
+        "tags", "youtube_url", "images", "image_url"
       ];
 
       const sets: string[] = [];
