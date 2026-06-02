@@ -6,6 +6,7 @@
 export async function sendEmail(env: any, options: {
   to: string;
   replyTo?: string;
+  from?: string;
   subject: string;
   text: string;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
@@ -16,6 +17,7 @@ export async function sendEmail(env: any, options: {
   }
 
   try {
+    const from = options.from || env.ORDER_FROM_EMAIL || "MildMate <noreply@mildmate.com>";
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -23,7 +25,7 @@ export async function sendEmail(env: any, options: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "MildMate <noreply@mildmate.com>",
+        from,
         to: [options.to],
         reply_to: options.replyTo,
         subject: options.subject,

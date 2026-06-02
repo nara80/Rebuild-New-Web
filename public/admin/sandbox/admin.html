@@ -1,51 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="/css/fonts.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MildMate Admin — Sandbox</title>
+<title>MildMate Super Admin — Sandbox</title>
 <style>
-:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#334155;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#1E293B;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;display:flex;min-height:100vh}
-.sidebar{width:240px;background:var(--c-dark);color:#fff;padding:24px 0;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar{width:20%;min-width:220px;background:var(--c-dark);color:#fff;padding:24px 0;flex-shrink:0;display:flex;flex-direction:column}
 .sidebar-brand{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:1.125rem;font-weight:700;display:flex;align-items:center;gap:8px}
 .sidebar-brand .dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue)}
-.sidebar-nav{flex:1;padding:16px 0}
+.sidebar-nav{flex:1;padding:16px 0;overflow-y:auto}
 .sidebar-nav a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.875rem;transition:all 0.15s}
-.sidebar-nav a:hover,.sidebar-nav a.active{color:#fff;background:rgba(255,255,255,0.08)}
+.sidebar-nav a:hover{color:#fff;background:rgba(255,255,255,0.08)}.sidebar-nav a.active{color:#fff;background:var(--c-blue);font-weight:600}
 .sidebar-nav a .icon{width:18px;height:18px;flex-shrink:0}
+.sidebar-action{color:var(--c-blue) !important; font-weight:600}
+.sidebar-action:hover{color:#fff !important; background:var(--c-blue) !important}
+.sidebar-badge{font-size:0.625rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto}
+.sidebar-badge.amber{background:rgba(217,119,6,0.2);color:#fbbf24}
+.sidebar-section{font-size:0.625rem;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.35);padding:12px 20px 6px}
 .main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
 .toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 .toolbar h2{font-size:1.125rem;font-weight:600}
-.role-badge{font-size:0.75rem;padding:4px 12px;border-radius:4px;font-weight:600;background:#eff6ff;color:var(--c-blue);border:1px solid #bfdbfe}
+.toolbar-actions{display:flex;gap:8px;align-items:center}
+.role-badge{font-size:0.75rem;padding:4px 12px;border-radius:4px;font-weight:600}
+.role-badge.super{background:#fef2f2;color:var(--c-red);border:1px solid #fecaca}
 .content{padding:24px;flex:1}
-.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
+.card{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
 .card-header{padding:16px 20px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.9375rem;display:flex;align-items:center;justify-content:space-between}
 .card-body{padding:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);padding:20px}
+.stat-label{font-size:0.75rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.stat-value{font-size:1.75rem;font-weight:700;color:var(--c-dark)}
+.stat-sub{font-size:0.75rem;color:var(--c-muted);margin-top:4px}
 table{width:100%;border-collapse:collapse;font-size:0.875rem}
 th{text-align:left;padding:10px 14px;background:var(--c-surface);font-weight:600;color:var(--c-muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--c-border)}
-td{padding:10px 14px;border-bottom:1px solid var(--c-border);color:var(--c-text)}
+td{padding:10px 14px;border-bottom:1px solid var(--c-border);color:var(--c-text);vertical-align:middle}
 tr:hover td{background:#f8fafc}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
 .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff;font-family:inherit}
 .form-group textarea{resize:vertical;min-height:80px}
+.rtf-toolbar{display:flex;gap:2px;margin-bottom:4px}
+.rtf-toolbar button{width:32px;height:28px;border:1px solid var(--c-border);border-radius:4px;background:#fff;font-size:0.8125rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--c-text)}
+.rtf-toolbar button:hover{background:var(--c-surface);border-color:var(--c-blue)}
+.rtf-toolbar button.active{background:#e0f0ff;border-color:var(--c-blue);color:var(--c-blue)}
+.rtf-editor{width:100%;min-height:120px;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);background:#fff;font-family:inherit;overflow-y:auto;line-height:1.5}
+.rtf-editor:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.rtf-editor ul,.rtf-editor ol{padding-left:24px;margin:4px 0}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.btn{padding:8px 16px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
 .btn-outline{background:transparent;border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
 .btn-sm{padding:4px 10px;font-size:0.75rem}
-.btn-danger{background:var(--c-red);color:#fff}.btn-danger:hover{background:#b91c1c}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
-.badge-pending{background:#fef3c7;color:#92400e}
-.badge-production{background:#dbeafe;color:#1e40af}
-.badge-shipped{background:#dcfce7;color:#166534}
-.badge-cancelled{background:#fee2e2;color:#991b1b}
-/* Product editor 2-col */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
+.badge-fabric{background:#dbeafe;color:#1e40af}.badge-margin{background:#fce7f3;color:#9d174d}
+.badge-sewing{background:#dcfce7;color:#166534}.badge-fixed{background:#fef3c7;color:#92400e}.badge-ops{background:#e0e7ff;color:#3730a3}
+.badge-pending{background:#fef3c7;color:#92400e}.badge-production{background:#dbeafe;color:#1e40af}
+.badge-shipped{background:#dcfce7;color:#166534}.badge-cancelled{background:#fee2e2;color:#991b1b}
+.upload-zone{border:2px dashed var(--c-border);border-radius:var(--radius);padding:40px;text-align:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s}
+.upload-zone:hover{border-color:var(--c-blue);color:var(--c-blue);background:#f0f7ff}
+.upload-zone.dragover{border-color:var(--c-blue);background:#eff6ff}
 .editor-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start}
-.product-list{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);overflow:hidden}
+.product-list{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);overflow:hidden}
 .product-list-header{padding:14px 18px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.875rem}
 .product-list-item{padding:12px 18px;border-bottom:1px solid var(--c-border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.1s}
 .product-list-item:hover{background:#f8fafc}
@@ -54,234 +75,538 @@ tr:hover td{background:#f8fafc}
 .product-list-item .thumb img{width:100%;height:100%;object-fit:cover}
 .product-list-item .name{font-size:0.8125rem;font-weight:500;flex:1}
 .product-list-item .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.status-dot.active{background:var(--c-green)}
-.status-dot.inactive{background:var(--c-border)}
-.editor-panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border)}
+.status-dot.active{background:var(--c-green)}.status-dot.inactive{background:var(--c-border)}
+.editor-panel{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border)}
 .editor-empty{padding:60px 20px;text-align:center;color:var(--c-muted)}
 .image-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
 .image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s;position:relative;overflow:hidden}
 .image-slot:hover{border-color:var(--c-blue);color:var(--c-blue)}
 .image-slot.has-image{border-style:solid;border-color:var(--c-border)}
 .image-slot.has-image img{width:100%;height:100%;object-fit:cover}
-.image-slot .remove-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;font-size:0.625rem;display:none;align-items:center;justify-content:center;cursor:pointer;border:none}
-.image-slot.has-image:hover .remove-btn{display:flex}
+.image-slot .remove-btn{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.75rem;display:none;align-items:center;justify-content:center;cursor:pointer;border:none;box-shadow:0 1px 3px rgba(0,0,0,0.3);font-weight:700}
+.image-slot.has-image .remove-btn{display:flex}
+[data-slot].drop-target{outline:3px solid var(--c-blue) !important;outline-offset:2px;background-color:rgba(44,150,244,0.08)}
 .add-image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s;font-size:1.5rem}
 .add-image-slot:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
+.tag-chip .remove-tag{cursor:pointer;opacity:0.5;font-size:0.75rem}.tag-chip .remove-tag:hover{opacity:1}
+.fabric-checkboxes label:hover{background:#f8fafc}
+.fabric-cb input[type="checkbox"]{accent-color:var(--c-blue)}
+.timeline{padding-left:24px;border-left:2px solid var(--c-border);margin:16px 0}
+.timeline-item{margin-bottom:20px;position:relative}
+.timeline-dot{position:absolute;left:-29px;top:0;width:12px;height:12px;border-radius:50%;border:2px solid var(--c-border);background:#fff}
+.timeline-dot.done{background:var(--c-green);border-color:var(--c-green)}
+.timeline-dot.current{background:var(--c-blue);border-color:var(--c-blue)}
+.timeline-date{font-size:0.6875rem;color:var(--c-muted)}
+.timeline-text{font-size:0.8125rem;margin-top:2px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--c-dark);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:0.875rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;animation:slideIn 0.25s ease}
 @keyframes slideIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
-@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}}
-.image-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;color:var(--c-muted);position:relative;transition:border-color 0.15s;background:var(--c-surface);overflow:hidden}
-.image-slot:hover{border-color:var(--c-blue)}
-.image-slot.has-image{border-style:solid}
-.image-slot.has-bg{background-size:cover;background-position:center;background-repeat:no-repeat}
-.remove-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.15s;z-index:1}
-.image-slot:hover .remove-btn{opacity:1}
-.add-image-slot{aspect-ratio:1;border:2px dashed var(--c-border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;color:var(--c-muted);transition:border-color 0.15s}
-.add-image-slot:hover{border-color:var(--c-blue)}
+@media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.stats-grid{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px}.stats-grid>*{min-width:170px;flex-shrink:0;scroll-snap-align:start}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,1fr)}.form-row{grid-template-columns:1fr}.content{padding:12px}.toolbar{padding:12px 16px}.card{margin-bottom:12px}.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+.quote-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center}
+.quote-overlay.open{display:flex}
+.quote-popup{background:#fff;border-radius:var(--radius);padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative}
+.quote-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5rem;color:var(--c-muted);cursor:pointer;padding:0;line-height:1}
+.quote-close:hover{color:var(--c-dark)}
+.quote-popup-title{font-size:1.125rem;font-weight:700;color:var(--c-dark);margin-bottom:20px}
+.quote-field{margin-bottom:16px}
+.quote-field label{display:block;font-size:0.8125rem;font-weight:600;color:var(--c-dark);margin-bottom:4px}
+.quote-field input,.quote-field select{width:100%;padding:10px 12px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;color:var(--c-text);font-family:inherit}
+.quote-field input:focus,.quote-field select:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.quote-req{color:var(--c-red)}
+.quote-submit-btn{width:100%;padding:12px;background:var(--c-blue);color:#fff;border:none;border-radius:var(--radius);font-size:0.9375rem;font-weight:600;cursor:pointer;font-family:inherit}
+.quote-submit-btn:hover{background:#1a7fd4}
 </style>
 <script src="../../js/campaign-state.js"></script>
+<script src="../../js/clerk.js"></script>
 </head>
 <body>
 
+<!-- Sidebar -->
 <aside class="sidebar">
   <div class="sidebar-brand"><span class="dot"></span> MildMate Admin</div>
   <nav class="sidebar-nav">
     <a href="index.html" style="border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:12px;padding-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Hub</a>
-    <a href="#" class="active" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
-    <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
+    <a href="#" class="active" data-page="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Dashboard</a>
+    <div class="sidebar-section">Admin Features</div>
     <a href="#" data-page="marketing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Marketing</a>
+    <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
+    <a href="#" class="sidebar-action" onclick="startNewProduct()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Product</a>
+    <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
     <a href="#" data-page="customers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Customers</a>
     <a href="#" data-page="subscribers"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Subscribers</a>
   </nav>
 </aside>
 
+<!-- Main -->
 <main class="main">
   <div class="toolbar">
-    <h2 id="page-title">Orders</h2>
-    <div class="role-badge">ADMIN</div>
+    <h2 id="page-title">Dashboard</h2>
+    <div class="toolbar-actions">
+      <span class="role-badge super">ADMIN</span>
+    </div>
   </div>
   <div class="content" id="page-content"></div>
 </main>
 
+<!-- Toast -->
 <div class="toast" id="toast" style="display:none"></div>
 
 <script>
   var ADMIN_SECRET = localStorage.getItem("admin_secret") || "";
-var currentPage = 'orders';
-function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
+// ── Page Router ──
+var pages = ['dashboard','pricing','diy','exchange','marketing','products','orders','customers','subscribers','accounts'];
+var currentPage = 'dashboard';
 
-document.querySelectorAll('.sidebar-nav a[data-page]').forEach(function(a){
-  a.addEventListener('click',function(e){e.preventDefault();showPage(this.dataset.page);});
-});
-
-function showPage(name){
-  currentPage=name;
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a){a.classList.remove('active');});
-  document.querySelector('[data-page="'+name+'"]').classList.add('active');
-  document.getElementById('page-title').textContent={orders:'Orders',products:'Products',marketing:'Marketing',customers:'Customers',subscribers:'Subscribers'}[name];
-  document.getElementById('page-content').innerHTML={orders:rOrders,products:rProducts,marketing:rMarketing,customers:rCustomers,subscribers:rSubscribers}[name]();
+async function showPage(name) {
+  currentPage = name;
+  document.querySelectorAll('.sidebar-nav a').forEach(function(a){ a.classList.remove('active'); });
+  var link = document.querySelector('[data-page="'+name+'"]');
+  if(link) link.classList.add('active');
+  document.getElementById('page-title').textContent = {
+    dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
+    exchange:'Exchange Rates',marketing:'Marketing',products:'Products',orders:'Orders',
+    customers:'Customers',subscribers:'Subscribers',accounts:'Admin Accounts'
+  }[name];
+  var result = renderPage(name);
+  if (result && typeof result.then === 'function') {
+    document.getElementById('page-content').innerHTML = await result;
+  } else {
+    document.getElementById('page-content').innerHTML = result;
+  }
 }
 
-// ── Mock data ──
+function toast(msg, bg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  t.style.background = bg || 'var(--c-dark)';
+  setTimeout(function(){ t.style.display = 'none'; }, 3000);
+}
+
+// ── Nav clicks ──
+document.querySelectorAll('.sidebar-nav a').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    if (!this.dataset.page) return; // keep inline actions (e.g. + New Product) working
+    showPage(this.dataset.page);
+  });
+});
+
+// ── Render Pages ──
+
+function renderPage(name) {
+  switch(name) {
+    case 'dashboard': return renderDashboard();
+    case 'pricing': return renderPricingParams();
+    case 'diy': return renderDiyPrices();
+    case 'exchange': return renderExchange();
+    case 'marketing': return rMarketing();
+    case 'products': return rProducts();
+    case 'orders': return rOrders();
+    case 'customers': return rCustomers();
+    case 'subscribers': return renderSubscribers();
+    case 'accounts': return rAccounts();
+    default: return '';
+  }
+}
+
+function renderDashboard() {
+  return '<div class="stats-grid">'+
+    '<div class="stat-card"><div class="stat-label">Pricing Params</div><div class="stat-value">37</div><div class="stat-sub">Active parameters</div></div>'+
+    '<div class="stat-card"><div class="stat-label">DIY Prices</div><div class="stat-value">8</div><div class="stat-sub">Marine shape entries</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Currencies</div><div class="stat-value">8</div><div class="stat-sub">Exchange rates tracked</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">27</div><div class="stat-sub">All configurators live</div></div>'+
+  '</div>';
+}
+
+// ── Pricing Parameters Page ──
+function getParams() {
+  var raw = localStorage.getItem("sandbox_params");
+  if (raw) return JSON.parse(raw);
+  var def = [{"key":"fabric_rate_cloudsoft","value":100,"label":"CloudSoft Rate (THB/yd)","category":"fabric","products":"Marine,RV,Dorm,Family,Pets,Flat"},{"key":"fabric_rate_breezeplus","value":180,"label":"BreezePlus Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Dorm,Pets"},{"key":"fabric_rate_premacotton","value":180,"label":"PremaCotton Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Duvet,Pillow"},{"key":"fabric_rate_ecoluxe","value":180,"label":"EcoLuxe Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Duvet,Pillow"},{"key":"fabric_rate_tpu","value":120,"label":"TPU Rate (THB/lm)","category":"fabric","products":"Encasement,Protector,PillowProtect"},{"key":"waste_factor_fabric","value":20,"label":"Fabric Waste (%)","category":"waste","products":"Fitted,Flat,Duvet,Encase"},{"key":"waste_factor_pillowcase","value":60,"label":"Pillow Waste (%)","category":"waste","products":"Pillowcase,PillowProtect"},{"key":"margin_rate_standard","value":30,"label":"Standard Fitted Margin","category":"margin","products":"Standard,DeepPkt,Dorm,Pets"},{"key":"margin_rate_marine","value":680,"label":"Marine V-Berth Margin","category":"margin","products":"Marine"},{"key":"margin_rate_family","value":50,"label":"Family Fitted Margin","category":"margin","products":"Family"},{"key":"margin_rate_rv_truck","value":45,"label":"RV & Truck Fitted Margin","category":"margin","products":"RV,Truck"},{"key":"margin_rate_encasement","value":50,"label":"Encasement Margin","category":"margin","products":"Encasement,RV Encase"},{"key":"encasement_mkt_rate","value":25,"label":"Encasement Marketing Rate","category":"margin","products":"Encasement,RV Encase"},{"key":"margin_rate_duvet","value":30,"label":"Duvet Cover Margin","category":"margin","products":"3-Sided,Pet,Marine,RV,Dorm"},{"key":"margin_rate_pillow","value":15,"label":"Pillowcase Margin","category":"margin","products":"Envelope,Zipper,Sham"},{"key":"margin_rate_pillow_protector","value":35,"label":"Pillow Protector Margin","category":"margin","products":"Pillow Protect"},{"key":"margin_rate_protector_standard","value":15,"label":"Protector Standard Margin","category":"margin","products":"Std,PetProof"},{"key":"margin_rate_protector_deep","value":25,"label":"Protector Deep Pocket Margin","category":"margin","products":"DeepPkt"},{"key":"margin_rate_protector_family","value":50,"label":"Protector Family Margin","category":"margin","products":"Family"},{"key":"sewing_tier1_cost","value":120,"label":"Fitted 3.5F (≤51,600 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier2_cost","value":200,"label":"Fitted 5,6F (≤71,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier3_cost","value":300,"label":"Fitted 8F, 6F+Ext (≤91,200 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier4_cost","value":400,"label":"Fitted 10F, 8F+Ext (≤120,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier5_cost","value":500,"label":"Fitted 10F+Ext (>120,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"duvet_tier1_cost","value":300,"label":"Duvet 70×90 (≤98,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier2_cost","value":400,"label":"Duvet 90×100 (≤139,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier3_cost","value":500,"label":"Duvet 110×100 (≤170,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier4_cost","value":600,"label":"Duvet 125×100 (>170,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"encasement_sewing_cost","value":300,"label":"Encasement Sewing (flat)","category":"flat_sewing","products":"Encasement,RV Encase"},{"key":"flat_sewing_cost","value":250,"label":"Flat Sheet Sewing (flat)","category":"flat_sewing","products":"Flat Std,Flat Deep"},{"key":"pillow_sewing_cost","value":40,"label":"Pillowcase Sewing (per pc)","category":"flat_sewing","products":"Envelope,Zipper"},{"key":"pillow_sham_sewing_cost","value":50,"label":"Sham Sewing (per pc)","category":"flat_sewing","products":"Sham"},{"key":"packing_cost","value":100,"label":"Packing Cost","category":"fixed","products":"All products"},{"key":"delivery_cost","value":50,"label":"Delivery Cost","category":"fixed","products":"All products"},{"key":"zipper_rate","value":0.4,"label":"Zipper Rate (THB/cm)","category":"fixed","products":"Duvets,Encasement,Zipper Pillow"},{"key":"accessories_rate","value":10,"label":"Accessories Rate","category":"marketing","products":"All fitted sheets"},{"key":"ops_rate","value":15,"label":"Operations Rate","category":"operations","products":"All products"},{"key":"mkt_rate","value":20,"label":"Marketing Rate","category":"marketing","products":"All products"}];
+  localStorage.setItem("sandbox_params", JSON.stringify(def));
+  return def;
+}
+function saveParams(ps) { localStorage.setItem("sandbox_params", JSON.stringify(ps)); }
+
+function editParam(idx) {
+  var ps = getParams();
+  var p = ps[idx];
+  if (!p) return;
+  var pctCats = ["waste","margin","operations","marketing"];
+  var suffix = pctCats.indexOf(p.category) !== -1 ? "%" : "";
+  var val = prompt("Edit " + p.label + "\nKey: " + p.key, p.value);
+  if (val === null) return;
+  var num = parseFloat(val);
+  if (isNaN(num)) { toast("Invalid number"); return; }
+  p.value = num;
+  saveParams(ps);
+  syncParam(p);
+  toast("Saved: " + p.key + " = " + num + suffix);
+  document.getElementById("page-pricing").innerHTML = renderPricingParams();
+}
+
+
+
+async function syncParam(p) {
+  try {
+    var secret = localStorage.getItem("admin_secret") || "";
+    var resp = await fetch("/api/admin/pricing-params", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Admin-Secret": secret },
+      body: JSON.stringify({ key: p.key, value: p.value, label: p.label, category: p.category })
+    });
+    if (resp.ok) toast(p.key + " saved");
+    else if (resp.status === 401) toast("Set Admin Secret to save (401)");
+    else console.warn("D1 sync failed:", resp.status);
+  } catch(e) { /* offline */ }
+}
+
+function renderPricingParams() {
+  var categories = {
+    fabric: { label:"Fabric Rates", badge:"badge-fabric" },
+    waste: { label:"Fabric Waste Factors", badge:"badge-waste" },
+    margin: { label:"Margin Rates", badge:"badge-margin" },
+    sewing: { label:"Fitted Sheet Sewing Tiers", badge:"badge-sewing" },
+    duvet_sewing: { label:"Duvet Cover Sewing Tiers", badge:"badge-sewing" },
+    flat_sewing: { label:"Other Sewing Costs", badge:"badge-sewing" },
+    fixed: { label:"Fixed Costs \u0026 Constants", badge:"badge-fixed" },
+    operations: { label:"Operations Rate", badge:"badge-ops" },
+    marketing: { label:"Marketing Rate", badge:"badge-ops" }
+  };
+  var sample = getParams();
+  var catKeys = Object.keys(categories);
+  var html = "";
+  for(var c = 0; c < catKeys.length; c++) {
+    var cat = catKeys[c];
+    var items = sample.filter(function(r){ return r.category === cat; });
+    if(!items.length) continue;
+    html += "<div class=\"card\"><div class=\"card-header\"><span>"+categories[cat].label+" <span class=\"badge "+categories[cat].badge+"\">"+items.length+"</span></span></div>";
+    html += "<div class=\"card-body\"><div style=\"overflow-x:auto\"><table><thead><tr><th>Key</th><th>Label</th><th>Value</th><th style=\"min-width:140px\">Products</th><th></th></tr></thead><tbody>";
+    for(var i = 0; i < sample.length; i++) {
+      if (sample[i].category !== cat) continue;
+      var productBadges = "";
+      if (sample[i].products) {
+        sample[i].products.split(",").forEach(function(p){
+          productBadges += "<span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap\">"+p.trim()+"</span>";
+        });
+      }
+      var pctCats = ["waste","margin","operations","marketing"];
+      var pctSuffix = pctCats.indexOf(sample[i].category) !== -1 ? "%" : "";
+      html += "<tr><td style=\"font-family:monospace;font-size:0.75rem\">"+sample[i].key+"</td><td>"+sample[i].label+"</td><td><strong>"+sample[i].value+pctSuffix+"</strong></td><td>"+productBadges+"</td><td><button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+i+")\">Edit</button></td></tr>";
+    }
+    html += "</tbody></table></div></div></div>";
+  }
+
+  return html;
+}
+// ── DIY Prices Page ──
+function renderDiyPrices() {
+  var shapes = [
+    {code:'A',name:'V-Berth Narrow Foot',thb:2820,usd:94},
+    {code:'B',name:'V-Berth Wide Foot',thb:3330,usd:111},
+    {code:'C',name:'V-Berth King Size',thb:3750,usd:125},
+    {code:'D',name:'Double Round End',thb:3750,usd:125},
+    {code:'E',name:'King Size Round End',thb:4140,usd:138},
+    {code:'F',name:'Single Quarter Berth',thb:3300,usd:110},
+    {code:'G',name:'Cut Off Corner',thb:3240,usd:108},
+    {code:'H',name:'Octagonal Berth',thb:3960,usd:132}
+  ];
+  var html = '<div class="card"><div class="card-header"><span>Marine Fitted Sheet — Shape Prices</span>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm" onclick="toast(\'CSV downloaded (sandbox)\')">⬇ Export CSV</button>'+
+    '<button class="btn btn-primary btn-sm" onclick="toast(\'CSV uploaded (sandbox)\')">⬆ Upload CSV</button></div></div>'+
+    '<div class="card-body"><table><thead><tr><th>Code</th><th>Shape</th><th>THB</th><th>USD</th><th></th></tr></thead><tbody>';
+  for(var i = 0; i < shapes.length; i++) {
+    html += '<tr><td><strong>'+shapes[i].code+'</strong></td><td>'+shapes[i].name+'</td><td>฿'+shapes[i].thb.toLocaleString()+'</td><td>$'+shapes[i].usd+'</td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit Shape '+shapes[i].code+' (sandbox)\')">Edit</button></td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '<div class="card"><div class="card-header">CSV Upload</div><div class="card-body">'+
+    '<div class="upload-zone" id="csv-drop" onclick="toast(\'CSV upload (sandbox — file select simulated)\')">'+
+    '<p style="font-size:1.5rem;margin-bottom:8px">📄</p>'+
+    '<p><strong>Drop CSV file here</strong> or click to browse</p>'+
+    '<p style="font-size:0.75rem;margin-top:4px">Columns: product_slug, shape_code, price_thb, price_usd, label</p>'+
+    '</div></div></div>';
+
+  html += '<div class="card"><div class="card-header">CSV Export Format</div><div class="card-body">'+
+    '<pre style="background:var(--c-surface);padding:16px;border-radius:var(--radius);font-size:0.75rem;overflow-x:auto">'+
+'product_slug,shape_code,price_thb,price_usd,label\n'+
+'marine-fitted-sheet,A,2820,94,"Shape A — V-Berth Narrow Foot"\n'+
+'marine-fitted-sheet,B,3330,111,"Shape B — V-Berth Wide Foot"\n'+
+'marine-fitted-sheet,C,3750,125,"Shape C — V-Berth King Size"</pre>'+
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:8px">Download current data, edit in Excel/Sheets, re-upload CSV to bulk update database.</p>'+
+  '</div></div>';
+  return html;
+}
+
+// ── Exchange Rates Page ──
+function renderExchange() {
+  var rates = [
+    {currency:'USD',rate:0.033,label:'US Dollar',symbol:'$'},
+    {currency:'EUR',rate:0.031,label:'Euro',symbol:'€'},
+    {currency:'GBP',rate:0.026,label:'British Pound',symbol:'£'},
+    {currency:'JPY',rate:4.95,label:'Japanese Yen',symbol:'¥'},
+    {currency:'MYR',rate:0.15,label:'Malaysian Ringgit',symbol:'RM'},
+    {currency:'CAD',rate:0.045,label:'Canadian Dollar',symbol:'C$'},
+    {currency:'AUD',rate:0.052,label:'Australian Dollar',symbol:'A$'},
+    {currency:'SGD',rate:0.044,label:'Singapore Dollar',symbol:'S$'}
+  ];
+  var html = '<div class="card"><div class="card-header">Exchange Rates (1 THB = X currency)</div><div class="card-body"><table><thead><tr><th>Currency</th><th>Label</th><th>Symbol</th><th>Rate (per THB)</th><th></th></tr></thead><tbody>';
+  for(var i = 0; i < rates.length; i++) {
+    html += '<tr><td><strong>'+rates[i].currency+'</strong></td><td>'+rates[i].label+'</td><td>'+rates[i].symbol+'</td><td><strong>'+rates[i].rate+'</strong></td><td><button class="btn btn-outline btn-sm" onclick="toast(\'Edit '+rates[i].currency+' rate (sandbox)\')">Edit</button></td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+
+  html += '<div class="card"><div class="card-header">How Exchange Rates Flow</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:12px">Rates are fetched by <code>product-configurator.js</code> via <code>GET /api/pricing-params</code>. The frontend converts THB to the user\'s local currency using the IP-geo-detected region.</p>'+
+    '<p style="color:var(--c-muted)">Current regions: Canada, EU, UK, Japan, Malaysia, Australia, Singapore, United States (THB→USD default)</p>'+
+  '</div></div>';
+  return html;
+}
+
+// ── Orders (enhanced with status badges) ──
 var sampleOrders = [
   {id:'#001',date:'2026-05-21',customer:'john@email.com',product:'Standard Fitted Sheet',dims:'153×203×30 cm',fabric:'CloudSoft',status:'pending',total:'฿1,250'},
   {id:'#002',date:'2026-05-20',customer:'sarah@email.com',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',fabric:'CloudSoft',status:'production',total:'$94'},
-  {id:'#003',date:'2026-05-19',customer:'mike@email.com',product:'Family Fitted Sheet',dims:'250×220×35 cm',fabric:'BreezePlus',status:'shipped',total:'฿2,100'},
-  {id:'#004',date:'2026-05-18',customer:'anna@email.com',product:'Duvet Cover — 3-Sided',dims:'200×200 cm',fabric:'PremaCotton',status:'cancelled',total:'$55'},
-  {id:'#005',date:'2026-05-17',customer:'tom@email.com',product:'Pet Owner Fitted Sheet',dims:'120×60×15 cm',fabric:'BreezePlus',status:'pending',total:'฿880'}
+  {id:'#003',date:'2026-05-19',customer:'mike@email.com',product:'Family Fitted Sheet',dims:'250×220×35 cm',fabric:'BreezePlus',status:'shipped',total:'฿2,100'}
 ];
 
-var sampleProducts = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"sheets","fabric":"","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets"]},{"slug":"deep-pocket-fitted-sheet","name":"Deep Pocket Fitted Sheet","active":true,"category":"sheets, deep-pocket","fabric":"","titleEN":"Deep Pocket Fitted Sheet","titleTH":"ผ้าปูความลึกพิเศษ","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","deep-pocket"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet","active":true,"category":"sheets, marine","fabric":"","titleEN":"Marine Fitted Sheet","titleTH":"ผ้าปูที่นอน Marine (V-Berth)","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","marine"]},{"slug":"dorm-fitted-sheet","name":"Dorm Fitted Sheet","active":true,"category":"sheets, boarding-dorm","fabric":"","titleEN":"Dorm Fitted Sheet","titleTH":"ผ้าปูหอพัก","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","boarding-dorm"]},{"slug":"rv-truck-fitted-sheet","name":"RV & Truck Fitted Sheet","active":true,"category":"sheets, rv-truck","fabric":"","titleEN":"RV & Truck Fitted Sheet","titleTH":"ผ้าปูที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","rv-truck"]},{"slug":"family-fitted-sheet","name":"Family Fitted Sheet","active":true,"category":"sheets, family","fabric":"","titleEN":"Family Fitted Sheet","titleTH":"ผ้าปูครอบครัว Co-Sleep","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","family"]},{"slug":"pet-owner-fitted-sheet","name":"Pet Owner Fitted Sheet","active":true,"category":"sheets, pets","fabric":"","titleEN":"Pet Owner Fitted Sheet","titleTH":"ผ้าปูที่นอนสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","pets"]},{"slug":"flat-sheet-standard","name":"Flat Sheet — Standard","active":true,"category":"sheets","fabric":"","titleEN":"Flat Sheet — Standard","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets"]},{"slug":"flat-sheet-extra-deep-pocket","name":"Flat Sheet — Extra Deep Pocket","active":true,"category":"sheets, deep-pocket","fabric":"","titleEN":"Flat Sheet — Extra Deep Pocket","titleTH":"ผ้าปูราบความลึกพิเศษ","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["sheets","deep-pocket"]},{"slug":"3-sided-duvet","name":"3-Sided Zipper Duvet Cover","active":true,"category":"duvet-covers, family","fabric":"","titleEN":"3-Sided Zipper Duvet Cover","titleTH":"ผ้าคลุมผ้าสวย 3 ด้านซิป","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","family"]},{"slug":"pet-owner-duvet-cover","name":"Pet Owner Duvet Cover","active":true,"category":"duvet-covers, pets","fabric":"","titleEN":"Pet Owner Duvet Cover","titleTH":"ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","pets"]},{"slug":"duvet-cover-marine","name":"Duvet Cover — Marine","active":true,"category":"duvet-covers, marine","fabric":"","titleEN":"Duvet Cover — Marine","titleTH":"ผ้าคลุมผ้าสวย Marine","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","marine"]},{"slug":"duvet-cover-rv","name":"Duvet Cover — RV","active":true,"category":"duvet-covers, rv-truck","fabric":"","titleEN":"Duvet Cover — RV","titleTH":"ผ้าคลุมผ้าสวย RV","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","rv-truck"]},{"slug":"duvet-cover-dorm","name":"Duvet Cover — Dorm","active":true,"category":"duvet-covers, boarding-dorm","fabric":"","titleEN":"Duvet Cover — Dorm","titleTH":"ผ้าคลุมผ้าสวยหอพัก","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers","boarding-dorm"]},{"slug":"duvet-insert","name":"Duvet Insert","active":true,"category":"duvet-covers","fabric":"","titleEN":"Duvet Insert","titleTH":"ไส้ผ้านวม (Duvet Insert)","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["duvet-covers"]},{"slug":"pillowcase-envelope","name":"Envelope Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Envelope Pillowcase","titleTH":"ถุงหมอนแบบซอง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-zipper","name":"Zipper Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Zipper Pillowcase","titleTH":"ถุงหมอนซิป","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-sham","name":"Sham Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Sham Pillowcase","titleTH":"ถุงหมอน Sham","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"mattress-protector-standard","name":"Mattress Protector — Standard","active":true,"category":"protection","fabric":"","titleEN":"Mattress Protector — Standard","titleTH":"ผ้าปูกันเปื้อนมาตรฐาน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection"]},{"slug":"mattress-protector-family","name":"Mattress Protector — Family","active":true,"category":"protection, family","fabric":"","titleEN":"Mattress Protector — Family","titleTH":"ผ้าปูกันเปื้อนครอบครัว","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","family"]},{"slug":"mattress-protector-deep-pocket","name":"Mattress Protector — Deep Pocket","active":true,"category":"protection, deep-pocket","fabric":"","titleEN":"Mattress Protector — Deep Pocket","titleTH":"ผ้าปูกันเปื้อนความลึกพิเศษ","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","deep-pocket"]},{"slug":"pet-proof-mattress-protector","name":"Pet-Proof Mattress Protector","active":true,"category":"protection, pets","fabric":"","titleEN":"Pet-Proof Mattress Protector","titleTH":"ผ้าปูกันเปื้อนสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","pets"]},{"slug":"mattress-encasement-general","name":"6-Sided Mattress Encasement","active":true,"category":"protection, marine, rv-truck","fabric":"","titleEN":"6-Sided Mattress Encasement","titleTH":"ผ้าห่อที่นอน 6 ด้าน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","marine","rv-truck"]},{"slug":"rv-truck-mattress-encasement","name":"RV & Truck Mattress Encasement","active":true,"category":"protection, rv-truck","fabric":"","titleEN":"RV & Truck Mattress Encasement","titleTH":"ผ้าห่อที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","rv-truck"]},{"slug":"pillow-protector-general","name":"Pillow Protector","active":true,"category":"protection, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","titleEN":"Pillow Protector","titleTH":"ผ้ากันเปื้อนหมอน","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["protection","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"accessories, family","fabric":"","titleEN":"BedBridge Connector","titleTH":"BedBridge Connector","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["accessories","family"]},{"slug":"mattress-lift-helper","name":"Bed Lifter (38 cm)","active":true,"category":"accessories","fabric":"","titleEN":"Bed Lifter (38 cm)","titleTH":"ตัวยกที่นอนขนาดใหญ่ (38 ซม.)","descEN":"","descTH":"","images":"[]","video":"","youtube_url":"","tags":["accessories"]}];
-
-var selectedProductIndex = -1;
-
-function selectProduct(idx){
-  selectedProductIndex=idx;
-  var items=document.querySelectorAll('.product-list-item');
-  items.forEach(function(item,i){item.classList.toggle('active',i===idx);});
-  showProductEditor();
+function isProdAdminRuntime() {
+  var h = (location && location.hostname ? location.hostname : '').toLowerCase();
+  return h === 'www.mildmate.com' || h === 'mildmate.com' || h.endsWith('.pages.dev');
 }
 
-function showProductEditor(){
-  var panel=document.getElementById('editor-panel');
-  if(!panel)return;
-  if(selectedProductIndex<0){panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>';return;}
-  var p=sampleProducts[selectedProductIndex];
-  var imgs=[];
-  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
-  while(imgs.length<10)imgs.push('');
-  var hasYoutube=p.youtube_url||p.video||'';
-  var heroUrl = imgs[0] || '';
-
-  panel.innerHTML=
-    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>Edit: '+p.name+'</span>'+
-      '<span style="display:flex;gap:6px">'+
-        (p.active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>')+
-        '<button class="btn btn-sm btn-outline" onclick="toast(\'Toggle active/inactive (sandbox)\')">'+(p.active?'Deactivate':'Activate')+'</button>'+
-      '</span></div>'+
-    '<div class="card-body">'+
-      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+p.titleEN+'"></div>'+
-      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+p.titleTH+'"></div></div>'+
-      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><textarea id="ed-desc-en" rows="3">'+p.descEN+'</textarea></div>'+
-      '<div class="form-group"><label>Description (TH)</label><textarea id="ed-desc-th" rows="3">'+p.descTH+'</textarea></div></div>'+
-      '<div class="form-group"><label>Fabric Details</label><input value="'+p.fabric+'" readonly style="background:var(--c-surface);color:var(--c-muted);font-size:0.8125rem"><small style="color:var(--c-muted)">Hardcoded in template — edit in templates/</small></div>'+
-      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start"><div style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background:var(--c-surface);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative"'+
-        (heroUrl?' style="background-image:url(\''+heroUrl+'\');background-size:cover;background-position:center"':'')+
-        ' onclick="uploadImage(0)">'+
-        (heroUrl?'':'<span style="font-size:2rem;color:var(--c-muted)">+</span>')+
-        (heroUrl?'<div style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.875rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1" onclick="event.stopPropagation();removeImageSlot(0)">✕</div>':'')+
-      '</div><div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 8px">Main image for product cards, category pages, and hero banner. Uses slot 1 of 10.</p><div style="display:flex;gap:8px"><button type="button" class="btn btn-sm btn-primary" onclick="event.stopPropagation();uploadImage(0)">'+(heroUrl?'Change Image':'Upload Image')+'</button>'+(heroUrl?'<button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red)">Remove</button>':'')+'</div></div></div></div>'+
-      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
-        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
-      '<div class="form-group"><label>Gallery Images (slots 2–10)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
-        imgs.slice(1).map(function(url,i){var si=i+1;return'<div class="image-slot'+(url?' has-image has-bg':'')+'" style="'+(url?'background-image:url('+url+');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+si+')" title="Slot '+(si+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+si+')">✕</div>':'<span>+</span>')+'</div>';}).join('')+
-        '</div>'+
-        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click slot to upload (JPEG/PNG/WebP, max 5MB). Hover to remove. <strong style="color:var(--c-amber)">Click Save to persist.</strong></small></div>'+
-      '<div class="form-group"><label>Tags / Niches</label><div class="tags-row">'+
-        (p.tags||[]).map(function(t){return'<span class="tag-chip">'+t+' <span class="remove-tag" onclick="toast(\'Remove tag: '+t+' (sandbox)\')">✕</span></span>';}).join('')+
-        '<span class="tag-chip" style="border-style:dashed;cursor:pointer" onclick="var t=prompt(\'Add tag:\');if(t)toast(\'Tag added: \'+t+\' (sandbox)\')">+ Add Tag</span></div></div>'+
-      '<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" onclick="saveProduct()">Save</button>'+
-        '<button class="btn btn-outline" onclick="location.href=\'/product/'+p.slug+'/\'">Preview</button></div></div>';
-
-  setTimeout(function(){
-    var f = document.getElementById('ed-title-en'); if(f) f.value = p.titleEN || '';
-    f = document.getElementById('ed-title-th'); if(f) f.value = p.titleTH || '';
-    f = document.getElementById('ed-desc-en'); if(f) f.value = p.descEN || '';
-    f = document.getElementById('ed-desc-th'); if(f) f.value = p.descTH || '';
-    f = document.getElementById('ed-youtube'); if(f) f.value = p.youtube_url || p.video || '';
-  }, 0);
+async function getAdminAuthHeaders(includeJson) {
+  var headers = {};
+  if (includeJson) headers['Content-Type'] = 'application/json';
+  try {
+    if (typeof window.getClerkToken === 'function') {
+      var token = await window.getClerkToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+    }
+  } catch(e) {}
+  var secret = localStorage.getItem('admin_secret') || '';
+  if (secret) headers['X-Admin-Secret'] = secret;
+  return headers;
 }
 
-function rOrders(){
-  var h='<div class="card">'+
-    '<div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+sampleOrders.length+' orders</span></div>'+
-    '<div class="card-body">'+
-    '<table><thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Dimensions</th><th>Fabric</th><th>Total</th><th>Status</th></tr></thead><tbody>';
-  sampleOrders.forEach(function(o){
-    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled'}[o.status];
-    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+o.customer+'</td><td>'+o.product+'</td><td style="font-size:0.8125rem">'+o.dims+'</td><td>'+o.fabric+'</td><td><strong>'+o.total+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
+function mapOrderRow(o) {
+  var dims = [];
+  if (o.width_cm && o.length_cm) {
+    dims.push(o.width_cm + '×' + o.length_cm);
+    if (o.depth_cm) dims.push(o.depth_cm + ' cm');
+  }
+  var price = o.price_thb ? ('฿' + Number(o.price_thb).toLocaleString()) : (o.price_usd ? ('$' + Number(o.price_usd)) : '—');
+  return {
+    id: '#ORD-' + o.id,
+    date: (o.created_at || '').substring(0, 10),
+    customer: o.customer_name || o.email || '',
+    product: o.product_title_en || o.product_slug || '',
+    dims: dims.join(' × ') || '—',
+    fabric: o.fabric || '—',
+    status: o.status || 'pending',
+    total: price,
+    dbId: o.id
+  };
+}
+
+async function rOrders(){
+  var orders = [];
+  var fromApi = false;
+  var fetchError = '';
+  try {
+    var resp = await fetch('/api/admin/orders', { headers: await getAdminAuthHeaders(false) });
+    if (resp.ok) {
+      var data = await resp.json();
+      orders = Array.isArray(data.orders) ? data.orders.map(mapOrderRow) : [];
+      fromApi = true;
+    } else {
+      var errData = null;
+      try { errData = await resp.json(); } catch(e) {}
+      fetchError = (errData && errData.error) ? errData.error : ('HTTP ' + resp.status);
+    }
+  } catch(e) {
+    fetchError = e && e.message ? e.message : 'Network error';
+  }
+
+  if (!fromApi) {
+    if (!isProdAdminRuntime()) {
+      orders = sampleOrders;
+    } else {
+      return '<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-red)">D1 unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Live D1 orders could not be loaded.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError || 'Unauthorized') + '</p><p style="color:var(--c-muted);font-size:0.8125rem;margin-top:8px">Sign in with an admin Clerk role or use admin secret on non-production only.</p></div></div>';
+    }
+  }
+
+  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders'+(fromApi?' (D1)':' (sample)')+'</span></div><div class="card-body"><table><thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Product</th><th>Dimensions</th><th>Fabric</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+  orders.forEach(function(o){
+    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
+    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+escHtml(o.product)+'</td><td style="font-size:0.8125rem">'+o.dims+'</td><td>'+o.fabric+'</td><td><strong>'+o.total+'</strong></td>';
+    if (fromApi && o.dbId) {
+      h+='<td><select onchange="updateOrderStatus('+o.dbId+',this.value)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+
+        ['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+
+        '</select></td>';
+    } else {
+      h+='<td><span class="badge '+bc+'">'+o.status+'</span></td>';
+    }
+    h+='</tr>';
   });
   h+='</tbody></table></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Orders appear here when a customer submits via the Customer sandbox. Sandbox — no live data.</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">'+(fromApi?'Orders loaded from D1 database.':'Sandbox sample data (non-production fallback).')+'</p>';
   return h;
 }
 
-function rProducts(){
-  var h='<div class="editor-layout">';
-  h+='<div class="product-list">';
-  h+='<div class="product-list-header">'+sampleProducts.length+' Products</div>';
-  sampleProducts.forEach(function(p,i){
-    h+='<div class="product-list-item'+(i===selectedProductIndex?' active':'')+'" onclick="selectProduct('+i+')">';
-    h+='<div class="thumb">📷</div>';
-    h+='<div class="name">'+p.name+'</div>';
-    h+='<span class="status-dot '+(p.active?'active':'inactive')+'"></span>';
-    h+='</div>';
-  });
-  h+='<div style="padding:12px 18px"><button class="btn btn-outline btn-sm" style="width:100%" onclick="toast(\'Add new product (sandbox)\')">+ New Product</button></div>';
-  h+='</div>';
-  h+='<div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div>';
-  h+='</div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (10 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves via API.</p>';
-  return h;
+async function updateOrderStatus(orderId, newStatus) {
+  try {
+    var resp = await fetch('/api/admin/orders/'+orderId, {
+      method: 'PUT',
+      headers: await getAdminAuthHeaders(true),
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (resp.ok) {
+      document.getElementById('page-content').innerHTML = await rOrders();
+    } else {
+      var err = await resp.json();
+      toast('Failed: '+(err.error||resp.status));
+    }
+  } catch(e) { toast('Network error: '+e.message); }
 }
 
-function rSubscribers(){
-  var subs=[{email:'customer1@email.com',source:'footer',date:'2026-05-21'},{email:'customer2@email.com',source:'checkout',date:'2026-05-20'},{email:'customer3@email.com',source:'quote',date:'2026-05-19'}];
-  var h='<div class="card"><div class="card-header">Email Subscribers</div><div class="card-body">';
-  h+='<table><thead><tr><th>Email</th><th>Source</th><th>Date</th></tr></thead><tbody>';
-  subs.forEach(function(s){h+='<tr><td>'+s.email+'</td><td>'+s.source+'</td><td>'+s.date+'</td></tr>';});
-  h+='</tbody></table></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Sandbox — no live data.</p>';
-  return h;
+// ── Subscribers Tab ──
+async function renderSubscribers(){
+  try {
+    var resp = await fetch('/api/admin/subscribers', { headers: { 'X-Admin-Secret': ADMIN_SECRET } });
+    var data = await resp.json();
+    var subs = data.subscribers || [];
+    var h = '<div class="card"><div class="card-header"><span>Subscribers</span><span style="font-size:0.75rem;color:var(--c-muted)">'+subs.length+' subscribers</span></div><div class="card-body">';
+    if (subs.length === 0) {
+      h += '<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">📧</p><p>No subscribers yet.</p></div>';
+    } else {
+      h += '<table><thead><tr><th>ID</th><th>Email</th><th>Source</th><th>Language</th><th>Date</th><th></th></tr></thead><tbody>';
+      subs.forEach(function(s){
+        h += '<tr><td>'+s.id+'</td><td>'+s.email+'</td><td><span class="badge badge-production">'+s.source+'</span></td><td>'+s.language.toUpperCase()+'</td><td>'+s.created_at+'</td><td><button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#dc2626;padding:4px 10px;font-size:0.75rem" onclick="deleteSubscriber('+s.id+')">Delete</button></td></tr>';
+      });
+      h += '</tbody></table>';
+      h += '<div style="margin-top:16px"><a href="/api/admin/subscribers?format=csv" class="btn btn-outline btn-sm" style="text-decoration:none" target="_blank">📥 Export CSV</a></div>';
+    }
+    h += '</div></div>';
+    return h;
+  } catch(e) {
+    return '<div class="card"><div class="card-body"><p style="color:#dc2626">Failed to load subscribers: '+e.message+'</p></div></div>';
+  }
 }
 
-showPage('orders');
+async function deleteSubscriber(id){
+  if (!confirm('Delete subscriber #'+id+'? This cannot be undone.')) return;
+  var resp = await fetch('/api/admin/subscribers?id='+id, { method: 'DELETE', headers: { 'X-Admin-Secret': ADMIN_SECRET } });
+  if (resp.ok) {
+    document.getElementById('page-content').innerHTML = await renderSubscribers();
+  } else {
+    alert('Failed to delete subscriber');
+  }
+}
 
-// ── Marketing Tab ──
-var marketingSub = 'campaigns';
-var allProductSlugs=['standard-fitted-sheet','deep-pocket-fitted-sheet','marine-fitted-sheet','dorm-fitted-sheet','rv-truck-fitted-sheet','family-fitted-sheet','pet-owner-fitted-sheet','flat-sheet-standard','flat-sheet-extra-deep-pocket','3-sided-duvet','pet-owner-duvet-cover','duvet-cover-marine','duvet-cover-rv','duvet-cover-dorm','duvet-insert','pillowcase-envelope','pillowcase-zipper','pillowcase-sham','mattress-protector-standard','mattress-protector-family','mattress-protector-deep-pocket','pet-proof-mattress-protector','mattress-encasement-general','rv-truck-mattress-encasement','pillow-protector-general','bedbridge-connector','mattress-lift-helper'];
+// ── Marketing Tab (Campaigns + Offers) ──
+var marketingSub = 'campaigns'; // 'campaigns' or 'offers'
 
 function rMarketing(){
   var tabs='<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--c-border)">'+
     '<a href="#" onclick="marketingSub=\'campaigns\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='campaigns'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🏷 Run a Sale</a>'+
     '<a href="#" onclick="marketingSub=\'offers\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
   '</div>';
-  return tabs+(marketingSub==='offers'?rOffers():rCampaigns());
+  return tabs + (marketingSub==='offers' ? rOffers() : rCampaigns());
 }
 
 function rCampaigns(){
-  var campaigns=[];try{campaigns=JSON.parse(localStorage.getItem('mildmate_campaigns')||'[]');}catch(e){}
+  var campaigns=[];
+  try{ campaigns=JSON.parse(localStorage.getItem(MildMateCampaigns.STORAGE_KEY)||'[]'); }catch(e){}
   var now=Date.now();
+
   var h='<div class="card"><div class="card-header"><span>Active Sales</span><button class="btn btn-primary btn-sm" onclick="showNewCampaignForm()">+ New Sale</button></div><div class="card-body">';
-  if(campaigns.length===0){h+='<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🏷</p><p>No campaigns yet.</p></div>';}
-  else {
-    campaigns.forEach(function(c){
-      var active=now>=new Date(c.startDate).getTime()&&now<=new Date(c.endDate).getTime();
-      var tag=active?'<span class="badge badge-shipped">Live</span>':now<new Date(c.startDate).getTime()?'<span class="badge badge-production">Scheduled</span>':'<span class="badge badge-cancelled">Ended</span>';
-      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--c-border)"><div><strong>'+c.name+'</strong> <span style="color:var(--c-red);font-weight:600">('+c.discount+'% off)</span><br><span style="font-size:0.75rem;color:var(--c-muted)">'+c.productSlugs.join(', ')+'</span><br><span style="font-size:0.6875rem;color:var(--c-muted)">'+c.startDate+' → '+c.endDate+'</span></div><div style="text-align:right">'+tag+'<br><button class="btn btn-sm btn-outline" onclick="MildMateCampaigns.deleteCampaign(\''+c.id+'\');document.getElementById(\'page-content\').innerHTML=rMarketing()" style="color:var(--c-red);margin-top:4px">Delete</button></div></div>';
-    });
+
+  var activeCampaigns=campaigns.filter(function(c){return now>=new Date(c.startDate).getTime()&&now<=new Date(c.endDate).getTime();});
+  var upcoming=campaigns.filter(function(c){return now<new Date(c.startDate).getTime();});
+  var expired=campaigns.filter(function(c){return now>new Date(c.endDate).getTime();});
+
+  if(campaigns.length===0){
+    h+='<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🏷</p><p>No campaigns yet. Create your first sale.</p></div>';
+  } else {
+    if(activeCampaigns.length>0){
+      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Active ('+activeCampaigns.length+')</h4>';
+      h+=renderCampaignTable(activeCampaigns, 'active');
+    }
+    if(upcoming.length>0){
+      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Upcoming ('+upcoming.length+')</h4>';
+      h+=renderCampaignTable(upcoming, 'upcoming');
+    }
+    if(expired.length>0){
+      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Expired ('+expired.length+')</h4>';
+      h+=renderCampaignTable(expired, 'expired');
+    }
   }
-  h+='</div></div><p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Campaigns apply to product pages — strike-through price + countdown. Max 15 days.</p>';
+  h+='</div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Campaigns apply to product pages — strike-through original price + countdown timer. Valid 1-15 days.</p>';
+  return h;
+}
+
+function renderCampaignTable(items, type){
+  var h='<table><thead><tr><th>Name</th><th>Discount</th><th>Products</th><th>Period</th><th>Status</th><th></th></tr></thead><tbody>';
+  items.forEach(function(c){
+    var statusTag=type==='active'?'<span class="badge badge-shipped">Live</span>':type==='upcoming'?'<span class="badge badge-production">Scheduled</span>':'<span class="badge badge-cancelled">Ended</span>';
+    h+='<tr><td><strong>'+c.name+'</strong></td><td><strong style="color:var(--c-red)">'+c.discount+'% off</strong></td><td>'+c.productSlugs.join(', ')+'</td><td>'+c.startDate+' → '+c.endDate+'</td><td>'+statusTag+'</td><td><button class="btn btn-sm btn-outline" onclick="deleteCampaign(\''+c.id+'\')" style="color:var(--c-red)">Delete</button></td></tr>';
+  });
+  h+='</tbody></table>';
   return h;
 }
 
 function showNewCampaignForm(){
   var existing=document.getElementById('new-campaign-form');
-  if(existing){existing.remove();return;}
-  var div=document.createElement('div');div.id='new-campaign-form';div.style.cssText='margin-bottom:20px';
+  if(existing){ existing.style.display=existing.style.display==='none'?'block':'none'; return; }
+  var div=document.createElement('div');
+  div.id='new-campaign-form';
+  div.style.cssText='margin-bottom:20px';
   div.innerHTML='<div class="card"><div class="card-header">New Sale Campaign</div><div class="card-body">'+
-    '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" placeholder="e.g. Flash Sale"></div>'+
+    '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" placeholder="e.g. Songkran Flash Sale"></div>'+
     '<div class="form-group"><label>Discount % *</label><input type="number" id="camp-discount" value="15" min="1" max="90"></div></div>'+
-    '<div class="form-group"><label>Products *</label><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
-    '<label style="display:flex;align-items:center;gap:4px;font-size:0.8125rem;cursor:pointer"><input type="checkbox" id="camp-all" onchange="var c=this.checked;document.querySelectorAll(\'.camp-prod\').forEach(function(cb){cb.checked=c})"> All Products</label>'+
-    allProductSlugs.map(function(s){return'<label style="display:flex;align-items:center;gap:4px;font-size:0.8125rem;cursor:pointer"><input type="checkbox" class="camp-prod" value="'+s+'"> '+s.replace(/-/g,' ')+'</label>';}).join('')+'</div></div>'+
+    '<div class="form-group"><label>Products * <span style="font-weight:400;font-size:0.75rem;color:var(--c-muted)">— click to multi-select</span></label>'+
+    '<div style="display:flex;gap:6px;margin-bottom:6px"><button type="button" class="btn btn-sm btn-outline" onclick="toggleCampProds(true)">Select All</button><button type="button" class="btn btn-sm btn-outline" onclick="toggleCampProds(false)">Clear All</button></div>'+
+    '<div class="camp-checkboxes" style="max-height:280px;overflow-y:auto;border:1px solid var(--c-border);border-radius:var(--radius);background:#fff">'+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px">Sheets (9)</div>'+
+    allProductSlugs.slice(0,9).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Duvet Covers (6)</div>'+
+    allProductSlugs.slice(9,15).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Pillowcases (3)</div>'+
+    allProductSlugs.slice(15,18).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Protection (7)</div>'+
+    allProductSlugs.slice(18,25).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Accessories (2)</div>'+
+    allProductSlugs.slice(25,27).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
+    '</div></div>'+
     '<div class="form-row"><div class="form-group"><label>Start Date</label><input type="date" id="camp-start"></div>'+
     '<div class="form-group"><label>End Date (max 15 days)</label><input type="date" id="camp-end"></div></div>'+
-    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="createCampaign()">Create</button><button class="btn btn-outline" onclick="document.getElementById(\'new-campaign-form\').remove()">Cancel</button></div></div></div>';
-  document.getElementById('page-content').insertBefore(div, document.getElementById('page-content').firstChild);
-  document.getElementById('camp-start').value=new Date().toISOString().split('T')[0];
-  document.getElementById('camp-end').value=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Maximum 15 days. Product pages show strike-through price + countdown timer.</p>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="createCampaign()">Create Campaign</button>'+
+    '<button class="btn btn-outline" onclick="document.getElementById(\'new-campaign-form\').remove()">Cancel</button></div>'+
+  '</div></div>';
+  var content=document.getElementById('page-content');
+  content.insertBefore(div, content.firstChild);
+  var today=new Date().toISOString().split('T')[0];
+  var end=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
+  document.getElementById('camp-start').value=today;
+  document.getElementById('camp-end').value=end;
+}
+
+var allProductSlugs=[
+  'standard-fitted-sheet','deep-pocket-fitted-sheet','marine-fitted-sheet','dorm-fitted-sheet',
+  'rv-truck-fitted-sheet','family-fitted-sheet','pet-owner-fitted-sheet','flat-sheet-standard',
+  'flat-sheet-extra-deep-pocket','3-sided-duvet','pet-owner-duvet-cover','duvet-cover-marine',
+  'duvet-cover-rv','duvet-cover-dorm','duvet-insert','pillowcase-envelope','pillowcase-zipper',
+  'pillowcase-sham','mattress-protector-standard','mattress-protector-family',
+  'mattress-protector-deep-pocket','pet-proof-mattress-protector','mattress-encasement-general',
+  'rv-truck-mattress-encasement','pillow-protector-general','bedbridge-connector','mattress-lift-helper'
+];
+
+function toggleCampProds(checked) {
+  document.querySelectorAll('.camp-prod').forEach(function(cb) { cb.checked = checked; });
 }
 
 function createCampaign(){
@@ -290,67 +615,812 @@ function createCampaign(){
   var start=document.getElementById('camp-start').value;
   var end=document.getElementById('camp-end').value;
   if(!name){toast('Enter campaign name');return;}
-  if((new Date(end)-new Date(start))/86400000>15){toast('Max 15 days');return;}
-  var all=document.getElementById('camp-all').checked;
-  var slugs=all?['ALL']:Array.from(document.querySelectorAll('.camp-prod:checked')).map(function(c){return c.value});
-  if(slugs.length===0){toast('Select at least one product');return;}
+  var days=(new Date(end)-new Date(start))/86400000;
+  if(days<0){toast('End date must be after start date');return;}
+  if(days>15){toast('Maximum campaign duration is 15 days');return;}
+  var slugs = [];
+  document.querySelectorAll('.camp-prod:checked').forEach(function(cb) { slugs.push(cb.value); });
+  if (slugs.length === 0) { toast('Select at least one product'); return; }
   MildMateCampaigns.addCampaign({name:name,discount:discount,productSlugs:slugs,startDate:start,endDate:end});
-  toast('Created: '+name);document.getElementById('page-content').innerHTML=rMarketing();
+  toast('Campaign created: '+name+' ('+discount+'% off)');
+  document.getElementById('page-content').innerHTML=rMarketing();
 }
 
+function deleteCampaign(id){
+  MildMateCampaigns.deleteCampaign(id);
+  toast('Campaign deleted');
+  document.getElementById('page-content').innerHTML=rMarketing();
+}
+
+// ── Offers View ──
 function rOffers(){
   var offers=MildMateCampaigns.getOffers();
-  var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';
-  [{id:'favorite',icon:'❤️',label:'Favorited Item',exp:'60 days',def:15,desc:'When a shopper favorites an item, send a discount offer.'},
-   {id:'cart',icon:'🛒',label:'Abandoned Cart',exp:'60 days',def:20,desc:'When items left in cart without checkout, send a recovery offer.'},
-   {id:'thankyou',icon:'🎉',label:'Thank You (Repeat)',exp:'1 year',def:20,desc:'After order ships, send thank-you discount to encourage repeat purchase.'}].forEach(function(o){
-    h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--c-border)">'+
-      '<div><span style="font-size:1.25rem">'+o.icon+'</span> <strong>'+o.label+'</strong><br><span style="font-size:0.75rem;color:var(--c-muted)">'+o.desc+' Expires '+o.exp+'.</span></div>'+
-      '<div style="text-align:right"><input type="number" id="offer-'+o.id+'" value="'+offers[o.id]+'" min="5" max="50" style="width:64px;padding:6px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"><span style="font-size:0.875rem;color:var(--c-muted)">%</span></div></div>';
-  });
-  h+='<button class="btn btn-primary" style="margin-top:12px" onclick="saveOffers()">Save Offers</button></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Sandbox — simulated. Production: Resend email API.</p>';
+  var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">'+
+    '<p style="color:var(--c-muted);margin-bottom:20px">Configure discount percentages for 3 automated email offer types. These send automatically when triggered — no manual action needed.</p>';
+
+  h+=offerCard('favorite','❤️ Favorited Item','cart');
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-favorite" value="'+offers.favorite+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('When a shopper favorites an item, automatically send a discount offer. Expires 60 days after sent.')+
+  '</div></div>';
+
+  h+='<div class="card"><div class="card-body">';
+  h+=offerCard('cart','🛒 Abandoned Cart','cart');
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-cart" value="'+offers.cart+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('When a shopper adds to cart but doesn\'t check out, send a recovery discount. Expires 60 days after sent.')+
+  '</div></div>';
+
+  h+='<div class="card"><div class="card-body">';
+  h+=offerCard('thankyou','🎉 Thank You (Repeat Buyer)','thankyou');
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou" value="'+offers.thankyou+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('After an order ships, send a thank-you discount to encourage repeat purchase. Expires 1 year after sent.')+
+  '</div></div>';
+
+  h+='<button class="btn btn-primary" style="margin-top:16px" onclick="saveAllOffers()">Save Offers</button>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:12px">In production, offers are sent via Resend email to customers who trigger the event. Sandbox: simulated.</p>';
   return h;
 }
 
-function saveOffers(){
-  MildMateCampaigns.saveOffers({
+function offerCard(id,title,icon){
+  return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><span style="font-size:1.5rem">'+icon+'</span><span style="font-weight:600;font-size:0.9375rem">'+title+'</span></div>';
+}
+
+function offerDesc(text){
+  return '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:4px;padding-top:8px;border-top:1px solid var(--c-border)">'+text+'</p>';
+}
+
+function saveAllOffers(){
+  var offers={
     favorite:parseInt(document.getElementById('offer-favorite').value)||15,
     cart:parseInt(document.getElementById('offer-cart').value)||20,
     thankyou:parseInt(document.getElementById('offer-thankyou').value)||20
-  });
-  toast('Offers saved');
+  };
+  MildMateCampaigns.saveOffers(offers);
+  toast('Offers saved: Favorite '+offers.favorite+'% | Cart '+offers.cart+'% | Thank You '+offers.thankyou+'%');
 }
 
-// ── Customer data ──
+// ── Product Editor (inherited from Admin) ──
+var _productsCache = null;
+var _pendingUploads = {};
+var _pendingDeletes = [];
+var _pendingBlobs = {};
+function _isR2Url(u) { return typeof u === 'string' && u.indexOf('/r2/') === 0; }
+function _r2KeyFromUrl(u) { return _isR2Url(u) ? u.substring(4) : null; }
+function _pendingCount() { return Object.keys(_pendingUploads).length + _pendingDeletes.length; }
+function _clearPending() {
+  Object.keys(_pendingBlobs).forEach(function(k){ try { URL.revokeObjectURL(_pendingBlobs[k]); } catch(e){} });
+  _pendingUploads = {}; _pendingDeletes = []; _pendingBlobs = {};
+}
+
+async function getProducts() {
+  if (_productsCache) return _productsCache;
+  try {
+    var resp = await fetch("/api/admin/products", { headers: { "X-Admin-Secret": ADMIN_SECRET } });
+    if (resp.ok) {
+      var list = await resp.json();
+      // Normalize D1 fields for editor compatibility
+      _productsCache = list.map(function(r) {
+        return {
+          slug: r.slug,
+          name: r.title_en || r.slug,
+          active: !!r.is_active,
+          category: r.category || "",
+          fabric: r.fabric_options || "",
+          formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
+          titleEN: r.title_en || "",
+          titleTH: r.title_th || "",
+          descEN: r.description_en || "",
+          descTH: r.description_th || "",
+          images: r.images || "[]",
+          imagesRaw: r.images || "[]",
+          video: r.youtube_url || "",
+          youtube_url: r.youtube_url || "",
+          tags: (r.tags||"").split(",").filter(Boolean),
+          is_active: r.is_active,
+          title_en: r.title_en,
+          title_th: r.title_th,
+          description_en: r.description_en,
+          description_th: r.description_th,
+          image_url: r.image_url || "",
+          id: r.id
+        };
+      });
+      return _productsCache;
+    }
+  } catch(e) {}
+  // Fallback to public API (no auth, includes image_url)
+  try {
+    var pResp = await fetch("/api/products");
+    if (pResp.ok) {
+      var pJson = await pResp.json();
+      var pList = pJson.products || pJson || [];
+      _productsCache = pList.map(function(r) {
+        return {
+          slug: r.slug,
+          name: r.title_en || r.slug,
+          active: !!r.is_active,
+          category: r.category || "",
+          fabric: r.fabric_options || "",
+          formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
+          titleEN: r.title_en || "",
+          titleTH: r.title_th || "",
+          descEN: r.description_en || "",
+          descTH: r.description_th || "",
+          images: r.images || "[]",
+          imagesRaw: r.images || "[]",
+          video: r.youtube_url || "",
+          youtube_url: r.youtube_url || "",
+          tags: (r.tags||"").split(",").filter(Boolean),
+          is_active: r.is_active,
+          title_en: r.title_en,
+          title_th: r.title_th,
+          description_en: r.description_en,
+          description_th: r.description_th,
+          image_url: r.image_url || "",
+          id: r.id
+        };
+      });
+      return _productsCache;
+    }
+  } catch(e) {}
+  // Fallback: localStorage or seed 27-product catalog
+  var raw = localStorage.getItem("sandbox_products");
+  if (raw) { _productsCache = JSON.parse(raw); return _productsCache; }
+  var _seed = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"sheets","fabric":"","formulaType":"fitted","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets"]},{"slug":"deep-pocket-fitted-sheet","name":"Deep Pocket Fitted Sheet","active":true,"category":"sheets, deep-pocket","fabric":"","formulaType":"fitted","titleEN":"Deep Pocket Fitted Sheet","titleTH":"ผ้าปูความลึกพิเศษ","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","deep-pocket"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet","active":true,"category":"sheets, marine","fabric":"","formulaType":"vberth","titleEN":"Marine Fitted Sheet","titleTH":"ผ้าปูที่นอน Marine (V-Berth)","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","marine"]},{"slug":"dorm-fitted-sheet","name":"Dorm Fitted Sheet","active":true,"category":"sheets, boarding-dorm","fabric":"","formulaType":"fitted","titleEN":"Dorm Fitted Sheet","titleTH":"ผ้าปูหอพัก","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","boarding-dorm"]},{"slug":"rv-truck-fitted-sheet","name":"RV & Truck Fitted Sheet","active":true,"category":"sheets, rv-truck","fabric":"","formulaType":"fitted","titleEN":"RV & Truck Fitted Sheet","titleTH":"ผ้าปูที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","rv-truck"]},{"slug":"family-fitted-sheet","name":"Family Fitted Sheet","active":true,"category":"sheets, family","fabric":"","formulaType":"fitted","titleEN":"Family Fitted Sheet","titleTH":"ผ้าปูครอบครัว Co-Sleep","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","family"]},{"slug":"pet-owner-fitted-sheet","name":"Pet Owner Fitted Sheet","active":true,"category":"sheets, pets","fabric":"","formulaType":"fitted","titleEN":"Pet Owner Fitted Sheet","titleTH":"ผ้าปูที่นอนสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","pets"]},{"slug":"flat-sheet-standard","name":"Flat Sheet — Standard","active":true,"category":"sheets","fabric":"","formulaType":"flat","titleEN":"Flat Sheet — Standard","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets"]},{"slug":"flat-sheet-extra-deep-pocket","name":"Flat Sheet — Extra Deep Pocket","active":true,"category":"sheets, deep-pocket","fabric":"","formulaType":"flat","titleEN":"Flat Sheet — Extra Deep Pocket","titleTH":"ผ้าปูราบความลึกพิเศษ","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","deep-pocket"]},{"slug":"3-sided-duvet","name":"3-Sided Zipper Duvet Cover","active":true,"category":"duvet-covers, family","fabric":"","formulaType":"duvet","titleEN":"3-Sided Zipper Duvet Cover","titleTH":"ผ้าคลุมผ้าสวย 3 ด้านซิป","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","family"]},{"slug":"pet-owner-duvet-cover","name":"Pet Owner Duvet Cover","active":true,"category":"duvet-covers, pets","fabric":"","formulaType":"duvet","titleEN":"Pet Owner Duvet Cover","titleTH":"ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","pets"]},{"slug":"duvet-cover-marine","name":"Duvet Cover — Marine","active":true,"category":"duvet-covers, marine","fabric":"","formulaType":"duvet","titleEN":"Duvet Cover — Marine","titleTH":"ผ้าคลุมผ้าสวย Marine","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","marine"]},{"slug":"duvet-cover-rv","name":"Duvet Cover — RV","active":true,"category":"duvet-covers, rv-truck","fabric":"","formulaType":"duvet","titleEN":"Duvet Cover — RV","titleTH":"ผ้าคลุมผ้าสวย RV","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","rv-truck"]},{"slug":"duvet-cover-dorm","name":"Duvet Cover — Dorm","active":true,"category":"duvet-covers, boarding-dorm","fabric":"","formulaType":"duvet","titleEN":"Duvet Cover — Dorm","titleTH":"ผ้าคลุมผ้าสวยหอพัก","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","boarding-dorm"]},{"slug":"duvet-insert","name":"Duvet Insert","active":true,"category":"duvet-covers","fabric":"","formulaType":"fixed","titleEN":"Duvet Insert","titleTH":"ไส้ผ้านวม (Duvet Insert)","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers"]},{"slug":"pillowcase-envelope","name":"Envelope Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowcase","titleEN":"Envelope Pillowcase","titleTH":"ถุงหมอนแบบซอง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-zipper","name":"Zipper Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowcase","titleEN":"Zipper Pillowcase","titleTH":"ถุงหมอนซิป","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-sham","name":"Sham Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowcase","titleEN":"Sham Pillowcase","titleTH":"ถุงหมอน Sham","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"mattress-protector-standard","name":"Mattress Protector — Standard","active":true,"category":"protection","fabric":"","formulaType":"protector","titleEN":"Mattress Protector — Standard","titleTH":"ผ้าปูกันเปื้อนมาตรฐาน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection"]},{"slug":"mattress-protector-family","name":"Mattress Protector — Family","active":true,"category":"protection, family","fabric":"","formulaType":"protector","titleEN":"Mattress Protector — Family","titleTH":"ผ้าปูกันเปื้อนครอบครัว","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","family"]},{"slug":"mattress-protector-deep-pocket","name":"Mattress Protector — Deep Pocket","active":true,"category":"protection, deep-pocket","fabric":"","formulaType":"protector","titleEN":"Mattress Protector — Deep Pocket","titleTH":"ผ้าปูกันเปื้อนความลึกพิเศษ","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","deep-pocket"]},{"slug":"pet-proof-mattress-protector","name":"Pet-Proof Mattress Protector","active":true,"category":"protection, pets","fabric":"","formulaType":"protector","titleEN":"Pet-Proof Mattress Protector","titleTH":"ผ้าปูกันเปื้อนสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","pets"]},{"slug":"mattress-encasement-general","name":"6-Sided Mattress Encasement","active":true,"category":"protection, marine, rv-truck","fabric":"","formulaType":"encasement","titleEN":"6-Sided Mattress Encasement","titleTH":"ผ้าห่อที่นอน 6 ด้าน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","marine","rv-truck"]},{"slug":"rv-truck-mattress-encasement","name":"RV & Truck Mattress Encasement","active":true,"category":"protection, rv-truck","fabric":"","formulaType":"encasement","titleEN":"RV & Truck Mattress Encasement","titleTH":"ผ้าห่อที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","rv-truck"]},{"slug":"pillow-protector-general","name":"Pillow Protector","active":true,"category":"protection, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowprotector","titleEN":"Pillow Protector","titleTH":"ผ้ากันเปื้อนหมอน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"accessories, family","fabric":"","formulaType":"fixed","titleEN":"BedBridge Connector","titleTH":"BedBridge Connector","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["accessories","family"]},{"slug":"mattress-lift-helper","name":"Bed Lifter (38 cm)","active":true,"category":"accessories","fabric":"","formulaType":"fixed","titleEN":"Bed Lifter (38 cm)","titleTH":"ตัวยกที่นอนขนาดใหญ่ (38 ซม.)","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["accessories"]}];
+  _productsCache = _seed;
+  return _seed;
+}
+
+// ── Image Upload ──
+
+// ── Client-side image optimization ──
+function optimizeImage(file, maxDim) {
+  maxDim = maxDim || 1200;
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (w <= maxDim && h <= maxDim && file.type === 'image/jpeg') {
+        resolve(file); // already small JPEG, skip
+        return;
+      }
+      if (w > maxDim || h > maxDim) {
+        var ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(function(blob) {
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.8);
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+async function uploadImage(slotIndex) {
+  var input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/jpeg,image/png,image/webp,image/gif";
+  input.multiple = true;
+  input.onchange = function() { stageFiles(slotIndex, input.files); };
+  input.click();
+}
+
+function stageFile(slot, file) {
+  if (!file || !file.type || file.type.indexOf("image/") !== 0) return false;
+  if (slot < 0 || slot > 19) return false;
+  var ps = _productsCache;
+  var p = ps && ps[selectedProductIndex];
+  if (!p) return false;
+  var imgs = [];
+  try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
+  while (imgs.length < 20) imgs.push("");
+
+  var old = imgs[slot];
+  if (_isR2Url(old) && _pendingDeletes.indexOf(old) < 0) _pendingDeletes.push(old);
+  if (_pendingBlobs[slot]) { try { URL.revokeObjectURL(_pendingBlobs[slot]); } catch(e){} }
+
+  _pendingUploads[slot] = file;
+  var blobUrl = URL.createObjectURL(file);
+  _pendingBlobs[slot] = blobUrl;
+  imgs[slot] = blobUrl;
+  p.images = JSON.stringify(imgs);
+  return true;
+}
+
+function stageFiles(startSlot, files) {
+  if (!files || files.length === 0) return;
+  var staged = 0, skipped = 0;
+  for (var i = 0; i < files.length; i++) {
+    var slot = startSlot + i;
+    if (slot > 19) { skipped += (files.length - i); break; }
+    if (stageFile(slot, files[i])) staged++; else skipped++;
+  }
+  if (staged > 0) {
+    showProductEditor();
+    var msg = "Staged " + staged + " image(s). " + _pendingCount() + " pending — click Save to apply.";
+    if (skipped > 0) msg += " (" + skipped + " skipped)";
+    toast(msg);
+  } else if (skipped > 0) {
+    toast("Skipped " + skipped + " file(s) — only images supported (slot " + (startSlot + 1) + "-20).");
+  }
+}
+
+var _dragDropInited = false;
+function initDragDrop() {
+  if (_dragDropInited) return;
+  var panel = document.getElementById("editor-panel");
+  if (!panel) return;
+  _dragDropInited = true;
+  panel.addEventListener("dragover", function(e) {
+    var t = e.target.closest("[data-slot]");
+    if (!t) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    document.querySelectorAll("[data-slot].drop-target").forEach(function(x){ if (x !== t) x.classList.remove("drop-target"); });
+    t.classList.add("drop-target");
+  });
+  panel.addEventListener("dragleave", function(e) {
+    var t = e.target.closest("[data-slot]");
+    if (t && !t.contains(e.relatedTarget)) t.classList.remove("drop-target");
+  });
+  panel.addEventListener("drop", function(e) {
+    e.preventDefault();
+    document.querySelectorAll("[data-slot].drop-target").forEach(function(x){ x.classList.remove("drop-target"); });
+    var t = e.target.closest("[data-slot]");
+    if (!t) return;
+    var slot = parseInt(t.dataset.slot, 10);
+    if (isNaN(slot)) return;
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+    stageFiles(slot, e.dataTransfer.files);
+  });
+}
+
+// ── Save Product ──
+async function saveProduct() {
+  var isNew = selectedProductIndex < 0;
+  var ps = await getProducts();
+  var p = isNew ? _newProductDraft : ps[selectedProductIndex];
+  if (!p) return;
+
+  // Read Product Type and Niche
+  var category = (document.getElementById("ed-category") || {}).value || "sheets";
+  var niche = (document.getElementById("ed-niche") || {}).value || "";
+  var formulaType = (document.getElementById("ed-formula") || {}).value || (p.formulaType || "fitted");
+
+  // For new products: read slug
+  var slug = isNew ? ((document.getElementById("ed-slug") || {}).value || "").replace(/\s+/g,'-').toLowerCase() : p.slug;
+  if (isNew && !slug) { toast("Slug is required"); return; }
+
+  var slotKeys = Object.keys(_pendingUploads);
+  if (slotKeys.length > 0) {
+    var imgs = [];
+    try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
+    while (imgs.length < 20) imgs.push("");
+    for (var i = 0; i < slotKeys.length; i++) {
+      var slot = parseInt(slotKeys[i], 10);
+      var file = _pendingUploads[slot];
+      toast("Optimizing slot " + (slot + 1) + " (" + (i + 1) + "/" + slotKeys.length + ")...");
+      try {
+        var optimized = await optimizeImage(file);
+        if (optimized.size > 5 * 1024 * 1024) { toast("Slot " + (slot + 1) + " too large after optimization. Aborting save."); return; }
+        var form = new FormData();
+        form.append("file", optimized);
+        var upResp = await fetch("/api/admin/upload", {
+          method: "POST",
+          headers: { "X-Admin-Secret": ADMIN_SECRET },
+          body: form
+        });
+        var upData = await upResp.json();
+        if (!upData.success) { toast("Upload slot " + (slot + 1) + " failed: " + (upData.error || "unknown")); return; }
+        if (_pendingBlobs[slot]) { try { URL.revokeObjectURL(_pendingBlobs[slot]); } catch(e){} delete _pendingBlobs[slot]; }
+        imgs[slot] = upData.url;
+      } catch (e) {
+        toast("Upload slot " + (slot + 1) + " error: " + e.message);
+        return;
+      }
+    }
+    p.images = JSON.stringify(imgs);
+    _pendingUploads = {};
+  }
+
+  if (_pendingDeletes.length > 0) {
+    for (var d = 0; d < _pendingDeletes.length; d++) {
+      var dKey = _r2KeyFromUrl(_pendingDeletes[d]);
+      if (!dKey) continue;
+      try {
+        await fetch("/api/admin/upload?key=" + encodeURIComponent(dKey), {
+          method: "DELETE",
+          headers: { "X-Admin-Secret": ADMIN_SECRET }
+        });
+      } catch (e) {}
+    }
+    _pendingDeletes = [];
+  }
+
+  var titleEN = (document.getElementById("ed-title-en") || {}).value || "";
+  var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
+  var descEN = (document.getElementById("ed-desc-en") || {}).innerHTML || "";
+  var descTH = (document.getElementById("ed-desc-th") || {}).innerHTML || "";
+  var pImgs = []; try { pImgs = JSON.parse(p.images || "[]"); } catch(e) { pImgs = []; } var imageUrl = (pImgs[0] || p.image_url || "");
+  var youtube = (document.getElementById("ed-youtube") || {}).value || "";
+
+  var fabricCbs = document.querySelectorAll('.fab-opt:checked');
+  var fabricOpts = []; for (var fc = 0; fc < fabricCbs.length; fc++) fabricOpts.push(fabricCbs[fc].value);
+  var fabricOptions = fabricOpts.join(',');
+
+  // Build tags from niche + any existing non-niche tags
+  var nicheKeys = ['marine','family','pets','deep-pocket','boarding-dorm','rv-truck'];
+  var existingTags = (Array.isArray(p.tags) ? p.tags : (p.tags||'').split(',')).map(function(t){return (t||'').toString().trim();}).filter(function(t){return t && nicheKeys.indexOf(t)<0;});
+  if (niche) existingTags.push(niche);
+  var tags = existingTags.join(',');
+
+  var method = isNew ? "POST" : "PUT";
+  var apiPath = isNew ? "/api/admin/products" : "/api/admin/products/" + slug;
+
+  if (isNew) {
+    // Save to localStorage too
+    ps.push({slug:slug, name:titleEN, active:true, category:category, fabric:fabricOptions, formulaType:formulaType,
+      titleEN:titleEN, titleTH:titleTH, descEN:descEN, descTH:descTH, images:(pImgs.length||1), video:youtube, tags:existingTags});
+    saveProducts_toLocal(ps);
+  }
+
+  try {
+    var resp = await fetch(apiPath, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Secret": ADMIN_SECRET
+      },
+      body: JSON.stringify({
+        slug: isNew ? slug : undefined,
+        title_en: titleEN,
+        title_th: titleTH,
+        description_en: descEN,
+        description_th: descTH,
+        category: category,
+        fabric_options: fabricOptions,
+        image_url: imageUrl,
+        youtube_url: youtube,
+        images: p.images || "[]",
+        tags: tags
+      })
+    });
+    var text = await resp.text();
+    var data;
+    try { data = JSON.parse(text); } catch(e) { toast("Save failed: Invalid server response (" + resp.status + "). Is the Worker API deployed?"); return; }
+    if (data.success) {
+      toast(isNew ? "Product created: " + titleEN : "Product saved: " + p.name);
+      _productsCache = null;
+      if (isNew) {
+        _newProductDraft = { images: [], hero: '', youtube: '' };
+        selectedProductIndex = ps.length - 1;
+        document.getElementById("page-content").innerHTML = await rProducts();
+      }
+    } else {
+      toast("Save failed: " + (data.error || "Unknown"));
+    }
+  } catch(e) {
+    toast("Save failed: " + e.message);
+  }
+}
+function saveProducts_toLocal(ps) {
+  localStorage.setItem("sandbox_products", JSON.stringify(ps));
+  _productsCache = null;
+}
+
+function saveProducts(ps) { localStorage.setItem("sandbox_products", JSON.stringify(ps)); }
+
+var selectedProductIndex = -1;
+var _newProductDraft = { images: [], hero: '', youtube: '' };
+
+
+function selectProduct(idx){
+  if (_pendingCount() > 0) {
+    if (!confirm("You have " + _pendingCount() + " unsaved image changes. Discard and switch product?")) return;
+    _clearPending();
+  }
+  selectedProductIndex=idx;
+  var items=document.querySelectorAll('.product-list-item');
+  items.forEach(function(item,i){item.classList.toggle('active',i===idx);});
+  showProductEditor();
+}
+
+var FABRIC_LABELS = {breezeplus:'BreezePlus',cloudsoft:'CloudSoft',ecoluxe:'EcoLuxe',premacotton:'PremaCotton',tpu:'TPU Waterproof',other:'Other'};
+
+function buildFabricCheckboxes(p) {
+  var selected = (p.fabric || p.fabric_options || '').toLowerCase().split(/\s*,\s*/).filter(Boolean);
+  return Object.keys(FABRIC_LABELS).map(function(k) {
+    var checked = selected.indexOf(k) >= 0;
+    return '<label class="fabric-cb" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid '+(checked?'var(--c-blue)':'var(--c-border)')+';border-radius:4px;font-size:0.8125rem;cursor:pointer;background:'+(checked?'#eff6ff':'#fff')+'">'+
+      '<input type="checkbox" class="fab-opt" value="'+k+'"'+(checked?' checked':'')+' style="margin:0" onchange="this.closest(\'.fabric-cb\').style.borderColor=this.checked?\'var(--c-blue)\':\'var(--c-border)\';this.closest(\'.fabric-cb\').style.background=this.checked?\'#eff6ff\':\'#fff\'">'+
+      FABRIC_LABELS[k]+'</label>';
+  }).join('');
+}
+
+async function showProductEditor(){
+  var panel=document.getElementById('editor-panel');
+  if(!panel)return;
+  var isNew = selectedProductIndex < 0;
+  var ps = await getProducts();
+  var p = isNew ? _newProductDraft : ps[selectedProductIndex];
+  if (!p) { panel.innerHTML='<div class="editor-empty">Select a product from the list to edit</div>'; return; }
+
+  // Parse images
+  var imgs=[];
+  try{imgs=JSON.parse(p.images||'[]');}catch(e){imgs=[];}
+  while(imgs.length<20)imgs.push('');
+  var heroSrc = (imgs[0] || p.image_url || p.hero || '');
+  var hasYoutube=p.youtube_url||p.video||'';
+  var titleEN = p.title_en || p.titleEN || '';
+  var titleTH = p.title_th || p.titleTH || '';
+  var descEN = p.description_en || p.descEN || '';
+  var descTH = p.description_th || p.descTH || '';
+  var slug = p.slug || '';
+
+  // Product Type dropdown (category)
+  var catOptions = ['sheets','duvet-covers','pillowcases','protection','accessories'];
+  var catNames = {sheets:'Sheets','duvet-covers':'Duvet Covers',pillowcases:'Pillowcases',protection:'Protection',accessories:'Accessories'};
+  var curCat = (p.category || 'sheets').toLowerCase();
+  var catSelect = '<select id="ed-category" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
+    catOptions.map(function(c){ return '<option value="'+c+'"'+(curCat===c?' selected':'')+'>'+catNames[c]+'</option>'; }).join('')+'</select>';
+
+  // Niche Type dropdown (tag)
+  var nicheMap = {'marine':'Marine & Yacht','family':'Family & Co-Sleep','pets':'Pet Owner','deep-pocket':'Deep Pocket','boarding-dorm':'Boarding Dorm','rv-truck':'RV & Truck Cab'};
+  var curTags = Array.isArray(p.tags) ? p.tags : (p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
+  var curNiche = '';
+  Object.keys(nicheMap).forEach(function(k){ if (curTags.indexOf(k)>=0) curNiche = k; });
+  var nicheSelect = '<select id="ed-niche" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
+    '<option value="">— None —</option>'+
+    Object.keys(nicheMap).map(function(k){ return '<option value="'+k+'"'+(curNiche===k?' selected':'')+'>'+nicheMap[k]+'</option>'; }).join('')+'</select>';
+  var curFormula = (p.formulaType || 'fitted').toLowerCase();
+  var formulaSelect = '<select id="ed-formula" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
+    '<option value="fitted"'+(curFormula==='fitted'?' selected':'')+'>Fitted Sheet</option>'+
+    '<option value="flat"'+(curFormula==='flat'?' selected':'')+'>Flat Sheet</option>'+
+    '<option value="duvet"'+(curFormula==='duvet'?' selected':'')+'>Duvet Cover</option>'+
+    '<option value="pillowcase"'+(curFormula==='pillowcase'?' selected':'')+'>Pillowcase</option>'+
+    '<option value="pillow_protector"'+(curFormula==='pillow_protector'?' selected':'')+'>Pillow Protector</option>'+
+    '<option value="encasement"'+(curFormula==='encasement'?' selected':'')+'>Encasement (TPU)</option>'+
+    '<option value="protector"'+(curFormula==='protector'?' selected':'')+'>Mattress Protector</option>'+
+    '<option value="vberth"'+(curFormula==='vberth'?' selected':'')+'>V-Berth (Marine)</option>'+
+    '<option value="fixed"'+(curFormula==='fixed'?' selected':'')+'>Fixed Price</option>'+
+    '</select>';
+  var formulaHtml = isNew ? '<div class="form-row"><div class="form-group"><label>Formula Type</label>'+formulaSelect+
+    '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Pricing formula mapping is hardcoded in configurator and pricing worker</p></div><div class="form-group"></div></div>' : '';
+
+  var headerTitle = isNew ? 'Create New Product' : 'Edit: '+(p.title_en||p.titleEN||p.slug);
+  var badgeHtml = isNew ? '' : (p.is_active?'<span class="badge badge-shipped">Active</span>':'<span class="badge badge-cancelled">Inactive</span>');
+  var slugHtml = isNew ? '<div class="form-group"><label>URL Slug <span style="color:#dc2626">*</span></label><input id="ed-slug" value="'+slug+'" placeholder="e.g. my-new-product" style="width:100%"></div>' : '';
+  var configWarning = isNew ? '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px;font-size:0.8rem;color:#92400e;margin:12px 0"><strong>Pricing Configurator Notice:</strong> After creating this product, the pricing formula must be <strong>manually hardcoded</strong> in <code>public/js/product-configurator.js</code> and <code>workers/api/pricing.ts</code>. The auto-detection logic maps product slugs to formulas — a new product will not price until those files are updated.</div>' : '';
+  var saveBtn = isNew ? '<button class="btn btn-primary" onclick="saveProduct()">Create Product</button><button class="btn btn-outline" onclick="cancelNewProduct()">Cancel</button>' : '<button class="btn btn-primary" onclick="saveProduct()">Save</button><button class="btn btn-outline" onclick="location.href=\'/product/'+slug+'/\'">Preview</button>';
+
+  panel.innerHTML=
+    '<div class="card-header" style="border-radius:var(--radius) var(--radius) 0 0"><span>'+headerTitle+'</span><span style="display:flex;gap:6px">'+badgeHtml+'</span></div>'+
+    '<div class="card-body">'+
+      slugHtml+
+      configWarning+
+      '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+titleEN+'"></div>'+
+      '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+titleTH+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Product Type</label>'+catSelect+
+        '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Determines which category page this product appears on</p></div>'+
+      '<div class="form-group"><label>Niche Type</label>'+nicheSelect+
+        '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Links this product to a use-case SEO landing page</p></div></div>'+
+      formulaHtml+
+      '<div class="form-row"><div class="form-group"><label>Description (EN)</label><div class="rtf-toolbar" data-for="ed-desc-en"><button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button><button type="button" data-cmd="italic" title="Italic"><em>I</em></button><button type="button" data-cmd="bullet" title="Bullet List">•</button></div><div id="ed-desc-en" contenteditable="true" class="rtf-editor">'+descEN+'</div></div>'+ // merged Description EN into form-row
+      '<div class="form-group"><label>Description (TH)</label><div class="rtf-toolbar" data-for="ed-desc-th"><button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button><button type="button" data-cmd="italic" title="Italic"><em>I</em></button><button type="button" data-cmd="bullet" title="Bullet List">•</button></div><div id="ed-desc-th" contenteditable="true" class="rtf-editor">'+descTH+'</div></div>'+ // merged Description TH
+      '<div class="form-group"><label>Fabric Options</label><div class="fabric-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+buildFabricCheckboxes(p)+'</div></div>'+
+      '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start"><div data-slot="0" style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background:var(--c-surface);background-size:cover;background-position:center;cursor:pointer;position:relative;flex-shrink:0;'+(heroSrc?'background-image:url(\''+heroSrc+'\')':'display:flex;align-items:center;justify-content:center')+'" onclick="uploadImage(0)">'+(heroSrc?'<div style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="event.stopPropagation();removeImageSlot(0)">✕</div>':'<span style="font-size:2rem;color:var(--c-muted)">+</span>')+'</div><div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 10px">Main image for product cards, category pages, and hero banner. <strong>Slot 1 of 20.</strong></p><div style="display:flex;gap:8px"><button type="button" class="btn btn-sm btn-primary" onclick="uploadImage(0)">'+(heroSrc?'Change Image':'Upload Image')+'</button>'+(heroSrc?'<button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red);border-color:var(--c-red)">Remove</button>':'')+'</div></div></div></div>'+
+      '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
+        (hasYoutube?'<p style="margin-top:8px;font-size:0.75rem;color:var(--c-muted)"><a href="'+hasYoutube+'" target="_blank" style="color:var(--c-blue)">'+hasYoutube+'</a></p>':'')+'</div>'+
+      '<div class="form-group"><label>Gallery Images (slots 2-20)</label><div class="image-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">'+
+        imgs.slice(1).map(function(url,i){var si=i+1;return'<div data-slot="'+si+'" class="image-slot'+(url?' has-image':'')+'" style="'+(url?'background-image:url(\''+url+'\');background-size:cover;background-position:center':'')+'" onclick="uploadImage('+si+')" title="Slot '+(si+1)+'">'+(url?'<div class="remove-btn" onclick="event.stopPropagation();removeImageSlot('+si+')">&times;</div>':'<span style="font-size:1.5rem">+</span>')+'</div>';}).join('')+
+        '</div>'+
+        '<small style="color:var(--c-muted);margin-top:6px;display:block">Click or drag &amp; drop files (JPEG/PNG/WebP, max 5MB each). Drop on slot N to start filling from N.</small></div>'+
+      '<div style="display:flex;gap:8px;margin-top:16px">'+saveBtn+'</div></div>';
+
+  setTimeout(function(){
+    var f = document.getElementById('ed-title-en'); if(f) f.value = titleEN;
+    f = document.getElementById('ed-title-th'); if(f) f.value = titleTH;
+    f = document.getElementById('ed-desc-en'); if(f) f.innerHTML = descEN;
+    f = document.getElementById('ed-desc-th'); if(f) f.innerHTML = descTH;
+    f = document.getElementById('ed-youtube'); if(f) f.value = hasYoutube;
+    if (isNew) { f = document.getElementById('ed-slug'); if(f) f.value = slug; }
+    if (isNew) { f = document.getElementById('ed-formula'); if(f) f.value = curFormula; }
+    initDragDrop();
+  }, 0);
+}
+
+function cancelNewProduct(){
+  _newProductDraft = { images: [], hero: '', youtube: '' };
+  _pendingUploads = {};
+  _pendingDeletes = [];
+  _pendingBlobs = {};
+  selectedProductIndex = -1;
+  document.getElementById('editor-panel').innerHTML = '<div class="editor-empty">Select a product from the list to edit</div>';
+}
+
+async function startNewProduct(){
+  _newProductDraft = { images: '[]', hero: '', youtube: '', category: 'sheets', tags: '', fabric_options: '', formulaType: 'fitted' };
+  _pendingUploads = {};
+  _pendingDeletes = [];
+  _pendingBlobs = {};
+  selectedProductIndex = -1;
+  await showPage('products');
+  showProductEditor();
+}
+
+async function removeImageSlot(idx) {
+  var ps = _productsCache;
+  var p = ps && ps[selectedProductIndex];
+  if (!p) return;
+  var imgs = [];
+  try { imgs = JSON.parse(p.images || '[]'); } catch(e) { imgs = []; }
+
+  var url = imgs[idx];
+  if (_isR2Url(url) && _pendingDeletes.indexOf(url) < 0) _pendingDeletes.push(url);
+  if (_pendingBlobs[idx]) { try { URL.revokeObjectURL(_pendingBlobs[idx]); } catch(e){} delete _pendingBlobs[idx]; }
+  delete _pendingUploads[idx];
+
+  imgs[idx] = '';
+  p.images = JSON.stringify(imgs);
+  showProductEditor();
+  toast(_pendingCount() + " pending — click Save to apply.");
+}
+
+async function rProducts(){
+  var ps = await getProducts();
+  var searchTerm = (document.getElementById('product-search')||{}).value||'';
+  var catFilter = (document.getElementById('product-cat-filter')||{}).value||'';
+  var pageInput = document.getElementById('product-page');
+  var currentPage = pageInput ? parseInt(pageInput.value)||1 : 1;
+
+  var filtered = ps.map(function(p,i){ p._origIdx = i; return p; });
+  if (searchTerm) {
+    var q = searchTerm.toLowerCase();
+    filtered = filtered.filter(function(p){ return p.name.toLowerCase().indexOf(q)>=0 || p.slug.toLowerCase().indexOf(q)>=0; });
+  }
+  if (catFilter) {
+    filtered = filtered.filter(function(p){ return (p.category||'').indexOf(catFilter)>=0; });
+  }
+
+  var PER_PAGE = 20;
+  var totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  if (currentPage < 1 || currentPage > totalPages) currentPage = 1;
+  var start = (currentPage - 1) * PER_PAGE;
+  var paged = filtered.slice(start, start + PER_PAGE);
+
+  var cats = ['sheets','duvet-covers','pillowcases','protection','accessories'];
+  var catNames = {sheets:'Sheets','duvet-covers':'Duvet Covers',pillowcases:'Pillowcases',protection:'Protection',accessories:'Accessories'};
+
+  var h='<div class="editor-layout"><div class="product-list">'+
+    '<div class="product-list-header">'+filtered.length+' of '+ps.length+' Products</div>'+
+    '<div style="padding:8px 12px;display:flex;flex-direction:column;gap:8px">'+
+      '<input id="product-search" placeholder="Search name or slug..." value="'+searchTerm+'" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:6px;font-size:0.8125rem" oninput="rProductsDraw()">'+
+      '<select id="product-cat-filter" style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:6px;font-size:0.8125rem" onchange="rProductsDraw()">'+
+        '<option value="">All Categories</option>'+
+        cats.map(function(c){ return '<option value="'+c+'"'+(catFilter===c?' selected':'')+'>'+catNames[c]+'</option>'; }).join('')+'</select>'+
+    '</div>';
+
+  if (paged.length === 0) {
+    h+='<div style="padding:24px 18px;text-align:center;color:var(--c-muted);font-size:0.8125rem">No products match</div>';
+  } else {
+    paged.forEach(function(p){
+      h+='<div class="product-list-item'+(p._origIdx===selectedProductIndex?' active':'')+'" onclick="selectProduct('+p._origIdx+')"><div class="thumb">📷</div><div class="name">'+p.name+'</div><span class="status-dot '+(p.active?'active':'inactive')+'"></span></div>';
+    });
+  }
+
+  // Pagination
+  h+='<div class="product-list-pagination"><span>Page '+currentPage+' of '+totalPages+'</span><div>';
+
+  var pagesToShow = [];
+  if (totalPages <= 7) {
+    for (var pi = 1; pi <= totalPages; pi++) pagesToShow.push(pi);
+  } else {
+    pagesToShow.push(1);
+    if (currentPage > 3) pagesToShow.push('...');
+    for (var pj = Math.max(2, currentPage-1); pj <= Math.min(totalPages-1, currentPage+1); pj++) pagesToShow.push(pj);
+    if (currentPage < totalPages - 2) pagesToShow.push('...');
+    pagesToShow.push(totalPages);
+  }
+
+  pagesToShow.forEach(function(pn){
+    if (pn === '...') {
+      h+='<button class="page-btn" disabled>…</button>';
+    } else {
+      h+='<button class="page-btn'+(pn===currentPage?' current':'')+'" onclick="rProductsGo('+pn+')">'+pn+'</button>';
+    }
+  });
+
+  h+='</div><button class="page-btn" onclick="rProductsGo('+(currentPage<totalPages?currentPage+1:totalPages)+')"'+(currentPage>=totalPages?' disabled':'')+'>»</button></div>';
+
+  h+='</div><div class="editor-panel" id="editor-panel"><div class="editor-empty">Select a product from the list to edit</div></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Product editor — titles, descriptions, images (20 slots), video, tags. <strong>Price is formula-driven — cannot edit here.</strong> Saves via API.</p>';
+  return h;
+}
+
+function rProductsGo(n) {
+  var el = document.getElementById('product-page');
+  if (!el) { el = document.createElement('input'); el.type = 'hidden'; el.id = 'product-page'; document.body.appendChild(el); }
+  el.value = n;
+  rProductsDraw();
+}
+
+async function rProductsDraw(){ document.getElementById('page-content').innerHTML = await rProducts(); }
+
+
+
+// ── Customers ──
 var sampleCustomers = [
   {name:'John Doe',email:'john@email.com',phone:'+1 555-0101',country:'United States',address:'123 Main St, Austin TX 78701',
     orders:[{id:'#001',date:'2026-05-21',product:'Standard Fitted Sheet',dims:'153×203×30 cm',total:'฿1,250',status:'pending'},
             {id:'#007',date:'2026-04-10',product:'Envelope Pillowcase',dims:'50×75 cm',total:'$18',status:'shipped'}]},
   {name:'Sarah Chen',email:'sarah@email.com',phone:'+66 812 345 678',country:'Thailand',address:'123 Sukhumvit Rd, Bangkok 10110',
-    orders:[{id:'#002',date:'2026-05-20',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',total:'$94',status:'production'}]},
+    orders:[{id:'#002',date:'2026-05-20',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',total:'$94',status:'production'},
+            {id:'#006',date:'2026-03-15',product:'Duvet Cover — Marine',dims:'200×200 cm',total:'฿1,800',status:'shipped'}]},
   {name:'Mike Ross',email:'mike@email.com',phone:'+44 7911 123456',country:'United Kingdom',address:'45 Oxford St, London W1D 2DZ',
     orders:[{id:'#003',date:'2026-05-19',product:'Family Fitted Sheet',dims:'250×220×35 cm',total:'฿2,100',status:'shipped'}]}
 ];
 
-var selectedCust = -1;
+var selectedCustomerIdx = -1;
 
-function rCustomers(){
-  if(selectedCust>=0){return rCustDetail(selectedCust);}
-  var h='<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">'+sampleCustomers.length+'</div></div><div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">'+sampleCustomers.reduce(function(s,c){return s+c.orders.length;},0)+'</div></div></div>'+
-    '<div class="card"><div class="card-header">Customers</div><div class="card-body"><table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Orders</th><th></th></tr></thead><tbody>';
-  sampleCustomers.forEach(function(c,i){
-    h+='<tr style="cursor:pointer" onclick="selectedCust='+i+';rCustDraw()"><td><strong>'+c.name+'</strong></td><td>'+c.email+'</td><td>'+c.country+'</td><td>'+c.orders.length+'</td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();selectedCust='+i+';rCustDraw()">View →</button></td></tr>';
+var formulaParamKeys = {
+  fitted: ["waste_factor_fabric","margin_rate_standard","accessories_rate","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  flat: ["waste_factor_fabric","flat_sewing_cost","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  duvet: ["waste_factor_fabric","margin_rate_duvet","packing_cost","delivery_cost","zipper_rate","ops_rate","mkt_rate"],
+  pillowcase: ["waste_factor_pillowcase","margin_rate_pillow","pillow_sewing_cost","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  pillow_protector: ["waste_factor_pillowcase","margin_rate_pillow_protector","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  encasement: ["waste_factor_fabric","margin_rate_encasement","encasement_mkt_rate","encasement_sewing_cost","packing_cost","delivery_cost","zipper_rate","ops_rate"],
+  protector: ["margin_rate_protector_standard","protector_packing","protector_delivery","ops_rate","mkt_rate"],
+  vberth: ["waste_factor_fabric","margin_rate_marine","accessories_rate","packing_cost","delivery_cost","ops_rate","mkt_rate"],
+  fixed: ["packing_cost","delivery_cost","ops_rate","mkt_rate"]
+};
+
+// Append new product slug to matching param pill badges
+function syncBadgesForProduct(slug, fType, name) {
+  var keys = formulaParamKeys[fType] || [];
+  var params = getParams();
+  var changed = false;
+  var tag = name.split(" ")[0]; // first word as short badge
+  params.forEach(function(p) {
+    if (keys.indexOf(p.key) !== -1) {
+      var existing = (p.products || "").split(",").map(function(s){ return s.trim(); });
+      if (existing.indexOf(tag) === -1) {
+        p.products = (p.products ? p.products + "," : "") + tag;
+        changed = true;
+      }
+    }
   });
-  h+='</tbody></table></div></div><p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Customer data — name, address, order history, order status. Sandbox — no live data.</p>';
+  if (changed) saveParams(params);
+}
+var customersData = [];
+var customersFromApi = false;
+
+async function rCustomers(){
+  if (selectedCustomerIdx >= 0) { return customersFromApi ? rCustomerDetailLive(selectedCustomerIdx) : rCustomerDetail(selectedCustomerIdx); }
+
+  customersData = [];
+  customersFromApi = false;
+  var fetchError = '';
+
+  try {
+    var resp = await fetch('/api/admin/customers', { headers: await getAdminAuthHeaders(false) });
+    if (resp.ok) {
+      var data = await resp.json();
+      if (Array.isArray(data.customers) && data.customers.length > 0) {
+        customersData = data.customers.map(function(c, i) {
+          var totalStr = '';
+          if (c.total_thb > 0) { totalStr = (totalStr ? totalStr + ' / ' : '') + '\u0E3F' + Number(c.total_thb).toLocaleString(); }
+          if (c.total_usd > 0) { totalStr = (totalStr ? totalStr + ' / ' : '') + '$' + Number(c.total_usd); }
+          return {
+            _idx: i,
+            name: c.customer_name || (c.email ? c.email.split('@')[0] : '\u2014'),
+            email: c.email || '\u2014',
+            phone: c.phone || '\u2014',
+            country: '\u2014',
+            address: c.shipping_address || '\u2014',
+            orderCount: c.order_count,
+            totalThb: c.total_thb,
+            totalUsd: c.total_usd,
+            totalStr: totalStr || '\u2014',
+            lastCurrency: c.last_currency,
+            lastOrder: c.last_order,
+            firstOrder: c.first_order
+          };
+        });
+        customersFromApi = true;
+      }
+    } else {
+      var errData = null;
+      try { errData = await resp.json(); } catch(e) {}
+      fetchError = (errData && errData.error) ? errData.error : ('HTTP ' + resp.status);
+    }
+  } catch(e) {
+    fetchError = e && e.message ? e.message : 'Network error';
+  }
+
+  if (!customersFromApi) {
+    if (!isProdAdminRuntime()) {
+      customersData = sampleCustomers;
+    } else {
+      return '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-red)">D1 unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Live D1 customers could not be loaded.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError || 'Unauthorized') + '</p><p style="color:var(--c-muted);font-size:0.8125rem;margin-top:8px">Sign in with an admin Clerk role or use admin secret on non-production only.</p></div></div>';
+    }
+  }
+
+  var totalOrders = customersFromApi ? customersData.reduce(function(s,c){return s + c.orderCount;}, 0) : customersData.reduce(function(s,c){return s + (c.orders ? c.orders.length : 0);}, 0);
+
+  var h='<div class="stats-grid"><div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">'+customersData.length+'</div><div class="stat-sub">'+(customersFromApi ? 'Loaded from D1' : 'Sandbox sample')+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">'+totalOrders+'</div><div class="stat-sub">Across all customers</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Countries</div><div class="stat-value">\u2014</div><div class="stat-sub">'+(customersFromApi ? 'D1 (no country field)' : 'International reach')+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value">\u2014</div><div class="stat-sub">'+(customersFromApi ? 'Per-customer totals' : 'Estimated USD')+'</div></div></div>'+
+    '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-muted)">' + (customersFromApi ? 'D1' : 'Sample') + ' \u2014 Click row to see detail</span></div><div class="card-body"><table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Orders</th><th></th></tr></thead><tbody>';
+
+  customersData.forEach(function(c, i){
+    var orderCount = customersFromApi ? c.orderCount : (c.orders ? c.orders.length : 0);
+    h+='<tr style="cursor:pointer" onclick="selectedCustomerIdx='+i+';rCustomersDraw()"><td><strong>'+escHtml(c.name||'\u2014')+'</strong></td><td>'+escHtml(c.email||'\u2014')+'</td><td>'+escHtml(c.country||'\u2014')+'</td><td>'+orderCount+'</td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();selectedCustomerIdx='+i+';rCustomersDraw()">View \u2192</button></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">'+(customersFromApi ? 'Customers loaded from D1 orders table (grouped by email).' : 'Customer view \u2014 name, address, order history, order status. Sandbox \u2014 no live data.')+'</p>';
   return h;
 }
 
-function rCustDraw(){document.getElementById('page-content').innerHTML=rCustomers();}
+async function rCustomerDetailLive(idx) {
+  var c = customersData[idx];
+  if (!c) return '<p>Customer not found.</p>';
+  var h = '<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCustomerIdx=-1;rCustomersDraw()">\u2190 Back to Customers</button>'+
+    '<div class="card"><div class="card-header">'+escHtml(c.name||c.email)+'</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Name</label><input value="'+escHtml(c.name||'\u2014')+'" readonly style="background:var(--c-surface)"></div>'+
+    '<div class="form-group"><label>Email</label><input value="'+escHtml(c.email||'\u2014')+'" readonly style="background:var(--c-surface)"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Phone</label><input value="'+escHtml(c.phone||'\u2014')+'" readonly style="background:var(--c-surface)"></div>'+
+    '<div class="form-group"><label>First Order</label><input value="'+(c.firstOrder||'\u2014').substring(0,10)+'" readonly style="background:var(--c-surface)"></div></div>'+
+    '<div class="form-group"><label>Address</label><textarea rows="2" readonly style="background:var(--c-surface)">'+escHtml(c.address||'\u2014')+'</textarea></div></div></div>';
 
-function rCustDetail(idx){
+  var fetchError = '';
+  var orders = [];
+  try {
+    var resp = await fetch('/api/admin/customers?email='+encodeURIComponent(c.email), { headers: await getAdminAuthHeaders(false) });
+    if (resp.ok) {
+      var data = await resp.json();
+      orders = Array.isArray(data.orders) ? data.orders : [];
+    } else {
+      var errData = null;
+      try { errData = await resp.json(); } catch(e) {}
+      fetchError = (errData && errData.error) ? errData.error : ('HTTP ' + resp.status);
+    }
+  } catch(e) {
+    fetchError = e && e.message ? e.message : 'Network error';
+  }
+
+  h+='<div class="card" style="margin-top:16px"><div class="card-header">Order History ('+c.orderCount+' orders'+(orders.length ? ', '+orders.length+' shown' : '')+')</div><div class="card-body">';
+  if (fetchError) {
+    h += '<p style="color:var(--c-red)">Could not load orders: '+escHtml(fetchError)+'</p>';
+  } else if (orders.length===0) {
+    h += '<p style="color:var(--c-muted);text-align:center;padding:20px">No orders to display.</p>';
+  } else {
+    h += '<table><thead><tr><th>ID</th><th>Date</th><th>Product</th><th>Dimensions</th><th>Total</th><th>Status</th></tr></thead><tbody>';
+    orders.forEach(function(o){
+      var dims = [];
+      if (o.width_cm && o.length_cm) { dims.push(o.width_cm+'\u00D7'+o.length_cm); if(o.depth_cm) dims.push(o.depth_cm+' cm'); }
+      var price = o.price_thb ? '\u0E3F'+Number(o.price_thb).toLocaleString() : (o.price_usd ? '$'+Number(o.price_usd) : '\u2014');
+      var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
+      h+='<tr><td>#ORD-'+o.id+'</td><td>'+(o.created_at||'').substring(0,10)+'</td><td>'+escHtml(o.product_title_en||o.product_slug||'\u2014')+'</td><td style="font-size:0.8125rem">'+(dims.join(' \u00D7 ')||'\u2014')+'</td><td><strong>'+price+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function rCustomersDraw(){document.getElementById('page-content').innerHTML=rCustomers();}
+
+function rCustomerDetail(idx){
   var c=sampleCustomers[idx];
-  var h='<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCust=-1;rCustDraw()">← Back to Customers</button>'+
+  var h='<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCustomerIdx=-1;rCustomersDraw()">← Back to Customers</button>'+
     '<div class="card"><div class="card-header">'+c.name+'</div><div class="card-body">'+
     '<div class="form-row"><div class="form-group"><label>Name</label><input value="'+c.name+'" readonly style="background:var(--c-surface)"></div>'+
     '<div class="form-group"><label>Email</label><input value="'+c.email+'" readonly style="background:var(--c-surface)"></div></div>'+
@@ -365,6 +1435,131 @@ function rCustDetail(idx){
   h+='</tbody></table></div></div>';
   return h;
 }
+
+// ── Admin Accounts ──
+var ACCOUNTS_KEY = 'mildmate_admin_accounts';
+
+function getAdminAccounts(){
+  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveAdminAccounts(list){
+  try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(list)); } catch(e) {}
+}
+
+function rAccounts(){
+  var accounts = getAdminAccounts();
+  if(accounts.length===0){
+    // seed defaults
+    accounts = [
+      {email:'super@mildmate.com',password:'admin123',role:'Super Admin',lastActive:'—',createdAt:'2026-05-21'},
+      {email:'admin@mildmate.com',password:'admin456',role:'Admin',lastActive:'—',createdAt:'2026-05-22'}
+    ];
+    saveAdminAccounts(accounts);
+  }
+
+  var h='<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat-card"><div class="stat-label">Total Admins</div><div class="stat-value">'+accounts.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Super Admins</div><div class="stat-value">'+accounts.filter(function(a){return a.role==='Super Admin';}).length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Regular Admins</div><div class="stat-value">'+accounts.filter(function(a){return a.role==='Admin';}).length+'</div></div></div>'+
+    '<div class="card"><div class="card-header"><span>Admin Accounts</span><button class="btn btn-primary btn-sm" onclick="showAddAccountForm()">+ Add Admin</button></div><div class="card-body"><table><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Created</th><th>Last Active</th><th></th></tr></thead><tbody>';
+
+  accounts.forEach(function(a,i){
+    h+='<tr><td><strong>'+a.email+'</strong></td><td><span class="badge '+(a.role==='Super Admin'?'badge-margin':'badge-sewing')+'">'+a.role+'</span></td><td style="font-family:monospace;font-size:0.75rem">••••••••</td><td>'+a.createdAt+'</td><td>'+a.lastActive+'</td>'+
+      '<td><button class="btn btn-sm btn-outline" onclick="deleteAccount('+i+')" style="color:var(--c-red)">'+(accounts.length<=1?'':'Delete')+'</button></td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Manage admin accounts. Super Admin can add/delete. In production, authentication is via Cloudflare Access (Google login). Sandbox — localStorage.</p>';
+  return h;
+}
+
+function showAddAccountForm(){
+  var existing=document.getElementById('add-account-form');
+  if(existing){existing.remove();return;}
+  var div=document.createElement('div');
+  div.id='add-account-form';
+  div.style.cssText='margin-bottom:20px';
+  div.innerHTML='<div class="card"><div class="card-header">Add Admin Account</div><div class="card-body">'+
+    '<div class="form-row"><div class="form-group"><label>Email *</label><input id="acct-email" type="email" placeholder="admin@mildmate.com"></div>'+
+    '<div class="form-group"><label>Role</label><select id="acct-role"><option>Admin</option><option>Super Admin</option></select></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Password *</label><input id="acct-password" type="password" placeholder="Min 6 characters"></div>'+
+    '<div class="form-group"><label>Confirm Password *</label><input id="acct-confirm" type="password" placeholder="Re-enter password"></div></div>'+
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Password stored locally for sandbox only. Production uses Cloudflare Access Gmail OAuth — no passwords stored.</p>'+
+    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="addAccount()">Add Admin</button>'+
+    '<button class="btn btn-outline" onclick="document.getElementById(\'add-account-form\').remove()">Cancel</button></div></div></div>';
+  var content=document.getElementById('page-content');
+  content.insertBefore(div, content.firstChild);
+}
+
+function addAccount(){
+  var email=document.getElementById('acct-email').value.trim();
+  var role=document.getElementById('acct-role').value;
+  var pw=document.getElementById('acct-password').value;
+  var confirm=document.getElementById('acct-confirm').value;
+  if(!email||!pw){toast('Fill all fields');return;}
+  if(!email.includes('@')){toast('Invalid email');return;}
+  if(pw.length<6){toast('Password must be 6+ characters');return;}
+  if(pw!==confirm){toast('Passwords do not match');return;}
+  var accounts=getAdminAccounts();
+  if(accounts.some(function(a){return a.email===email;})){toast('Email already exists');return;}
+  accounts.push({email:email,role:role,password:pw,lastActive:'—',createdAt:new Date().toISOString().split('T')[0]});
+  saveAdminAccounts(accounts);
+  toast('Admin added: '+email);
+  document.getElementById('page-content').innerHTML=rAccounts();
+}
+
+function deleteAccount(index){
+  var accounts=getAdminAccounts();
+  if(accounts.length<=1){toast('Cannot delete last admin account');return;}
+  var name=accounts[index].email;
+  accounts.splice(index,1);
+  saveAdminAccounts(accounts);
+  toast('Deleted: '+name);
+  document.getElementById('page-content').innerHTML=rAccounts();
+}
+
+// ── Rich Text Toolbar ──
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.rtf-toolbar button');
+  if (!btn) return;
+  var cmd = btn.getAttribute('data-cmd');
+  var targetId = btn.closest('.rtf-toolbar').getAttribute('data-for');
+  var editor = document.getElementById(targetId);
+  if (!editor) return;
+  editor.focus();
+  if (cmd === 'bold') { document.execCommand('bold', false, null); }
+  else if (cmd === 'italic') { document.execCommand('italic', false, null); }
+  else if (cmd === 'bullet') { document.execCommand('insertUnorderedList', false, null); }
+  updateToolbarState(editor);
+});
+
+document.addEventListener('keyup', function(e) {
+  var editor = e.target.closest('.rtf-editor');
+  if (editor) updateToolbarState(editor);
+});
+
+document.addEventListener('mouseup', function(e) {
+  var editor = e.target.closest('.rtf-editor');
+  if (editor) updateToolbarState(editor);
+});
+
+function updateToolbarState(editor) {
+  var toolbar = document.querySelector('.rtf-toolbar[data-for="' + editor.id + '"]');
+  if (!toolbar) return;
+  var state = {
+    bold: document.queryCommandState('bold'),
+    italic: document.queryCommandState('italic'),
+    bullet: document.queryCommandState('insertUnorderedList')
+  };
+  toolbar.querySelectorAll('button').forEach(function(btn) {
+    var cmd = btn.getAttribute('data-cmd');
+    btn.classList.toggle('active', !!state[cmd]);
+  });
+}
+
+// ── Init ──
+showPage('dashboard');
 </script>
 </body>
 </html>
+
+

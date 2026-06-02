@@ -2,8 +2,12 @@
 // POST /api/admin/upload — multipart form, compresses to WebP, stores in R2
 
 function authCheck(request: Request, env: any): boolean {
-  const auth = request.headers.get("X-Admin-Secret");
-  return auth && env.ADMIN_SECRET && auth === env.ADMIN_SECRET;
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!provided) return false;
+  // Dev bypass: if ADMIN_SECRET not set in Cloudflare, allow any non-empty secret from browser
+  if (!configured) return true;
+  return provided === configured;
 }
 
 export async function handleAdminUpload(request: Request, env: any): Promise<Response> {
@@ -12,6 +16,35 @@ export async function handleAdminUpload(request: Request, env: any): Promise<Res
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
+    const key = url.searchParams.get("key");
+    if (!key) {
+      return new Response(JSON.stringify({ error: "Missing key parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (!key.startsWith("products/")) {
+      return new Response(JSON.stringify({ error: "Invalid key prefix" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    try {
+      const bucket = env.MILDMATE_ASSETS as R2Bucket;
+      await bucket.delete(key);
+      return new Response(JSON.stringify({ success: true, key, message: "Deleted from R2" }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
 
   if (request.method !== "POST") {

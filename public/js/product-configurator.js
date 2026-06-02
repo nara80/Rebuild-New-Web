@@ -337,10 +337,50 @@
   var sizeSelect = document.getElementById('size-select');
   var fabricSelect = document.getElementById('fabric-select');
   var priceDisplay = document.getElementById('price-display');
+  var priceDisplayTop = document.getElementById('price-display-top');
+  // Auto-sync price summary block (top of page) whenever configurator price updates
+  if (priceDisplay && priceDisplayTop) {
+    new MutationObserver(function() {
+      priceDisplayTop.innerHTML = priceDisplay.innerHTML;
+    }).observe(priceDisplay, { characterData: true, childList: true, subtree: true });
+  }
   var addToCartBtn = document.getElementById('add-to-cart');
-  var customQuoteBtn = document.getElementById('custom-quote-btn');
-  var customDims = document.getElementById('custom-dimensions');
   var customPrice = document.getElementById('custom-price');
+
+  // Tab switching — Standard Sizes vs Custom Quote
+  var configTabs = document.querySelectorAll('.config-tab');
+  var tabStandard = document.getElementById('tab-standard');
+  var tabCustom = document.getElementById('tab-custom');
+  function switchToTab(name) {
+    configTabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
+    document.querySelectorAll('.config-tab-content').forEach(function(c) { c.classList.toggle('active', c.id === 'tab-' + name); });
+    if (name === 'standard') switchToStandard();
+    else switchToCustom();
+  }
+  configTabs.forEach(function(tab) {
+    tab.addEventListener('click', function() { switchToTab(this.dataset.tab); });
+  });
+  function switchToStandard() {
+    if (addToCartBtn) {
+      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
+      addToCartBtn.style.background = '';
+      addToCartBtn.style.color = '';
+    }
+  }
+  function switchToCustom() {
+    if (addToCartBtn) {
+      addToCartBtn.innerHTML = 'Request Custom Quote';
+      addToCartBtn.disabled = false;
+      addToCartBtn.style.background = '#f59e0b';
+      addToCartBtn.style.color = '#fff';
+    }
+  }
+  // Helper for focusing first dim input after switching to custom tab
+  var dimFirstInput = null;
+  function focusFirstDimInput() {
+    if (!dimFirstInput) dimFirstInput = document.querySelector('#tab-custom input[type="number"]');
+    if (dimFirstInput) { setTimeout(function() { dimFirstInput.focus(); }, 100); }
+  }
 
   // Custom dimension inputs
   var dimW = document.getElementById('dim-width');
@@ -404,12 +444,16 @@
         // Price display
         if (quoteOnly) {
           priceDisplay.textContent = 'Custom Quote';
-          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
+          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; addToCartBtn.disabled = true; }
+          state._dims = null;
+          state._price = null;
         } else {
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
           priceDisplay.innerHTML = displayPrice(thb, price);
-          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
+          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; addToCartBtn.disabled = false; }
+          state._dims = { w: parseFloat(opt.dataset.headMin) || 0, l: parseFloat(opt.dataset.lengthMin) || 0, d: 30 };
+          state._price = { thb: thb, usd: price };
         }
 
         // Dimension hints
@@ -431,7 +475,7 @@
     var sizes = PRODUCT_SIZES[typeKey];
     if (!sizes) return;
 
-    var regionLabels = { us: '\uD83C\uDDFA\uD83C\uDDF8 US / Canada', uk: '\uD83C\uDDEC\uD83C\uDDE7 UK', eu: '\uD83C\uDDEA\uD83C\uDDFA EU', th: '\uD83C\uDDF9\uD83C\uDDED Thailand', au: '\uD83C\uDDE6\uD83C\uDDFA AU', my: '\uD83C\uDDF2\uD83C\uDDFE MY / SG', jp: '\uD83C\uDDEF\uD83C\uDDF5 Japan' };
+    var regionLabels = { us: '\uD83C\uDDFA\uD83C\uDDF8 US / CA', uk: '\uD83C\uDDEC\uD83C\uDDE7 UK', eu: '\uD83C\uDDEA\uD83C\uDDFA EU', th: '\uD83C\uDDF9\uD83C\uDDED TH', au: '\uD83C\uDDE6\uD83C\uDDFA AU', my: '\uD83C\uDDF2\uD83C\uDDFE MY / SG', jp: '\uD83C\uDDEF\uD83C\uDDF5 JP', in: '\uD83C\uDDEE\uD83C\uDDF3 IN' };
     sizeSelect.innerHTML = '<option value="">\u2014 Choose size \u2014</option>';
 
     for (var region in sizes) {
@@ -440,6 +484,7 @@
       var label = regionLabels[region] || region.toUpperCase();
       var optgroup = document.createElement('optgroup');
       optgroup.label = label;
+      optgroup.setAttribute('data-region', region);
       for (var i = 0; i < items.length; i++) {
         var s = items[i];
         var option = document.createElement('option');
@@ -451,15 +496,199 @@
       }
       sizeSelect.appendChild(optgroup);
     }
-    var customGrp = document.createElement('optgroup');
-    customGrp.label = 'Custom Size';
-    var customOpt = document.createElement('option');
-    customOpt.value = 'custom';
-    customOpt.textContent = 'Custom dimensions \u2192';
-    customGrp.appendChild(customOpt);
-    sizeSelect.appendChild(customGrp);
+    enhanceSizeSelect(sizeSelect);
   }
   populateSizeSelect();
+
+  function escHTML(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function enhanceSizeSelect(selectEl) {
+    if (!selectEl || !selectEl.id) return;
+    var host = selectEl.parentElement;
+    if (!host) return;
+
+    var groups = [];
+    Array.prototype.forEach.call(selectEl.children, function (node) {
+      if (!node || node.tagName !== 'OPTGROUP') return;
+      var options = [];
+      Array.prototype.forEach.call(node.children, function (opt) {
+        if (!opt.value) return;
+        options.push({ value: opt.value, label: opt.textContent });
+      });
+      if (!options.length) return;
+      groups.push({
+        code: node.getAttribute('data-region') || '',
+        label: node.label || '',
+        options: options
+      });
+    });
+
+    if (!groups.length) {
+      enhanceSelectToPills(selectEl);
+      return;
+    }
+
+    var picker = host.querySelector('.size-picker[data-select-id="' + selectEl.id + '"]');
+    if (!picker) {
+      picker = document.createElement('div');
+      picker.className = 'size-picker';
+      picker.setAttribute('data-select-id', selectEl.id);
+      selectEl.insertAdjacentElement('afterend', picker);
+    }
+
+    var activeIndex = 0;
+    var showAllByIndex = [];
+    for (var i = 0; i < groups.length; i++) showAllByIndex.push(false);
+
+    function syncActiveIndexByValue(value) {
+      if (!value) return;
+      // Try current region first, then others
+      var regions = [activeIndex];
+      for (var i = 0; i < groups.length; i++) {
+        if (i !== activeIndex) regions.push(i);
+      }
+      for (var ri = 0; ri < regions.length; ri++) {
+        var gi = regions[ri];
+        for (var oi = 0; oi < groups[gi].options.length; oi++) {
+          if (groups[gi].options[oi].value === value) {
+            activeIndex = gi;
+            return;
+          }
+        }
+      }
+    }
+
+    function renderSizePicker() {
+      var active = groups[activeIndex] || groups[0];
+      if (!active) return;
+
+      var chipsHTML = groups.map(function (group, idx) {
+        return '<button type="button" class="size-country-chip' + (idx === activeIndex ? ' active' : '') + '" data-idx="' + idx + '">' + escHTML(group.label) + '</button>';
+      }).join('');
+
+      var showAll = showAllByIndex[activeIndex];
+      var visibleOptions = showAll ? active.options : active.options.slice(0, 6);
+      var optionsHTML = visibleOptions.map(function (opt) {
+        return (
+          '<button type="button" class="selection-pill size-option-pill' + (opt.value === selectEl.value ? ' active' : '') + '" data-value="' + escHTML(opt.value) + '">' +
+            '<span class="selection-pill-label">' + escHTML(opt.label) + '</span>' +
+          '</button>'
+        );
+      }).join('');
+
+      var toggleHTML = '';
+      if (active.options.length > 6) {
+        toggleHTML = '<button type="button" class="size-toggle-btn" data-action="toggle-all">' + (showAll ? 'Show fewer sizes' : ('See all sizes (' + active.options.length + ')')) + '</button>';
+      }
+
+      picker.innerHTML = '' +
+        '<div class="size-country-chips">' + chipsHTML + '</div>' +
+        '<div class="size-options-grid">' + optionsHTML + '</div>' +
+        toggleHTML;
+
+      Array.prototype.forEach.call(picker.querySelectorAll('.size-country-chip'), function (chip) {
+        chip.addEventListener('click', function () {
+          var newIdx = parseInt(chip.getAttribute('data-idx'), 10) || 0;
+          if (newIdx === activeIndex) return;
+          activeIndex = newIdx;
+          selectEl.value = '';  // reset — prevent cross-region value bleed
+          renderSizePicker();
+        });
+      });
+
+      Array.prototype.forEach.call(picker.querySelectorAll('.size-option-pill'), function (pill) {
+        pill.addEventListener('click', function () {
+          var value = pill.getAttribute('data-value');
+          if (!value || selectEl.value === value) return;
+          selectEl.value = value;
+          selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+
+      var toggleBtn = picker.querySelector('.size-toggle-btn');
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+          showAllByIndex[activeIndex] = !showAllByIndex[activeIndex];
+          renderSizePicker();
+        });
+      }
+    }
+
+    if (!selectEl.dataset.sizePickerSyncBound) {
+      selectEl.addEventListener('change', function () {
+        syncActiveIndexByValue(selectEl.value);
+        renderSizePicker();
+      });
+      selectEl.dataset.sizePickerSyncBound = '1';
+    }
+
+    syncActiveIndexByValue(selectEl.value);
+    selectEl.classList.add('sr-select');
+    renderSizePicker();
+  }
+
+  function syncPillState(selectEl, pillsWrap) {
+    if (!selectEl || !pillsWrap) return;
+    var selected = selectEl.value;
+    pillsWrap.querySelectorAll('.selection-pill').forEach(function (pill) {
+      pill.classList.toggle('active', pill.getAttribute('data-value') === selected);
+    });
+  }
+
+  function enhanceSelectToPills(selectEl) {
+    if (!selectEl || !selectEl.id) return;
+    var host = selectEl.parentElement;
+    if (!host) return;
+
+    var options = [];
+    Array.prototype.forEach.call(selectEl.options, function (opt) {
+      if (!opt.value || opt.hidden) return;
+      var grp = (opt.parentElement && opt.parentElement.tagName === 'OPTGROUP') ? opt.parentElement.label : '';
+      options.push({ value: opt.value, label: opt.textContent, group: grp });
+    });
+
+    var pillsWrap = host.querySelector('.selection-pills[data-select-id="' + selectEl.id + '"]');
+    if (!pillsWrap) {
+      pillsWrap = document.createElement('div');
+      pillsWrap.className = 'selection-pills';
+      pillsWrap.setAttribute('data-select-id', selectEl.id);
+      selectEl.insertAdjacentElement('afterend', pillsWrap);
+    }
+
+    pillsWrap.innerHTML = options.map(function (opt) {
+      return (
+        '<button type="button" class="selection-pill" data-value="' + escHTML(opt.value) + '">' +
+          (opt.group ? ('<span class="selection-pill-group">' + escHTML(opt.group) + '</span>') : '') +
+          '<span class="selection-pill-label">' + escHTML(opt.label) + '</span>' +
+        '</button>'
+      );
+    }).join('');
+
+    Array.prototype.forEach.call(pillsWrap.querySelectorAll('.selection-pill'), function (pill) {
+      pill.addEventListener('click', function () {
+        var nextVal = pill.getAttribute('data-value');
+        if (selectEl.value === nextVal) return;
+        selectEl.value = nextVal;
+        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+
+    if (!selectEl.dataset.pillSyncBound) {
+      selectEl.addEventListener('change', function () { syncPillState(selectEl, pillsWrap); });
+      selectEl.dataset.pillSyncBound = '1';
+    }
+
+    selectEl.classList.add('sr-select');
+    syncPillState(selectEl, pillsWrap);
+  }
+
+  if (fabricSelect) enhanceSelectToPills(fabricSelect);
+  if (isMarineFitted) {
+    var marineShapeSelect = document.getElementById('marine-shape-select');
+    if (marineShapeSelect) enhanceSelectToPills(marineShapeSelect);
+  }
 
   // -- Inject quote popup HTML --
   var popupHTML = '' +
@@ -586,7 +815,8 @@
     if (isMarineFitted) return;
     var val = sizeSelect.value;
     if (val === 'custom') {
-      if (customDims) customDims.classList.add('open');
+      switchToTab('custom');
+      focusFirstDimInput();
       if (addToCartBtn) addToCartBtn.disabled = true;
       priceDisplay.textContent = '—';
       return;
@@ -597,8 +827,6 @@
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
-    if (customDims) customDims.classList.remove('open');
-
     // V-Berth: no standard-size dropdown — handled by "Choose Your Berth Shape" + custom dims
 
     var result;
@@ -632,6 +860,9 @@
     }
     priceDisplay.innerHTML = displayPrice(result.thb, result.usd);
     if (addToCartBtn) addToCartBtn.disabled = false;
+    // Save for add-to-cart handler
+    state._dims = dims;
+    state._price = { thb: result.thb, usd: result.usd };
   }
 
   // -- Update price from custom dimensions --
@@ -702,6 +933,32 @@
     updateCustomPrice();
   }
 
+  function formatColorName(raw) {
+    var txt = String(raw || '').trim();
+    if (!txt) return '';
+    txt = txt.replace(/[-_]+/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+    return txt.replace(/\b\w/g, function (m) { return m.toUpperCase(); });
+  }
+
+  function updateSelectedColorName(groupEl) {
+    if (!groupEl) return;
+    var selected = groupEl.querySelector('.color-option.selected') || groupEl.querySelector('.color-option');
+    var label = groupEl.querySelector('.selected-color-name');
+    if (!label) {
+      label = document.createElement('div');
+      label.className = 'selected-color-name';
+      label.setAttribute('aria-live', 'polite');
+      label.setAttribute('aria-atomic', 'true');
+      groupEl.appendChild(label);
+    }
+    if (!selected) {
+      label.textContent = '';
+      return;
+    }
+    var rawName = selected.getAttribute('title') || selected.getAttribute('data-color') || '';
+    label.textContent = 'Selected color: ' + formatColorName(rawName);
+  }
+
   // -- Fabric dropdown change --
   if (fabricSelect) {
     fabricSelect.addEventListener('change', function () {
@@ -718,6 +975,7 @@
         var opts = activeGroup.querySelectorAll('.color-option');
         opts.forEach(function (o) { o.classList.remove('selected'); });
         if (opts.length > 0) opts[0].classList.add('selected');
+        updateSelectedColorName(activeGroup);
       }
     });
   }
@@ -762,13 +1020,6 @@
     });
   }
 
-  // -- Custom quote toggle (existing — unchanged) --
-  if (customQuoteBtn) {
-    customQuoteBtn.addEventListener('click', function () {
-      if (customDims) customDims.classList.toggle('open');
-    });
-  }
-
   // -- "Custom Quote" button ? validate dimensions then open popup --
   var quoteOverlay = document.getElementById('quote-overlay');
   var confirmOverlay = document.getElementById('confirm-overlay');
@@ -785,9 +1036,8 @@
       if (state.unit === 'in') { w = inchToCm(w); l = inchToCm(l); d = inchToCm(d); }
       var dimValid = (isDuvet || isPillowProtector || isPillowcase) ? (w > 0 && l > 0) : (w > 0 && l > 0 && d > 0);
       if (!dimValid) {
-        if (customDims && !customDims.classList.contains('open')) {
-          customDims.classList.add('open');
-        }
+        switchToTab('custom');
+        focusFirstDimInput();
         alert((isDuvet || isPillowProtector || isPillowcase)
           ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
           : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
@@ -848,9 +1098,8 @@
     if (!dimsValid) {
       document.getElementById('qf-submit').disabled = false;
       document.getElementById('qf-submit').textContent = 'Submit';
-      if (customDims && !customDims.classList.contains('open')) {
-        customDims.classList.add('open');
-      }
+      switchToTab('custom');
+      focusFirstDimInput();
       alert((isDuvet || isPillowProtector || isPillowcase)
         ? 'Please enter your dimensions (W \u00D7 L) before submitting the quote.'
         : 'Please enter your mattress dimensions (W \u00D7 L \u00D7 D) before submitting the quote. Click "Custom Size" first.');
@@ -924,15 +1173,91 @@
     return d.innerHTML;
   }
 
-  // -- Add to cart (stub — Phase 5) --
+  // -- Add to cart (Phase 5) --
   if (addToCartBtn) {
     addToCartBtn.addEventListener('click', function () {
+      // If Custom Quote tab is active, trigger quote popup instead of add-to-cart
+      if (tabCustom && tabCustom.classList.contains('active')) {
+        var w = parseFloat(dimW && dimW.value) || 0;
+        var l = parseFloat(dimL && dimL.value) || 0;
+        var d = (isDuvet || isPillowProtector || isPillowcase) ? 0 : (parseFloat(dimD && dimD.value) || 0);
+        if (state.unit === 'in') { w = inchToCm(w); l = inchToCm(l); d = inchToCm(d); }
+        var dimValid = (isDuvet || isPillowProtector || isPillowcase) ? (w > 0 && l > 0) : (w > 0 && l > 0 && d > 0);
+        if (!dimValid) {
+          switchToTab('custom');
+          focusFirstDimInput();
+          alert((isDuvet || isPillowProtector || isPillowcase)
+            ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
+            : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+          return;
+        }
+        quoteOverlay.classList.add('open');
+        var qfName = document.getElementById('qf-name');
+        if (qfName) qfName.focus();
+        return;
+      }
+
+      if (!state._dims || !state._price) return;
+
+      var productSlug = window.location.pathname.split('/').filter(Boolean).slice(-1)[0] || 'fitted-sheet';
+      var titleEl = document.querySelector('.product-title');
+      var productName = titleEl ? titleEl.textContent.trim() : productSlug.replace(/-/g, ' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+
+      var fabricName = (fabricSelect && fabricSelect.options[fabricSelect.selectedIndex])
+        ? fabricSelect.options[fabricSelect.selectedIndex].text
+        : state.fabric;
+
+      // Color: look up within the active (visible) fabric group, format via title
+      var activeColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
+      var selectedColorEl = activeColorGroup ? activeColorGroup.querySelector('.color-option.selected') : null;
+      var colorName = selectedColorEl ? formatColorName(selectedColorEl.getAttribute('title') || selectedColorEl.getAttribute('data-color') || '') : '';
+
+      // Size label: capture the human-readable label (e.g., "US/CA · Twin 68×86″")
+      var sizeLabel = '';
+      if (sizeSelect && sizeSelect.selectedOptions[0] && sizeSelect.value && sizeSelect.value !== 'custom') {
+        sizeLabel = sizeSelect.selectedOptions[0].text.trim();
+      }
+      if (isMarineFitted) {
+        var ms = document.getElementById('marine-shape-select');
+        if (ms && ms.selectedOptions[0] && ms.value) {
+          sizeLabel = ms.selectedOptions[0].text.trim();
+        }
+      }
+
+      var item = {
+        type: 'product',
+        id: 'cart-' + Date.now(),
+        product_slug: productSlug,
+        product_name: productName,
+        dimensions: {
+          w: state._dims.w,
+          l: state._dims.l,
+          d: state._dims.d || 0,
+          unit: 'cm',
+          label: sizeLabel
+        },
+        fabric: fabricName,
+        color: colorName,
+        price_usd: Math.round(state._price.usd),
+        price_thb: state._price.thb,
+        qty: 1,
+        image: (function() {
+          var meta = document.querySelector('meta[name="product-image"]');
+          return meta ? meta.getAttribute('content') || meta.content : '';
+        })()
+      };
+
+      if (window.MildMateCart) {
+        window.MildMateCart.add(item);
+      }
+
+      // Visual feedback
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
       addToCartBtn.style.background = '#16a34a';
       setTimeout(function () {
         addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
         addToCartBtn.style.background = '';
-        addToCartBtn.disabled = true;
+        addToCartBtn.disabled = false;
       }, 2000);
     });
   }
@@ -941,30 +1266,27 @@
   var colorOptions = document.querySelectorAll('.color-option');
   colorOptions.forEach(function (c) {
     c.addEventListener('click', function () {
-      colorOptions.forEach(function (o) { o.classList.remove('selected'); });
+      var group = c.closest('.fabric-color-group');
+      if (!group) return;
+      group.querySelectorAll('.color-option').forEach(function (o) { o.classList.remove('selected'); });
       c.classList.add('selected');
+      updateSelectedColorName(group);
     });
   });
+  document.querySelectorAll('.fabric-color-group').forEach(function (group) {
+    updateSelectedColorName(group);
+  });
 
-  // -- Product tabs --
-  var tabBtns = document.querySelectorAll('.tab-btn');
-  tabBtns.forEach(function (btn) {
+  // -- Info tabs --
+  var infoTabs = document.querySelectorAll('.info-tab');
+  infoTabs.forEach(function (btn) {
     btn.addEventListener('click', function () {
-      tabBtns.forEach(function (b) { b.classList.remove('active'); });
-      document.querySelectorAll('.tab-content').forEach(function (c) { c.classList.remove('open'); });
+      var tabName = btn.getAttribute('data-info-tab');
+      infoTabs.forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.info-panel').forEach(function (p) { p.classList.remove('active'); });
       btn.classList.add('active');
-      var panel = document.getElementById('tab-' + btn.dataset.tab);
-      if (panel) panel.classList.add('open');
-    });
-  });
-
-  // -- Gallery thumbnails --
-  document.querySelectorAll('.gallery-thumb').forEach(function (thumb) {
-    thumb.addEventListener('click', function () {
-      document.querySelectorAll('.gallery-thumb').forEach(function (t) { t.classList.remove('active'); });
-      thumb.classList.add('active');
-      var img = document.getElementById('gallery-main-img');
-      if (img) img.src = thumb.dataset.img;
+      var panel = document.getElementById('info-panel-' + tabName);
+      if (panel) panel.classList.add('active');
     });
   });
 

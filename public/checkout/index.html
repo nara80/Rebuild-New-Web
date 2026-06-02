@@ -1,0 +1,1381 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MildMate Checkout — Complete your custom bedding order.">
+  <title>Checkout — MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <style>
+    :root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-heading:#0F172A;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06);--shadow-md:0 4px 12px rgba(0,0,0,0.06);--header-height:80px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth;font-size:16px}
+    body{font-family:var(--font-main);color:var(--color-text);background:var(--color-surface);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}
+    a{color:var(--color-primary);text-decoration:none}
+    a:hover{color:var(--color-primary-dark)}
+    img{max-width:100%;height:auto;display:block}
+    button{font-family:inherit;cursor:pointer;border:none;background:none}
+    h1{font-size:1.75rem;font-weight:700;color:var(--color-heading)}
+    h2{font-size:1.25rem;font-weight:700;color:var(--color-heading)}
+    h3{font-size:1rem;font-weight:600;color:var(--color-heading)}
+
+    .container{max-width:1040px;margin:0 auto;padding:0 24px}
+
+    /* Checkout Header — distraction-free */
+    .checkout-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);display:flex;flex-direction:column;justify-content:center}
+    .checkout-header-inner{display:flex;align-items:center;justify-content:center;height:48px;max-width:1040px;margin:0 auto;padding:0 24px;width:100%;position:relative}
+    .checkout-trust{position:absolute;left:24px;font-size:0.75rem;font-weight:600;color:var(--color-primary);display:flex;align-items:center;gap:4px;white-space:nowrap}
+    .checkout-cancel{position:absolute;left:24px;font-size:0.8125rem;font-weight:600;color:var(--color-muted);display:none;text-decoration:none}
+    .checkout-cancel:hover{color:var(--color-primary)}
+    .checkout-logo{display:flex;align-items:center}
+    .checkout-logo img{max-height:36px;width:auto}
+    .checkout-actions{position:absolute;right:24px;display:flex;align-items:center;gap:16px}
+    .checkout-lang{font-size:0.6875rem;font-weight:600;padding:2px 6px;border-radius:4px;border:1px solid var(--color-border);display:flex;align-items:center;gap:2px}
+    .checkout-lang .active{color:var(--color-primary);font-weight:700}
+    .checkout-lang .inactive{color:var(--color-muted)}
+    .checkout-lang span{cursor:pointer}
+    .checkout-steps-bar{display:none;justify-content:center;align-items:center;gap:16px;padding:0 24px 8px;font-size:0.6875rem;font-weight:600;color:var(--color-muted)}
+    .checkout-steps-bar .step-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--color-border);margin-right:4px}
+    .checkout-steps-bar .step-dot.active{background:var(--color-primary)}
+    @media (max-width:768px){
+      .checkout-trust{display:none}
+      .checkout-cancel{display:flex}
+      .checkout-steps-bar{display:flex}
+      .checkout-actions{gap:8px}
+      .checkout-header-inner{height:44px}
+    }
+    @media (max-width:480px){
+      .form-row{grid-template-columns:1fr!important}
+    }
+
+    /* Steps */
+    .checkout-steps{display:flex;justify-content:center;gap:8px;margin:32px 0 24px}
+    .step-dot{width:12px;height:12px;border-radius:50%;background:var(--color-border);transition:background 0.2s}
+    .step-dot.active{background:var(--color-primary)}
+    .step-dot.done{background:#16a34a}
+    .step-labels{display:flex;justify-content:center;gap:60px;margin-bottom:32px;font-size:0.75rem;font-weight:600;color:var(--color-muted)}
+    .step-labels span.active{color:var(--color-primary)}
+
+    /* Cards */
+    .card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;border:1px solid var(--color-border);overflow:visible}
+
+    /* Cart item */
+    .cart-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--color-border);align-items:center}
+    .cart-item:last-child{border-bottom:none}
+    .cart-item-img{width:80px;height:80px;border-radius:var(--radius);background:var(--color-surface);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .cart-item-img img{width:100%;height:100%;object-fit:cover}
+    .cart-item-info{flex:1;min-width:0}
+    .cart-item-title{font-weight:700;margin-bottom:4px}
+    .cart-item-meta{font-size:0.8125rem;color:var(--color-muted)}
+    .cart-item-price{font-weight:700;margin-top:4px}
+    .cart-item-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;white-space:nowrap}
+    .qty-btn{width:28px;height:28px;border:1px solid var(--color-border);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1rem;color:var(--color-text);background:var(--color-bg)}
+    .qty-btn:hover{border-color:var(--color-primary);color:var(--color-primary)}
+    .qty-val{font-weight:700;min-width:20px;text-align:center}
+    .remove-btn{font-size:0.75rem;color:#ef4444;cursor:pointer}
+    .remove-btn:hover{text-decoration:underline}
+
+    /* Totals */
+    .totals-row{display:flex;justify-content:space-between;padding:8px 0;font-size:0.9375rem}
+    .totals-row.grand{font-weight:700;font-size:1.125rem;border-top:1px solid var(--color-border);padding-top:12px;margin-top:4px}
+    .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}
+
+    /* Forms */
+    .form-group{margin-bottom:16px;position:relative;overflow:visible}
+    .form-label{display:block;font-size:0.8125rem;font-weight:700;color:#1E293B;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.03em}
+    .form-input{width:100%;padding:12px 14px;border:2px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:#1E293B;background:#F8FAFC;transition:border-color 0.2s}
+    .form-input:focus{outline:none;border-color:var(--color-primary);background:#fff}
+    .form-input::placeholder{color:#1E293B;opacity:0.45}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;overflow:visible}
+
+    /* Floating labels (CSS-only, label after input in DOM) */
+    .float-group{position:relative;z-index:1}
+    .float-group:focus-within{z-index:80}
+    .float-group .form-input,
+    .float-group select.form-input{min-height:48px;padding:18px 34px 6px 14px;font-size:0.9375rem}
+    .float-group select.form-input{position:relative}
+    .float-group .form-label{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:0.9375rem;font-weight:400;color:#1E293B;opacity:0.55;text-transform:none;letter-spacing:0;margin:0;pointer-events:none;transition:all 0.2s ease;white-space:nowrap;z-index:3;background:var(--color-bg);padding:0 4px}
+    /* Float up: focus */
+    .float-group:focus-within > .form-label,
+    .float-group .form-input:focus + .form-label{top:7px;transform:translateY(0);font-size:0.6875rem;font-weight:600;color:var(--color-primary);opacity:1}
+    /* Float up: filled (direct sibling or :has for wrapped groups) */
+    .float-group .form-input:not(:placeholder-shown) + .form-label,
+    .float-group:has(.form-input:not(:placeholder-shown)) > .form-label{top:7px;transform:translateY(0);font-size:0.6875rem;font-weight:600}
+    /* Filled + not focused → muted slate */
+    .float-group .form-input:not(:focus):not(:placeholder-shown) + .form-label,
+    .float-group:not(:focus-within):has(.form-input:not(:placeholder-shown)) > .form-label{color:#1E293B;opacity:0.7}
+    /* Select: float when value selected (JS-driven .filled class) */
+    .float-group.filled > .form-label{top:7px!important;transform:translateY(0)!important;font-size:0.6875rem!important;font-weight:600!important;color:#1E293B!important;opacity:0.7!important}
+    .float-group.filled:focus-within > .form-label{color:var(--color-primary)!important;opacity:1!important}
+
+    /* Valid checkmark — blue circle + white tick on validated text inputs (excludes selects to avoid arrow overlap) */
+    .float-group:has(.form-input[required]:valid):not(:has(select))::after {
+      content: '\2713';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      width: 20px;
+      height: 20px;
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      text-align: center;
+      animation: checkPop 0.35s ease forwards;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes checkPop {
+      0%   { transform: translateY(-50%) scale(0); opacity: 0; }
+      55%  { transform: translateY(-50%) scale(1.2); opacity: 1; }
+      100% { transform: translateY(-50%) scale(1); opacity: 1; }
+    }
+
+    /* Phone code select (compact) */
+    
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 28px;border-radius:var(--radius);font-weight:700;font-size:1rem;transition:all 0.2s;gap:8px}
+    .btn-primary{background:var(--color-primary);color:#fff;border:none;width:100%}
+    .btn-primary:hover{background:var(--color-primary-dark);color:#fff}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+    .btn-outline{background:transparent;border:2px solid var(--color-border);color:var(--color-text)}
+    .btn-outline:hover{border-color:var(--color-primary);color:var(--color-primary)}
+    .btn-google{background:#fff;border:2px solid var(--color-border);color:var(--color-text);display:flex;align-items:center;gap:10px;justify-content:center}
+    .btn-google:hover{border-color:#4285f4;color:#4285f4}
+    .btn-google svg{width:20px;height:20px}
+
+    /* Login prompt */
+    .login-prompt{text-align:center;padding:12px 16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius);margin-bottom:20px;font-size:0.875rem}
+    .login-prompt a{font-weight:700}
+
+    /* Empty cart */
+    .empty-cart{text-align:center;padding:60px 24px;color:var(--color-muted)}
+    .empty-cart svg{width:64px;height:64px;color:var(--color-border);margin-bottom:16px}
+    .empty-cart h2{margin-bottom:8px}
+    .empty-cart p{margin-bottom:24px}
+
+    /* States */
+    .step-panel{display:none}
+    .step-panel.active{display:block}
+    .loading-spinner{display:inline-block;width:20px;height:20px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .error-msg{color:#ef4444;font-size:0.8125rem;margin-top:4px}
+    .success-badge{display:inline-flex;align-items:center;gap:6px;background:#dcfce7;color:#166534;padding:4px 10px;border-radius:4px;font-size:0.75rem;font-weight:700}
+
+    .divider{text-align:center;color:var(--color-muted);font-size:0.75rem;margin:16px 0;position:relative}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--color-border)}
+    .divider::before{left:0}.divider::after{right:0}
+
+    .footer-simple{text-align:center;padding:32px 24px;font-size:0.75rem;color:var(--color-muted)}
+
+    @media(max-width:640px){
+      .form-row{grid-template-columns:1fr}
+      .step-labels{gap:24px;font-size:0.6875rem}
+    }
+
+    /* === Dual-column Checkout Layout (Desktop) === */
+    .checkout-layout{display:grid;grid-template-columns:65fr 35fr;gap:28px;align-items:start}
+    .checkout-main{min-width:0}
+    .checkout-layout.is-empty{
+      grid-template-columns:1fr;
+      min-height:calc(100vh - var(--header-height) - 220px);
+      align-items:center;
+    }
+    .checkout-layout.is-empty .checkout-main{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .checkout-layout.is-empty .empty-cart{
+      width:100%;
+      max-width:560px;
+      margin:0 auto;
+      background:var(--color-bg);
+      border:1px solid var(--color-border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:48px 24px;
+    }
+    .checkout-sidebar{
+      position:sticky;
+      top:calc(var(--header-height) + 24px);
+      background:#F8FAFC;
+      border-radius:var(--radius);
+      padding:24px;
+      border:1px solid var(--color-border);
+    }
+    .checkout-sidebar .btn-primary{margin-top:16px}
+    .sidebar-heading{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-muted);margin-bottom:12px}
+
+    @media(max-width:767px){
+      .checkout-layout{grid-template-columns:1fr}
+      .checkout-sidebar{position:static}
+      .checkout-layout.is-empty .checkout-main{
+        flex-direction:column;
+        align-items:center;
+        justify-content:flex-start;
+        gap:14px;
+      }
+      .checkout-layout.is-empty #login-banner{
+        width:100%;
+        max-width:560px;
+      }
+      .checkout-layout.is-empty #login-banner .login-prompt{
+        margin-bottom:0;
+      }
+      .checkout-layout.is-empty #login-banner .divider{
+        margin:12px 0 0;
+      }
+
+      /* Hide desktop Pay Now in sidebar on mobile — drawer handles it */
+      .checkout-sidebar #btn-pay,
+      .checkout-sidebar #btn-pay + p{display:none}
+
+      /* Mobile cart item cards */
+      .cart-item{
+        border:1px solid var(--color-border);
+        border-radius:8px;
+        padding:12px;
+        margin-bottom:8px;
+        gap:10px;
+      }
+      .cart-item:last-child{border-bottom:1px solid var(--color-border)}
+      .cart-item-img{width:48px;height:48px}
+      .cart-item-title{font-size:0.875rem;margin-bottom:2px}
+      .cart-item-meta{font-size:0.75rem}
+      .cart-item-price{font-size:0.875rem;margin-top:2px}
+      .cart-item-actions{gap:4px}
+      .qty-btn{width:24px;height:24px;font-size:0.875rem}
+      .qty-val{min-width:16px;font-size:0.8125rem}
+      .remove-btn{font-size:0.6875rem}
+    }
+
+    /* === Mobile Bottom Checkout Bar === */
+    .checkout-mobile-bar{
+      display:none;
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      background:var(--color-surface);
+      border-top:1px solid var(--color-border);
+      padding:12px 16px;
+      padding-bottom:max(12px, env(safe-area-inset-bottom));
+      z-index:500;
+      box-shadow:0 -2px 8px rgba(0,0,0,0.06);
+      align-items:center;
+      justify-content:space-between;
+    }
+    .checkout-mobile-bar.visible{display:flex}
+    .bar-total{font-weight:700;font-size:0.9375rem;white-space:nowrap}
+    .bar-total-label{font-size:0.6875rem;color:var(--color-muted);display:block}
+    .checkout-mobile-bar .btn-primary{width:auto;padding:10px 24px;font-size:0.875rem;flex-shrink:0}
+
+    /* Step 2 order summary items (compact) */
+    .summary-item{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;font-size:0.8125rem;gap:8px}
+    .summary-item+.summary-item{border-top:1px solid var(--color-border)}
+    .summary-item-name{flex:1;min-width:0;color:var(--color-text)}
+    .summary-item-meta{font-size:0.6875rem;color:var(--color-muted)}
+    .summary-item-price{font-weight:700;white-space:nowrap;flex-shrink:0}
+
+    /* Surface wells — replace white card bg with muted canvas */
+    .surface-well{background:var(--color-surface)}
+  </style>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <header class="checkout-header">
+    <div class="checkout-header-inner">
+      <span class="checkout-trust">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secure Checkout
+      </span>
+      <a href="/products/" class="checkout-cancel">Cancel</a>
+      <a href="/" class="checkout-logo" aria-label="MildMate Home">
+        <picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="120" height="32"></picture>
+      </a>
+      <div class="checkout-actions">
+        <div class="checkout-lang" role="group" aria-label="Language switch">
+          <span data-lang="en" class="active">EN</span>
+          <span>/</span>
+          <span data-lang="th" class="inactive">TH</span>
+        </div>
+      </div>
+    </div>
+    <div class="checkout-steps-bar">
+      <span><span class="step-dot active" data-step="1"></span>Cart</span>
+      <span><span class="step-dot" data-step="2"></span>Shipping</span>
+      <span><span class="step-dot" data-step="3"></span>Pay</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <!-- Step indicators -->
+      <div class="checkout-steps">
+        <span class="step-dot active" id="dot-1"></span>
+        <span class="step-dot" id="dot-2"></span>
+        <span class="step-dot" id="dot-3"></span>
+      </div>
+      <div class="step-labels">
+        <span class="active" id="lbl-1">Cart Review</span>
+        <span id="lbl-2">Shipping Details</span>
+        <span id="lbl-3">Payment</span>
+      </div>
+
+      <!-- STEP 1: Cart Review -->
+      <div class="step-panel active" id="step-1">
+        <div class="checkout-layout" id="layout-step1">
+          <div class="checkout-main">
+            <div id="cart-items"></div>
+            <div class="empty-cart" id="empty-cart" style="display:none">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <h2>Your cart is empty</h2>
+              <p>Add some custom bedding to get started.</p>
+              <a href="/products/" class="btn btn-primary" style="display:inline-flex;width:auto">Browse Products</a>
+            </div>
+
+            <div id="login-banner" style="display:none">
+              <div class="login-prompt">
+                <p style="margin-bottom:8px">Sign in for faster checkout and order tracking.</p>
+                <button class="btn btn-google" onclick="signInWithClerk()" style="width:100%;max-width:300px;margin:0 auto">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                  Sign in with Google
+                </button>
+                <p style="margin-top:12px;font-size:0.75rem;color:var(--color-muted)">
+                  Also available: Facebook &middot; Email
+                </p>
+                <p style="margin-top:8px;font-size:0.75rem;color:var(--color-muted)">
+                  Signed in with wrong account?
+                  <button type="button" onclick="if(window.signOutClerk){window.signOutClerk('/checkout/');}" style="border:none;background:none;color:var(--color-primary);font-weight:600;cursor:pointer;padding:0 0 0 4px;text-decoration:underline">
+                    Sign out
+                  </button>
+                </p>
+              </div>
+              <div class="divider">or continue as guest</div>
+            </div>
+          </div>
+
+          <div class="checkout-sidebar" id="cart-totals" style="display:none">
+            <div class="sidebar-heading">Order Summary</div>
+            <div class="totals-row"><span>Subtotal</span><span id="subtotal">—</span></div>
+            <div class="totals-row"><span>Shipping</span><span id="shipping-step1">—</span></div>
+            <div class="totals-row grand"><span>Total</span><span id="grand-total">—</span></div>
+            <button class="btn btn-primary" id="btn-to-step2" onclick="goToStep(2)" disabled>
+              Checkout
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile bottom checkout bar (visible ≤767px on step 1 only) -->
+        <div class="checkout-mobile-bar" id="mobile-bar">
+          <div>
+            <span class="bar-total-label">Subtotal</span>
+            <span class="bar-total" id="bar-total">—</span>
+          </div>
+          <button class="btn btn-primary" id="btn-mobile-checkout" onclick="goToStep(2)" disabled>
+            Checkout
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Shipping Details -->
+      <div class="step-panel" id="step-2">
+        <div class="checkout-layout">
+          <div class="checkout-main">
+            <div class="card">
+              <h2 style="margin-bottom:20px">Shipping Details</h2>
+
+              <div class="form-row">
+                <div class="form-group float-group">
+                  <input type="text" class="form-input" id="cust-fname" placeholder=" " required autocomplete="given-name">
+                  <label class="form-label" for="cust-fname">First Name *</label>
+                </div>
+                <div class="form-group float-group">
+                  <input type="text" class="form-input" id="cust-lname" placeholder=" " required autocomplete="family-name">
+                  <label class="form-label" for="cust-lname">Last Name *</label>
+                </div>
+              </div>
+
+              <div class="form-group float-group">
+                <input type="email" class="form-input" id="cust-email" placeholder=" " required autocomplete="email">
+                <label class="form-label" for="cust-email">Email *</label>
+              </div>
+
+              <div class="form-row" style="grid-template-columns:1fr 3fr">
+                <div class="form-group float-group" id="phone-code-group">
+                  <select class="form-input" id="phone-code" required autocomplete="tel-country-code" onchange="this.closest('.float-group').classList.add('filled')"></select>
+                  <label class="form-label" for="phone-code">Code *</label>
+                </div>
+                <div class="form-group float-group" id="cust-phone-group">
+                  <input type="tel" class="form-input" id="cust-phone" placeholder=" " required autocomplete="tel-national">
+                  <label class="form-label" for="cust-phone">Phone *</label>
+                </div>
+              </div>
+
+              <div class="form-group float-group">
+                <select class="form-input" id="cust-country" required autocomplete="country" onchange="this.closest('.float-group').classList.add('filled')"></select>
+                <label class="form-label" for="cust-country">Country *</label>
+              </div>
+
+              <div class="form-group float-group">
+                <input type="text" class="form-input" id="cust-street" placeholder=" " required autocomplete="street-address">
+                <label class="form-label" for="cust-street">Street Address *</label>
+              </div>
+
+              <div class="form-group float-group">
+                <input type="text" class="form-input" id="cust-apt" placeholder=" " autocomplete="address-line2">
+                <label class="form-label" for="cust-apt">Apt / Suite (Optional)</label>
+              </div>
+
+              <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
+                <div class="form-group float-group">
+                  <input type="text" class="form-input" id="cust-city" placeholder=" " required autocomplete="address-level2">
+                  <label class="form-label" for="cust-city">City *</label>
+                </div>
+                <div class="form-group float-group">
+                  <input type="text" class="form-input" id="cust-province" placeholder=" " required autocomplete="address-level1">
+                  <label class="form-label" for="cust-province">Province / State *</label>
+                </div>
+                <div class="form-group float-group">
+                  <input type="text" class="form-input" id="cust-postal" placeholder=" " required autocomplete="postal-code">
+                  <label class="form-label" for="cust-postal">Postal Code *</label>
+                </div>
+              </div>
+
+              <p class="price-note">Your email is used for order confirmation and shipping updates only.</p>
+            </div>
+
+            <div style="display:flex;gap:12px">
+              <button class="btn btn-outline" onclick="goToStep(1)" style="flex:1">Back to Cart</button>
+              <button class="btn btn-primary" id="btn-to-step3" onclick="goToStep(3)" style="flex:2">Review &amp; Pay</button>
+            </div>
+          </div>
+
+          <div class="checkout-sidebar" id="step2-summary">
+            <div class="sidebar-heading">Order Summary</div>
+            <div id="step2-order-items"></div>
+            <div class="totals-row" style="margin-top:8px"><span>Subtotal</span><span id="step2-subtotal">—</span></div>
+            <div class="totals-row"><span>Shipping</span><span id="step2-shipping">—</span></div>
+            <div class="totals-row grand" style="margin-top:8px"><span>Total</span><span id="step2-total">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Payment -->
+      <div class="step-panel" id="step-3">
+        <div class="checkout-layout">
+          <div class="checkout-main">
+            <div class="card surface-well">
+              <label style="font-weight:600;display:block;margin-bottom:8px">Discount Code</label>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="discount-input" placeholder="WELCOME-XXXXXX" style="flex:1;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius);font-size:0.875rem;text-transform:uppercase">
+                <button class="btn btn-outline btn-sm" id="btn-apply-discount" onclick="applyDiscountCode()">Apply</button>
+              </div>
+              <p id="discount-msg" style="font-size:0.75rem;margin-top:6px;display:none"></p>
+            </div>
+
+            <div style="display:flex;gap:12px">
+              <button class="btn btn-outline" onclick="goToStep(2)" style="flex:1">Edit Details</button>
+            </div>
+          </div>
+
+          <div class="checkout-sidebar">
+            <div class="sidebar-heading">Order Summary</div>
+            <div id="order-summary-sidebar"></div>
+            <div class="totals-row" style="margin-top:8px"><span>Subtotal</span><span id="pay-subtotal-sidebar">—</span></div>
+            <div class="totals-row"><span>Shipping</span><span id="pay-shipping-sidebar">—</span></div>
+            <div class="totals-row grand" style="margin-top:8px"><span>Total</span><span id="pay-total-sidebar">—</span></div>
+            <button class="btn btn-primary" id="btn-pay" onclick="processPayment()" style="width:100%;margin-top:16px">
+              <span id="pay-text">Pay Now</span>
+              <span class="loading-spinner" id="pay-spinner" style="display:none"></span>
+            </button>
+            <p style="font-size:0.6875rem;color:var(--color-muted);margin-top:12px;text-align:center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Secured by Stripe
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile bottom bar — Step 3 (visible ≤767px) -->
+      <div class="checkout-mobile-bar" id="mobile-bar-step3">
+        <div>
+          <span class="bar-total-label">Total</span>
+          <span class="bar-total" id="bar-total-step3">—</span>
+        </div>
+        <button class="btn btn-primary" id="btn-mobile-pay" onclick="processPayment()">
+          Pay Now
+        </button>
+      </div>
+
+      <div id="error-banner" style="display:none;margin-top:16px">
+        <div class="card" style="border-left:4px solid #ef4444">
+          <p style="color:#ef4444;font-weight:600;margin-bottom:4px" id="error-text"></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer-simple">
+    <p>&copy; MildMate 2026 &middot; <a href="/policy/">Privacy</a> &middot; <a href="/shipping/">Shipping</a></p>
+  </footer>
+
+  <script src="/js/clerk.js"></script>
+  <script src="/js/geo.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+    (function() {
+      var cart = MildMateCart.get();
+      var discountApplied = false;
+      var discountCode = '';
+      var shippingState = {
+        currency: 'USD',
+        requestedCountry: '',
+        appliedCountry: '',
+        countryName: '',
+        amount: 0,
+        firstItem: 0,
+        additionalItem: 0,
+        isFallback: false,
+        totalQty: 0,
+        lastError: ''
+      };
+      var shippingRequestSeq = 0;
+
+      function getTotalQty() {
+        return (cart.items || []).reduce(function(sum, item) { return sum + (item.qty || 1); }, 0);
+      }
+
+      function getActiveCurrency() {
+        return (window.MildMateGeo && window.MildMateGeo.currency === 'THB') ? 'THB' : 'USD';
+      }
+
+      function getSelectedCountryCode() {
+        var countryEl = document.getElementById('cust-country');
+        var selected = countryEl && countryEl.value ? countryEl.value : '';
+        if (selected) return selected;
+        var detected = (window.MildMateGeo && window.MildMateGeo.country) || '';
+        return detected || 'OTHER';
+      }
+
+      function formatMoney(value, currency) {
+        var n = Number(value || 0);
+        if (!isFinite(n)) n = 0;
+        if (currency === 'THB') {
+          return '\u0E3F' + Math.round(n).toLocaleString();
+        }
+        var rounded = Math.round(n * 100) / 100;
+        if (Math.abs(rounded - Math.round(rounded)) < 0.0001) return '$' + Math.round(rounded);
+        return '$' + rounded.toFixed(2);
+      }
+
+      function computeSubtotal(currency) {
+        var sum = (cart.items || []).reduce(function(total, item) {
+          var unit = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
+          return total + (unit * (item.qty || 1));
+        }, 0);
+        return discountApplied ? Math.round(sum * 0.85) : sum;
+      }
+
+      function setText(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+      }
+
+      var EU_COUNTRIES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
+      var NO_TARIFF_NOTE = ['TH','US','CA','AU'];
+
+      function countryNeedsTariffTaxNote(code) {
+        var c = String(code || '').toUpperCase();
+        if (NO_TARIFF_NOTE.indexOf(c) >= 0) return false;
+        if (EU_COUNTRIES.indexOf(c) >= 0 || c === 'GB') return 'tariff_tax';
+        return 'tariff_tax';
+      }
+
+      function updateShippingNotes() {
+        // Shipping note removed — kept as no-op for compatibility
+      }
+
+      function applyTotalsFromState() {
+        var currency = shippingState.currency || getActiveCurrency();
+        var subtotal = computeSubtotal(currency);
+        var shipping = Number(shippingState.amount || 0);
+        var total = subtotal + shipping;
+        var shippingText = formatMoney(shipping, currency);
+
+        setText('subtotal', formatMoney(subtotal, currency));
+        setText('shipping-step1', shippingText);
+        setText('grand-total', formatMoney(total, currency));
+
+        setText('step2-subtotal', formatMoney(subtotal, currency));
+        setText('step2-shipping', shippingText);
+        setText('step2-total', formatMoney(total, currency));
+
+        setText('pay-subtotal-sidebar', formatMoney(subtotal, currency));
+        setText('pay-shipping-sidebar', shippingText);
+        setText('pay-total-sidebar', formatMoney(total, currency));
+        setText('bar-total-step3', formatMoney(total, currency));
+
+        // Keep step-1 mobile bar as subtotal (label already says Subtotal)
+        setText('bar-total', formatMoney(subtotal, currency));
+        updateShippingNotes();
+      }
+
+      async function refreshShippingQuote(forceCountryCode) {
+        var qty = getTotalQty();
+        var currency = getActiveCurrency();
+        if (qty <= 0) {
+          shippingState = {
+            currency: currency,
+            requestedCountry: '',
+            appliedCountry: '',
+            countryName: '',
+            amount: 0,
+            firstItem: 0,
+            additionalItem: 0,
+            isFallback: false,
+            totalQty: 0,
+            lastError: ''
+          };
+          applyTotalsFromState();
+          return;
+        }
+
+        var country = forceCountryCode || getSelectedCountryCode();
+        var requestId = ++shippingRequestSeq;
+        setText('shipping-step1', 'Calculating...');
+        setText('step2-shipping', 'Calculating...');
+        setText('pay-shipping-sidebar', 'Calculating...');
+
+        try {
+          var url = '/api/shipping/calculate?country=' + encodeURIComponent(country) +
+            '&qty=' + encodeURIComponent(qty) +
+            '&currency=' + encodeURIComponent(currency);
+          var resp = await fetch(url);
+          var data = await resp.json().catch(function() { return {}; });
+          if (requestId !== shippingRequestSeq) return;
+          if (!resp.ok || !data.ok) throw new Error(data.error || 'Shipping quote failed');
+
+          shippingState = {
+            currency: data.currency || currency,
+            requestedCountry: data.requested_country || country,
+            appliedCountry: data.applied_country || country,
+            countryName: data.country_name || '',
+            amount: Number(data.amount || 0),
+            firstItem: Number(data.first_item || 0),
+            additionalItem: Number(data.additional_item || 0),
+            isFallback: !!data.is_fallback,
+            totalQty: Number(data.total_qty || qty),
+            lastError: ''
+          };
+        } catch (e) {
+          if (requestId !== shippingRequestSeq) return;
+          shippingState = {
+            currency: currency,
+            requestedCountry: country,
+            appliedCountry: country,
+            countryName: '',
+            amount: 0,
+            firstItem: 0,
+            additionalItem: 0,
+            isFallback: false,
+            totalQty: qty,
+            lastError: e && e.message ? e.message : 'shipping-unavailable'
+          };
+        }
+        applyTotalsFromState();
+      }
+
+      // Cart badge (no badge on checkout header, no-op safe)
+      function updateBadge() {
+        var badge = document.getElementById('cart-count');
+        var count = MildMateCart.get().items.reduce(function(s, i) { return s + (i.qty || 1); }, 0);
+        if (badge) badge.textContent = count > 99 ? '99+' : count;
+      }
+      updateBadge();
+      var currentStep = 1;
+      var authedEmail = null;
+      var _authRetryCount = 0;
+      var hasDefaultAddressPrefill = false;
+      var prefilledCountryCode = '';
+      var prefilledPhoneCode = '';
+
+      // Check auth state on load — single call, no concurrency
+      var _authDone = false;
+      var _checkingAuth = false;
+      checkAuth();
+      window.addEventListener('clerk:signed-in', function() {
+        if (!_checkingAuth) { checkAuth(); }
+      });
+      window.addEventListener('clerk:signed-out', function() {
+        authedEmail = null;
+        document.getElementById('login-banner').style.display = 'block';
+      });
+      // Fallback: if no auth result after 6s, show banner
+      setTimeout(function() {
+        if (!_authDone) {
+          document.getElementById('login-banner').style.display = 'block';
+        }
+      }, 6000);
+
+      // Render cart
+      step1();
+      loadCountryMaster();
+      if (window.MildMateGeo && window.MildMateGeo.onDetect) {
+        window.MildMateGeo.onDetect(function() {
+          refreshShippingQuote();
+          populateStep2Summary();
+          renderStep3();
+        });
+      }
+
+      async function checkAuth() {
+        if (_checkingAuth) return;
+        _checkingAuth = true;
+
+        // Fast path: Clerk SDK already has the user → hide banner immediately
+        if (window.clerk && window.clerk.user) {
+          document.getElementById('login-banner').style.display = 'none';
+        }
+
+        // Wait for Clerk SDK to initialize (if not already)
+        if (!window.clerk) {
+          await new Promise(function(resolve) {
+            window.addEventListener('clerk:ready', resolve, { once: true });
+            setTimeout(resolve, 5000);
+          });
+        }
+
+        try {
+          var authHeaders = {};
+          var clerkEmail = (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress && window.clerk.user.primaryEmailAddress.emailAddress) || '';
+          if (clerkEmail) {
+            authHeaders['X-User-Email'] = clerkEmail;
+          }
+          if (typeof window.getClerkToken === 'function') {
+            // Retry token fetch — SDK may need a moment after init
+            for (var i = 0; i < 50; i++) {
+              try {
+                var token = await window.getClerkToken();
+                if (token) {
+                  authHeaders.Authorization = 'Bearer ' + token;
+                  break;
+                }
+              } catch (e) {
+                // getClerkToken can throw during re-init — keep retrying
+              }
+              await new Promise(function(resolve) { setTimeout(resolve, 200); });
+            }
+          }
+          if (authHeaders.Authorization) {
+            _authRetryCount = 0;
+          } else if (window.clerk && window.clerk.user && _authRetryCount < 3) {
+            _authRetryCount++;
+            setTimeout(function() {
+              if (!_checkingAuth) checkAuth();
+            }, 1200);
+          }
+
+          var resp = await fetch('/api/auth/me', { headers: authHeaders });
+          var data = await resp.json();
+          if (data.authenticated) {
+            _authDone = true;
+            authedEmail = data.email;
+            if (data.email) {
+              authHeaders['X-User-Email'] = data.email;
+            }
+            document.getElementById('cust-fname').value = data.name || '';
+            document.getElementById('cust-email').value = data.email || '';
+            document.getElementById('login-banner').style.display = 'none';
+
+            // If local cart has items, sync them to server
+            if (cart.items && cart.items.length > 0) {
+              await MildMateCart.syncToServer();
+            } else {
+              // No local cart — load from server
+              try {
+                var cartResp = await fetch('/api/customers/cart', { headers: authHeaders });
+                var cartData = await cartResp.json();
+                if (cartData.items && cartData.items.length > 0) {
+                  cart.items = cartData.items;
+                }
+              } catch(e) {}
+            }
+          }
+
+          // Pre-fill shipping from default address (runs regardless of /api/auth/me result, if we have a token)
+          if (authHeaders.Authorization) {
+            try {
+              var addrResp = await fetch('/api/customers/addresses', { headers: authHeaders });
+              if (!addrResp.ok) {
+                var addrErr = await addrResp.json().catch(function() { return {}; });
+                console.error('checkout address prefill failed:', addrResp.status, addrErr.error || '');
+                return;
+              }
+              var addrData = await addrResp.json();
+              var addrs = addrData.addresses || [];
+              var defAddr = null;
+              for (var ai = 0; ai < addrs.length; ai++) {
+                if (addrs[ai].is_default == 1) { defAddr = addrs[ai]; break; }
+              }
+              if (!defAddr && addrs.length > 0) defAddr = addrs[0]; // fallback to first
+              if (defAddr) {
+                var userEmail = authedEmail || (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress && window.clerk.user.primaryEmailAddress.emailAddress) || '';
+                if (!authedEmail && userEmail) authedEmail = userEmail;
+                document.getElementById('cust-fname').value = defAddr.first_name || '';
+                document.getElementById('cust-lname').value = defAddr.last_name || '';
+                document.getElementById('cust-email').value = userEmail || '';
+
+                // Map country name → country code for the dropdown
+                await loadCountryMaster();
+                var countryMatch = findCountryByName(defAddr.country);
+                if (countryMatch) {
+                  document.getElementById('cust-country').value = countryMatch.code;
+                  document.getElementById('phone-code').value = countryMatch.phone;
+                  prefilledCountryCode = countryMatch.code;
+                }
+
+                // Extract phone code from stored phone (e.g., "+6612345678" → code "+66", number "12345678")
+                var phoneMatch = (defAddr.phone || '').match(/^(\+\d{1,3})(.*)/);
+                if (phoneMatch && document.getElementById('phone-code')) {
+                  document.getElementById('phone-code').value = phoneMatch[1];
+                  document.getElementById('cust-phone').value = phoneMatch[2];
+                  prefilledPhoneCode = phoneMatch[1];
+                } else {
+                  document.getElementById('cust-phone').value = defAddr.phone || '';
+                }
+
+                // Split address into street + apt (e.g., "123 Main St, Apt/Suite 4B")
+                var addrParts = (defAddr.address || '').split(/,?\s*Apt\s*\/?\s*Suite\s*/i);
+                document.getElementById('cust-street').value = addrParts[0].trim();
+                if (addrParts[1] && document.getElementById('cust-apt')) {
+                  document.getElementById('cust-apt').value = addrParts[1].trim();
+                }
+
+                document.getElementById('cust-city').value = defAddr.city || '';
+                document.getElementById('cust-province').value = defAddr.state || '';
+                document.getElementById('cust-postal').value = defAddr.postal_code || '';
+                hasDefaultAddressPrefill = true;
+              }
+            } catch(e) {
+              // Address pre-fill is non-blocking — form still works without it
+            }
+          }
+        } catch(e) {
+          console.error('checkAuth error:', e && e.message);
+        } finally {
+          _checkingAuth = false;
+        }
+      }
+      // Multi-provider sign-in via Clerk hosted page (Google / Apple / Facebook / Email)
+      function handleGoogleLogin() {
+        if (typeof signInWithClerk === 'function') {
+          signInWithClerk();
+        }
+      }
+
+      // Centralized country master list (source: /api/countries, D1-backed)
+      var COUNTRIES_FALLBACK = [
+        { code: 'TH', name: 'Thailand', phone: '+66' },
+        { code: 'US', name: 'United States', phone: '+1' },
+        { code: 'GB', name: 'United Kingdom', phone: '+44' },
+        { code: 'AU', name: 'Australia', phone: '+61' },
+        { code: 'CA', name: 'Canada', phone: '+1' },
+        { code: 'JP', name: 'Japan', phone: '+81' },
+        { code: 'KR', name: 'South Korea', phone: '+82' },
+        { code: 'CN', name: 'China', phone: '+86' },
+        { code: 'TW', name: 'Taiwan', phone: '+886' },
+        { code: 'HK', name: 'Hong Kong', phone: '+852' },
+        { code: 'SG', name: 'Singapore', phone: '+65' },
+        { code: 'MY', name: 'Malaysia', phone: '+60' },
+        { code: 'ID', name: 'Indonesia', phone: '+62' },
+        { code: 'PH', name: 'Philippines', phone: '+63' },
+        { code: 'VN', name: 'Vietnam', phone: '+84' },
+        { code: 'IN', name: 'India', phone: '+91' }
+      ];
+      var COUNTRIES = COUNTRIES_FALLBACK.slice();
+      var countriesLoadedPromise = null;
+
+      function findCountryByCode(code) {
+        var c = String(code || '').trim().toUpperCase();
+        return COUNTRIES.filter(function(x) { return x.code === c; })[0] || null;
+      }
+
+      function findCountryByName(name) {
+        var n = String(name || '').trim().toLowerCase();
+        if (!n) return null;
+        return COUNTRIES.filter(function(x) { return String(x.name || '').trim().toLowerCase() === n; })[0] || null;
+      }
+
+      async function loadCountryMaster() {
+        if (countriesLoadedPromise) return countriesLoadedPromise;
+        countriesLoadedPromise = (async function() {
+          try {
+            var resp = await fetch('/api/countries');
+            var data = await resp.json().catch(function(){ return {}; });
+            if (resp.ok && data && Array.isArray(data.countries) && data.countries.length > 0) {
+              COUNTRIES = data.countries
+                .map(function(c) {
+                  return {
+                    code: String(c.code || '').toUpperCase(),
+                    name: String(c.name || '').trim(),
+                    phone: String(c.phone || '').trim()
+                  };
+                })
+                .filter(function(c) { return c.code && c.name; });
+              if (COUNTRIES.length) return;
+            }
+          } catch (e) {}
+          COUNTRIES = COUNTRIES_FALLBACK.slice();
+        })();
+        return countriesLoadedPromise;
+      }
+
+      async function initCountrySelects() {
+        var countrySel = document.getElementById('cust-country');
+        var phoneCodeSel = document.getElementById('phone-code');
+        if (!countrySel || !phoneCodeSel) return;
+        await loadCountryMaster();
+
+        // Populate both dropdowns
+        var countryHtml = '';
+        var phoneHtml = '';
+        var seenPhone = {};
+        COUNTRIES.forEach(function(c) {
+          countryHtml += '<option value="' + c.code + '">' + c.name + '</option>';
+          var p = c.phone || '';
+          if (p && !seenPhone[p]) {
+            seenPhone[p] = true;
+            phoneHtml += '<option value="' + p + '">' + p + '</option>';
+          }
+        });
+        if (!seenPhone['+66']) phoneHtml = '<option value="+66">+66</option>' + phoneHtml;
+        countrySel.innerHTML = countryHtml;
+        phoneCodeSel.innerHTML = phoneHtml;
+
+        // Preserve saved default address selection when available
+        if (hasDefaultAddressPrefill) {
+          if (prefilledCountryCode) {
+            countrySel.value = prefilledCountryCode;
+          }
+          if (prefilledPhoneCode) {
+            phoneCodeSel.value = prefilledPhoneCode;
+          } else {
+            var selectedCountry = findCountryByCode(countrySel.value);
+            if (selectedCountry && selectedCountry.phone) phoneCodeSel.value = selectedCountry.phone;
+          }
+        } else {
+          // Auto-detect country from geo.js
+          var detected = (window.MildMateGeo && window.MildMateGeo.country) || null;
+          if (detected) {
+            var match = findCountryByCode(detected);
+            if (match) {
+              countrySel.value = match.code;
+              if (match.phone) phoneCodeSel.value = match.phone;
+            }
+          }
+        }
+
+        // Sync phone code when country changes
+        if (!countrySel.dataset.boundShippingChange) {
+          countrySel.addEventListener('change', function() {
+            var c = findCountryByCode(countrySel.value);
+            if (c && c.phone) phoneCodeSel.value = c.phone;
+            refreshSelectLabels();
+            refreshShippingQuote(countrySel.value);
+          });
+          countrySel.dataset.boundShippingChange = '1';
+        }
+        refreshSelectLabels();
+
+        refreshShippingQuote(countrySel.value || ((window.MildMateGeo && window.MildMateGeo.country) || 'OTHER'));
+      }
+
+      function refreshSelectLabels() {
+        var sel = document.getElementById('cust-country');
+        var grp = sel && sel.closest('.float-group');
+        if (grp) grp.classList.toggle('filled', !!sel.value);
+        var pc = document.getElementById('phone-code');
+        var pcg = pc && document.getElementById('phone-code-group');
+        if (pcg) pcg.classList.toggle('filled', !!(pc && pc.value));
+      }
+
+      function buildAddress() {
+        var getVal = function(id) { return document.getElementById(id) ? document.getElementById(id).value.trim() : ''; };
+        var parts = [getVal('cust-street')];
+        var apt = getVal('cust-apt');
+        if (apt) parts.push('Apt/Suite ' + apt);
+        parts.push(getVal('cust-city'));
+        parts.push(getVal('cust-province'));
+        parts.push(getVal('cust-postal'));
+        var country = findCountryByCode(getVal('cust-country'));
+        if (country) parts.push(country.name);
+        return parts.join(', ');
+      }
+
+      function buildFullPhone() {
+        var code = document.getElementById('phone-code') ? document.getElementById('phone-code').value : '';
+        var num = document.getElementById('cust-phone') ? document.getElementById('cust-phone').value.trim() : '';
+        return code + num;
+      }
+
+      function populateStep2Summary() {
+        var container = document.getElementById('step2-order-items');
+        if (!container) return;
+
+        var currency = getActiveCurrency();
+        var html = '';
+
+        cart.items.forEach(function(item) {
+          var priceUsd = item.price_usd || item.price || 0;
+          var priceThb = item.price_thb || 0;
+          var qty = item.qty || 1;
+          var rowPrice = currency === 'THB' ? (priceThb * qty) : (priceUsd * qty);
+          var priceStr = formatMoney(rowPrice, currency);
+
+          html += '<div class="summary-item">' +
+            '<div class="summary-item-name">' +
+              escHtml(item.product_name || 'Product') + ' \u00D7 ' + qty +
+              '<div class="summary-item-meta">' + escHtml([item.fabric, item.color].filter(Boolean).join(' | ')) + '</div>' +
+            '</div>' +
+            '<span class="summary-item-price">' + priceStr + '</span>' +
+          '</div>';
+        });
+        container.innerHTML = html || '<p class="price-note">No items in cart.</p>';
+        applyTotalsFromState();
+      }
+
+      function step1() {
+        var container = document.getElementById('cart-items');
+        var emptyEl = document.getElementById('empty-cart');
+        var totalsEl = document.getElementById('cart-totals');
+        var btnStep2 = document.getElementById('btn-to-step2');
+        var layout = document.getElementById('layout-step1');
+
+        if (!cart.items || cart.items.length === 0) {
+          container.innerHTML = '';
+          emptyEl.style.display = 'block';
+          totalsEl.style.display = 'none';
+          if (layout) layout.classList.add('is-empty');
+          btnStep2.disabled = true;
+          var mbar = document.getElementById('mobile-bar');
+          if (mbar) mbar.classList.remove('visible');
+          shippingState.amount = 0;
+          shippingState.totalQty = 0;
+          shippingState.lastError = '';
+          applyTotalsFromState();
+          return;
+        }
+
+        emptyEl.style.display = 'none';
+        if (layout) layout.classList.remove('is-empty');
+        var html = '';
+        var currency = getActiveCurrency();
+
+        cart.items.forEach(function(item, idx) {
+          var priceUsd = item.price_usd || item.price || 0;
+          var priceThb = item.price_thb || 0;
+          var qty = item.qty || 1;
+          var itemName = item.product_name || item.title || 'Product';
+          var isCustomQuote = !!item.is_quote || !!item.quote_id;
+          var imageSrc = item.image || item.image_url || (isCustomQuote ? '/images/custom-quote-placeholder.svg' : '');
+          var imageHtml = imageSrc
+            ? '<img src="' + escHtml(imageSrc) + '" alt="' + escHtml(itemName) + '">'
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>';
+
+          // Show size label if available, otherwise cm dimensions (only if w > 0)
+          var dimStr = '';
+          if (item.dimensions && item.dimensions.w > 0) {
+            if (item.dimensions.label) {
+              dimStr = item.dimensions.label;
+            } else {
+              dimStr = (item.dimensions.w || '?') + '\u00D7' + (item.dimensions.l || '?') + (item.dimensions.d ? '\u00D7' + item.dimensions.d : '') + ' ' + (item.dimensions.unit || 'cm');
+            }
+          }
+          var meta = [item.fabric, item.color, dimStr].filter(Boolean).join(' | ');
+
+          // Currency-specific price display
+          var itemUnit = currency === 'THB' ? (priceThb || 0) : (priceUsd || 0);
+          var priceDisplay = formatMoney(itemUnit, currency);
+
+          html += '<div class="cart-item">' +
+            '<div class="cart-item-img">' +
+              imageHtml +
+            '</div>' +
+            '<div class="cart-item-info">' +
+              '<div class="cart-item-title">' + escHtml(itemName) + '</div>' +
+              '<div class="cart-item-meta">' + escHtml(meta) + '</div>' +
+              '<div class="cart-item-price">' + priceDisplay + '</div>' +
+            '</div>' +
+            '<div class="cart-item-actions">' +
+              '<button class="qty-btn" onclick="changeQty(' + idx + ',-1)">\u2212</button>' +
+              '<span class="qty-val">' + qty + '</span>' +
+              '<button class="qty-btn" onclick="changeQty(' + idx + ',1)">+</button>' +
+              ' <button class="remove-btn" onclick="removeItem(' + idx + ')">Remove</button>' +
+            '</div>' +
+          '</div>';
+        });
+
+        container.innerHTML = html;
+        totalsEl.style.display = 'block';
+        btnStep2.disabled = false;
+
+        // Sync mobile bar
+        var bar = document.getElementById('mobile-bar');
+        var barBtn = document.getElementById('btn-mobile-checkout');
+        if (bar) {
+          bar.classList.add('visible');
+          if (barBtn) barBtn.disabled = false;
+        }
+        refreshShippingQuote();
+      }
+
+      window.changeQty = function(idx, delta) {
+        var cartData = MildMateCart.get();
+        if (!cartData.items[idx]) return;
+        var item = cartData.items[idx];
+        var newQty = Math.max(1, (item.qty || 1) + delta);
+        if (item.id) {
+          MildMateCart.updateQty(item.id, newQty);
+        } else {
+          item.qty = newQty;
+          var saveCart = function(c) { localStorage.setItem('mildmate-cart', JSON.stringify(c)); };
+          saveCart(cartData);
+        }
+        cart = MildMateCart.get();
+        updateBadge();
+        step1();
+      };
+
+      window.removeItem = function(idx) {
+        var cartData = MildMateCart.get();
+        if (!cartData.items[idx]) return;
+        var itemId = cartData.items[idx].id;
+        if (itemId) {
+          MildMateCart.remove(itemId);
+        } else {
+          cartData.items.splice(idx, 1);
+          var saveCart = function(c) { localStorage.setItem('mildmate-cart', JSON.stringify(c)); };
+          saveCart(cartData);
+        }
+        cart = MildMateCart.get();
+        updateBadge();
+        step1();
+      };
+
+      window.goToStep = async function(step) {
+        // Validate step 2 fields
+        if (step > 2) {
+          var fname = document.getElementById('cust-fname').value.trim();
+          var lname = document.getElementById('cust-lname').value.trim();
+          var email = document.getElementById('cust-email').value.trim();
+          var phone = document.getElementById('cust-phone').value.trim();
+          var street = document.getElementById('cust-street').value.trim();
+          var city = document.getElementById('cust-city').value.trim();
+          var province = document.getElementById('cust-province').value.trim();
+          var postal = document.getElementById('cust-postal').value.trim();
+          var country = document.getElementById('cust-country').value.trim();
+          if (!fname || !lname || !email || !phone || !street || !city || !province || !postal || !country) {
+            showError('Please fill in all required fields (all fields marked with * are required).');
+            return;
+          }
+          if (!email.includes('@')) {
+            showError('Please enter a valid email address.');
+            return;
+          }
+        }
+
+        currentStep = step;
+        document.querySelectorAll('.step-panel').forEach(function(p) { p.classList.remove('active'); });
+        document.getElementById('step-' + step).classList.add('active');
+
+        // Update dots
+        for (var i = 1; i <= 3; i++) {
+          var dot = document.getElementById('dot-' + i);
+          dot.classList.remove('active', 'done');
+          if (i < step) dot.classList.add('done');
+          if (i === step) dot.classList.add('active');
+        }
+        // Update labels
+        for (var i = 1; i <= 3; i++) {
+          var lbl = document.getElementById('lbl-' + i);
+          lbl.classList.toggle('active', i === step);
+        }
+
+        // Update header stepper dots (mobile)
+        document.querySelectorAll('.checkout-steps-bar .step-dot').forEach(function(d) {
+          d.classList.toggle('active', parseInt(d.getAttribute('data-step')) === step);
+        });
+
+        hideError();
+
+        // Show/hide mobile bottom bar
+        var bar = document.getElementById('mobile-bar');
+        if (bar) bar.classList.toggle('visible', step === 1 && cart.items && cart.items.length > 0);
+        var bar3 = document.getElementById('mobile-bar-step3');
+        if (bar3) bar3.classList.toggle('visible', step === 3 && cart.items && cart.items.length > 0);
+
+        if (step === 2) {
+          // Wait for geo detection before auto-filling country
+          if (window.MildMateGeo && window.MildMateGeo.detected) {
+            await initCountrySelects();
+          } else if (window.MildMateGeo && window.MildMateGeo.onDetect) {
+            window.MildMateGeo.onDetect(function() { initCountrySelects(); });
+            await initCountrySelects();
+          } else {
+            await initCountrySelects();
+          }
+          populateStep2Summary();
+        }
+        if (step === 3) renderStep3();
+      };
+
+      function renderStep3() {
+        var currency = getActiveCurrency();
+        var html = '';
+        cart.items.forEach(function(item) {
+          var price = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
+          var priceStr = formatMoney(price, currency);
+          html += '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:0.875rem">' +
+            '<span>' + escHtml(item.product_name) + ' \u00D7' + (item.qty || 1) + '</span>' +
+            '<span>' + priceStr + '</span>' +
+          '</div>';
+        });
+        var sidebarItems = document.getElementById('order-summary-sidebar');
+        if (sidebarItems) sidebarItems.innerHTML = html;
+        applyTotalsFromState();
+        refreshShippingQuote();
+      }
+
+      async function applyDiscountCode() {
+        var input = document.getElementById("discount-input");
+        var msg = document.getElementById("discount-msg");
+        var code = input.value.trim().toUpperCase();
+        if (!code) { msg.style.display = "block"; msg.style.color = "#ef4444"; msg.textContent = "Please enter a code"; return; }
+        msg.style.display = "block"; msg.style.color = "var(--c-muted)"; msg.textContent = "Checking...";
+        try {
+          var checkoutEmail = (document.getElementById('cust-email') && document.getElementById('cust-email').value || '').trim().toLowerCase();
+          if (!checkoutEmail || checkoutEmail.indexOf('@') < 0) {
+            msg.style.color = "#ef4444";
+            msg.textContent = "Please fill valid email in Shipping Details first";
+            return;
+          }
+          var resp = await fetch("/api/discount/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: code, email: checkoutEmail, address: buildAddress() })
+          });
+          var data = await resp.json();
+          if (data.valid) {
+            discountApplied = true;
+            discountCode = code;
+            msg.style.color = "#16a34a";
+            msg.textContent = "15% discount applied! (expires " + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ")";
+            document.getElementById("btn-apply-discount").disabled = true;
+            document.getElementById("discount-input").disabled = true;
+            // Refresh totals across steps after discount is applied
+            step1();
+            populateStep2Summary();
+            renderStep3();
+          } else {
+            msg.style.color = "#ef4444";
+            msg.textContent = data.error || "Invalid code";
+          }
+        } catch(e) { msg.style.color = "#ef4444"; msg.textContent = "Validation failed — try again"; }
+      }
+
+      window.applyDiscountCode = applyDiscountCode;
+
+      async function processPayment() {
+        var btn = document.getElementById('btn-pay');
+        var text = document.getElementById('pay-text');
+        var spin = document.getElementById('pay-spinner');
+
+        btn.disabled = true;
+        text.style.display = 'none';
+        spin.style.display = 'inline-block';
+
+        var mPay = document.getElementById('btn-mobile-pay');
+        if (mPay) { mPay.disabled = true; mPay.querySelector('.loading-spinner') || (function(){ var s = document.createElement('span'); s.className='loading-spinner'; s.id='pay-spinner-mobile'; mPay.appendChild(s); })(); }
+        var mSpin = document.getElementById('pay-spinner-mobile');
+        if (mSpin) mSpin.style.display = 'inline-block';
+
+        try {
+          var currencyPref = getActiveCurrency();
+          var shippingCountryCode = getSelectedCountryCode();
+
+          var resp = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items: cart.items,
+              email: document.getElementById('cust-email').value.trim(),
+              name: document.getElementById('cust-fname').value.trim() + ' ' + document.getElementById('cust-lname').value.trim(),
+              phone: buildFullPhone(),
+              address: buildAddress(),
+              currency: currencyPref,
+              shipping_country: shippingCountryCode,
+              discount_code: discountApplied ? discountCode : undefined
+            })
+          });
+
+          var data = await resp.json();
+
+          if (resp.ok && data.url) {
+            window.location.href = data.url;
+          } else {
+            showError(data.error || 'Payment setup failed. Please try again.');
+            // If error mentions discount/code, reset discount state so UI matches reality
+            if (data.error && (data.error.indexOf('discount') >= 0 || data.error.indexOf('code') >= 0 || data.error.indexOf('used') >= 0)) {
+              discountApplied = false;
+              discountCode = '';
+              var dInp = document.getElementById('discount-input');
+              var dBtn = document.getElementById('btn-apply-discount');
+              var dMsg = document.getElementById('discount-msg');
+              if (dInp) { dInp.disabled = false; dInp.value = ''; }
+              if (dBtn) dBtn.disabled = false;
+              if (dMsg) { dMsg.style.color = '#ef4444'; dMsg.textContent = data.error; dMsg.style.display = 'block'; }
+              step1();
+              populateStep2Summary();
+              renderStep3();
+            }
+            btn.disabled = false;
+            text.style.display = '';
+            spin.style.display = 'none';
+            if (mPay) { mPay.disabled = false; }
+            var mSpin2 = document.getElementById('pay-spinner-mobile');
+            if (mSpin2) mSpin2.style.display = 'none';
+          }
+        } catch(e) {
+          showError('Network error. Please check your connection and try again.');
+          btn.disabled = false;
+          text.style.display = '';
+          spin.style.display = 'none';
+          if (mPay) { mPay.disabled = false; }
+          var mSpin3 = document.getElementById('pay-spinner-mobile');
+          if (mSpin3) mSpin3.style.display = 'none';
+        }
+      }
+      window.processPayment = processPayment;
+
+      function showError(msg) {
+        document.getElementById('error-text').textContent = msg;
+        document.getElementById('error-banner').style.display = 'block';
+      }
+
+      function hideError() {
+        document.getElementById('error-banner').style.display = 'none';
+      }
+
+      function escHtml(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

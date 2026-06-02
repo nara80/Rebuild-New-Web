@@ -1,22 +1,32 @@
 ## Phase 3 Completion Summary (2026-05-09)
 
-Design system implemented. `main.css` (~400 lines) with brand tokens, Quicksand font, sticky header with mega-menu (Shop) and dropdown (Fabrics), mobile drawer (slides from left), 4-column minimal footer (Quick Links, Customer Service, Shop With Us, Contact) with icon-only marketplace links (Etsy, eBay, Shopee, Lazada, TikTok), centered social row, deep navy `#001d3d` footer background. Header injected into all 258 pages.
+Design system implemented. `main.min.css` (~40KB minified) with brand tokens, Quicksand + Sarabun bilingual font system, sticky fixed header (scroll-shrinks via CSS class), mobile drawer (slides from left), 4-column minimal footer with icon-only marketplace links (Etsy, eBay, Shopee, Lazada, TikTok), centered social row, deep navy `#001d3d` footer background. Header + footer injected into all ~56 pages. Shop links to `/products/`, Fabrics to `/fabric/` (no mega-menu or dropdown built). LINE present in footer contact section. Cookie consent banner built. Clerk auth integration built.
 
 ### Additional Updates (2026-05-14)
 - Header consistency: `/about/`, `/reviews/`, `/fabric/` page heroes updated to blue-gradient CI Blue centered style (matching `/contact/`)
 - Full global footer restored on `/how-to-measure-mattress-size/` and `/custom-measurement/` (both had stripped-down footers)
 - Quicksand (EN) + Sarabun (TH) bilingual font system implemented across all 26+ HTML files
-- CSS `:lang(th) { font-family: 'Sarabun', sans-serif; }` added to `main.css` — Thai pages auto-use Sarabun
+- CSS `:lang(th) { font-family: 'Sarabun', sans-serif; }` added to `main.min.css` — Thai pages auto-use Sarabun
+
+### Additional Updates (2026-05-28)
+- Phase 2 remains **deferred** (post-Phase 8). Phase 3 built on existing Phase 1 scaffold, not Phase 2 placeholder pages.
+- `public/css/main.min.css` is the production minified stylesheet — source map or dev version may also exist.
+- Cookie consent (`cookie-consent.js`), Clerk auth integration (`clerk.js`), and search overlay are Phase 3 deliverables that evolved through Phases 4–5.
+- Nav items: Home → `/`, Shop → `/products/`, Fabrics → `/fabric/`, Size Guide → `/sizeguide/` (About and Contact removed from header nav — accessible via footer links).
+- LINE sticky bar intentionally removed per AGENTS.md (international positioning).
+- `admin.css` not built in Phase 3 — admin styling handled separately in Phase 7.
 
 ---
 
 # Phase 3 — Design System + Shared Components
-**Status (2026-05-21): ✅ COMPLETE — header, footer, nav, mobile drawer, search overlay all built**
-**Goal:** Build the visual identity of the entire website — the brand colors, typography, sticky header with simplified navigation, minimal premium footer, and mobile navigation. These components are then injected into all pages at once.
+**Status (2026-05-28): ✅ COMPLETE — main.min.css, nav.js, mobile drawer, search overlay, header+footer injection all built and confirmed**
+**Goal:** Build the visual identity of the entire website — the brand colors, typography, sticky header, minimal premium footer, and mobile navigation. These components are then injected into all pages.
 
-**End Result:** Every page on the site suddenly looks like a real MildMate website. Open any HTML file in your browser and you will see the blue brand header, navigation, and footer — even though the page content is still a placeholder.
+**End Result:** Every page on the site suddenly looks like a real MildMate website. Open any HTML file in your browser and you will see the blue brand header, navigation, and footer — even though the page content may still be a placeholder.
 
 **Time Estimate:** 30–45 minutes (you provide logo + give feedback; Droid builds everything)
+
+> **Phase 2 note:** SEO URL preservation is deferred to post-Phase 8. The redirect rule set from that phase lives in `public/_redirects` and will be expanded at that time.
 
 ---
 
@@ -30,7 +40,7 @@ Collect all of the following before telling Droid to build. These are the only a
 
 Phase 3 builds the design system (CSS, header, footer, navigation) and injects it into all pages. Phase 1 must be complete first.
 
-> **Note:** Phase 2 (SEO URL Preservation) is **intentionally deferred** — it will run pre-launch after Phase 7. Phase 3 injects components into the existing `public/index.html` placeholder and all new pages created in this phase.
+> **Note:** Phase 2 (SEO URL Preservation) is **intentionally deferred** — it will run pre-launch after Phase 8. Phase 3 injects components into existing pages in the `public/` scaffold.
 
 **Confirm before starting:**
 - [ ] `public/` folder exists with `css/`, `js/`, `images/` subfolders
@@ -93,6 +103,8 @@ Tell Droid "No LINE account yet — use a placeholder link." The LINE widget wil
 
 The footer has two groups of links: **Contact channels** (how customers reach you) and **Marketplace shops** (where you sell online).
 
+> **Note:** Collected during Phase 3 build. Update via Droid if links change.
+
 **Contact Channels — fill in your URLs:**
 
 | Platform | Your URL | Required? |
@@ -126,18 +138,11 @@ The header navigation has 6 items by default. Confirm or adjust the order and na
 | Position | Label (EN) | Label (TH) | Links To |
 |---|---|---|---|
 | 1 | Home | หน้าแรก | `/` |
-| 2 | Shop ▾ | ช้อป ▾ | Mega-dropdown |
-| 3 | Fabrics ▾ | ผ้า ▾ | Dropdown |
+| 2 | Shop | ช้อป | `/products/` |
+| 3 | Fabrics | ผ้า | `/fabric/` |
 | 4 | Size Guide | คู่มือขนาด | `/sizeguide/` |
-| 5 | About | เกี่ยวกับเรา | `/about/` |
-| 6 | Contact | ติดต่อเรา | `/contact/` |
 
-**Decisions needed:**
-- Are the label names correct in both Thai and English?
-- Is the order correct?
-- Do you want to add or remove any navigation items?
-
-Write your final navigation list — give it to Droid in Step 3.4.
+> **Note:** About and Contact are not in the desktop header — they are accessible via footer links or direct URL.
 
 ---
 
@@ -172,22 +177,24 @@ The footer bottom bar has links to your policy pages. Confirm which policy pages
 
 Think of Phase 3 as building the **frame of a house** before putting in the furniture.
 
-- The header and footer are shared across all 258 pages
-- If you build them once here and inject them everywhere, changing them later only requires editing 1 file — not 258
+- The header and footer are shared across all pages in `public/`
+- If you build them once here and inject them everywhere, changing them later only requires editing 1 file — not all pages in `public/`
 - Your brand identity (color, font, spacing) is defined once as CSS variables — changing `--color-primary` in one place updates every button, link, and badge across the whole site
 
 ---
 
 ## What Phase 3 Builds
 
-| File | What It Is |
-|---|---|
-| `public/css/main.css` | All visual styles — brand tokens, typography, layout, header, footer, buttons, cards, forms |
-| `public/css/admin.css` | Styles for the admin dashboard (separate from public site) |
-| `public/js/nav.js` | Mega-menu open/close, mobile hamburger drawer, sticky header shrink on scroll |
-| Header HTML component | Sticky bar: logo + navigation + TH/EN toggle + cart icon |
-| Footer HTML component | 4-column minimal footer + icon-only marketplace/social + search overlay |
-| Injected into all 258 pages | Header and footer added to every `public/[slug]/index.html` file |
+| File | What It Is | Status |
+|---|---|---|
+| `public/css/main.min.css` | All visual styles — brand tokens, typography, layout, header, footer, buttons, cards, forms (~40KB minified) | ✅ Built |
+| `public/js/nav.js` | Sticky header shrink on scroll + mobile hamburger drawer (left) + search overlay toggle | ✅ Built |
+| `public/js/cookie-consent.js` | GDPR cookie consent banner + GA4 conditional load | ✅ Built |
+| `public/js/clerk.js` | Clerk auth integration — account button (Sign In vs person icon) | ✅ Built |
+| Header HTML component | Sticky bar: logo + navigation (Home/Shop/Fabrics/Size Guide) + EN/TH toggle + search + account + cart | ✅ Built |
+| Footer HTML component | 4-column minimal footer + icon-only marketplace links + search overlay | ✅ Built |
+| Injected into all ~56 pages | Header and footer added to every `public/[slug]/index.html` file | ✅ Built |
+| `public/css/admin.css` | Admin dashboard styles (Phase 7) | ⏸️ Deferred |
 
 ---
 
@@ -227,16 +234,17 @@ These are the visual rules Droid will code into `main.css`. No decisions needed 
 ### Desktop Header
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  [MildMate Logo]  Home  Shop  Fabrics  Size Guide          │
+│  [MildMate Logo]  Home  Shop  Fabrics  Size Guide         │
 │                                    [🔍][👤][🛒][EN/TH]  │
 └─────────────────────────────────────────────────────────┘
 ```
-- Height: 80px normal → shrinks to 60px when you scroll down
+- Height: 83px normal → shrinks to 60px when you scroll down (CSS class `.scrolled`)
 - Background: white with a subtle bottom border
 - Logo: left-aligned, max-height 64px (shrinks to 50px on scroll)
 - Nav text: 1.2rem, weight 600, Quicksand
 - Actions right: Search → Account → Cart → EN/TH
 - Icons: 20px inline SVGs, blue hover
+- **No mega-menu on Shop** — Shop links directly to `/products/` page
 
 ### Mobile Header (screen width ≤ 1024px)
 ```
@@ -295,7 +303,7 @@ Go through Requirements 1–7 above and collect every item. Fill in this summary
 ```
 PHASE 3 REQUIREMENTS SUMMARY
 
-Requirement 1 — Phase 1 complete (Phase 2 deferred): Yes / No
+Requirement 1 — Phase 1 complete (Phase 2 deferred to post-Phase 8): Yes / No
 Requirement 2 — Logo file: placed at public/images/logo.png / [describe format]
 Requirement 3 — LINE link: [your LINE URL]
 Requirement 4 — Contact & Marketplace links:
@@ -308,12 +316,14 @@ Requirement 4 — Contact & Marketplace links:
   Lazada: [URL]
   TikTok Shop: [URL]
 Requirement 5 — Navigation:
-  1. Home / หน้าแรก → /
-  2. Shop / ช้อป → mega-dropdown
-  3. Fabrics / ผ้า → dropdown
-  4. Size Guide / คู่มือขนาด → /sizeguide/
-  5. About / เกี่ยวกับเรา → /about/
-  6. Contact / ติดต่อเรา → /contact/
+  1. Home → /
+  2. Shop → /products/ (no mega-menu)
+  3. Fabrics → /fabric/
+  4. Size Guide → /sizeguide/
+Requirement 6 — Footer tagline:
+  EN: [your tagline]
+  TH: [your tagline]
+Requirement 7 — Policy links: Privacy Policy → /policy/ | Shipping Policy → /shipping/
   [add/remove/rename if needed]
 Requirement 6 — Footer tagline:
   EN: [your tagline]
@@ -340,52 +350,39 @@ If not already done in Requirement 2:
 
 ---
 
-### Step 3.3 — Confirm Phase 2 Pages Are Present
+### Step 3.3 — Tell Droid to Build Phase 3
 
-Before asking Droid to inject the header and footer, quickly confirm the Phase 2 pages exist.
-
-**Quick check in cmd:**
-```
-cd D:\00_MildMate\Re-Bulit_Web
-npx wrangler pages dev public
-```
-Open `http://localhost:8788/mattress-size-th/` — if the page loads (even as a blank/placeholder), Phase 2 is confirmed. Press `Ctrl + C` to stop.
-
----
-
-### Step 3.4 — Tell Droid to Build Phase 3
-
-Once all 7 requirements are collected and the logo is placed, hand off to Droid.
+Once all requirements are collected and the logo is placed, hand off to Droid.
 
 **Tell Droid:**
-> "Phase 2 is complete. Please build Phase 3 — the design system and shared components.
+> "Please build Phase 3 — the design system and shared components.
 >
-> **Requirement 1:** Phase 2 confirmed complete.
-> **Requirement 2 — Logo:** Placed at `public/images/logo.png` [or describe: 'JPG file' / 'no logo yet — use text placeholder']
-> **Requirement 3 — LINE:** [your LINE URL]
-> **Requirement 4 — Social links:**
+> **Logo:** Placed at `public/images/logo.png` [or describe: 'JPG file' / 'no logo yet — use text placeholder']
+> **LINE:** [your LINE URL]
+> **Social links:**
 > - Facebook: [URL]
 > - Etsy: [URL]
-> - Instagram: [URL or none]
-> - TikTok: [URL or none]
-> **Requirement 5 — Navigation:** [confirm default OR list your changes]
-> **Requirement 6 — Footer tagline:**
-> - EN: [your tagline]
-> - TH: [your tagline]
-> **Requirement 7 — Policy links:** Privacy Policy → /policy/ | Shipping Policy → /shipping/ [add others if needed]
+> - eBay: [URL]
+> - Shopee: [URL]
+> - Lazada: [URL]
+> - TikTok Shop: [URL]
+> **Navigation:** Home → `/`, Shop → `/products/`, Fabrics → `/fabric/`, Size Guide → `/sizeguide/`
+> **Footer tagline:** EN: [your tagline] | TH: [your tagline]
+> **Policy links:** Privacy Policy → /policy/ | Shipping Policy → /shipping/
 >
-> Build main.css, admin.css, nav.js, the sticky header with mega-menu, the footer with LINE widget and all contact/marketplace links (LINE, WhatsApp, Facebook, Etsy, eBay, Shopee, Lazada, TikTok), mobile hamburger drawer, and inject header + footer into all 258 pages."
+> Build main.min.css, nav.js, the sticky header, the footer with LINE widget and all contact/marketplace links, mobile hamburger drawer, and inject header + footer into all pages in public/."
 
 **What Droid builds:**
-1. `public/css/main.css` — full design system CSS (~400 lines)
-2. `public/js/nav.js` — header scroll shrink + mega-menu + mobile drawer
-3. Header HTML (injected into all pages)
-4. Footer HTML with LINE widget (injected into all pages)
-5. Updates all 258 `index.html` files with the header and footer
+1. `public/css/main.min.css` — full design system CSS (~40KB minified)
+2. `public/js/nav.js` — sticky header shrink on scroll + mobile drawer (left) + search overlay toggle
+3. `public/js/cookie-consent.js` — GDPR cookie consent banner + GA4 conditional load
+4. `public/js/clerk.js` — Clerk auth integration for account button
+5. Header HTML (injected into all ~56 pages in `public/`)
+6. Footer HTML with LINE widget and marketplace links (injected into all pages)
 
 ---
 
-### Step 3.5 — Review the Header on Desktop
+### Step 3.4 — Review the Header on Desktop
 
 After Droid finishes, open your browser and check the header.
 
@@ -414,7 +411,7 @@ After Droid finishes, open your browser and check the header.
 
 ---
 
-### Step 3.6 — Review the Header on Mobile
+### Step 3.5 — Review the Header on Mobile
 
 **How to simulate mobile on desktop:**
 1. In your browser, press `F12` to open Developer Tools
@@ -435,7 +432,7 @@ After Droid finishes, open your browser and check the header.
 
 ---
 
-### Step 3.7 — Review the Footer
+### Step 3.6 — Review the Footer
 
 Scroll all the way to the bottom of any page.
 
@@ -452,19 +449,19 @@ Scroll all the way to the bottom of any page.
 
 ---
 
-### Step 3.8 — Review One of the 258 Injected Pages
+### Step 3.7 — Review One of the Injected Pages
 
-Confirm the header and footer were injected into the SEO pages from Phase 2.
+Confirm the header and footer were injected into the pages.
 
 **How to check:**
-1. In your browser, go to: `http://localhost:8788/mattress-size-th/`
+1. In your browser, go to: `http://localhost:8788/`
 2. Confirm: The header appears at the top with the logo and navigation
 3. Confirm: The footer appears at the bottom
 4. Confirm: The page title in the browser tab says: `[เช็คขนาด] ที่นอน 6ฟุต...`
 
 ---
 
-### Step 3.9 — Give Feedback and Request Fixes
+### Step 3.8 — Give Feedback and Request Fixes
 
 Look at the site on both desktop and mobile. Write down anything that looks wrong or that you want to change.
 
@@ -485,36 +482,26 @@ Droid makes the changes. Repeat Step 3.5–3.8 until you are happy.
 
 ## How You Know Phase 3 Is Complete
 
-Go through this checklist before moving to Phase 4:
-
-**Initial Requirements:**
-- [ ] Phase 2 confirmed complete (258 pages exist)
-- [ ] Logo file placed at `public/images/logo.png`
-- [ ] LINE Official Account link collected
-- [ ] All contact links collected (LINE, WhatsApp, Facebook)
-- [ ] All marketplace links collected (Etsy, eBay, Shopee, Lazada, TikTok)
-- [ ] Navigation labels and order confirmed in both TH and EN
-- [ ] Footer tagline written in both TH and EN
-- [ ] Footer policy links confirmed
-
-**Build Steps:**
-- [ ] `public/css/main.css` exists and has content
-- [ ] `public/js/nav.js` exists
-- [ ] Logo appears correctly in the header on desktop
-- [ ] Mega-menu opens when hovering "Shop" on desktop
-- [ ] Fabrics dropdown opens when hovering "Fabrics" on desktop
-- [ ] Header shrinks when scrolling down the page
-- [ ] Mobile view shows hamburger icon `☰` on far left
-- [ ] Tapping `☰` opens slide-in drawer from the **left**
-- [ ] TH/EN toggle visible in header (desktop and mobile)
-- [ ] Account, search, and cart icons visible in header
-- [ ] Footer shows all 4 columns with correct links
-- [ ] Footer marketplace icons are icon-only (no text labels)
-- [ ] Social icons centered in footer row
-- [ ] No LINE sticky widget (removed for international positioning)
-- [ ] Header and footer appear on `http://localhost:8788/`
-- [ ] Brand color `#2c96f4` used on buttons and hover states
-- [ ] Quicksand font loads correctly (text looks rounded and clean)
+**Build Steps (verified by Droid during build):**
+- [x] `public/css/main.min.css` exists (~40KB minified) with brand tokens, Quicksand + Sarabun fonts, `#001d3d` footer
+- [x] `public/js/nav.js` exists with hamburger toggle + mobile drawer (left) + scroll shrink
+- [x] `public/js/cookie-consent.js` exists
+- [x] `public/js/clerk.js` exists
+- [x] Logo appears in header
+- [x] Header shrinks when scrolling down (`.scrolled` class applied via scroll listener)
+- [x] Mobile view shows hamburger icon on far left
+- [x] Tapping hamburger opens slide-in drawer from **left**
+- [x] TH/EN toggle visible in header
+- [x] Account, search, and cart icons visible in header
+- [x] Footer shows all 4 columns with correct links
+- [x] Footer marketplace icons are icon-only (no text labels)
+- [x] Social icons centered in footer row
+- [x] LINE sticky bar removed (international positioning)
+- [x] Brand color `#2c96f4` used on buttons and hover states
+- [x] Quicksand font loads correctly
+- [x] Header and footer appear on `http://localhost:8788/`
+- [x] Shop links to `/products/`, Fabrics to `/fabric/`, Size Guide to `/sizeguide/`
+- [x] ~56 pages in `public/` all have header and footer injected
 
 ---
 
@@ -522,9 +509,7 @@ Go through this checklist before moving to Phase 4:
 
 | Problem | Solution |
 |---|---|
-| Phase 2 pages not found | Run `npx wrangler pages dev public` and check `http://localhost:8788/mattress-size-th/` — if 404, go back and complete Phase 2. |
-| Logo file not found | Confirm the file is named exactly `logo.png` (lowercase) and is inside `public/images/`. Windows file names are case-sensitive when deployed to Cloudflare. |
-| Logo is not showing in browser | Tell Droid: "Logo is not showing — the path is `public/images/logo.png`." |
+| Logo file not found | Confirm the file is named exactly `logo.png` (lowercase) and is inside `public/images/`. |
 | Logo looks stretched or blurry | Tell Droid: "Logo appears stretched — please set max-height to 60px and width to auto." |
 | LINE link not working | Confirm your LINE URL starts with `https://lin.ee/` or is in `@handle` format. Tell Droid if it needs to be updated. |
 | Contact link not in footer | Tell Droid: "The [LINE/WhatsApp/Facebook] link is not appearing in the footer Contact column." |
@@ -533,9 +518,8 @@ Go through this checklist before moving to Phase 4:
 | Footer logo/description showing | Tell Droid: "The footer still shows a logo or description block — it should be minimal with only 4 columns of links." |
 | Marketplace icons showing text labels | Tell Droid: "Marketplace links in the footer are showing text labels — they should be icon-only circles." |
 | Mobile drawer slides from right | Tell Droid: "The hamburger drawer is sliding in from the right — it should slide from the left to match the hamburger position." |
-| LINE widget showing | LINE sticky bar was removed for international positioning. It should not appear on any screen size. |
+| LINE sticky bar showing | LINE sticky bar removed for international positioning. If it appears, tell Droid to remove it. |
 | Quicksand font not loading | The font loads from Google Fonts and requires internet. Check your internet connection and refresh. |
-| Footer columns stacked on desktop | Tell Droid: "Footer columns are not in a row on desktop — they are stacking vertically." |
 | Header not shrinking on scroll | Tell Droid: "The sticky header is not shrinking when I scroll down." |
 | Account/cart icons not visible | Tell Droid: "The account and cart icons are not showing in the header." |
 
@@ -543,11 +527,9 @@ Go through this checklist before moving to Phase 4:
 
 ## Design Decisions You Can Still Change in Phase 3
 
-These are not locked in until you approve them:
-
 | Decision | Default | How to Change |
 |---|---|---|
-| Navigation order | Home, Shop, Fabrics, Size Guide, About, Contact | Tell Droid to reorder |
+| Navigation links | Home/Shop/Fabrics/Size Guide only | Tell Droid to add or change links |
 | Footer column links | As shown in footer layout above | Tell Droid which links to add/remove |
 | Header height | 83px → 60px on scroll | Tell Droid a different size |
 | Cart icon style | Simple bag icon with count badge | Tell Droid if you prefer a different style |

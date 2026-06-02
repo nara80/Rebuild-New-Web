@@ -1,5 +1,5 @@
 # Phase 8 — Polish + Launch
-**Status (2026-05-21): ⏸️ PENDING**
+**Status (2026-05-31): ⏸️ PENDING — Phase 7 Admin Complete, Phase 8 Part A Not Yet Started**
 **Goal:** Make everything production-ready — fix all mobile issues, hit 90+/100 performance, DNS cutover.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
@@ -21,17 +21,18 @@
 
 ## What Phase 8 Builds / Fixes
 
-| Item | What It Is |
-|---|---|
-| Mobile CSS fixes | Any layout issues found during QA review |
-| `public/_headers` | Security headers: HSTS, CSP, X-Frame-Options, Referrer-Policy |
-| Open Graph meta tags | Facebook/LINE share preview image + title on all pages |
-| Sitemap: `public/sitemap.xml` | List of all URLs — submitted to Google Search Console |
-| `public/robots.txt` | Tells Google which pages to index |
-| Lighthouse performance fixes | Image compression, CSS/JS optimization |
-| Stripe live mode keys | Real payment credentials stored as Cloudflare secrets |
-| DNS records | Points `www.mildmate.com` to Cloudflare Pages |
-| Google Search Console verification | Confirms Google can crawl the new site |
+| Item | What It Is | Status |
+|---|---|---|
+| `public/_headers` | Security headers: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy | ✅ Built |
+| `public/robots.txt` | Tells Google which pages to index — blocks `/admin/*`, `/api/*`, `/checkout/*`, `/account/*`, `/unsubscribe/` | ✅ Built |
+| `sitemap.xml` | List of all URLs — submitted to Google Search Console | ⏸ Pending |
+| Open Graph meta tags | Facebook/LINE share preview image + title on all pages | ⏸ Pending |
+| GTM / Analytics | Google Tag Manager (`GTM-KLJZZM9`) + GA4 tracking on all pages | ⏸ Pending |
+| Mobile CSS fixes | Any layout issues found during QA review | ⏸ Pending |
+| Lighthouse performance fixes | Image compression, CSS/JS optimization | ⏸ Pending |
+| Stripe live mode keys | Real payment credentials stored as Cloudflare secrets | ⏸ Pending |
+| DNS records | Points `www.mildmate.com` to Cloudflare Pages | ⏸ Pending |
+| Google Search Console verification | Confirms Google can crawl the new site | ⏸ Pending |
 
 ---
 
@@ -85,7 +86,7 @@ When someone shares your website link on LINE, Facebook, or other platforms, a p
 - One image sized **1200 × 630 pixels** (landscape orientation)
 - Should show your brand — e.g., your logo on a blue background, or a lifestyle product photo
 - Save it as: `og-image.jpg`
-- Place it in: `D:\00_MildMate\Re-Bulit_Web\public\images\og-image.jpg`
+- Place it in: `D:\00_MildMate\Re-Build_Web\public\images\og-image.jpg` (not yet created)
 
 **What it looks like when shared:**
 ```
@@ -261,8 +262,8 @@ The homepage is not the only page that matters. Run Lighthouse on these pages to
 
 | Page | Why Important |
 |---|---|
-| `https://mildmate-new.pages.dev/mattress-size-th/` | #1 traffic page — must score 95+ SEO |
-| `https://mildmate-new.pages.dev/product/product-boat-bedding-fitted-sheet-microfiber/` | Top product page — performance matters for conversion |
+| `https://mildmate-new.pages.dev/sizeguide/` | #1 traffic page — must score 95+ SEO (formerly `/mattress-size-th/` from WordPress) |
+| `https://mildmate-new.pages.dev/product/marine-fitted-sheet/` | Top product page — performance matters for conversion (marine V-Berth is the anchor product) |
 | `https://mildmate-new.pages.dev/checkout/` | Checkout — speed directly impacts conversion rate |
 
 Give all 4 Lighthouse reports to Droid at once — it will fix everything in one pass.
@@ -369,8 +370,7 @@ Replace test keys with live keys in Cloudflare secrets.
 
 **In cmd:**
 ```
-cd D:\00_MildMate\Re-Bulit_Web
-
+cd D:\00_MildMate\Re-Build_Web
 npx wrangler secret put STRIPE_SECRET_KEY
 ```
 When prompted: paste your **live** secret key (`sk_live_...`) — NOT the test key
@@ -398,7 +398,7 @@ Confirm all 3 secrets are listed.
 Deploy everything one last time before DNS cutover:
 
 ```
-cd D:\00_MildMate\Re-Bulit_Web
+cd D:\00_MildMate\Re-Build_Web
 npx wrangler pages deploy public
 ```
 
@@ -563,7 +563,7 @@ Two days after launch:
 
 | Error | Likely Cause | Fix |
 |---|---|---|
-| "Page not found (404)" | A URL was missed in Phase 2 | Tell Droid: "URL `/[slug]/` returns 404 — please create the page." |
+| "Page not found (404)" | A URL was missed in `_redirects` or product page not generated | Tell Droid: "URL `/[slug]/` returns 404 — please create or add redirect." |
 | "Redirect error" | A `_redirects` rule points to a URL that also redirects | Tell Droid: "Redirect chain detected on `/[slug]/`." |
 | "Blocked by robots.txt" | A page you want indexed is in robots.txt | Tell Droid: "Remove `/[slug]/` from robots.txt." |
 | "Duplicate, Google chose different canonical" | hreflang is not set correctly on TH/EN pages | Tell Droid: "Google is treating `/[slug]/` and `/th/[slug]/` as duplicates." |
@@ -622,12 +622,15 @@ When `https://www.mildmate.com` loads your new site with a padlock, Stripe is ac
 **What you have built:**
 - A modern custom bedding e-commerce site on Cloudflare's global edge network
 - 258 SEO-preserved URLs — zero ranking loss from WordPress migration
-- A live price configurator for custom mattress dimensions
-- Thai PromptPay + international card payments via Stripe
-- Automatic order confirmation emails and team notifications
-- Abandoned cart recovery system running every hour in the background
-- A private admin dashboard for your manufacturing and marketing teams
-- Performance score 90+, security headers grade A+
+- A live price configurator for custom mattress dimensions (27 products, all 24 with live pricing)
+- Thai PromptPay + international card payments via Stripe (Option A shipping tracking: carrier + tracking number + auto-generated carrier URL)
+- Clerk multi-provider auth (Google / Facebook / Email) — customer account portal at `/account/`
+- Automatic order confirmation emails and team notifications via Resend
+- Abandoned cart email capture (Phase 5 built) — `workers/cron.ts` recovery email cron ⏸ Pending (Phase 6)
+- A private admin dashboard (`/admin/`) for your manufacturing and marketing teams (Phase 7 — code complete, setup pending)
+- Performance score 90+, security headers grade A at securityheaders.com
+- Favorites wishlist (authenticated users) — built + deployed
+- `public/robots.txt` ✅ built — `sitemap.xml` ⏸ Pending
 
 **The website will now run automatically.** Orders save to D1. Emails send via Resend. Abandoned carts recover themselves. Your team manages everything from the admin dashboard — no code required.
 
@@ -639,6 +642,6 @@ When `https://www.mildmate.com` loads your new site with a padlock, Stripe is ac
 |---|---|
 | Week 1 | Upload remaining product photos via Admin → Images. Monitor orders daily. |
 | Week 2 | Check Google Search Console for crawl errors. Fix any 404s. |
-| Week 3 | Review abandoned cart recovery rate — how many recovery emails sent vs opened? |
+| Week 3 | (Phase 6 pending) Monitor abandoned cart capture working in checkout Step 2. Once `workers/cron.ts` is deployed, review recovery email rate. |
 | Week 4 | Check Lighthouse scores again — confirm no regression. Review first real orders for any issues. |
 | Day 30 | If everything is stable, cancel old WordPress hosting. Keep database backup. |

@@ -1,8 +1,14 @@
 # Phase 2 — SEO URL Preservation
-**Status (2026-05-21): ⏸️ DEFERRED — runs pre-launch after Phase 7**
-**Goal:** Make sure every existing page on `www.mildmate.com` has a matching page on the new site so Google never loses your rankings when you launch.
+**Status (2026-05-28): ⏸️ DEFERRED — runs pre-launch after Phase 8 (Launch)**
+**Goal:** Redirect every existing WordPress URL so that when you swap domain names and point `www.mildmate.com` to the new Cloudflare Pages site, every old URL either lands on the correct new page or redirects to the nearest equivalent. Google never sees a 404.
 
-**End Result:** 258 HTML placeholder pages — one for every URL from your WordPress site — plus a `_redirects` file that handles duplicate and broken old URLs with 301 redirects.
+**End Result:** A complete `_redirects` file covering:
+- ~81 WordPress product URL redirects → the 27 new product pages
+- ~90 WordPress static-page URL redirects → existing new site pages
+- Thai WordPress URLs (Unicode slug format) → `/th/` prefixed new site pages
+- All existing duplicate/typo redirect rules preserved
+
+When you deploy to Cloudflare Pages and swap DNS, the `_redirects` file handles everything automatically — no changes needed to the old WordPress site.
 
 **Time Estimate:** 15–30 minutes (most of it is Droid building — you only review and approve one list)
 
@@ -19,8 +25,8 @@ Collect all of the following before telling Droid to build. Phase 2 has fewer de
 Phase 2 builds directly inside the `public/` folder created in Phase 1. If Phase 1 is not complete, Phase 2 cannot run.
 
 **Confirm before starting:**
-- [ ] `public/` folder exists at `D:\00_MildMate\Re-Bulit_Web\public\`
-- [ ] `AGENTS.md` exists at `D:\00_MildMate\Re-Bulit_Web\AGENTS.md`
+- [ ] `public/` folder exists at `D:\00_MildMate\Re-Build_Web\public\`
+- [ ] `AGENTS.md` exists at `D:\00_MildMate\Re-Build_Web\AGENTS.md`
 - [ ] Local server runs: `npx wrangler pages dev public` shows `Ready on http://localhost:8788`
 
 **If any item is missing:** Go back and complete Phase 1 before continuing.
@@ -35,9 +41,9 @@ Droid reads these 3 files to know every URL on your existing site. Confirm they 
 
 | File | Full Path |
 |---|---|
-| Pages | `D:\00_MildMate\Re-Bulit_Web\MildMateDataBase\ExistingWeb\MildMate_Pages.md` |
-| Posts | `D:\00_MildMate\Re-Bulit_Web\MildMateDataBase\ExistingWeb\MildMate_Posts.md` |
-| Products | `D:\00_MildMate\Re-Bulit_Web\MildMateDataBase\ExistingWeb\MildMate_Products.md` |
+| Pages | `D:\00_MildMate\Re-Build_Web\MildMateDataBase\ExistingWeb\MildMate_Pages.md` |
+| Posts | `D:\00_MildMate\Re-Build_Web\MildMateDataBase\ExistingWeb\MildMate_Posts.md` |
+| Products | `D:\00_MildMate\Re-Build_Web\MildMateDataBase\ExistingWeb\MildMate_Products.md` |
 
 **If any file is missing:** Tell Droid which file is missing — it will recreate it from the URL data already in your knowledge base.
 
@@ -73,7 +79,7 @@ A small number of URLs require your personal decision because they could go to m
 | `/shop/` | `/all-products/` | Confirm or change? |
 | `/product/` (the page, not folder) | `/all-products/` | Confirm or change? |
 | `/blogs/` | `/blogs/` (keep as blog listing page) | Confirm or change? |
-| `/faq/` | `/faq/` (keep — will build in Phase 4) | Confirm or change? |
+| `/faq/` | `/faq/` (keep — built in Phase 4) | Confirm or change? |
 | `/reviews/` | `/productreview/` (your main review page) | Confirm or change? |
 | `/about/` and `/about-us/` | Both keep as separate pages OR merge to `/about/`? | Decide |
 | `/my-account/` | `/` (homepage — no login system) | Confirm or change? |
@@ -90,8 +96,12 @@ Your WordPress site has **5 years of SEO history**. Google has indexed every one
 
 ### The Risk Without This Phase
 - `/mattress-size-th/` — your #1 traffic page — disappears → you lose all Thai search traffic
-- `/product/product-boat-bedding-fitted-sheet-microfiber/` → 404 error → Google drops the product from search results
+- `/product/product-boat-bedding-fitted-sheet-microfiber/` → 404 → Google drops the product from search results
+- Old Thai WordPress URLs (`/ผ้าปูสั่งตัด/`) → 404 error → Thai SEO traffic lost
 - Customers who bookmarked your pages get error pages
+
+### How It Works (Redirect = Automatic, No Code Changes Needed)
+When you deploy to Cloudflare Pages, Cloudflare reads `public/_redirects` and handles every redirect at the edge — before a page is even served. Your WordPress site stays live until DNS cutover, then `www.mildmate.com` starts routing through Cloudflare. No WordPress config changes needed.
 
 ### What This Phase Guarantees
 - Every existing URL continues to work on the new site
@@ -109,7 +119,7 @@ Droid will read these 3 files you already have:
 |---|---|---|
 | `MildMateDataBase/ExistingWeb/MildMate_Pages.md` | All WordPress pages (homepage, about, contact, size guides, etc.) | 125 pages |
 | `MildMateDataBase/ExistingWeb/MildMate_Posts.md` | All blog posts (Thai SEO articles, bedding guides) | 50 posts |
-| `MildMateDataBase/ExistingWeb/MildMate_Products.md` | All product pages | 83 products |
+| `MildMateDataBase/ExistingWeb/MildMate_Products.md` | All WordPress product pages | 81 products → **27 real pages** (remaining 54+ redirect via `_redirects`) |
 | **Total** | | **258 URLs** |
 
 ---
@@ -118,57 +128,115 @@ Droid will read these 3 files you already have:
 
 | Output | What It Is |
 |---|---|
-| `public/[slug]/index.html` | One HTML file per URL (258 total) — preserves the exact URL path |
-| `public/product/[slug]/index.html` | Product pages under `/product/` path (83 total) |
-| `public/th/[slug]/index.html` | Thai-language pages under `/th/` path (~20 total) |
-| `public/_redirects` | 301 redirect rules for duplicate and junk WordPress slugs |
-| `hreflang` tags in each page | Tells Google which language each page is in |
-| Schema.org JSON-LD in product pages | Structured data that helps Google show your products in search |
+| `public/_redirects` | **Unified redirect file** — covers all 258 WordPress URLs. Cloudflare Pages reads this file at deploy time and handles every redirect automatically. When you swap DNS to point `www.mildmate.com` at the new site, every old URL is resolved |
+| Thai WordPress URLs → `/th/` pages | Your WordPress had Thai pages in two formats: Unicode slug (`/ผ้าปูสั่งตัด/`) and `/th/slug/. Both formats are redirected to the equivalent `/th/` page on the new site |
+| Product URL redirects | All 81 WP product URLs → 27 new product pages (301 permanent redirect, Google ranking passes through) |
 
 ---
 
 ## Step-by-Step Instructions
 
-### Step 2.1 — Understand the Two Types of URLs
+### The 81 WordPress Product URLs → 27 New Product Pages
 
-Before Droid builds, you need to understand how your 258 URLs are categorized:
+Your WordPress site had **81 product URLs** but the new site has only **27 product pages** (one per product). The remaining 54 URLs must be redirected — plus 2 URLs with old `product-` prefixes, 12 pillowcase variants, and some misc orphaned slugs — totaling **~81 product URLs that need redirect rules**.
 
-**Type A — Keep As-Is (Droid creates a matching HTML file)**
-These are clean, meaningful URLs that must be preserved exactly:
+**How the mapping works:**
+
+| WordPress slug pattern | New destination | Count |
+|---|---|---|
+| Regional size variants (e.g., `ecoluxe-fitted-sheets-standard-size-in-au`) | Base product page (e.g., `/product/standard-fitted-sheet/`) | ~52 |
+| Old `product-` prefix (e.g., `product-boat-bedding-fitted-sheet-microfiber`) | `/product/marine-fitted-sheet/` | 2 |
+| Pillowcase variants (e.g., `boat-pillowcases-cloudsoft-quick-dry`) | `/product/pillowcase-envelope/` + `/product/pillowcase-zipper/` + `/product/pillowcase-sham/` (match by keyword) | ~12 |
+| Misc orphaned (e.g., `tbar`, `baby-blanket`, `animal-bedding`) | `/all-products/` | ~8 |
+| Direct 1:1 matches (same slug as new) | `/product/[slug]/` | 1 (`mattress-lift-helper`) |
+
+**Example redirect rules:**
+
 ```
-/mattress-size-th/
-/product/product-boat-bedding-fitted-sheet-microfiber/
-/custom-bedding/
-/bedsheet-in-a-boat/
-/th/home-th/
+# Regional size variants → base product
+/product/ecoluxe-fitted-sheets-standard-size-in-au/    /product/standard-fitted-sheet/   301
+/product/ecoluxe-fitted-sheets-standard-size-in-eu/    /product/standard-fitted-sheet/   301
+/product/ecoluxe-fitted-sheets-standard-size-in-us/    /product/standard-fitted-sheet/   301
+/product/ecoluxe-fitted-sheets-standard-size-in-uk/    /product/standard-fitted-sheet/   301
+/product/premacotton-fitted-sheets-standard-size-in-au/  /product/standard-fitted-sheet/  301
+/product/breezeplus-fitted-sheets-standard-size-in-au/   /product/standard-fitted-sheet/  301
+/product/cloudsoft-fitted-sheets-standard-size-in-us/    /product/standard-fitted-sheet/   301
+
+# More regional variants
+/product/breezeplus-duvet-standard-size-in-us/   /product/3-sided-duvet/  301
+/product/breezeplus-duvet-standard-size-in-uk/   /product/3-sided-duvet/  301
+/product/breezeplus-duvet-standard-size-in-eu/   /product/3-sided-duvet/  301
+
+# Co-sleeping variants
+/product/ecoluxe-co-sleeping-bed-size-in-au/    /product/family-fitted-sheet/   301
+/product/premacotton-co-sleeping-bed-size-in-thailand/  /product/family-fitted-sheet/  301
+
+# Old product- prefix
+/product/product-boat-bedding-fitted-sheet-microfiber/  /product/marine-fitted-sheet/  301
+/product/product-boat-top-sheet-rectangular-cloudsoft-mildew-resistant/  /product/marine-fitted-sheet/  301
+
+# Pillowcase variants → closest matching pillowcase page
+/product/boat-pillowcases-cloudsoft-quick-dry/   /product/pillowcase-envelope/   301
+/product/ecoluxe-pillowcases-with-hidden-zippers-turn-your-bedroom-into-an-eco-friendly-paradise/  /product/pillowcase-zipper/  301
+/product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/  /product/pet-owner-duvet-cover/  301
+/product/decorative-pillow-shams-th-size/        /product/pillowcase-sham/       301
+
+# Misc orphaned
+/product/tbar/           /all-products/  301
+/product/baby-blanket/    /all-products/  301
+/product/animal-bedding/  /all-products/  301
+/product/sheet-protectors/ /product/mattress-protector-standard/  301
 ```
 
-**Type B — Redirect to Canonical (301 redirect)**
-These are WordPress duplicates, typos, or junk slugs that should forward to the real page:
-```
-/cotact-us/          → redirect to → /contact/
-/blogs-2/            → redirect to → /blogs/
-/blogs-2-2/          → redirect to → /blogs/
-/blogs3/             → redirect to → /blogs/
-/blogs-2-2/          → redirect to → /blogs/
-/reviews-2/          → redirect to → /reviews/
-/reviews-3/          → redirect to → /reviews/
-/privacypolicy/      → redirect to → /privacy-policy/
-/policy/             → redirect to → /privacy-policy/
-/policy-en/          → redirect to → /privacy-policy/
-/my-account/         → redirect to → /  (no login system)
-/order/              → redirect to → /checkout/
-/fabric-2/           → redirect to → /fabric-collections/
-/fabric-4/           → redirect to → /fabric-collections/
-/breezeplus-2/       → redirect to → /fabric-collections/
-/cloudsoft-4/        → redirect to → /fabric-collections/
-/premacotton-2/      → redirect to → /fabric-collections/
-/ecoluxe-3/          → redirect to → /fabric-collections/
-/สินค้า/             → redirect to → /all-products/
-/สินค้า-2/           → redirect to → /all-products/
-/หน้าแรก/            → redirect to → /th/home-th/
-/?page_id=10056      → redirect to → /  (WordPress internal ID, not a real page)
-```
+## Static Page Redirects: WP Pages → New Site Pages
+
+Of the 102 WordPress pages, ~10 already have exact-match pages on the new site (e.g., `/contact/`, `/about/`, `/faq/`, `/blogs/`, `/reviews/`, `/policy/`, `/product/`, `/sizeguide/`, `/all-products/`). The remaining ~92 WordPress page URLs — including duplicates, typos, and pages for topics now covered by other URLs — should be redirected rather than recreated as placeholders. This keeps `public/` clean and preserves SEO ranking via 301 redirects.
+
+**Redirect strategy by category:**
+
+| WP page slug pattern | Destination | Why |
+|---|---|---|
+| `/privacy-policy/`, `/privacypolicy/` | `/policy/` | Privacy policy page already built |
+| `/policy-en/` | `/policy/` | English privacy policy variant |
+| `/cotact-us/` | `/contact/` | Typo fix |
+| `/about-us/` | `/about/` | Standard about page |
+| `/productreview/`, `/product-reviews/` | `/reviews/` | Reviews consolidated |
+| `/size-guide/` | `/sizeguide/` | Size guide already built |
+| `/all-products/`, `/shop/`, `/shop-with-us/` | `/all-products/` | Catalog page already built |
+| `/product/` (the page, not folder) | `/product/` | Goes to product listing |
+| `/my-account/`, `/order/` | `/` | No account/order system — redirect to homepage |
+| `/languages/`, `?page_id=*` | `/` | WordPress internals — redirect to homepage |
+| `/custom-bedding/`, `/personalised-pillow/` | `/custom-measurement/` | Custom measurement page |
+| `/fabric-2/`, `/fabric-4/`, `/cloudsoft-4/`, `/premacotton-2/`, `/ecoluxe-3/`, `/breezeplus-2/` | `/fabric/` | Fabric collections page |
+| `/bedsheet-in-a-boat/`, `/bedsheet-in-a-camper-van/` | `/marine/` | Marine category landing |
+| `/ผ้าปูที่นอนสั่งตัด/`, `/เตียงครอบครัว/`, `/หน้าแรก/`, `/สินค้า/`, `/สินค้า-2/`, `/ผ้าปูที่นอนขนาดมาตรฐาน/`, `/ผ้าปูขนาดมาตรฐานในไทย/`, `/ภาษา/` | `/` or `/th/` | Thai system pages → homepage or Thai home |
+| `/blogs-2/`, `/blogs-2-2/`, `/blogs3/` | `/blogs/` | Blog duplicates |
+| `/reviews-2/`, `/reviews-3/` | `/reviews/` | Reviews duplicates |
+| `/duvet-cover-with-3-sided-zipper/`, `/3-sided-zipper-duvet-cover/` | `/duvet-covers/` | Category landing |
+| `/standard-mattress/`, `/standard-size-bed-sheet/`, `/standard-bed-sheets/` | `/sizeguide/` | Size guide content |
+| `/family-co-sleeping-solutions/`, `/family-co-sleeping-solutions-2/`, `/bed-sheets-co-sleeping-sizes/`, `/family-co-sleeping-bedding-solutions-for-a-harmonious-sleep/` | `/family/` | Family category |
+| `/easy-change-duvet-cover/`, `/duvet-cover-with-3-side/` | `/duvet-covers/` | Category landing |
+| `/fabric-collections/` | `/fabric/` | Fabric page |
+| `/bedbridge-mildmate/` | `/accessories/` | Accessories page |
+| `/pet-friendly-fitted-sheet/`, `/pet-seat-cover/` | `/pets/` | Pets category |
+| `/hotel-resort-hospital-bedding-manufacturer/` | `/about/` | About page |
+| `/mattress-cover/`, `/waterproof-zippered-tpu-mattress-cover/`, `/prevent-dust-mites/` | `/protection/` | Protection category |
+| Blog SEO posts (e.g., `bed-sheets-for-the-family-laid-out-side-by-side`, `bedsheet-in-a-boat`, `custom-dorm-bedding-students`) | `/blogs/` | Long-form blog content — redirect to blog listing |
+| Any URL with no specific match on the new site | `/` | **Catch-all: redirect ALL orphaned WordPress URLs to the new site homepage. This guarantees zero 404s** |
+
+**When Phase 2 runs:** Droid reads `MildMateDataBase/ExistingWeb/MildMate_Pages.md` and `MildMate_Posts.md`, generates all redirect rules (combining static pages, product URLs from `MildMate_Products.md`, and existing `_redirects` rules), and presents a unified list for approval.
+
+### Step 2.1 — How URLs Are Categorized
+
+Before Droid builds, you need to understand how your WordPress URLs are handled — they either get a redirect (preferred for duplicates/junk) or a new HTML placeholder page (for unique URLs that need preserving):
+
+**What Phase 2 does:**
+
+Phase 2 writes a complete `_redirects` file that covers every WordPress URL:
+- **WordPress product URLs** → map to one of 27 product pages (e.g., `/product/product-boat-bedding-fitted-sheet-microfiber/` → `/product/marine-fitted-sheet/`)
+- **Duplicates / typos** → map to the correct existing page (e.g., `/cotact-us/` → `/contact/`)
+- **Page slugs** → map to existing pages (e.g., `/about-us/` → `/about/`, `/shop/` → `/all-products/`)
+- **Orphaned URLs** → redirect to `/` (homepage of the new site). This catch-all guarantees zero 404s
 
 ---
 
@@ -216,105 +284,57 @@ Once you have completed all 4 initial requirements, hand off to Droid.
 > - /shop-with-us/ → /all-products/
 > - /hotel-resort-hospital-bedding-manufacturer/ → [your decision]
 >
-> Read the 3 URL files, categorize all 258 URLs into Type A (keep) and Type B (redirect), show me the full proposed redirect list for approval before writing any files."
+> Read the 3 URL files, generates redirect rules for all WordPress URLs that map to existing pages or need consolidation, shows you the unified redirect list for approval before writing any files."
 
 **What Droid does:**
-1. Reads all 3 source files
-2. Classifies every URL as Type A or Type B
-3. Shows you the redirect list for approval
-4. After your approval, creates all 258 HTML files
-5. Writes `public/_redirects` with all 301 rules
-6. Adds `hreflang` tags to every page
-7. Adds Schema.org JSON-LD to all 83 product pages
+1. Reads all 3 URL source files
+2. Generates redirect rules for all WordPress URLs (products + static pages + posts)
+3. Shows you the unified redirect list for approval
+4. After your approval, updates `public/_redirects` with all 301 rules
 
 ---
 
-### Step 2.4 — Understand What Each HTML Page Looks Like
+### Step 2.5 — Verify the Redirects
 
-Each of the 258 HTML files Droid creates is a **minimal placeholder page** — not the final design (that comes in Phase 3 and 4). It contains:
+After Droid writes `public/_redirects`, verify the key redirect rules are present. You do not need to check every rule — just confirm the main categories are covered.
 
-```
-- Correct <title> tag (from your WordPress SEO title)
-- Correct <meta description> tag (from your WordPress meta description)
-- Correct <link rel="canonical"> tag
-- hreflang tags (TH + EN)
-- Schema.org JSON-LD (product pages only)
-- A simple "Coming Soon" body (replaced with real content in Phase 3/4)
-- Header and footer placeholders (filled in Phase 3)
-```
+**Open `public/_redirects` in Notepad** and look for:
+- Product URL redirects (e.g., `/product/ecoluxe-fitted-sheets-standard-size-in-au/` → `/product/standard-fitted-sheet/`)
+- Page redirects (e.g., `/cotact-us/` → `/contact/`, `/about-us/` → `/about/`)
+- Thai language redirects (e.g., `/th/fitted-sheets/*` → `/th/sheets/`)
 
-**Why placeholders first?**
-Because Google can re-index the URLs immediately after launch, even before the full design is ready. The SEO signals (title, description, canonical, hreflang) are what matter most — not the visual design.
+Each line should look like: `/old-url/ /new-destination/ 301`
+
+If anything looks missing, tell Droid to add the rule before moving on.
 
 ---
 
-### Step 2.5 — Verify a Sample of the Output
+### Step 2.6 — Run a Local Redirect Test
 
-After Droid finishes building, you do a quick spot-check. You do not need to check all 258 — just 5 key ones.
-
-**Open these files in your browser (double-click each):**
-
-| File to open | What to check |
-|---|---|
-| `public/mattress-size-th/index.html` | Title should be: `[เช็คขนาด] ที่นอน 6ฟุต 5ฟุต 3.5ฟุต...` |
-| `public/product/product-boat-bedding-fitted-sheet-microfiber/index.html` | Title should be: `Boat Bedding: CloudSoft Marine Fitted Sheet` |
-| `public/custom-bedding/index.html` | Title should be: `เครื่องนอนสั่งตัด – ออกแบบชุดเครื่องนอน...` |
-| `public/th/home-th/index.html` | Should have `hreflang="th"` tag |
-| `public/_redirects` | Open in Notepad — should contain lines like `/cotact-us/ /contact/ 301` |
-
-**How to check the title and hreflang:**
-1. Open the HTML file in your browser
-2. Right-click anywhere on the page → click **View Page Source**
-3. Press `Ctrl + F` and search for `<title>` — confirm the text matches
-4. Search for `hreflang` — confirm it exists
-
----
-
-### Step 2.6 — Check the _redirects File
-
-Open `public/_redirects` in Notepad (right-click the file → Open with → Notepad).
-
-Each line should look like this:
-```
-/cotact-us/  /contact/  301
-/blogs-2/    /blogs/    301
-/my-account/ /          301
-```
-
-- The **first part** is the old URL (the one that exists on your WordPress site)
-- The **second part** is where it should go on the new site
-- `301` means "permanent redirect" — this is what tells Google to transfer SEO value
-
-If anything looks wrong, tell Droid to fix it before moving to Phase 3.
-
----
-
-### Step 2.7 — Run a Local Test
-
-Test that the redirects work correctly on your local computer.
+Test that the key redirects work correctly on your local computer.
 
 **How to do it:**
 1. Open cmd and navigate to your project:
    ```
-   cd D:\00_MildMate\Re-Bulit_Web
+   cd D:\00_MildMate\Re-Build_Web
    ```
 2. Start the local server:
    ```
    npx wrangler pages dev public
    ```
-3. Open your browser and test these URLs:
-   - `http://localhost:8788/mattress-size-th/` → should show the placeholder page (not a 404 error)
+3. Open your browser and test these redirects:
    - `http://localhost:8788/cotact-us/` → should redirect to `http://localhost:8788/contact/`
-   - `http://localhost:8788/product/product-boat-bedding-fitted-sheet-microfiber/` → should show the placeholder page
+   - `http://localhost:8788/about-us/` → should redirect to `http://localhost:8788/about/`
+   - `http://localhost:8788/product/ecoluxe-fitted-sheets-standard-size-in-au/` → should redirect to `/product/standard-fitted-sheet/`
 4. Press `Ctrl + C` to stop the server when done.
 
-> **What is a 404 error?** It means "page not found." If you see one, tell Droid which URL caused it.
+> **What is a 404 error?** It means "page not found." If you see one, tell Droid which URL caused it so the redirect rule can be added.
 
 ---
 
 ## How You Know Phase 2 Is Complete
 
-Go through this checklist before moving to Phase 3:
+Go through this checklist before moving to **Phase 8 — Polish + Launch** (Phase 2 runs pre-launch):
 
 **Initial Requirements:**
 - [ ] Phase 1 confirmed complete (public/ folder and AGENTS.md exist)
@@ -323,15 +343,12 @@ Go through this checklist before moving to Phase 3:
 - [ ] All 9 redirect decisions from Requirement 4 answered and given to Droid
 
 **Build Steps:**
-- [ ] Droid showed you the full redirect list and you approved it
-- [ ] `public/` folder contains subfolders for all 258 URL slugs
-- [ ] `public/product/` contains 83 product page folders
-- [ ] `public/th/` contains ~20 Thai-language page folders
-- [ ] `public/_redirects` file exists and contains 301 rules
-- [ ] 5 spot-check files opened correctly in browser with correct `<title>` tags
-- [ ] `hreflang` tags confirmed in Thai and English pages
-- [ ] Local server test passed — no 404 errors on checked URLs
-- [ ] `/cotact-us/` redirects correctly to `/contact/`
+- [ ] Droid showed you the unified redirect list (products + static pages) and you approved it
+- [ ] public/_redirects updated with all product redirects (~81 rules) and static-page redirects (~90 rules)
+- [ ] Key redirects tested: product URL + page URL redirects
+- [ ] public/product/ contains 27 real product page folders
+- [ ] Thai-language redirects confirmed in _redirects
+- [ ] /cotact-us/ and other typo redirects tested and working
 
 ---
 
@@ -346,19 +363,19 @@ Go through this checklist before moving to Phase 3:
 | Redirect goes to the wrong page | Tell Droid: "Change the redirect for `/[old-slug]/` to go to `/[correct-slug]/` instead." |
 | Thai URL folders not created | Windows sometimes has issues with Thai characters in folder names. Tell Droid and it will use URL-encoded folder names instead. |
 | `_redirects` file is empty | Tell Droid: "`_redirects` file is empty. Please rewrite it." |
-| `hreflang` tag missing | Tell Droid: "The file `public/[slug]/index.html` is missing the hreflang tag." |
-| Unsure if a URL should be Type A or Type B | Default rule: if the URL has a real SEO title and meta description in the source files → Type A (keep). If it is blank or a duplicate → Type B (redirect). |
+| `hreflang` tag missing on EN pages | Tell Droid: "EN page is missing hreflang tags — add `<link rel="alternate" hreflang="th" href="/th/[slug]/">` and canonical." |
+| URL shows 404 instead of redirecting | Tell Droid: "URL `/[slug]/` is showing 404 — please add the redirect rule to `_redirects`." |
 
 ---
 
 ## Important SEO Notes
 
 ### Your #1 Priority URL
-`/mattress-size-th/` is your highest-traffic page. Confirm this file exists:
+`/mattress-size-th/` is your highest-traffic page. Confirm the redirect exists in `_redirects`:
 ```
-public\mattress-size-th\index.html
+/th/mattress-size-th/*   /th/sizeguide/   301
 ```
-If it is missing, **stop and tell Droid immediately** before proceeding.
+If this line is missing, **stop and tell Droid immediately** before proceeding.
 
 ### Thai Slug URLs
 Some of your URLs use Thai characters, for example:
@@ -378,8 +395,8 @@ These WordPress system URLs do not need HTML pages — they can go directly to r
 
 ## What Happens Next
 
-Once Phase 2 is complete, move to **Phase 3 — Design System + Shared Components**.
+Once Phase 2 is complete, move to **Phase 7 — Admin Dashboard** (Phase 3 and 4 are already ✅ Complete, Phase 5 is 🚧 In Progress, Phase 6 is ⏸️ Pending).
 
-Phase 3 is where the site starts to look like a real MildMate website. Droid builds the full CSS design system with your brand blue color, the sticky header with mega-menu, and the footer — then injects them into all 258 pages at once.
+Phase 7 builds the private management interface for your team — the orders table showing custom dimensions for manufacturing, the product editor, the image uploader, and the subscriber CSV export. It is protected by Clerk auth so only your team can access it.
 
-**Tell Droid:** "Phase 2 is complete. All checklist items are done. Please start Phase 3."
+**Tell Droid:** "Phase 2 is complete. All checklist items are done. Please start Phase 7."

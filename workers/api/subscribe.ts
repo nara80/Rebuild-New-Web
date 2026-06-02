@@ -13,6 +13,13 @@ export interface SubscribeInput {
   _website?: string;    // honeypot
 }
 
+function generateDiscountCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return "WELCOME-" + code;
+}
+
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -98,6 +105,24 @@ export async function handleSubscribe(request: Request, env: any): Promise<Respo
         .bind(email, source, language)
         .run();
 
+      // Insert into unified contacts table (upsert)
+      await db.prepare(
+        "INSERT INTO contacts (email, sources, is_subscribed, language, first_seen, last_seen) VALUES (?, 'subscribe', 1, ?, datetime('now'), datetime('now')) ON CONFLICT(email) DO UPDATE SET sources = CASE WHEN contacts.sources LIKE '%subscribe%' THEN contacts.sources ELSE contacts.sources || ',subscribe' END, is_subscribed = 1, last_seen = datetime('now')"
+      ).bind(email, language).run();
+
+      // Generate unique discount code for new subscriber
+      let discountCode = "";
+      for (let attempt = 0; attempt < 5; attempt++) {
+        discountCode = generateDiscountCode();
+        const exists = await db.prepare("SELECT id FROM discount_claims WHERE code = ?").bind(discountCode).first();
+        if (!exists) break;
+      }
+      if (discountCode) {
+        await db.prepare(
+          "INSERT INTO discount_claims (email, code, status, expires_at, source) VALUES (?, ?, 'issued', datetime('now', '+6 months'), 'subscribe')"
+        ).bind(email, discountCode).run();
+      }
+
       // Send confirmation email to subscriber + notify contact@mildmate.com
       // Await both in parallel — do NOT block the response on email failures
       const emailResults = await Promise.allSettled([
@@ -107,8 +132,8 @@ export async function handleSubscribe(request: Request, env: any): Promise<Respo
             ? 'ยินดีต้อนรับสู่ MildMate — ส่วนลด 15% สำหรับคุณ'
             : 'Welcome to MildMate — 15% Off Your First Order',
           text: language === 'th'
-            ? 'ขอบคุณที่สมัครรับข่าวสารจาก MildMate! ใช้โค้ด WELCOME15 เพื่อรับส่วนลด 15% สำหรับคำสั่งซื้อแรกของคุณ\n\nยกเลิกการสมัครได้ตลอดเวลาที่ mildmate.com/unsubscribe/'
-            : 'Thanks for subscribing to MildMate! Use code WELCOME15 for 15% off your first order.\n\nUnsubscribe anytime at mildmate.com/unsubscribe/',
+            ? 'ขอบคุณที่สมัครรับข่าวสารจาก MildMate! ใช้โค้ด ' + discountCode + ' เพื่อรับส่วนลด 15% สำหรับคำสั่งซื้อแรกของคุณ (หมดอายุใน 6 เดือน)\n\nยกเลิกการสมัครได้ตลอดเวลาที่ mildmate.com/unsubscribe/'
+            : 'Thanks for subscribing to MildMate! Use code ' + discountCode + ' for 15% off your first order (expires in 6 months).\n\nUnsubscribe anytime at mildmate.com/unsubscribe/',
         }),
         sendEmail(env, {
           to: 'contact@mildmate.com',

@@ -18,11 +18,11 @@
     '.rc-track::-webkit-scrollbar { display: none; }',
     '.rc-card, .rc-track .review-card { flex: 0 0 calc(33.333% - 14px); min-width: 280px; scroll-snap-align: start; background: #fff; border-radius: var(--radius, 8px); padding: 24px; box-shadow: var(--shadow, 0 2px 12px rgba(0,0,0,0.08)); position: relative; display: flex; flex-direction: column; }',
     '.rc-track .review-card { margin-bottom: 0; }',
-    '.rc-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 1px solid #d1d5db; color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 3; transition: all 0.2s; }',
-    '.rc-arrow:hover { background: #f3f4f6; color: #000; }',
+    '.rc-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 3; transition: background 0.15s; }',
+    '.rc-arrow:hover { background: #fff; }',
     '.rc-arrow:disabled { opacity: 0.3; cursor: default; }',
-    '.rc-arrow:disabled:hover { background: #fff; color: #000; }',
-    '.rc-arrow svg { width: 18px; height: 18px; }',
+    '.rc-arrow:disabled:hover { background: rgba(255,255,255,0.88); }',
+    '.rc-arrow svg { width: 18px !important; height: 18px !important; stroke: #1E293B !important; stroke-width: 2.5 !important; display: block !important; }',
     '.rc-prev { left: 8px; }',
     '.rc-next { right: 8px; }',
     '.rc-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }',
@@ -39,11 +39,11 @@
     '.rel-card .rel-title { font-size: 0.875rem; font-weight: 700; color: #333; margin-bottom: 6px; line-height: 1.3; }',
     '.rel-card .rel-price { font-size: 0.9375rem; font-weight: 700; color: #2c96f4; }',
     '.rel-card .rel-note { font-size: 0.75rem; color: #999; }',
-    '.rel-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 1px solid #d1d5db; color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 3; transition: all 0.2s; }',
-    '.rel-arrow:hover { background: #f3f4f6; color: #000; }',
+    '.rel-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 3; transition: background 0.15s; }',
+    '.rel-arrow:hover { background: #fff; }',
     '.rel-arrow:disabled { opacity: 0.3; cursor: default; }',
-    '.rel-arrow:disabled:hover { background: #fff; color: #000; }',
-    '.rel-arrow svg { width: 18px; height: 18px; }',
+    '.rel-arrow:disabled:hover { background: rgba(255,255,255,0.88); }',
+    '.rel-arrow svg { width: 18px !important; height: 18px !important; stroke: #1E293B !important; stroke-width: 2.5 !important; display: block !important; }',
     '.rel-prev { left: 8px; }',
     '.rel-next { right: 8px; }',
     '.rel-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }',
@@ -51,7 +51,7 @@
     '.rel-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }',
     '/* Responsive */',
     '@media (max-width: 900px) {',
-    '  .rc-card, .rc-track .review-card { flex: 0 0 calc(50% - 10px); }',
+    '  .rc-card, .rc-track .review-card { flex: 0 0 calc(50% - 10px); min-width: 0; max-width: calc(50% - 10px); }',
     '  .rel-card { flex: 0 0 calc(33.333% - 14px); }',
     '  .rc-prev { left: 0; } .rc-next { right: 0; }',
     '  .rel-prev { left: 0; } .rel-next { right: 0; }',
@@ -59,7 +59,7 @@
     '@media (max-width: 640px) {',
     '  .rc-wrapper { padding: 0 36px; }',
     '  .rel-carousel { padding: 0 36px; }',
-    '  .rc-card, .rc-track .review-card { flex: 0 0 100%; min-width: 0; }',
+    '  .rc-card, .rc-track .review-card { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }',
     '  .rel-card { flex: 0 0 calc(50% - 10px); min-width: 160px; }',
     '  .rc-prev { left: 0; } .rc-next { right: 0; }',
     '  .rel-prev { left: 0; } .rel-next { right: 0; }',
@@ -71,8 +71,8 @@
      Shared Helpers
      ================================================================ */
   function arrowSVG(dir) {
-    var d = dir === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + d + '"/></svg>';
+    var points = dir === 'prev' ? '15 18 9 12 15 6' : '9 18 15 12 9 6';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + points + '"/></svg>';
   }
 
   function getCardsPerView(opts) {
@@ -192,56 +192,42 @@
      Transform Review Section
      ================================================================ */
   function transformReviews() {
-    var reviewsContainer = document.getElementById('reviews');
-    if (!reviewsContainer) return;
-    var reviewsSection = reviewsContainer.querySelector('.reviews-section');
-    if (!reviewsSection) return;
-
-    // Find existing review cards container (the div directly containing .review-card elements)
-    var existingCards = reviewsSection.querySelectorAll('.review-card');
-    var existingGrid = existingCards.length > 0 ? existingCards[0].parentElement : null;
-
-    // Build the carousel HTML
-    var carouselHTML = '<div class="rc-wrapper">';
-    carouselHTML += '<button class="rc-arrow rc-prev" aria-label="Previous reviews">' + arrowSVG('prev') + '</button>';
-    carouselHTML += '<button class="rc-arrow rc-next" aria-label="Next reviews">' + arrowSVG('next') + '</button>';
-    carouselHTML += '<div class="rc-track">';
-
-    // Insert existing review cards
-    for (var e = 0; e < existingCards.length; e++) {
-      carouselHTML += existingCards[e].outerHTML;
+    // Find the reviews carousel wrapper in the page (index.html uses .reviews-carousel-wrapper, others use #reviews)
+    var wrapper = document.querySelector('.reviews-carousel-wrapper');
+    if (!wrapper) {
+      var reviewsContainer = document.getElementById('reviews');
+      if (reviewsContainer) wrapper = reviewsContainer.querySelector('.reviews-section');
     }
+    if (!wrapper) return;
+    // Prevent double initialization
+    if (wrapper.hasAttribute('data-carousel-initialized')) return;
+    wrapper.setAttribute('data-carousel-initialized', '1');
 
-    carouselHTML += '</div>';
-    carouselHTML += '<div class="rc-dots"></div>';
-    carouselHTML += '</div>';
+    var track = wrapper.querySelector('.reviews-track');
+    var cards = wrapper.querySelectorAll('.review-card');
+    if (!track || cards.length <= 1) return;
 
-    // Replace old grid with carousel
-    if (existingGrid) {
-      existingGrid.outerHTML = carouselHTML;
-    } else {
-      // Fallback: append after reviews-summary
-      var summary = reviewsSection.querySelector('.reviews-summary');
-      if (summary) {
-        summary.insertAdjacentHTML('afterend', carouselHTML);
-      }
-    }
+    var prevBtn = wrapper.querySelector('.reviews-prev, .rc-prev');
+    var nextBtn = wrapper.querySelector('.reviews-next, .rc-next');
 
-    // Init carousel
-    var wrapper = reviewsSection.querySelector('.rc-wrapper');
-    if (wrapper) {
-      initCarousel(wrapper, '.rc-track', '.rc-card, .review-card', {
-        cardsPerView: 3,
-        tabletBreak: 900,
-        tabletCards: 2,
-        mobileBreak: 640,
-        mobileCards: 1,
-        prevSelector: '.rc-prev',
-        nextSelector: '.rc-next',
-        dotsSelector: '.rc-dots',
-        dotClass: 'rc-dot'
-      });
-    }
+    // Remove any stale dots, then create fresh container after the track
+    var oldDots = wrapper.querySelectorAll('.rc-dots');
+    for (var od = 0; od < oldDots.length; od++) oldDots[od].remove();
+    var dotsContainer = document.createElement('div');
+    dotsContainer.className = 'rc-dots';
+    track.parentNode.insertBefore(dotsContainer, track.nextSibling);
+
+    initCarousel(wrapper, '.reviews-track', '.review-card', {
+      cardsPerView: 3,
+      tabletBreak: 900,
+      tabletCards: 2,
+      mobileBreak: 640,
+      mobileCards: 1,
+      prevSelector: '.reviews-prev, .rc-prev',
+      nextSelector: '.reviews-next, .rc-next',
+      dotsSelector: '.rc-dots',
+      dotClass: 'rc-dot'
+    });
   }
 
   /* ================================================================

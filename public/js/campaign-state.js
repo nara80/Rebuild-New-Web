@@ -20,6 +20,33 @@ var MildMateCampaigns = (function(){
     try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
   }
 
+  function getClerkEmail(){
+    try {
+      if (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress) {
+        return window.clerk.user.primaryEmailAddress.emailAddress || '';
+      }
+    } catch(e) {}
+    return '';
+  }
+
+  async function getAuthHeaders(retries){
+    if (typeof window.getClerkToken !== 'function') return null;
+    var max = retries || 0;
+    for (var attempt = 0; attempt <= max; attempt++) {
+      try {
+        var token = await window.getClerkToken();
+        if (token) {
+          var headers = { Authorization: 'Bearer ' + token };
+          var email = getClerkEmail();
+          if (email) headers['X-User-Email'] = email;
+          return headers;
+        }
+      } catch(e) { /* SDK may not be ready yet */ }
+      if (attempt < max) await new Promise(function(r) { setTimeout(r, 200); });
+    }
+    return null;
+  }
+
   // ── Campaigns ──
   function getActiveCampaigns(){
     var all = load(STORAGE_KEY, []);
@@ -113,6 +140,98 @@ var MildMateCampaigns = (function(){
     return false;
   }
 
+  async function syncFavoritesFromServer(){
+    var headers = await getAuthHeaders();
+    if (!headers || !headers.Authorization) return load(FAVORITES_KEY, []);
+    try {
+      var resp = await fetch('/api/favorites', { headers: headers });
+      if (!resp.ok) return load(FAVORITES_KEY, []);
+      var data = await resp.json();
+      var favs = (data.favorites || []).map(function(f){
+        return {
+          slug: f.slug,
+          name: f.title_en || f.slug,
+          image: f.image_url || '',
+          priceUsd: f.price_usd || null,
+          priceThb: f.price_thb || null,
+          addedAt: f.created_at ? new Date(f.created_at).getTime() : Date.now()
+        };
+      });
+      save(FAVORITES_KEY, favs);
+      return favs;
+    } catch(e) {
+      return load(FAVORITES_KEY, []);
+    }
+  }
+
+  async function getFavoritesServer(){
+    return syncFavoritesFromServer();
+  }
+
+  async function toggleFavoriteServer(slug, name){
+    var headers = await getAuthHeaders(25); // poll up to 5s for Clerk SDK
+    if (!headers || !headers.Authorization) {
+      return { ok: false, requiresAuth: true, isFavorite: isFavorite(slug) };
+    }
+
+    // Product pages optimistically toggle local state before calling server sync.
+    // Therefore local state here represents the desired final server state.
+    var shouldBeFavorite = isFavorite(slug);
+    try {
+      var resp;
+      if (shouldBeFavorite) {
+        resp = await fetch('/api/favorites', {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+          body: JSON.stringify({ productSlug: slug, productName: name || slug })
+        });
+      } else {
+        resp = await fetch('/api/favorites?productSlug=' + encodeURIComponent(slug), {
+          method: 'DELETE',
+          headers: headers
+        });
+      }
+
+      if (resp.status === 401 || resp.status === 403) {
+        return { ok: false, requiresAuth: true, isFavorite: shouldBeFavorite };
+      }
+      if (!resp.ok) {
+        return { ok: false, requiresAuth: false, isFavorite: shouldBeFavorite };
+      }
+
+      var data = await resp.json().catch(function(){ return {}; });
+      var nextFavorite = shouldBeFavorite;
+      if (typeof data.isFavorite === 'boolean') nextFavorite = data.isFavorite;
+
+      var favs = load(FAVORITES_KEY, []);
+      var idx = -1;
+      for (var i = 0; i < favs.length; i++) {
+        if (favs[i].slug === slug) { idx = i; break; }
+      }
+
+      if (nextFavorite) {
+        var product = data.product || {};
+        var item = {
+          slug: slug,
+          name: name || product.title_en || slug,
+          image: product.image_url || '',
+          priceUsd: product.price_usd || null,
+          priceThb: product.price_thb || null,
+          addedAt: Date.now()
+        };
+        if (idx >= 0) favs[idx] = Object.assign({}, favs[idx], item);
+        else favs.unshift(item);
+      } else if (idx >= 0) {
+        favs.splice(idx, 1);
+      }
+
+      save(FAVORITES_KEY, favs);
+      return { ok: true, requiresAuth: false, isFavorite: nextFavorite };
+    } catch(e) {
+      return { ok: false, requiresAuth: false, isFavorite: shouldBeFavorite };
+    }
+  }
+
   // ── Public API ──
   return {
     getActiveCampaigns: getActiveCampaigns,
@@ -126,6 +245,9 @@ var MildMateCampaigns = (function(){
     getFavorites: getFavorites,
     toggleFavorite: toggleFavorite,
     isFavorite: isFavorite,
+    syncFavoritesFromServer: syncFavoritesFromServer,
+    getFavoritesServer: getFavoritesServer,
+    toggleFavoriteServer: toggleFavoriteServer,
     STORAGE_KEY: STORAGE_KEY,
     OFFERS_KEY: OFFERS_KEY,
     FAVORITES_KEY: FAVORITES_KEY

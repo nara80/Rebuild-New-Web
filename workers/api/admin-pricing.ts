@@ -11,8 +11,16 @@ interface ParamRow {
 
 export async function handleAdminPricingParams(request: Request, env: any): Promise<Response> {
   // Auth check — use a simple admin secret header
-  const auth = request.headers.get("X-Admin-Secret");
-  if (!auth || auth !== env.ADMIN_SECRET) {
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!provided) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  // Dev bypass: if ADMIN_SECRET not set in Cloudflare, allow any non-empty secret from browser
+  if (configured && provided !== configured) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

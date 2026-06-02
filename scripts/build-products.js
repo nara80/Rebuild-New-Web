@@ -258,6 +258,7 @@ function buildCustomizable(slug, p, prod) {
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
     '{{IMAGE_PATH}}': prod.image || '/images/placeholder.jpg',
+    '{{PRODUCT_SLUG}}': slug,
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE}}': shortTitle ? '  -  ' + shortTitle : '',
     '{{TAGLINE}}': p.tagline || '',
@@ -335,14 +336,15 @@ function buildFixed(slug, p, prod) {
     '{{TAGLINE}}': p.tagline || '',
     '{{TH_REDIRECT_PATH}}': (prod.urlTh || '/th' + prod.url),
     '{{RELATED_PRODUCTS}}': buildRelatedHTML(p.relatedSlugs),
-    '{{TAGS_HTML}}': buildTagsHTML(p.tags)
+    '{{TAGS_HTML}}': buildTagsHTML(p.tags),
+    '{{PRODUCT_SLUG}}': slug,
   };
 
   // Build fixed pricing HTML
   replacements['{{FIXED_PRICING_HTML}}'] = buildFixedPricingHTML(slug, p, prod);
 
   // Build trust signals
-  replacements['{{TRUST_SIGNALS_HTML}}'] = buildTrustSignalsHTML();
+  replacements['{{TRUST_DESKTOP_WRAPPER_HTML}}'] = buildTrustSignalsWrapperHTML();
 
   // Build fixed content HTML (specs, features, etc.)
   replacements['{{FIXED_CONTENT_HTML}}'] = buildFixedContentHTML(slug, p);
@@ -415,7 +417,7 @@ function buildFixedPricingHTML(slug, p, prod) {
       html += '</div>';
     }
 
-    html += '<button class="add-to-cart-btn" id="add-to-cart" onclick="if(typeof addToCart===\'function\'){addToCart({slug:\'' + slug + '\',name:\'' + (p.breadcrumbName || '') + '\',price:' + (p.priceUsd || 0) + ',qty:1})}">Add to Cart</button>';
+    html += '<button class="add-to-cart-btn" id="add-to-cart" onclick="if(typeof addToCart===\'function\'){addToCart({slug:\'' + slug + '\',name:\'' + (p.breadcrumbName || '') + '\',price:' + (p.priceUsd || 0) + ',priceThb:' + (prod.priceThb || 0) + ',qty:1})}">Add to Cart</button>';
   }
 
   html += '</div>';
@@ -425,6 +427,11 @@ function buildFixedPricingHTML(slug, p, prod) {
 function buildTrustSignalsHTML() {
   return '<div class="trust-signals"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div></div>';
 }
+
+function buildTrustSignalsWrapperHTML() {
+  return '<div class="container trust-signals-desktop-wrap" style="max-width:1280px; padding:0 24px 28px;"><div class="trust-signals trust-signals-desktop"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</div></div></div>';
+}
+
 
 function buildFixedContentHTML(slug, p) {
   if (slug === 'duvet-insert') {

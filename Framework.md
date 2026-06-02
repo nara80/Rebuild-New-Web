@@ -7,8 +7,8 @@
 - **Deploy:** `mildmate-new.pages.dev` → cutover to `www.mildmate.com` when 100% done
 - **Email:** Resend (free tier: 100/day, `RESEND_API_KEY` required as Pages secret)
 - **Payments:** Stripe (USD + PromptPay THB natively)
-- **Admin auth:** Cloudflare Access (Google login)
-- **Parcel tracking:** AfterShip (FedEx, UPS, DHL, Thai Post + 100+ carriers) — tracking page at `/track/[tracking]` via AfterShip embedded widget or API
+- **Admin auth:** Clerk (Google / Facebook / Email login)
+- **Order tracking:** Option A — carrier code + tracking number entered by admin on shipped, URL auto-generated from templates (thaipost, flash, dhl, ups, fedex, usps). No external API needed. Tracking shown inline in `/account` Orders panel.
 
 ---
 
@@ -47,34 +47,33 @@
 ## Complete Site Pages Overview
 
 ### Static Pages (manually authored HTML)
-| Page | URL | Notes |
+| Page | URL | Status |
 |---|---|---|
-| Homepage EN | `/` | 8 sections, full content |
-| Homepage TH | `/th/` | Thai language version |
-| About Us | `/about/` | Company story, certifications |
-| Contact | `/contact/` | Form + multi-channel links |
-| Fabric Collections | `/fabric/` | 4 fabric tabs, expanded detail |
-| Size Guide | `/sizeguide/` | Unified country-first mattress size selector |
-| Size Guide TH (#1 SEO) | `/mattress-size-th/` | Thai SEO hub — preserved with country tabs |
-| How to Measure | `/how-to-measure-mattress-size/` | Credit card method diagram |
-| Bed Sheet Size | `/bed-sheets-size/` | Sheet sizing guide |
-| Shipping Policy | `/shipping/` | Rates, regions, transit times |
-| Privacy Policy | `/policy/` | GDPR-compatible policy |
-| Customer Reviews | `/reviews/` | Curated reviews + rating badge |
-| Checkout | `/checkout/` | 3-step guest checkout (guest or logged-in) |
-| Order Confirmed | `/order-confirmed/` | Post-payment confirmation |
-| My Account | `/account/` | Order history, saved addresses, parcel tracking (AfterShip), social login |
-| Parcel Tracking | `/track/[tracking]/` | AfterShip embedded widget — FedEx, UPS, DHL, Thai Post + 100+ carriers auto-detected |
-| All 258 WordPress URLs | various | Preserved from Phase 2 |
+| Homepage EN | `/` | ✅ Built |
+| Homepage TH | `/th/` | ✅ Built |
+| About Us | `/about/` | ✅ Built |
+| Contact | `/contact/` | ✅ Built |
+| Fabric Collections | `/fabric/` | ✅ Built |
+| Size Guide EN | `/sizeguide/` | ✅ Built |
+| Size Guide TH (#1 SEO) | `/th/sizeguide/` | ✅ Built via redirect: `/th/mattress-size-th/*` → `/th/sizeguide/` |
+| How to Measure | `/how-to-measure-mattress-size/` | ✅ Built |
+| Shipping Policy | `/shipping/` | ✅ Built |
+| Privacy Policy | `/policy/` | ✅ Built |
+| Customer Reviews | `/reviews/` | ✅ Built |
+| Checkout | `/checkout/` | ✅ Built |
+| Order Confirmed | `/order-confirmed/` | ✅ Built |
+| My Account | `/account/` | ✅ Built |
+| Order Tracking | Inline in `/account/` Orders panel | ✅ Built — Option A (carrier code + tracking number, auto-generated carrier URL, no external API needed) |
+| All 258 WP URLs | various | Phase 2 redirect file — pre-launch after Phase 8 |
 
 ### Blog Pages (static HTML, managed manually)
-| Page | URL | Notes |
+| Page | URL | Status |
 |---|---|---|
-| Blog Index | `/blogs/` | Featured post + 11-card grid, filter tabs, pagination (12/page), newsletter CTA — implemented 2026-05-16 |
-| Blog Pagination | `/blogs/page/2/` | Page 2 — posts 13–17 (5 cards) — implemented 2026-05-16 |
-| Blog Post Template | `/blogs/template/index.html` | Hero image, rich article body, author box, social share, related products — implemented 2026-05-16 |
-| Blog Post Sample | `/blogs/v-berth-sheets-vs-standard/` | First real blog post (Marine/V-Berth) — implemented 2026-05-16 |
-| Individual Blog Post | `/blogs/[post-slug]/` | One file per article — copy from template |
+| Blog Index | `/blogs/` | ✅ Built — featured + 11-card grid, filter tabs, pagination (12/page) |
+| Blog Pagination | `/blogs/page/2/` | ✅ Built |
+| Blog Post Template | `/blogs/template/index.html` | ❌ Not a live file — used to generate posts, then deleted |
+| Blog Post Sample | `/blogs/v-berth-sheets-vs-standard/` | ✅ Built |
+| Individual Blog Post | `/blogs/[post-slug]/` | Copy from template when adding new posts |
 
 ### Dynamic Pages (data from Cloudflare D1)
 
@@ -103,13 +102,11 @@
 | All Products | `/products/` | Full catalog grid with filter bar |
 
 ### Admin Pages (Google login required)
-| Page | URL | Notes |
+| Page | URL | Status |
 |---|---|---|
-| Admin Dashboard | `/admin/` | Summary cards |
-| Orders | `/admin/orders.html` | Manufacturing view |
-| Products | `/admin/products.html` | CRUD product catalog |
-| Image Uploader | `/admin/upload.html` | Drag & drop → R2 |
-| Subscribers | `/admin/subscribers.html` | Email list + CSV export |
+| Admin Hub | `/admin/` | ✅ Built — role cards linking to super-admin.html + admin.html |
+| Super Admin | `/admin/super-admin.html` | ✅ Built — products CRUD, orders, R2 upload, pricing params, marketing, customers (D1), subscribers |
+| Admin | `/admin/admin.html` | ✅ Built — orders, products, subscribers, customers (D1) |
 
 ---
 
@@ -169,7 +166,7 @@ BreezePlus | CloudSoft | PremaCotton | EcoLuxe
 
 ## Custom Configurator Specification
 
-The configurator appears in two places: the **Homepage** (conversion preview) and every **Product Detail page** (full purchase flow). It has two modes selectable by tab.
+The configurator appears on every **Product Detail page** (`/product/[slug]/`). It has two modes selectable by tab.
 
 ### Mode A — Fitted Bed Sheet (rectangular)
 | Input | Label | Unit Toggle |
@@ -266,7 +263,7 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 
 ### Blog Index Layout
 - 3-column grid desktop, 2-column tablet, 1-column mobile
-- 20 posts per page
+- 12 posts per page
 - Pagination: First ← | Prev | 1 2 3 … N | Next | Last →
 - Category filter bar: All · Marine & Yacht · Family Bedding · Care Tips · Size Guides · News
 - Each card: Thumbnail (800×534) + Category tag + Title + Excerpt (3 lines) + Date + Read Time
@@ -315,9 +312,9 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 [SHOP BY PRODUCT]  ← 5 cards, 4-col grid
   Sheets | Duvet Covers | Pillowcases | Protection | Accessories
 
-[SHOP BY NICHE]  ← 6 cards, 3-col grid, 8px radius + 2px border
-  Marine & Yacht | Family & Co-Sleep | Pet Owner | Deep Pocket | Boarding Dorm | RV & Truck
+[SHOP BY NICHE]  ← 4 cards (verified 2026-05-28): Marine & Yacht / Family & Co-Sleep / Specialized Protection / Duvet Covers
   Mobile: horizontal swipe strip, 220px min-width cards
+  (Note: 6-card grid was planned; actual build uses 4 cards. Deep Pocket / Boarding Dorm / RV & Truck / Pet Owner are accessible via SHOP BY PRODUCT category links instead.)
 
 [FABRIC INTELLIGENCE]  ← lateral comparison grid (2026-05-21)
   4-column comparison: Feature | BreezePlus | CloudSoft | PremaCotton | EcoLuxe
@@ -549,31 +546,49 @@ Covers: data collected, usage, cookies, third parties (Stripe, Resend), rights
 ### 13. Checkout (`/checkout/`)
 
 ```
-[STEP 1: CART REVIEW]
-  Items, dimensions, fabric, price
-  Currency toggle (THB / USD)
-  Note: "Prices shown exclude shipping — rates calculated at payment"
-  Optional: "Sign in for faster checkout" (social login buttons)
+[STEP 1: CART REVIEW]  ← 65/35 split (cart left, order summary sidebar right)
+  Items, dimensions, fabric, color, qty, line total
+  Google sign-in banner (optional — pre-fills shipping form)
+  "Continue as guest" default path
+  Order summary sidebar: subtotal, grand total, [Continue to Shipping]
 
 [STEP 2: SHIPPING DETAILS]  ← email captured HERE for abandoned cart
-  Name | Email | Phone | Shipping Address
-  Custom notes (special shape description)
-  Post-checkout prompt: "Create account to save your measurements"
+  65/35 grid: form left, order summary sidebar right
+  Floating label inputs (48px min-height, CI colors: #F8FAFC bg, #1E293B text)
+  Row 1: First Name* | Last Name*     (autocomplete: given-name, family-name)
+  Row 2: Email*       | Phone*        (autocomplete: email, tel-national + tel-country-code)
+  Row 3: Street Address*              (autocomplete: street-address)
+  Row 4: Apt/Suite    | Country*      (autocomplete: address-line2, country — 61 countries)
+  Row 5: City*        | Postal Code*  (autocomplete: address-level2, postal-code)
+  Row 6: Province/State*              (autocomplete: address-level1)
+  Valid checkmarks on required fields (blue circle ✓)
+  Phone: country code select + number input (auto-detected from geo)
+  [Back to Cart] [Review & Pay]
 
-[STEP 3: PAYMENT]
-  → Stripe Checkout (hosted, redirects to Stripe)
-  TH visitors: PromptPay QR via Stripe
-  Global: Card / Google Pay
+[STEP 3: PAYMENT]  ← 65/35 split
+  Order Summary card: items list + grand total
+  [Proceed to Payment] → redirects to Stripe Checkout (hosted)
+  "Secured by Stripe. We never store your card details."
+  Order summary sidebar (sticky)
+  [Edit Details]
 ```
 
 **Social Login (Optional — No Forced Login):**
 - Customers can check out as guests without any login
-- Social login buttons shown at checkout and in header for convenience
-- Supported providers: Google, Facebook, LINE (Thailand essential), Apple
-- Logging in pre-fills shipping details and saves order history
+- Google sign-in button shown at Step 1 (Clerk)
+- Logging in pre-fills name + email in shipping form
 - Account creation is encouraged *after* purchase, not required before
 
-### 14. Admin Dashboard (`/admin/`) — protected by Cloudflare Access
+**Long-term Option 3 (confirmed):**
+- Move to Clerk Production instance + custom auth domain before go-live
+- Enforce centralized bearer-token auth for `/api/auth/me` + `/api/customers/*` across checkout/account pages
+- Keep explicit sign-out CTA on checkout/account (not only profile menu) for account switching and QA reliability
+
+### 14. Admin Dashboard (`/admin/`) — protected by Clerk (Option A)
+
+**Auth (Option A — implemented):** `functions/admin/_middleware.ts` verifies Clerk JWT on every request to `/admin/*`. Checks for admin/super-admin role claims or email in `ADMIN_EMAILS` env var. Non-admins redirected to Clerk sign-in; non-admin authenticated users see a 403 page. Dev mode (pages.dev/localhost) bypasses middleware (relies on client-side gate instead). API endpoints (`/api/admin/*`) are independently protected server-side via `authorizeAdmin()`.
+
+**Planned (Option B):** Cloudflare Access zero-trust policy in front of `/admin/*` — Cloudflare handles identity verification before requests reach the Worker. Adds defense-in-depth without code changes. Requires Cloudflare Teams (free for up to 50 users).
 
 ```
 Sidebar: Dashboard | Products | Orders | Images | Subscribers
@@ -624,13 +639,19 @@ mildmate-web/
 ├── Framework.md
 ├── wrangler.toml
 ├── package.json
-├── blog-mockup.html           ← Blog template design reference
-├── mockup.html                ← Homepage design reference
+├── blog-mockup.html           ← Not in project root (kept in design assets if needed)
+├── mockup.html                ← Not in project root (design reference only)
 │
 ├── functions/                        ← Pages Functions (local dev bridge)
-│   └── api/
-│       └── [[path]].ts               ← API catch-all → Worker handlers
-│
+│   ├── api/
+│   │   └── [[path]].ts               ← API catch-all → Worker handlers
+│   ├── account/
+│   │   └── _middleware.ts            ← Clerk auth gate for /account/*
+│   ├── admin/
+│   │   └── _middleware.ts            ← Clerk admin-role gate for /admin/*
+│   └── quote/
+│       └── [[path]].ts               ← Magic quote link: /quote/QT-XXXXX/
+
 ├── public/                          ← Cloudflare Pages static files
 │   ├── index.html                   ← Homepage EN
 │   ├── th/index.html                ← Homepage TH
@@ -661,10 +682,7 @@ mildmate-web/
 │   ├── product/[slug]/index.html    ← 83 product detail pages (standard + custom paths)
 │   ├── quote/[quote-id]/index.html  ← Magic link: locked custom quote → Add to Cart
 │   │
-│   ├── mattress-size-th/index.html  ← #1 SEO page
-│   ├── mattress-size/index.html
-│   ├── how-to-measure-mattress-size/index.html
-│   ├── bed-sheets-size/index.html
+│   ├── th/sizeguide/                ← #1 SEO page (WordPress /mattress-size-th/* → /sizeguide/, /th/mattress-size-th/* → /th/sizeguide/)
 │   ├── [all-other-258-slugs]/index.html   ← Phase 2 URL preservation
 │   │
 │   ├── css/
@@ -728,155 +746,198 @@ mildmate-web/
 │   │   ├── Logo/                    ← Marketplace & social icons
 │   │   └── about/                   ← About page photos
 │   ├── _redirects                   ← 301s for WordPress legacy URLs
-│   ├── _headers                     ← Security headers (CSP, HSTS)
-│   ├── sitemap.xml
-│   └── robots.txt
-│
+│   ├── _headers                     ← Security headers (CSP, HSTS, Permissions-Policy)
+│   ├── sitemap.xml                  ← ⏸ Pending (Phase 8)
+│   └── robots.txt                   ← ✅ Built
+
 ├── workers/
-│   ├── api/
-│   │   ├── products.ts
-│   │   ├── pricing.ts               ← Handles both bed sheet + V-Berth formulas
-│   │   ├── geo-currency.ts
-│   │   ├── cart.ts
-│   │   ├── checkout.ts
-│   │   ├── webhook.ts
-│   │   ├── email.ts
-│   │   ├── email.ts                  ← Shared Resend email helper
-│   ├── subscribers.ts
-│   │   ├── auth.ts                  ← Social login (Google, Facebook, LINE, Apple)
-│   │   ├── customers.ts             ← Customer profile, order history, saved addresses
-│   │   └── quote.ts                 ← Custom quote: submit, approve, fetch by ID
-│   ├── admin/
-│   │   ├── products.ts
-│   │   ├── orders.ts
-│   │   ├── upload.ts
-│   │   └── subscribers.ts
-│   └── cron.ts                      ← Abandoned cart cron (Phase 6)
-│
-├── admin/
-│   ├── index.html
-│   ├── products.html
-│   ├── orders.html
-│   ├── upload.html
-│   └── subscribers.html
-│
+│   └── api/
+│       ├── index.ts                ← Main Worker entry (all /api/* routes)
+│       ├── products.ts              ← Public products catalog API
+│       ├── pricing.ts              ← All pricing formulas (fitted/V-Berth/flat/encasement/duvet/pillowcase/mattress-protector)
+│       ├── pricing-params.ts       ← Public read for admin-set pricing params
+│       ├── geo-currency.ts          ← Country → THB/USD
+│       ├── subscribe.ts             ← Email → D1 subscribers
+│       ├── unsubscribe.ts           ← Email removal from D1
+│       ├── quote.ts                 ← Custom quote → D1 + Resend email
+│       ├── contact.ts               ← Contact form → D1 + Resend email
+│       ├── email.ts                 ← Shared Resend helper
+│       ├── checkout.ts              ← Stripe Checkout Sessions + PromptPay
+│       ├── webhook.ts               ← checkout.session.completed → D1 + Resend
+│       ├── auth.ts                  ← Clerk JWT decode, /api/auth/me
+│       ├── customers.ts             ← Order history (dual-match thumbnail) + saved-cart sync + addresses CRUD
+│       ├── shipping.ts              ← Centralized shipping-quote engine (THB rates, geo-country, OTHER fallback)
+│       ├── countries.ts             ← Centralized country master list (D1 countries_master, 95 countries + OTHER)
+│       ├── order-confirmed.ts       ← Lookup by stripe_session_id
+│       ├── clerk-verify.ts          ← Clerk JWT verification (production)
+│       ├── favorites.ts             ← Authenticated wishlist: POST /api/favorites (add), DELETE /api/favorites/:id (remove), GET /api/favorites (list); user+email matching, duplicate guard, schema auto-heal
+│       ├── discount.ts              ← Discount code validation and claim tracking
+│       ├── admin-products.ts       ← Admin: GET/PUT products
+│       ├── admin-upload.ts         ← Admin: R2 image upload → CDN URL
+│       ├── admin-pricing.ts        ← Admin: GET/PUT pricing params
+│       ├── admin-orders.ts        ← Admin: GET/PUT orders (status + Option A shipping tracking)
+│       ├── admin-customers.ts      ← Admin: customers grouped by email from D1 orders
+│       ├── admin-diy.ts           ← Admin: GET/PUT DIY prices
+│       ├── admin-exchange.ts       ← Admin: GET/PUT exchange rates
+│       ├── admin-contacts.ts       ← Admin: contacts management
+│       ├── admin-stats.ts          ← Admin: dashboard statistics
+│       ├── admin-shipping.ts       ← Admin: shipping rates CRUD (THB-only, OTHER protected)
+│       └── admin-quotes.ts         ← Admin: custom quotes management (status, price, expiry)
+
 └── migrations/
-    ├── 001_initial.sql
-    ├── 003_quote_fields.sql
-    └── 004_rate_limits.sql
+    ├── 001_initial.sql             ← products/orders/abandoned_carts/subscribers/rate_limits
+    ├── 002_add_tags.sql             ← tags column on products
+    ├── 002_discount_claims.sql      ← discount_claims table
+    ├── 003_custom_quotes.sql        ← custom_quotes table (updated schema)
+    ├── 003_seed_products.sql        ← 15 products
+    ├── 004_rate_limits.sql          ← rate_limits table
+    ├── 005_pricing_params.sql       ← standard_prices + pricing_params tables
+    ├── 006_product_editor.sql       ← youtube_url + images columns on products
+    ├── 007_seed_products.sql        ← 27 products
+    ├── 008_seed_image_urls.sql      ← image_url seeded for all 27 products
+    ├── 009_customer_addresses.sql   ← customer_addresses table
+    ├── 010_discount_expiry.sql      ← expires_at + source columns on discount_claims
+    ├── 011_orders_discount_code.sql ← discount_code column on orders
+    ├── 012_contacts.sql             ← contacts table (unified)
+    ├── 013_favorites.sql            ← favorites table (authenticated wishlist)
+    ├── 014_order_shipping_tracking.sql  ← carrier_code + tracking_number + tracking_url + shipping_status + shipped_at on orders
+    ├── 015_shipping_rates.sql       ← shipping_rates table (country_code, first_item_thb, additional_item_thb) + seed TH/US/OTHER
+    └── 016_countries_master.sql    ← countries_master table (95 countries + OTHER, phone codes)
 ```
+
 
 ---
 
 ## SEO URL Strategy
 
+Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** — no HTML placeholder pages are created for old WordPress URLs. Everything goes through `public/_redirects`.
+
 | Type | Count | Action |
 |---|---|---|
-| Clean EN slugs | ~80 | Preserve exact — create matching `/slug/index.html` |
-| Clean TH slugs | ~15 | Preserve exact — UTF-8 folder names supported by CF Pages |
-| `/th/` prefixed pages | ~20 | Preserve exact |
-| `/product/[slug]/` | 83 | Preserve exact |
+| Product URLs | 81 | `_redirects` → 27 product pages (1:1 where possible, category redirect for size variants) |
+| Static page URLs | ~102 | `_redirects` → existing new site pages, or → `/` for orphaned URLs |
+| Clean EN slugs | ~80 | Redirect or preserve depending on new site match |
+| `/th/` prefixed pages | ~20 | Redirect → `/th/` pages (not yet built) or → EN equivalent |
 | Duplicate/junk slugs | ~60 | `_redirects` 301 → canonical |
 
 ---
 
 ## D1 Database Schema
 
+**Actual schema (migrations 001–009). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
+
 ```sql
--- Products
+-- Products (migration 001 + 006)
 CREATE TABLE products (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   slug TEXT UNIQUE NOT NULL,
-  title_th TEXT, title_en TEXT,
-  description_th TEXT, description_en TEXT,
-  category TEXT,                  -- 'marine', 'family', 'duvet', 'protection'
-  base_price_usd REAL, base_price_thb REAL,
-  price_per_sqcm_usd REAL, price_per_sqcm_thb REAL,
-  fabric_options TEXT,            -- JSON array
-  image_r2_key TEXT,
-  active INTEGER DEFAULT 1
+  title_en TEXT NOT NULL, title_th TEXT,
+  description_en TEXT, description_th TEXT,
+  category TEXT NOT NULL,          -- 'sheets', 'duvet-covers', 'pillowcases', etc.
+  subcategory TEXT,
+  fabric_options TEXT DEFAULT 'BreezePlus,CloudSoft,PremaCotton,EcoLuxe',
+  base_price_usd REAL NOT NULL DEFAULT 0,
+  base_price_thb REAL NOT NULL DEFAULT 0,
+  price_per_cm2_usd REAL DEFAULT 0,
+  price_per_cm2_thb REAL DEFAULT 0,
+  is_custom INTEGER DEFAULT 1,
+  image_url TEXT,                   -- CDN path: /images/products/{slug}/main.jpg
+  sort_order INTEGER DEFAULT 0,
+  is_active INTEGER DEFAULT 1,
+  tags TEXT,                        -- comma-separated cross-sell tags
+  youtube_url TEXT,
+  images TEXT DEFAULT '[]',       -- JSON array of image URLs
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Orders
+-- Orders (migration 001 — Phase 5+ checkout saves here)
 CREATE TABLE orders (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  stripe_session_id TEXT,
+  stripe_payment_intent_id TEXT,
   email TEXT NOT NULL,
   customer_name TEXT, phone TEXT,
-  address TEXT,                   -- JSON {line1, city, country}
-  product_id INTEGER REFERENCES products(id),
-  sheet_type TEXT DEFAULT 'fitted_bed',   -- 'fitted_bed' | 'vberth'
-  -- Fitted Bed Sheet dimensions
-  custom_width_cm REAL,
-  custom_length_cm REAL,
-  custom_depth_cm REAL,
-  -- V-Berth additional dimensions (NULL for fitted bed sheet orders)
-  custom_head_width_cm REAL,      -- Bow (narrow end)
-  custom_foot_width_cm REAL,      -- Cabin entry (wide end)
+  shipping_address TEXT,
+  product_slug TEXT NOT NULL,
+  product_title_en TEXT,
   fabric TEXT, color TEXT,
-  amount REAL, currency TEXT,     -- 'USD' | 'THB'
-  payment_id TEXT,                -- Stripe session ID
-  payment_status TEXT DEFAULT 'pending',
-  order_status TEXT DEFAULT 'pending',    -- 'pending' | 'in-production' | 'shipped' | 'cancelled'
-  tracking_number TEXT,           -- AfterShip / carrier tracking ID (FedEx, UPS, DHL, Thai Post)
-  carrier TEXT,                   -- Carrier slug: 'fedex' | 'ups' | 'dhl' | 'thaipost' | 'other'
-  created_at TEXT DEFAULT (datetime('now'))
+  width_cm REAL, length_cm REAL, depth_cm REAL,
+  width_in REAL, length_in REAL, depth_in REAL,
+  custom_notes TEXT,
+  price_usd REAL, price_thb REAL,
+  currency TEXT DEFAULT 'USD',
+  quantity INTEGER DEFAULT 1,
+  status TEXT DEFAULT 'pending',  -- 'pending' | 'in-production' | 'shipped' | 'cancelled'
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Custom Quotes (custom-size orders requiring manual pricing)
+-- Custom Quotes (migration 003_quote_fields.sql)
 CREATE TABLE custom_quotes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  quote_id TEXT NOT NULL UNIQUE,     -- e.g., "QT-250519-001"
+  quote_id TEXT NOT NULL UNIQUE,       -- e.g. "QT-250519-001"
   customer_name TEXT NOT NULL,
   email TEXT NOT NULL,
-  address TEXT,
-  telephone TEXT,
+  address TEXT, telephone TEXT,
   product_slug TEXT NOT NULL,
-  dimensions TEXT NOT NULL,          -- JSON: {"w":183,"l":198,"d":51,"unit":"cm"}
-  fabric TEXT,
-  color TEXT,
-  status TEXT DEFAULT 'pending',     -- pending | approved | rejected | expired
-  quoted_price INTEGER,              -- cents, NULL until admin approves
+  dimensions TEXT NOT NULL,            -- JSON: {"w":183,"l":198,"d":51,"unit":"cm"}
+  fabric TEXT, color TEXT,
+  status TEXT DEFAULT 'pending',       -- pending | approved | rejected | expired
+  quoted_price INTEGER,               -- cents, NULL until admin approves
   expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Abandoned Carts
+-- Abandoned Carts (migration 001)
 CREATE TABLE abandoned_carts (
-  id INTEGER PRIMARY KEY,
-  email TEXT NOT NULL,
-  cart_json TEXT,                 -- Full cart with sheet_type + all dimensions
-  recovered INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now'))
-);
-
--- Email Subscribers
-CREATE TABLE subscribers (
-  id INTEGER PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  source TEXT,                    -- 'footer', 'checkout'
-  created_at TEXT DEFAULT (datetime('now'))
-);
-
--- Rate Limits (anti-spam)
-CREATE TABLE rate_limits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ip_address TEXT NOT NULL,
-  endpoint TEXT NOT NULL,         -- 'quote' | 'subscribe'
+  email TEXT NOT NULL,
+  customer_name TEXT,
+  cart_json TEXT NOT NULL,
+  recovered INTEGER DEFAULT 0,
+  recovery_sent_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customers (social login accounts — optional)
-CREATE TABLE customers (
-  id INTEGER PRIMARY KEY,
+-- Email Subscribers (migration 001)
+CREATE TABLE subscribers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   email TEXT UNIQUE NOT NULL,
-  name TEXT,
-  phone TEXT,
-  auth_provider TEXT,             -- 'google', 'facebook', 'line', 'apple'
-  auth_provider_id TEXT,          -- ID from provider
-  addresses TEXT,                 -- JSON array of saved addresses
-  created_at TEXT DEFAULT (datetime('now'))
+  source TEXT DEFAULT 'footer',
+  language TEXT DEFAULT 'en',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Rate Limits — anti-spam (migration 004)
+CREATE TABLE rate_limits (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ip_address TEXT NOT NULL,
+  endpoint TEXT NOT NULL,            -- 'quote' | 'subscribe'
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Standard Prices — admin-controlled pricing (migration 005)
+CREATE TABLE standard_prices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_category TEXT NOT NULL,    -- 'fitted-sheet', 'flat-sheet', 'duvet-cover', etc.
+  size_key TEXT NOT NULL,             -- e.g. '153x203x30'
+  fabric TEXT NOT NULL,
+  price_thb INTEGER NOT NULL,
+  price_usd REAL NOT NULL,
+  UNIQUE(product_category, size_key, fabric)
+);
+
+-- Pricing Params — global pricing config (migration 005)
+CREATE TABLE pricing_params (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  param_key TEXT UNIQUE NOT NULL,
+  param_value TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+**Active migrations:** 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master
 
 ---
 
@@ -885,17 +946,16 @@ CREATE TABLE customers (
 | Phase | Scope | Key Output |
 |---|---|---|
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
-| **2** | SEO URL Preservation | All 258 static HTML shells + `_redirects` | ⏸️ Deferred — runs pre-launch after Phase 7 |
+| **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → 27 product pages, ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created. | ⏸️ Deferred — runs pre-launch after Phase 8 |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
 | **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling | ✅ Complete |
-| **5** | Checkout + Stripe + Social Login | Guest checkout + Stripe payments + optional social login (Google, Facebook, LINE, Apple) + My Account page with AfterShip parcel tracking | ⏸️ Pending |
-| **6** | Abandoned Cart Cron | Email capture → D1 → Cron Trigger → Resend | ⏸️ Pending |
-| **7** | Admin Dashboard | Orders (V-Berth fields + tracking_number + carrier), AfterShip tracking display, product CRUD, R2 uploader, CSV export | ⏸️ Pending |
+| **5** | Checkout + Stripe + Auth | Checkout/account/order-confirmed pages, Stripe Checkout Sessions + PromptPay, Clerk multi-provider (Google/Facebook/Email), cart↔server sync, quote magic link (`/quote/QT-XXXXX/`), Resend emails, D1 orders + favorites + customer_addresses + contacts (migrations 009–016). Workers API defensive schema self-heal on all endpoints. **Option A order tracking:** carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. **Centralized shipping-quote engine** (`workers/api/shipping.ts`): THB-only rates from D1 `shipping_rates`, exchange-rate conversion, geo-country detection, OTHER fallback. **D1 country master list** (`workers/api/countries.ts`, 95 countries + OTHER): consumed by checkout, /account, and super-admin country dropdowns. **Country-specific tariff/tax notes:** EU/UK/OTHER → "Price excludes import tariff and Tax."; TH/US/CA/AU → hidden. **Order thumbnail dual-match resolution:** slug normalization + title fallback for legacy orders. **Pending:** Option 3 production-auth hardening (Clerk production instance), `workers/cron.ts` abandoned cart recovery (Phase 6). | ✅ Built (code complete; email capture ✅, shipping ✅, migrations 009–016 ✅, cron ⏸ Pending) |
+| **6** | Abandoned Cart Cron | `abandoned_carts` table ready (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` scheduled handler scans D1 for carts >24h, sends Resend recovery email (HTML, MildMate-branded). Cron trigger in Cloudflare Dashboard. | ✅ Built |
+| **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `super-admin.html` (~155KB) + `admin.html` (~118KB) with full products CRUD, orders table (D1 live + Option A shipping tracking), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown via `/api/countries`), marketing. `workers/api/admin-shipping.ts` — shipping rates CRUD (THB-only, OTHER protected). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Planned:** Cloudflare Access zero-trust (Option B, defense-in-depth). | ✅ Built (code complete; setup ⏸ pending) |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏸️ Pending |
-| **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook | ⏸️ Pending |
 
-> **Note:** Phase 2 (SEO URL Preservation) is intentionally deferred — it will run pre-launch after Phase 7 is complete. All other phases proceed in normal order.
+> **Note:** Phase 2 (SEO URLs) runs pre-launch after Phase 8 is complete. Phase 5 (Checkout/Stripe/Auth) is ✅ Built. Phase 6 (Abandoned Cart) is ✅ Built. Phase 7 (Admin Dashboard) is ✅ Code Complete. Phase 8 (Polish + Launch) is ⏸️ Pending.
 
 ---
 

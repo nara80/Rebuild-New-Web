@@ -1,17 +1,40 @@
 # Phase 4 — Homepage + Product Pages
+**Status (2026-05-31): ✅ COMPLETE — Homepage, 27 product pages, all category/SEO/niche landing pages, blog, size guides, Workers API, all 19 migrations (001–016, with some numbers split: 002×2, 003×3) applied. Language-driven currency (EN → USD, TH → THB). Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Centralized country master list. See Completion Summary below for full details.**
+
+**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016). This document reflects the final verified state.**
+
+> **Reconciliation note (2026-05-31):** "all 16 migrations" in the title was incorrect — there are 19 migration SQL files. Migration numbers 002 and 003 each have 2–3 files (e.g., 002_discount_claims, 003_custom_quotes, 003_seed_products, 003_quote_fields). The numbered range 001–016 is correct; the count 16 was not.
 **Goal:** Build all real content pages — the homepage with every section filled, the product listing grid, individual product detail pages, and the size guide SEO hub pages.
 
 **End Result:** A fully functional shopping experience. Visitors can land on the homepage, browse products by category, enter their mattress dimensions, and see a live price update — all before Phase 5 adds the actual payment step.
 
-**Status (2026-05-21): ✅ COMPLETE — Homepage redesigned per Brand CI, all 27 product configurators live (including Marine V-Berth formula). See AGENTS.md for full details.**
-
 ---
 
-## Initial Requirements — What You Must Provide
+## Setup — Executed
 
-Collect all of the following before telling Droid to build. Phase 4 has the most content decisions of any phase — take time to prepare each requirement carefully before starting.
+All Phase 4 requirements were collected and built. Below is the final record of what was decided and built.
 
----
+**Requirement 1 — Phase 3 confirmed:** `public/css/main.min.css` and `public/js/nav.js` exist; styled header with logo and navigation confirmed visible on all pages.
+
+**Requirement 2 — Hero image:** CI blue gradient placeholder — `public/images/Hero01.jpg` used. Headline: "Bedding Made Easy Again: Custom Sizes, Perfect Fits." CTA: "Shop All Products" → `/products/`.
+
+**Requirement 3 — Category images:** 4 niche category cards confirmed: Marine & Yacht (`/marine/`), Family & Co-Sleep (`/family/`), Protection (`/protection/`), Duvet Covers (`/duvet-covers/`). Real photos placed at `public/images/categories/`. "Boarding Dorm" accessible via Shop by Product → Protectors → 6-Sided Encasement.
+
+**Requirement 4 — Product images:** Top 5 real photos placed for: 3-sided-duvet, family-fitted-sheet, marine-fitted-sheet, mattress-encasement-general, bedbridge-connector. Rest use branded placeholders.
+
+**Requirement 5 — Pricing:** Live formula pricing implemented in `workers/api/pricing.ts` (7 formula types: fitted sheet, V-Berth, flat sheet, encasement, duvet cover, pillowcase, protector/mattress). No manual pricing table needed — formula-driven. Marine V-Berth uses `calcVBerthFitted()` with VERTH_MARKUP=8.15.
+
+**Requirement 6 — Customer reviews:** 8 real Etsy reviews on `/reviews/`. Homepage Social Proof carousel shows 2 reviews. All buyer names and countries mapped from Etsy orders.
+
+**Requirement 7 — Fabric content:** `MildMateDataBase/01_Fabric_Intelligence_Guide_V2.md` used as source. Fabric Intelligence section built on homepage as side-by-side comparison grid (desktop) + accordion (mobile). `/fabric/` page: 4-tab deep-dive with comparison table.
+
+**Requirement 8 — Size guide:** All 8 regions built. Country-first progressive disclosure confirmed. Size tables show both cm + inch simultaneously. Unit toggle used only on configurator inputs.
+
+**Requirement 9 — Configurator:** `public/js/product-configurator.js` — shared configurator on all 27 product detail pages (`/product/[slug]/`). Auto-detects product type from URL path. 7 formula types. Path A (Standard Size) + Path B (Custom Size) with W×L×D inputs + unit toggle + diagram + fabric selector + live price + Custom Quote modal → POST `/api/quote`. V-Berth tab with HW/FW/L/D inputs + shape selector (A-H fixed prices, I custom quote). Marine Fitted Sheet uses `calcVBerthFitted()` with VERTH_MARKUP=8.15.
+
+**Requirement 10 — Static pages:** All content built and deployed — `/about/`, `/contact/`, `/fabric/`, `/shipping/`, `/policy/`, `/reviews/`, `/unsubscribe/` (EN). **Note:** Thai versions of static pages not built — Phase 3's lang-toggle uses URL prefix `/th/` but no `/th/` pages exist yet. Thai visitors see English pages with Sarabun font.
+
+**Requirement 11 — Blog:** Blog index at `/blogs/` (17 posts, 2 pages with featured post), pagination page at `/blogs/page/2/`, first real post at `/blogs/v-berth-sheets-vs-standard/`. Blog post template deleted after use (not needed as standalone file).
 
 ### Requirement 1 — Confirm Phase 3 Is Complete
 
@@ -72,7 +95,7 @@ The "Shop by Niche" section has 4 cards. Each needs one photo.
 
 ### Requirement 4 — Product Images (Top 10 Priority)
 
-You have 83 products. You do not need all 83 images before Phase 4 starts. Start with these 10 — prioritized by your Etsy performance data.
+You have 27 products. You do not need all 27 images before Phase 4 starts. Start with these 10 — prioritized by your Etsy performance data.
 
 **Priority order:**
 
@@ -276,9 +299,9 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 
 **What was built (2026-05-16):**
 - Blog index page (`/blogs/index.html`) — featured post + 6-post grid, filter tabs, newsletter CTA
-- Blog post template (`/blogs/template/index.html`) — hero image, article body, author box, social share, related products section
+- Blog post template (`/blogs/index.html`) — hero image, article body, author box, social share, related products section
 
-**To create a new blog post:** Copy `/blogs/template/index.html` to `/blogs/[post-slug]/index.html`, update the content, and add a card to the blog index.
+**To create a new blog post:** Copy `/blogs/index.html` to `/blogs/[post-slug]/index.html`, update the content, and add a card to the blog index.
 
 **What YOU provide (for the 3 sample posts Droid pre-fills):**
 | Field | Sample Post 1 | Sample Post 2 | Sample Post 3 |
@@ -295,77 +318,107 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 
 ## What Phase 4 Builds
 
-### Static Content Pages (new)
+### Static Content Pages (EN — all built)
 | Page / File | What It Is |
 |---|---|
-| `public/index.html` | Homepage (EN) — 8 sections with revised configurator |
-| `public/th/index.html` | Homepage (TH) — Thai language version |
-| `public/about/index.html` | About Us — company story, certifications, team |
+| `public/index.html` | Homepage (EN) — 6 sections with Most Popular carousel |
+| `public/about/index.html` | About Us — Engineering Authority 5-section rebuild |
 | `public/contact/index.html` | Contact — form + LINE/WhatsApp/Facebook + marketplace icons |
 | `public/fabric/index.html` | Fabric Collections — 4-tab deep-dive with comparison table |
-| `public/shipping/index.html` | Returns & Delivery — 30-day returns, shipping regions, carriers, customs |
-| `public/policy/index.html` | Privacy Policy — 14-section GDPR/CCPA-compliant with cookie inventory |
-| `public/reviews/index.html` | Customer Reviews — 8 real Etsy reviews with mapped buyer names/countries |
-| `public/unsubscribe/index.html` | Unsubscribe — email form + D1 deletion + privacy-safe API |
-| `public/js/cookie-consent.js` | GDPR Cookie Consent Banner — Essential + Analytics toggles, GA4 conditional load |
+| `public/shipping/index.html` | Returns & Delivery |
+| `public/policy/index.html` | Privacy Policy — 14-section GDPR/CCPA-compliant |
+| `public/reviews/index.html` | Customer Reviews — 8 real Etsy reviews |
+| `public/unsubscribe/index.html` | Unsubscribe — email form + D1 deletion |
+| `public/js/cookie-consent.js` | GDPR Cookie Consent Banner |
+| `public/custom-measurement/index.html` | Custom Measurement guide |
 
-### Blog Pages (static HTML templates)
+**Note:** Thai versions (`/th/...`) of static pages were planned but not built. Lang toggle exists but routes to non-existent TH pages.
+
+### Blog Pages
 | Page / File | What It Is |
 |---|---|
 | `public/blogs/index.html` | Blog index — featured post + 11-card grid + filter tabs + pagination (12/page) + newsletter CTA |
 | `public/blogs/page/2/index.html` | Blog pagination page 2 — 5 posts (posts 13–17) |
-| `public/blogs/template/index.html` | Blog post template — hero image, rich body, author box, social share, related products |
 | `public/blogs/v-berth-sheets-vs-standard/index.html` | First real blog post — "5 Reasons V-Berth Sheets Beat Standard Sheets" |
 
 ### Product & SEO Pages
 | Page / File | What It Is |
 |---|---|
 | `public/products/index.html` | Full product listing with filter bar (from `data/products.json`) |
-| `public/sheets/index.html` | **NEW** Primary: Fitted Sheets + Flat Sheets (from `data/products.json`) |
-| `public/duvet-covers/index.html` | **NEW** Primary: 3-Sided Zipper + Pet Owner duvet covers (from `data/products.json`) |
-| `public/pillowcases/index.html` | **NEW** Envelope, Zipper, Sham pillowcases (from `data/products.json`) |
-| `public/protection/index.html` | **NEW** Mattress Protectors + Pillow Protectors (from `data/products.json`) |
-| `public/marine/index.html` | SEO Landing: Marine & Yacht category page (from `data/products.json`) |
-| `public/family/index.html` | SEO Landing: Family & Co-Sleep category page (from `data/products.json`) |
-| `public/duvet/index.html` | SEO Landing: Easy-Change Duvet category page (from `data/products.json`) |
-| `public/pets/index.html` | SEO Landing: Pet Owner Bedding (BreezePlus anti-fur) |
-| `public/rv-truck/index.html` | SEO Landing: RV & Truck Cab bedding |
-| `public/product/[slug]/index.html` | 83 individual product detail pages |
-| `public/mattress-size-th/index.html` | #1 SEO page — fully built with size tables |
-| `public/mattress-size/index.html` | EN size guide page |
+| `public/sheets/index.html` | Primary: Fitted Sheets + Flat Sheets (9 products from JSON) |
+| `public/duvet-covers/index.html` | Primary: 6 duvet cover products |
+| `public/pillowcases/index.html` | Primary: 3 pillowcase products |
+| `public/protection/index.html` | Primary: 7 protector products |
+| `public/accessories/index.html` | Primary: 2 accessory products |
+| `public/marine/index.html` | SEO Landing: Marine & Yacht (7 products) |
+| `public/family/index.html` | SEO Landing: Family & Co-Sleep (8 products) |
+| `public/pets/index.html` | SEO Landing: Pet Owner Bedding (7 products) |
+| `public/deep-pocket/index.html` | SEO Landing: Deep Pocket (7 products) |
+| `public/boarding-dorm/index.html` | SEO Landing: Boarding Dorm (6 products) |
+| `public/rv-truck/index.html` | SEO Landing: RV & Truck Cab (8 products) |
+| `public/product/[slug]/index.html` | 27 individual product detail pages with auto-detecting configurator |
+| `public/sizeguide/index.html` | Size Guide SEO hub — 4-card landing + all 8 region tables |
+| `public/mattress-size-th/index.html` | #1 SEO page — Thai + international size tables |
+| `public/mattress-size/index.html` | EN international size guide |
 | `public/how-to-measure-mattress-size/index.html` | Measurement guide with credit card diagram |
-| `public/bed-sheets-size/index.html` | Bed sheet size guide |
+| `public/bed-sheets-size/index.html` | Bed sheet size guide (redirects to `/sizeguide/`) |
 
-### Backend Workers
-| File | What It Is |
+### Backend Workers (in `functions/api/` for local dev, `workers/api/` for production)
+| File | What It Is | Phase |
 |---|---|
-| `workers/api/products.ts` | Serves product data from D1 (Phase 5+ runtime use — storefront uses `data/products.json`) |
-| `workers/api/pricing.ts` | Calculates price for Fitted Bed Sheet AND V-Berth modes |
-| `workers/api/geo-currency.ts` | Detects Thai visitors, returns THB prices |
-| `workers/api/subscribe.ts` | Email signup: validation + D1 INSERT OR IGNORE + localized messages |
-| `workers/api/unsubscribe.ts` | Email removal: D1 DELETE + privacy-safe response (always 200) |
-| `public/js/configurator.js` | Frontend: two-mode live price calculator (Bed Sheet + V-Berth) |
-| `public/js/cart.js` | Frontend: add to cart, localStorage (stores sheet_type + dimensions) |
-| `public/js/cookie-consent.js` | Frontend: consent banner + modal + conditional GA4 load |
-| `public/js/geo.js` | Frontend: currency display toggle |
+| `functions/api/[[path]].ts` | Pages Functions catch-all router → Worker handlers |
+| `workers/api/index.ts` | Main Worker entry — routes all `/api/*` |
+| `workers/api/products.ts` | D1 product listing + category filtering (Phase 5+ use) |
+| `workers/api/pricing.ts` | 7 formula types: fitted, V-Berth, flat, encasement, duvet, pillowcase, protector/mattress |
+| `workers/api/geo-currency.ts` | CF-IPCountry detection → THB/USD pricing |
+| `workers/api/subscribe.ts` | Email signup → D1 with `INSERT OR IGNORE` |
+| `workers/api/unsubscribe.ts` | Email removal from D1 (privacy-safe, always 200) |
+| `workers/api/quote.ts` | Custom quote → D1 `custom_quotes` + Resend email |
+| `workers/api/contact.ts` | Contact form → D1 + Resend email |
+| `workers/api/email.ts` | Shared Resend helper (MailChannels → Resend migration) |
+| `workers/api/admin-products.ts` | Admin: GET/PUT products (X-Admin-Secret) |
+| `workers/api/admin-upload.ts` | Admin: R2 image upload → CDN URL |
+| `workers/api/admin-pricing.ts` | Admin: GET/PUT pricing params |
+| `public/js/product-configurator.js` | Shared configurator on all 27 product pages (~55KB). Auto-detects product type, 7 formula types, V-Berth hybrid pricing, Custom Quote modal → `/api/quote` |
+| `public/js/cart.js` | localStorage cart with sheet_type + dimensions |
+| `public/js/geo.js` | Currency display — `getPageCurrencyByLanguage()` drives EN → USD, TH → THB (language-path detection, not geo-only). Reads `/api/geo` for geo context. | Phase 4+5 |
+
+| workers/api/checkout.ts | Stripe Checkout Sessions + PromptPay + shipping line item injection | Phase 5 |
+| workers/api/webhook.ts | Payment webhook → D1 order + Resend emails | Phase 5 |
+| workers/api/auth.ts | Clerk JWT verification (Google/Email; Facebook/LINE NOT implemented) | Phase 5 |
+| workers/api/customers.ts | Order history (dual-match thumbnail) + cart sync + addresses CRUD | Phase 5 |
+| workers/api/shipping.ts | Centralized shipping-quote engine (THB rates, exchange-rate conversion, geo-country, OTHER fallback) | Phase 5 |
+| workers/api/countries.ts | Centralized country master list (D1 countries_master, 95 countries + OTHER) | Phase 5 |
+| workers/api/admin-shipping.ts | Super-admin shipping rates CRUD (THB-only, USD preview, OTHER protected) | Phase 5 |
+| workers/api/order-confirmed.ts | Post-payment order lookup by stripe_session_id | Phase 5 |
+| workers/api/clerk-verify.ts | Clerk JWT Web Crypto + JWKS verification | Phase 5 |
+| workers/api/discount.ts | Discount code validation + claim tracking | Phase 5 |
+| workers/api/favorites.ts | Authenticated wishlist (user+email matching, duplicate guard) | Phase 5 |
+| workers/api/admin-orders.ts | Admin: GET/PUT orders (status + Option A shipping tracking) | Phase 5 |
+| workers/api/admin-customers.ts | Admin: customers grouped by email from D1 | Phase 5 |
+| workers/api/admin-exchange.ts | Admin: GET/PUT exchange rates | Phase 5 |
+| workers/api/admin-diy.ts | Admin: GET/PUT DIY prices | Phase 5 |
+| workers/api/admin-contacts.ts | Admin: contacts management | Phase 5 |
+| workers/api/admin-stats.ts | Admin: dashboard statistics | Phase 5 |
 
 ---
 
-## Homepage Sections (What You Will See)
+## Homepage Sections (verified 2026-05-28)
 
-Phase 4 builds the homepage in 8 sections from top to bottom:
+The homepage has **no configurator section** — the live price calculator is on individual product detail pages (`/product/[slug]/`), not on the homepage.
 
 ```
-1. HERO           — Big headline + CTA buttons + lifestyle background image
-2. TRUST BAR      — 4 certification/trust icons in a row
-3a. SHOP BY PRODUCT TYPE  — 5 category cards (Primary navigation)
-3b. SHOP BY NICHE  — 5 category cards with images (SEO landing pages)
-4. TOP PRODUCTS   — 5 product cards from your Etsy top performers
-5. CONFIGURATOR   — Two-mode live price calculator (see Configurator Requirement below)
-6. FABRIC TABS    — 4-tab showcase of BreezePlus, CloudSoft, PremaCotton, EcoLuxe
-7. SOCIAL PROOF   — Customer reviews + 5-star rating
-8. EMAIL SIGNUP   — "Get 10% off" footer email capture
+1. HERO            — Full-bleed CI blue gradient + "Bedding Made Easy Again / Custom Sizes, Perfect Fits." + "Shop All Products" CTA
+2. TRUST BAR       — 4 icons: Precision Fit / Global Delivery / Top-Rated Etsy / Sensitive Skin Friendly
+3. SHOP BY PRODUCT — 5 cards: Sheets / Duvet Covers / Pillowcases / Protection / Accessories → `/[type]/`
+4. CHOOSE YOUR APPLICATION — 4 niche cards: Marine & Yacht / Family & Co-Sleep / Protection / Duvet Covers → `/[niche]/`
+5. MATERIAL INTELLIGENCE — Side-by-side comparison grid (desktop) + accordion (mobile) + "Explore Full Fabric Details" CTA → `/fabric/`
+6. MOST POPULAR    — Horizontal-scroll carousel: 5 product cards with "View Options" button
+7. WHAT CUSTOMERS SAY — Reviews carousel with dots (2 reviews on homepage, 8 on `/reviews/`)
+8. GET 15% OFF YOUR FIRST ORDER — Blue gradient email signup with AJAX
 ```
+
+**Niche cards (Choose Your Application):** 4 cards — `/marine/`, `/family/`, `/protection/`, `/duvet-covers/`. Not 6. Boarding Dorm and RV Truck accessible via `/protection/` and `/sheets/` respectively.
 
 ---
 
@@ -393,7 +446,7 @@ Product images are the most important visual element. Droid will use placeholder
    D:\00_MildMate\Re-Bulit_Web\public\images\products\
    ```
 
-> **You do NOT need all 83 images on day one.** Start with your top 10 most important products. Droid will use a branded placeholder image for the rest.
+> **You do NOT need all 27 images on day one.** Start with your top 10 most important products. Droid will use a branded placeholder image for the rest.
 
 **Priority images to get first (your Etsy top 5):**
 
@@ -544,7 +597,7 @@ Once all 8 requirements are ready, hand off to Droid.
 >
 > **Requirement 11 — Blog:** Build blog index with 3 sample posts. Sample post 1: [title/category/excerpt/body]. Post 2: [same]. Post 3: [same].
 >
-> Build the homepage (EN + TH), all new static pages (About, Contact, Fabric Collections, Shipping Policy, Privacy Policy, Customer Reviews), blog index + 3 sample posts, product listing + 11 category pages (5 primary product-type + 6 SEO landing), all product detail pages (15+ expandable to 83), the 4 size guide pages, and all backend Workers (products API, pricing API with both modes, geo-currency API)."
+> Build the homepage (EN + TH), all new static pages (About, Contact, Fabric Collections, Shipping Policy, Privacy Policy, Customer Reviews), blog index + 3 sample posts, product listing + 11 category pages (5 primary product-type + 6 SEO landing), all 27 product detail pages, the 4 size guide pages, and all backend Workers (products API, pricing API with both modes, geo-currency API)."
 
 ---
 
@@ -573,38 +626,32 @@ After Droid finishes, open `http://localhost:8788` and review each section top t
 
 | Check | Expected |
 |---|---|
-| 6 cards visible | Marine, Family, Pets, Duvet, International Boarding School, RV & Truck |
+| 4 cards visible | Marine & Yacht, Family & Co-Sleep, Specialized Protection, Duvet Covers (4 cards, not 6) |
 | Each card has image | Photo or colored placeholder |
 | Each card links somewhere | Clicking goes to the category listing |
 | Mobile | Cards stack to 2 columns |
 
-**Section 4 — Top Products**
+**Section 4 — Most Popular**
 
 | Check | Expected |
 |---|---|
-| 5 product cards | Your Etsy top 5 products shown |
+| 5 product cards in scroll row | Your Etsy top 5 products shown |
 | Each card has image, title, price | All 3 visible |
 | Price shows correct currency | THB if you are in Thailand |
-| "Customize" button | Blue button on each card |
+| "View Options" button | Blue button on each card |
 | Mobile | Horizontal scroll row |
 
-**Section 5 — Custom Configurator**
+**Section 5 — Fabric Intelligence**
 
 | Check | Expected |
 |---|---|
-| Two mode tabs visible | "🛏 Fitted Bed Sheet" and "⚓ V-Berth Boat Sheet" |
-| Unit toggle visible | cm / inch switch in top-right of configurator |
-| Bed Sheet tab — inputs | Width, Length, Depth (3 inputs) |
-| V-Berth tab — inputs | Head Width (Bow), Foot Width (Cabin), Length, Depth (4 inputs) |
-| Diagram beside inputs | Labeled SVG diagram switches when tab switches |
-| Fabric selector | 4 fabric buttons (BreezePlus, CloudSoft, PremaCotton, EcoLuxe) |
-| Unit toggle | Clicking "inch" converts all input values instantly |
-| Enter numbers and change fabric | Price updates immediately without page reload |
-| Price note | "Price excludes shipping & import tariff" visible below price |
-| Currency | Shows THB for Thai visitors, USD for others |
-| "Add to Cart" button | Visible and clickable after dimensions are entered |
+| Side-by-side comparison grid | Desktop shows 5-column grid (Feature + 4 fabrics) |
+| Mobile accordion | 4 expandable cards, one per fabric |
+| Color swatches | Shown inline in both grid and mobile view |
+| Accordion toggles | Each fabric panel expands/collapses |
+| CTA link | "Explore Full Fabric Details" → `/fabric/` |
 
-> **This is the most important section to test.** Test BOTH modes (bed sheet and V-Berth) and the unit toggle. The configurator is your main conversion tool.
+> **Note:** The homepage has NO configurator section. The live price calculator is on product detail pages (`/product/[slug]/`) — not the homepage. The review checklist below (Sections 5–8) refers to product detail pages, not homepage sections.
 
 **Section 6 — Fabric Tabs**
 
@@ -731,15 +778,9 @@ Go through this checklist before moving to Phase 5:
 - [x] Hero headline reads: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
 - [x] Trust bar shows all 4 icons
 - [x] 5 product-type category cards visible (Fitted Sheets, Flat Sheets, Duvet Covers, Pillowcases, Protectors)
-- [x] 6 niche category cards visible with images (Marine, Family, Pets, Duvet, Boarding Dorm, RV & Truck)
-- [x] Top 5 products show with prices
-- [x] Configurator shows two tabs: "🛏 Fitted Bed Sheet" and "⚓ V-Berth Boat Sheet"
-- [x] Fitted Bed Sheet tab shows Width / Length / Depth inputs
-- [x] V-Berth tab shows Head Width / Foot Width / Length / Depth inputs
-- [x] cm/inch unit toggle converts all values
-- [x] Measurement diagram switches when tab is changed
-- [x] Price updates instantly when dimensions are entered
-- [x] Price note "Excludes shipping & import tariff" visible
+- [x] 4 niche category cards visible: Marine & Yacht / Family & Co-Sleep / Specialized Protection / Duvet Covers (rest accessible via SHOP BY PRODUCT)
+- [x] Top 5 products show with prices in Most Popular carousel
+- [x] Product detail pages show two-mode configurator: "🛏 Fitted Bed Sheet" (W×L×D) and "⚓ V-Berth Boat Sheet" (HW×FW×L×D) — located on product detail pages, not homepage
 - [x] Fabric tabs all work (click each — panel changes)
 - [x] At least 2 customer reviews visible in Social Proof section — 8 real reviews shown
 - [x] Email signup form visible in section 8
@@ -752,8 +793,8 @@ Go through this checklist before moving to Phase 5:
 - [x] Product listing page (`/products/`) shows product grid
 - [x] Primary category pages (`/sheets/`, `/duvet-covers/`, `/pillowcases/`, `/protection/`) show product grids
 - [x] SEO landing pages (`/marine/`, `/family/`, `/pets/`, `/duvet/`, `/protection/`, `/rv-truck/`) show filtered grids with cross-links to primary categories
-- [x] Product detail pages show two-mode configurator with live price update
-- [x] "Measure My Mattress" collapsible section opens and closes
+- [x] Product detail pages show two-mode configurator with live price update (on `/product/[slug]/` pages — not on homepage)
+- [x] Configurator on product detail pages shows: "🛏 Fitted Bed Sheet" tab (W×L×D) + "⚓ V-Berth Boat Sheet" tab (HW×FW×L×D) with unit toggle, diagram, fabric selector
 - [x] Product detail tabs work (Description, Fabric Details, Size Guide, Care)
 - [x] "Add to Cart" saves item (with sheet_type + all dimensions) and updates header icon count
 - [x] Cart persists after browser refresh (localStorage)
@@ -1198,10 +1239,10 @@ The existing D1 `products` table (from Phase 1) stores **catalog metadata for th
 | Encasement pricing formula | ✅ Implemented | Real formula for 2 products (6-Sided General, RV & Truck). 6-sided surface area: 2(W×L + W×D + L×D). TPU fabric: 120 THB/linear metre (210cm bolt) ÷ 21,000 cm² ×1.20 waste. Sewing 300 THB flat. Zipper 0.4 THB/cm × (2L+W). Markups: 15% Op + 25% Mkt + 50% Margin. |
 | Product page configurators | ✅ Built (23/27 products) | `public/js/product-configurator.js` — shared configurator on 23 product detail pages. Auto-detects product type from URL path. 6 formula types: fitted sheet, flat sheet, encasement (TPU), duvet cover, pillowcase, pillow protector (TPU), mattress protector (3-layer). Standard size dropdown → parse W×L×D → formula. Custom W×L×D → formula. Unit toggle (cm/inch). Full quote popup flow: [Custom Size] → [Custom Quote] → modal form → POST `/api/quote` → Resend email. Centralized product template system (2 templates + build script) regenerates all 27 pages from source. Fabric specs grids replace dropdowns for locked-fabric products. Per-fabric color selector (4 color sets, 6-col grid). Responsive carousel dots on reviews + related products. |
 | Product detail pages enhanced | ✅ | Centralized template system (2 templates, build script, 1667-line content JSON). All 27 product pages regenerated from templates with consistent UI. `standard-fitted-sheet` through `mattress-lift-helper`: full configurator with auto-detection. Fabric specs grids for locked-fabric products (BreezePlus: pet-owner, CloudSoft: marine/RV, TPU: encasements/protectors, 3-layer: mattress protectors). Per-fabric color selector with 6-col grid. Responsive carousel dots on reviews + related. Region-aware size formatting (US imperial, others metric). UI simplifications: region grid removed, Apple Pay removed, star ratings removed. |
-| 1 product awaits configurator | ⏸️ Pending | Marine Fitted Sheet (V-Berth) — currently uses legacy placeholder pricing. |
+| 1 product awaits configurator | ✅ Built (2026-05-30) | Marine Fitted Sheet (V-Berth) — hybrid configurator built: shape selector (A-H fixed discounted prices) + custom HW/FW/L/D fields. `calcVBerthFitted()` formula: width=max(HW,FW)+2D+14, length=L+2D+14, CloudSoft fabric only, VERTH_MARKUP=8.15. 4-field responsive layout (desktop 4-col, tablet 2×2, mobile 1-col). |
 | 3 products skip configurator | ✅ Verified | BedBridge Connector + Bed Lifter (fixed-price accessories) + Duvet Insert (Thai-only, fixed standard sizes, Microfiber 200g/m² fill). |
 | Hybrid pricing architecture designed | ✅ Documented | Future: D1 `standard_prices` table for admin-controlled standard-size pricing. Standard sizes → API D1 lookup. Custom dimensions → live formula. Implementation deferred until all 27 formulas ready. Design documented in `pricing.ts` header comment + Framework.md. |
-| USD-only pricing (EN pages) | ✅ Implemented | EN product pages show `$XX.XX` only. TH pages (when built) show THB only. Detected via URL path `/th/` prefix. |
+| Language-driven currency (EN→USD, TH→THB) | ✅ Implemented | EN product pages show `$XX.XX` only. TH pages (when built) show THB only. Detected via URL path `/th/` prefix. |
 | Custom quote popup flow | ✅ Implemented | "Custom Quote" button (renamed from "Submit for Custom Quote →") → modal popup: Name*, Email*, Address, Telephone → [Submit] → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → Resend email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). Dimensions validation blocks submission if W×L×D not entered. |
 | Quote API worker | ✅ Created | `workers/api/quote.ts` — validates, generates QT-YYMMDD-NNN ID, inserts to D1 + rate_limits, fire-and-forget Resend notification with quoted_price |
 | Custom quotes D1 table | ✅ Created | `migrations/003_quote_fields.sql` — `custom_quotes` table: quote_id, customer_name, email, address, telephone, product_slug, dimensions (JSON), fabric, color, status, quoted_price |

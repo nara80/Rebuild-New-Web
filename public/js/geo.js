@@ -4,15 +4,22 @@
    ============================================ */
 
 (function () {
-  const geo = {
+  var _callbacks = [];
+  var geo = {
     country: null,
     currency: 'USD',
     detected: false
   };
 
+  function getPageCurrencyByLanguage() {
+    var p = (window.location && window.location.pathname ? window.location.pathname : '').toLowerCase();
+    if (p === '/th' || p.indexOf('/th/') === 0) return 'THB';
+    return 'USD';
+  }
+
   function formatPrice(el, currency) {
-    const usd = parseFloat(el.dataset.usd);
-    const thb = parseFloat(el.dataset.thb);
+    var usd = parseFloat(el.dataset.usd);
+    var thb = parseFloat(el.dataset.thb);
     if (!usd && !thb) return;
     if (currency === 'THB' && thb) {
       el.textContent = '฿' + thb.toLocaleString();
@@ -30,24 +37,37 @@
     }
   }
 
+  function fireCallbacks() {
+    _callbacks.forEach(function (fn) { fn(geo); });
+    _callbacks = [];
+  }
+
   function detect() {
+    var pageCurrency = getPageCurrencyByLanguage();
     fetch('/api/geo')
       .then(function (res) { return res.json(); })
       .then(function (data) {
         geo.country = data.country || null;
-        geo.currency = data.currency || 'USD';
+        // Currency is language-based: EN pages = USD, TH pages = THB
+        geo.currency = pageCurrency;
         geo.detected = true;
-        window.MildMateGeo = geo;
         updatePrices(geo.currency);
+        fireCallbacks();
       })
       .catch(function () {
+        geo.currency = pageCurrency;
         geo.detected = true;
-        window.MildMateGeo = geo;
+        updatePrices(geo.currency);
+        fireCallbacks();
       });
   }
 
   window.MildMateGeo = geo;
   window.MildMateGeo.updatePrices = updatePrices;
+  window.MildMateGeo.onDetect = function (fn) {
+    if (geo.detected) { fn(geo); return; }
+    _callbacks.push(fn);
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', detect);

@@ -39,6 +39,13 @@ export default async function handleUnsubscribe(
       .bind(email)
       .run();
 
+    // Also update contacts table — unmark as subscribed but keep the record
+    try {
+      await env.DB.prepare(
+        "UPDATE contacts SET is_subscribed = 0, sources = TRIM(REPLACE(REPLACE(REPLACE(sources, ',subscribe', ''), 'subscribe,', ''), 'subscribe', ''), ','), last_seen = datetime('now') WHERE email = ?"
+      ).bind(email).run();
+    } catch (e) { /* contacts table may not exist in older environments */ }
+
     // D1 returns meta.changes for number of rows affected
     const changes = (result as any).meta?.changes ?? 0;
 

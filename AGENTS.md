@@ -10,7 +10,7 @@ This file is read by Droid at the start of every session. It contains all critic
 - **Current site:** WordPress on `www.mildmate.com` (Flatsome theme)
 - **Goal:** Rebuild to Vanilla HTML + Cloudflare Workers with e-commerce features
 - **Dev URL:** `mildmate-new.pages.dev` (production: `www.mildmate.com` at 100% completion)
-- **Phase 2 deferred:** Will be done at pre-launch (after Phase 7)
+- **Phase 2 deferred:** Will be done at pre-launch (after Phase 8 is complete — redirect-first approach, all URLs through `_redirects`)
 
 ---
 
@@ -24,25 +24,22 @@ This file is read by Droid at the start of every session. It contains all critic
 | Storage | Cloudflare R2 (`mildmate-assets`) |
 | Email | Resend (free tier: 100/day, `RESEND_API_KEY` secret) |
 | Payments | Stripe (USD + PromptPay THB) |
-| Admin Auth | Cloudflare Access (Google login) |
+| Auth | Clerk (Google, Facebook, Email) |
 | Deploy | Cloudflare Pages |
 
 ---
 
 ## Cloudflare Account
 
-- **Account:** `nara19080@gmail.com` (old account — existing resources)
-- **D1 Database:** `mildmate-db` (ID: `85ce2f41-463a-43fa-8485-181e983b8fd4`)
+- **Account:** `- **D1 Database:** `mildmate-db` (ID: `85ce2f41-463a-43fa-8485-181e983b8fd4`)
 - **R2 Bucket:** `mildmate-assets`
 - **Pages Project:** `mildmate-new`
-- **Wrangler login:** Use `nara19080@gmail.com`
-
+- **Wrangler login:** Use `
 ---
 
 ## GitHub
 
-- **Account:** `nara80` (email: `nara19080@gmail.com`)
-- **Repo:** `Rebuild-New-Web` (private)
+- **Account:** `nara80` (email: `- **Repo:** `Rebuild-New-Web` (private)
 - **Repo URL:** `https://github.com/nara80/Rebuild-New-Web`
 - **Auth method:** HTTPS with Personal Access Token (credential helper cached 1 year)
 
@@ -84,15 +81,15 @@ This file is read by Droid at the start of every session. It contains all critic
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0 — Mockup | ✅ Approved | `mockup.html` created |
-| 1 — Foundation | ✅ Complete | Scaffold, D1 migration, local server tested, placeholder index.html |
-| 2 — SEO URLs | ⏸️ Deferred | **Intentionally deferred — runs pre-launch AFTER Phase 7 complete** |
+| 0 — Mockup | ✅ Approved | Design reference in `mockup.html` — not in project root |
+| 1 — Foundation | ✅ Complete | Scaffold, D1 migrations 001–016, local server tested, placeholder index.html |
+| 2 — SEO URLs | ⏸️ Deferred | **Runs pre-launch after Phase 8 is complete** — redirect-first approach, all URLs through `_redirects` |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | Homepage EN+TH (AJAX email signup, 15% off), configurator, cart.js, geo.js, all static pages (about→Engineering Authority 5-section rebuild with real images, contact, fabric, shipping→Returns&Delivery, policy, reviews), size guides, product/category skeletons, workers (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), image compression (92.5% saved), `discount_claims` migration ready, cookie consent banner (GDPR, GA4 G-0GWVSPJLVJ), real Etsy reviews (8 with mapped names/countries), 14-section privacy policy, unsubscribe page + API, header consistency (about/reviews/contact/fabric all blue-gradient hero), full global footer restored on how-to-measure-mattress-size + custom-measurement, Sarabun Thai font added to all 26+ HTML files, comprehensive size guide revision across all 8 regions, all footers full 4-col global. All 12 EN+TH product/category pages complete with brand-hero + real photos. Blog index + post template + sample post. **Homepage redesigned per Brand CI** (2026-05-21): color system (#1E293B text, #F8FAFC surfaces, #e2e8f0 borders), header sticky 95% opacity + backdrop blur, hero full-bleed with light overlay + dark text + mobile 1:1 square image first, niche hub 8px border-radius cards + mobile horizontal swipe, fabric intelligence lateral comparison grid replacing tab panels, shadows softened. Product inventory verified at 27 products (9/6/3/7/2). **All 27 of 27 products have live configurator pricing formulas** — see Configurator Status below. **Centralized product template system** (2 templates, build script, content data — all 27 pages regenerated from source). **Fabric specs grids** replace dropdowns for locked-fabric products (BreezePlus, CloudSoft, TPU, 3-layer protectors). **Fabric color selector** updates per-fabric (4 color sets matching /fabric/), 6-col grid with visible borders. **Responsive carousel dots** on reviews + related products (desktop/tablet/mobile). **UI simplifications**: region grid removed, Apple Pay removed, star ratings removed, size dropdown region-aware (US imperial, others metric). **USD whole-dollar pricing** on EN pages, THB-only on TH pages. **Centralized size system** (`product-sizes.js`, 174 entries, 8 regions) auto-populates all product page size dropdowns — synced from `/sizeguide/`. **Custom quote popup**: "Custom Quote" button → modal form (Name*, Email*, Address, Telephone) → POST `/api/quote` → D1 `custom_quotes` + `subscribers` dedup → **Resend** email to contact@mildmate.com → confirmation popup (dimensions, fabric, quote ID). **Anti-spam**: honeypot field + IP rate limit (D1 `rate_limits` table) on quote (3/hr) and subscribe (5/hr). Future: D1 `standard_prices` table for admin-controlled standard-size prices (API lookup); custom dimensions use live formula |
-| 5 — Checkout + Stripe + Social Login | ⏸️ Pending | Guest checkout, Stripe (PromptPay/cards), social login (Google/FB/LINE/Apple), My Account |
-| 6 — Abandoned Cart | ⏸️ Pending | Cron trigger, recovery emails |
-| 7 — Admin Dashboard | ⏸️ Pending | Orders, products, upload, subscribers |
-| 8 — Launch | ⏸️ Pending | DNS cutover, testing, sitemap |
+| 4 — Homepage + Products | ✅ Complete | **Everything built and deployed** — all static pages, 27 product pages, 12 category pages, blog system, configurator, Workers API (products, pricing, geo, subscribe, unsubscribe, quote, contact, email), cookie consent, Resend email, R2 uploader, admin dashboard (Phase 7 precursor), image compression, full 4-col footer, bilingual EN/TH. Language-driven currency (EN→USD, TH→THB). Shipping rates Option A (THB source, geo-country, OTHER fallback). D1-backed country master list (95 countries). Full details in Phase4.md completion summary. |
+| 5 — Checkout + Stripe + Auth | ✅ Built (code complete) | Stripe Checkout Sessions (redirect flow), PromptPay for TH, webhook saves orders to D1 + Resend emails, 3-step checkout UI, order-confirmed page. **Auth: Clerk multi-provider** (Google / Facebook / Email) hosted-page redirect, JWT verified in Workers via Web Crypto + JWKS. Cart→server sync via PUT/DELETE `/api/customers/cart`. Quote magic link at `/quote/QT-XXXXX/`. Default-address pre-fill on checkout. **Account portal `/account/`**: 4-tab (Dashboard/Orders/Favorites/Addresses), 25/75 desktop layout, saved addresses CRUD (D1, migration 009), favorites wishlist (migration 013). **Workers `/api/customers/addresses`**: GET/POST/PUT/DELETE. **Option A order tracking**: carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. Workers API defensive schema self-heal on all endpoints. Country-specific tariff/tax notes in Payment step (EU/UK/OTHER → note; TH/US/CA/AU → hidden). Order thumbnail dual-match resolution (slug normalization + title fallback). Centralized shipping-quote engine (`workers/api/shipping.ts`) with THB rates and exchange-rate conversion. D1 country master list (`workers/api/countries.ts`, 95 countries + OTHER) consumed by checkout, /account, and super-admin. **Pending:** Option 3 production-auth hardening (Clerk production instance), `workers/cron.ts` abandoned cart recovery (Phase 6). |
+| 6 — Abandoned Cart | ✅ Built | `abandoned_carts` table ready (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). **`functions/cron.ts`**: hourly scheduled handler scans D1 for carts older than 24h with no recovery sent, sends Resend HTML email with cart summary + direct checkout link. Recovery email template inline (MildMate-branded, responsive). Cron trigger configured in Cloudflare Dashboard → Settings → Cron Triggers (`0 * * * *`). |
+| 7 — Admin Dashboard | ✅ Built (code complete) | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `super-admin.html` (~155KB) + `admin.html` (~118KB) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), marketing, admin accounts. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. |
+| 8 — Launch | ⏸️ Pending | DNS cutover, testing, sitemap; Part A: OG tags ⏸, GTM tags ⏸, sitemap.xml ⏸, mobile QA ⏸, Lighthouse audit ⏸; Part B: Stripe live mode ⏸, DNS cutover ⏸; Step 8.1 handoff prompt already in Phase8.md |
 | 9 — Testing (Vitest) | ⏸️ Pending | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` |
 
 ---
@@ -103,7 +100,7 @@ This file is read by Droid at the start of every session. It contains all critic
 |---|---|
 | Payment gateway | Stripe (PromptPay for TH, cards for global) |
 | Email service | Resend (free tier: 100/day, `RESEND_API_KEY` secret) |
-| Admin access | Cloudflare Access (Google login) |
+| Auth | Clerk multi-provider (Google, Facebook, Email) |
 | Dev domain | `mildmate-new.pages.dev` |
 | Cutover trigger | 100% completion, not before |
 | Language | Bilingual Thai/English, EN primary |
@@ -114,7 +111,109 @@ This file is read by Droid at the start of every session. It contains all critic
 | Footer style | Minimal, icon-only marketplace/social, no logo block |
 | LINE sticky bar | Removed (international positioning) |
 | Checkout | Guest checkout default, social login optional |
+## Phase 5 — Infrastructure Status
+
+| Component | Status | Detail |
+|---|---|---|
+| Stripe Secret Key | ✅ Set | `STRIPE_SECRET_KEY` stored as Cloudflare Pages secret |
+| Stripe Webhook Secret | ✅ Set | `STRIPE_WEBHOOK_SECRET` stored as Cloudflare Pages secret |
+| Stripe Webhook | ✅ Live | `mildmate-new.pages.dev/api/webhook/stripe` |
+
+---
+
+### Clerk Auth Architecture
+
+**Public paths (no login required):**
+- `/checkout/` — Guest checkout is the default flow; page has optional Google sign-in banner
+- `/api/auth/*` — Auth detection API must return JSON (not redirect) for frontend JS to parse; Worker handles gracefully: returns `{authenticated: false}` when no JWT present
+- `/api/checkout` — Anyone can create a Stripe checkout session (even guests)
+- `/api/webhook/stripe` — Stripe must POST payment confirmations unobstructed
+
+**Protected paths (Google login required):**
+- `/account/*` — User dashboard with order history
+- `/api/customers/*` — Order history and saved cart data (sensitive)
+
+**How auth flows:**
+1. Guest checkout: no login needed; checkout page calls `/api/auth/me` → receives `{authenticated: false}` → shows Clerk sign-in banner (optional)
+2. Optional login: user clicks Sign in → Clerk hosted-page redirect → returns to `/checkout/` with `__session` cookie → `/api/auth/me` returns profile → form pre-fills, cart syncs
+3. Protected pages: `/account/` and `/api/customers/*` are behind Clerk → Clerk session token sent as `Authorization: Bearer` header → Worker verifies Clerk JWT via Web Crypto + JWKS
+
+**Long-term Option 3 (confirmed for launch hardening):**
+- Migrate auth from Clerk Development instance to Clerk Production instance before DNS cutover
+- Use custom Clerk domain (same-site with production app) and explicit allowlist for production/staging redirect URLs
+- Keep guest checkout default, but centralize bearer-token auth for `/api/auth/me` and `/api/customers/*` on all frontend calls
+- Keep explicit sign-out CTA visible on checkout/account flows (do not rely on hidden user menu only)
+- Add `functions/account/_middleware.ts` for server-side `/account/*` protection (verify Clerk `__session` cookie, redirect unauthenticated users to sign-in — replaces current client-side-only gate)
+
+
 | Search | Overlay triggered by magnifying glass icon |
+
+---
+
+## Phase 5 — Guest Checkout + Auth Flow (UAT Test Script)
+
+**Flow:** Guest browses → adds to cart → prompted to sign in at checkout → authenticates via Clerk (Google / Facebook / Email) → cart restored → completes Stripe payment → lands in `/account/` dashboard.
+
+### What Must Be Built (Pre-Requisites)
+
+| # | Component | Files | Status |
+|---|---|---|---|
+| 1 | Checkout page | `public/checkout/index.html` — 3-step (Cart Review → Shipping → Payment), floating labels, CI colors, 61-country list | ✅ Built |
+| 2 | Customer login | Clerk multi-provider (Google / Facebook / Email) hosted-page redirect | ✅ Built |
+| 3 | User dashboard | `public/account/index.html` — order history, saved addresses, settings | ✅ Built |
+| 4 | Checkout API | `workers/api/checkout.ts` — Stripe Checkout Session (redirect flow), PromptPay for TH | ✅ Built |
+| 5 | Stripe webhook | `workers/api/webhook.ts` — checkout.session.completed → D1 + Resend emails | ✅ Built |
+| 6 | Cart→server sync | `public/js/cart.js` — push localStorage to D1 on login, clear on logout | ✅ Built |
+| 7 | Auth API | `workers/api/auth.ts` — Clerk JWT verification, /api/auth/me | ✅ Built |
+| 8 | Customers API | `workers/api/customers.ts` — order history, profile | ✅ Built |
+
+### UAT Checklist
+
+**Phase A — Guest Browse + Add to Cart**
+| Step | Expected |
+|------|----------|
+| A1 | Guest opens any product page, configurator works |
+| A2 | Select size/fabric/color → live price, [Add to Cart] enabled |
+| A3 | Click [Add to Cart] → cart count badge increments |
+| A4 | Click cart icon → `/checkout/` shows item with correct details |
+| A5 | Add second product → cart shows 2 items |
+| A6 | Remove item via cart UI → count updates |
+
+**Phase B — Login Gate at Checkout**
+| Step | Expected |
+|------|----------|
+| B1 | Guest clicks "Proceed to Checkout" → prompted "Sign in to continue" |
+| B2 | "Continue as Guest" alternative → email-only + proceed to Stripe |
+| B3 | "Sign in" → Clerk hosted-page redirect |
+| B4 | After sign-in → returns to checkout, cart items intact |
+| B5 | Login with empty cart → dashboard shows "No orders yet" |
+
+**Phase C — Checkout + Payment**
+| Step | Expected |
+|------|----------|
+| C1 | Checkout shows cart summary (product, size, fabric, color, qty, total) |
+| C2 | Enter shipping address → validated |
+| C3 | Click "Pay with Card" → Stripe Payment Element loads |
+| C4 | Test card `4242 4242 4242 4242` → success → order confirmed page |
+| C5 | Order confirmation shows order number, items, total |
+
+**Phase D — User Dashboard**
+| Step | Expected |
+|------|----------|
+| D1 | "My Account" → `/account/` dashboard |
+| D2 | "Recent Orders" shows order, status "Confirmed" |
+| D3 | Click order → expands detail (items, dimensions, fabric, price) |
+| D4 | "Order History" → all past orders, newest first |
+| D5 | "Account Settings" → email, name (from Google), saved addresses |
+| D6 | Sign out → homepage, cart cleared |
+
+**Phase E — Edge Cases**
+| Step | Expected |
+|------|----------|
+| E1 | Custom-quote product in cart → "Quote Pending", cannot proceed to Stripe |
+| E2 | Multiple tabs → cart syncs across tabs (storage event) |
+| E3 | Expired checkout session → "Session expired", cart restored |
+| E4 | Declined card `4000 0000 0000 0002` → error, cart preserved, retry enabled |
 
 ---
 
@@ -185,7 +284,9 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 
 ---
 
-## Configurator Pricing Status (23 of 27 products verified)
+## Configurator Pricing Status
+
+**24 of 27 products** have live pricing formulas (all requiring a configurator). **3 products** are fixed-price and need no configurator (see section below).
 
 All product detail pages use the shared `public/js/product-configurator.js` which auto-detects the product type from the URL path and applies the correct pricing formula. The full workflow is: [Custom Size] → enter dimensions → live price → [Custom Quote] → popup form (Name/Email) → POST `/api/quote` → Resend email to contact@mildmate.com.
 
@@ -193,7 +294,7 @@ Size dropdowns on all product pages are auto-populated from `public/js/product-s
 
 USD prices displayed as whole dollars (no decimals).
 
-### Products with Live Pricing Formula (20)
+### Products with Live Pricing Formula (24 of 27)
 
 | Product | Formula | Server Function | Markup |
 |---|---|---|---|
@@ -260,69 +361,132 @@ All 27 products now have live pricing formulas or don't require configurators.
 
 ---
 
-## Database Schema (7 tables, 6 active)
+## Database Schema (9 tables, 8 active)
 
-- `products` — product catalog
-- `orders` — customer orders with custom dimensions
-- `custom_quotes` — quote requests (name, email, dimensions, fabric, status)
-- `abandoned_carts` — email + cart JSON for recovery
-- `subscribers` — email signup list (dedup: quote form also inserts here)
+- `products` — product catalog (slug, title_en/th, category, fabric_options, base_price_usd/thb, image_url, images JSON, youtube_url, tags, is_custom, is_active, sort_order)
+- `orders` — customer orders (stripe_session/payment IDs, email, dimensions W/L/D in cm+inch, fabric, color, price, status)
+- `custom_quotes` — quote requests (quote_id, name, email, address, telephone, dimensions JSON, fabric, color, status, quoted_price, expires_at)
+- `abandoned_carts` — email + cart JSON for recovery (recovered flag, recovery_sent_at)
+- `subscribers` — email signup list (dedup: quote form also inserts here, language field)
 - `rate_limits` — IP-based rate limiting for anti-spam (quote: 3/hr, subscribe: 5/hr)
-- `standard_prices` (planned) — pre-calculated prices per product × size × fabric for admin-controlled standard-size pricing
+- `customer_addresses` — saved shipping addresses per customer (migration 009)
+- `discount_claims` — discount code usage tracking (migration 002_discount_claims)
+- `favorites` — authenticated user wishlist (user_id, product_id, created_at)
 
-See `migrations/001_initial.sql` through `migrations/004_rate_limits.sql` for current schema.
+Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master
 
 ---
 
 ## File Structure
 
 ```
-D:\00_MildMate\Re-Bulit_Web\
+D:\00_MildMate\Re-Build_Web\
 ├── AGENTS.md                          ← This file
-├── mockup.html                        ← Design reference (Phase 0)
+├── mockup.html                        ← Design reference only (not in project root)
 ├── wrangler.toml                      ← Cloudflare config
 ├── package.json                       ← Node dependencies
-├── public\                            ← Static site files
-│   ├── css\                           ← Stylesheets
-│   ├── js\                            ← Client scripts
-│   ├── images\                       ← Logo, product photos
-│   ├── _redirects                     ← SEO redirects (Phase 2)
-│   └── _headers                       ← Security headers
-├── functions\                         ← Pages Functions (local dev)
-│   └── api\
-│       └── [[path]].ts                 ← API catch-all router
-├── workers\                           ← Cloudflare Workers
-│   ├── api\                          ← Public API endpoints
-│   │   ├── email.ts                  ← Shared Resend email helper
-│   │   └── ...
-│   └── admin\                        ← Admin dashboard API
-├── templates\                        ← Product page master templates
-│   ├── product-customizable.html      ← Template for 24 configurable products
-│   ├── product-fixed.html             ← Template for 3 non-customizable products
-│   └── blog-post.html                 ← Template for blog post pages
-├── scripts\                           ← Build & utility scripts
-│   ├── build-products.js              ← Node.js script — generates all 27 product pages
-│   └── build-blogs.js                 ← Node.js script — generates blog post pages
-├── data\                              ← Data files (single source of truth)
-│   ├── products.json                  ← Product catalog (names, prices, URLs)
-│   ├── product-content.json           ← Tab content, reviews, tags (1667 lines)
-│   └── blog-posts.json                ← Blog post content (articles, authors, related products)
-├── admin\                            ← Admin dashboard HTML
-├── migrations\                       ← Database migrations
-│   ├── 001_initial.sql
-│   ├── 003_quote_fields.sql
-│   └── 004_rate_limits.sql
-└── MildMateDataBase\                  ← Knowledge base files
-    └── ExistingWeb\
+├── public/                            ← Cloudflare Pages static files
+│   ├── index.html                     ← Homepage EN
+│   ├── th/index.html                  ← Homepage TH (≨️ Pending — TH pages not yet built)
+│   ├── admin/
+│   │   ├── index.html                 ← Admin hub (role cards)
+│   │   ├── super-admin.html           ← Full admin (products CRUD, orders, R2 upload, pricing)
+│   │   └── admin.html                 ← Admin (orders, products, subscribers, customers)
+│   ├── css/main.css                   ← All public styles (bilingual)
+│   ├── js/
+│   │   ├── nav.js                    ← Header/nav/mobile drawer + auth-aware account btn
+│   │   ├── cart.js                   ← localStorage cart
+│   │   ├── geo.js                    ← Currency toggle
+│   │   ├── product-configurator.js   ← All 27 product configurators (auto-detects type)
+│   │   ├── product-sizes.js          ← Centralized size data (174 entries, 8 regions)
+│   │   ├── clerk.js                  ← Clerk auth (sign-in/out, JWT decode)
+│   │   └── cookie-consent.js         ← GDPR banner + GA4 conditional load
+│   ├── images/                        ← Products, categories, fabrics, hero, router
+│   ├── _redirects                    ← 301 redirects (WordPress era + Phase 2 SEO URLs)
+│   ├── _headers                      ← Security headers (CSP, HSTS)
+│   ├── product/                      ← 27 EN product detail pages (static HTML)
+│   ├── th/product/                    ← 27 TH product detail pages (≨️ Pending)
+│   ├── sheets/duvet-covers/pillowcases/protection/accessories/  ← EN+TH category listings
+│   ├── marine/family/deep-pocket/boarding-dorm/pets/rv-truck/  ← EN+TH SEO landing pages
+│   ├── blogs/                         ← Blog index + pagination + posts
+│   ├── th/blogs/                      ← TH blog posts
+│   ├── quote/                         ← Magic link: /quote/QT-XXXXX/ (functions/quote/[[path]].ts)
+│   └── products/index.html            ← Full catalog listing
+├── functions/                          ← Pages Functions (local dev bridge → Workers)
+│   ├── account/
+│   │   └── _middleware.ts            ← Clerk auth gate for /account/*
+│   ├── admin/
+│   │   └── _middleware.ts            ← Clerk admin-role gate for /admin/*
+│   ├── api/
+│   │   └── [[path]].ts               ← API catch-all: /api/* → Worker handlers
+│   └── quote/
+│       └── [[path]].ts               ← Magic quote link: /quote/QT-XXXXX/
+├── workers/api/
+│   ├── index.ts                       ← Main Worker entry (routes all /api/*)
+│   ├── products.ts                   ← Public products catalog API
+│   ├── pricing.ts                   ← All pricing formulas (fitted/V-Berth/flat/encasement/duvet/pillowcase/mattress-protector)
+│   ├── pricing-params.ts             ← Public read for admin-set pricing params
+│   ├── geo-currency.ts               ← Country → THB/USD
+│   ├── subscribe.ts                  ← Email → D1 subscribers
+│   ├── unsubscribe.ts               ← Email removal from D1
+│   ├── quote.ts                     ← Custom quote → D1 + Resend email
+│   ├── contact.ts                   ← Contact form → D1 + Resend email
+│   ├── email.ts                     ← Shared Resend helper
+│   ├── checkout.ts                  ← Stripe Checkout Sessions + PromptPay
+│   ├── webhook.ts                   ← checkout.session.completed → D1 + Resend
+│   ├── auth.ts                      ← Clerk JWT decode, /api/auth/me
+│   ├── customers.ts                 ← Order history (dual-match thumbnail) + saved-cart sync + addresses CRUD
+│   ├── shipping.ts                  ← Centralized shipping-quote engine (THB rates, geo-country, OTHER fallback)
+│   ├── countries.ts                 ← Centralized country master list (D1 countries_master, 95 countries + OTHER)
+│   ├── order-confirmed.ts           ← Lookup order by stripe_session_id
+│   ├── clerk-verify.ts              ← Clerk JWT verification
+│   ├── favorites.ts                 ← Authenticated wishlist (user+email matching, duplicate guard, schema auto-heal)
+│   ├── discount.ts                   ← Discount code validation + claim tracking
+│   ├── admin-products.ts            ← Admin: GET/PUT products (X-Admin-Secret)
+│   ├── admin-upload.ts              ← Admin: R2 image upload → CDN URL
+│   ├── admin-pricing.ts             ← Admin: GET/PUT pricing params
+│   ├── admin-shipping.ts            ← Admin: shipping rates CRUD (THB-only, OTHER protected)
+│   ├── admin-stats.ts                ← Admin: dashboard statistics
+│   ├── admin-orders.ts              ← Admin: GET/PUT orders (status + Option A shipping tracking)
+│   ├── admin-customers.ts           ← Admin: customers grouped by email from D1
+│   ├── admin-diy.ts                  ← Admin: GET/PUT DIY prices
+│   ├── admin-exchange.ts             ← Admin: GET/PUT exchange rates
+│   ├── admin-quotes.ts              ← Admin: custom quotes management (status, price, expiry)
+│   └── admin-contacts.ts             ← Admin: contacts management
+├── templates/
+│   ├── product-customizable.html   ← Template for 24 configurable products
+│   ├── product-fixed.html           ← Template for 3 non-configurable (BedBridge/BedLifter/DuvetInsert)
+│   └── blog-post.html               ← Template for blog posts (has global header + footer)
+├── scripts/
+│   ├── build-products.js            ← Generates all 27 product pages from templates
+│   └── build-blogs.js               ← Generates blog posts from templates
+├── data/
+│   ├── products.json                ← Source of truth for product catalog
+│   ├── product-content.json         ← Tab content, reviews, tags per product
+│   └── blog-posts.json              ← Blog post content
+├── migrations/                       ← 16 migrations: 001–016
+│   ├── 001_initial.sql             ← products/orders/abandoned_carts/subscribers/rate_limits
+│   ├── 002_add_tags.sql             ← tags column on products
+│   ├── 002_discount_claims.sql       ← discount_claims table
+│   ├── 003_custom_quotes.sql         ← custom_quotes table
+│   ├── 003_seed_products.sql        ← 15 products seeded
+│   ├── 004_rate_limits.sql          ← rate_limits table
+│   ├── 005_pricing_params.sql        ← standard_prices + pricing_params tables
+│   ├── 006_product_editor.sql        ← youtube_url + images columns on products
+│   ├── 007_seed_products.sql        ← 27 products (full seed)
+│   ├── 008_seed_image_urls.sql        ← image_url seeded for all 27 products
+│   └── 009_customer_addresses.sql    ← customer_addresses table
+│   ├── 010_discount_expiry.sql        ← expires_at + source on discount_claims
+│   ├── 011_orders_discount_code.sql  ← discount_code on orders
+│   ├── 012_contacts.sql              ← contacts table (unified)
+│   ├── 013_favorites.sql             ← favorites table (authenticated wishlist)
+│   ├── 014_order_shipping_tracking.sql  ← carrier_code + tracking_number + tracking_url + shipping_status + shipped_at on orders
+│   ├── 015_shipping_rates.sql       ← shipping_rates table (country_code, first_item_thb, additional_item_thb) + seed TH/US/OTHER
+│   └── 016_countries_master.sql    ← countries_master table (95 countries + OTHER, phone codes)
+└── MildMateDataBase/ExistingWeb/    ← WordPress URL source data
 ```
 
----
-
-## Deployment Protocol
-
-**The user controls all deployments manually. Droid NEVER deploys automatically.**
-
-| Rule | Instruction |
+ |
 |---|---|
 | **Never auto-deploy** | Do NOT run `wrangler pages deploy`, `wrangler deploy`, `git push`, or any command that modifies the live site or remote repository without explicit user instruction. |
 | **User-triggered only** | Only deploy when the user explicitly says: "Deploy now", "Push to GitHub", "Deploy to Cloudflare", or a similar direct command. |
@@ -342,6 +506,7 @@ D:\00_MildMate\Re-Bulit_Web\
 - Always check `wrangler.toml` before running `npx wrangler` commands
 - Database ID is hardcoded in `wrangler.toml` — do not change without confirming
 - R2 bucket name is `mildmate-assets` — consistent everywhere
-- Admin pages are in `/admin/` path, protected by Cloudflare Access
+- Admin pages are in `/admin/` path, protected by `functions/admin/_middleware.ts` (Clerk JWT + admin role/email check; dev bypass on pages.dev/localhost). `/admin/sandbox/` URLs 301-redirect to `/admin/`.
 - All customer-facing pages go in `public/`
-- **Phase 2 (SEO URLs) is intentionally deferred** — it will run pre-launch after Phase 7 is complete. Do not start Phase 2 early.
+- **Phase 2 (SEO URLs) is intentionally deferred** — it will run pre-launch after Phase 8 is complete. Do not start Phase 2 early.
+- **Global auth scripts:** Every page with the header (`.site-header`) must load both `<script src="/js/nav.js"></script>` and `<script src="/js/clerk.js"></script>`. nav.js injects the auth-aware account button (Sign In text vs person icon). The three templates (`templates/blog-post.html`, `templates/product-customizable.html`, `templates/product-fixed.html`) are the canonical sources — always add clerk.js to templates, not individual generated pages.

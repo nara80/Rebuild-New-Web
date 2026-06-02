@@ -98,6 +98,75 @@
     updateCartCount(0);
   }
 
+  /* ── 4b. Auth-aware account button ────────── */
+  (function setupAccountButton() {
+    var accountBtn = document.querySelector('.header-actions .account-btn');
+    if (!accountBtn) return;
+
+    // Create "Sign In" text button
+    var signInText = document.createElement('button');
+    signInText.className = 'sign-in-text';
+    signInText.textContent = 'Sign In';
+    signInText.setAttribute('aria-label', 'Sign in to your account');
+    signInText.style.cssText =
+      'font-size:0.875rem;font-weight:600;color:var(--color-primary);' +
+      'border:none;background:none;cursor:pointer;white-space:nowrap;padding:0 2px;';
+
+    // Store the default SVG HTML for sign-out fallback
+    var defaultSvg = accountBtn.innerHTML;
+
+    // Insert before the existing account icon
+    accountBtn.parentNode.insertBefore(signInText, accountBtn);
+
+    function updateAccountButton() {
+      var signedIn =
+        (window.clerk && window.clerk.user) ||
+        (typeof window.isClerkSignedIn === 'function' && window.isClerkSignedIn());
+      signInText.style.display = signedIn ? 'none' : '';
+      accountBtn.style.display = signedIn ? '' : 'none';
+
+      if (signedIn) {
+        // Try to show the real profile photo from Google/Facebook
+        var photoUrl =
+          window.clerk &&
+          window.clerk.user &&
+          window.clerk.user.imageUrl;
+        if (photoUrl) {
+          // Replace SVG with the real profile photo — circular, same 20×20 SVG size
+          accountBtn.innerHTML =
+            '<img src="' +
+            photoUrl +
+            '" alt="My account" width="20" height="20"' +
+            ' style="width:28px;height:28px;border-radius:50%;' +
+            'object-fit:cover;display:block;">';
+          // Remove the circular border from the <a> when photo is shown
+          accountBtn.style.borderRadius = '50%';
+        } else {
+          // No photo — use default person SVG
+          accountBtn.innerHTML = defaultSvg;
+          accountBtn.style.borderRadius = '';
+        }
+      }
+    }
+
+    signInText.addEventListener('click', function () {
+      if (typeof window.signInWithClerk === 'function') {
+        window.signInWithClerk(window.location.href);
+      } else {
+        // Fallback — direct URL to Clerk hosted sign-in page
+        window.location.href =
+          'https://kind-joey-29.accounts.dev/sign-in?redirect_url=' +
+          encodeURIComponent(window.location.href);
+      }
+    });
+
+    updateAccountButton();
+    window.addEventListener('clerk:signed-in', updateAccountButton);
+    window.addEventListener('clerk:signed-out', updateAccountButton);
+    // Also run when Clerk is fully ready (covers page-load-while-signed-in)
+    window.addEventListener('clerk:ready', updateAccountButton);
+  })();
+
   /* ── 5. Search overlay toggle ────────────── */
   const searchBtn = document.querySelector('.search-btn');
   const searchOverlay = document.querySelector('.search-overlay');
@@ -151,12 +220,28 @@
   const scrollRow = document.querySelector('.product-grid.scroll-row');
   const dots = document.querySelectorAll('.carousel-dot');
   const cards = scrollRow ? scrollRow.querySelectorAll('.product-card') : [];
+  var cachedCardWidth = 280;
+
+  function recalcCardWidth() {
+    if (!cards.length) return;
+    var rect = cards[0].getBoundingClientRect();
+    cachedCardWidth = Math.max(1, Math.round(rect.width + 16)); // width + gap
+  }
+  recalcCardWidth();
+  var resizeTicking = false;
+  window.addEventListener('resize', function () {
+    if (resizeTicking) return;
+    resizeTicking = true;
+    requestAnimationFrame(function () {
+      recalcCardWidth();
+      resizeTicking = false;
+    });
+  }, { passive: true });
 
   function updateActiveDot() {
     if (!scrollRow || !cards.length) return;
     const scrollLeft = scrollRow.scrollLeft;
-    const cardWidth = cards[0].offsetWidth + 16; // width + gap
-    const activeIndex = Math.round(scrollLeft / cardWidth);
+    const activeIndex = Math.round(scrollLeft / cachedCardWidth);
     dots.forEach(function (dot, i) {
       dot.classList.toggle('active', i === activeIndex);
     });
@@ -177,13 +262,13 @@
 
   if (carouselPrev && scrollRow) {
     carouselPrev.addEventListener('click', function () {
-      scrollRow.scrollBy({ left: -280, behavior: 'smooth' });
+      scrollRow.scrollBy({ left: -cachedCardWidth, behavior: 'smooth' });
     });
   }
 
   if (carouselNext && scrollRow) {
     carouselNext.addEventListener('click', function () {
-      scrollRow.scrollBy({ left: 280, behavior: 'smooth' });
+      scrollRow.scrollBy({ left: cachedCardWidth, behavior: 'smooth' });
     });
   }
 
@@ -191,8 +276,7 @@
     dot.addEventListener('click', function () {
       const index = parseInt(dot.dataset.index, 10);
       if (scrollRow && cards[index]) {
-        const cardWidth = cards[0].offsetWidth + 16;
-        scrollRow.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+        scrollRow.scrollTo({ left: index * cachedCardWidth, behavior: 'smooth' });
       }
     });
   });

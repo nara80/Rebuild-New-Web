@@ -1,5 +1,7 @@
-# Phase 5 — Checkout + Stripe Payments + Social Login
-**Status (2026-05-21): ⏸️ PENDING**
+# Phase 5 — Checkout + Stripe Payments + Auth
+**Status (2026-05-31): ✅ BUILT + VERIFIED — Full Stripe checkout + PromptPay QR, Clerk multi-provider auth (Google/Email), magic quote link, account 4-tab portal (Dashboard/Orders/Favorites/Addresses), admin quote management system (`/api/admin/quotes` + `workers/api/admin-quotes.ts`), `migrations/001–016` applied. Workers API defensive schema self-heal on all endpoints. Admin order shipped flow with Option A tracking (carrier_code + tracking_number + tracking_url auto-generated from URL templates). Centralized `countries_master` D1 table + `/api/countries` consumed by all 3 country dropdowns. Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Language-driven currency (EN pages → USD, TH pages → THB). Quote page: 65/35 sticky transaction-card layout, single-currency display (USD or THB), Review & Pay CTA. Quote email sender: `orders@mildmate.com` via `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` Cloudflare secrets.**
+
+**Tracking:** AfterShip is NOT used. Option A tracking — carrier + tracking number entered by admin on shipped, URL auto-generated from carrier templates (thaipost, flash, dhl, ups, fedex, usps). No external API credentials. No `/track/` page — tracking is inline in `/account` Orders panel.**
 **Goal:** Connect the shopping cart to Stripe so customers can actually complete a purchase.
 
 **End Result:** A complete 3-step guest checkout with optional social login. You can do a real test purchase and see the order appear in your database, receive a "New Order" notification email, and the customer receives an order confirmation — all automatically. Logged-in customers can view their order history and re-order custom sizes quickly.
@@ -107,21 +109,17 @@ Resend sends emails on behalf of your domain. The "From" field in all customer e
 
 ---
 
-### Requirement 7 — Social Login Provider Credentials (Optional but Recommended)
+### Requirement 7 — Auth Providers (Implemented: Google + Email via Clerk)
 
-Customers can check out as guests without logging in. Social login is optional — it lets returning customers save their shipping addresses and view order history.
+Clerk handles auth as a managed service. The current implementation uses:
+- **Google** — OAuth sign-in via Clerk hosted pages
+- **Facebook** — OAuth sign-in via Clerk hosted pages
+- **Email** — magic link or email/password via Clerk hosted pages
+- **LINE** — NOT implemented as standalone provider; international positioning deprioritizes LINE-specific login
 
-**Supported providers:**
-| Provider | Why | What You Need |
-|---|---|---|
-| **Google** | Universal, most customers have it | Google Cloud Console → OAuth 2.0 Client ID |
-| **Facebook** | Very popular in Thailand | Facebook Developers → App ID + App Secret |
-| **LINE** | **Essential** — #1 app in Thailand | LINE Developers → Channel ID + Channel Secret |
-| **Apple** | Nice-to-have for iPhone users | Apple Developer → Services ID + Key ID |
+Checkout is **guest-first**: customers can complete payment without logging in. Social login is optional — it enables saved addresses and order history in `/account/`.
 
-**You do NOT need all four.** Start with Google + LINE (covers most Thai and international customers). Facebook and Apple can be added later without rebuilding.
-
-**If you want to skip social login for now:** Tell Droid "Skip social login — build guest checkout only." The checkout works perfectly without it. Social login can be added in a future update.
+> To add LINE or Facebook login: configure them as social providers in your Clerk Dashboard → User Management → Social providers. No code changes needed — Clerk handles the UI automatically.
 
 ---
 
@@ -191,22 +189,82 @@ Order confirmation email sent
 
 ## What Phase 5 Builds
 
+### Public Pages
+
 | File | What It Is |
 |---|---|
-| `public/checkout/index.html` | 3-step checkout page (Cart Review → Shipping Details → Payment) with optional social login |
-| `public/order-confirmed/index.html` | Success page shown after payment |
-| `public/account/index.html` | My Account page — order history, saved addresses, parcel tracking (AfterShip), social login buttons |
-| `public/track/index.html` | Parcel tracking page — AfterShip embedded widget (auto-detects carrier from tracking number) |
-| `workers/api/checkout.ts` | Creates a Stripe payment session |
-| `workers/api/webhook.ts` | Receives Stripe payment confirmation → saves order → sends emails |
-| `workers/api/email.ts` | Resend email helper (customer receipt + team notification) |
-| `workers/api/subscribers.ts` | Saves email signups to D1 subscribers table |
-| `workers/api/auth.ts` | Social login handler (Google, Facebook, LINE, Apple OAuth) |
-| `workers/api/customers.ts` | Customer profile API — order history, saved addresses, re-order |
-| `workers/api/quote.ts` | Custom quote API — submit quote, admin approve/reject, fetch by ID |
-| `public/quote/[id]/index.html` | Magic link page — shows locked custom quote, "Add to Cart" button |
-| `public/js/quote.js` | Client-side quote fetch + locked-price add-to-cart logic |
-| `public/js/auth.js` | Client-side auth state, login buttons, account menu toggle |
+| `public/checkout/index.html` | Checkout page (Cart Review → Shipping Details → Payment) with autocomplete, optional Google sign-in banner, Subtotal/Shipping/Total on all steps, centralized country dropdown from `/api/countries`, phone code auto-fill on country change, country-specific tariff/tax notes, z-index fixed country dropdown, custom-quote product image placeholder |
+| `public/order-confirmed/index.html` | Success page shown after payment — reads `?session_id=` |
+| `public/account/index.html` | My Account 4-tab portal — Dashboard, Orders (with dual-match thumbnail resolution for legacy slugs), **Favorites** wishlist, Addresses (CRUD); inline carrier+tracking "Track Package" link (Option A) |
+
+### Admin Pages
+
+| File | What It Is |
+|---|---|
+| `public/admin/index.html` | Admin hub with role cards (Admin / Super Admin) |
+| `public/admin/admin.html` | Admin dashboard — orders, products, subscribers, customers, **Quotes** (full CRUD) |
+| `public/admin/super-admin.html` | Super-admin dashboard — full CRUD: orders, products, pricing params, shipping rates, exchange rates, DIY prices, contacts, stats, **Quotes** (full CRUD) |
+| `functions/admin/_middleware.ts` | Clerk JWT + admin-role gate for `/admin/*` (dev bypass on pages.dev/localhost) |
+| `functions/account/_middleware.ts` | Clerk session gate for `/account/*` — redirects unauthenticated users to sign-in |
+
+### Workers / API Endpoints
+
+| File | What It Is |
+|---|---|
+| `workers/api/index.ts` | Main Worker entry — routes all `/api/*` |
+| `functions/api/[[path]].ts` | Pages Functions catch-all router — local dev bridge to Worker handlers |
+| `workers/api/checkout.ts` | Creates Stripe Checkout Session (redirect flow) + PromptPay for TH. Returns `{url, session_id}`. Injects Stripe shipping line item + `shipping_amount_thb` metadata. |
+| `workers/api/webhook.ts` | Receives `checkout.session.completed` → saves order to D1 → sends Resend emails (customer + team). Marks `abandoned_carts.recovered=1` on payment. |
+| `workers/api/email.ts` | Resend email helper. Default sender: `MildMate <noreply@mildmate.com>`. Custom quote emails override via `QUOTE_FROM_EMAIL` env var (default: `MildMate <orders@mildmate.com>`). |
+| `workers/api/order-confirmed.ts` | Order confirmed lookup — queries D1 by `stripe_session_id` |
+| `workers/api/auth.ts` | Auth detection API — `/api/auth/me` reads Clerk JWT (Google/Email via Clerk hosted pages) |
+| `workers/api/clerk-verify.ts` | Clerk JWT verification via Web Crypto + JWKS (`/api/auth/me` consumer) |
+| `workers/api/customers.ts` | Customer API — order history with dual-match thumbnail resolution (slug normalization + title fallback), saved-cart sync (PUT/DELETE), saved-addresses CRUD (GET/POST/PUT/DELETE with default-address logic, 5-address limit) |
+| `workers/api/shipping.ts` | Centralized shipping-quote engine. Reads THB-only rates from `shipping_rates`, converts via `exchange_rates.rate_per_thb` at query time. Returns `{amount, amount_thb, first_item_thb, additional_item_thb, is_fallback}`. Auto-creates table + seeds OTHER on first run. |
+| `workers/api/countries.ts` | Centralized country master list. `countries_master` D1 table seeded from `MASTER_COUNTRIES` (95 countries + OTHER). |
+| `workers/api/admin-orders.ts` | Admin: GET/PUT orders (status + Option A shipping tracking). CSV export. |
+| `workers/api/admin-customers.ts` | Admin: customers grouped by email from D1 orders |
+| `workers/api/admin-products.ts` | Admin: GET/PUT products (X-Admin-Secret) |
+| `workers/api/admin-stats.ts` | Admin: dashboard statistics (today/7d/30d orders + revenue) |
+| `workers/api/admin-quotes.ts` | **Admin: Sales quote management** (GET/POST/PUT). Clerk JWT admin-role gate or X-Admin-Secret fallback. Dual-currency (THB/USD) storage with auto-conversion. Soft-delete via `archived` status. Resend magic-link email via `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` env vars. |
+| `workers/api/admin-upload.ts` | Admin: R2 image upload → CDN URL |
+| `workers/api/admin-pricing.ts` | Admin: GET/PUT pricing params |
+| `workers/api/admin-exchange.ts` | Admin: GET/PUT exchange rates |
+| `workers/api/admin-diy.ts` | Admin: GET/PUT DIY prices |
+| `workers/api/admin-shipping.ts` | Super-admin shipping rates CRUD. THB-only upsert; GET returns USD preview via `getUsdRatePerThb()`. OTHER rate is protected (cannot be deleted). |
+| `workers/api/admin-contacts.ts` | Admin: contacts management |
+| `workers/api/discount.ts` | Discount code validation + claim with `expires_at` + `source` tracking |
+| `workers/api/favorites.ts` | Authenticated wishlist — user+email matching, duplicate guard, schema auto-heal |
+| `workers/api/quote.ts` | Customer quote request → D1 `custom_quotes` + Resend email to `contact@mildmate.com` with `QUOTE_FROM_EMAIL` sender |
+| `functions/quote/[[path]].ts` | **Quote magic link page** at `/quote/QT-XXXXX/`. Desktop: 65/35 asymmetric split (spec grid left + sticky transaction card right). Mobile: unified single-column card. Single-currency price display. Lock-icon validity badge. Add to Cart → Review & Pay → `/checkout/`. Logo header + EN/TH lang toggle. |
+| `workers/api/subscribe.ts` | Email signup → D1 `subscribers` with `INSERT OR IGNORE` |
+| `workers/api/unsubscribe.ts` | Email removal from D1 (privacy-safe, always 200) |
+| `workers/api/contact.ts` | Contact form → D1 `contacts` + Resend email |
+| `workers/api/products.ts` | D1 product catalog listing + category filtering |
+| `workers/api/pricing.ts` | All 23 pricing formulas (fitted/V-Berth/flat/encasement/duvet/pillowcase/mattress-protector) |
+| `workers/api/pricing-params.ts` | Public read-only access to admin-set pricing params |
+| `workers/api/geo-currency.ts` | CF-IPCountry detection → THB/USD pricing |
+| `functions/r2/[[path]].ts` | R2 asset proxy — serves uploaded product images at `/r2/*` |
+
+### Client-side Scripts
+
+| File | What It Is |
+|---|---|
+| `public/js/clerk.js` | Client-side Clerk auth — SDK init, sign-in/sign-up redirect, sign-out, token getter, auth state events |
+| `public/js/cart.js` | Client-side cart — localStorage + server sync (PUT/DELETE `/api/customers/cart`), tokenized auth headers, auto-sync on save |
+| `public/js/geo.js` | Currency display toggle — `getPageCurrencyByLanguage()` drives EN → USD, TH → THB (language-path detection, not geo-only). Reads `/api/geo` for geo context. |
+
+### Migrations Applied (Phase 5 additions)
+
+| Migration | What It Is |
+|---|---|
+| `010_discount_expiry.sql` | `expires_at` + `source` on `discount_claims` |
+| `011_orders_discount_code.sql` | `discount_code` on `orders` |
+| `012_contacts.sql` | Unified `contacts` table |
+| `013_favorites.sql` | `favorites` table (authenticated wishlist) |
+| `014_order_shipping_tracking.sql` | `carrier_code`, `tracking_number`, `tracking_url`, `shipping_status`, `shipped_at` on `orders` |
+| `015_shipping_rates.sql` | `shipping_rates` table (THB-only, Option A) |
+| `016_countries_master.sql` | `countries_master` table (95 countries + OTHER) |
 
 ---
 
@@ -380,35 +438,43 @@ Once all requirements are ready and your Stripe keys are stored as Cloudflare se
 > **Requirement 6 — Email sender:** [Sender Name] <[sender address]>
 > **Requirement 7 — Social login:** [Build with Google + LINE / Skip for now — add later]
 >
-> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, Resend email system, My Account page with AfterShip parcel tracking, and the Parcel Tracking page.
+> Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, Resend email system, My Account page with inline Option A tracking (carrier + tracking number entered by admin on shipped, URL auto-generated from carrier template), and the magic quote `/quote/QT-XXXXX/` page.
 
 **Phase 5 Additional Requirements:**
 
-### Requirement 8 — AfterShip Parcel Tracking (Optional but Recommended)
+### Requirement 8 — Option A Order Tracking (Already Built)
 
-Customer order tracking (FedEx, UPS, DHL, Thai Post, 100+ carriers) via AfterShip.
+No external API needed. When admin sets an order to "Shipped", they enter:
+- **Carrier code** (thaipost / flash / dhl / ups / fedex / usps)
+- **Tracking number** (text input)
 
-**What to collect:**
-| Item | Where to Find | Notes |
-|---|---|---|
-| AfterShip API Key | [aftership.com](https://www.aftership.com) → Settings → API → Free tier | Free plan: 100 shipments/mo |
-| Custom domain (optional) | AfterShip dashboard → Settings → Branded Tracking Page | `mildmate.com/track/[tracking]` |
+The system auto-generates the carrier tracking URL from URL templates — no AfterShip, no API key needed.
 
-**If you skip for now:** Tracking numbers can still be stored in the order and displayed in My Account as carrier links. AfterShip can be added later without rebuilding.
+| Carrier | URL Template |
+|---|---|
+| Thai Post | `https://track.thailandpost.co.th/?trackNumber={TRACKING}` |
+| Flash Express | `https://www.flashexpress.co.th/fle/tracking?se={TRACKING}` |
+| DHL | `https://www.dhl.com/th-en/home/tracking/tracking-express.html?submit=1&tracking-id={TRACKING}` |
+| UPS | `https://www.ups.com/track?tracknum={TRACKING}` |
+| FedEx | `https://www.fedex.com/fedextrack/?trknbr={TRACKING}` |
+| USPS | `https://tools.usps.com/go/TrackConfirmAction?tLabels={TRACKING}` |
+
+Tracking link is shown inline in the customer `/account` Orders panel and the admin Orders table.
 
 ---
 
-**What Droid builds:**
-1. `public/checkout/index.html` — 3-step checkout UI with optional social login buttons
-2. `public/account/index.html` — My Account page (order history, saved addresses, AfterShip parcel tracking widget, social login)
-3. `public/track/index.html` — Parcel tracking page — AfterShip widget auto-detects FedEx/UPS/DHL/Thai Post + 100+ carriers from tracking number
-3. `workers/api/checkout.ts` — Stripe session creator
-4. `workers/api/webhook.ts` — payment confirmation handler
-5. `workers/api/email.ts` — Resend email sender
-6. `workers/api/auth.ts` — Social login handler (Google, Facebook, LINE, Apple)
-7. `workers/api/customers.ts` — Customer profile and order history API
-8. `public/order-confirmed/index.html` — success page
-9. Email templates for customer receipt and team notification
+**What was built (verified 2026-05-30):**
+1. `public/checkout/index.html` — 3-step checkout UI with country dropdown from `/api/countries`, phone code auto-fill on country change, Subtotal/Shipping/Total display on all steps, tariff/tax notes by country group, CSS z-index fix for dropdown
+2. `public/account/index.html` — My Account page (order history with dual-match thumbnail resolution, saved addresses, Favorites wishlist, social login via Clerk)
+3. `public/order-confirmed/index.html` — post-payment success page
+4. `workers/api/checkout.ts` — Stripe Checkout Session creator with shipping line item injection + `shipping_amount_thb` metadata
+5. `workers/api/webhook.ts` — payment confirmation handler (saves order to D1 + sends Resend emails)
+6. `workers/api/email.ts` — Resend email sender
+7. `workers/api/auth.ts` — Clerk JWT verification (Google/Email via Clerk hosted pages; Facebook/LINE NOT implemented)
+8. `workers/api/customers.ts` — Customer profile, order history with dual-match thumbnail resolution, cart sync, addresses CRUD
+9. `workers/api/shipping.ts` — Centralized shipping-quote engine (THB-only rates, exchange-rate conversion, geo-country detection, OTHER fallback)
+10. `workers/api/countries.ts` — Centralized country master list (D1 `countries_master`, 95 countries + OTHER)
+11. `workers/api/admin-shipping.ts` — Super-admin shipping rates CRUD (THB-only, USD preview column, OTHER protected)
 
 ---
 
@@ -538,8 +604,12 @@ Go through this checklist before moving to Phase 6:
 - [ ] Customer confirmation email received in inbox
 - [ ] Team "New Order" notification email received
 - [ ] Test order visible in D1 database with correct dimensions
-- [ ] Checkout has 3 clear steps (Cart Review → Guest Details → Payment)
-- [ ] Email field in Step 2 is required before proceeding
+- [ ] Checkout has 3 clear steps (Cart Review → Shipping Details → Payment)
+- [ ] Country dropdown on `/checkout/` pulls from D1 `countries_master` via `/api/countries`
+- [ ] Phone code auto-fills when country is changed on `/checkout/`
+- [ ] Shipping cost updates dynamically when country or quantity changes
+- [ ] Tariff/tax note shown correctly per country group (EU/UK/OTHER → note shown; TH/US/CA/AU → hidden)
+- [ ] Order thumbnail visible in `/account` → Orders for legacy/mismatched slug orders
 - [ ] Custom quote magic link page (`/quote/QT-XXXXX/`) shows locked price and "Add to Cart" button
 - [ ] Custom quote item in cart shows correct dimensions, fabric, and locked price (uneditable)
 - [ ] Custom quote order stores `quote_id` reference in D1 `orders` table
@@ -565,6 +635,9 @@ Go through this checklist before moving to Phase 6:
 | Webhook shows "Failed" in Stripe dashboard | Go to Stripe → Developers → Webhooks → click your endpoint → copy the error message → tell Droid. |
 | PromptPay not showing on payment page | Tell Droid: "PromptPay is not appearing on the Stripe payment page even though it is enabled in Stripe settings." |
 | Resend DNS not yet active | DNS changes take 5–30 minutes. Wait and retry. If still failing after 1 hour, tell Droid the exact DNS record you added. |
+| Favorites not showing in `/account` after adding | Clerk session JWT may not be ready on first load. Tell Droid: "loadFavorites returning 500 — token retry patch may need redeploy." |
+| Order thumbnail missing on `/account` → Orders | Slug mismatch between `orders.product_slug` and `products.slug`. Workers API uses dual-match resolution (slug normalization + title fallback). Redeploy after confirming the fix is live. |
+| Checkout country dropdown not opening | CSS z-index overlay issue — fixed in `public/checkout/index.html` via `.float-group:focus-within {z-index:40}` and `select {z-index:2}`. Redeploy after confirming the fix is live. |
 
 ---
 
@@ -581,7 +654,7 @@ Go through this checklist before moving to Phase 6:
 
 ## What Happens Next
 
-Once Phase 5 is complete, move to **Phase 6 — Abandoned Cart Recovery**.
+Once Phase 5 is complete, move to **Phase 7 — Admin Dashboard** (currently IN PROGRESS), then Phase 6 (Abandoned Cart Recovery), then Phase 8 (Launch).
 
 Phase 6 builds the automatic system that catches customers who started checkout but did not finish — and sends them a single recovery email 24 hours later. Based on your Etsy data, this could recover up to $1,005 in lost revenue.
 

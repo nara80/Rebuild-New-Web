@@ -1,0 +1,13 @@
+name = "mildmate-cron"
+main = "index.ts"
+compatibility_date = "2024-04-29"
+
+# Cron trigger — runs every hour, gates on cron_hour_utc from D1 recovery_config
+[triggers]
+crons = ["0 * * * *"]
+
+# Same D1 database as Pages project
+[[d1_databases]]
+binding = "DB"
+database_name = "mildmate-db"
+database_id = "85ce2f41-463a-43fa-8485-181e983b8fd4"

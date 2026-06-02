@@ -1,5 +1,9 @@
 # MildMate Redirects
-# Updated 2026-05-18
+# Updated 2026-05-28
+
+# Admin sandbox to admin (Phase 7: middleware auth gating)
+/admin/sandbox/             /admin/                  301
+/admin/sandbox/*            /admin/:splat            301
 
 # Product URL changes
 /product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/   /product/3-sided-duvet/   301
@@ -20,7 +24,10 @@
 # WordPress old URLs -> sizeguide pages
 /bed-sheets-size/*   /sizeguide/   301
 /mattress-size/*   /sizeguide/   301
-/mattress-size-th/*   /sizeguide/th/   301
+/mattress-size-th/*   /th/sizeguide/   301
+
+# Thai mattress-size-th -> /th/sizeguide/ (Framework.md #1 SEO page)
+/th/mattress-size-th/*   /th/sizeguide/   301
 
 # Thai language redirects
 /th/fitted-sheets/*   /th/sheets/   301

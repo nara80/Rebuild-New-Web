@@ -16,6 +16,79 @@ async function checkRateLimit(db: any, ip: string, endpoint: string, max: number
 }
 
 export async function handleQuote(request: Request, env: any): Promise<Response> {
+  const url = new URL(request.url);
+
+  // GET /api/quote?quote_id=QT-XXXXX — fetch a quote by ID (magic link)
+  if (request.method === "GET") {
+    const quoteId = url.searchParams.get("quote_id");
+    if (!quoteId) {
+      return new Response(JSON.stringify({ error: "Missing quote_id parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    try {
+      const row = await env.DB.prepare(
+        `SELECT quote_id, customer_name, email, product_slug, dimensions, fabric, color,
+                status, quoted_price, expires_at, created_at
+         FROM custom_quotes
+         WHERE quote_id = ?1`
+      ).bind(quoteId).first();
+
+      if (!row) {
+        return new Response(JSON.stringify({ error: "Quote not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      let dimensions: any = {};
+      try {
+        dimensions = typeof row.dimensions === "string" ? JSON.parse(row.dimensions) : row.dimensions;
+      } catch {}
+
+      // Get exchange rate for USD display
+      let usdRate = 30;
+      try {
+        const rateRow = await env.DB.prepare(
+          "SELECT param_value FROM pricing_params WHERE param_key = 'usd_rate'"
+        ).first();
+        if (rateRow) {
+          const val = parseFloat(rateRow.param_value);
+          if (!isNaN(val)) usdRate = val;
+        }
+      } catch {}
+
+      const priceThb = row.quoted_price || null;
+      const priceUsd = priceThb ? Math.round(priceThb / usdRate) : null;
+
+      return new Response(JSON.stringify({
+        quote_id: row.quote_id,
+        customer_name: row.customer_name,
+        product_slug: row.product_slug,
+        dimensions,
+        fabric: row.fabric,
+        color: row.color,
+        status: row.status,
+        quoted_price_thb: priceThb,
+        quoted_price_usd: priceUsd,
+        expires_at: row.expires_at,
+        created_at: row.created_at,
+        is_expired: row.expires_at ? new Date(row.expires_at + "Z") < new Date() : false,
+        is_approved: row.status === "approved",
+      }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (e: any) {
+      console.error("Quote GET error:", e.message);
+      return new Response(JSON.stringify({ error: "Database error" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -115,6 +188,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     try {
       const emailResult = await sendEmail(env, {
         to: "contact@mildmate.com",
+        from: env.QUOTE_FROM_EMAIL || "MildMate <orders@mildmate.com>",
         replyTo: cleanEmail,
         subject: `[Quote Request] ${quoteId} — ${cleanName} (${cleanSlug})`,
         text: emailBody,

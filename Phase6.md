@@ -1,5 +1,5 @@
 # Phase 6 — Abandoned Cart Recovery
-**Status (2026-05-21): ⏸️ PENDING**
+**Status (2026-05-31): 🚧 IN PROGRESS — `abandoned_carts` table (migration 001 ✅), webhook marks carts as `recovered=1` on payment (`workers/api/webhook.ts` ✅), `workers/api/customers.ts` handles cart email capture via `PUT /api/customers/cart` (✅ built in Phase 5). Pending: `workers/cron.ts` hourly cron + recovery HTML email template. Note: Admin Dashboard ✅ built in Phase 7.**
 **Goal:** Automatically catch customers who started checkout but did not finish.
 
 **End Result:** A fully automated background system that runs every hour without you doing anything. When a customer enters their email at checkout but does not complete payment, they receive one recovery email the next day. Based on your Etsy data (8 abandoned carts = $1,005 in lost revenue), this system pays for itself immediately.
@@ -136,12 +136,14 @@ Customer receives email with:
 
 ## What Phase 6 Builds
 
-| File | What It Is |
-|---|---|
-| `workers/api/cart.ts` | Updated: captures email + cart to D1 the moment email is entered |
-| `workers/cron.ts` | Cron Trigger: runs every hour, finds and sends recovery emails |
-| `wrangler.toml` | Updated: adds Cron Trigger schedule |
-| Recovery email template | HTML email with cart summary + "Complete Your Order" button |
+| File | What It Is | Status |
+|---|---|---|
+| `workers/api/customers.ts` | `PUT /api/customers/cart` captures email + cart JSON to `abandoned_carts` table the moment customer enters checkout Step 2 | ✅ Built (Phase 5) |
+| `workers/api/webhook.ts` | Marks cart as `recovered=1` on successful payment — no recovery email sent to paying customers | ✅ Built (Phase 5) |
+| `abandoned_carts` table | Created by migration 001 — stores email + cart JSON + timestamp + `recovered` flag | ✅ Built |
+| `workers/cron.ts` | Hourly Cron Trigger: finds carts >24h old with `recovered=0` → sends recovery email → marks `recovered=1` | ⏸ Pending |
+| `wrangler.toml` | Adds `[triggers]` cron schedule `crons = ["0 * * * *"]` | ⏸ Pending |
+| Recovery email template | HTML email with your subject/body text + cart summary + "Complete Your Order" CTA button | ⏸ Pending |
 
 ---
 
@@ -240,7 +242,7 @@ Once all 4 requirements are ready, hand off to Droid.
 **Tell Droid:**
 > "Phase 5 is complete. Please build Phase 6 — the abandoned cart recovery system.
 >
-> **Requirement 1:** Phase 5 confirmed complete — test purchase succeeded, Resend emails working.
+> **Requirement 1:** Phase 5 confirmed complete — test purchase succeeded, Resend emails working, `workers/api/webhook.ts` (marks `recovered=1` on payment) and `workers/api/customers.ts` (cart email capture via `PUT /api/customers/cart`) ✅ both built.
 > **Requirement 2 — Subject line:** [your chosen subject line]
 > **Requirement 3 — Email body:**
 > - Opening: [your opening line]
@@ -249,14 +251,12 @@ Once all 4 requirements are ready, hand off to Droid.
 > - Sign-off: [your name / team name]
 > **Requirement 4 — Discount:** [No discount / X% off with code: YOURCODE]
 >
-> Build the cart capture on email entry in checkout Step 2, the Cron Trigger Worker that runs every hour, the recovery email template, and update wrangler.toml with the cron schedule."
+> Build `workers/cron.ts` (hourly Cron Trigger), the HTML recovery email template with your text, and update `wrangler.toml` with `[triggers]` cron schedule. Note: cart capture and webhook flagging are ✅ already built."
 
 **What Droid builds:**
-1. Updates `public/checkout/index.html` — adds JavaScript that saves to D1 the moment email is entered
-2. Updates `workers/api/cart.ts` — saves email + cart JSON + timestamp to `abandoned_carts` table
-3. Creates `workers/cron.ts` — hourly cron that finds and sends recovery emails
-4. Updates `wrangler.toml` — adds `[triggers]` cron schedule
-5. Designs the HTML recovery email template with your text + cart summary block
+1. `workers/cron.ts` — hourly Cron Trigger: queries D1 for carts >24h with `recovered=0` → sends recovery email via Resend → marks `recovered=1` (runs exactly once per cart, no spam)
+2. `wrangler.toml` — adds `[triggers]` + `crons = ["0 * * * *"]` (minute 0 of every hour UTC)
+3. Recovery HTML email template — your subject/body + cart summary + "Complete Your Order" CTA button
 
 ---
 
@@ -267,7 +267,7 @@ The Cron Trigger only works when deployed to Cloudflare — it cannot run on you
 **How to deploy:**
 1. In cmd:
    ```
-   cd D:\00_MildMate\Re-Bulit_Web
+   cd D:\00_MildMate\Re-Build_Web
    npx wrangler pages deploy public
    ```
 2. Wait for confirmation:
@@ -390,7 +390,7 @@ After deployment, confirm Cloudflare has registered and is running your Cron Tri
 
 ## How You Know Phase 6 Is Complete
 
-Go through this checklist before moving to Phase 7:
+Go through this checklist before moving to **Phase 8 — Polish + Launch** (Phase 7 Admin Dashboard is 🚧 IN PROGRESS):
 
 **Initial Requirements:**
 - [ ] Phase 5 confirmed complete (test purchase worked, Resend emails received)
@@ -417,7 +417,7 @@ Go through this checklist before moving to Phase 7:
 
 | Problem | Solution |
 |---|---|
-| Phase 5 Resend email was never tested | Go back and complete Phase 5 Step 5.11 (test purchase + confirm emails received) before starting Phase 6. |
+| Phase 5 checkout + Resend email never tested | Go back and test the full checkout flow (add product → Stripe test card → confirm order in D1 + Resend emails received) before starting Phase 6. |
 | Not sure what to write for the email body | Use the example email in Step 6.1 exactly as written — it is already proven to work. Change the sign-off name only. |
 | Want to use a discount but no Stripe coupon code exists | Go to Stripe dashboard → **Products** → **Coupons** → **Create coupon** → set percentage off → name your code (e.g., `COMEBACK5`). Then give the code to Droid. |
 | Email not saved to D1 after entering in checkout | Tell Droid: "The cart is not being saved to D1 when I enter email in checkout Step 2." |
@@ -448,8 +448,4 @@ This system runs automatically forever — you set it up once in Phase 6 and it 
 
 ## What Happens Next
 
-Once Phase 6 is complete, move to **Phase 7 — Admin Dashboard**.
-
-Phase 7 builds the private management interface for your team — the orders table showing custom dimensions for manufacturing, the product editor, the image uploader, and the subscriber CSV export. It is protected by Google login via Cloudflare Access so only your team can access it.
-
-**Tell Droid:** "Phase 6 is complete. All checklist items are done. Please start Phase 7."
+Once Phase 6 is complete, move to **Phase 7 — Admin Dashboard** (already verified above) or **Phase 8 — Polish + Launch**. Phase 7 admin is at `/admin/` (not `/admin/sandbox/`).

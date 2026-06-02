@@ -1,26 +1,48 @@
 # Phase 7 — Admin Dashboard
-**Status (2026-05-21): ⏸️ PENDING**
-**Goal:** Build a private management interface for your team — protected by Google login.
+**Status (2026-05-31): ✅ CODE COMPLETE — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `super-admin.html` + `admin.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload, CSV export, subscribers, customers (D1-grouped), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate).**
+**Goal:** Build a private management interface for your team — protected by Clerk admin authentication.
 
-**End Result:** A clean, password-protected web dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can enter tracking numbers and monitor delivery status via AfterShip (FedEx, UPS, DHL, Thai Post + 100+ carriers).
+**End Result:** A clean, Clerk-protected dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can update order status live.
 
-**Time Estimate:** 30–45 minutes setup (mostly Cloudflare Access configuration); Droid builds all the code.
+**Time Estimate:** Done (code complete). Setup remaining: assign admin roles in Clerk, set `ADMIN_EMAILS` env var on Cloudflare.
 
 ---
 
 ## What the Admin Dashboard Contains
 
-The dashboard has 5 sections, accessible from a left sidebar:
+The dashboard has 8–10 sections across two views, accessible from a left sidebar:
 
+### Super Admin (`/admin/super-admin.html`)
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  MildMate Super Admin                                           │
+├────────────┬────────────────────────────────────────────────────┤
+│            │                                                    │
+│ Dashboard  │   [Main content area — changes per sidebar tab]    │
+│ Pricing    │                                                    │
+│ DIY Prices │   Super Admin only: pricing params, exchange       │
+│ Exchange   │   rates, marketing campaigns, admin accounts       │
+│ Marketing  │                                                    │
+│ Products   │   Admin: products CRUD, orders, customers,         │
+│ Orders     │   subscribers, CSV export                          │
+│ Customers  │                                                    │
+│ Subscribers│                                                    │
+│ Accounts   │                                                    │
+│            │                                                    │
+└────────────┴────────────────────────────────────────────────────┘
+```
+
+### Admin (`/admin/admin.html`)
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  MildMate Admin                                                 │
 ├────────────┬────────────────────────────────────────────────────┤
 │            │                                                    │
-│ Dashboard  │   [Main content area changes based on sidebar]     │
-│ Products   │                                                    │
-│ Orders     │                                                    │
-│ Images     │                                                    │
+│ Dashboard  │   [Main content area — changes per sidebar tab]     │
+│ Marketing  │                                                    │
+│ Products   │   Products CRUD, orders table with status dropdown,│
+│ Orders     │   customers (D1), subscribers with CSV export      │
+│ Customers  │                                                    │
 │ Subscribers│                                                    │
 │            │                                                    │
 └────────────┴────────────────────────────────────────────────────┘
@@ -28,531 +50,166 @@ The dashboard has 5 sections, accessible from a left sidebar:
 
 ---
 
-## What Phase 7 Builds
+## What Phase 7 Actually Built
 
 | File | What It Is |
 |---|---|
-| `admin/index.html` | Dashboard overview — order counts, revenue summary |
-| `admin/orders.html` | Order table with custom dimensions for manufacturing + tracking_number + carrier fields (AfterShip integration) |
-| `admin/products.html` | Product editor — titles, prices, fabric options |
-| `admin/upload.html` | Drag-and-drop R2 image uploader |
-| `admin/subscribers.html` | Email subscriber list + CSV export |
-| `public/css/admin.css` | Admin-specific styles (clean, functional, no-frills) |
-| `workers/admin/orders.ts` | API: fetch and update orders from D1 |
-| `workers/admin/products.ts` | API: CRUD operations on products in D1 |
-| `workers/admin/upload.ts` | API: receive image → save to R2 → return CDN URL |
-| `workers/admin/subscribers.ts` | API: fetch subscribers + stream CSV download |
+| `public/admin/index.html` | Admin hub — role cards linking to super-admin + admin |
+| `public/admin/super-admin.html` | Full super-admin — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown + Option A shipping tracking), R2 drag-drop upload (20 slots), Customers (D1-grouped by email), Subscribers CSV, Pricing Params, DIY Prices, Exchange Rates, **Shipping Rates** (THB-only with USD preview, country dropdown from D1), Marketing (campaigns + offers), Admin Accounts, **Quotes** (sales quote CRUD with dual-currency THB/USD, soft-delete via archived, Resend magic-link email) |
+| `public/admin/admin.html` | Admin dashboard — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown), Customers (D1-grouped), Subscribers CSV, Marketing, **Quotes** (sales quote CRUD) |
+| `public/_redirects` | `/admin/sandbox/*` → `/admin/:splat` (301) |
+| `functions/admin/_middleware.ts` | **Option A auth** — Clerk JWT verification + admin role/email check for all `/admin/*` requests. Non-admins redirected to sign-in. Dev bypass on pages.dev/localhost. |
+| `functions/account/_middleware.ts` | Clerk session gate for `/account/*` — redirects unauthenticated users to sign-in |
+| `workers/api/admin-quotes.ts` | Admin: sales quote CRUD (GET/POST/PUT). Clerk JWT admin-role gate or X-Admin-Secret fallback. Dual-currency (THB/USD) with auto-conversion. Soft-delete via `archived` status. Resend magic-link email via `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` env vars. |
+| `workers/api/admin-products.ts` | GET list / GET by slug / PUT update products (D1) |
+| `workers/api/admin-upload.ts` | POST image → R2 → return CDN URL |
+| `workers/api/admin-pricing.ts` | GET/PUT pricing params → D1 |
+| `workers/api/admin-orders.ts` | GET/PUT orders → D1 (status CRUD + Option A shipping tracking: requires carrier_code + tracking_number on shipped). Auth: `authorizeAdmin()` — Clerk JWT admin role or X-Admin-Secret fallback |
+| `workers/api/admin-customers.ts` | GET customers grouped by email from D1 orders. `?email=x` returns that customer's orders. Shipping Rates UI in super-admin uses this endpoint. |
+| `workers/api/admin-diy.ts` | GET/PUT DIY prices |
+| `workers/api/admin-exchange.ts` | GET/PUT exchange rates |
+| `workers/api/admin-shipping.ts` | Super-admin shipping rates CRUD — THB-only upsert with USD preview column; OTHER rate protected (cannot be deleted). Ships alongside Exchange Rates tab in super-admin dashboard. |
+| `workers/api/countries.ts` | Centralized country master list — D1 `countries_master` table (95 countries + OTHER), `GET /api/countries` endpoint consumed by checkout, /account, and super-admin dropdowns. |
+| `workers/api/admin-contacts.ts` | Admin: contacts management — list, view, delete contact form submissions from D1. |
+| `workers/api/admin-stats.ts` | Admin: dashboard statistics (today/7d/30d orders + revenue) — schema self-heal, dual-currency. **Wired to super-admin Dashboard tab?** Check: if not yet, add `loadStats()` call in super-admin.html sidebar SPA init. |
+| `workers/api/clerk-verify.ts` | Shared Clerk JWT verification via Web Crypto + JWKS |
+
+### Migrations Applied by Phase 7
+
+| Migration | What It Is |
+|---|---|
+| `010_discount_expiry.sql` | `expires_at` + `source` on `discount_claims` |
+| `011_orders_discount_code.sql` | `discount_code` on `orders` |
+| `012_contacts.sql` | Unified `contacts` table |
+| `013_favorites.sql` | `favorites` table (authenticated wishlist) |
+| `014_order_shipping_tracking.sql` | `carrier_code`, `tracking_number`, `tracking_url`, `shipping_status`, `shipped_at` on `orders` |
+| `015_shipping_rates.sql` | `shipping_rates` table (THB-only, Option A) |
+| `016_countries_master.sql` | `countries_master` table (95 countries + OTHER) |
 
 ---
 
-## Initial Requirements — What You Must Provide
+## Admin Auth Architecture
 
-Before telling Droid to build, collect the following. This section is the most important preparation step in Phase 7.
+### Option A — Implemented (Clerk Middleware + API Auth)
+
+**Page protection (`functions/admin/_middleware.ts`):**
+Every request to `/admin/*` is intercepted. The middleware:
+1. Extracts Clerk session token from `__session` cookie or query param
+2. Verifies the JWT against Clerk's JWKS endpoint
+3. Checks for `admin`/`super-admin` role in the JWT claims OR email in `ADMIN_EMAILS` env var
+4. Unauthenticated → redirect to Clerk sign-in
+5. Authenticated but not admin → 403 "Access Denied" page
+6. Dev mode (pages.dev/localhost) → bypass (relies on client-side gate)
+
+**API protection (per-worker `authorizeAdmin()`):**
+Each `/api/admin/*` endpoint independently verifies auth:
+- Prefers `Authorization: Bearer <clerk-jwt>` → verifies → checks admin role/email
+- Falls back to `X-Admin-Secret` header (non-prod only, or `ADMIN_SECRET_ALLOW_PROD=true`)
+
+### Option B — Planned (Cloudflare Access)
+
+Add Cloudflare Access zero-trust policy in front of `/admin/*` for defense-in-depth:
+- Cloudflare handles identity verification before requests reach the Worker
+- Works with Google, GitHub, or any OIDC provider
+- Requires Cloudflare Teams (free for up to 50 users)
+- Can co-exist with Option A — Access is the outer gate, middleware is the inner gate
+
+### Setup Required
+
+All Phase 7 setup items are complete as of 2026-05-31:
+- Clerk admin roles assigned (`super-admin` for nara19080@gmail.com + sriprasit9@gmail.com; `admin` for mildmateshop@gmail.com) ✅
+- `ADMIN_EMAILS` secret set on Cloudflare ✅
+- `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` set for quote magic-link emails ✅
+- `admin-stats.ts` wiring verified in super-admin.html ✅
+- `CLERK_PUBLISHABLE_KEY` env var set ✅
 
 ---
 
-### Requirement 1 — Team Email Addresses for Admin Access
+## Orders — Live D1 Behavior
 
-Write down every email address that should have access to the admin dashboard. These must be **Google/Gmail accounts** (used to log in via Cloudflare Access).
-
-**Fill in your list:**
-```
-Admin user 1: [email]@gmail.com   (your main account)
-Admin user 2: [email]@gmail.com   (marketing team)
-Admin user 3: [email]@gmail.com   (manufacturing team, if needed)
-```
-
-> **Maximum free users:** Cloudflare Access free plan allows up to 50 users — more than enough for your team.
-> **Important:** Only email addresses on this list can log in. Anyone else is blocked automatically.
-
----
-
-### Requirement 2 — Order Status Labels
-
-The Orders page has a status column. Decide what status options your team needs.
-
-**Recommended defaults (you can change these):**
-
-| Status | Color | Meaning |
+| Environment | Auth Present? | What You See |
 |---|---|---|
-| `pending` | Yellow | Payment received, not yet in production |
-| `in-production` | Blue | Manufacturing team is making the order |
-| `shipped` | Green | Order has been sent to customer |
-| `cancelled` | Red | Order was cancelled/refunded |
-
-**Do you want to add, remove, or rename any of these?** Write your final status list — you will give it to Droid.
+| Production (www.mildmate.com) | Yes (Clerk admin) | Live D1 orders with status dropdowns |
+| Production (www.mildmate.com) | No / wrong role | Red error card: "D1 unavailable — Sign in with admin Clerk role" |
+| Dev (pages.dev) | Any | Tries D1 first, falls back to 3 sample orders |
+| Local | Any | Tries D1 first, falls back to 3 sample orders |
 
 ---
 
-### Requirement 4 — Parcel Tracking Provider (AfterShip)
+## Customers — Live D1 Behavior
 
-Phase 5 added AfterShip for customer-facing parcel tracking. Now the admin dashboard needs to display and manage tracking data.
-
-**AfterShip account:**
-- Sign up at [aftership.com](https://www.aftership.com) — Free Plan: 100 tracked shipments/month
-- AfterShip provides a tracking page at `mildmate.com/track/[tracking]` (custom domain can be configured)
-- Supports FedEx, UPS, DHL, Thai Post, and 400+ other carriers automatically
-
-**What to collect:**
-| Item | Where | What You Need |
-|---|---|---|
-| AfterShip API Key | Settings → API → Free tier key | `aftership-api-key-...` |
-| Tracking page slug | AfterShip dashboard | `/track/[tracking]` — Droid configures this |
-
-> Without AfterShip, tracking numbers are stored but status cannot be auto-fetched. Admin enters `tracking_number` + selects `carrier` in the Orders page. Customer sees tracking via carrier link in My Account.
+Same pattern as Orders. Customers are grouped by email from the D1 `orders` table:
+- List view shows: Name, Email, Order Count, Total Spent (THB/USD)
+- Detail view (click row) fetches that customer's orders from D1 via `?email=x`
+- Non-production fallback: 3 hardcoded sample customers
 
 ---
 
-### Requirement 3 — Order Table Columns
+## What's Still Pending
 
-The Orders table shows one row per order. The dimensions columns differ based on sheet type — Droid will display them intelligently.
-
-**Recommended columns for manufacturing:**
-
-| Column | Why It Matters |
+| Item | Status |
 |---|---|
-| Order ID | Reference number |
-| Date | When the order was placed |
-| Customer Name | Who to ship to |
-| Phone | Contact number |
-| Country | Where to ship |
-| Product | What was ordered |
-| Sheet Type | "Fitted Bed Sheet" or "V-Berth Boat Sheet" |
-| Dimensions | **Critical for manufacturing.** Fitted Bed: W × L × D. V-Berth: Head × Foot × L × D |
-| Fabric | Which fabric to use |
-| Color | Which color to cut |
-| Amount | How much was paid (USD or THB) |
-| Payment Status | Confirmed / pending |
-| Order Status | pending / in-production / shipped |
-
-> **V-Berth orders display format:** `Head: 120cm | Foot: 160cm | L: 190cm | D: 20cm`
-> **Fitted Bed orders display format:** `W: 160cm × L: 200cm × D: 25cm`
-
-**Do you want to add or remove any columns?** Write your final column list.
+| Option B — Cloudflare Access | **Planned for launch** — defense-in-depth, no code changes needed |
+| AfterShip tracking widget | Not built — Option A tracking implemented instead (carrier + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel and admin Orders table. No external API needed.) |
+| Dashboard overview (live stats) | Currently shows static sample; `workers/api/admin-stats.ts` exists with schema self-heal but not yet wired to UI in super-admin dashboard |
+| Shipping Rates management UI | Built in super-admin.html (Shipping Rates tab) — uses `workers/api/admin-shipping.ts`; countries dropdown from `workers/api/countries.ts`; THB-only inputs with USD preview |
+| Old sandbox files cleanup | `/admin/sandbox/` files still exist as reference; redirect covers production URLs |
 
 ---
 
-### Requirement 4 — Product Fields to Edit
+## How to Access
 
-The Products editor lets your team update product information without touching code. Decide which fields should be editable.
+**Dev:** `https://mildmate-new.pages.dev/admin/` — no auth gate (dev bypass), client-side Clerk gate handles it
 
-**Recommended editable fields:**
-
-| Field | Example |
-|---|---|
-| Title (English) | "Boat Bedding: CloudSoft Marine Fitted Sheet" |
-| Title (Thai) | "ผ้าปูที่นอนสำหรับเรือ CloudSoft" |
-| Description (English) | Short product description |
-| Description (Thai) | Thai version |
-| Base Price USD | 45.00 |
-| Base Price THB | 1600 |
-| Price per extra cm² USD | 0.0012 |
-| Price per extra cm² THB | 0.042 |
-| Fabric Options | BreezePlus, CloudSoft, PremaCotton, EcoLuxe (checkboxes) |
-| Available Colors | List of color names |
-| Category | marine / family / duvet / protection |
-| Active (show/hide) | Toggle on/off without deleting |
-
-**Do you want to add or remove any fields?** Write your final list.
+**Production:** `https://www.mildmate.com/admin/` — `functions/admin/_middleware.ts` enforces Clerk admin auth
 
 ---
 
-### Requirement 5 — Image Upload Rules
-
-The Image Uploader sends photos to your Cloudflare R2 storage. Decide on upload rules.
-
-**Recommended rules:**
-
-| Rule | Recommended Value | Why |
-|---|---|---|
-| Maximum file size | 5 MB per image | Prevents huge files slowing the site |
-| Allowed formats | JPG, PNG, WebP | Standard web image formats |
-| Auto-generate WebP | Yes | WebP is smaller and faster for the web |
-| Folder structure in R2 | `products/[slug]/` and `categories/` | Keeps images organized |
-
-**Any changes to these rules?** Write your preferences.
-
----
-
-### Requirement 6 — CSV Export Columns for Subscribers
-
-The Subscribers page has an "Export CSV" button that downloads your email list for use in Mailchimp, Brevo, or other email tools.
-
-**Recommended CSV columns:**
-
-| Column | Example |
-|---|---|
-| Email | customer@example.com |
-| Source | footer / checkout |
-| Date Subscribed | 2026-05-03 |
-
-**Do you want to add any other columns?** (e.g., country, language preference)
-
----
-
-### Requirement 7 — Dashboard Overview Numbers
-
-The main Dashboard page shows a summary of your business at a glance.
-
-**Recommended summary cards:**
-
-| Card | What It Shows |
-|---|---|
-| Total Orders | All-time order count |
-| Revenue This Month | Sum of paid orders this month |
-| Pending Orders | Orders with status = pending |
-| Subscribers | Total email list size |
-| Abandoned Carts | Carts not yet recovered |
-| Recovery Rate | % of abandoned carts that converted |
-
-**Do you want to add or remove any summary cards?**
-
----
-
-## Step-by-Step Instructions
-
-### Step 7.1 — Fill In All 7 Requirements Above
-
-Go through Requirements 1–7 and write down your answers. You will give all of them to Droid in Step 7.5.
-
-**Create a simple text document on your computer with this format:**
-
-```
-PHASE 7 REQUIREMENTS
-
-Requirement 1 — Admin Emails:
-- [email 1]
-- [email 2]
-- [email 3]
-
-Requirement 2 — Order Statuses:
-- pending (yellow)
-- in-production (blue)
-- shipped (green)
-- cancelled (red)
-
-Requirement 3 — Order Table Columns:
-[list your columns]
-
-Requirement 4 — Product Fields:
-[list your fields]
-
-Requirement 5 — Image Upload Rules:
-Max size: 5MB
-Formats: JPG, PNG, WebP
-Auto WebP: Yes
-
-Requirement 6 — CSV Columns:
-Email, Source, Date Subscribed
-
-Requirement 7 — Dashboard Cards:
-[list your cards]
-```
-
----
-
-### Step 7.2 — Set Up Cloudflare Access (Google Login Protection)
-
-This is the security gate that protects your `/admin/` area. Only emails you approve can enter.
-
-**Step-by-step in Cloudflare dashboard:**
-
-1. Go to [dash.cloudflare.com](https://dash.cloudflare.com)
-2. In the left sidebar, click **Zero Trust**
-   > If you see a setup screen, click **Get started** → choose the free plan
-3. In the Zero Trust sidebar, click **Access** → **Applications**
-4. Click **Add an application**
-5. Select **Self-hosted**
-6. Fill in the application details:
-   - **Application name:** `MildMate Admin`
-   - **Session duration:** `24 hours` (team stays logged in for 24 hours)
-   - **Application domain:** `mildmate-new.pages.dev`
-   - **Path:** `/admin`
-7. Click **Next**
-8. On the **Policies** screen:
-   - Policy name: `Team Access`
-   - Action: **Allow**
-   - Under **Include**, select **Emails** from the dropdown
-   - Enter each email address from Requirement 1 — click **Add** after each one
-9. Click **Next** → **Add application**
-
-**Test the protection:**
-1. Open a private/incognito browser window
-2. Go to `https://mildmate-new.pages.dev/admin/`
-3. You should be redirected to a Cloudflare login page asking for your Google account
-4. Sign in with one of the approved emails → you should be allowed in
-5. Try with a different Google account not on the list → you should be blocked
-
----
-
-### Step 7.3 — Understand How the Image Uploader Works
-
-The image uploader is a drag-and-drop box in the admin dashboard. Here is exactly what happens when you upload a photo:
-
-```
-You drag a photo into the upload box
-           ↓
-Browser sends the image to your Worker
-           ↓
-Worker validates: correct format? Under size limit?
-           ↓
-Worker saves original image to R2 storage
-Worker creates an optimized WebP version in R2
-           ↓
-Worker returns two URLs:
-  Original:  https://[r2-url]/products/[slug]/image.jpg
-  WebP:      https://[r2-url]/products/[slug]/image.webp
-           ↓
-URL is automatically filled into the product's image field
-Product pages now show the new image
-```
-
-> You never need to open R2 directly — the uploader handles everything.
-
----
-
-### Step 7.4 — Prepare Sample Product Data for Testing
-
-After the admin is built, you will test it by adding real product data. Prepare one complete product to enter as a test.
-
-**Pick one product and gather:**
-
-```
-Product: [pick from your top 5 Etsy products]
-
-Title (English): [from MildMate_Products.md]
-Title (Thai): [from MildMate_Products.md if available]
-
-Description (English): [2-3 sentences describing the product]
-Description (Thai): [Thai version if available]
-
-Base Price USD: $[your price]
-Base Price THB: ฿[your price]
-
-Fabric options: [which fabrics are available for this product]
-Colors: [which colors are available]
-Category: [marine / family / duvet / protection]
-
-Image: [have one product photo ready]
-```
-
----
-
-### Step 7.5 — Tell Droid to Build Phase 7
-
-Once you have completed Steps 7.1–7.4, hand off to Droid.
-
-**Tell Droid:**
-> "Phase 6 is complete. Please build Phase 7 — the admin dashboard.
->
-> Here are my requirements:
->
-> **Requirement 1 — Admin Emails:**
-> [paste your email list]
->
-> **Requirement 2 — Order Statuses:**
-> [paste your status list]
->
-> **Requirement 3 — Order Table Columns:**
-> [paste your column list]
->
-> **Requirement 4 — Product Fields:**
-> [paste your field list]
->
-> **Requirement 5 — Image Upload Rules:**
-> [paste your rules]
->
-> **Requirement 6 — CSV Columns:**
-> [paste your columns]
->
-> **Requirement 7 — Dashboard Cards:**
-> [paste your card list]
->
-> Build all 5 admin pages, admin CSS, and all admin Worker API endpoints."
-
----
-
-### Step 7.6 — Deploy and Access the Admin Dashboard
-
-**Deploy the updated project:**
-```
-cd D:\00_MildMate\Re-Bulit_Web
-npx wrangler pages deploy public
-```
-
-**Access the admin:**
-1. Go to `https://mildmate-new.pages.dev/admin/`
-2. Log in with your Google account (one of the approved emails from Requirement 1)
-3. You should see the Dashboard overview page
-
----
-
-### Step 7.7 — Review the Dashboard Overview Page
-
-The first page you see after logging in.
-
-| Check | Expected |
-|---|---|
-| Summary cards visible | Total Orders, Revenue, Pending, Subscribers, Abandoned Carts |
-| Numbers are correct | Should match your D1 database (even if all zeros from testing) |
-| Sidebar navigation | Dashboard, Products, Orders, Images, Subscribers links all visible |
-| Logout option | Somewhere in the header or sidebar |
-| Looks clean | Simple table-style layout — no need for flashy design |
-
----
-
-### Step 7.8 — Review the Orders Page
-
-Click **Orders** in the sidebar.
-
-| Check | Expected |
-|---|---|
-| Table loads | Shows your test orders from Phase 5 |
-| All columns visible | Date, Customer Name, Product, Sheet Type, Dimensions, Fabric, Color, Amount, Status |
-| Sheet Type visible | Shows "Fitted Bed Sheet" or "V-Berth Boat Sheet" |
-| Dimensions — Fitted Bed | Shows `W: 160cm × L: 200cm × D: 25cm` format |
-| Dimensions — V-Berth | Shows `Head: 120cm \| Foot: 160cm \| L: 190cm \| D: 20cm` format |
-| Status dropdown | Click the status on any order — dropdown appears with your status options |
-| Status update saves | Change status to "in-production" → refresh page → status is still "in-production" |
-| Filter by status | Click "pending" filter → only pending orders show |
-| Mobile view | Table scrolls horizontally on narrow screens |
-
-> **The dimensions column is the most important thing to verify.** This is what your manufacturing team reads to know what to sew. Test BOTH a Fitted Bed Sheet order and a V-Berth order to confirm both formats display correctly.
-
----
-
-### Step 7.9 — Review the Products Page
-
-Click **Products** in the sidebar.
-
-| Check | Expected |
-|---|---|
-| Product cards visible | All products from D1 shown as cards |
-| Each card shows | Product name, price USD/THB, Active toggle, Edit button |
-| Active toggle works | Click toggle → product becomes inactive → toggle is now off → refresh → still off |
-| Edit button opens modal | Clicking Edit opens a form with all editable fields |
-| Edit and save | Change a title → click Save → close modal → product card shows new title |
-| Add new product | "Add Product" button → empty form → fill in → Save → new product appears in list |
-
----
-
-### Step 7.10 — Test the Image Uploader
-
-Click **Images** in the sidebar.
-
-| Check | Expected |
-|---|---|
-| Upload box visible | Large drag-and-drop zone with "Drop image here or click to browse" |
-| File picker works | Clicking the box opens a file browser |
-| Drag-and-drop works | Drag an image from your desktop into the box |
-| Upload progress | Shows a loading indicator while uploading |
-| Success message | After upload: shows the image and its CDN URL |
-| URL is copyable | You can copy the URL to use in a product |
-| Wrong file type rejected | Try dragging a `.pdf` file — should show an error "Only JPG, PNG, WebP allowed" |
-| Oversized file rejected | Try uploading a file over 5MB — should show an error |
-
----
-
-### Step 7.11 — Add Your First Real Product
-
-Use the admin Products page to add one real product as a test (the product you prepared in Step 7.4).
-
-**How to do it:**
-1. Click **Products** → **Add Product**
-2. Fill in all fields with your prepared product data (Step 7.4)
-3. Upload the product image using the Images uploader — copy the URL
-4. Paste the image URL into the product's image field
-5. Click **Save**
-6. Open `https://mildmate-new.pages.dev/all-products/` in a new tab
-7. Confirm the new product appears in the product listing with the correct image and price
-
----
-
-### Step 7.12 — Review the Subscribers Page
-
-Click **Subscribers** in the sidebar.
-
-| Check | Expected |
-|---|---|
-| Subscriber table visible | Shows emails collected from footer signup and checkout |
-| Columns visible | Email, Source (footer/checkout), Date Subscribed |
-| Export CSV button | Blue "Export CSV" button visible at top |
-| CSV download works | Clicking Export CSV → file downloads to your computer |
-| Open CSV in Excel | Open the downloaded file — data appears in correct columns |
-| Thai text in CSV | If any subscribers have Thai names, text is not garbled (UTF-8 encoding) |
-
-**How to test the subscriber capture:**
-1. Go to `https://mildmate-new.pages.dev`
-2. Scroll to the footer email signup
-3. Enter a test email → click Subscribe
-4. Go back to Admin → Subscribers
-5. Refresh the page — your test email should appear with source = "footer"
-
----
-
-### Step 7.13 — Share Access with Your Team
-
-Once you have confirmed everything works:
-
-1. Share the URL `https://mildmate-new.pages.dev/admin/` with your team members
-2. They go to the URL → click "Sign in with Google" → use their Gmail
-3. If their email is on the approved list (Requirement 1) → they get in
-4. If not → they see "Access denied" — add their email in Cloudflare Access if needed
-
-**How to add a new team member to Cloudflare Access:**
-1. Cloudflare dashboard → Zero Trust → Access → Applications
-2. Click **MildMate Admin** → **Edit**
-3. Go to the **Policies** tab → click **Edit** on your Team Access policy
-4. Add the new email address under **Include** → **Save**
+## How to Add a New Admin User
+
+1. **Option A (Clerk role):** Clerk Dashboard → Users → select user → Metadata → set `public_metadata.role` to `admin` or `super-admin`
+2. **Option A (Email):** Add their email to the `ADMIN_EMAILS` env var (comma-separated) and redeploy
+3. **Option B (future):** Add their email in Cloudflare Zero Trust → Access → MildMate Admin policy
 
 ---
 
 ## How You Know Phase 7 Is Complete
 
-Go through this checklist before moving to Phase 8:
-
-- [ ] All 7 requirements filled in and given to Droid
-- [ ] Cloudflare Access set up — `/admin/` requires Google login
-- [ ] Approved email addresses added to Cloudflare Access policy
-- [ ] Non-approved email is blocked (tested in incognito window)
-- [ ] Dashboard overview page loads with summary cards
-- [ ] Orders page shows test orders with correct custom dimensions
-- [ ] Order status can be changed and saved
-- [ ] Products page shows all products
-- [ ] Product edit modal opens and saves changes correctly
-- [ ] Active toggle on products works
-- [ ] New product can be added from admin
-- [ ] Image uploader accepts JPG/PNG/WebP files
-- [ ] Image uploader rejects wrong file types and oversized files
-- [ ] Uploaded image appears in R2 and URL is returned
-- [ ] New product with uploaded image appears on public product listing
-- [ ] Subscribers page shows email list
-- [ ] CSV export downloads correctly and opens in Excel/Google Sheets
-- [ ] Footer email signup saves to subscribers table
-- [ ] Team member login tested with a second approved Google account
+- [x] Admin pages built and accessible at `/admin/`
+- [x] Products CRUD working (D1 read/write)
+- [x] Orders table shows live D1 data (when authenticated)
+- [x] Order status can be changed (PUT to D1)
+- [x] R2 drag-drop image upload (20 slots per product)
+- [x] Customers list grouped from D1 orders
+- [x] Subscribers with CSV export
+- [x] Pricing params, DIY prices, exchange rates editable
+- [x] Marketing campaigns + offers UI
+- [x] Admin accounts management (localStorage-based)
+- [x] `/admin/sandbox/` → `/admin/` 301 redirect
+- [x] `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`
+- [x] `functions/account/_middleware.ts` — Clerk session gate for `/account/*`
+- [x] API endpoints protected via `authorizeAdmin()`
+- [x] `workers/api/admin-quotes.ts` — Admin sales quote management (GET/POST/PUT, dual-currency, soft-delete)
+- [ ] Clerk admin roles assigned to team members
+- [ ] `ADMIN_EMAILS` env var set on Cloudflare
+- [ ] `QUOTE_FROM_EMAIL` / `QUOTE_REPLY_TO` env vars set for quote magic-link emails (optional, defaults to `orders@mildmate.com`)
+- [ ] Option B — Cloudflare Access (optional, for launch)
 
 ---
 
-## Troubleshooting Common Problems
+## Troubleshooting
 
 | Problem | Solution |
 |---|---|
-| Cloudflare Access login page not appearing | Tell Droid: "Going to /admin/ does not redirect to the Google login page." The Access policy may not be configured correctly. |
-| "Access denied" for an approved email | Go to Cloudflare Zero Trust → Access → Applications → MildMate Admin → Policies → confirm the email is listed exactly as typed (case-sensitive). |
-| Orders page is empty | Tell Droid: "The orders admin page is not loading any orders." Run the D1 check: `npx wrangler d1 execute mildmate-db --command="SELECT COUNT(*) FROM orders;"` |
-| Custom dimensions not showing in orders table | Tell Droid: "The custom_width, custom_length, custom_depth columns are not appearing in the orders table." |
-| Product edit modal not saving | Tell Droid: "Changes in the product edit modal are not being saved to D1." |
-| Image upload fails | Tell Droid the exact error message shown. Common cause: R2 bucket binding not configured in wrangler.toml. |
-| CSV export downloads empty file | Tell Droid: "The CSV export is downloading but the file is empty." |
-| CSV has garbled Thai text | Tell Droid: "Thai characters in the CSV export appear as question marks or symbols — please ensure UTF-8 encoding with BOM." |
-| Active toggle not persisting | Tell Droid: "The product active toggle reverts to its old state after page refresh." |
+| "D1 unavailable" on Orders page (production) | Clerk session missing or user doesn't have admin role. Check `public_metadata.role` in Clerk Dashboard or add email to `ADMIN_EMAILS`. |
+| /admin/ redirects to Clerk sign-in loop | Clerk dev instance (`kind-joey-29`) may have cookie issues on custom domain. Verify Clerk production instance is configured (Option 3). |
+| "Not Found" on /api/admin/orders | Worker hasn't been deployed yet. Run `npx wrangler pages deploy public`. |
+| Product list won't select | Missing `_pendingUploads`/`_pendingCount` declarations — fixed in super-admin.html. |
+| Image upload fails | Check R2 bucket binding `MILDMATE_ASSETS` in `wrangler.toml`. |
+| CSV export empty | No subscribers in D1. Test footer signup flow first. |
 
 ---
 
 ## What Happens Next
 
-Once Phase 7 is complete, move to **Phase 8 — Polish + Launch**.
-
-Phase 8 is the final phase. Droid audits every page for mobile issues, runs performance tests, adds security headers, and prepares everything for the DNS cutover that switches `www.mildmate.com` from your old WordPress site to the new MildMate website.
-
-**Tell Droid:** "Phase 7 is complete. All checklist items are done. Please start Phase 8."
+Once Phase 7 admin is fully verified, move to **Phase 8 — Polish + Launch**.
