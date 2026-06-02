@@ -1729,8 +1729,9 @@ function rOffers(){
   // 🎉 Thank You
   h+='<div class="card" style="margin-top:16px"><div class="card-body">';
   h+=offerCard('thankyou','🎉 Thank You (Repeat Buyer)','thankyou');
-  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou" value="'+offers.thankyou+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
-    offerDesc('After an order ships, send a thank-you discount to encourage repeat purchase. Expires 1 year after sent.')+
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou" value="'+offers.thankyou+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>';
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Send After (hours)</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou-hours" value="'+(offers.thankyouHours||1)+'" min="1" max="72" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('After an order is confirmed, send a thank-you discount to encourage repeat purchase. Expires 1 year after sent.')+
   '</div></div>';
 
   h+='<button class=\"btn btn-primary\" style=\"margin-top:16px\" onclick=\"saveAllOffers()\">Save Offers</button>';
@@ -1779,7 +1780,8 @@ function saveAllOffers(){
     stage3Discount:parseInt(document.getElementById('offer-stage3-discount').value)||10,
     expiryDays:parseInt(document.getElementById('offer-expiry-days').value)||60,
     cronHour:parseInt(document.getElementById('offer-cron-hour').value)||10,
-    thankyou:parseInt(document.getElementById('offer-thankyou').value)||20
+    thankyou:parseInt(document.getElementById('offer-thankyou').value)||20,
+    thankyouHours:parseInt(document.getElementById('offer-thankyou-hours').value)||1
   };
   MildMateCampaigns.saveOffers(offers);
   toast('Offers saved: Basket \u2265$'+offers.basketThreshold+' | Stage2 '+(offers.stage2Enabled?offers.stage2Discount+'%':'Off')+' | Stage3 '+(offers.stage3Enabled?offers.stage3Discount+'%':'Off')+' | Expires '+offers.expiryDays+'d');

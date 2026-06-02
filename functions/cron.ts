@@ -185,6 +185,35 @@ ${rows}
 </td></tr></table></body></html>`;
 }
 
+// ── Thank-you Email ──
+
+function buildThankyouEmail(discountCode: string, discountPct: number): string {
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+<tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center">
+<h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">Thank you for your order</h1>
+<p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Here&rsquo;s ${discountPct}% off your next purchase</p>
+</td></tr>
+<tr><td style="padding:24px">
+<p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 16px">Hi there,</p>
+<p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Thank you for choosing MildMate. We hope you love your custom bedding. As a token of appreciation, here&rsquo;s a discount on your next order.</p>
+<div style="background:#F0F9FF;border:2px dashed #2c96f4;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px">
+<p style="margin:0 0 8px;font-size:13px;color:#64748b">Your discount code</p>
+<p style="margin:0;font-size:28px;font-weight:700;color:#2c96f4;letter-spacing:2px">${discountCode}</p>
+<p style="margin:8px 0 0;font-size:14px;color:#0F172A;font-weight:600">${discountPct}% off — valid for 1 year</p>
+</div>
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<a href="https://mildmate-new.pages.dev/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Shop MildMate</a>
+</td></tr></table>
+<p style="color:#64748b;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center">Discount applies to your entire order. Not combinable with other offers.<br>Questions? Reply or contact <a href="mailto:contact@mildmate.com" style="color:#2c96f4">contact@mildmate.com</a></p>
+</td></tr>
+<tr><td style="background:#F8FAFC;padding:20px 24px;text-align:center;border-top:1px solid #e2e8f0">
+<p style="color:#94a3b8;font-size:12px;margin:0">MildMate &middot; Custom Bedding Made in Thailand<br><a href="https://www.mildmate.com" style="color:#2c96f4;text-decoration:none">www.mildmate.com</a></p>
+</td></tr></table></body></html>`;
+}
+
 // ── D1 Config Reader ──
 
 async function loadRecoveryConfig(db: D1Database): Promise<RecoveryConfig> {
@@ -391,4 +420,27 @@ export async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionC
   }
 
   console.log(`CRON: done — ${sent} sent, ${failed} failed (${sentToday + sent}/${MAX_PER_DAY} today)`);
+
+  // ── Thank-you discount emails ──
+  const { results: tyQueue } = await env.DB.prepare(
+    "SELECT id, order_id, email, discount_code, discount_pct FROM thankyou_queue WHERE sent = 0 AND send_after <= datetime('now') LIMIT 10"
+  ).all();
+
+  if (tyQueue && tyQueue.length > 0) {
+    console.log(`CRON: thankyou queue — ${tyQueue.length} pending`);
+    for (const t of tyQueue as any[]) {
+      try {
+        const html = buildThankyouEmail(t.discount_code, t.discount_pct);
+        const ok = await sendRecoveryEmail(env, t.email, `Thank you \u2014 here's ${t.discount_pct}% off your next MildMate order`, html);
+        if (ok) {
+          await env.DB.prepare('UPDATE thankyou_queue SET sent = 1 WHERE id = ?').bind(t.id).run();
+          console.log(`CRON: thankyou sent to ${t.email} (${t.discount_code})`);
+        } else {
+          console.log(`CRON: thankyou failed for ${t.email}`);
+        }
+      } catch (e: any) {
+        console.log(`CRON: thankyou error for ${t.email}: ${e.message}`);
+      }
+    }
+  }
 }

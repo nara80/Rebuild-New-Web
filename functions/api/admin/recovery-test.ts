@@ -34,7 +34,7 @@ function formatPrice(thb?: number, usd?: number): string {
   return parts.join(' / ') || '\u2014';
 }
 
-export async function onRequest({ request, env }: { request: Request; env: any }): Promise<Response> {
+export async function onRequest({ request, env }: any): Promise<Response> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",

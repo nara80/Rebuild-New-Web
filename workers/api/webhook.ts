@@ -247,6 +247,36 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     }
   }
 
+  // ── Thank-you discount: insert into queue for cron to send later ──
+  if (email) {
+    try {
+      const { results: cfgRows } = await env.DB.prepare('SELECT key, value FROM recovery_config').all();
+      let discountPct = 20, sendAfterHours = 1;
+      if (cfgRows) {
+        const map: Record<string, string> = {};
+        for (const row of cfgRows as any[]) map[row.key] = row.value;
+        discountPct = Number(map.thankyou_discount) || 20;
+        sendAfterHours = Number(map.thankyou_send_after_hours) || 1;
+      }
+
+      const discountCode = 'THANKS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const expiresAt = new Date(Date.now() + 365 * 86400 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+      const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+
+      await env.DB.prepare(
+        "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
+      ).bind(discountCode, email.toLowerCase(), discountPct, expiresAt).run();
+
+      await env.DB.prepare(
+        "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
+      ).bind(session.id, email.toLowerCase(), discountCode, discountPct, sendAfter).run();
+
+      console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+    } catch (e: any) {
+      console.error('Thankyou queue insert failed:', e.message);
+    }
+  }
+
   return new Response(JSON.stringify({ received: true }), {
     headers: { "Content-Type": "application/json" },
   });
