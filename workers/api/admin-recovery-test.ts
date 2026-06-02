@@ -48,6 +48,8 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
 
+  try {
+
   const url = new URL(request.url);
   const targetStage = parseInt(url.searchParams.get('stage') || '1') || 1;
   const testEmail = url.searchParams.get('email') || '';
@@ -75,7 +77,7 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
   // For stage 2/3: force update the cart to make it eligible
   if (targetStage === 2) {
     const emailFilter = testEmail ? "AND email = '" + testEmail.replace(/'/g, "''") + "'" : "";
-    await db.prepare("UPDATE abandoned_carts SET recovery_stage = 1, recovery_sent_at = datetime('now','-49 hours') WHERE recovered = 0 AND recovery_stage = 0" + emailFilter).run();
+    await db.prepare("UPDATE abandoned_carts SET recovery_stage = 1, recovery_sent_at = datetime('now','-49 hours') WHERE recovered = 0 AND recovery_stage IN (0,1)" + emailFilter).run();
   } else if (targetStage === 3) {
     const emailFilter = testEmail ? "AND email = '" + testEmail.replace(/'/g, "''") + "'" : "";
     await db.prepare("UPDATE abandoned_carts SET recovery_stage = 2, recovery_sent_at = datetime('now','-5 days') WHERE recovered = 0 AND recovery_stage IN (0,1)" + emailFilter).run();
@@ -155,4 +157,7 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
   }
 
   return new Response(JSON.stringify({ sent, stage: targetStage, total: carts.length, errors: errors.length ? errors : undefined }), { headers });
+  } catch (e: any) {
+    return new Response(JSON.stringify({ error: "Internal error", message: e.message, stack: e.stack }), { status: 500, headers });
+  }
 }
