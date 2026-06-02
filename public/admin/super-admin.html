@@ -1658,19 +1658,12 @@ function deleteCampaign(id){
 // ── Offers View ──
 function rOffers(){
   var offers=MildMateCampaigns.getOffers();
-  var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">'+
-    '<p style="color:var(--c-muted);margin-bottom:20px">Configure discount percentages for automated email offers. These send automatically via Resend when triggered.</p>';
+  var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';
 
-  // ❤️ Favorited Item
-  h+=offerCard('favorite','❤️ Favorited Item','favorite');
-  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-favorite" value="'+offers.favorite+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
-    offerDesc('When a shopper favorites an item, automatically send a discount offer. Expires 60 days after sent.')+
-  '</div></div>';
-
-  // 🛒 Abandoned Cart Recovery — Basket Threshold + Multi-Stage
-  h+='<div class="card" style="margin-top:16px"><div class="card-body">';
+  // 🛒 Abandoned Cart Recovery — Basket Threshold
+  h+='<div class="card" style="margin-top:0"><div class="card-body">';
   h+=offerCard('cart','🛒 Abandoned Cart Recovery','cart');
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:16px">Carts below the threshold get 1 reminder only. Carts above it get up to 3 emails (reminder → discount → last chance).</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:16px">Carts abandoned for 24+ hours receive a gentle reminder via email.</p>';
 
   // Basket threshold
   h+='<div style="background:#F8FAFC;border-radius:6px;padding:12px;margin-bottom:16px">'+
@@ -1738,7 +1731,6 @@ function offerDesc(text){
 
 function saveAllOffers(){
   var offers={
-    favorite:parseInt(document.getElementById('offer-favorite').value)||15,
     basketThreshold:parseInt(document.getElementById('offer-basket-threshold').value)||150,
     cronHour:parseInt(document.getElementById('offer-cron-hour').value)||10,
     thankyou:parseInt(document.getElementById('offer-thankyou').value)||20
