@@ -1660,16 +1660,16 @@ function rOffers(){
   var offers=MildMateCampaigns.getOffers();
   var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';
 
-  // 🛒 Abandoned Cart Recovery — Basket Threshold
+  // 🛒 Abandoned Cart Recovery — Basket Threshold + Multi-Stage
   h+='<div class="card" style="margin-top:0"><div class="card-body">';
   h+=offerCard('cart','🛒 Abandoned Cart Recovery','cart');
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:16px">Carts abandoned for 24+ hours receive a gentle reminder via email.</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:16px">Carts below the threshold get 1 reminder only. Carts above it get up to 3 emails (reminder → discount → last chance).</p>';
 
   // Basket threshold
   h+='<div style="background:#F8FAFC;border-radius:6px;padding:12px;margin-bottom:16px">'+
     '<div style="font-weight:600;font-size:0.875rem;margin-bottom:4px">Basket Size Threshold (USD)</div>'+
     '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.875rem;color:var(--c-muted)">$</span><input type="number" id="offer-basket-threshold" value="'+(offers.basketThreshold||150)+'" min="0" max="500" step="10" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem">'+
-    '<span style="font-size:0.75rem;color:var(--c-muted)">minimum cart value for recovery email</span></div>'+
+    '<span style="font-size:0.75rem;color:var(--c-muted)">carts ≥ this get multi-stage recovery</span></div>'+
   '</div>';
 
   // Stage 1
@@ -1677,6 +1677,45 @@ function rOffers(){
     '<div style="font-weight:600;font-size:0.875rem;margin-bottom:2px">Stage 1 — Gentle Reminder</div>'+
     '<div style="font-size:0.75rem;color:var(--c-muted);margin-bottom:6px">24h after cart abandoned &middot; No discount &middot; Sent to all abandoned carts</div>'+
     '<span class="badge badge-success" style="font-size:0.6875rem">Always On</span>'+
+  '</div>';
+
+  // Stage 2
+  h+='<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--c-border)">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'+
+      '<span style="font-weight:600;font-size:0.875rem">Stage 2 — Discount Offer</span>'+
+      '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">'+
+        '<span style="font-size:0.75rem;color:var(--c-muted)">'+(offers.stage2Enabled!==false?'Enabled':'Disabled')+'</span>'+
+        '<input type="checkbox" id="offer-stage2-enabled"'+(offers.stage2Enabled!==false?' checked':'')+' onchange="var r=document.getElementById(\'offer-stage2-row\');r.style.display=this.checked?\'\':\'none\';this.parentElement.querySelector(\'span\').textContent=this.checked?\'Enabled\':\'Disabled\'">'+
+      '</label>'+
+    '</div>'+
+    '<div style="font-size:0.75rem;color:var(--c-muted);margin-bottom:6px">72h after Stage 1 &middot; Only for carts ≥ threshold</div>'+
+    '<div id="offer-stage2-row" style="display:'+(offers.stage2Enabled!==false?'block':'none')+'">'+
+      '<table style="width:100%"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-stage2-discount" value="'+(offers.stage2Discount||10)+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    '</div>'+
+  '</div>';
+
+  // Stage 3
+  h+='<div style="margin-bottom:12px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'+
+      '<span style="font-weight:600;font-size:0.875rem">Stage 3 — Last Chance</span>'+
+      '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">'+
+        '<span style="font-size:0.75rem;color:var(--c-muted)">'+(offers.stage3Enabled!==false?'Enabled':'Disabled')+'</span>'+
+        '<input type="checkbox" id="offer-stage3-enabled"'+(offers.stage3Enabled!==false?' checked':'')+' onchange="var r=document.getElementById(\'offer-stage3-row\');r.style.display=this.checked?\'\':\'none\';this.parentElement.querySelector(\'span\').textContent=this.checked?\'Enabled\':\'Disabled\'">'+
+      '</label>'+
+    '</div>'+
+    '<div style="font-size:0.75rem;color:var(--c-muted);margin-bottom:6px">7 days after Stage 1 &middot; Same discount code &middot; Urgency tone</div>'+
+    '<div id="offer-stage3-row" style="display:'+(offers.stage3Enabled!==false?'block':'none')+'">'+
+      '<table style="width:100%"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-stage3-discount" value="'+(offers.stage3Discount||10)+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    '</div>'+
+  '</div>';
+
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:4px;padding-top:8px;border-top:1px solid var(--c-border)">Multi-stage recovery only applies to carts at or above the basket threshold. Carts below threshold receive Stage 1 only.</p>';
+
+  // Discount expiry days
+  h+='<div style="background:#F8FAFC;border-radius:6px;padding:12px;margin-top:16px">'+
+    '<div style="font-weight:600;font-size:0.875rem;margin-bottom:4px">Discount Expiry (Days)</div>'+
+    '<div style="display:flex;align-items:center;gap:8px"><input type="number" id="offer-expiry-days" value="'+(offers.expiryDays||60)+'" min="30" max="365" step="5" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem">'+
+    '<span style="font-size:0.75rem;color:var(--c-muted)">days before discount code expires</span></div>'+
   '</div>';
 
   // Cron schedule
@@ -1696,28 +1735,30 @@ function rOffers(){
 
   h+='<button class=\"btn btn-primary\" style=\"margin-top:16px\" onclick=\"saveAllOffers()\">Save Offers</button>';
   h+='<div style=\"margin-top:12px;display:flex;gap:8px;flex-wrap:wrap\">';
-  h+='<button class=\"btn btn-outline\" onclick=\"testRecoveryStage()\" title=\"Send recovery email now\">🧪 Send Test Recovery Email</button>';
+  h+='<button class=\"btn btn-outline\" onclick=\"testRecoveryStage(1)\" title=\"24h reminder\">🧪 Stage 1</button>';
+  h+='<button class=\"btn btn-outline\" onclick=\"testRecoveryStage(2)\" title=\"72h discount\">🧪 Stage 2</button>';
+  h+='<button class=\"btn btn-outline\" onclick=\"testRecoveryStage(3)\" title=\"7d last chance\">🧪 Stage 3</button>';
   h+='</div>';
   h+='<p id="test-recovery-result" style="font-size:0.75rem;color:var(--c-muted);margin-top:8px"></p>';
   return h;
 }
-function testRecoveryStage(){
-  var btn = document.querySelector('button[onclick="testRecoveryStage()"]');
-  if (btn) btn.disabled = true;
+function testRecoveryStage(stage){
+  var btns = document.querySelectorAll('button[onclick^="testRecoveryStage"]');
+  btns.forEach(function(b){ b.disabled = true; });
   var result = document.getElementById('test-recovery-result');
-  result.textContent = 'Sending recovery email...';
-  fetch('/api/admin/recovery-test?email=mildmatelaz@gmail.com', { method: 'POST', headers: { 'X-Admin-Secret': ADMIN_SECRET } })
+  result.textContent = 'Running Stage ' + stage + '...';
+  fetch('/api/admin/recovery-test?stage=' + stage + '&email=mildmatelaz@gmail.com', { method: 'POST', headers: { 'X-Admin-Secret': ADMIN_SECRET } })
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if (btn) btn.disabled = false;
+      btns.forEach(function(b){ b.disabled = false; });
       if (data.sent > 0) {
-        result.innerHTML = '<span style=\"color:var(--c-green);font-weight:600\">✅ Sent ' + data.sent + ' email(s). Check mildmatelaz@gmail.com</span>';
+        result.innerHTML = '<span style=\"color:var(--c-green);font-weight:600\">✅ Stage ' + stage + ': Sent ' + data.sent + ' email(s). Check mildmatelaz@gmail.com</span>';
       } else {
-        result.innerHTML = '<span style=\"color:var(--c-amber)\">⚠ ' + (data.message || 'No eligible carts.') + '</span>';
+        result.innerHTML = '<span style=\"color:var(--c-amber)\">⚠ Stage ' + stage + ': ' + (data.message || 'No eligible carts.') + '</span>';
       }
     })
     .catch(function(e){
-      if (btn) btn.disabled = false;
+      btns.forEach(function(b){ b.disabled = false; });
       result.innerHTML = '<span style=\"color:var(--c-red)\">❌ ' + e.message + '</span>';
     });
 }
@@ -1732,11 +1773,16 @@ function offerDesc(text){
 function saveAllOffers(){
   var offers={
     basketThreshold:parseInt(document.getElementById('offer-basket-threshold').value)||150,
+    stage2Enabled:document.getElementById('offer-stage2-enabled').checked,
+    stage2Discount:parseInt(document.getElementById('offer-stage2-discount').value)||10,
+    stage3Enabled:document.getElementById('offer-stage3-enabled').checked,
+    stage3Discount:parseInt(document.getElementById('offer-stage3-discount').value)||10,
+    expiryDays:parseInt(document.getElementById('offer-expiry-days').value)||60,
     cronHour:parseInt(document.getElementById('offer-cron-hour').value)||10,
     thankyou:parseInt(document.getElementById('offer-thankyou').value)||20
   };
   MildMateCampaigns.saveOffers(offers);
-  toast('Offers saved: Basket \u2265$'+offers.basketThreshold+' | Cron '+offers.cronHour+' UTC');
+  toast('Offers saved: Basket \u2265$'+offers.basketThreshold+' | Stage2 '+(offers.stage2Enabled?offers.stage2Discount+'%':'Off')+' | Stage3 '+(offers.stage3Enabled?offers.stage3Discount+'%':'Off')+' | Expires '+offers.expiryDays+'d');
 }
 
 // ── Product Editor (inherited from Admin) ──
