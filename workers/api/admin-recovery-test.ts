@@ -60,6 +60,11 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
     return new Response(JSON.stringify({ error: "RESEND_API_KEY not set" }), { status: 500, headers });
   }
 
+  // TEMPORARY: bare-minimum Stage 2 test
+  if (targetStage === 2) {
+    return new Response(JSON.stringify({ stage: 2, db: !!db, apiKey: !!apiKey, testEmail: testEmail }), { headers });
+  }
+
   // Read recovery config
   let threshold = 150, expiryDays = 60, s2Discount = 10, s3Discount = 10;
   try {
