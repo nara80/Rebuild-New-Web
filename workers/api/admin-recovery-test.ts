@@ -76,24 +76,42 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
 
   // For stage 2/3: force update the cart to make it eligible
   if (targetStage === 2) {
-    const emailFilter = testEmail ? "AND email = '" + testEmail.replace(/'/g, "''") + "'" : "";
-    await db.prepare("UPDATE abandoned_carts SET recovery_stage = 1, recovery_sent_at = datetime('now','-49 hours') WHERE recovered = 0 AND recovery_stage IN (0,1)" + emailFilter).run();
+    const twoDaysAgo = new Date(Date.now() - 49 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+    if (testEmail) {
+      await db.prepare("UPDATE abandoned_carts SET recovery_stage = 1, recovery_sent_at = ? WHERE recovered = 0 AND recovery_stage IN (0,1) AND email = ?").bind(twoDaysAgo, testEmail).run();
+    } else {
+      await db.prepare("UPDATE abandoned_carts SET recovery_stage = 1, recovery_sent_at = ? WHERE recovered = 0 AND recovery_stage IN (0,1)").bind(twoDaysAgo).run();
+    }
   } else if (targetStage === 3) {
-    const emailFilter = testEmail ? "AND email = '" + testEmail.replace(/'/g, "''") + "'" : "";
-    await db.prepare("UPDATE abandoned_carts SET recovery_stage = 2, recovery_sent_at = datetime('now','-5 days') WHERE recovered = 0 AND recovery_stage IN (0,1)" + emailFilter).run();
+    const fiveDaysAgo = new Date(Date.now() - 5 * 86400 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+    if (testEmail) {
+      await db.prepare("UPDATE abandoned_carts SET recovery_stage = 2, recovery_sent_at = ? WHERE recovered = 0 AND recovery_stage IN (0,1) AND email = ?").bind(fiveDaysAgo, testEmail).run();
+    } else {
+      await db.prepare("UPDATE abandoned_carts SET recovery_stage = 2, recovery_sent_at = ? WHERE recovered = 0 AND recovery_stage IN (0,1)").bind(fiveDaysAgo).run();
+    }
   }
 
   // Query for the right stage
   let query = '';
+  let params: any[] = [];
   if (targetStage === 1) {
-    query = "SELECT id, email, cart_json FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 0 AND created_at < datetime('now','-24 hours')" + (testEmail ? " AND email = '" + testEmail.replace(/'/g, "''") + "'" : "") + " LIMIT 5";
+    const cutoff = new Date(Date.now() - 24 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+    query = "SELECT id, email, cart_json FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 0 AND created_at < ?" + (testEmail ? " AND email = ?" : "") + " LIMIT 5";
+    params = [cutoff];
+    if (testEmail) params.push(testEmail);
   } else if (targetStage === 2) {
-    query = "SELECT id, email, cart_json FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 1 AND recovery_sent_at < datetime('now','-48 hours')" + (testEmail ? " AND email = '" + testEmail.replace(/'/g, "''") + "'" : "") + " LIMIT 3";
+    const cutoff = new Date(Date.now() - 48 * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+    query = "SELECT id, email, cart_json FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 1 AND recovery_sent_at < ?" + (testEmail ? " AND email = ?" : "") + " LIMIT 3";
+    params = [cutoff];
+    if (testEmail) params.push(testEmail);
   } else {
-    query = "SELECT id, email, cart_json, discount_code FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 2 AND recovery_sent_at < datetime('now','-4 days')" + (testEmail ? " AND email = '" + testEmail.replace(/'/g, "''") + "'" : "") + " LIMIT 3";
+    const cutoff = new Date(Date.now() - 4 * 86400 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+    query = "SELECT id, email, cart_json, discount_code FROM abandoned_carts WHERE recovered = 0 AND recovery_stage = 2 AND recovery_sent_at < ?" + (testEmail ? " AND email = ?" : "") + " LIMIT 3";
+    params = [cutoff];
+    if (testEmail) params.push(testEmail);
   }
 
-  const { results: carts } = await db.prepare(query).all();
+  const { results: carts } = await db.prepare(query).bind(...params).all();
 
   if (!carts || carts.length === 0) {
     return new Response(JSON.stringify({ sent: 0, message: "No eligible abandoned carts found for stage " + targetStage }), { headers });
@@ -132,7 +150,7 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
         nextStage = 2;
         // Save discount code
         try {
-          await db.prepare("INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, datetime('now', '+" + expiryDays + " days'), 'abandoned_cart', datetime('now'))").bind(discountCode, cart.email, s2Discount).run();
+          await db.prepare("INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'abandoned_cart', datetime('now'))").bind(discountCode, cart.email, s2Discount, new Date(Date.now() + expiryDays * 86400 * 1000).toISOString().replace('T', ' ').slice(0, 19)).run();
           await db.prepare("UPDATE abandoned_carts SET discount_code = ? WHERE id = ?").bind(discountCode, cart.id).run();
         } catch (e: any) {}
       } else {
