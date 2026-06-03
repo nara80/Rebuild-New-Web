@@ -153,6 +153,7 @@
               var found = merged.some(function(lItem) {
                 return lItem.type === sItem.type &&
                   lItem.product_slug === sItem.product_slug &&
+                  (lItem.color || '').toLowerCase().trim() === (sItem.color || '').toLowerCase().trim() &&
                   JSON.stringify(lItem.dimensions) === JSON.stringify(sItem.dimensions);
               });
               if (!found) merged.push(sItem);
