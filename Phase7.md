@@ -1,5 +1,5 @@
 # Phase 7 — Admin Dashboard
-**Status (2026-05-31): ✅ CODE COMPLETE — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `super-admin.html` + `admin.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload, CSV export, subscribers, customers (D1-grouped), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate).**
+**Status (2026-06-03): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `super-admin.html` + `admin.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Option B (Cloudflare Access) is optional for launch — defense-in-depth only.**
 **Goal:** Build a private management interface for your team — protected by Clerk admin authentication.
 
 **End Result:** A clean, Clerk-protected dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can update order status live.
@@ -190,10 +190,10 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 - [x] `functions/account/_middleware.ts` — Clerk session gate for `/account/*`
 - [x] API endpoints protected via `authorizeAdmin()`
 - [x] `workers/api/admin-quotes.ts` — Admin sales quote management (GET/POST/PUT, dual-currency, soft-delete)
-- [ ] Clerk admin roles assigned to team members
-- [ ] `ADMIN_EMAILS` env var set on Cloudflare
-- [ ] `QUOTE_FROM_EMAIL` / `QUOTE_REPLY_TO` env vars set for quote magic-link emails (optional, defaults to `orders@mildmate.com`)
-- [ ] Option B — Cloudflare Access (optional, for launch)
+- [x] Clerk admin roles assigned to team members (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin)
+- [x] `ADMIN_EMAILS` env var set on Cloudflare (comma-separated)
+- [x] `QUOTE_FROM_EMAIL` / `QUOTE_REPLY_TO` env vars set for quote magic-link emails
+- [ ] Option B — Cloudflare Access (optional, for launch — defense-in-depth only)
 
 ---
 
