@@ -970,14 +970,20 @@
             if (selectedCountry && selectedCountry.phone) phoneCodeSel.value = selectedCountry.phone;
           }
         } else {
-          // Auto-detect country from geo.js
+          // Auto-detect country from geo.js, default to US
           var detected = (window.MildMateGeo && window.MildMateGeo.country) || null;
           if (detected) {
             var match = findCountryByCode(detected);
             if (match) {
               countrySel.value = match.code;
               if (match.phone) phoneCodeSel.value = match.phone;
+            } else {
+              countrySel.value = 'US';
+              phoneCodeSel.value = '+1';
             }
+          } else {
+            countrySel.value = 'US';
+            phoneCodeSel.value = '+1';
           }
         }
 
@@ -992,8 +998,48 @@
           countrySel.dataset.boundShippingChange = '1';
         }
         refreshSelectLabels();
+      }
 
-        refreshShippingQuote(countrySel.value || ((window.MildMateGeo && window.MildMateGeo.country) || 'OTHER'));
+      function populateCountrySelects() {
+        var countrySel = document.getElementById('cust-country');
+        var phoneCodeSel = document.getElementById('phone-code');
+        if (!countrySel || !phoneCodeSel) return;
+        var countryHtml = '';
+        var phoneHtml = '';
+        var seenPhone = {};
+        COUNTRIES.forEach(function(c) {
+          countryHtml += '<option value="' + c.code + '">' + c.name + '</option>';
+          var p = c.phone || '';
+          if (p && !seenPhone[p]) { seenPhone[p] = true; phoneHtml += '<option value="' + p + '">' + p + '</option>'; }
+        });
+        if (!seenPhone['+66']) phoneHtml = '<option value="+66">+66</option>' + phoneHtml;
+        countrySel.innerHTML = countryHtml;
+        phoneCodeSel.innerHTML = phoneHtml;
+        if (hasDefaultAddressPrefill) {
+          if (prefilledCountryCode) countrySel.value = prefilledCountryCode;
+          if (prefilledPhoneCode) phoneCodeSel.value = prefilledPhoneCode;
+          else { var sc = findCountryByCode(countrySel.value); if (sc && sc.phone) phoneCodeSel.value = sc.phone; }
+        } else {
+          var det = (window.MildMateGeo && window.MildMateGeo.country) || null;
+          if (det) { var m2 = findCountryByCode(det); if (m2) { countrySel.value = m2.code; if (m2.phone) phoneCodeSel.value = m2.phone; } }
+        }
+        if (!countrySel.dataset.boundShippingChange) {
+          countrySel.addEventListener('change', function() {
+            var c2 = findCountryByCode(countrySel.value);
+            if (c2 && c2.phone) phoneCodeSel.value = c2.phone;
+            refreshSelectLabels();
+            refreshShippingQuote(countrySel.value);
+          });
+          countrySel.dataset.boundShippingChange = '1';
+        }
+        refreshSelectLabels();
+      }
+
+      async function initCountrySelects() {
+        populateCountrySelects();
+        await loadCountryMaster();
+        populateCountrySelects();
+        refreshShippingQuote(document.getElementById('cust-country').value || ((window.MildMateGeo && window.MildMateGeo.country) || 'OTHER'));
       }
 
       function refreshSelectLabels() {

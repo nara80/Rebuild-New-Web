@@ -33,6 +33,7 @@
       const cart = loadCart();
       const existing = cart.items.find(function (i) {
         return i.type === item.type && i.fabric === item.fabric &&
+          i.color === item.color &&
           JSON.stringify(i.dimensions) === JSON.stringify(item.dimensions);
       });
       if (existing) {
