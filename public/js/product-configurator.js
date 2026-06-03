@@ -366,6 +366,7 @@
       addToCartBtn.style.background = '';
       addToCartBtn.style.color = '';
     }
+    validateForm();
   }
   function switchToCustom() {
     if (addToCartBtn) {
@@ -374,6 +375,7 @@
       addToCartBtn.style.background = '#f59e0b';
       addToCartBtn.style.color = '#fff';
     }
+    validateForm();
   }
   // Helper for focusing first dim input after switching to custom tab
   var dimFirstInput = null;
@@ -393,11 +395,79 @@
   var state = {
     unit: 'cm',
     fabric: 'cloudsoft',
+    region: '',   // selected region chip — gates size dropdown
     quotePriceThb: 0,
     quotePriceUsd: 0
   };
 
   if (!fabricSelect && !sizeSelect) return; // Not a configurator page — exit
+
+  // Initially disable Add to Cart until all required fields are selected
+  if (addToCartBtn) addToCartBtn.disabled = true;
+
+  // Inject validation notice bar
+  (function injectValidationNotice() {
+    var panel = document.querySelector('.pricing-panel');
+    if (!panel) return;
+    var notice = document.createElement('div');
+    notice.id = 'validation-notice';
+    notice.className = 'validation-notice';
+    notice.setAttribute('aria-live', 'polite');
+    panel.insertAdjacentElement('beforebegin', notice);
+  })();
+
+  // -- Validation: gate Add to Cart until required fields are selected --
+  function getValidation() {
+    var noColorSwatches = document.querySelectorAll('.fabric-color-group').length === 0;
+    var hasColorSwatches = document.querySelectorAll('.color-option').length > 0;
+    var activeGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
+    var hasSelectedColor = activeGroup ? !!activeGroup.querySelector('.color-option.selected') : false;
+    var isPetOwnerOrMarine = isPetOwner || isMarineFitted;
+    var noColorRequired = isPetOwnerOrMarine || noColorSwatches;
+    // Marine: shape select IS the size/region selector — region always passes
+    var noRegionRequired = isMarineFitted;
+
+    return {
+      region: noRegionRequired || !!state.region,
+      size: !!sizeSelect && sizeSelect.value !== '' && sizeSelect.value !== 'custom',
+      fabric: !!state.fabric,
+      color: noColorRequired || (hasColorSwatches && hasSelectedColor)
+    };
+  }
+
+  function validateForm() {
+    var v = getValidation();
+    var allMissing = [];
+    if (!v.region) allMissing.push('Country / Region');
+    if (!v.size) allMissing.push('Size');
+    if (!v.fabric) allMissing.push('Fabric');
+    if (!v.color) allMissing.push('Color');
+
+    // Show only the FIRST missing requirement (sequential guidance)
+    var nextMissing = allMissing[0] || '';
+
+    var notice = document.getElementById('validation-notice');
+    if (notice) {
+      if (nextMissing) {
+        notice.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Please select: ' + nextMissing;
+        notice.className = 'validation-notice visible';
+        notice.style.display = 'flex';
+      } else {
+        notice.style.display = 'none';
+        notice.className = 'validation-notice';
+      }
+    }
+
+    // Update "Starting from" sub-label — hide when a valid selection is made
+    var priceSub = document.getElementById('price-top-sub');
+    if (priceSub) {
+      priceSub.textContent = (v.region && v.size) ? '' : 'Starting from';
+    }
+
+    if (addToCartBtn) {
+      addToCartBtn.disabled = !(v.region && v.size && v.fabric && v.color);
+    }
+  }
 
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
@@ -434,6 +504,8 @@
         if (!opt || !opt.value) {
           if (shapeHint) shapeHint.textContent = '';
           priceDisplay.textContent = 'Select shape above';
+          state.region = '';
+          validateForm();
           return;
         }
         var quoteOnly = opt.dataset.quoteOnly === '1';
@@ -444,16 +516,18 @@
         // Price display
         if (quoteOnly) {
           priceDisplay.textContent = 'Custom Quote';
-          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; addToCartBtn.disabled = true; }
+          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
           state._dims = null;
           state._price = null;
         } else {
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
           priceDisplay.innerHTML = displayPrice(thb, price);
-          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; addToCartBtn.disabled = false; }
+          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
           state._dims = { w: parseFloat(opt.dataset.headMin) || 0, l: parseFloat(opt.dataset.lengthMin) || 0, d: 30 };
           state._price = { thb: thb, usd: price };
+          state.region = 'marine';  // Marine uses shape selector — mark region as set
+          validateForm();
         }
 
         // Dimension hints
@@ -593,7 +667,9 @@
           var newIdx = parseInt(chip.getAttribute('data-idx'), 10) || 0;
           if (newIdx === activeIndex) return;
           activeIndex = newIdx;
+          state.region = groups[newIdx] && groups[newIdx].code || '';
           selectEl.value = '';  // reset — prevent cross-region value bleed
+          validateForm();
           renderSizePicker();
         });
       });
@@ -604,6 +680,7 @@
           if (!value || selectEl.value === value) return;
           selectEl.value = value;
           selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+          validateForm();
         });
       });
 
@@ -620,13 +697,29 @@
       selectEl.addEventListener('change', function () {
         syncActiveIndexByValue(selectEl.value);
         renderSizePicker();
+        validateForm();
       });
       selectEl.dataset.sizePickerSyncBound = '1';
     }
 
     syncActiveIndexByValue(selectEl.value);
+    // Auto-select US/CA (first region) and its first size on initial load
+    if (!selectEl.value && groups.length > 0 && groups[0].options.length > 0) {
+      activeIndex = 0;
+      var firstOpt = groups[0].options[0];
+      state.region = groups[0].code || '';
+      selectEl.value = firstOpt.value;
+    } else if (selectEl.value && groups[activeIndex]) {
+      state.region = groups[activeIndex].code || '';
+    }
     selectEl.classList.add('sr-select');
     renderSizePicker();
+    // Trigger price update for auto-selected first size
+    if (selectEl.value) {
+      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      validateForm();
+    }
   }
 
   function syncPillState(selectEl, pillsWrap) {
@@ -859,7 +952,7 @@
       return;
     }
     priceDisplay.innerHTML = displayPrice(result.thb, result.usd);
-    if (addToCartBtn) addToCartBtn.disabled = false;
+    validateForm();
     // Save for add-to-cart handler
     state._dims = dims;
     state._price = { thb: result.thb, usd: result.usd };
@@ -977,6 +1070,7 @@
         if (opts.length > 0) opts[0].classList.add('selected');
         updateSelectedColorName(activeGroup);
       }
+      validateForm();
     });
   }
 
@@ -1271,6 +1365,7 @@
       group.querySelectorAll('.color-option').forEach(function (o) { o.classList.remove('selected'); });
       c.classList.add('selected');
       updateSelectedColorName(group);
+      validateForm();
     });
   });
   document.querySelectorAll('.fabric-color-group').forEach(function (group) {
