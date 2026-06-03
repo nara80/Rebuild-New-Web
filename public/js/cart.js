@@ -33,7 +33,7 @@
       const cart = loadCart();
       const existing = cart.items.find(function (i) {
         return i.type === item.type && i.fabric === item.fabric &&
-          i.color === item.color &&
+          (i.color || '').toLowerCase().trim() === (item.color || '').toLowerCase().trim() &&
           JSON.stringify(i.dimensions) === JSON.stringify(item.dimensions);
       });
       if (existing) {
