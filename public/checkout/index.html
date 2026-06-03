@@ -418,11 +418,6 @@
               </div>
 
               <div class="form-group float-group">
-                <select class="form-input" id="cust-country" required autocomplete="country" onchange="this.closest('.float-group').classList.add('filled')"></select>
-                <label class="form-label" for="cust-country">Country *</label>
-              </div>
-
-              <div class="form-group float-group">
                 <input type="text" class="form-input" id="cust-street" placeholder=" " required autocomplete="street-address">
                 <label class="form-label" for="cust-street">Street Address *</label>
               </div>
@@ -445,6 +440,11 @@
                   <input type="text" class="form-input" id="cust-postal" placeholder=" " required autocomplete="postal-code">
                   <label class="form-label" for="cust-postal">Postal Code *</label>
                 </div>
+              </div>
+
+              <div class="form-group float-group">
+                <select class="form-input" id="cust-country" required autocomplete="country" onchange="this.closest('.float-group').classList.add('filled')"></select>
+                <label class="form-label" for="cust-country">Country *</label>
               </div>
 
               <p class="price-note">Your email is used for order confirmation and shipping updates only.</p>

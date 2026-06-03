@@ -21,6 +21,7 @@ import { handleAdminShippingRates } from "../../workers/api/admin-shipping";
 import { handleAdminQuotes } from "../../workers/api/admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "../../workers/api/discount";
 import { handleAdminContacts } from "../../workers/api/admin-contacts";
+import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
 import { handleShippingCalculate } from "../../workers/api/shipping";
@@ -125,6 +126,11 @@ export const onRequest: PagesFunction<{
   // Admin sales quotes
   if (path === "/api/admin/quotes" || path === "/api/admin/quotes/") {
     return handleAdminQuotes(request, env);
+  }
+
+  // Admin recovery test — triggers abandoned cart recovery email manually
+  if (path === "/api/admin/recovery-test" || path === "/api/admin/recovery-test/") {
+    return handleAdminRecoveryTest(request, env);
   }
 
   // Public checkout shipping quote
