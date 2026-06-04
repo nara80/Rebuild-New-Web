@@ -803,7 +803,15 @@ mildmate-web/
     ├── 014_order_shipping_tracking.sql  ← carrier_code + tracking_number + tracking_url + shipping_status + shipped_at on orders
     ├── 015_shipping_rates.sql       ← shipping_rates table (country_code, first_item_thb, additional_item_thb) + seed TH/US/OTHER
     └── 016_countries_master.sql    ← countries_master table (95 countries + OTHER, phone codes)
+│   ├── 017_recovery_stages.sql    ← recovery_stages table (per-cart stage timestamps)
+│   ├── 018_recovery_config.sql     ← recovery_config table (Stage 2/3 discount, basket threshold)
+│   ├── 019_discount_pct.sql        ← discount_pct column on thankyou_queue
+└── MildMateDataBase/ExistingWeb/    ← WordPress URL source data
 ```
+
+---
+
+## SEO URL Strategy
 
 
 ---
@@ -824,7 +832,7 @@ Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** — no
 
 ## D1 Database Schema
 
-**Actual schema (migrations 001–009). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
+**Actual schema (migrations 001–020). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
 
 ```sql
 -- Products (migration 001 + 006)
@@ -896,6 +904,8 @@ CREATE TABLE abandoned_carts (
   customer_name TEXT,
   cart_json TEXT NOT NULL,
   recovered INTEGER DEFAULT 0,
+  recovery_stage INTEGER DEFAULT 0,
+  discount_code TEXT,
   recovery_sent_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -937,7 +947,7 @@ CREATE TABLE pricing_params (
 );
 ```
 
-**Active migrations:** 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master
+**Active migrations:** 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue
 
 ---
 
@@ -948,9 +958,9 @@ CREATE TABLE pricing_params (
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
 | **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → 27 product pages, ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created. | ⏸️ Deferred — runs pre-launch after Phase 8 |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling | ✅ Complete |
-| **5** | Checkout + Stripe + Auth | Checkout/account/order-confirmed pages, Stripe Checkout Sessions + PromptPay, Clerk multi-provider (Google/Facebook/Email), cart↔server sync, quote magic link (`/quote/QT-XXXXX/`), Resend emails, D1 orders + favorites + customer_addresses + contacts (migrations 009–016). Workers API defensive schema self-heal on all endpoints. **Option A order tracking:** carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. **Centralized shipping-quote engine** (`workers/api/shipping.ts`): THB-only rates from D1 `shipping_rates`, exchange-rate conversion, geo-country detection, OTHER fallback. **D1 country master list** (`workers/api/countries.ts`, 95 countries + OTHER): consumed by checkout, /account, and super-admin country dropdowns. **Country-specific tariff/tax notes:** EU/UK/OTHER → "Price excludes import tariff and Tax."; TH/US/CA/AU → hidden. **Order thumbnail dual-match resolution:** slug normalization + title fallback for legacy orders. **Pending:** Option 3 production-auth hardening (Clerk production instance), `workers/cron.ts` abandoned cart recovery (Phase 6). | ✅ Built (code complete; email capture ✅, shipping ✅, migrations 009–016 ✅, cron ⏸ Pending) |
-| **6** | Abandoned Cart Cron | `abandoned_carts` table ready (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` scheduled handler scans D1 for carts >24h, sends Resend recovery email (HTML, MildMate-branded). Cron trigger in Cloudflare Dashboard. | ✅ Built |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load) | ✅ Complete |
+| **5** | Checkout + Stripe + Auth | Checkout/account/order-confirmed pages, Stripe Checkout Sessions + PromptPay, Clerk multi-provider (Google/Facebook/Email), cart↔server sync, quote magic link (`/quote/QT-XXXXX/`), Resend emails, D1 orders + favorites + customer_addresses + contacts (migrations 001–020). Workers API defensive schema self-heal on all endpoints. **Option A order tracking:** carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. **Centralized shipping-quote engine** (`workers/api/shipping.ts`): THB-only rates from D1 `shipping_rates`, exchange-rate conversion, geo-country detection, OTHER fallback. **D1 country master list** (`workers/api/countries.ts`, 95 countries + OTHER): consumed by checkout, /account, and super-admin country dropdowns. **Country-specific tariff/tax notes:** EU/UK/OTHER → "Price excludes import tariff and Tax."; TH/US/CA/AU → hidden. **Order thumbnail dual-match resolution:** slug normalization + title fallback for legacy orders. **Pending:** Option 3 production-auth hardening (Clerk production instance). | ✅ Built (code complete; thank-you discount ✅; wrangler.toml [triggers] ⏸ Pending) |
+| **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts ≥$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. Cron trigger in Cloudflare Dashboard. **Pending:** wrangler.toml `[triggers]` cron schedule. | ✅ Built |
 | **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `super-admin.html` (~155KB) + `admin.html` (~118KB) with full products CRUD, orders table (D1 live + Option A shipping tracking), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown via `/api/countries`), marketing. `workers/api/admin-shipping.ts` — shipping rates CRUD (THB-only, OTHER protected). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Planned:** Cloudflare Access zero-trust (Option B, defense-in-depth). | ✅ Built (code complete; setup ⏸ pending) |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ⏸️ Pending |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏸️ Pending |
@@ -1593,3 +1603,23 @@ New catalog system files + configurator:
 ```
 
 All existing pages remain in `public/`. The regenerator overwrites only the product grid sections in each page — hero, descriptions, footer, and all other content is preserved.
+
+
+---
+
+## Operational Notes (2026-06)
+
+### Multi-Stage Abandoned Cart Recovery
+functions/cron.ts runs 3 recovery stages on a daily schedule:
+- Stage 1 (24h): Gentle reminder, always sent.
+- Stage 2 (72h): Discount offer; only for carts >= $basketThresholdUsd (default $150, configurable via D1 recovery_config table).
+- Stage 3 (7d): Last-chance, reuses Stage 2 discount code.
+- Max 50 emails/day overall; 5+3+3 per-stage batching. thankyou_queue sends 1-year discount code post-purchase.
+- All config driven from D1 recovery_config table (migrations 018) - not hardcoded.
+- Pending: wrangler.toml [triggers] cron schedule needs to be configured in Cloudflare Dashboard.
+
+### Sequential Add-to-Cart Validation
+Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
+
+### Database Migrations (001-020)
+All 20 migrations applied. Tables include abandoned_carts (with recovery_stage, discount_code columns), recovery_stages (migration 017), recovery_config (migration 018), thankyou_queue (migration 020).

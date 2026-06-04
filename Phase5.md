@@ -109,13 +109,13 @@ Resend sends emails on behalf of your domain. The "From" field in all customer e
 
 ---
 
-### Requirement 7 — Auth Providers (Implemented: Google + Email via Clerk)
+### Requirement 7 — Auth Providers (Implemented: Google + Email + Facebook via Clerk)
 
 Clerk handles auth as a managed service. The current implementation uses:
 - **Google** — OAuth sign-in via Clerk hosted pages
-- **Facebook** — OAuth sign-in via Clerk hosted pages
+- **Facebook** — OAuth sign-in via Clerk hosted pages (requires Clerk dashboard configuration)
 - **Email** — magic link or email/password via Clerk hosted pages
-- **LINE** — NOT implemented as standalone provider; international positioning deprioritizes LINE-specific login
+- **LINE** — NOT built; international positioning deprioritizes LINE-specific login
 
 Checkout is **guest-first**: customers can complete payment without logging in. Social login is optional — it enables saved addresses and order history in `/account/`.
 
@@ -586,34 +586,34 @@ To test the Thai payment flow:
 Go through this checklist before moving to Phase 6:
 
 **Initial Requirements:**
-- [ ] Phase 4 confirmed complete (configurator works, cart functional)
-- [ ] Stripe account exists (created or already had one)
-- [ ] PromptPay enabled in Stripe with your Thai National ID or Tax ID
-- [ ] All 3 Stripe keys collected (Publishable, Secret, Webhook Secret)
-- [ ] Order notification email address decided and written down
-- [ ] Email sender name and address decided and written down
-- [ ] Custom quote workflow confirmed: admin pricing → magic link → locked-price add to cart
+- [x] Phase 4 confirmed complete (configurator works, cart functional)
+- [x] Stripe account exists (created or already had one)
+- [x] PromptPay enabled in Stripe with your Thai National ID or Tax ID
+- [x] All 3 Stripe keys collected (Publishable, Secret, Webhook Secret)
+- [x] Order notification email address decided and written down
+- [x] Email sender name and address decided and written down
+- [x] Custom quote workflow confirmed: admin pricing → magic link → locked-price add to cart
 
 **Build Steps:**
-- [ ] All 3 Stripe keys stored as Cloudflare secrets (`npx wrangler secret list` confirms all 3)
-- [ ] Webhook endpoint created in Stripe dashboard pointing to `mildmate-new.pages.dev/api/webhook/stripe`
-- [ ] Resend domain verified in dashboard (https://resend.com/domains) + `RESEND_API_KEY` secret set
-- [ ] Site deployed to `mildmate-new.pages.dev` with `npx wrangler pages deploy public`
-- [ ] Test purchase completed with test card `4242 4242 4242 4242`
-- [ ] "Order Confirmed" page appears after payment
-- [ ] Customer confirmation email received in inbox
-- [ ] Team "New Order" notification email received
-- [ ] Test order visible in D1 database with correct dimensions
-- [ ] Checkout has 3 clear steps (Cart Review → Shipping Details → Payment)
-- [ ] Country dropdown on `/checkout/` pulls from D1 `countries_master` via `/api/countries`
-- [ ] Phone code auto-fills when country is changed on `/checkout/`
-- [ ] Shipping cost updates dynamically when country or quantity changes
-- [ ] Tariff/tax note shown correctly per country group (EU/UK/OTHER → note shown; TH/US/CA/AU → hidden)
-- [ ] Order thumbnail visible in `/account` → Orders for legacy/mismatched slug orders
-- [ ] Custom quote magic link page (`/quote/QT-XXXXX/`) shows locked price and "Add to Cart" button
-- [ ] Custom quote item in cart shows correct dimensions, fabric, and locked price (uneditable)
-- [ ] Custom quote order stores `quote_id` reference in D1 `orders` table
-- [ ] PromptPay option visible on Stripe payment page
+- [x] All 3 Stripe keys stored as Cloudflare secrets (`npx wrangler secret list` confirms all 3)
+- [x] Webhook endpoint created in Stripe dashboard pointing to `mildmate-new.pages.dev/api/webhook/stripe`
+- [x] Resend domain verified in dashboard (https://resend.com/domains) + `RESEND_API_KEY` secret set
+- [x] Site deployed to `mildmate-new.pages.dev` with `npx wrangler pages deploy public`
+- [x] Test purchase completed with test card `4242 4242 4242 4242`
+- [x] "Order Confirmed" page appears after payment
+- [x] Customer confirmation email received in inbox
+- [x] Team "New Order" notification email received
+- [x] Test order visible in D1 database with correct dimensions
+- [x] Checkout has 3 clear steps (Cart Review → Shipping Details → Payment)
+- [x] Country dropdown on `/checkout/` pulls from D1 `countries_master` via `/api/countries`
+- [x] Phone code auto-fills when country is changed on `/checkout/`
+- [x] Shipping cost updates dynamically when country or quantity changes
+- [x] Tariff/tax note shown correctly per country group (EU/UK/OTHER → note shown; TH/US/CA/AU → hidden)
+- [x] Order thumbnail visible in `/account` → Orders for legacy/mismatched slug orders
+- [x] Custom quote magic link page (`/quote/QT-XXXXX/`) shows locked price and "Add to Cart" button
+- [x] Custom quote item in cart shows correct dimensions, fabric, and locked price (uneditable)
+- [x] Custom quote order stores `quote_id` reference in D1 `orders` table
+- [x] PromptPay option visible on Stripe payment page
 
 ---
 
