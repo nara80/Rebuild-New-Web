@@ -1,6 +1,8 @@
 // MildMate Discount API
 // POST /api/discount/validate — validate a discount code at checkout
 // Called by checkout page before creating Stripe session
+// Checks promo_codes FIRST (admin-created), then discount_claims (welcome codes)
+// Mutual exclusivity: only one type can be applied per checkout
 
 async function sha256(text: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -35,7 +37,7 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
     return new Response(JSON.stringify({ valid: false, error: "Method not allowed" }), { status: 405, headers });
   }
 
-  let body: { code: string; email?: string; address?: any };
+  let body: { code: string; email?: string; address?: any; cart_total_thb?: number; cart_total_usd?: number };
   try {
     body = await request.json();
   } catch {
@@ -53,7 +55,47 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
 
   const db = env.DB;
 
-  // 1. Look up code
+  // ── 1. Check promo_codes FIRST (admin-created, mutual exclusivity) ──
+  const promo = await db.prepare(
+    "SELECT id, code, discount_pct, order_minimum_usd, order_minimum_thb, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
+  ).bind(code).first() as any;
+
+  if (promo) {
+    if (!promo.is_active) {
+      return new Response(JSON.stringify({ valid: false, error: "This promo code has been revoked" }), { headers });
+    }
+    if (promo.expires_at && promo.expires_at < new Date().toISOString()) {
+      return new Response(JSON.stringify({ valid: false, error: "This promo code has expired" }), { headers });
+    }
+    if (promo.max_uses !== null && promo.use_count >= promo.max_uses) {
+      return new Response(JSON.stringify({ valid: false, error: "This promo code has reached its usage limit" }), { headers });
+    }
+    const minUsd = promo.order_minimum_usd ?? promo.order_minimum_thb ?? 0;
+    if (minUsd > 0 && (body.cart_total_usd || 0) < minUsd) {
+      return new Response(JSON.stringify({
+        valid: false,
+        error: `Minimum order of $${minUsd} USD required for this code (your cart: $${Math.round(body.cart_total_usd || 0)} USD)`,
+      }), { headers });
+    }
+    if (promo.per_email_limit > 0) {
+      const redeemed = await db.prepare(
+        "SELECT id FROM promo_redemptions WHERE promo_id = ? AND email = ?"
+      ).bind(promo.id, email).first();
+      if (redeemed) {
+        return new Response(JSON.stringify({ valid: false, error: "You have already used this promo code" }), { headers });
+      }
+    }
+    return new Response(JSON.stringify({
+      valid: true,
+      code: promo.code,
+      discount_percent: promo.discount_pct,
+      discount_type: "promo",
+      expires_at: promo.expires_at,
+      source: "promo",
+    }), { headers });
+  }
+
+  // ── 2. Fall back to discount_claims (welcome/discount code) ──
   const claim = await db.prepare(
     "SELECT id, email, code, status, expires_at, discount_pct, address_hash, order_id, source FROM discount_claims WHERE code = ?"
   ).bind(code).first() as any;
@@ -68,27 +110,21 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
     }), { headers });
   }
 
-  // 2. Check status
   if (claim.status === "used") {
     return new Response(JSON.stringify({ valid: false, error: "This code has already been used" }), { headers });
   }
   if (claim.status === "expired" || (claim.expires_at && claim.expires_at < new Date().toISOString())) {
-    // Auto-expire if past date
     if (claim.status !== "expired") {
       await db.prepare("UPDATE discount_claims SET status = 'expired' WHERE id = ?").bind(claim.id).run();
     }
     return new Response(JSON.stringify({ valid: false, error: "This code has expired" }), { headers });
   }
 
-  // 3. Check address (one discount per household ever)
   if (body.address) {
     const addrHash = await sha256(normalizeAddress(body.address));
-    
-    // Check if this address has ever been used for any discount
     const usedByAddress = await db.prepare(
       "SELECT id, code, status FROM discount_claims WHERE address_hash = ? LIMIT 1"
     ).bind(addrHash).first() as any;
-    
     if (usedByAddress) {
       return new Response(JSON.stringify({
         valid: false,
@@ -101,7 +137,7 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
     valid: true,
     code: claim.code,
     discount_percent: claim.discount_pct || 15,
-    discount_type: "percent",
+    discount_type: "welcome",
     expires_at: claim.expires_at,
     source: claim.source || 'subscribe',
   }), { headers });

@@ -21,6 +21,7 @@ import { handleAdminShippingRates } from "../../workers/api/admin-shipping";
 import { handleAdminQuotes } from "../../workers/api/admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "../../workers/api/discount";
 import { handleAdminContacts } from "../../workers/api/admin-contacts";
+import { handleAdminPromo } from "../../workers/api/admin-promo";
 import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
@@ -126,6 +127,11 @@ export const onRequest: PagesFunction<{
   // Admin sales quotes
   if (path === "/api/admin/quotes" || path === "/api/admin/quotes/") {
     return handleAdminQuotes(request, env);
+  }
+
+  // Admin promo codes
+  if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
+    return handleAdminPromo(request, env);
   }
 
   // Admin recovery test — triggers abandoned cart recovery email manually

@@ -154,13 +154,29 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
         metadata.discount_code || null
       ).run();
 
-      // Mark discount code as used (one per household)
+      // Mark discount code as used
       if (metadata.discount_code) {
         try {
           var addrHash = metadata.address ? await sha256(normalizeAddress(metadata.address)) : null;
-          await env.DB.prepare(
-            "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
-          ).bind(addrHash, metadata.discount_code).run();
+          const normalizedEmail2 = (metadata.email || session.customer_email || "").toLowerCase();
+          // Check if it's a promo code (by trying promo_codes table first)
+          const promoRow = await env.DB.prepare(
+            "SELECT id FROM promo_codes WHERE code = ? AND is_active = 1"
+          ).bind(metadata.discount_code).first();
+          if (promoRow) {
+            // Promo code redemption — increment use_count, record per-email redemption
+            await env.DB.prepare(
+              "UPDATE promo_codes SET use_count = use_count + 1 WHERE id = ?"
+            ).bind((promoRow as any).id).run();
+            await env.DB.prepare(
+              "INSERT INTO promo_redemptions (promo_id, email, order_id) VALUES (?, ?, ?)"
+            ).bind((promoRow as any).id, normalizedEmail2, null).run();
+          } else {
+            // Welcome/discount_claims redemption (one per household)
+            await env.DB.prepare(
+              "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
+            ).bind(addrHash, metadata.discount_code).run();
+          }
         } catch(err) { console.error('Discount claim failed:', (err as any)?.message || err); }
       }
     } catch (e: any) {

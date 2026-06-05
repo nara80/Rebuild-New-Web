@@ -1529,14 +1529,17 @@ async function archiveQuote(quoteId) {
 }
 
 // ── Marketing Tab (Campaigns + Offers) ──
-var marketingSub = 'campaigns'; // 'campaigns' or 'offers'
+var marketingSub = 'campaigns'; // 'campaigns' or 'offers' or 'promo'
 
-function rMarketing(){
+async function rMarketing(){
   var tabs='<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--c-border)">'+
-    '<a href="#" onclick="marketingSub=\'campaigns\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='campaigns'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🏷 Run a Sale</a>'+
-    '<a href="#" onclick="marketingSub=\'offers\';document.getElementById(\'page-content\').innerHTML=rMarketing();return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
+    '<a href="#" onclick="marketingSub=\'campaigns\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='campaigns'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🏷 Run a Sale</a>'+
+    '<a href="#" onclick="marketingSub=\'offers\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
+    '<a href="#" onclick="marketingSub=\'promo\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='promo'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🎟️ Promo Codes</a>'+
   '</div>';
-  return tabs + (marketingSub==='offers' ? rOffers() : rCampaigns());
+  if (marketingSub === 'offers') return tabs + rOffers();
+  if (marketingSub === 'promo') return tabs + (await rPromoCodes());
+  return tabs + rCampaigns();
 }
 
 function rCampaigns(){
@@ -1655,7 +1658,114 @@ function deleteCampaign(id){
   document.getElementById('page-content').innerHTML=rMarketing();
 }
 
-// ── Offers View ──
+// ── Promo Codes View ──
+async function rPromoCodes(){
+  var codes = [];
+  try {
+    var res = await fetch('/api/admin/promo', { headers: { 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' } });
+    if (res.ok) { var j = await res.json(); codes = j.codes || []; }
+  } catch(e) { toast('Failed to load promo codes: ' + e.message); }
+
+  var h = '<div class="card"><div class="card-header"><span>Promo Codes</span><button class="btn btn-primary btn-sm" onclick="showNewPromoForm()">+ Generate Promo Code</button></div><div class="card-body">';
+
+  h += '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:16px">Custom promo codes are mutually exclusive with welcome/discount codes at checkout — only one can be applied per order.</p>';
+
+  if (codes.length === 0) {
+    h += '<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🎟️</p><p>No promo codes yet. Generate your first one.</p></div>';
+  } else {
+    h += '<table style="width:100%;border-collapse:collapse;font-size:0.8125rem">';
+    h += '<thead><tr style="border-bottom:2px solid var(--c-border)">';
+    h += '<th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Code</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Discount</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Min Order</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Uses</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Per Email</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Expires</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Status</th>';
+    h += '<th style="text-align:right;padding:8px 10px"></th>';
+    h += '</tr></thead><tbody>';
+
+    var now = new Date().toISOString();
+    codes.forEach(function(p){
+      var isExpired = p.expires_at && p.expires_at < now;
+      var isActive = p.is_active && !isExpired;
+      var usesDisplay = p.max_uses !== null ? (p.use_count || 0) + ' / ' + p.max_uses : (p.use_count || 0) + ' / &#8734;';
+      var statusBadge = !p.is_active ? '<span class="badge badge-cancelled">Revoked</span>' : isExpired ? '<span class="badge badge-cancelled">Expired</span>' : '<span class="badge badge-success">Active</span>';
+      h += '<tr style="border-bottom:1px solid var(--c-border)">';
+      h += '<td style="padding:10px 10px;font-family:monospace;font-weight:700;font-size:0.875rem">' + p.code + '</td>';
+      h += '<td style="padding:10px 10px;text-align:center;font-weight:700;color:var(--c-red)">' + p.discount_pct + '%</td>';
+      h += '<td style="padding:10px 10px;text-align:center;color:var(--c-muted)">' + (p.order_minimum_usd > 0 ? '$' + p.order_minimum_usd + ' USD' : '—') + '</td>';
+      h += '<td style="padding:10px 10px;text-align:center">' + usesDisplay + '</td>';
+      h += '<td style="padding:10px 10px;text-align:center;color:var(--c-muted)">' + (p.per_email_limit ? 'Yes' : 'No') + '</td>';
+      h += '<td style="padding:10px 10px;text-align:center;color:var(--c-muted);font-size:0.75rem">' + (p.expires_at ? p.expires_at.replace('T',' ').substring(0,16) : '—') + '</td>';
+      h += '<td style="padding:10px 10px;text-align:center">' + statusBadge + '</td>';
+      h += '<td style="padding:10px 10px;text-align:right"><button class="btn btn-sm btn-outline" onclick="revokePromo(' + p.id + ')" style="color:var(--c-red)">Revoke</button></td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function showNewPromoForm(){
+  var existing = document.getElementById('new-promo-form');
+  if (existing) { existing.style.display = existing.style.display === 'none' ? 'block' : 'none'; return; }
+  var div = document.createElement('div');
+  div.id = 'new-promo-form';
+  div.style.cssText = 'margin-bottom:20px';
+  div.innerHTML = '<div class="card"><div class="card-header">Generate Promo Code</div><div class="card-body">' +
+    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:16px">Mutually exclusive with welcome codes. Shoppers can only use one discount type per order.</p>' +
+    '<div class="form-row"><div class="form-group"><label>Custom Code * <span style="font-weight:400;font-size:0.7rem;color:var(--c-muted)">(3–20 letters/numbers)</span></label><input id="promo-code" placeholder="e.g. SUMMER20" maxlength="20" style="text-transform:uppercase"></div>'+
+    '<div class="form-group"><label>Discount % *</label><input type="number" id="promo-discount" value="10" min="1" max="100"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Min Order (USD) <span style="font-weight:400;font-size:0.7rem;color:var(--c-muted)">(0 = no minimum)</span></label><input type="number" id="promo-min-order" value="0" min="0"></div>'+
+    '<div class="form-group"><label>Duration *</label><select id="promo-duration" style="padding:10px 12px;border:2px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;width:100%"><option value="1">1 day</option><option value="3">3 days</option><option value="7" selected>7 days</option></select></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Max Uses <span style="font-weight:400;font-size:0.7rem;color:var(--c-muted)">(blank = unlimited)</span></label><input type="number" id="promo-max-uses" placeholder="e.g. 100" min="1"></div>'+
+    '<div class="form-group"><label><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="promo-per-email" checked style="margin:0"> Single use per buyer</label></label><span style="font-size:0.75rem;color:var(--c-muted);display:block;margin-top:4px">One code per email address at checkout</span></div></div>'+
+    '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-primary" onclick="createPromo()">Generate Code</button>'+
+    '<button class="btn btn-outline" onclick="document.getElementById(\'new-promo-form\').remove()">Cancel</button></div>'+
+  '</div></div>';
+  var content = document.getElementById('page-content');
+  content.insertBefore(div, content.firstChild);
+}
+
+async function createPromo(){
+  var code = document.getElementById('promo-code').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  var discount = parseInt(document.getElementById('promo-discount').value) || 0;
+  var minOrder = parseInt(document.getElementById('promo-min-order').value) || 0;
+  var duration = parseInt(document.getElementById('promo-duration').value) || 7;
+  var maxUses = document.getElementById('promo-max-uses').value ? parseInt(document.getElementById('promo-max-uses').value) : null;
+  var perEmail = document.getElementById('promo-per-email').checked ? 1 : 0;
+  if (!code || code.length < 3) { toast('Code must be at least 3 characters (letters and numbers only)'); return; }
+  if (discount < 1 || discount > 100) { toast('Discount must be 1–100%'); return; }
+  if (duration < 1) { toast('Duration must be at least 1 day'); return; }
+
+  try {
+    var res = await fetch('/api/admin/promo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' },
+      body: JSON.stringify({ code: code, discount_pct: discount, order_minimum_thb: minOrder, duration_days: duration, max_uses: maxUses, per_email_limit: perEmail })
+    });
+    var j = await res.json();
+    if (!res.ok) { toast(j.error || 'Failed to create promo code'); return; }
+    toast('Promo code ' + j.code + ' created (' + j.discount_pct + '% off, expires ' + j.expires_at + ')');
+    document.getElementById('page-content').innerHTML = rMarketing();
+  } catch(e) { toast('Network error: ' + e.message); }
+}
+
+async function revokePromo(id){
+  if (!confirm('Revoke this promo code? It will no longer be usable at checkout.')) return;
+  try {
+    var res = await fetch('/api/admin/promo', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' },
+      body: JSON.stringify({ id: id })
+    });
+    if (!res.ok) { var j = await res.json(); toast(j.error || 'Failed to revoke'); return; }
+    toast('Promo code revoked');
+    document.getElementById('page-content').innerHTML = rMarketing();
+  } catch(e) { toast('Network error: ' + e.message); }
+}
 function rOffers(){
   var offers=MildMateCampaigns.getOffers();
   var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';

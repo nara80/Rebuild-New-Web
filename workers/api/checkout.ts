@@ -46,37 +46,78 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     });
   }
 
-  const { items, email, name, phone, address, currency: bodyCurrency } = body;
+  const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
   const shippingCountryInput = body.shipping_country || body.country_code || "";
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const discountCode = (body.discount_code || "").trim().toUpperCase();
   let discountApplied = false;
+  let discountPct = 0;
+  let discountType = null; // 'promo' | 'welcome'
   if (discountCode) {
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
       return new Response(JSON.stringify({ error: "Valid email is required before applying discount code" }), {
         status: 400, headers: { "Content-Type": "application/json" },
       });
     }
-    const claim = await env.DB.prepare(
-      "SELECT id, email, status, expires_at FROM discount_claims WHERE code = ? AND status = 'issued'"
-    ).bind(discountCode).first();
-    if (!claim) {
-      return new Response(JSON.stringify({ error: "Invalid or already used discount code" }), {
-        status: 400, headers: { "Content-Type": "application/json" },
-      });
+    // Check promo_codes FIRST (admin-created, mutual exclusivity)
+    const promo = await env.DB.prepare(
+      "SELECT id, discount_pct, order_minimum_usd, order_minimum_thb, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
+    ).bind(discountCode).first() as any;
+    if (promo) {
+      if (promo.expires_at && promo.expires_at < new Date().toISOString()) {
+        return new Response(JSON.stringify({ error: "This promo code has expired" }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (promo.max_uses !== null && promo.use_count >= promo.max_uses) {
+        return new Response(JSON.stringify({ error: "This promo code has reached its usage limit" }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+      const minUsd = promo.order_minimum_usd ?? promo.order_minimum_thb ?? 0;
+      if (minUsd > 0 && (cart_total_usd || 0) < minUsd) {
+        return new Response(JSON.stringify({
+          error: `Minimum order of $${minUsd} USD required for this code (your cart: $${Math.round(cart_total_usd || 0)} USD)`,
+        }), { status: 400, headers: { "Content-Type": "application/json" } });
+      }
+      if (promo.per_email_limit > 0) {
+        const redeemed = await env.DB.prepare(
+          "SELECT id FROM promo_redemptions WHERE promo_id = ? AND email = ?"
+        ).bind(promo.id, normalizedEmail).first();
+        if (redeemed) {
+          return new Response(JSON.stringify({ error: "You have already used this promo code" }), {
+            status: 400, headers: { "Content-Type": "application/json" },
+          });
+        }
+      }
+      discountApplied = true;
+      discountPct = promo.discount_pct;
+      discountType = "promo";
+    } else {
+      // Fall back to welcome/discount_claims (mutually exclusive with promo)
+      const claim = await env.DB.prepare(
+        "SELECT id, email, status, expires_at FROM discount_claims WHERE code = ? AND status = 'issued'"
+      ).bind(discountCode).first();
+      if (!claim) {
+        return new Response(JSON.stringify({ error: "Invalid or already used discount code" }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (claim.expires_at && claim.expires_at < new Date().toISOString()) {
+        await env.DB.prepare("UPDATE discount_claims SET status = 'expired' WHERE id = ?").bind(claim.id).run();
+        return new Response(JSON.stringify({ error: "Discount code has expired" }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (String(claim.email || "").toLowerCase() !== normalizedEmail) {
+        return new Response(JSON.stringify({ error: "This welcome code is linked to a different email account." }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+      discountApplied = true;
+      discountPct = 15; // welcome codes are always 15%
+      discountType = "welcome";
     }
-    if (claim.expires_at && claim.expires_at < new Date().toISOString()) {
-      await env.DB.prepare("UPDATE discount_claims SET status = 'expired' WHERE id = ?").bind(claim.id).run();
-      return new Response(JSON.stringify({ error: "Discount code has expired" }), {
-        status: 400, headers: { "Content-Type": "application/json" },
-      });
-    }
-    if (String(claim.email || "").toLowerCase() !== normalizedEmail) {
-      return new Response(JSON.stringify({ error: "This welcome code is linked to a different email account." }), {
-        status: 400, headers: { "Content-Type": "application/json" },
-      });
-    }
-    discountApplied = true;
   }
 
 
@@ -163,7 +204,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
           name: item.product_name,
           description: desc,
         },
-        unit_amount: discountApplied ? Math.round(unitAmount * 0.85) : unitAmount,
+        unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount,
       },
       quantity: item.qty || 1,
     };
@@ -228,7 +269,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     params.append("metadata[shipping_total_qty]", String(totalQty));
     if (discountApplied) {
       params.append("metadata[discount_code]", discountCode);
-      params.append("metadata[discount_percent]", "15");
+      params.append("metadata[discount_percent]", String(discountPct));
     }
     const metadataItems = items.map((i: CartItem, idx: number) => ({
       slug: i.product_slug,

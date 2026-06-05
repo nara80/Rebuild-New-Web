@@ -802,10 +802,12 @@ mildmate-web/
     ├── 013_favorites.sql            ← favorites table (authenticated wishlist)
     ├── 014_order_shipping_tracking.sql  ← carrier_code + tracking_number + tracking_url + shipping_status + shipped_at on orders
     ├── 015_shipping_rates.sql       ← shipping_rates table (country_code, first_item_thb, additional_item_thb) + seed TH/US/OTHER
-    └── 016_countries_master.sql    ← countries_master table (95 countries + OTHER, phone codes)
-│   ├── 017_recovery_stages.sql    ← recovery_stages table (per-cart stage timestamps)
-│   ├── 018_recovery_config.sql     ← recovery_config table (Stage 2/3 discount, basket threshold)
-│   ├── 019_discount_pct.sql        ← discount_pct column on thankyou_queue
+    ├── 016_countries_master.sql    ← countries_master table (95 countries + OTHER, phone codes)
+    ├── 017_recovery_stages.sql    ← recovery_stages table (per-cart stage timestamps)
+    ├── 018_recovery_config.sql     ← recovery_config table (Stage 2/3 discount, basket threshold)
+    ├── 019_discount_pct.sql        ← discount_pct column on thankyou_queue
+    ├── 020_thankyou_queue.sql      ← thankyou_queue table (post-purchase discount emails)
+    └── 021_promo_codes.sql         ← promo_codes + promo_redemptions tables (admin-created custom promo)
 └── MildMateDataBase/ExistingWeb/    ← WordPress URL source data
 ```
 
@@ -947,7 +949,7 @@ CREATE TABLE pricing_params (
 );
 ```
 
-**Active migrations:** 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue
+**Active migrations:** 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd
 
 ---
 

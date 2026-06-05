@@ -375,8 +375,10 @@ All 27 products now have live pricing formulas or don't require configurators.
 - `recovery_stages` — abandoned cart stage timestamps per cart (migration 017)
 - `recovery_config` — email config: Stage 2 discount pct/enabled, Stage 3 discount pct/enabled, basket threshold USD, expiry days (migration 018)
 - `thankyou_queue` — post-purchase discount emails pending delivery (id, order_id, email, discount_code, discount_pct, send_after, sent) (migration 020)
+- `promo_codes` — admin-created custom promo codes: code, discount_pct, order_minimum_usd, duration_days, max_uses, use_count, per_email_limit, is_active, expires_at (migration 021)
+- `promo_redemptions` — per-email usage tracking for promo codes (migration 021)
 
-Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue
+Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd
 
 ---
 
@@ -490,7 +492,9 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── 017_recovery_stages.sql    ← recovery_stages table (per-cart stage timestamps)
 │   ├── 018_recovery_config.sql     ← recovery_config table (Stage 2/3 discount, basket threshold)
 │   ├── 019_discount_pct.sql        ← discount_pct column on thankyou_queue
-│   └── 020_thankyou_queue.sql      ← thankyou_queue table (post-purchase discount emails)
+│   ├── 020_thankyou_queue.sql      ← thankyou_queue table (post-purchase discount emails)
+│   ├── 021_promo_codes.sql         ← promo_codes + promo_redemptions tables (admin-created custom promo)
+│   └── 022_promo_min_usd.sql        ← order_minimum_thb → order_minimum_usd on promo_codes
 └── MildMateDataBase/ExistingWeb/    ← WordPress URL source data
 ```
 
