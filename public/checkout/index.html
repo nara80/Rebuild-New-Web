@@ -533,6 +533,7 @@
       var cart = MildMateCart.get();
       var discountApplied = false;
       var discountCode = '';
+      var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
       var shippingState = {
         currency: 'USD',
         requestedCountry: '',
@@ -579,7 +580,7 @@
           var unit = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
           return total + (unit * (item.qty || 1));
         }, 0);
-        return discountApplied ? Math.round(sum * 0.85) : sum;
+        return discountApplied ? Math.round(sum * (100 - discountPercent) / 100) : sum;
       }
 
       function setText(id, value) {
@@ -1320,10 +1321,12 @@
           if (data.valid) {
             discountApplied = true;
             discountCode = code;
+            discountPercent = data.discount_percent || 15;
             msg.style.color = "#16a34a";
-            msg.textContent = "15% discount applied! (expires " + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ")";
+            msg.innerHTML = discountPercent + '% discount applied! <span id="remove-discount-btn" style="cursor:pointer;color:#ef4444;font-size:0.875rem;margin-left:8px;text-decoration:underline">Remove</span> (expires ' + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ')';
             document.getElementById("btn-apply-discount").disabled = true;
             document.getElementById("discount-input").disabled = true;
+            document.getElementById("remove-discount-btn").onclick = removeDiscountCode;
             // Refresh totals across steps after discount is applied
             step1();
             populateStep2Summary();
@@ -1333,6 +1336,21 @@
             msg.textContent = data.error || "Invalid code";
           }
         } catch(e) { msg.style.color = "#ef4444"; msg.textContent = "Validation failed — try again"; }
+      }
+
+      function removeDiscountCode() {
+        discountApplied = false;
+        discountCode = '';
+        discountPercent = 15;
+        var input = document.getElementById('discount-input');
+        var msg = document.getElementById('discount-msg');
+        var btn = document.getElementById('btn-apply-discount');
+        if (input) { input.disabled = false; input.value = ''; }
+        if (btn) btn.disabled = false;
+        if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+        step1();
+        populateStep2Summary();
+        renderStep3();
       }
 
       window.applyDiscountCode = applyDiscountCode;
@@ -1380,6 +1398,7 @@
             if (data.error && (data.error.indexOf('discount') >= 0 || data.error.indexOf('code') >= 0 || data.error.indexOf('used') >= 0)) {
               discountApplied = false;
               discountCode = '';
+              discountPercent = 15;
               var dInp = document.getElementById('discount-input');
               var dBtn = document.getElementById('btn-apply-discount');
               var dMsg = document.getElementById('discount-msg');
