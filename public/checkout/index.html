@@ -605,7 +605,11 @@
 
       function applyTotalsFromState() {
         var currency = shippingState.currency || getActiveCurrency();
-        var subtotal = computeSubtotal(currency);
+        var rawSubtotal = (cart.items || []).reduce(function(total2, item) {
+          var unit = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
+          return total2 + (unit * (item.qty || 1));
+        }, 0);
+        var subtotal = discountApplied ? Math.round(rawSubtotal * (100 - discountPercent) / 100) : rawSubtotal;
         var shipping = Number(shippingState.amount || 0);
         var total = subtotal + shipping;
         var shippingText = formatMoney(shipping, currency);
@@ -628,12 +632,7 @@
         updateShippingNotes();
 
         // Discount row — show amount in red when discount is applied
-        var rawSubtotal = (cart.items || []).reduce(function(total2, item) {
-          var unit = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
-          return total2 + (unit * (item.qty || 1));
-        }, 0);
         var discountAmt = discountApplied ? (rawSubtotal - subtotal) : 0;
-        window._debugDiscount = { applied: discountApplied, raw: rawSubtotal, sub: subtotal, amt: discountAmt };
         var steps = [
           { row: 'discount-row-step1', amt: 'discount-amount-step1' },
           { row: 'discount-row-step2', amt: 'discount-amount-step2' },
@@ -652,9 +651,7 @@
             }
           }
         });
-      }
-
-      async function refreshShippingQuote(forceCountryCode) {
+      }async function refreshShippingQuote(forceCountryCode) {
         var qty = getTotalQty();
         var currency = getActiveCurrency();
         if (qty <= 0) {
