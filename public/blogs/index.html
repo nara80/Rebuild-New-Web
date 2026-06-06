@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,10 +9,10 @@
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    /* ── Blog Index Page ─────────────────────── */
+    /* â”€â”€ Blog Index Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blog-index-page { background: #f0f7ff; }
 
-    /* ── Hero ──────────────────────────────── */
+    /* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blog-hero {
       background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
       padding: 72px 24px 56px;
@@ -52,7 +52,7 @@
       margin: 0 auto;
     }
 
-    /* ── Filter Tabs ────────────────────────── */
+    /* â”€â”€ Filter Tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blog-filters {
       background: #fff;
       border-bottom: 1px solid var(--color-border);
@@ -83,7 +83,7 @@
       color: #fff;
     }
 
-    /* ── Blog Grid ─────────────────────────── */
+    /* â”€â”€ Blog Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blog-listing-section { padding: 48px 0 80px; }
     .blog-grid {
       display: grid;
@@ -174,7 +174,7 @@
     }
     .blog-card .card-read-more:hover { text-decoration: underline; }
 
-    /* ── Featured Post ────────────────────── */
+    /* â”€â”€ Featured Post â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .featured-post {
       background: #fff;
       border-radius: var(--radius);
@@ -264,7 +264,7 @@
     }
     .featured-post .btn:hover { background: var(--color-primary-dark); }
 
-    /* ── Newsletter CTA ────────────────────── */
+    /* â”€â”€ Newsletter CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blog-newsletter {
       background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
       padding: 56px 24px;
@@ -280,7 +280,7 @@
     .newsletter-form button { padding: 12px 24px; background: #1a7fd4; color: #fff; border: 2px solid rgba(255,255,255,0.4); border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; font-family: var(--font-main); cursor: pointer; transition: background 0.2s; }
     .newsletter-form button:hover { background: #1569b0; }
 
-    /* ── Pagination ─────────────────────────── */
+    /* â”€â”€ Pagination â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .blog-pagination {
       display: flex;
       justify-content: center;
@@ -316,7 +316,7 @@
     }
     .blog-pagination .ellipsis { color: #999; background: none; border: none; }
 
-    /* ── Responsive ─────────────────────────── */
+    /* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     @media (max-width: 768px) {
       .blog-hero-inner h1 { font-size: 1.75rem; }
       .featured-post { grid-template-columns: 1fr; }
@@ -372,232 +372,17 @@
     <!-- Blog Listing -->
     <section class="blog-listing-section">
       <div class="container">
-
-        <!-- Featured Post -->
-        <article class="featured-post">
-          <div class="card-image">
-            <img src="/images/products/marine-fitted-sheet/main.jpg" alt="V-Berth marine bedding" width="800" height="480" loading="eager" decoding="async">
-            <span class="card-category">Marine</span>
+        <div id="blog-posts-root">
+          <div id="blog-featured-post" style="display:none"></div>
+          <div id="blog-grid" class="blog-grid" style="min-height:200px">
+            <div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--color-muted)">
+              <div style="font-size:1.5rem;margin-bottom:8px">Loading...</div>
+            </div>
           </div>
-          <div class="card-body">
-            <div class="featured-badge">Featured</div>
-            <h2 class="card-title"><a href="/blogs/v-berth-sheets-vs-standard/">5 Reasons V-Berth Sheets Beat Standard Sheets on Your Boat</a></h2>
-            <p class="card-excerpt">Standard sheets were never built for boats. If you've ever spent twenty minutes wrestling a flat sheet into a V-Berth at 2am in a rolling anchorage, you already know why custom fitted sheets change everything.</p>
-            <div class="card-date">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              May 12, 2026 &middot; 7 min read
-            </div>
-            <a href="/blogs/v-berth-sheets-vs-standard/" class="btn">Read Article</a>
-          </div>
-        </article>
+        </div>
 
-        <!-- Post Grid -->
-        <div class="blog-grid">
-
-          <!-- Post 2 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/family-fitted-sheet/main.jpg" alt="Family co-sleeping solutions" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Family</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                April 28, 2026
-              </div>
-              <h3 class="card-title"><a href="#">How Family Co-Sleep Sheets Handle Active Sleepers  -  A Parent's Guide</a></h3>
-              <p class="card-excerpt">Kids who kick, roll, and migrate across the mattress need bedding that moves with them  -  not against them. Here's why parents love our family sheets.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 3 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/pet-owner-fitted-sheet/main.jpg" alt="Pet-proof bedding protection" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Pet Owner</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                April 15, 2026
-              </div>
-              <h3 class="card-title"><a href="#">The Ultimate Pet-Proof Bedding System: Fitted Sheet + Duvet Cover Combo</a></h3>
-              <p class="card-excerpt">Fur, claws, accidents, and odors  -  pet bedding takes a beating. Our BreezePlus fabric and easy-change zipper duvet are built for pet households.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 4 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/rv-truck-fitted-sheet/main.jpg" alt="RV and truck cab bedding" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">RV &amp; Truck</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                April 3, 2026
-              </div>
-              <h3 class="card-title"><a href="#">Bedding for Truck Cabs and RVs: Standard Sizes That Actually Fit</a></h3>
-              <p class="card-excerpt">Truck cab mattresses and RV bunks are oddly sized  -  usually no standard sheet fits. Custom bedding solves the fit problem permanently.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 5 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/flat-sheet-standard/main.jpg" alt="CloudSoft fabric close-up" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Fabric Guide</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                March 20, 2026
-              </div>
-              <h3 class="card-title"><a href="#">CloudSoft vs Bamboo: Which Fabric Is Best for Custom Bedding?</a></h3>
-              <p class="card-excerpt">We break down the real differences between CloudSoft microfiber and bamboo fabric  -  breathability, durability, pet resistance, and care ease.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 6 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/3-sided-duvet/main.jpg" alt="How to measure mattress for custom bedding" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">How-To</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                March 8, 2026
-              </div>
-              <h3 class="card-title"><a href="#">Photo-Measurement: How to Get Perfect Custom Bedding From Your Phone</a></h3>
-              <p class="card-excerpt">Our 10-minute photo measurement process produces bedding that fits within 1cm accuracy. Here's exactly how to take the right photos.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 7 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/pillowcase-envelope/main.jpg" alt="Better sleep tips" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Sleep Tips</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                February 25, 2026
-              </div>
-              <h3 class="card-title"><a href="#">Sleep Better on Your Boat: The Science of Marine Bedding</a></h3>
-              <p class="card-excerpt">Motion, humidity, salt air, and limited space  -  boat sleep is physiologically different. Here's what the research says about sleeping well at anchor.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 8 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/flat-sheet-standard/main.jpg" alt="DIY custom bedding measurement" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">How-To</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                February 10, 2026
-              </div>
-              <h3 class="card-title"><a href="#">The Credit Card Method: Measure Any Mattress in 3 Minutes</a></h3>
-              <p class="card-excerpt">No tape measure? No problem. A standard credit card is all you need to capture width, length, and depth with enough accuracy for our pattern team.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 9 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/flat-sheet-extra-deep-pocket/main.jpg" alt="PremaCotton fabric natural cotton" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Fabric Guide</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                January 28, 2026
-              </div>
-              <h3 class="card-title"><a href="#">PremaCotton vs Egyptian Cotton: Why Thai-Made Cotton Wins</a></h3>
-              <p class="card-excerpt">We tested PremaCotton against Egyptian cotton over 6 months. The results surprised us  -  and changed how we think about bedding value.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 10 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/pillow-protector-general/main.jpg" alt="BreezePlus fabric care guide" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Care Tips</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                January 15, 2026
-              </div>
-              <h3 class="card-title"><a href="#">BreezePlus Care Guide: Washing Tips for Pet Owners</a></h3>
-              <p class="card-excerpt">BreezePlus is machine-washable and odor-resistant, but there's a right way to do it. Here's our step-by-step guide to keeping it fresh.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 11 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/family-fitted-sheet/main-th.jpg" alt="Family co-sleep safety standards" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Family</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                January 3, 2026
-              </div>
-              <h3 class="card-title"><a href="#">Co-Sleep Safety Standards: What Parents Need to Know</a></h3>
-              <p class="card-excerpt">Co-sleeping safety isn't just about mattress size  -  sheet tension, fabric breathability, and secure corners all play a role in safe family sleep.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 12 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/marine-fitted-sheet/main.jpg" alt="Marine bedding humidity management" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Marine</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                December 18, 2025
-              </div>
-              <h3 class="card-title"><a href="#">Managing Humidity Below Deck: Best Fabrics for Liveaboard Yachts</a></h3>
-              <p class="card-excerpt">Mold, mildew, and musty sheets are the enemy of liveaboard life. The right fabric and a simple drying routine make all the difference.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
-          <!-- Post 12 -->
-          <article class="blog-card">
-            <div class="card-image">
-              <img src="/images/products/marine-fitted-sheet/main.jpg" alt="Marine bedding humidity management" width="600" height="338" loading="lazy" decoding="async">
-              <span class="card-category">Marine</span>
-            </div>
-            <div class="card-body">
-              <div class="card-date">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                December 18, 2025
-              </div>
-              <h3 class="card-title"><a href="#">Managing Humidity Below Deck: Best Fabrics for Liveaboard Yachts</a></h3>
-              <p class="card-excerpt">Mold, mildew, and musty sheets are the enemy of liveaboard life. The right fabric and a simple drying routine make all the difference.</p>
-              <a href="#" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-            </div>
-          </article>
-
+        <!-- Pagination -->
+        <nav class="blog-pagination" id="blog-pagination" aria-label="Blog pagination" style="display:none"></nav>
         </div><!-- /.blog-grid -->
 
         <!-- Pagination -->
@@ -724,3 +509,56 @@
   </script>
 </body>
 </html>
+
+    <script>
+    (function() {
+      var featured = document.getElementById('blog-featured-post');
+      var grid = document.getElementById('blog-grid');
+      var pagination = document.getElementById('blog-pagination');
+      var currentCategory = 'All';
+      function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+      function formatDate(d) { if (!d) return ''; try { return new Date(d).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); } catch(e) { return d; } }
+      function renderCard(p) {
+        var cat = esc(p.category || 'General');
+        var img = p.featured_image ? '<img src="' + esc(p.featured_image) + '" alt="' + esc(p.featured_image_alt_en || p.title_en || '') + '" loading="lazy">' : '<div style="aspect-ratio:16/9;background:linear-gradient(135deg,#2c96f4,#1a7fd4);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.6);font-size:0.875rem;font-weight:600;padding:20px;text-align:center">' + cat + '</div>';
+        var excerpt = p.meta_description_en || p.body_en ? esc((p.meta_description_en || p.body_en).replace(/<[^>]+>/g,'').substring(0,120)) + '...' : '';
+        return '<article class="blog-card"><div class="card-image">' + img + '<span class="card-category">' + cat + '</span></div><div class="card-body"><div class="card-date"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + formatDate(p.created_at) + '</div><h3 class="card-title"><a href="/blogs/' + esc(p.slug) + '/">' + esc(p.title_en || p.title_th || 'Untitled') + '</a></h3>' + (excerpt ? '<p class="card-excerpt">' + excerpt + '</p>' : '') + '<a href="/blogs/' + esc(p.slug) + '/" class="card-read-more">Read more <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a></div></article>';
+      }
+      function renderFeatured(p) {
+        var cat = esc(p.category || 'General');
+        var img = p.featured_image ? '<img src="' + esc(p.featured_image) + '" alt="' + esc(p.featured_image_alt_en || p.title_en || '') + '" width="800" height="480" loading="eager">' : '<div style="width:100%;height:100%;background:linear-gradient(135deg,#2c96f4,#1a7fd4);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:1.5rem;font-weight:700;padding:24px;text-align:center">' + esc(p.title_en || '') + '</div>';
+        return '<article class="featured-post" style="margin-bottom:40px"><div class="card-image" style="max-height:420px;overflow:hidden;border-radius:var(--radius)">' + img + '<span class="card-category">' + cat + '</span></div><div class="card-body"><div class="card-date"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ' + formatDate(p.created_at) + ' | ' + esc(p.read_time_en || '5 min read') + '</div><h2 class="card-title" style="font-size:1.375rem"><a href="/blogs/' + esc(p.slug) + '/" style="color:inherit;text-decoration:none">' + esc(p.title_en || p.title_th || 'Untitled') + '</a></h2>' + (p.meta_description_en ? '<p class="card-excerpt">' + esc(p.meta_description_en) + '</p>' : '') + '<a href="/blogs/' + esc(p.slug) + '/" class="card-read-more">Read article <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a></div></article>';
+      }
+      function renderPagination(page, total) {
+        var perPage = 9;
+        var totalPages = Math.ceil(total / perPage);
+        if (totalPages <= 1) { pagination.style.display = 'none'; return; }
+        pagination.style.display = 'flex';
+        var h = '';
+        if (page > 1) h += '<a href="#" onclick="loadBlogPage(' + (page-1) + ');return false" class="page-nav">&laquo;</a>';
+        h += '<span class="current">' + page + ' / ' + totalPages + '</span>';
+        if (page < totalPages) h += '<a href="#" onclick="loadBlogPage(' + (page+1) + ');return false" class="page-nav">&raquo;</a>';
+        pagination.innerHTML = h;
+      }
+      window.loadBlogPage = function(page) {
+        page = page || 1;
+        var perPage = 9;
+        var offset = (page - 1) * perPage;
+        var catFilter = currentCategory !== 'All' ? '&category=' + encodeURIComponent(currentCategory) : '';
+        fetch('/api/blog/posts?limit=' + perPage + '&offset=' + offset + catFilter)
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(j) {
+            if (!j || !j.posts) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--color-muted)"><p>No posts yet. <a href="/admin/blog.html">Create your first post</a>.</p></div>'; return; }
+            var posts = j.posts;
+            if (!posts.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--color-muted)"><p>No posts found' + (currentCategory !== 'All' ? ' in "' + currentCategory + '"' : '') + '.</p></div>'; pagination.style.display = 'none'; return; }
+            if (page === 1 && posts.length > 0) { featured.style.display = 'block'; featured.innerHTML = renderFeatured(posts[0]); posts = posts.slice(1); } else { featured.style.display = 'none'; featured.innerHTML = ''; }
+            grid.innerHTML = posts.length ? posts.map(renderCard).join('') : '';
+            renderPagination(page, j.total || posts.length);
+          })
+          .catch(function() { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--color-muted)"><p>Failed to load posts.</p></div>'; });
+      };
+      var filterTabs = document.querySelectorAll('.filter-tab');
+      filterTabs.forEach(function(tab) { tab.addEventListener('click', function() { filterTabs.forEach(function(t) { t.classList.remove('active'); }); tab.classList.add('active'); currentCategory = tab.textContent.trim(); loadBlogPage(1); }); });
+      loadBlogPage(1);
+    })();
+    </script>

@@ -151,7 +151,7 @@ tr:hover td{background:#f8fafc}
     <a href="#" data-page="exchange"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Exchange Rates</a>
     <a href="#" data-page="shipping"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h12v10H3z"/><path d="M15 10h3l3 3v4h-6z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg> Shipping Rates</a>
     <a href="#" data-page="marketing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Marketing</a>
-    <a href="#" data-page="stat"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="19" x2="20" y2="19"/><rect x="6" y="10" width="3" height="7"/><rect x="11" y="7" width="3" height="10"/><rect x="16" y="4" width="3" height="13"/></svg> Stat</a>
+    <a href="#" data-page="blog"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" y2="13"/><line x1="16" y1="17" y2="17"/><polyline points="8 13 8 17"/></svg> Blog</a>
     <div class="sidebar-section">Admin Features</div>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
     <a href="#" class="sidebar-action" onclick="startNewProduct()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Product</a>
@@ -202,7 +202,7 @@ window.addEventListener('clerk:signed-out', function() {
   document.getElementById('admin-sign-in-btn').style.display = '';document.getElementById('admin-sign-out-link').style.display = 'none';
 });
 // ── Page Router ──
-var pages = ['dashboard','pricing','diy','exchange','shipping','marketing','stat','products','orders','quotes','customers','contacts','subscribers','accounts'];
+var pages = ['dashboard','pricing','diy','exchange','shipping','marketing','stat','blog','products','orders','quotes','customers','contacts','subscribers','accounts'];
 var currentPage = 'dashboard';
 
 async function showPage(name) {
@@ -212,7 +212,7 @@ async function showPage(name) {
   if(link) link.classList.add('active');
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
-    exchange:'Exchange Rates',shipping:'Shipping Rates',marketing:'Marketing',stat:'Stat',products:'Products',orders:'Orders',quotes:'Quotes',
+    exchange:'Exchange Rates',shipping:'Shipping Rates',marketing:'Marketing',stat:'Stat',blog:'Blog',products:'Products',orders:'Orders',quotes:'Quotes',
     customers:'Customers',contacts:'Contacts',subscribers:'Newsletter',accounts:'Admin Accounts'
   }[name];
   var result = renderPage(name);
@@ -250,6 +250,7 @@ function renderPage(name) {
     case 'shipping': return renderShippingRates();
     case 'marketing': return rMarketing();
     case 'stat': return renderStatPage();
+    case 'blog': return rBlog();
     case 'products': return rProducts();
     case 'orders': return rOrders();
     case 'quotes': return renderQuotes();
@@ -433,6 +434,155 @@ async function renderStatPage() {
   var period = localStorage.getItem('admin_stats_period') || 'last-30-days';
   var currency = (localStorage.getItem('admin_stats_currency') || 'USD').toUpperCase();
   return await renderListingPerformanceCard(period, currency);
+}
+
+// ── Blog Posts Admin ──────────────────────────────
+async function rBlog() {
+  var posts = [];
+  try {
+    var r = await fetch('/api/admin/blog', { headers: { 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' } });
+    if (r.ok) { var j = await r.json(); posts = j.posts || []; }
+  } catch(e) { toast('Failed to load posts: ' + e.message); }
+
+  if (!posts.length) {
+    return '<div class="card"><div class="card-header"><span>Blog Posts</span><button class="btn btn-primary btn-sm" onclick="openBlogForm()">+ New Post</button></div><div class="card-body"><p style="color:var(--c-muted);text-align:center;padding:40px">No posts yet. Click + New Post to create your first article.</p></div></div>';
+  }
+  var h = '<div class="card"><div class="card-header"><span>Blog Posts</span><button class="btn btn-primary btn-sm" onclick="openBlogForm()">+ New Post</button></div><div class="card-body"><div style="overflow-x:auto"><table><thead><tr>';
+  h += '<th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Title (EN)</th>';
+  h += '<th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Category</th>';
+  h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Status</th>';
+  h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Actions</th>';
+  h += '</tr></thead><tbody>';
+  posts.forEach(function(p) {
+    var badge = p.status === 'published' ? '<span class="badge badge-shipped">Published</span>' : '<span class="badge badge-pending">Draft</span>';
+    h += '<tr style="border-bottom:1px solid var(--c-border)">';
+    h += '<td style="padding:10px 10px;font-weight:600">' + escHtml(p.title_en || p.title_th || 'Untitled') + '</td>';
+    h += '<td style="padding:10px 10px;color:var(--c-muted)">' + escHtml(p.category || '—') + '</td>';
+    h += '<td style="padding:10px 10px;text-align:center">' + badge + '</td>';
+    h += '<td style="padding:10px 10px;text-align:center">';
+    h += '<button class="btn btn-outline btn-sm" onclick="editBlogPost(' + p.id + ')">Edit</button> ';
+    h += '<button class="btn btn-outline btn-sm" onclick="deleteBlogPost(' + p.id + ')" style="color:var(--c-red)">Delete</button>';
+    h += '</td></tr>';
+  });
+  h += '</tbody></table></div></div></div>';
+  return h;
+}
+
+function openBlogForm(post) {
+  post = post || {};
+  var isEdit = !!post.id;
+  var modal = document.createElement('div');
+  modal.id = 'blog-form-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+  modal.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:800px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;position:relative">' +
+    '<button onclick="document.getElementById(\\'blog-form-modal\\').remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--c-muted)">✕</button>' +
+    '<h2 style="margin-bottom:20px;font-size:1.125rem">' + (isEdit ? 'Edit Post' : 'New Blog Post') + '</h2>' +
+    '<div id="blog-form-error" style="color:var(--c-red);font-size:0.875rem;margin-bottom:12px;display:none"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">' +
+    '<div style="grid-column:1/-1"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Title (EN) *</label><input id="bf-title-en" value="' + escHtml(post.title_en || '') + '" placeholder="Article headline (English)" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"></div>' +
+    '<div><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Title TH</label><input id="bf-title-th" value="' + escHtml(post.title_th || '') + '" placeholder="Thai title (optional)" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"></div>' +
+    '<div><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Slug</label><input id="bf-slug" value="' + escHtml(post.slug || '') + '" placeholder="auto-generated from EN title" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"><small style="color:var(--c-muted);font-size:0.75rem">Leave blank to auto-generate</small></div>' +
+    '<div><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Category</label><input id="bf-category" value="' + escHtml(post.category || 'General') + '" placeholder="e.g. Marine, Bedding Guide" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"></div>' +
+    '<div><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Author</label><input id="bf-author" value="' + escHtml(post.author || 'MildMate Team') + '" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"></div>' +
+    '</div>' +
+    '<div style="grid-column:1/-1;margin-bottom:16px"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Featured Image URL (16:9)</label><input id="bf-image" value="' + escHtml(post.featured_image || '') + '" placeholder="/images/blog/banner.jpg" oninput="updateBlogImgPreview()" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"><div id="bf-img-preview" style="margin-top:8px;border-radius:8px;overflow:hidden;aspect-ratio:16/9;max-width:280px;background:#f1f5f9;display:' + (post.featured_image ? 'block' : 'none') + '"><img id="bf-preview-img" src="' + escHtml(post.featured_image || '') + '" style="width:100%;height:100%;object-fit:cover"></div><small style="color:var(--c-muted);font-size:0.75rem">Paste R2 upload URL or external image URL.</small></div>' +
+    '<div style="grid-column:1/-1"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Meta Description EN (SEO)</label><input id="bf-meta-en" value="' + escHtml(post.meta_description_en || '') + '" placeholder="SEO meta description (English)" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"></div>' +
+    '<div style="grid-column:1/-1"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Meta Description TH (SEO)</label><input id="bf-meta-th" value="' + escHtml(post.meta_description_th || '') + '" placeholder="Thai meta description" style="width:100%;padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem"></div>' +
+    '<div style="grid-column:1/-1"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Body EN</label><div style="margin-bottom:8px"><button type="button" id="bf-btn-write" onclick="switchBlogMode(\\'write\\')" style="background:#2c96f4;color:#fff;border:none;padding:4px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600;margin-right:4px">Write</button><button type="button" id="bf-btn-preview" onclick="switchBlogMode(\\'preview\\')" style="background:var(--c-surface);border:1px solid var(--c-border);padding:4px 12px;border-radius:20px;cursor:pointer;font-size:0.75rem;font-weight:600">Preview</button></div><textarea id="bf-body-en" style="width:100%;min-height:120px;font-family:monospace;font-size:0.8125rem;padding:12px;border:1.5px solid var(--c-border);border-radius:var(--radius);resize:vertical;display:block;box-sizing:border-box">' + escHtml(post.body_en || '') + '</textarea><div id="bf-preview-box" style="display:none;margin-top:8px;padding:12px;border:1px solid var(--c-border);border-radius:var(--radius);min-height:80px;background:#f8fafc"></div></div>' +
+    '<div style="grid-column:1/-1"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Body TH (optional)</label><textarea id="bf-body-th" style="width:100%;min-height:80px;font-family:monospace;font-size:0.8125rem;padding:12px;border:1.5px solid var(--c-border);border-radius:var(--radius);resize:vertical;display:block;box-sizing:border-box">' + escHtml(post.body_th || '') + '</textarea></div>' +
+    '<div style="grid-column:1/-1"><label style="font-size:0.8125rem;font-weight:600;display:block;margin-bottom:4px">Status</label><select id="bf-status" style="padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;width:100%"><option value="draft">Draft</option><option value="published">Published</option></select></div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px">' +
+    '<button class="btn btn-primary" onclick="saveBlogPost(' + (post.id || 'null') + ')">' + (isEdit ? 'Save Changes' : 'Publish Post') + '</button>' +
+    '<button class="btn btn-outline" onclick="document.getElementById(\\'blog-form-modal\\').remove()">Cancel</button>' +
+    '</div></div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  if (post.status) setTimeout(function() { var s = document.getElementById('bf-status'); if (s) s.value = post.status; }, 50);
+}
+
+function updateBlogImgPreview() {
+  var url = document.getElementById('bf-image').value;
+  var preview = document.getElementById('bf-img-preview');
+  var img = document.getElementById('bf-preview-img');
+  if (url) { preview.style.display = 'block'; img.src = url; } else { preview.style.display = 'none'; img.src = ''; }
+}
+
+function switchBlogMode(mode) {
+  var writeBtn = document.getElementById('bf-btn-write');
+  var previewBtn = document.getElementById('bf-btn-preview');
+  var textarea = document.getElementById('bf-body-en');
+  var preview = document.getElementById('bf-preview-box');
+  if (mode === 'write') {
+    textarea.style.display = 'block'; preview.style.display = 'none';
+    writeBtn.style.background = '#2c96f4'; writeBtn.style.color = '#fff';
+    previewBtn.style.background = ''; previewBtn.style.color = '';
+  } else {
+    textarea.style.display = 'none'; preview.style.display = 'block';
+    preview.innerText = document.getElementById('bf-body-en').value;
+    previewBtn.style.background = '#2c96f4'; previewBtn.style.color = '#fff';
+    writeBtn.style.background = ''; writeBtn.style.color = '';
+  }
+}
+
+function makeBlogSlug(title) {
+  return title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
+}
+
+async function saveBlogPost(id) {
+  var titleEn = document.getElementById('bf-title-en').value.trim();
+  if (!titleEn) { toast('Title (EN) is required'); return; }
+  var slug = document.getElementById('bf-slug').value.trim() || makeBlogSlug(titleEn);
+  var payload = {
+    slug: slug, title_en: titleEn,
+    title_th: document.getElementById('bf-title-th').value.trim(),
+    meta_description_en: document.getElementById('bf-meta-en').value.trim(),
+    meta_description_th: document.getElementById('bf-meta-th').value.trim(),
+    featured_image: document.getElementById('bf-image').value.trim(),
+    featured_image_alt_en: '', featured_image_alt_th: '',
+    category: document.getElementById('bf-category').value.trim() || 'General',
+    author: document.getElementById('bf-author').value.trim() || 'MildMate Team',
+    read_time_en: '5 min read', read_time_th: '5 นาที อ่าน',
+    th_redirect_path: '', body_en: document.getElementById('bf-body-en').value,
+    body_th: document.getElementById('bf-body-th').value,
+    status: document.getElementById('bf-status').value, is_featured: 0, related_products: []
+  };
+  if (id) payload.id = id;
+  try {
+    var method = id ? 'PUT' : 'POST';
+    var r = await fetch('/api/admin/blog', {
+      method: method,
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' },
+      body: JSON.stringify(payload)
+    });
+    var j = await r.json();
+    if (!r.ok) { toast(j.error || 'Save failed'); return; }
+    toast(id ? 'Post saved' : 'Post created');
+    document.getElementById('blog-form-modal').remove();
+    document.getElementById('page-content').innerHTML = rBlog();
+  } catch(e) { toast('Save failed: ' + e.message); }
+}
+
+async function editBlogPost(id) {
+  try {
+    var r = await fetch('/api/admin/blog?id=' + id, { headers: { 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' } });
+    if (!r.ok) { toast('Load failed'); return; }
+    var j = await r.json();
+    openBlogForm(j.post);
+  } catch(e) { toast('Load failed: ' + e.message); }
+}
+
+async function deleteBlogPost(id) {
+  if (!confirm('Delete this blog post? This cannot be undone.')) return;
+  try {
+    var r = await fetch('/api/admin/blog', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' },
+      body: JSON.stringify({ id: id })
+    });
+    if (!r.ok) { var j = await r.json(); toast(j.error || 'Delete failed'); return; }
+    toast('Post deleted');
+    document.getElementById('page-content').innerHTML = rBlog();
+  } catch(e) { toast('Delete failed: ' + e.message); }
 }
 
 async function renderDashboard() {
