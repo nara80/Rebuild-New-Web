@@ -612,9 +612,9 @@
         var discountedSubtotal = discountApplied ? rawSubtotal * (100 - discountPercent) / 100 : rawSubtotal;
         var discountAmt = discountApplied ? rawSubtotal - discountedSubtotal : 0;
         var shipping = Number(shippingState.amount || 0);
-        var total = rawSubtotal - discountAmt + shipping;
+        var total = (discountApplied ? discountedSubtotal : rawSubtotal) + shipping;
         var shippingText = formatMoney(shipping, currency);
-        var subtotalDisplay = discountApplied ? discountedSubtotal : rawSubtotal;
+        var subtotalDisplay = rawSubtotal;
 
         setText('subtotal', formatMoney(subtotalDisplay, currency));
         setText('shipping-step1', shippingText);
