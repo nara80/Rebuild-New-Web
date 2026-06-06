@@ -609,30 +609,31 @@
           var unit = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
           return total2 + (unit * (item.qty || 1));
         }, 0);
-        var subtotal = discountApplied ? Math.round(rawSubtotal * (100 - discountPercent) / 100) : rawSubtotal;
+        var discountedSubtotal = discountApplied ? rawSubtotal * (100 - discountPercent) / 100 : rawSubtotal;
+        var discountAmt = discountApplied ? rawSubtotal - discountedSubtotal : 0;
         var shipping = Number(shippingState.amount || 0);
-        var total = subtotal + shipping;
+        var total = rawSubtotal - discountAmt + shipping;
         var shippingText = formatMoney(shipping, currency);
+        var subtotalDisplay = discountApplied ? discountedSubtotal : rawSubtotal;
 
-        setText('subtotal', formatMoney(subtotal, currency));
+        setText('subtotal', formatMoney(subtotalDisplay, currency));
         setText('shipping-step1', shippingText);
         setText('grand-total', formatMoney(total, currency));
 
-        setText('step2-subtotal', formatMoney(subtotal, currency));
+        setText('step2-subtotal', formatMoney(subtotalDisplay, currency));
         setText('step2-shipping', shippingText);
         setText('step2-total', formatMoney(total, currency));
 
-        setText('pay-subtotal-sidebar', formatMoney(subtotal, currency));
+        setText('pay-subtotal-sidebar', formatMoney(subtotalDisplay, currency));
         setText('pay-shipping-sidebar', shippingText);
         setText('pay-total-sidebar', formatMoney(total, currency));
         setText('bar-total-step3', formatMoney(total, currency));
 
         // Keep step-1 mobile bar as subtotal (label already says Subtotal)
-        setText('bar-total', formatMoney(subtotal, currency));
+        setText('bar-total', formatMoney(subtotalDisplay, currency));
         updateShippingNotes();
 
         // Discount row — show amount in red when discount is applied
-        var discountAmt = discountApplied ? (rawSubtotal - subtotal) : 0;
         var steps = [
           { row: 'discount-row-step1', amt: 'discount-amount-step1' },
           { row: 'discount-row-step2', amt: 'discount-amount-step2' },
