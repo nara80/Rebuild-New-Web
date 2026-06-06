@@ -363,6 +363,7 @@
           <div class="checkout-sidebar" id="cart-totals" style="display:none">
             <div class="sidebar-heading">Order Summary</div>
             <div class="totals-row"><span>Subtotal</span><span id="subtotal">—</span></div>
+            <div class="totals-row" id="discount-row-step1" style="display:none"><span>Discount</span><span id="discount-amount-step1" style="color:#ef4444">—</span></div>
             <div class="totals-row"><span>Shipping</span><span id="shipping-step1">—</span></div>
             <div class="totals-row grand"><span>Total</span><span id="grand-total">—</span></div>
             <button class="btn btn-primary" id="btn-to-step2" onclick="goToStep(2)" disabled>
@@ -460,6 +461,7 @@
             <div class="sidebar-heading">Order Summary</div>
             <div id="step2-order-items"></div>
             <div class="totals-row" style="margin-top:8px"><span>Subtotal</span><span id="step2-subtotal">—</span></div>
+            <div class="totals-row" id="discount-row-step2" style="display:none"><span>Discount</span><span id="discount-amount-step2" style="color:#ef4444">—</span></div>
             <div class="totals-row"><span>Shipping</span><span id="step2-shipping">—</span></div>
             <div class="totals-row grand" style="margin-top:8px"><span>Total</span><span id="step2-total">—</span></div>
           </div>
@@ -488,6 +490,7 @@
             <div class="sidebar-heading">Order Summary</div>
             <div id="order-summary-sidebar"></div>
             <div class="totals-row" style="margin-top:8px"><span>Subtotal</span><span id="pay-subtotal-sidebar">—</span></div>
+            <div class="totals-row" id="discount-row-step3" style="display:none"><span>Discount</span><span id="discount-amount-step3" style="color:#ef4444">—</span></div>
             <div class="totals-row"><span>Shipping</span><span id="pay-shipping-sidebar">—</span></div>
             <div class="totals-row grand" style="margin-top:8px"><span>Total</span><span id="pay-total-sidebar">—</span></div>
             <button class="btn btn-primary" id="btn-pay" onclick="processPayment()" style="width:100%;margin-top:16px">
@@ -570,9 +573,7 @@
         if (currency === 'THB') {
           return '\u0E3F' + Math.round(n).toLocaleString();
         }
-        var rounded = Math.round(n * 100) / 100;
-        if (Math.abs(rounded - Math.round(rounded)) < 0.0001) return '$' + Math.round(rounded);
-        return '$' + rounded.toFixed(2);
+        return '$' + Number(n).toFixed(2);
       }
 
       function computeSubtotal(currency) {
@@ -625,6 +626,32 @@
         // Keep step-1 mobile bar as subtotal (label already says Subtotal)
         setText('bar-total', formatMoney(subtotal, currency));
         updateShippingNotes();
+
+        // Discount row — show amount in red when discount is applied
+        var rawSubtotal = (cart.items || []).reduce(function(total2, item) {
+          var unit = currency === 'THB' ? (item.price_thb || 0) : (item.price_usd || item.price || 0);
+          return total2 + (unit * (item.qty || 1));
+        }, 0);
+        var discountAmt = discountApplied ? (rawSubtotal - subtotal) : 0;
+        window._debugDiscount = { applied: discountApplied, raw: rawSubtotal, sub: subtotal, amt: discountAmt };
+        var steps = [
+          { row: 'discount-row-step1', amt: 'discount-amount-step1' },
+          { row: 'discount-row-step2', amt: 'discount-amount-step2' },
+          { row: 'discount-row-step3', amt: 'discount-amount-step3' }
+        ];
+        steps.forEach(function(s) {
+          var row = document.getElementById(s.row);
+          var amtEl = document.getElementById(s.amt);
+          if (row && amtEl) {
+            if (discountApplied && discountAmt > 0) {
+              row.style.display = '';
+              amtEl.textContent = '-' + formatMoney(discountAmt, currency);
+            } else {
+              row.style.display = 'none';
+              amtEl.textContent = '—';
+            }
+          }
+        });
       }
 
       async function refreshShippingQuote(forceCountryCode) {
@@ -1312,10 +1339,13 @@
             msg.textContent = "Please fill valid email in Shipping Details first";
             return;
           }
+          var cartTotalUsd = (cart.items || []).reduce(function(sum, item) {
+            return sum + ((item.price_usd || item.price || 0) * (item.qty || 1));
+          }, 0);
           var resp = await fetch("/api/discount/validate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code: code, email: checkoutEmail, address: buildAddress() })
+            body: JSON.stringify({ code: code, email: checkoutEmail, address: buildAddress(), cart_total_usd: cartTotalUsd })
           });
           var data = await resp.json();
           if (data.valid) {
