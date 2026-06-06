@@ -812,11 +812,16 @@
           if (data.authenticated) {
             _authDone = true;
             authedEmail = data.email;
+            var clerkEmail = (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress && window.clerk.user.primaryEmailAddress.emailAddress) || '';
+            var prefilledEmail = data.email || clerkEmail || '';
+            authedEmail = prefilledEmail;
             if (data.email) {
               authHeaders['X-User-Email'] = data.email;
+            } else if (clerkEmail) {
+              authHeaders['X-User-Email'] = clerkEmail;
             }
-            document.getElementById('cust-fname').value = data.name || '';
-            document.getElementById('cust-email').value = data.email || '';
+            document.getElementById('cust-fname').value = data.name || clerkEmail.split('@')[0] || '';
+            document.getElementById('cust-email').value = prefilledEmail;
             document.getElementById('login-banner').style.display = 'none';
 
             // If local cart has items, sync them to server
