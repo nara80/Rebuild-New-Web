@@ -820,7 +820,7 @@
             } else if (clerkEmail) {
               authHeaders['X-User-Email'] = clerkEmail;
             }
-            document.getElementById('cust-fname').value = data.name || clerkEmail.split('@')[0] || '';
+            document.getElementById('cust-fname').value = data.name || '';
             document.getElementById('cust-email').value = prefilledEmail;
             document.getElementById('login-banner').style.display = 'none';
 
@@ -856,11 +856,11 @@
               }
               if (!defAddr && addrs.length > 0) defAddr = addrs[0]; // fallback to first
               if (defAddr) {
-                var userEmail = authedEmail || (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress && window.clerk.user.primaryEmailAddress.emailAddress) || '';
+                var userEmail = authedEmail || '';
                 if (!authedEmail && userEmail) authedEmail = userEmail;
                 document.getElementById('cust-fname').value = defAddr.first_name || '';
                 document.getElementById('cust-lname').value = defAddr.last_name || '';
-                document.getElementById('cust-email').value = userEmail || '';
+                // email already pre-filled from OAuth — do not overwrite
 
                 // Map country name → country code for the dropdown
                 await loadCountryMaster();

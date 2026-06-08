@@ -23,6 +23,8 @@ import { handleAdminShippingRates } from "./admin-shipping";
 import { handleAdminQuotes } from "./admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "./discount";
 import { handleAdminPromo } from "./admin-promo";
+import { handleAdminBlog } from "./admin-blog";
+import { handleBlogPosts } from "./blog-posts";
 import { handleAdminContacts } from "./admin-contacts";
 import { handleFavorites } from "./favorites";
 import { handleCheckout } from "./checkout";
@@ -117,6 +119,16 @@ export default {
     // Admin API — promo codes (create, list, revoke)
     if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
       return handleAdminPromo(request, env);
+    }
+
+    // Admin Blog Posts — CRUD
+    if (path === "/api/admin/blog" || path === "/api/admin/blog/") {
+      return handleAdminBlog(request, env);
+    }
+
+    // Public Blog Posts — listing + single post
+    if (path === "/api/blog/posts" || path === "/api/blog/posts/") {
+      return handleBlogPosts(request, env);
     }
 
     // Admin API — sales custom quotes

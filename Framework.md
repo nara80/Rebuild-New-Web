@@ -1,4 +1,4 @@
-﻿# MildMate Web Rebuild â€” Full Framework Plan
+# MildMate Web Rebuild â€” Full Framework Plan
 
 ## Stack Confirmed
 - **Frontend:** Vanilla HTML + CSS + minimal JS
@@ -66,16 +66,18 @@
 | Order Tracking | Inline in `/account/` Orders panel | âœ… Built â€” Option A (carrier code + tracking number, auto-generated carrier URL, no external API needed) |
 | All 258 WP URLs | various | Phase 2 redirect file â€” pre-launch after Phase 8 |
 
-### Blog Pages (static HTML, managed manually)
-| Page | URL | Status |
-|---|---|---|
-| Blog Index | `/blogs/` | âœ… Built â€” featured + 11-card grid, filter tabs, pagination (12/page) |
-| Blog Pagination | `/blogs/page/2/` | âœ… Built |
-| Blog Post Template | `/blogs/template/index.html` | âŒ Not a live file â€” used to generate posts, then deleted |
-| Blog Post Sample | `/blogs/v-berth-sheets-vs-standard/` | âœ… Built |
-| Individual Blog Post | `/blogs/[post-slug]/` | Copy from template when adding new posts |
+### ### Blog Pages (D1-backed, SSR via Pages Function)
 
-### Dynamic Pages (data from Cloudflare D1)
+**Routing:**
+- unctions/blogs/[[path]].ts catches /blogs/ (SSR listing) and /blogs/{slug}/ (SSR individual post)
+- /api/blog/posts JSON API for listing
+- /api/admin/blog for Admin CRUD
+
+**Listing page:** SSR reads D1 directly, no fetch loop. Featured post + card grid + category filter tabs + pagination. Subscribe form posts to /api/subscribe.
+
+**Individual post:** SSR from D1. Hero priority: YouTube embed (16:9 iframe) if youtube_url set, else featured image, else blue gradient fallback. Body, CTA box, share bar.
+
+**Admin:** /admin/blog.html with WYSIWYG editor, YouTube URL field, category dropdown (9 options), write/preview toggle.### Dynamic Pages (data from Cloudflare D1)
 
 **Shop by Product â€” 5 categories (primary navigation, SEO discoverability)**
 | Category | URL | Products |
@@ -977,6 +979,7 @@ CREATE TABLE blog_posts (
   is_featured INTEGER DEFAULT 0,
   th_redirect_path TEXT DEFAULT '',
   related_products_json TEXT DEFAULT '[]',
+  youtube_url TEXT DEFAULT '',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -1236,9 +1239,7 @@ Admin seeds via formula initially, can override any price for business control.
 ---
 
 ## What Is NOT Being Built (Deferred or Out of Scope)
-- Blog CMS editor (static HTML only â€” blog posts are manually authored HTML files)
-- Inventory management
-- Auto-translation (manual TH/EN per page)
+
 - Shopee/Lazada direct API integration (links only â€” orders managed on those platforms directly)
 
 ---

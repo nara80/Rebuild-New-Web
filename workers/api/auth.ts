@@ -34,8 +34,10 @@ export async function handleAuth(request: Request, env: any): Promise<Response> 
     }
 
     const { payload } = result;
-    const email = payload.email || "";
-    const name = payload.name || email.split("@")[0] || "";
+    // Clerk JWT may not contain email for Google/Facebook OAuth — fallback to X-User-Email header from frontend SDK
+    const headerEmail = request.headers.get("X-User-Email") || "";
+    const email = payload.email || headerEmail || "";
+    const name = payload.name || headerEmail.split("@")[0] || "";
 
     // Upsert customer record
     try {

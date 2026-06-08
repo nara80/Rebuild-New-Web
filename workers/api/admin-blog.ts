@@ -57,7 +57,7 @@ export async function handleAdminBlog(request: Request, env: any): Promise<Respo
       featured_image_alt_th = "", category = "General", author = "MildMate Team",
       read_time_en = "5 min read", read_time_th = "5 นาที อ่าน",
       status = "draft", is_featured = 0, th_redirect_path = "",
-      related_products = []
+      related_products = [], youtube_url = ""
     } = body;
 
     if (!slug || !title_en) {
@@ -77,12 +77,12 @@ export async function handleAdminBlog(request: Request, env: any): Promise<Respo
     const relatedJson = JSON.stringify(Array.isArray(related_products) ? related_products : []);
 
     const result = await db.prepare(`
-      INSERT INTO blog_posts (slug, title_en, title_th, meta_description_en, meta_description_th, body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th, category, author, read_time_en, read_time_th, status, is_featured, th_redirect_path, related_products_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO blog_posts (slug, title_en, title_th, meta_description_en, meta_description_th, body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th, category, author, read_time_en, read_time_th, status, is_featured, th_redirect_path, related_products_json, youtube_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       slugNorm, title_en, title_th, meta_description_en, meta_description_th,
       body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th,
-      category, author, read_time_en, read_time_th, status, is_featured ? 1 : 0, th_redirect_path, relatedJson
+      category, author, read_time_en, read_time_th, status, is_featured ? 1 : 0, th_redirect_path, relatedJson, youtube_url || ""
     ).run();
 
     return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id, slug: slugNorm }), { headers });
@@ -101,7 +101,7 @@ export async function handleAdminBlog(request: Request, env: any): Promise<Respo
       featured_image_alt_th = "", category = "General", author = "MildMate Team",
       read_time_en = "5 min read", read_time_th = "5 นาที อ่าน",
       status = "draft", is_featured = 0, th_redirect_path = "",
-      related_products = []
+      related_products = [], youtube_url = ""
     } = body;
 
     if (!id) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers });
@@ -140,6 +140,7 @@ export async function handleAdminBlog(request: Request, env: any): Promise<Respo
     add("is_featured", is_featured ? 1 : 0);
     add("th_redirect_path", th_redirect_path);
     add("related_products_json", relatedJson);
+    add("youtube_url", youtube_url || "");
     updates.push("updated_at = datetime('now')");
     vals.push(Number(id));
 

@@ -167,7 +167,14 @@ function buildForm(p) {
   h += '<div class="form-group full"><label>Title (EN) *</label><input id="f-title-en" value="' + esc(p.title_en || '') + '" placeholder="Article headline (English)"></div>';
   h += '<div class="form-group"><label>Title TH</label><input id="f-title-th" value="' + esc(p.title_th || '') + '" placeholder="Thai title (optional)"></div>';
   h += '<div class="form-group"><label>Slug</label><input id="f-slug" value="' + esc(p.slug || '') + '" placeholder="auto-generated from EN title"><small style="color:var(--c-muted);font-size:0.75rem">Leave blank to auto-generate</small></div>';
-  h += '<div class="form-group"><label>Category</label><input id="f-category" value="' + esc(p.category || 'General') + '" placeholder="e.g. Bedding Guide, Marine"></div>';
+  h += '<div class="form-group"><label>Category</label>';
+  h += '<select id="f-category" style="padding:10px 12px;border:1.5px solid var(--c-border);border-radius:var(--c-radius);font-size:0.875rem;width:100%">';
+  var cats = ['Marine & Yacht','Family & Co-Sleep','Pet Owner','Deep Pocket','Boarding Dorm','RV & Truck Cab','Bedding Guide','Product News','Others'];
+  cats.forEach(function(c) {
+    h += '<option value="' + esc(c) + '">' + esc(c) + '</option>';
+  });
+  h += '</select></div>';
+  if (p.category) { setTimeout(function() { var sel = document.getElementById('f-category'); if (sel) sel.value = p.category; }, 50); }
   h += '<div class="form-group"><label>Author</label><input id="f-author" value="' + esc(p.author || 'MildMate Team') + '"></div>';
   h += '</div>';
 
@@ -175,6 +182,10 @@ function buildForm(p) {
   h += '<input id="f-image" value="' + esc(p.featured_image || '') + '" placeholder="/images/blog/banner.jpg" oninput="updateImagePreview()">';
   h += '<div class="image-preview" id="img-preview"><img id="img-preview-img" src="" alt=""></div>';
   h += '<small style="color:var(--c-muted);font-size:0.75rem">Paste R2 upload URL or external image. 16:9 widescreen.</small></div>';
+
+  h += '<div class="form-group full"><label>YouTube URL</label>';
+  h += '<input id="f-youtube" value="' + esc(p.youtube_url || '') + '" placeholder="https://www.youtube.com/watch?v=...">';
+  h += '<small style="color:var(--c-muted);font-size:0.75rem">YouTube, youtu.be, or embed URL. Shown at top of post. Leave blank to use featured image.</small></div>';
 
   h += '<div class="form-group"><label>Image Alt EN</label><input id="f-alt-en" value="' + esc(p.featured_image_alt_en || '') + '" placeholder="EN alt text"></div>';
   h += '<div class="form-group"><label>Image Alt TH</label><input id="f-alt-th" value="' + esc(p.featured_image_alt_th || '') + '" placeholder="TH alt text"></div>';
@@ -246,7 +257,8 @@ async function savePost(id) {
     body_en: document.getElementById('f-body-en').value,
     body_th: document.getElementById('f-body-th').value,
     status: document.getElementById('f-status').value,
-    is_featured: 0, related_products: []
+    is_featured: 0, related_products: [],
+    youtube_url: document.getElementById('f-youtube').value.trim()
   };
   if (id) payload.id = id;
   try {
