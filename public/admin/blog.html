@@ -59,6 +59,54 @@
     .empty-state { text-align: center; padding: 60px 20px; color: var(--c-muted); }
     .empty-state p { margin-top: 8px; }
     .action-btns { display: flex; gap: 8px; }
+
+    /* ── WYSIWYG Editor ── */
+    .rtf-toolbar { display: flex; gap: 2px; margin-bottom: 6px; }
+    .rtf-toolbar button {
+      width: 32px; height: 28px; border: 1px solid var(--c-border); border-radius: 4px;
+      background: #fff; font-size: 0.8125rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; color: var(--c-text);
+    }
+    .rtf-toolbar button:hover { background: var(--c-surface); border-color: var(--c-primary); }
+    .rtf-toolbar button.active { background: #e0f0ff; border-color: var(--c-primary); color: var(--c-primary); }
+    .rtf-toolbar-sep { width: 1px; height: 24px; background: var(--c-border); margin: 0 4px; align-self: center; }
+    .rtf-editor {
+      width: 100%; min-height: 200px; padding: 12px;
+      border: 1.5px solid var(--c-border); border-radius: var(--c-radius);
+      font-size: 0.9375rem; color: var(--c-text); background: #fff;
+      font-family: inherit; overflow-y: auto; line-height: 1.6;
+    }
+    .rtf-editor:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.1); }
+    .rtf-editor h2 { font-size: 1.5rem; font-weight: 700; color: var(--c-heading); margin: 24px 0 12px; line-height: 1.3; }
+    .rtf-editor h3 { font-size: 1.25rem; font-weight: 600; color: var(--c-heading); margin: 20px 0 10px; }
+    .rtf-editor p { margin-bottom: 14px; }
+    .rtf-editor ul, .rtf-editor ol { padding-left: 24px; margin-bottom: 14px; }
+    .rtf-editor li { margin-bottom: 6px; }
+    .rtf-editor blockquote { border-left: 4px solid var(--c-primary); padding: 12px 16px; margin: 16px 0; background: var(--c-surface); border-radius: 0 6px 6px 0; font-style: italic; color: var(--c-muted); }
+    .rtf-editor a { color: var(--c-primary); text-decoration: underline; }
+    .rtf-editor img { max-width: 100%; height: auto; border-radius: 6px; margin: 12px 0; }
+
+    /* Mode tabs */
+    .mode-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+    .mode-tabs button {
+      background: var(--c-surface); border: 1px solid var(--c-border); padding: 4px 14px;
+      border-radius: 20px; cursor: pointer; font-size: 0.75rem; font-weight: 600; color: var(--c-muted);
+    }
+    .mode-tabs button.active { background: var(--c-primary); color: #fff; border-color: var(--c-primary); }
+    .mode-tabs button:hover:not(.active) { border-color: var(--c-primary); color: var(--c-primary); }
+
+    /* Preview visual */
+    .blog-preview { border: 1.5px solid var(--c-border); border-radius: var(--c-radius); padding: 32px 28px; background: #fff; font-size: 1.0625rem; color: #334155; line-height: 1.75; min-height: 200px; }
+    .blog-preview h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 24px 0 12px; line-height: 1.3; }
+    .blog-preview h3 { font-size: 1.25rem; font-weight: 600; color: #0f172a; margin: 20px 0 10px; }
+    .blog-preview p { margin-bottom: 14px; }
+    .blog-preview ul, .blog-preview ol { padding-left: 24px; margin-bottom: 14px; }
+    .blog-preview li { margin-bottom: 6px; }
+    .blog-preview blockquote { border-left: 4px solid var(--c-primary); padding: 12px 16px; margin: 16px 0; background: var(--c-surface); border-radius: 0 6px 6px 0; font-style: italic; color: var(--c-muted); }
+    .blog-preview a { color: var(--c-primary); text-decoration: underline; }
+
+    /* HTML source view */
+    .html-source { display: none; width: 100%; min-height: 200px; padding: 12px; border: 1.5px solid var(--c-border); border-radius: var(--c-radius); font-family: 'Courier New', monospace; font-size: 0.8125rem; color: var(--c-text); background: #f8fafc; resize: vertical; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -199,11 +247,28 @@ function buildForm(p) {
   h += '<div class="form-group full"><label>TH Redirect Path</label><input id="f-th-redirect" value="' + esc(p.th_redirect_path || '') + '" placeholder="/th/blogs/my-post/"></div>';
 
   h += '<div class="form-group full"><label>Body EN</label>';
-  h += '<div class="preview-toggle">';
-  h += '<button type="button" id="btn-write-en" class="active" onclick="switchMode(\'en\',\'write\')">Write</button>';
-  h += '<button type="button" id="btn-preview-en" onclick="switchMode(\'en\',\'preview\')">Preview HTML</button></div>';
-  h += '<textarea id="f-body-en" style="width:100%;min-height:140px;font-family:monospace;font-size:0.8125rem;padding:12px;border:1.5px solid var(--c-border);border-radius:var(--c-radius);resize:vertical;display:block">' + esc(p.body_en || '') + '</textarea>';
-  h += '<div id="f-preview-en" class="preview-box" style="display:none;white-space:pre-wrap"></div></div>';
+  h += '<div class="mode-tabs" id="mode-tabs-en">';
+  h += '<button type="button" class="active" id="btn-write-en" onclick="switchBodyMode(\'en\',\'write\')">Write</button>';
+  h += '<button type="button" id="btn-preview-en" onclick="switchBodyMode(\'en\',\'preview\')">Preview</button>';
+  h += '<button type="button" id="btn-html-en" onclick="switchBodyMode(\'en\',\'html\')">HTML</button></div>';
+  h += '<div class="rtf-toolbar" data-for="f-body-en">';
+  h += '<button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button>';
+  h += '<button type="button" data-cmd="italic" title="Italic"><em>I</em></button>';
+  h += '<span class="rtf-toolbar-sep"></span>';
+  h += '<button type="button" data-cmd="h2" title="Heading 2"><span style="font-size:0.6875rem;font-weight:700">H2</span></button>';
+  h += '<button type="button" data-cmd="h3" title="Heading 3"><span style="font-size:0.6875rem;font-weight:700">H3</span></button>';
+  h += '<span class="rtf-toolbar-sep"></span>';
+  h += '<button type="button" data-cmd="bullet" title="Bullet List">&#8226;</button>';
+  h += '<button type="button" data-cmd="number" title="Numbered List">1.</button>';
+  h += '<button type="button" data-cmd="blockquote" title="Blockquote">&ldquo;</button>';
+  h += '<span class="rtf-toolbar-sep"></span>';
+  h += '<button type="button" data-cmd="link" title="Link">&#128279;</button>';
+  h += '</div>';
+  h += '<div id="f-body-en" contenteditable="true" class="rtf-editor">' + (p.body_en || '') + '</div>';
+  h += '<div id="f-preview-en" class="blog-preview" style="display:none"></div>';
+  h += '<textarea id="f-html-en" class="html-source" wrap="soft" spellcheck="false"></textarea>';
+  h += '<input type="hidden" id="f-body-en-sync" value="' + esc(p.body_en || '') + '">';
+  h += '<small style="color:var(--c-muted);font-size:0.75rem;margin-top:4px;display:block">Tip: paste from Word or a webpage — styles will be stripped automatically on save.</small></div>';
 
   h += '<div class="form-group full"><label>Body TH (optional)</label><textarea id="f-body-th" style="width:100%;min-height:80px;font-family:monospace;font-size:0.8125rem;padding:12px;border:1.5px solid var(--c-border);border-radius:var(--c-radius);resize:vertical">' + esc(p.body_th || '') + '</textarea></div>';
 
@@ -221,19 +286,61 @@ function updateImagePreview() {
   if (url) { box.style.display = 'block'; img.src = url; } else { box.style.display = 'none'; img.src = ''; }
 }
 
-function switchMode(lang, mode) {
-  var writeBtn = document.getElementById('btn-' + lang + '-write');
-  var previewBtn = document.getElementById('btn-' + lang + '-preview');
-  var textarea = document.getElementById('f-body-' + lang);
+function switchBodyMode(lang, mode) {
+  var editor = document.getElementById('f-body-' + lang);
   var preview = document.getElementById('f-preview-' + lang);
+  var htmlSrc = document.getElementById('f-html-' + lang);
+  var syncInput = document.getElementById('f-body-' + lang + '-sync');
+
+  // Sync current content from editor before switching
+  if (editor && syncInput) {
+    syncInput.value = editor.innerHTML;
+  }
+
+  var writeBtn = document.getElementById('btn-write-' + lang);
+  var previewBtn = document.getElementById('btn-preview-' + lang);
+  var htmlBtn = document.getElementById('btn-html-' + lang);
+
+  document.getElementById('btn-write-' + lang).classList.remove('active');
+  document.getElementById('btn-preview-' + lang).classList.remove('active');
+  document.getElementById('btn-html-' + lang).classList.remove('active');
+
   if (mode === 'write') {
-    textarea.style.display = 'block'; preview.style.display = 'none';
-    writeBtn.classList.add('active'); previewBtn.classList.remove('active');
-  } else {
-    textarea.style.display = 'none'; preview.style.display = 'block'; preview.innerText = document.getElementById('f-body-' + lang).value;
-    previewBtn.classList.add('active'); writeBtn.classList.remove('active');
+    editor.style.display = '';
+    preview.style.display = 'none';
+    htmlSrc.style.display = 'none';
+    document.getElementById('btn-write-' + lang).classList.add('active');
+    editor.focus();
+  } else if (mode === 'preview') {
+    // Render HTML visually
+    editor.style.display = 'none';
+    preview.style.display = '';
+    htmlSrc.style.display = 'none';
+    document.getElementById('btn-preview-' + lang).classList.add('active');
+    var rawHTML = syncInput ? syncInput.value : (editor ? editor.innerHTML : '');
+    preview.innerHTML = rawHTML || '<p style="color:var(--c-muted);font-style:italic">No content yet.</p>';
+  } else if (mode === 'html') {
+    // Show raw HTML source (read from sync input, not live editor innerHTML to avoid fighting)
+    editor.style.display = 'none';
+    preview.style.display = 'none';
+    htmlSrc.style.display = 'block';
+    document.getElementById('btn-html-' + lang).classList.add('active');
+    var rawHTML = syncInput ? syncInput.value : (editor ? editor.innerHTML : '');
+    htmlSrc.value = rawHTML;
   }
 }
+
+// Keep sync input in sync with editor on every input event (debounced)
+var _bodyEnSyncTimer = null;
+document.addEventListener('input', function(e) {
+  var editor = e.target.closest('.rtf-editor');
+  if (!editor || editor.id !== 'f-body-en') return;
+  clearTimeout(_bodyEnSyncTimer);
+  _bodyEnSyncTimer = setTimeout(function() {
+    var syncInput = document.getElementById('f-body-en-sync');
+    if (syncInput) syncInput.value = editor.innerHTML;
+  }, 150);
+});
 
 function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
 
@@ -241,6 +348,17 @@ async function savePost(id) {
   var titleEn = document.getElementById('f-title-en').value.trim();
   if (!titleEn) { toast('Title (EN) is required'); return; }
   var slug = document.getElementById('f-slug').value.trim() || slugify(titleEn);
+
+  // Read body from contenteditable (already synced on any blur/input)
+  var bodyEn = '';
+  var syncInput = document.getElementById('f-body-en-sync');
+  if (syncInput) bodyEn = syncInput.value;
+  if (!bodyEn) {
+    var editor = document.getElementById('f-body-en');
+    if (editor) bodyEn = editor.innerHTML;
+  }
+  bodyEn = sanitizeBlogHTML(bodyEn);
+
   var payload = {
     slug: slug, title_en: titleEn,
     title_th: document.getElementById('f-title-th').value.trim(),
@@ -254,7 +372,7 @@ async function savePost(id) {
     read_time_en: document.getElementById('f-readtime-en').value.trim() || '5 min read',
     read_time_th: document.getElementById('f-readtime-th').value.trim() || '5 นาที อ่าน',
     th_redirect_path: document.getElementById('f-th-redirect').value.trim(),
-    body_en: document.getElementById('f-body-en').value,
+    body_en: bodyEn,
     body_th: document.getElementById('f-body-th').value,
     status: document.getElementById('f-status').value,
     is_featured: 0, related_products: [],
@@ -291,7 +409,80 @@ async function deletePost(id) {
   } catch(e) { toast('Delete failed: ' + e.message); }
 }
 
-// Init
+// ── Sanitize blog HTML ──────────────────────────────────────────────────────
+function sanitizeBlogHTML(html) {
+  if (!html) return '';
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/\s+on\w+="[^"]*"/gi, '')
+    .replace(/\s+on\w+='[^']*'/gi, '')
+    .replace(/\s+class="[^"]*"/gi, '')
+    .replace(/<(\/?)(?:span|font|b|i|u|s)(?:\s[^>]*)?>/gi, function(m, slash) {
+      // Convert semantic tags properly; strip non-semantic inline tags
+      if (m.match(/<\/?(b|i|u|s)\b/i)) return slash ? '</strong>' : '<strong>';
+      return '';
+    })
+    .replace(/<strong>\s*<\/strong>/gi, '')
+    .replace(/<em>\s*<\/em>/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+// ── WYSIWYG Toolbar event delegation ─────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.rtf-toolbar button');
+  if (!btn) return;
+  var cmd = btn.getAttribute('data-cmd');
+  var toolbar = btn.closest('.rtf-toolbar');
+  var targetId = toolbar.getAttribute('data-for');
+  var editor = document.getElementById(targetId);
+  if (!editor) return;
+
+  // Sync current state to hidden input before any DOM manipulation
+  var syncInput = document.getElementById(targetId + '-sync');
+  if (syncInput) syncInput.value = editor.innerHTML;
+
+  editor.focus();
+
+  if (cmd === 'bold') { document.execCommand('bold', false, null); }
+  else if (cmd === 'italic') { document.execCommand('italic', false, null); }
+  else if (cmd === 'bullet') { document.execCommand('insertUnorderedList', false, null); }
+  else if (cmd === 'number') { document.execCommand('insertOrderedList', false, null); }
+  else if (cmd === 'h2') {
+    document.execCommand('formatBlock', false, '<h2>');
+  } else if (cmd === 'h3') {
+    document.execCommand('formatBlock', false, '<h3>');
+  } else if (cmd === 'blockquote') {
+    document.execCommand('formatBlock', false, '<blockquote>');
+  } else if (cmd === 'link') {
+    var url = prompt('Enter URL:', 'https://');
+    if (url) document.execCommand('createLink', false, url);
+  }
+
+  // Sync back after DOM change
+  if (syncInput) syncInput.value = editor.innerHTML;
+  e.preventDefault();
+});
+
+// Sync editor to hidden input on blur (ensures caret is preserved)
+document.addEventListener('blur', function(e) {
+  var editor = e.target.closest('.rtf-editor');
+  if (!editor) return;
+  var syncInput = document.getElementById(editor.id + '-sync');
+  if (syncInput) syncInput.value = editor.innerHTML;
+}, true);
+
+// Sync on paste to strip external formatting
+document.addEventListener('paste', function(e) {
+  var editor = e.target.closest('.rtf-editor');
+  if (!editor) return;
+  e.preventDefault();
+  var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+});
+
+// ── Init ──
 loadPosts();
 </script>
 </body>
