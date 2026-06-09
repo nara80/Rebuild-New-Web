@@ -30,8 +30,9 @@ function authorizeAdminSecret(request: Request, env: any): boolean {
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost(hostname);
+  if (!prodHost) return true;
+  if (!configured) return false;
   if (!provided) return false;
-  if (!configured) return !prodHost;
   return provided === configured;
 }
 

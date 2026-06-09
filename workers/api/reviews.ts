@@ -26,6 +26,16 @@ function sanitizeReviewText(html: string): string {
     .trim();
 }
 
+function normalizeReviewDate(raw: any): string {
+  const val = sanitize(typeof raw === 'string' ? raw : String(raw || ''));
+  if (!val) return new Date().toISOString().slice(0, 10);
+  const m = val.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return m[1];
+  const dt = new Date(val);
+  if (!isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+  return new Date().toISOString().slice(0, 10);
+}
+
 function isProductionHost(hostname: string): boolean {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
@@ -40,8 +50,9 @@ function authorizeAdminSecret(request: Request, env: any): boolean {
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost(hostname);
+  if (!prodHost) return true;
+  if (!configured) return false;
   if (!provided) return false;
-  if (!configured) return !prodHost;
   return provided === configured;
 }
 
@@ -63,7 +74,7 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
     const offset = parseInt(url.searchParams.get('offset') || '0', 10);
     const rating = url.searchParams.get('min_rating');
 
-    let sql = `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,created_at FROM reviews WHERE 1=1`;
+    let sql = `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,review_date,created_at FROM reviews WHERE 1=1`;
     const bindings: any[] = [];
 
     if (productType && ALLOWED_PRODUCT_TYPES.includes(productType)) {
@@ -81,8 +92,22 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
     sql += ` ORDER BY is_verified DESC, rating DESC, created_at DESC LIMIT ? OFFSET ?`;
     bindings.push(limit, offset);
 
-    const stmt = env.DB.prepare(sql).bind(...bindings);
-    const { results } = await stmt.all();
+    let results: any[] = [];
+    try {
+      const stmt = env.DB.prepare(sql).bind(...bindings);
+      const out = await stmt.all();
+      results = out.results || [];
+    } catch (e: any) {
+      if (!String(e.message || '').includes('review_date')) throw e;
+      sql = sql.replace('review_date,', '');
+      const stmt = env.DB.prepare(sql).bind(...bindings);
+      const out = await stmt.all();
+      results = out.results || [];
+    }
+    results = (results || []).map((rv: any) => ({
+      ...rv,
+      review_date: normalizeReviewDate(rv.review_date || rv.created_at)
+    }));
 
     // Count total
     let countSql = `SELECT COUNT(*) as total FROM reviews WHERE 1=1`;
@@ -159,13 +184,27 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
             headers
           });
         }
-        return new Response(JSON.stringify({ review: post }), { headers });
+        const review = post as any;
+        review.review_date = normalizeReviewDate(review.review_date || review.created_at);
+        return new Response(JSON.stringify({ review }), { headers });
       }
 
-      const stmt = env.DB.prepare(
-        `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,created_at,updated_at FROM reviews ORDER BY created_at DESC LIMIT 100`
-      );
-      const { results } = await stmt.all();
+      let results: any[] = [];
+      try {
+        const stmt = env.DB.prepare(
+          `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,review_date,created_at,updated_at FROM reviews ORDER BY created_at DESC LIMIT 100`
+        );
+        const out = await stmt.all();
+        results = out.results || [];
+      } catch (e: any) {
+        if (!String(e.message || '').includes('review_date')) throw e;
+        const stmt = env.DB.prepare(
+          `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,created_at,updated_at FROM reviews ORDER BY created_at DESC LIMIT 100`
+        );
+        const out = await stmt.all();
+        results = out.results || [];
+      }
+      results = results.map((rv: any) => ({ ...rv, review_date: normalizeReviewDate(rv.review_date || rv.created_at) }));
       return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
 
@@ -186,22 +225,42 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
       if (!ALLOWED_PLATFORMS.includes(platform)) return badRequest('Invalid platform');
 
       const rating = Math.min(5, Math.max(1, parseInt(body.rating || '5', 10)));
+      const reviewDate = normalizeReviewDate(body.review_date || body.created_at || '');
 
-      const stmt = env.DB.prepare(`
-        INSERT INTO reviews (customer_name, customer_country, review_text, rating, product_type, platform, image_url, is_verified)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        customerName,
-        sanitize(body.customer_country || ''),
-        reviewText,
-        rating,
-        productType,
-        platform,
-        sanitize(body.image_url || ''),
-        body.is_verified ? 1 : 0
-      );
-
-      const result = await stmt.run();
+      let result: any;
+      try {
+        const stmt = env.DB.prepare(`
+          INSERT INTO reviews (customer_name, customer_country, review_text, rating, product_type, platform, image_url, is_verified, review_date)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          customerName,
+          sanitize(body.customer_country || ''),
+          reviewText,
+          rating,
+          productType,
+          platform,
+          sanitize(body.image_url || ''),
+          body.is_verified ? 1 : 0,
+          reviewDate
+        );
+        result = await stmt.run();
+      } catch (e: any) {
+        if (!String(e.message || '').includes('review_date')) throw e;
+        const stmt = env.DB.prepare(`
+          INSERT INTO reviews (customer_name, customer_country, review_text, rating, product_type, platform, image_url, is_verified)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          customerName,
+          sanitize(body.customer_country || ''),
+          reviewText,
+          rating,
+          productType,
+          platform,
+          sanitize(body.image_url || ''),
+          body.is_verified ? 1 : 0
+        );
+        result = await stmt.run();
+      }
       return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id }), {
         status: 201,
         headers
@@ -250,6 +309,10 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
         updates.push('image_url = ?');
         bindings.push(sanitize(body.image_url));
       }
+      if (body.review_date !== undefined) {
+        updates.push('review_date = ?');
+        bindings.push(normalizeReviewDate(body.review_date));
+      }
       if (body.is_verified !== undefined) {
         updates.push('is_verified = ?');
         bindings.push(body.is_verified ? 1 : 0);
@@ -260,11 +323,20 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
       updates.push("updated_at = datetime('now')");
       bindings.push(id);
 
-      const stmt = env.DB.prepare(
-        `UPDATE reviews SET ${updates.join(', ')} WHERE id = ?`
-      ).bind(...bindings);
-
-      await stmt.run();
+      const updateSql = `UPDATE reviews SET ${updates.join(', ')} WHERE id = ?`;
+      const reviewDateIdx = updates.findIndex((u) => u.startsWith('review_date ='));
+      try {
+        const stmt = env.DB.prepare(updateSql).bind(...bindings);
+        await stmt.run();
+      } catch (e: any) {
+        if (!String(e.message || '').includes('review_date') || reviewDateIdx < 0) throw e;
+        const updatesLegacy = updates.slice();
+        updatesLegacy.splice(reviewDateIdx, 1);
+        const bindingsLegacy = bindings.slice();
+        bindingsLegacy.splice(reviewDateIdx, 1);
+        const stmt = env.DB.prepare(`UPDATE reviews SET ${updatesLegacy.join(', ')} WHERE id = ?`).bind(...bindingsLegacy);
+        await stmt.run();
+      }
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 

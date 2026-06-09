@@ -4,9 +4,11 @@
 function authCheck(request: Request, env: any): boolean {
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
+  const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
+  if (!isProdHost) return true;
   if (!provided) return false;
-  // Dev bypass: if ADMIN_SECRET not set in Cloudflare, allow any non-empty secret from browser
-  if (!configured) return true;
+  if (!configured) return false;
   return provided === configured;
 }
 

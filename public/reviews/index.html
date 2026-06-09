@@ -156,10 +156,11 @@
             <option value="Accessories">Accessories</option>
           </select>
           <select id="reviews-filter-rating">
+            <option value="" selected>All ratings</option>
             <option value="1">1+ stars</option>
             <option value="2">2+ stars</option>
             <option value="3">3+ stars</option>
-            <option value="4" selected>4+ stars</option>
+            <option value="4">4+ stars</option>
             <option value="5">5 stars</option>
           </select>
           <button id="reviews-refresh-btn" class="btn btn-outline">Refresh</button>
@@ -278,12 +279,22 @@
         return chip;
       }
 
+      function formatReviewDate(raw) {
+        var v = String(raw || "").trim();
+        var m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) return m[1] + "-" + m[2] + "-" + m[3];
+        var d = new Date(v);
+        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+        return "";
+      }
+
       function renderCard(rv) {
         var photo = rv.image_url
           ? '<div class="rv-photo"><img src="' + esc(rv.image_url) + '" alt=""></div>'
           : '<div class="rv-photo">No photo provided</div>';
         var meta = renderPlatform(rv.platform) + (rv.is_verified ? '<span class="rv-verified">Verified Buyer</span>' : "");
-        return '<article class="review-card">' + photo + '<div class="rv-body"><div class="review-stars">' + stars(rv.rating) + '</div><div class="rv-meta">' + meta + '</div><p class="review-text">"' + esc(rv.review_text || "") + '"</p><p class="rv-author">— ' + esc(rv.customer_name || "Anonymous") + (rv.customer_country ? ", " + esc(rv.customer_country) : "") + "</p></div></article>";
+        var dateText = formatReviewDate(rv.review_date || rv.created_at);
+        return '<article class="review-card">' + photo + '<div class="rv-body"><div class="review-stars">' + stars(rv.rating) + '</div><div class="rv-meta">' + meta + '</div><p class="review-text">"' + esc(rv.review_text || "") + '"</p><p class="rv-author">— ' + esc(rv.customer_name || "Anonymous") + (rv.customer_country ? ", " + esc(rv.customer_country) : "") + (dateText ? " • " + esc(dateText) : "") + "</p></div></article>";
       }
 
       async function loadReviews() {
@@ -291,10 +302,10 @@
         var status = document.getElementById("reviews-status");
         var avg = document.getElementById("reviews-average");
         var count = document.getElementById("reviews-count");
-        var minRating = document.getElementById("reviews-filter-rating").value || "4";
+        var minRating = document.getElementById("reviews-filter-rating").value || "";
         var type = document.getElementById("reviews-filter-type").value || "";
         status.textContent = "Loading reviews...";
-        var query = "/api/reviews?limit=50&min_rating=" + encodeURIComponent(minRating) + (type ? "&product_type=" + encodeURIComponent(type) : "");
+        var query = "/api/reviews?limit=50" + (minRating ? "&min_rating=" + encodeURIComponent(minRating) : "") + (type ? "&product_type=" + encodeURIComponent(type) : "") + "&_t=" + Date.now();
         try {
           var res = await fetch(query, { headers: { "Accept": "application/json" } });
           var data = await res.json();

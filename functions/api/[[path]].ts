@@ -24,6 +24,7 @@ import { handleAdminContacts } from "../../workers/api/admin-contacts";
 import { handleAdminPromo } from "../../workers/api/admin-promo";
 import { handleAdminBlog } from "../../workers/api/admin-blog";
 import { handleBlogPosts } from "../../workers/api/blog-posts";
+import { handleReviews, handleAdminReviews } from "../../workers/api/reviews";
 import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
@@ -144,6 +145,16 @@ export const onRequest: PagesFunction<{
   // Public Blog Posts — listing + single post
   if (path === "/api/blog/posts" || path === "/api/blog/posts/") {
     return handleBlogPosts(request, env);
+  }
+
+  // Public Reviews API
+  if (path === "/api/reviews" || path === "/api/reviews/") {
+    return handleReviews(request, env);
+  }
+
+  // Admin Reviews API — CRUD
+  if (path === "/api/admin/reviews" || path === "/api/admin/reviews/") {
+    return handleAdminReviews(request, env);
   }
 
   // Admin recovery test — triggers abandoned cart recovery email manually
