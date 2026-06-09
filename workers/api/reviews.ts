@@ -89,7 +89,7 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
       }
     }
 
-    sql += ` ORDER BY is_verified DESC, rating DESC, created_at DESC LIMIT ? OFFSET ?`;
+    sql += ` ORDER BY review_date DESC, created_at DESC, id DESC LIMIT ? OFFSET ?`;
     bindings.push(limit, offset);
 
     let results: any[] = [];
@@ -99,7 +99,7 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
       results = out.results || [];
     } catch (e: any) {
       if (!String(e.message || '').includes('review_date')) throw e;
-      sql = sql.replace('review_date,', '');
+      sql = sql.replace('review_date,', '').replace('ORDER BY review_date DESC, created_at DESC, id DESC', 'ORDER BY created_at DESC, id DESC');
       const stmt = env.DB.prepare(sql).bind(...bindings);
       const out = await stmt.all();
       results = out.results || [];

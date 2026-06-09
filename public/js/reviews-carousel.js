@@ -75,6 +75,14 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + points + '"/></svg>';
   }
 
+  function escHtml(v) {
+    return String(v || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   function getCardsPerView(opts) {
     var w = window.innerWidth;
     if (opts.mobileBreak && w <= opts.mobileBreak) return opts.mobileCards || 1;
@@ -191,7 +199,41 @@
   /* ================================================================
      Transform Review Section
      ================================================================ */
-  function transformReviews() {
+  async function loadHomepageLatestReviews(wrapper) {
+    var track = wrapper.querySelector('.reviews-track');
+    if (!track) return;
+    try {
+      var res = await fetch('/api/reviews?limit=5&_t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) return;
+      var data = await res.json();
+      var rows = Array.isArray(data.reviews) ? data.reviews : [];
+      if (!rows.length) return;
+      track.innerHTML = rows.slice(0, 5).map(function (rv) {
+        var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
+        var stars = '★★★★★'.slice(0, rating);
+        var body = escHtml(rv.review_text || '').slice(0, 420);
+        var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
+        var author = escHtml(rv.customer_name || 'Customer');
+        var country = escHtml(rv.customer_country || '');
+        return '<div class="review-card">' +
+          '<div class="review-stars">' + stars + '</div>' +
+          '<p class="review-text">“' + body + (body.length >= 420 ? '…' : '') + '”</p>' +
+          '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' • ' + escHtml(dt) : '') + '</div>' +
+        '</div>';
+      }).join('');
+
+      var total = Number(data.total || rows.length || 0);
+      var avg = rows.reduce(function (acc, rv) { return acc + (Number(rv.rating) || 0); }, 0) / rows.length;
+      var badgeStrong = wrapper.querySelector('.review-badge strong');
+      var badgeSmall = wrapper.querySelector('.review-badge .small');
+      if (badgeStrong && isFinite(avg)) badgeStrong.textContent = avg.toFixed(1) + ' out of 5 stars';
+      if (badgeSmall) badgeSmall.textContent = 'Based on ' + total + ' verified customer reviews';
+    } catch (e) {
+      // keep existing static cards as fallback
+    }
+  }
+
+  async function transformReviews() {
     // Find the reviews carousel wrapper in the page (index.html uses .reviews-carousel-wrapper, others use #reviews)
     var wrapper = document.querySelector('.reviews-carousel-wrapper');
     if (!wrapper) {
@@ -199,6 +241,11 @@
       if (reviewsContainer) wrapper = reviewsContainer.querySelector('.reviews-section');
     }
     if (!wrapper) return;
+
+    var path = window.location.pathname || '/';
+    var isHomepageReviews = wrapper.classList.contains('reviews-carousel-wrapper') && (path === '/' || path === '/index.html');
+    if (isHomepageReviews) await loadHomepageLatestReviews(wrapper);
+
     // Prevent double initialization
     if (wrapper.hasAttribute('data-carousel-initialized')) return;
     wrapper.setAttribute('data-carousel-initialized', '1');

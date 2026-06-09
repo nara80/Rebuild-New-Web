@@ -62,6 +62,9 @@
     .rv-platform img{width:14px;height:14px;border-radius:3px}
     .rv-verified{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:.75rem;font-weight:600;border:1px solid #a7f3d0}
     .rv-author{font-size:.875rem;color:var(--color-muted);margin:0}
+    .reviews-pagination{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px}
+    .reviews-pagination .btn[disabled]{opacity:.55;cursor:not-allowed}
+    .reviews-page-info{font-size:.875rem;color:var(--color-muted);font-weight:600}
   </style>
 </head>
 <body>
@@ -167,6 +170,11 @@
         </div>
 
         <div id="reviews-grid" class="reviews-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px"></div>
+        <div id="reviews-pagination" class="reviews-pagination" style="display:none">
+          <button id="reviews-prev-page" class="btn btn-outline" type="button">Previous</button>
+          <span id="reviews-page-info" class="reviews-page-info">Page 1 of 1</span>
+          <button id="reviews-next-page" class="btn btn-outline" type="button">Next</button>
+        </div>
 
         <div class="review-badge" style="margin-top:40px;">
           <div class="badge-box">
@@ -288,45 +296,99 @@
         return "";
       }
 
+      function getFallbackReviewPhoto(productType) {
+        var key = String(productType || "").trim();
+        var map = {
+          "Marine & Yacht": "/images/products/marine-fitted-sheet/main.jpg",
+          "Family & Co-Sleep": "/images/products/family-fitted-sheet/main.jpg",
+          "Deep Pocket": "/images/products/deep-pocket-fitted-sheet/main.jpg",
+          "Boarding Dorm": "/images/products/dorm-fitted-sheet/main.jpg",
+          "Pet Owner": "/images/products/pet-owner-fitted-sheet/main.jpg",
+          "RV & Truck Cab": "/images/products/rv-truck-fitted-sheet/main.jpg",
+          "Sheets": "/images/products/standard-fitted-sheet/main.jpg",
+          "Duvet Covers": "/images/products/3-sided-duvet/main.jpg",
+          "Pillowcases": "/images/products/pillowcase-envelope/main.jpg",
+          "Protections": "/images/products/mattress-protector-standard/main.jpg",
+          "Accessories": "/images/products/bedbridge-connector/main.jpg"
+        };
+        return map[key] || "/images/products/standard-fitted-sheet/main.jpg";
+      }
+
       function renderCard(rv) {
-        var photo = rv.image_url
-          ? '<div class="rv-photo"><img src="' + esc(rv.image_url) + '" alt=""></div>'
-          : '<div class="rv-photo">No photo provided</div>';
+        var imgSrc = rv.image_url || getFallbackReviewPhoto(rv.product_type);
+        var photo = '<div class="rv-photo"><img src="' + esc(imgSrc) + '" alt=""></div>';
         var meta = renderPlatform(rv.platform) + (rv.is_verified ? '<span class="rv-verified">Verified Buyer</span>' : "");
         var dateText = formatReviewDate(rv.review_date || rv.created_at);
         return '<article class="review-card">' + photo + '<div class="rv-body"><div class="review-stars">' + stars(rv.rating) + '</div><div class="rv-meta">' + meta + '</div><p class="review-text">"' + esc(rv.review_text || "") + '"</p><p class="rv-author">— ' + esc(rv.customer_name || "Anonymous") + (rv.customer_country ? ", " + esc(rv.customer_country) : "") + (dateText ? " • " + esc(dateText) : "") + "</p></div></article>";
       }
 
-      async function loadReviews() {
+      var paging = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
+
+      function refreshPager() {
+        var pager = document.getElementById("reviews-pagination");
+        var prevBtn = document.getElementById("reviews-prev-page");
+        var nextBtn = document.getElementById("reviews-next-page");
+        var info = document.getElementById("reviews-page-info");
+        paging.totalPages = Math.max(1, Math.ceil((paging.total || 0) / paging.pageSize));
+        if (paging.page > paging.totalPages) paging.page = paging.totalPages;
+        pager.style.display = paging.total > paging.pageSize ? "flex" : "none";
+        prevBtn.disabled = paging.page <= 1;
+        nextBtn.disabled = paging.page >= paging.totalPages;
+        info.textContent = "Page " + paging.page + " of " + paging.totalPages;
+      }
+
+      async function loadReviews(resetPage) {
         var grid = document.getElementById("reviews-grid");
         var status = document.getElementById("reviews-status");
         var avg = document.getElementById("reviews-average");
         var count = document.getElementById("reviews-count");
+        if (resetPage) paging.page = 1;
         var minRating = document.getElementById("reviews-filter-rating").value || "";
         var type = document.getElementById("reviews-filter-type").value || "";
+        var offset = (paging.page - 1) * paging.pageSize;
         status.textContent = "Loading reviews...";
-        var query = "/api/reviews?limit=50" + (minRating ? "&min_rating=" + encodeURIComponent(minRating) : "") + (type ? "&product_type=" + encodeURIComponent(type) : "") + "&_t=" + Date.now();
+        var query = "/api/reviews?limit=" + paging.pageSize + "&offset=" + offset + (minRating ? "&min_rating=" + encodeURIComponent(minRating) : "") + (type ? "&product_type=" + encodeURIComponent(type) : "") + "&_t=" + Date.now();
         try {
           var res = await fetch(query, { headers: { "Accept": "application/json" } });
           var data = await res.json();
           var list = Array.isArray(data.reviews) ? data.reviews : [];
+          paging.total = Number(data.total || list.length || 0);
+          if (!list.length && paging.page > 1 && paging.total > 0) {
+            paging.page = Math.max(1, paging.page - 1);
+            return loadReviews(false);
+          }
           grid.innerHTML = list.length ? list.map(renderCard).join("") : '<p style="color:var(--color-muted);grid-column:1/-1;text-align:center">No reviews found for this filter.</p>';
-          var total = list.length;
+          var total = paging.total;
+          var shownStart = total ? offset + 1 : 0;
+          var shownEnd = offset + list.length;
           var ratingSum = list.reduce(function (acc, rv) { return acc + (Number(rv.rating) || 0); }, 0);
-          var average = total ? (ratingSum / total).toFixed(1) : "—";
+          var average = list.length ? (ratingSum / list.length).toFixed(1) : "—";
           avg.textContent = average === "—" ? "—" : average + " out of 5 stars";
           count.textContent = total + " review" + (total === 1 ? "" : "s");
-          status.textContent = total + " review" + (total === 1 ? "" : "s") + " loaded";
+          status.textContent = list.length ? ("Showing " + shownStart + "–" + shownEnd + " of " + total + " reviews") : "No reviews found for this filter.";
+          refreshPager();
         } catch (e) {
           grid.innerHTML = '<p style="color:var(--c-red, #ef4444);grid-column:1/-1;text-align:center">Failed to load reviews.</p>';
           status.textContent = "Could not load reviews.";
+          paging.total = 0;
+          refreshPager();
         }
       }
 
-      document.getElementById("reviews-refresh-btn").addEventListener("click", loadReviews);
-      document.getElementById("reviews-filter-type").addEventListener("change", loadReviews);
-      document.getElementById("reviews-filter-rating").addEventListener("change", loadReviews);
-      loadReviews();
+      document.getElementById("reviews-refresh-btn").addEventListener("click", function () { loadReviews(false); });
+      document.getElementById("reviews-filter-type").addEventListener("change", function () { loadReviews(true); });
+      document.getElementById("reviews-filter-rating").addEventListener("change", function () { loadReviews(true); });
+      document.getElementById("reviews-prev-page").addEventListener("click", function () {
+        if (paging.page <= 1) return;
+        paging.page -= 1;
+        loadReviews(false);
+      });
+      document.getElementById("reviews-next-page").addEventListener("click", function () {
+        if (paging.page >= paging.totalPages) return;
+        paging.page += 1;
+        loadReviews(false);
+      });
+      loadReviews(true);
     })();
   </script>
 </body>
