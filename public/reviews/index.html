@@ -53,6 +53,15 @@
       .reviews-hero { padding: 48px 20px 36px; }
       .reviews-hero-inner h1 { font-size: 1.875rem; }
     }
+    .review-card{border-left:none;border:1px solid var(--color-border);padding:0;overflow:hidden}
+    .rv-photo{aspect-ratio:16/10;background:var(--color-surface);display:flex;align-items:center;justify-content:center;color:var(--color-muted);font-size:.8125rem}
+    .rv-photo img{width:100%;height:100%;object-fit:cover}
+    .rv-body{padding:16px}
+    .rv-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .rv-platform{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:.75rem;font-weight:600;border:1px solid #bfdbfe}
+    .rv-platform img{width:14px;height:14px;border-radius:3px}
+    .rv-verified{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#ecfdf5;color:#047857;font-size:.75rem;font-weight:600;border:1px solid #a7f3d0}
+    .rv-author{font-size:.875rem;color:var(--color-muted);margin:0}
   </style>
 </head>
 <body>
@@ -130,88 +139,41 @@
 
     <section class="section">
       <div class="container">
-        <h2 style="margin-top:0; margin-bottom:24px; font-size:1.25rem;">Etsy Reviews</h2>
-        <div class="reviews-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px;">
-          <!-- REVIEWS-START -->
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;My parents have a larger mattress cover and I’m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! It’s a joy to know they are sleeping in a chemically safe environment 🤍&rdquo;</p>
-            <div class="review-author">&mdash; Clayton, United States</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;I had a custom 160×50 cm dakimakura waterproof encasement made, and the experience was excellent from start to finish. The seller was very responsive and handled detailed technical requirements without any issues. We went over specifications like zipper length and placement, fabric behavior, and overall construction, and they even created a prototype with measurements before final production to ensure the fit was correct. The final product is a 2-layer system (TPU liner + outer cover), and the fit is exactly as intended  -  snug, smooth, and well-balanced with no bunching. The zipper is properly concealed, and the overall construction feels durable and well thought out. What stood out most was their understanding of materials and willingness to explain design decisions clearly, especially regarding fit and long-term durability.&rdquo;</p>
-            <div class="review-author">&mdash; William, United States</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;Schneller Versand, netter Kontakt, gute Qualität wie beschrieben.&rdquo;</p>
-            <div class="review-author">&mdash; Frank, Germany</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;I was very happy to receive my mattress protector! Everything was as described; custom size worked great, the material is high quality, and I love that it has all around protection. The seller was very responsive to my questions and helped me through a minor shipping fiasco. Highly recommended!&rdquo;</p>
-            <div class="review-author">&mdash; Tariq, Canada</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;I have always battled with duvets. This was exactly what I was looking for. When they arrived, I was pleasantly surprised with the quality of the cotton. I am in love with these duvet covers.&rdquo;</p>
-            <div class="review-author">&mdash; John Van, South Africa</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;Very happy with product. Congratulations to all those involved with making them.&rdquo;</p>
-            <div class="review-author">&mdash; John Van, South Africa</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;Word Word Word Word Word&rdquo;</p>
-            <div class="review-author">&mdash; John Van, South Africa</div>
-          </div>
-          <div class="review-card">
-            <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;I bought this easy duvet cover for my son at college. The customer service at MildMate is amazing! The staff went out of their way to make sure I got the product I wanted. If you have any special questions or requests, do not hesitate to reach out to them. It is not easy to find 3-Sided Zip Duvet Covers, so I am glad to have found MildMate.&rdquo;</p>
-            <div class="review-author">&mdash; amymccreedy</div>
-          </div>
-<!-- REVIEWS-END -->
+        <div id="reviews-status" style="color:var(--color-muted);margin-bottom:14px">Loading reviews...</div>
+        <div class="filter-bar" style="margin-top:0">
+          <select id="reviews-filter-type">
+            <option value="">All Segments</option>
+            <option value="Marine & Yacht">Marine &amp; Yacht</option>
+            <option value="Family & Co-Sleep">Family &amp; Co-Sleep</option>
+            <option value="Deep Pocket">Deep Pocket</option>
+            <option value="Boarding Dorm">Boarding Dorm</option>
+            <option value="Pet Owner">Pet Owner</option>
+            <option value="RV & Truck Cab">RV &amp; Truck Cab</option>
+            <option value="Sheets">Sheets</option>
+            <option value="Duvet Covers">Duvet Covers</option>
+            <option value="Pillowcases">Pillowcases</option>
+            <option value="Protections">Protections</option>
+            <option value="Accessories">Accessories</option>
+          </select>
+          <select id="reviews-filter-rating">
+            <option value="1">1+ stars</option>
+            <option value="2">2+ stars</option>
+            <option value="3">3+ stars</option>
+            <option value="4" selected>4+ stars</option>
+            <option value="5">5 stars</option>
+          </select>
+          <button id="reviews-refresh-btn" class="btn btn-outline">Refresh</button>
         </div>
 
-        <h2 style="margin-top:48px; margin-bottom:24px; font-size:1.25rem;">eBay Reviews</h2>
-        <div style="display:flex; justify-content:center; margin-bottom:24px;">
-          <div style="display:flex; align-items:center; gap:16px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius); padding:20px 28px;">
-            <div style="width:48px; height:48px; border-radius:50%; background:#0064D2; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:0.875rem;">eBay</div>
-            <div>
-              <strong style="font-size:1.05rem;">100% Positive Feedback</strong><br>
-              <span style="font-size:0.8125rem; color:var(--color-muted);">Verified eBay store transactions</span>
-            </div>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="margin-left:8px; padding:8px 16px; font-size:0.8125rem;">View Store</a>
-          </div>
-        </div>
-        <div class="reviews-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px;">
-          <!-- EBAY-REVIEWS-START -->
-          <p style="color:var(--color-muted); font-size:0.875rem; grid-column:1/-1; text-align:center;">eBay reviews will be added here.</p>
-          <!-- EBAY-REVIEWS-END -->
-        </div>
+        <div id="reviews-grid" class="reviews-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px"></div>
 
         <div class="review-badge" style="margin-top:40px;">
           <div class="badge-box">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             <div>
-              <strong>5.0 out of 5 stars</strong><br>
-              <span class="small">Based on verified customer reviews</span>
+              <strong id="reviews-average">—</strong><br>
+              <span class="small" id="reviews-count">Based on verified customer reviews</span>
             </div>
-          </div>
-        </div>
-
-        <div style="text-align:center; margin-top:32px;">
-          <p style="font-size:0.875rem; color:var(--color-muted); margin-bottom:16px;">Bought from us? Leave a review on your marketplace:</p>
-          <div class="marketplace-review-links" style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
-              <img src="/images/Logo/Etsy.png" alt="" width="20" height="20" style="border-radius:4px;"> Etsy
-            </a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;">
-              <img src="/images/Logo/eBay.png" alt="" width="20" height="20" style="border-radius:4px;"> eBay
-            </a>
           </div>
         </div>
       </div>
@@ -280,5 +242,81 @@
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
+  <script>
+    (function () {
+      var platformMap = {
+        etsy: { label: "Etsy", logo: "/images/Logo/Etsy.png", type: "marketplace", href: "https://www.etsy.com/shop/mildmate" },
+        ebay: { label: "eBay", logo: "/images/Logo/eBay.png", type: "marketplace", href: "https://www.ebay.com/str/mildmate" },
+        amazon: { label: "Amazon", logo: "/images/Logo/Amazon.png", type: "marketplace" },
+        shopee: { label: "Shopee", logo: "/images/Logo/Shopee.png", type: "marketplace", href: "https://shopee.co.th/neededshop_bt.2n.1y" },
+        lazada: { label: "Lazada", logo: "/images/Logo/Lazada.png", type: "marketplace", href: "https://www.lazada.co.th/shop/needed-shop" },
+        tiktok: { label: "TikTok", logo: "/images/Logo/TikTok.png", type: "marketplace", href: "https://www.tiktok.com/@bt.mildmate" },
+        website: { label: "Website", logo: "/images/logo.png", type: "direct" },
+        line: { label: "LINE", logo: "/images/Logo/LineOA.png", type: "direct" },
+        lineoa: { label: "LINE", logo: "/images/Logo/LineOA.png", type: "direct" },
+        whatsapp: { label: "WhatsApp", logo: "/images/Logo/WhatsAPP.png", type: "direct" },
+        facebook: { label: "Facebook", logo: "/images/Logo/Facebook.png", type: "direct" },
+        instagram: { label: "Instagram", logo: "/images/Logo/Instagram.png", type: "direct" }
+      };
+
+      function esc(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      function stars(n) {
+        var x = Math.max(1, Math.min(5, Number(n) || 5));
+        return "★★★★★".slice(0, x) + "☆☆☆☆☆".slice(0, 5 - x);
+      }
+
+      function renderPlatform(platform) {
+        var key = String(platform || "").toLowerCase();
+        var info = platformMap[key] || { label: key || "Unknown", type: "direct" };
+        var chip = '<span class="rv-platform">' + (info.logo ? '<img src="' + esc(info.logo) + '" alt="">' : "") + esc(info.label) + "</span>";
+        if (info.type === "marketplace" && info.href) {
+          return '<a href="' + esc(info.href) + '" target="_blank" rel="noopener noreferrer">' + chip + "</a>";
+        }
+        return chip;
+      }
+
+      function renderCard(rv) {
+        var photo = rv.image_url
+          ? '<div class="rv-photo"><img src="' + esc(rv.image_url) + '" alt=""></div>'
+          : '<div class="rv-photo">No photo provided</div>';
+        var meta = renderPlatform(rv.platform) + (rv.is_verified ? '<span class="rv-verified">Verified Buyer</span>' : "");
+        return '<article class="review-card">' + photo + '<div class="rv-body"><div class="review-stars">' + stars(rv.rating) + '</div><div class="rv-meta">' + meta + '</div><p class="review-text">"' + esc(rv.review_text || "") + '"</p><p class="rv-author">— ' + esc(rv.customer_name || "Anonymous") + (rv.customer_country ? ", " + esc(rv.customer_country) : "") + "</p></div></article>";
+      }
+
+      async function loadReviews() {
+        var grid = document.getElementById("reviews-grid");
+        var status = document.getElementById("reviews-status");
+        var avg = document.getElementById("reviews-average");
+        var count = document.getElementById("reviews-count");
+        var minRating = document.getElementById("reviews-filter-rating").value || "4";
+        var type = document.getElementById("reviews-filter-type").value || "";
+        status.textContent = "Loading reviews...";
+        var query = "/api/reviews?limit=50&min_rating=" + encodeURIComponent(minRating) + (type ? "&product_type=" + encodeURIComponent(type) : "");
+        try {
+          var res = await fetch(query, { headers: { "Accept": "application/json" } });
+          var data = await res.json();
+          var list = Array.isArray(data.reviews) ? data.reviews : [];
+          grid.innerHTML = list.length ? list.map(renderCard).join("") : '<p style="color:var(--color-muted);grid-column:1/-1;text-align:center">No reviews found for this filter.</p>';
+          var total = list.length;
+          var ratingSum = list.reduce(function (acc, rv) { return acc + (Number(rv.rating) || 0); }, 0);
+          var average = total ? (ratingSum / total).toFixed(1) : "—";
+          avg.textContent = average === "—" ? "—" : average + " out of 5 stars";
+          count.textContent = total + " review" + (total === 1 ? "" : "s");
+          status.textContent = total + " review" + (total === 1 ? "" : "s") + " loaded";
+        } catch (e) {
+          grid.innerHTML = '<p style="color:var(--c-red, #ef4444);grid-column:1/-1;text-align:center">Failed to load reviews.</p>';
+          status.textContent = "Could not load reviews.";
+        }
+      }
+
+      document.getElementById("reviews-refresh-btn").addEventListener("click", loadReviews);
+      document.getElementById("reviews-filter-type").addEventListener("change", loadReviews);
+      document.getElementById("reviews-filter-rating").addEventListener("change", loadReviews);
+      loadReviews();
+    })();
+  </script>
 </body>
 </html>

@@ -152,6 +152,7 @@ tr:hover td{background:#f8fafc}
     <a href="#" data-page="shipping"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h12v10H3z"/><path d="M15 10h3l3 3v4h-6z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg> Shipping Rates</a>
     <a href="#" data-page="marketing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Marketing</a>
     <a href="#" data-page="blog"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" y2="13"/><line x1="16" y1="17" y2="17"/><polyline points="8 13 8 17"/></svg> Blog</a>
+    <a href="#" data-page="reviews"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg> Reviews</a>
     <a href="#" data-page="stat"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="19" x2="20" y2="19"/><rect x="6" y="10" width="3" height="7"/><rect x="11" y="7" width="3" height="10"/><rect x="16" y="4" width="3" height="13"/></svg> Stat</a>
     <div class="sidebar-section">Admin Features</div>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
@@ -203,7 +204,7 @@ window.addEventListener('clerk:signed-out', function() {
   document.getElementById('admin-sign-in-btn').style.display = '';document.getElementById('admin-sign-out-link').style.display = 'none';
 });
 // ── Page Router ──
-var pages = ['dashboard','pricing','diy','exchange','shipping','marketing','stat','blog','products','orders','quotes','customers','contacts','subscribers','accounts'];
+var pages = ['dashboard','pricing','diy','exchange','shipping','marketing','stat','blog','reviews','products','orders','quotes','customers','contacts','subscribers','accounts'];
 var currentPage = 'dashboard';
 
 async function showPage(name) {
@@ -213,7 +214,7 @@ async function showPage(name) {
   if(link) link.classList.add('active');
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
-    exchange:'Exchange Rates',shipping:'Shipping Rates',marketing:'Marketing',stat:'Stat',blog:'Blog',products:'Products',orders:'Orders',quotes:'Quotes',
+    exchange:'Exchange Rates',shipping:'Shipping Rates',marketing:'Marketing',stat:'Stat',blog:'Blog',reviews:'Reviews',products:'Products',orders:'Orders',quotes:'Quotes',
     customers:'Customers',contacts:'Contacts',subscribers:'Newsletter',accounts:'Admin Accounts'
   }[name];
   var result = renderPage(name);
@@ -252,6 +253,7 @@ function renderPage(name) {
     case 'marketing': return rMarketing();
     case 'stat': return renderStatPage();
     case 'blog': return rBlog();
+    case 'reviews': return rReviews();
     case 'products': return rProducts();
     case 'orders': return rOrders();
     case 'quotes': return renderQuotes();
@@ -440,8 +442,13 @@ async function renderStatPage() {
 
 // ── Blog Posts Admin ──────────────────────────────
 function rBlog() {
-  window.open('/admin/blog.html', '_blank');
-  return '<div class="card"><div class="card-header">Blog</div><div class="card-body"><p style="color:var(--c-muted);text-align:center;padding:40px">Opening blog manager... <a href="/admin/blog.html" target="_blank">Click here if nothing happens.</a></p></div></div>';
+  if (typeof window.renderBlogManagerModule === 'function') return window.renderBlogManagerModule();
+  return '<div class="card"><div class="card-header">Blog</div><div class="card-body"><p style="color:var(--c-muted)">Loading blog module...</p></div></div>';
+}
+
+function rReviews() {
+  if (typeof window.renderReviewsManagerModule === 'function') return window.renderReviewsManagerModule();
+  return '<div class="card"><div class="card-header">Reviews</div><div class="card-body"><p style="color:var(--c-muted)">Loading reviews module...</p></div></div>';
 }
 
 // ── Pricing Parameters Page ──
@@ -2761,5 +2768,6 @@ function updateToolbarState(editor) {
 
 
 </script>
+<script src="../js/admin-content-modules.js"></script>
 </body>
 </html>

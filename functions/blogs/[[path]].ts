@@ -50,13 +50,30 @@ export async function onRequest(context): Promise<Response> {
 async function buildBlogListingHTML(env: any): Promise<Response> {
   try {
     const stmt = env.DB.prepare(
-      "SELECT id,slug,title_en,meta_description_en,featured_image,featured_image_alt_en,category,author,read_time_en,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT 20"
+      "SELECT id,slug,title_en,meta_description_en,featured_image,featured_image_alt_en,category,categories_json,author,read_time_en,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT 20"
     );
     const { results } = await stmt.all();
     const posts = results || [];
 
+    const parseCats = (raw: any): string[] => {
+      try {
+        const arr = JSON.parse(raw || "[]");
+        if (!Array.isArray(arr)) return [];
+        return arr.map((x: any) => String(x || "").trim()).filter(Boolean);
+      } catch {
+        return [];
+      }
+    };
+
     const categorySet = new Set(["All"]);
-    posts.forEach((p: any) => { if (p.category) categorySet.add(p.category); });
+    posts.forEach((p: any) => {
+      const cats = parseCats(p.categories_json);
+      if (cats.length) {
+        cats.forEach((c) => categorySet.add(c));
+      } else if (p.category) {
+        categorySet.add(p.category);
+      }
+    });
     const categories = Array.from(categorySet);
 
     const esc = (s: string) => s ? s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;") : "";
@@ -70,7 +87,8 @@ async function buildBlogListingHTML(env: any): Promise<Response> {
       const slug = esc(post.slug);
       const title = esc(post.title_en || "");
       const desc = esc(post.meta_description_en || "").substring(0, 140);
-      const cat = esc(post.category || "General");
+      const cats = parseCats(post.categories_json);
+      const cat = esc(cats[0] || post.category || "General");
       const date = formatDate(post.created_at);
       const link = "/blogs/" + slug + "/";
       const card = '<div class="blog-card"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="lazy"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
@@ -102,7 +120,14 @@ async function buildBlogListingHTML(env: any): Promise<Response> {
 function buildBlogPostHTML(post) {
   const title = escHtml(post.title_en || "MildMate Blog");
   const metaDesc = escHtml(post.meta_description_en || post.title_en || "");
-  const category = escHtml(post.category || "General");
+  let categoryLabel = post.category || "General";
+  try {
+    const cats = JSON.parse(post.categories_json || "[]");
+    if (Array.isArray(cats) && cats.length && String(cats[0] || "").trim()) {
+      categoryLabel = String(cats[0]).trim();
+    }
+  } catch {}
+  const category = escHtml(categoryLabel);
   const author = escHtml(post.author || "MildMate Team");
   const readTime = escHtml(post.read_time_en || "5 min read");
   const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";

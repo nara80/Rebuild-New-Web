@@ -27,6 +27,7 @@ import { handleAdminBlog } from "./admin-blog";
 import { handleBlogPosts } from "./blog-posts";
 import { handleAdminContacts } from "./admin-contacts";
 import { handleFavorites } from "./favorites";
+import { handleReviews, handleAdminReviews } from "./reviews";
 import { handleCheckout } from "./checkout";
 import { handleShippingCalculate } from "./shipping";
 import { handleStripeWebhook } from "./webhook";
@@ -129,6 +130,16 @@ export default {
     // Public Blog Posts — listing + single post
     if (path === "/api/blog/posts" || path === "/api/blog/posts/") {
       return handleBlogPosts(request, env);
+    }
+
+    // Public Reviews API
+    if (path === "/api/reviews" || path === "/api/reviews/") {
+      return handleReviews(request, env);
+    }
+
+    // Admin Reviews API — CRUD
+    if (path === "/api/admin/reviews" || path === "/api/admin/reviews/") {
+      return handleAdminReviews(request, env);
     }
 
     // Admin API — sales custom quotes

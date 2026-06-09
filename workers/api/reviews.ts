@@ -8,7 +8,7 @@ const ALLOWED_PRODUCT_TYPES = [
 
 const ALLOWED_PLATFORMS = [
   'etsy', 'ebay', 'amazon', 'shopee', 'lazada', 'tiktok',
-  'website', 'lineoa', 'whatsapp', 'facebook', 'instagram'
+  'website', 'lineoa', 'line', 'whatsapp', 'facebook', 'instagram'
 ];
 
 function sanitize(str: string | null | undefined): string {
@@ -26,13 +26,23 @@ function sanitizeReviewText(html: string): string {
     .trim();
 }
 
-function escHtml(s: string): string {
-  if (!s) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function isProductionHost(hostname: string): boolean {
+  if (!hostname) return false;
+  const host = hostname.toLowerCase().split(":")[0];
+  if (host === "localhost" || host === "127.0.0.1") return false;
+  if (host.endsWith(".pages.dev")) return false;
+  if (host.endsWith(".local")) return false;
+  return host === "www.mildmate.com" || host === "mildmate.com";
+}
+
+function authorizeAdminSecret(request: Request, env: any): boolean {
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  const hostname = request.headers.get("Host") || "";
+  const prodHost = isProductionHost(hostname);
+  if (!provided) return false;
+  if (!configured) return !prodHost;
+  return provided === configured;
 }
 
 // ── Public GET /api/reviews ────────────────────────────────────────────────
@@ -107,17 +117,29 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
 // ── Admin CRUD /api/admin/reviews ──────────────────────────────────────────
 export async function handleAdminReviews(request: Request, env: any): Promise<Response> {
   const url = new URL(request.url);
-  const secret = request.headers.get('X-Admin-Secret') || '';
+  const headers = { 'Content-Type': 'application/json' };
 
   // Verify admin auth
-  if (!env.ADMIN_EMAILS || !secret || !env.ADMIN_EMAILS.split(',').some((e: string) => e.trim())) {
-    // Dev bypass: allow if secret matches (handled per-request in super-admin)
-    if (!secret) {
-      return new Response(JSON.stringify({ error: 'Admin secret required' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
+  if (!authorizeAdminSecret(request, env)) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers
+    });
+  }
+
+  // Normalize legacy platform key
+  function normalizePlatform(raw: string): string {
+    const v = sanitize(raw).toLowerCase();
+    if (v === 'lineoa') return 'line';
+    return v;
+  }
+
+  function badRequest(msg: string): Response {
+    return new Response(JSON.stringify({ error: msg }), { status: 400, headers });
+  }
+
+  function internalError(msg: string): Response {
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers });
   }
 
   const method = request.method;
@@ -134,21 +156,17 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
         if (!post) {
           return new Response(JSON.stringify({ error: 'Review not found' }), {
             status: 404,
-            headers: { 'Content-Type': 'application/json' }
+            headers
           });
         }
-        return new Response(JSON.stringify({ review: post }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(JSON.stringify({ review: post }), { headers });
       }
 
       const stmt = env.DB.prepare(
         `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,created_at,updated_at FROM reviews ORDER BY created_at DESC LIMIT 100`
       );
       const { results } = await stmt.all();
-      return new Response(JSON.stringify({ reviews: results || [] }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
 
     // POST — create new review
@@ -156,36 +174,16 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
       const body = await request.json() as any;
 
       const customerName = sanitize(body.customer_name);
-      if (!customerName) {
-        return new Response(JSON.stringify({ error: 'Customer name is required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      if (!customerName) return badRequest('Customer name is required');
 
       const reviewText = sanitizeReviewText(body.review_text || '');
-      if (!reviewText) {
-        return new Response(JSON.stringify({ error: 'Review text is required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      if (!reviewText) return badRequest('Review text is required');
 
-      const productType = body.product_type || '';
-      if (!ALLOWED_PRODUCT_TYPES.includes(productType)) {
-        return new Response(JSON.stringify({ error: 'Invalid product_type' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      const productTypeRaw = sanitize(body.product_type || '');
+      const productType = ALLOWED_PRODUCT_TYPES.includes(productTypeRaw) ? productTypeRaw : 'Marine & Yacht';
 
-      const platform = body.platform || '';
-      if (!ALLOWED_PLATFORMS.includes(platform)) {
-        return new Response(JSON.stringify({ error: 'Invalid platform' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      const platform = normalizePlatform(body.platform || '');
+      if (!ALLOWED_PLATFORMS.includes(platform)) return badRequest('Invalid platform');
 
       const rating = Math.min(5, Math.max(1, parseInt(body.rating || '5', 10)));
 
@@ -206,7 +204,7 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
       const result = await stmt.run();
       return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id }), {
         status: 201,
-        headers: { 'Content-Type': 'application/json' }
+        headers
       });
     }
 
@@ -214,16 +212,9 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
     if (method === 'PUT') {
       const body = await request.json() as any;
 
-      if (!body.id) {
-        return new Response(JSON.stringify({ error: 'Review ID required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
+      if (!body.id) return badRequest('Review ID required');
       const id = parseInt(body.id, 10);
 
-      // Build dynamic update
       const updates: string[] = [];
       const bindings: any[] = [];
 
@@ -244,24 +235,16 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
         bindings.push(Math.min(5, Math.max(1, parseInt(body.rating, 10))));
       }
       if (body.product_type !== undefined) {
-        if (!ALLOWED_PRODUCT_TYPES.includes(body.product_type)) {
-          return new Response(JSON.stringify({ error: 'Invalid product_type' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
+        const productType = sanitize(body.product_type);
+        if (!ALLOWED_PRODUCT_TYPES.includes(productType)) return badRequest('Invalid product_type');
         updates.push('product_type = ?');
-        bindings.push(body.product_type);
+        bindings.push(productType);
       }
       if (body.platform !== undefined) {
-        if (!ALLOWED_PLATFORMS.includes(body.platform)) {
-          return new Response(JSON.stringify({ error: 'Invalid platform' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
+        const platform = normalizePlatform(body.platform);
+        if (!ALLOWED_PLATFORMS.includes(platform)) return badRequest('Invalid platform');
         updates.push('platform = ?');
-        bindings.push(body.platform);
+        bindings.push(platform);
       }
       if (body.image_url !== undefined) {
         updates.push('image_url = ?');
@@ -272,12 +255,7 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
         bindings.push(body.is_verified ? 1 : 0);
       }
 
-      if (updates.length === 0) {
-        return new Response(JSON.stringify({ error: 'No fields to update' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      if (updates.length === 0) return badRequest('No fields to update');
 
       updates.push("updated_at = datetime('now')");
       bindings.push(id);
@@ -287,37 +265,25 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
       ).bind(...bindings);
 
       await stmt.run();
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(JSON.stringify({ success: true }), { headers });
     }
 
     // DELETE — remove review
     if (method === 'DELETE') {
       const body = await request.json() as any;
-      if (!body.id) {
-        return new Response(JSON.stringify({ error: 'Review ID required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      if (!body.id) return badRequest('Review ID required');
 
       const stmt = env.DB.prepare(`DELETE FROM reviews WHERE id = ?`).bind(parseInt(body.id, 10));
       await stmt.run();
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(JSON.stringify({ success: true }), { headers });
     }
 
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' }
+      headers
     });
   } catch (e: any) {
     console.error('Admin reviews error:', e);
-    return new Response(JSON.stringify({ error: 'Server error', details: e.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return internalError('Server error: ' + e.message);
   }
 }
