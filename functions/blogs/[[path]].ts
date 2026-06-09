@@ -2,7 +2,7 @@
 // Reads from D1 blog_posts table
 
 export async function onRequest(context): Promise<Response> {
-  const { request, env } = context;
+  const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname; // e.g. /blogs/my-post/
 
@@ -11,12 +11,12 @@ export async function onRequest(context): Promise<Response> {
     return buildBlogListingHTML(env);
   }
 
-  // Extract slug from /blogs/{slug}/
-  const match = path.match(/^\/blogs\/([^/]+)\/?$/);
-  if (!match) {
-    return new Response("Not Found", { status: 404 });
+  // Let static assets under /blogs/* pass through (e.g. /blogs/folder/image.png)
+  const segments = path.replace(/^\/blogs\/?/, "").split("/").filter(Boolean);
+  if (segments.length !== 1 || segments[0].includes(".")) {
+    return next();
   }
-  const slug = match[1];
+  const slug = decodeURIComponent(segments[0]);
 
   try {
     const stmt = env.DB.prepare(
