@@ -1303,7 +1303,7 @@ async function renderQuotes() {
   if (!quotes.length) {
     h += '<p style="color:var(--c-muted);text-align:center;padding:24px">No quotes found for this status.</p>';
   } else {
-    h += '<div class="table-wrap"><table><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Size</th><th>Status</th><th>Price</th><th>Expires</th><th>Actions</th></tr></thead><tbody>';
+    h += '<div class="table-wrap"><table><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Fabric</th><th>Color</th><th>Size</th><th>Status</th><th>Price</th><th>Expires</th><th>Actions</th></tr></thead><tbody>';
     quotes.forEach(function(q){
       var statusBadge = q.status === 'approved'
         ? 'badge-shipped'
@@ -1319,6 +1319,8 @@ async function renderQuotes() {
         '<td><strong>' + escHtml(q.quote_id) + '</strong><div style="font-size:0.6875rem;color:var(--c-muted)">' + escHtml(q.email || '—') + '</div></td>' +
         '<td>' + escHtml(q.customer_name || '—') + '</td>' +
         '<td>' + escHtml(q.product_slug || '—') + '</td>' +
+        '<td style="font-size:0.8125rem">' + escHtml(q.fabric || '—') + '</td>' +
+        '<td style="font-size:0.8125rem">' + escHtml(q.color || '—') + '</td>' +
         '<td style="font-size:0.75rem">' + escHtml(formatQuoteDims(q.dimensions)) + '</td>' +
         '<td><span class="badge ' + statusBadge + '">' + escHtml(q.status || 'pending') + '</span></td>' +
         '<td>' + priceDisplay + '</td>' +

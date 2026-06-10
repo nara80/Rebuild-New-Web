@@ -163,13 +163,14 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     const cleanSlug = product_slug;
 
     await env.DB.prepare(`
-      INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       quoteId, cleanName, cleanEmail,
       address?.trim() || null, telephone?.trim() || null,
       cleanSlug, dimsJson, fabric || null, color || null,
-      quoted_price_thb || null
+      quoted_price_thb || null,
+      quoted_price_usd || null
     ).run();
 
     // Also save email to subscribers (dedup via UNIQUE constraint)
@@ -229,8 +230,8 @@ function buildQuoteEmail(
   let dimStr = "—";
   try {
     const d = JSON.parse(dimsJson);
-    if (d.w && d.l && d.d) {
-      dimStr = `${d.w} × ${d.l} × ${d.d} ${d.unit || "cm"}`;
+    if (d.w && d.l) {
+      dimStr = d.d ? `${d.w} × ${d.l} × ${d.d} ${d.unit || "cm"}` : `${d.w} × ${d.l} ${d.unit || "cm"}`;
     }
   } catch { dimStr = dimsJson; }
 

@@ -366,6 +366,9 @@
             <button class="config-tab active" data-tab="standard">Standard Sizes</button>
             <button class="config-tab" data-tab="custom">Custom Quote</button>
           </div>
+          {{SHAPE_SELECTOR_HTML}}
+          {{FABRIC_HTML}}
+          {{COLORS_HTML}}
           <div class="config-tab-content active" id="tab-standard">
             <div class="panel-section">
               <div id="sale-info"></div>
@@ -375,9 +378,6 @@
               </select>
               <div class="size-hint"><a href="/sizeguide/">View full size guide</a></div>
             </div>
-            {{SHAPE_SELECTOR_HTML}}
-            {{FABRIC_HTML}}
-            {{COLORS_HTML}}
           </div>
           <div class="config-tab-content" id="tab-custom">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">

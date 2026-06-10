@@ -1248,6 +1248,11 @@
         document.getElementById('confirm-details').innerHTML =
           '<strong>Dimension:</strong> ' + dimDisplay + '<br>' +
           '<strong>Fabric:</strong> ' + fabricName + '<br>' +
+          '<strong>Color:</strong> ' + ((function () {
+            var selectedSwatch = document.querySelector('.color-option.selected');
+            return selectedSwatch ? (selectedSwatch.getAttribute('title') || selectedSwatch.getAttribute('data-color') || '—') : '—';
+          })()) + '<br>' +
+          (state.quotePriceUsd ? '<strong>Price:</strong> $' + state.quotePriceUsd.toFixed(2) + ' USD<br>' : '') +
           '<strong>Quote ID:</strong> ' + data.quote_id;
         confirmOverlay.classList.add('open');
       } else {

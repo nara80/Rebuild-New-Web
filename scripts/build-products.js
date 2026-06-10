@@ -79,6 +79,22 @@ function getContent(slug) {
 
 // Generate fabric HTML
 function buildFabricHTML(p) {
+  // Mattress protectors — 3-layer construction specs (checked before breezeplus/cloudsoft
+  // so pet-proof shows 3-Layer not BreezePlus)
+  if (p.productType === 'protector') {
+    const specs = [
+      { label: 'Top Layer', value: 'Cotton Quilted' },
+      { label: 'Layer 2 (Core)', value: 'Polyester Filling' },
+      { label: 'Layer 3 (Backing)', value: 'TPU Waterproof' },
+      { label: 'Protects', value: 'Water Spills &amp; Accidents' }
+    ];
+    let grid = '<div class="panel-label">3-Layer Construction</div><div class="specs-grid">';
+    specs.forEach(s => {
+      grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
+    });
+    grid += '</div>';
+    return grid;
+  }
   // BreezePlus-exclusive products — show fabric feature specs
   if (p.lockedFabric === 'breezeplus') {
     const specs = [
@@ -103,21 +119,6 @@ function buildFabricHTML(p) {
       { label: 'Material', value: '100% Long-Staple Cotton' }
     ];
     let grid = '<div class="panel-label">Fabric</div><div class="specs-grid">';
-    specs.forEach(s => {
-      grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
-    });
-    grid += '</div>';
-    return grid;
-  }
-  // Mattress protectors — 3-layer construction specs
-  if (p.productType === 'protector') {
-    const specs = [
-      { label: 'Top Layer', value: 'Cotton Quilted' },
-      { label: 'Layer 2 (Core)', value: 'Polyester Filling' },
-      { label: 'Layer 3 (Backing)', value: 'TPU Waterproof' },
-      { label: 'Protects', value: 'Water Spills &amp; Accidents' }
-    ];
-    let grid = '<div class="panel-label">3-Layer Construction</div><div class="specs-grid">';
     specs.forEach(s => {
       grid += '<div class="spec-item"><div class="spec-label">' + s.label + '</div><div class="spec-value">' + s.value + '</div></div>';
     });
