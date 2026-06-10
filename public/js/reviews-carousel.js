@@ -236,12 +236,23 @@
     var track = wrapper.querySelector('.reviews-track');
     if (!track) return;
     try {
-      var res = await fetch('/api/reviews?limit=5&_t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
+      var res = await fetch('/api/reviews?limit=20&_t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
       if (!res.ok) return;
       var data = await res.json();
       var rows = Array.isArray(data.reviews) ? data.reviews : [];
       if (!rows.length) return;
-      track.innerHTML = rows.slice(0, 5).map(function (rv) {
+      // Sort: reviews with photos first (latest first), then reviews without photos (latest first)
+      rows.sort(function (a, b) {
+        var aHasPhoto = Boolean(a.image_url);
+        var bHasPhoto = Boolean(b.image_url);
+        if (aHasPhoto && !bHasPhoto) return -1;
+        if (!aHasPhoto && bHasPhoto) return 1;
+        var aDate = new Date(a.review_date || a.created_at || '').getTime();
+        var bDate = new Date(b.review_date || b.created_at || '').getTime();
+        return bDate - aDate;
+      });
+      rows = rows.slice(0, 10);
+      track.innerHTML = rows.map(function (rv) {
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platform = renderPlatformBadge(rv.platform);
