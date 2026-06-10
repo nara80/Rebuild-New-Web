@@ -73,6 +73,7 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 50);
     const offset = parseInt(url.searchParams.get('offset') || '0', 10);
     const rating = url.searchParams.get('min_rating');
+    const sort = url.searchParams.get('sort') || '';
 
     let sql = `SELECT id,customer_name,customer_country,review_text,rating,product_type,platform,image_url,is_verified,review_date,created_at FROM reviews WHERE 1=1`;
     const bindings: any[] = [];
@@ -89,7 +90,11 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
       }
     }
 
-    sql += ` ORDER BY review_date DESC, created_at DESC, id DESC LIMIT ? OFFSET ?`;
+    if (sort === 'priority') {
+      sql += ` ORDER BY CASE WHEN LOWER(platform) IN ('etsy','ebay','amazon') THEN 0 ELSE 1 END, review_date DESC, created_at DESC, id DESC LIMIT ? OFFSET ?`;
+    } else {
+      sql += ` ORDER BY review_date DESC, created_at DESC, id DESC LIMIT ? OFFSET ?`;
+    }
     bindings.push(limit, offset);
 
     let results: any[] = [];
@@ -99,7 +104,9 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
       results = out.results || [];
     } catch (e: any) {
       if (!String(e.message || '').includes('review_date')) throw e;
-      sql = sql.replace('review_date,', '').replace('ORDER BY review_date DESC, created_at DESC, id DESC', 'ORDER BY created_at DESC, id DESC');
+      sql = sql.replace('review_date,', '');
+      sql = sql.replace(/, review_date DESC/, '');
+      sql = sql.replace('ORDER BY review_date DESC,', 'ORDER BY ');
       const stmt = env.DB.prepare(sql).bind(...bindings);
       const out = await stmt.all();
       results = out.results || [];

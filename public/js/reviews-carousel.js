@@ -13,11 +13,11 @@
   var style = document.createElement('style');
   style.textContent = [
     '/* Review Carousel */',
-    '.rc-wrapper { position: relative; margin-bottom: 32px; padding: 0 44px; }',
-    '.rc-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
-    '.rc-track::-webkit-scrollbar { display: none; }',
-    '.rc-card, .rc-track .review-card { flex: 0 0 calc(33.333% - 14px); min-width: 280px; scroll-snap-align: start; background: #fff; border-radius: var(--radius, 8px); padding: 24px; box-shadow: var(--shadow, 0 2px 12px rgba(0,0,0,0.08)); position: relative; display: flex; flex-direction: column; }',
-    '.rc-track .review-card { margin-bottom: 0; }',
+    '.rc-wrapper, .reviews-carousel-wrapper { position: relative; margin-bottom: 32px; padding: 0 44px; }',
+    '.rc-track, .reviews-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
+    '.rc-track::-webkit-scrollbar, .reviews-track::-webkit-scrollbar { display: none; }',
+    '.rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 calc(33.333% - 14px); min-width: 280px; scroll-snap-align: start; background: #fff; border-radius: var(--radius, 8px); padding: 24px; box-shadow: var(--shadow, 0 2px 12px rgba(0,0,0,0.08)); position: relative; display: flex; flex-direction: column; }',
+    '.rc-track .review-card, .reviews-track .review-card { margin-bottom: 0; }',
     '.rc-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 3; transition: background 0.15s; }',
     '.rc-arrow:hover { background: #fff; }',
     '.rc-arrow:disabled { opacity: 0.3; cursor: default; }',
@@ -36,12 +36,6 @@
     '.rc-platform-link:hover .rc-platform { background: #dbeafe; }',
     '.rc-verified-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 999px; background: #ecfdf5; color: #065f46; font-size: 10.5px; font-weight: 600; border: 1px solid #a7f3d0; white-space: nowrap; }',
     '.rc-product-tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; border: 1px solid #fde68a; white-space: nowrap; }',
-    '.rc-photo { width: 80px; height: 80px; border-radius: var(--radius, 8px); overflow: hidden; flex-shrink: 0; margin-bottom: 12px; }',
-    '.rc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }',
-    '.review-card--has-photo { flex-direction: row; gap: 16px; align-items: flex-start; }',
-    '.review-card--has-photo .rc-photo { margin-bottom: 0; }',
-    '.review-card--has-photo .review-card-body { flex: 1; display: flex; flex-direction: column; }',
-    '@media (max-width: 640px) { .review-card--has-photo { flex-direction: column; gap: 8px; } .review-card--has-photo .rc-photo { width: 100%; height: 120px; } }',
     '/* Related Carousel */',
     '.rel-carousel { position: relative; padding: 0 44px; }',
     '.rel-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
@@ -65,15 +59,15 @@
     '.rel-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }',
     '/* Responsive */',
     '@media (max-width: 900px) {',
-    '  .rc-card, .rc-track .review-card { flex: 0 0 calc(50% - 10px); min-width: 0; max-width: calc(50% - 10px); }',
+    '  .rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 calc(50% - 10px); min-width: 0; max-width: calc(50% - 10px); }',
     '  .rel-card { flex: 0 0 calc(33.333% - 14px); }',
     '  .rc-prev { left: 0; } .rc-next { right: 0; }',
     '  .rel-prev { left: 0; } .rel-next { right: 0; }',
     '}',
     '@media (max-width: 640px) {',
-    '  .rc-wrapper { padding: 0 36px; }',
+    '  .rc-wrapper, .reviews-carousel-wrapper { padding: 0 36px; }',
     '  .rel-carousel { padding: 0 36px; }',
-    '  .rc-card, .rc-track .review-card { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }',
+    '  .rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }',
     '  .rel-card { flex: 0 0 calc(50% - 10px); min-width: 160px; }',
     '  .rc-prev { left: 0; } .rc-next { right: 0; }',
     '  .rel-prev { left: 0; } .rel-next { right: 0; }',
@@ -146,8 +140,41 @@
 
     var currentSlide = 0;
 
+    function getCardsPerStep() {
+      return Math.max(1, opts.stepCards || getCardsPerView(opts));
+    }
+
+    function getMaxStartIndex() {
+      return Math.max(0, cards.length - getCardsPerView(opts));
+    }
+
+    function getStartIndexForSlide(slideIdx) {
+      var step = getCardsPerStep();
+      var maxStart = getMaxStartIndex();
+      return Math.min(slideIdx * step, maxStart);
+    }
+
     function getTotalSlides() {
-      return Math.max(1, Math.ceil(cards.length / getCardsPerView(opts)));
+      var step = getCardsPerStep();
+      var maxStart = getMaxStartIndex();
+      return Math.floor(maxStart / step) + 1;
+    }
+
+    function getNearestSlideIndex() {
+      var total = getTotalSlides();
+      var bestSlide = 0;
+      var bestDist = Infinity;
+      for (var s = 0; s < total; s++) {
+        var start = getStartIndexForSlide(s);
+        var card = cards[start];
+        if (!card) continue;
+        var dist = Math.abs(card.offsetLeft - track.scrollLeft);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestSlide = s;
+        }
+      }
+      return bestSlide;
     }
 
     function buildDots() {
@@ -183,12 +210,11 @@
     }
 
     function scrollToSlide(trk, crds, idx) {
-      var cpv = getCardsPerView(opts);
-      currentSlide = idx;
-      var cardWidth = crds[0].offsetWidth;
-      var gap = parseInt(getComputedStyle(trk).gap) || 20;
-      var offset = idx * (cardWidth + gap) * cpv;
-      trk.scrollTo({ left: offset, behavior: 'smooth' });
+      var total = getTotalSlides();
+      currentSlide = Math.max(0, Math.min(idx, total - 1));
+      var start = getStartIndexForSlide(currentSlide);
+      var target = crds[start];
+      if (target) trk.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
       updateUI();
     }
 
@@ -197,11 +223,7 @@
     track.addEventListener('scroll', function () {
       clearTimeout(scrollTimer);
       scrollTimer = setTimeout(function () {
-        var cpv = getCardsPerView(opts);
-        var cardWidth = cards[0].offsetWidth;
-        var gap = parseInt(getComputedStyle(track).gap) || 20;
-        var slideWidth = (cardWidth + gap) * cpv;
-        var newSlide = Math.round(track.scrollLeft / slideWidth);
+        var newSlide = getNearestSlideIndex();
         var totalSlides = getTotalSlides();
         if (newSlide !== currentSlide) {
           currentSlide = Math.min(newSlide, totalSlides - 1);
@@ -212,7 +234,6 @@
 
     if (prevBtn) {
       prevBtn.addEventListener('click', function () {
-        var totalSlides = getTotalSlides();
         if (currentSlide > 0) scrollToSlide(track, cards, currentSlide - 1);
       });
     }
@@ -228,7 +249,7 @@
     window.addEventListener('resize', function () {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
-        currentSlide = 0;
+        currentSlide = getNearestSlideIndex();
         buildDots();
         updateUI();
       }, 200);
@@ -245,49 +266,27 @@
     var track = wrapper.querySelector('.reviews-track');
     if (!track) return;
     try {
-      var res = await fetch('/api/reviews?limit=20&_t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
+      var res = await fetch('/api/reviews?limit=20&sort=priority&_t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
       if (!res.ok) return;
       var data = await res.json();
       var rows = Array.isArray(data.reviews) ? data.reviews : [];
       if (!rows.length) return;
-      // Sort priority: 1) Etsy/eBay/Amazon with photo, 2) other platform with photo, 3) no photo (newest first within each group)
-      var priorityPlatforms = ['etsy', 'ebay', 'amazon'];
-      rows.sort(function (a, b) {
-        var aHasPhoto = Boolean(a.image_url);
-        var bHasPhoto = Boolean(b.image_url);
-        var aPri = priorityPlatforms.indexOf(String(a.platform || '').toLowerCase()) !== -1;
-        var bPri = priorityPlatforms.indexOf(String(b.platform || '').toLowerCase()) !== -1;
-        // Group 1: priority platform with photo
-        if (aPri && aHasPhoto && !(bPri && bHasPhoto)) return -1;
-        if (bPri && bHasPhoto && !(aPri && aHasPhoto)) return 1;
-        // Group 2: any photo
-        if (aHasPhoto && !bHasPhoto) return -1;
-        if (!aHasPhoto && bHasPhoto) return 1;
-        // Within same group: newest first
-        var aDate = new Date(a.review_date || a.created_at || '').getTime();
-        var bDate = new Date(b.review_date || b.created_at || '').getTime();
-        return bDate - aDate;
-      });
-      rows = rows.slice(0, 10);
+      rows = rows.slice(0, 20);
       track.innerHTML = rows.map(function (rv) {
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platform = renderPlatformBadge(rv.platform);
         var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Buyer</span>' : '';
         var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
-        var photoHtml = rv.image_url ? '<div class="rc-photo"><img src="' + escHtml(rv.image_url) + '" alt="Customer photo" loading="lazy" /></div>' : '';
         var body = escHtml(rv.review_text || '').slice(0, 420);
         var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
         var author = escHtml(rv.customer_name || 'Customer');
         var country = escHtml(rv.customer_country || '');
-        return '<div class="review-card' + (photoHtml ? ' review-card--has-photo' : '') + '">' +
-          photoHtml +
-          '<div class="' + (photoHtml ? 'review-card-body' : '') + '">' +
+        return '<div class="review-card">' +
           '<div class="review-stars">' + stars + ' ' + platform + '</div>' +
           '<div class="rc-meta">' + verifiedHtml + productTag + '</div>' +
           '<p class="review-text">“' + body + (body.length >= 420 ? '…' : '') + '”</p>' +
           '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' • ' + escHtml(dt) : '') + '</div>' +
-          '</div>' +
         '</div>';
       }).join('');
 
@@ -296,7 +295,7 @@
       var badgeStrong = wrapper.querySelector('.review-badge strong');
       var badgeSmall = wrapper.querySelector('.review-badge .small');
       if (badgeStrong && isFinite(avg)) badgeStrong.textContent = avg.toFixed(1) + ' out of 5 stars';
-      if (badgeSmall) badgeSmall.textContent = 'Based on ' + total + ' verified customer reviews';
+      if (badgeSmall) badgeSmall.textContent = 'Based on 1,000+ verified customer reviews';
     } catch (e) {
       // keep existing static cards as fallback
     }
@@ -335,6 +334,7 @@
 
     initCarousel(wrapper, '.reviews-track', '.review-card', {
       cardsPerView: 3,
+      stepCards: 1,
       tabletBreak: 900,
       tabletCards: 2,
       mobileBreak: 640,
