@@ -28,6 +28,11 @@
     '.rc-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }',
     '.rc-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #e5e7eb; cursor: pointer; padding: 0; transition: all 0.2s; }',
     '.rc-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }',
+    '.rc-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }',
+    '.rc-platform { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; border: 1px solid #bfdbfe; }',
+    '.rc-platform img { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; }',
+    '.rc-platform-link { text-decoration: none; display: inline-flex; }',
+    '.rc-platform-link:hover .rc-platform { background: #dbeafe; }',
     '/* Related Carousel */',
     '.rel-carousel { position: relative; padding: 0 44px; }',
     '.rel-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
@@ -81,6 +86,34 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  function getPlatformMap() {
+    return {
+      etsy: { label: 'Etsy', logo: '/images/Logo/Etsy.png', type: 'marketplace', href: 'https://www.etsy.com/shop/mildmate' },
+      ebay: { label: 'eBay', logo: '/images/Logo/eBay.png', type: 'marketplace', href: 'https://www.ebay.com/str/mildmate' },
+      amazon: { label: 'Amazon', logo: '/images/Logo/Amazon.png', type: 'marketplace' },
+      shopee: { label: 'Shopee', logo: '/images/Logo/Shopee.png', type: 'marketplace', href: 'https://shopee.co.th/neededshop_bt.2n.1y' },
+      lazada: { label: 'Lazada', logo: '/images/Logo/Lazada.png', type: 'marketplace', href: 'https://www.lazada.co.th/shop/needed-shop' },
+      tiktok: { label: 'TikTok', logo: '/images/Logo/TikTok.png', type: 'marketplace', href: 'https://www.tiktok.com/@bt.mildmate' },
+      website: { label: 'Website', logo: '/images/logo.png', type: 'direct' },
+      line: { label: 'LINE', logo: '/images/Logo/LineOA.png', type: 'direct' },
+      lineoa: { label: 'LINE', logo: '/images/Logo/LineOA.png', type: 'direct' },
+      whatsapp: { label: 'WhatsApp', logo: '/images/Logo/WhatsAPP.png', type: 'direct' },
+      facebook: { label: 'Facebook', logo: '/images/Logo/Facebook.png', type: 'direct' },
+      instagram: { label: 'Instagram', logo: '/images/Logo/Instagram.png', type: 'direct' }
+    };
+  }
+
+  function renderPlatformBadge(platform) {
+    var map = getPlatformMap();
+    var key = String(platform || '').toLowerCase();
+    var info = map[key] || { label: key || 'Unknown', type: 'direct' };
+    var chip = '<span class="rc-platform">' + (info.logo ? '<img src="' + escHtml(info.logo) + '" alt="">' : '') + escHtml(info.label) + '</span>';
+    if (info.type === 'marketplace' && info.href) {
+      return '<a class="rc-platform-link" href="' + escHtml(info.href) + '" target="_blank" rel="noopener noreferrer">' + chip + '</a>';
+    }
+    return chip;
   }
 
   function getCardsPerView(opts) {
@@ -211,12 +244,14 @@
       track.innerHTML = rows.slice(0, 5).map(function (rv) {
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
+        var platform = renderPlatformBadge(rv.platform);
         var body = escHtml(rv.review_text || '').slice(0, 420);
         var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
         var author = escHtml(rv.customer_name || 'Customer');
         var country = escHtml(rv.customer_country || '');
         return '<div class="review-card">' +
           '<div class="review-stars">' + stars + '</div>' +
+          '<div class="rc-meta">' + platform + '</div>' +
           '<p class="review-text">“' + body + (body.length >= 420 ? '…' : '') + '”</p>' +
           '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' • ' + escHtml(dt) : '') + '</div>' +
         '</div>';
