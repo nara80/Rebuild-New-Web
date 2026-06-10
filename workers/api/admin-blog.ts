@@ -8,8 +8,9 @@
 const BLOG_CATEGORY_OPTIONS = [
   "Marine & Yacht",
   "Family & Co-Sleep",
-  "Pet Owners",
+  "Pet Owner",
   "Deep Pocket",
+  "Boarding Dorm",
   "RV & Truck Cab",
   "Bedding Guide",
   "Product News",
@@ -118,7 +119,7 @@ export async function handleAdminBlog(request: Request, env: any): Promise<Respo
     try {
       result = await db.prepare(`
         INSERT INTO blog_posts (slug, title_en, title_th, meta_description_en, meta_description_th, body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th, category, categories_json, author, read_time_en, read_time_th, status, is_featured, th_redirect_path, related_products_json, youtube_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         slugNorm, title_en, title_th, meta_description_en, meta_description_th,
         body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th,
@@ -128,7 +129,7 @@ export async function handleAdminBlog(request: Request, env: any): Promise<Respo
       if (!String(e.message || "").includes("categories_json")) throw e;
       result = await db.prepare(`
         INSERT INTO blog_posts (slug, title_en, title_th, meta_description_en, meta_description_th, body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th, category, author, read_time_en, read_time_th, status, is_featured, th_redirect_path, related_products_json, youtube_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
         slugNorm, title_en, title_th, meta_description_en, meta_description_th,
         body_en, body_th, featured_image, featured_image_alt_en, featured_image_alt_th,
