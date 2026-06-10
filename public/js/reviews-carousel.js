@@ -33,6 +33,15 @@
     '.rc-platform img { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; }',
     '.rc-platform-link { text-decoration: none; display: inline-flex; }',
     '.rc-platform-link:hover .rc-platform { background: #dbeafe; }',
+    '.rc-verified-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 999px; background: #ecfdf5; color: #065f46; font-size: 10.5px; font-weight: 600; border: 1px solid #a7f3d0; white-space: nowrap; }',
+    '.rc-photo { width: 80px; height: 80px; border-radius: var(--radius, 8px); overflow: hidden; flex-shrink: 0; margin-bottom: 12px; }',
+    '.rc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }',
+    '.review-card--has-photo { flex-direction: row; gap: 16px; align-items: flex-start; }',
+    '.review-card--has-photo .rc-photo { margin-bottom: 0; }',
+    '.review-card--has-photo .review-card-body { flex: 1; display: flex; flex-direction: column; }',
+    '@media (max-width: 640px) { .review-card--has-photo { flex-direction: column; gap: 8px; } .review-card--has-photo .rc-photo { width: 100%; height: 120px; } }',
+    '.rc-segment { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; padding: 0 8px; min-width: 200px; }',
+    '.rc-segment span { font-size: 0.875rem; font-weight: 700; color: #64748b; text-align: center; padding: 12px 24px; background: #f1f5f9; border-radius: var(--radius, 8px); border: 1px dashed #cbd5e1; white-space: nowrap; }',
     '/* Related Carousel */',
     '.rel-carousel { position: relative; padding: 0 44px; }',
     '.rel-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
@@ -252,21 +261,42 @@
         return bDate - aDate;
       });
       rows = rows.slice(0, 10);
-      track.innerHTML = rows.map(function (rv) {
+      // Find where photo reviews end — used for segment divider insertion
+      var lastPhotoIdx = -1;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].image_url) lastPhotoIdx = i;
+      }
+      var cardsHtml = '';
+      for (var i = 0; i < rows.length; i++) {
+        var rv = rows[i];
+        // Insert segment divider BEFORE first no-photo card (only if both groups exist)
+        if (lastPhotoIdx >= 0 && lastPhotoIdx < rows.length - 1 && i === lastPhotoIdx + 1) {
+          cardsHtml += '<div class="rc-segment"><span>Latest Reviews</span></div>';
+        }
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platform = renderPlatformBadge(rv.platform);
+        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Buyer</span>' : '';
+        var photoHtml = rv.image_url ? '<div class="rc-photo"><img src="' + escHtml(rv.image_url) + '" alt="Customer photo" loading="lazy" /></div>' : '';
         var body = escHtml(rv.review_text || '').slice(0, 420);
         var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
         var author = escHtml(rv.customer_name || 'Customer');
         var country = escHtml(rv.customer_country || '');
-        return '<div class="review-card">' +
+        cardsHtml += '<div class="review-card' + (photoHtml ? ' review-card--has-photo' : '') + '">' +
+          photoHtml +
+          '<div class="' + (photoHtml ? 'review-card-body' : '') + '">' +
           '<div class="review-stars">' + stars + '</div>' +
-          '<div class="rc-meta">' + platform + '</div>' +
+          '<div class="rc-meta">' + platform + verifiedHtml + '</div>' +
           '<p class="review-text">“' + body + (body.length >= 420 ? '…' : '') + '”</p>' +
           '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' • ' + escHtml(dt) : '') + '</div>' +
+          '</div>' +
         '</div>';
-      }).join('');
+      }
+      // Insert "Customers' Photos" label at start if there are photo reviews
+      if (lastPhotoIdx >= 0) {
+        cardsHtml = '<div class="rc-segment"><span>Customers\' Photos</span></div>' + cardsHtml;
+      }
+      track.innerHTML = cardsHtml;
 
       var total = Number(data.total || rows.length || 0);
       var avg = rows.reduce(function (acc, rv) { return acc + (Number(rv.rating) || 0); }, 0) / rows.length;
