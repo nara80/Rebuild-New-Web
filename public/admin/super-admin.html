@@ -1325,10 +1325,10 @@ async function renderQuotes() {
         '<td><span class="badge ' + statusBadge + '">' + escHtml(q.status || 'pending') + '</span></td>' +
         '<td>' + priceDisplay + '</td>' +
         '<td>' + escHtml(expires) + '</td>' +
-        '<td style="white-space:nowrap">' +
-          '<button class="btn btn-sm btn-outline" onclick="copyQuoteLink(\'' + escHtml(q.quote_id) + '\')" style="margin-right:6px">Copy Link</button>' +
-          '<button class="btn btn-sm btn-primary" onclick="approveAndSendQuote(\'' + escHtml(q.quote_id) + '\',' + priceThb + ',' + priceUsd + ',\'' + escHtml(isUsd ? 'USD' : 'THB') + '\',\'' + escHtml(expires === '—' ? '' : expires) + '\')" style="margin-right:6px">' + (q.status === 'approved' ? 'Resend' : 'Approve & Send') + '</button>' +
-          '<button class="btn btn-sm btn-outline" onclick="archiveQuote(\'' + escHtml(q.quote_id) + '\')" style="color:var(--c-red);border-color:var(--c-red)">Delete</button>' +
+        '<td style="vertical-align:top">' +
+          '<button class="btn btn-sm btn-outline" onclick="copyQuoteLink(\'' + escHtml(q.quote_id) + '\')" style="margin-bottom:4px;display:block;width:100%">Copy Link</button>' +
+          '<button class="btn btn-sm btn-primary" onclick="approveAndSendQuote(\'' + escHtml(q.quote_id) + '\',' + priceThb + ',' + priceUsd + ',\'' + escHtml(isUsd ? 'USD' : 'THB') + '\',\'' + escHtml(expires === '—' ? '' : expires) + '\')" style="margin-bottom:4px;display:block;width:100%">' + (q.status === 'approved' ? 'Resend' : 'Approve & Send') + '</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="archiveQuote(\'' + escHtml(q.quote_id) + '\')" style="color:var(--c-red);border-color:var(--c-red);display:block;width:100%">Delete</button>' +
         '</td>' +
       '</tr>';
     });
