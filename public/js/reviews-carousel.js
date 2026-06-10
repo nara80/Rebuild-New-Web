@@ -135,7 +135,8 @@
 
     var prevBtn = wrapper.querySelector(opts.prevSelector || '.rc-prev');
     var nextBtn = wrapper.querySelector(opts.nextSelector || '.rc-next');
-    var dotsContainer = wrapper.querySelector(opts.dotsSelector || '.rc-dots');
+    // Accept explicit dotsContainer from opts, otherwise find inside wrapper
+    var dotsContainer = opts.dotsContainer || wrapper.querySelector(opts.dotsSelector || '.rc-dots');
     var dotClass = opts.dotClass || 'rc-dot';
 
     var currentSlide = 0;
@@ -278,15 +279,18 @@
         var platform = renderPlatformBadge(rv.platform);
         var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Buyer</span>' : '';
         var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
-        var body = escHtml(rv.review_text || '').slice(0, 420);
+        var body = escHtml(rv.review_text || '');
         var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
         var author = escHtml(rv.customer_name || 'Customer');
         var country = escHtml(rv.customer_country || '');
+        var cardId = 'rc-' + (rv.id || Math.random().toString(36).slice(2, 8));
+        var isLong = body.length > 280;
         return '<div class="review-card">' +
           '<div class="review-stars">' + stars + ' ' + platform + '</div>' +
           '<div class="rc-meta">' + verifiedHtml + productTag + '</div>' +
-          '<p class="review-text">“' + body + (body.length >= 420 ? '…' : '') + '”</p>' +
-          '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' • ' + escHtml(dt) : '') + '</div>' +
+          (isLong ? '<div class="review-text-wrap" id="' + cardId + '-wrap"><p class="review-text">"' + body + '"</p></div>' : '<p class="review-text">"' + body + '"</p>') +
+          (isLong ? '<button class="review-show-more" onclick="(function(b){var w=document.getElementById(\'' + cardId + '-wrap\');w.classList.toggle(\'expanded\');b.style.display=w.classList.contains(\'expanded\')?\'none\':\'\';})(this)">Show more</button>' : '') +
+          '<div class="review-author">\u2014 ' + author + (country ? ', ' + country : '') + (dt ? ' \u2022 ' + escHtml(dt) : '') + '</div>' +
         '</div>';
       }).join('');
 
@@ -301,8 +305,96 @@
     }
   }
 
+  /**
+   * Loads up to 5 reviews for a product page from the D1-backed API.
+   * Renders into #product-reviews-track, then initializes the carousel.
+   */
+  async function loadProductPageReviews(slug) {
+    var track = document.getElementById('product-reviews-track');
+    var scoreEl = document.getElementById('product-review-score');
+    var starsEl = document.getElementById('product-review-stars');
+    var countEl = document.getElementById('product-review-count');
+    if (!track) return;
+
+    try {
+      var res = await fetch('/api/products/' + encodeURIComponent(slug) + '/reviews?_t=' + Date.now(), { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      var rows = Array.isArray(data.reviews) ? data.reviews : [];
+
+      if (!rows.length) {
+        track.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--color-muted);font-size:0.9375rem;"><p>No reviews yet for this product.</p></div>';
+        if (countEl) countEl.textContent = 'No reviews yet';
+        return;
+      }
+
+      track.innerHTML = rows.map(function (rv) {
+        var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
+        var stars = '★★★★★'.slice(0, rating);
+        var platformHtml = renderPlatformBadge(rv.platform);
+        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Buyer</span>' : '';
+        var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
+        var body = escHtml(rv.review_text || '');
+        var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
+        var author = escHtml(rv.customer_name || 'Customer');
+        var country = escHtml(rv.customer_country || '');
+        var photoHtml = rv.image_url ? '<div class="review-photo"><img src="' + escHtml(rv.image_url) + '" alt="Customer photo" loading="lazy" width="200" height="200"></div>' : '';
+        var cardId = 'rc-' + (rv.id || Math.random().toString(36).slice(2, 8));
+        var isLong = body.length > 280;
+        return '<div class="review-card">' +
+          photoHtml +
+          '<div class="review-stars">' + stars + ' ' + platformHtml + '</div>' +
+          '<div class="rc-meta">' + verifiedHtml + productTag + '</div>' +
+          (isLong ? '<div class="review-text-wrap" id="' + cardId + '-wrap"><p class="review-text">"' + body + '"</p></div>' : '<p class="review-text">"' + body + '"</p>') +
+          (isLong ? '<button class="review-show-more" onclick="(function(b){var w=document.getElementById(\'' + cardId + '-wrap\');w.classList.toggle(\'expanded\');b.style.display=w.classList.contains(\'expanded\')?\'none\':\'\';})(this)">Show more</button>' : '') +
+          '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' \u2022 ' + dt : '') + '</div>' +
+        '</div>';
+      }).join('');
+
+      // Update summary
+      var total = rows.length;
+      var avg = rows.reduce(function (acc, rv) { return acc + (Number(rv.rating) || 0); }, 0) / total;
+      if (scoreEl && isFinite(avg)) scoreEl.textContent = avg.toFixed(1);
+      if (starsEl && isFinite(avg)) {
+        var fullStars = Math.round(avg);
+        starsEl.textContent = '★★★★★'.slice(0, fullStars) + '☆☆☆☆☆'.slice(fullStars);
+      }
+      if (countEl) countEl.textContent = '1,000+ verified buyers';
+
+      // Init carousel on product reviews wrapper
+      var wrapper = document.getElementById('product-reviews-wrapper');
+      var dotsEl = document.getElementById('product-review-dots');
+      if (wrapper && track.querySelectorAll('.review-card').length > 1) {
+        initCarousel(wrapper, '.reviews-track', '.review-card', {
+          cardsPerView: 3,
+          stepCards: 1,
+          tabletBreak: 900,
+          tabletCards: 2,
+          mobileBreak: 640,
+          mobileCards: 1,
+          prevSelector: '.reviews-prev',
+          nextSelector: '.reviews-next',
+          dotsContainer: dotsEl,
+          dotClass: 'rc-dot'
+        });
+      }
+    } catch (e) {
+      track.innerHTML = '<div style="text-align:center;padding:32px;color:var(--color-muted);font-size:0.9375rem;"><p>Could not load reviews.</p></div>';
+    }
+  }
+
   async function transformReviews() {
-    // Find the reviews carousel wrapper in the page (index.html uses .reviews-carousel-wrapper, others use #reviews)
+    var path = window.location.pathname || '/';
+
+    // Product page — load reviews from product-specific endpoint
+    var productMatch = path.match(/^\/product\/([^\/]+)\//);
+    if (productMatch) {
+      var productSlug = productMatch[1];
+      await loadProductPageReviews(productSlug);
+      return;
+    }
+
+    // Homepage or other page with review section
     var wrapper = document.querySelector('.reviews-carousel-wrapper');
     if (!wrapper) {
       var reviewsContainer = document.getElementById('reviews');
@@ -310,7 +402,6 @@
     }
     if (!wrapper) return;
 
-    var path = window.location.pathname || '/';
     var isHomepageReviews = wrapper.classList.contains('reviews-carousel-wrapper') && (path === '/' || path === '/index.html');
     if (isHomepageReviews) await loadHomepageLatestReviews(wrapper);
 

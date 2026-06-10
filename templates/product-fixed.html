@@ -152,6 +152,44 @@
       .related-grid { grid-template-columns: 1fr; }
       .trust-signals-mobile { grid-template-columns: repeat(4, minmax(0,1fr)); }
     }
+
+    /* Review section styles */
+    .reviews-section { margin-top: 48px; }
+    .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
+    .reviews-summary { display: flex; align-items: center; gap: 16px; background: #fff; padding: 20px 24px; border-radius: var(--radius); margin-bottom: 32px; width: 100%; box-sizing: border-box; border: 1px solid #e2e8f0; box-shadow: var(--shadow); }
+    .summary-score { font-size: 3rem; font-weight: 700; color: var(--color-text); line-height: 1; }
+    .summary-detail { flex: 1; }
+    .summary-stars { color: #f59e0b; font-size: 1.25rem; margin-bottom: 4px; }
+    .summary-text { font-size: 0.875rem; color: #64748b; }
+    .reviews-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }
+    .reviews-track::-webkit-scrollbar { display: none; }
+    .reviews-track .review-card { flex: 0 0 calc(33.333% - 14px); min-width: 280px; scroll-snap-align: start; background: #fff; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); position: relative; display: flex; flex-direction: column; margin-bottom: 0; }
+    .review-card { background: #fff; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; }
+    .review-stars { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #f59e0b; font-size: 1rem; margin-bottom: 6px; }
+    .rc-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rc-platform { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; border: 1px solid #bfdbfe; }
+    .rc-platform img { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; }
+    .rc-platform-link { text-decoration: none; display: inline-flex; }
+    .rc-verified-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 999px; background: #ecfdf5; color: #065f46; font-size: 10.5px; font-weight: 600; border: 1px solid #a7f3d0; white-space: nowrap; }
+    .rc-product-tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; border: 1px solid #fde68a; white-space: nowrap; }
+    .review-text { color: #64748b; line-height: 1.7; font-size: 0.9375rem; }
+    .review-text-wrap { max-height: 160px; overflow: hidden; position: relative; }
+    .review-text-wrap.expanded { max-height: none; }
+    .review-show-more { display: inline-block; font-size: 0.8125rem; font-weight: 600; color: var(--color-primary); background: none; border: none; cursor: pointer; padding: 4px 0 8px; font-family: var(--font-main); }
+    .review-show-more:hover { text-decoration: underline; }
+    .review-photo { width: 100%; aspect-ratio: 1/1; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; background: var(--color-surface); }
+    .review-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .review-author { font-size: 0.875rem; font-weight: 600; color: var(--color-muted); }
+    .rc-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }
+    .rc-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #e5e7eb; cursor: pointer; padding: 0; transition: all 0.2s; }
+    .rc-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }
+    @media (max-width: 900px) {
+      .reviews-track .review-card { flex: 0 0 calc(50% - 10px); min-width: 0; max-width: calc(50% - 10px); }
+    }
+    @media (max-width: 640px) {
+      .reviews-track .review-card { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+    }
   </style>
 </head>
 <body class="product-page">
@@ -204,6 +242,28 @@
       <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
         <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">Tags:</span>
         {{TAGS_HTML}}
+      </div>
+    </div>
+    <div class="container" id="reviews" style="max-width:1280px; padding:0 24px;">
+      <div class="reviews-section">
+        <div class="reviews-header"><h2>Customer Reviews</h2></div>
+        <div class="reviews-summary" id="product-review-summary">
+          <div class="summary-score" id="product-review-score">5.0</div>
+          <div class="summary-detail">
+            <div class="summary-stars" id="product-review-stars">★★★★★</div>
+            <div class="summary-text" id="product-review-count">Loading reviews...</div>
+          </div>
+        </div>
+        <div class="reviews-carousel-wrapper" id="product-reviews-wrapper" style="padding:0 44px; position:relative;">
+          <button class="carousel-arrow carousel-prev reviews-prev" aria-label="Previous review" style="left:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="reviews-track" id="product-reviews-track"></div>
+          <button class="carousel-arrow carousel-next reviews-next" aria-label="Next review" style="right:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="rc-dots" id="product-review-dots"></div>
       </div>
     </div>
   </main>
