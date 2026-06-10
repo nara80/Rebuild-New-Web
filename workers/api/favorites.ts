@@ -258,11 +258,13 @@ export async function handleFavorites(request: Request, env: any): Promise<Respo
          p.image_url,
          p.base_price_usd AS price_usd,
          p.base_price_thb AS price_thb,
-         p.category
+         p.category,
+         p.product_type,
+         p.niches
        FROM favorites f
        JOIN products p ON p.id = f.product_id
        WHERE f.user_id = ?1 OR LOWER(f.email) = ?2
-       GROUP BY p.id, p.slug, p.title_en, p.image_url, p.base_price_usd, p.base_price_thb, p.category
+       GROUP BY p.id, p.slug, p.title_en, p.image_url, p.base_price_usd, p.base_price_thb, p.category, p.product_type, p.niches
        ORDER BY MAX(f.created_at) DESC
        LIMIT 100`
     ).bind(user.userId, user.email).all();

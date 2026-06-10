@@ -12,6 +12,8 @@ interface ProductRow {
   description_en: string | null;
   description_th: string | null;
   category: string;
+  product_type: string | null;
+  niches: string | null;
   subcategory: string | null;
   fabric_options: string | null;
   base_price_usd: number | null;
@@ -25,6 +27,14 @@ interface ProductRow {
   is_active: number;
   created_at: string;
   updated_at: string;
+}
+
+// Helper: parse category CSV to extract product_type + niches
+function parseCategoryCsv(csv: string): { product_type: string; niches: string } {
+  const parts = csv.split(',').map(s => s.trim()).filter(Boolean);
+  const product_type = parts[0] || 'sheets';
+  const niches = parts.slice(1).join(', ');
+  return { product_type, niches };
 }
 
 const ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
@@ -55,7 +65,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
     const db = env.DB as D1Database;
     const result = await db.prepare(
       `SELECT id, slug, title_en, title_th, description_en, description_th,
-              category, subcategory, fabric_options, base_price_usd, base_price_thb,
+              category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
     ).all();
@@ -79,9 +89,12 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       if (dup) {
         return new Response(JSON.stringify({ error: "Slug already exists" }), { status: 409, headers: { "Content-Type": "application/json" } });
       }
+      // Parse product_type + niches from category CSV
+      const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
+
       await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, category, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
       ).bind(
         slug,
         body.title_en || body.titleEN || slug,
@@ -89,6 +102,8 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
         body.description_en || body.descEN || null,
         body.description_th || body.descTH || null,
         body.category || "sheets",
+        body.product_type || product_type,
+        body.niches || niches,
         body.fabric_options || null,
         body.image_url || null,
         body.youtube_url || body.video || null,
@@ -144,7 +159,8 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       // Build update query dynamically from allowed fields
       const allowed = [
         "title_en", "title_th", "description_en", "description_th",
-        "tags", "youtube_url", "images", "image_url", "fabric_options", "category"
+        "tags", "youtube_url", "images", "image_url", "fabric_options", "category",
+        "product_type", "niches"
       ];
 
       const sets: string[] = [];
@@ -155,6 +171,15 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
           sets.push(`${field} = ?`);
           values.push(body[field]);
         }
+      }
+
+      // If category is being updated, also sync product_type + niches
+      if (body.category !== undefined && body.product_type === undefined && body.niches === undefined) {
+        const parsed = parseCategoryCsv(body.category);
+        sets.push("product_type = ?");
+        values.push(parsed.product_type);
+        sets.push("niches = ?");
+        values.push(parsed.niches);
       }
 
       if (sets.length === 0) {

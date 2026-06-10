@@ -7,6 +7,8 @@ export interface Product {
   title_en: string;
   title_th: string | null;
   category: string;
+  product_type: string | null;
+  niches: string | null;
   fabric_options: string | null;  // e.g. 'BreezePlus,CloudSoft'
   price_usd: number | null;
   price_thb: number | null;
@@ -21,14 +23,22 @@ export interface Product {
   tags: string | null;  // comma-separated cross-sell tags, e.g. 'Family, Duvet, Marine, Pets'
 }
 
-export async function listProducts(env: any, filters: { category?: string; fabric?: string; search?: string }): Promise<Product[]> {
+export async function listProducts(env: any, filters: { category?: string; product_type?: string; niche?: string; fabric?: string; search?: string }): Promise<Product[]> {
   const db = env.DB as D1Database;
   let sql = `SELECT * FROM products WHERE 1=1`;
   const params: any[] = [];
 
-  if (filters.category) {
-    sql += ` AND category = ?`;
-    params.push(filters.category);
+  if (filters.product_type) {
+    sql += ` AND product_type = ?`;
+    params.push(filters.product_type);
+  } else if (filters.category) {
+    // Backward compat: filter by category CSV (exact or prefix match)
+    sql += ` AND (product_type = ? OR category = ?)`;
+    params.push(filters.category, filters.category);
+  }
+  if (filters.niche) {
+    sql += ` AND (',' || niches || ',' LIKE '%,' || ? || ',%' OR ',' || category || ',' LIKE '%,' || ? || ',%')`;
+    params.push(filters.niche, filters.niche);
   }
   if (filters.fabric) {
     sql += ` AND fabric = ?`;
@@ -56,11 +66,13 @@ export async function handleProducts(request: Request, env: any): Promise<Respon
 
   if (path === "/api/products" || path === "/api/products/") {
     const category = url.searchParams.get("category") || undefined;
+    const product_type = url.searchParams.get("product_type") || undefined;
+    const niche = url.searchParams.get("niche") || undefined;
     const fabric = url.searchParams.get("fabric") || undefined;
     const search = url.searchParams.get("search") || undefined;
 
     try {
-      const products = await listProducts(env, { category, fabric, search });
+      const products = await listProducts(env, { category, product_type, niche, fabric, search });
       return new Response(JSON.stringify({ products }), {
         headers: { "Content-Type": "application/json" },
       });
