@@ -1,5 +1,5 @@
 # Phase 8 — Polish + Launch
-**Status (2026-05-31): ⏸️ PENDING — Phase 7 Admin Complete, Phase 8 Part A Not Yet Started**
+**Status (2026-06-10): ⏸️ PENDING — Phase 7 Admin Complete, Phase 8 Part A Not Yet Started. D1-backed reviews, product_type+niches columns, homepage niche card update, and orphaned file cleanup completed in subsequent sessions.**
 **Goal:** Make everything production-ready — fix all mobile issues, hit 90+/100 performance, DNS cutover.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.

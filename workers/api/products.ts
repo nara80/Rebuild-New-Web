@@ -187,7 +187,7 @@ async function handleProductReviews(env: any, slug: string): Promise<Response> {
         END,
         review_date DESC,
         created_at DESC
-      LIMIT 5
+      LIMIT 10
     `;
 
     const bindings: any[] = [...matchTypes, ...nicheDisplayNames, ptDisplay];

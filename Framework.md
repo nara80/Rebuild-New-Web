@@ -314,9 +314,9 @@ Customer opens link â†’ sees locked quote with "Add to Cart â€” $89.00
 [SHOP BY PRODUCT]  â† 5 cards, 4-col grid
   Sheets | Duvet Covers | Pillowcases | Protection | Accessories
 
-[SHOP BY NICHE]  â† 4 cards (verified 2026-05-28): Marine & Yacht / Family & Co-Sleep / Specialized Protection / Duvet Covers
+[SHOP BY NICHE]  â† 4 cards (updated 2026-06-10): Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner
   Mobile: horizontal swipe strip, 220px min-width cards
-  (Note: 6-card grid was planned; actual build uses 4 cards. Deep Pocket / Boarding Dorm / RV & Truck / Pet Owner are accessible via SHOP BY PRODUCT category links instead.)
+  (Note: 6-card grid was planned; actual build uses 4 cards. Boarding Dorm / RV & Truck Cab are accessible via SHOP BY PRODUCT category links instead.)
 
 [FABRIC INTELLIGENCE]  â† lateral comparison grid (2026-05-21)
   4-column comparison: Feature | BreezePlus | CloudSoft | PremaCotton | EcoLuxe
@@ -325,7 +325,8 @@ Customer opens link â†’ sees locked quote with "Add to Cart â€” $89.00
 
 [MOST POPULAR]  â† horizontal scroll carousel, 5 product cards
 
-[SOCIAL PROOF]  â† reviews carousel + 5â˜… Etsy badge
+[SOCIAL PROOF]  â† D1-backed reviews carousel (20 cards, loaded from D1 via /api/products?reviews=true) + 5â˜… Etsy badge
+  Review cards: conditional photo (1:1 square, hidden if review_photo is null), "Show more" toggle (shown when text > 280 chars)
 
 [EMAIL SIGNUP]  â† blue gradient, "Get 15% Off Your First Order"
 
@@ -425,6 +426,16 @@ Customer opens link â†’ sees locked quote with "Add to Cart â€” $89.00
   Credit card method diagram
 
 [PRODUCT TABS]  Description | Fabric Details | Size Guide | Care
+
+[CUSTOMER REVIEWS]  → D1-backed dynamic carousel (added 2026-06-10)
+  Loaded via GET /api/products/{slug}/reviews → returns up to 10 reviews sorted by:
+    Tier 0: Niche match with photo (newest first)
+    Tier 1: Product match with photo
+    Tier 2: Marketplace reviews
+    Tier 3: Other reviews
+  Rendered in #product-reviews-track with conditional photo (1:1 square) and "Show more" toggle (shown when text > 280 chars)
+  Summary: "1,000+ verified buyers"
+  Carousel arrows + dot pagination
 
 [RELATED PRODUCTS]
 
@@ -696,6 +707,7 @@ mildmate-web/
 â”‚   â”‚   â”œâ”€â”€ product-configurator.js  â† Shared product page configurator (19 products, 6 formula types)
 â”‚   â”‚   â”œâ”€â”€ product-sizes.js         â† Centralized size data (174 entries, 8 regions â€” synced from /sizeguide/)
 â”‚   â”‚   â”œâ”€â”€ geo.js                   â† Currency toggle
+â”‚   â”‚   â”œâ”€â”€ reviews-carousel.js       â† Review + related-products carousels (homepage + product pages)
 â”‚   â”‚   â””â”€â”€ cookie-consent.js        â† GDPR consent banner
 â”‚   â”œâ”€â”€ images/
 â”‚   â”‚   â”œâ”€â”€ logo.png                 â† Main logo (transparent PNG)
@@ -809,7 +821,10 @@ mildmate-web/
     â”œâ”€â”€ 018_recovery_config.sql     â† recovery_config table (Stage 2/3 discount, basket threshold)
     â”œâ”€â”€ 019_discount_pct.sql        â† discount_pct column on thankyou_queue
     â”œâ”€â”€ 020_thankyou_queue.sql      â† thankyou_queue table (post-purchase discount emails)
-    â””â”€â”€ 021_promo_codes.sql         â† promo_codes + promo_redemptions tables (admin-created custom promo)
+    â”œâ”€â”€ 021_promo_codes.sql         â† promo_codes + promo_redemptions tables (admin-created custom promo)
+    â”œâ”€â”€ 022_promo_min_usd.sql       â† order_minimum_thb → order_minimum_usd on promo_codes
+    â”œâ”€â”€ 023_blog_posts.sql          â† blog_posts table (bilingual EN/TH CMS)
+    â””â”€â”€ 026_product_type_niches.sql â† product_type + niches columns on products (applied directly)
 â””â”€â”€ MildMateDataBase/ExistingWeb/    â† WordPress URL source data
 ```
 
@@ -836,7 +851,7 @@ Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** â€�
 
 ## D1 Database Schema
 
-**Actual schema (migrations 001â€“020). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
+**Actual schema (migrations 001–020 + 023 + 026 via direct ALTER TABLE). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
 
 ```sql
 -- Products (migration 001 + 006)
@@ -846,6 +861,8 @@ CREATE TABLE products (
   title_en TEXT NOT NULL, title_th TEXT,
   description_en TEXT, description_th TEXT,
   category TEXT NOT NULL,          -- 'sheets', 'duvet-covers', 'pillowcases', etc.
+  product_type TEXT,               -- single value: sheets, duvet-covers, pillowcases, protection, accessories (added by 026)
+  niches TEXT,                    -- comma-separated niche slugs: marine, family, pets, deep-pocket, boarding-dorm, rv-truck (added by 026)
   subcategory TEXT,
   fabric_options TEXT DEFAULT 'BreezePlus,CloudSoft,PremaCotton,EcoLuxe',
   base_price_usd REAL NOT NULL DEFAULT 0,
@@ -1002,7 +1019,7 @@ CREATE TABLE blog_posts (
 - **Post:** /blogs/{slug}/ — Pages Function (unctions/blogs/[[path]].ts) SSR from D1
 
 
- 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts
+ 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 026_product_type_niches (applied directly via ALTER TABLE)
 
 ---
 
@@ -1013,7 +1030,7 @@ CREATE TABLE blog_posts (
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | âœ… Complete |
 | **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects â†’ 27 product pages, ~90 page redirects â†’ existing pages, Thai WP URLs â†’ `/th/` pages. No HTML shells created. | â¸ï¸ Deferred â€” runs pre-launch after Phase 8 |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | âœ… Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load) | âœ… Complete |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on all 27 product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage "Choose Your Application"** updated to Deep Pocket + Pet Owner (replaced Specialized Protection + Duvet Covers). | âœ… Complete |
 | **5** | Checkout + Stripe + Auth | Checkout/account/order-confirmed pages, Stripe Checkout Sessions + PromptPay, Clerk multi-provider (Google/Facebook/Email), cartâ†”server sync, quote magic link (`/quote/QT-XXXXX/`), Resend emails, D1 orders + favorites + customer_addresses + contacts (migrations 001â€“020). Workers API defensive schema self-heal on all endpoints. **Option A order tracking:** carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. **Centralized shipping-quote engine** (`workers/api/shipping.ts`): THB-only rates from D1 `shipping_rates`, exchange-rate conversion, geo-country detection, OTHER fallback. **D1 country master list** (`workers/api/countries.ts`, 95 countries + OTHER): consumed by checkout, /account, and super-admin country dropdowns. **Country-specific tariff/tax notes:** EU/UK/OTHER â†’ "Price excludes import tariff and Tax."; TH/US/CA/AU â†’ hidden. **Order thumbnail dual-match resolution:** slug normalization + title fallback for legacy orders. **Pending:** Option 3 production-auth hardening (Clerk production instance). | âœ… Built (code complete; thank-you discount âœ…; wrangler.toml [triggers] â¸ Pending) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` âœ…), cart email capture via `PUT /api/customers/cart` âœ… (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts â‰¥$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. Cron trigger in Cloudflare Dashboard. **Pending:** wrangler.toml `[triggers]` cron schedule. | âœ… Built |
 | **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `super-admin.html` (~155KB) + `admin.html` (~118KB) with full products CRUD, orders table (D1 live + Option A shipping tracking), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown via `/api/countries`), marketing. `workers/api/admin-shipping.ts` â€” shipping rates CRUD (THB-only, OTHER protected). `functions/admin/_middleware.ts` â€” Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Planned:** Cloudflare Access zero-trust (Option B, defense-in-depth). | âœ… Built (code complete; setup â¸ pending) |

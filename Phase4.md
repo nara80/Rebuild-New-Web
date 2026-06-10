@@ -1,9 +1,9 @@
 # Phase 4 — Homepage + Product Pages
-**Status (2026-05-31): ✅ COMPLETE — Homepage, 27 product pages, all category/SEO/niche landing pages, blog, size guides, Workers API, all 19 migrations (001–016, with some numbers split: 002×2, 003×3) applied. Language-driven currency (EN → USD, TH → THB). Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Centralized country master list. See Completion Summary below for full details.**
+**Status (2026-06-10): ✅ COMPLETE — Homepage, 27 product pages, all category/SEO/niche landing pages, blog, size guides, Workers API, all migrations through 026 applied. Language-driven currency (EN → USD, TH → THB). Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Centralized country master list. D1-backed dynamic product reviews on all 27 product pages. product_type + niches columns added to D1 products table. Homepage "Choose Your Application" updated to Deep Pocket + Pet Owner. See Completion Summary below for full details.**
 
-**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016). This document reflects the final verified state.**
+**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (Deep Pocket + Pet Owner). This document reflects the final verified state.**
 
-> **Reconciliation note (2026-05-31):** "all 16 migrations" in the title was incorrect — there are 19 migration SQL files. Migration numbers 002 and 003 each have 2–3 files (e.g., 002_discount_claims, 003_custom_quotes, 003_seed_products, 003_quote_fields). The numbered range 001–016 is correct; the count 16 was not.
+> **Reconciliation note (2026-06-10):** Migrations now extend through 026: 024_reviews (reviews table), 024_blog_categories_json (blog categories), 025_reviews_review_date (review_date index), 026_product_type_niches (product_type + niches columns on products). Homepage "Choose Your Application" cards changed from (Marine & Yacht, Family & Co-Sleep, Specialized Protection, Duvet Covers) to (Marine & Yacht, Family & Co-Sleep, Deep Pocket, Pet Owner). Product reviews are now D1-backed (GET /api/products/:slug/reviews with 4-tier sort, LIMIT 10) instead of static HTML.
 **Goal:** Build all real content pages — the homepage with every section filled, the product listing grid, individual product detail pages, and the size guide SEO hub pages.
 
 **End Result:** A fully functional shopping experience. Visitors can land on the homepage, browse products by category, enter their mattress dimensions, and see a live price update — all before Phase 5 adds the actual payment step.
@@ -18,7 +18,7 @@ All Phase 4 requirements were collected and built. Below is the final record of 
 
 **Requirement 2 — Hero image:** CI blue gradient placeholder — `public/images/Hero01.jpg` used. Headline: "Bedding Made Easy Again: Custom Sizes, Perfect Fits." CTA: "Shop All Products" → `/products/`.
 
-**Requirement 3 — Category images:** 4 niche category cards confirmed: Marine & Yacht (`/marine/`), Family & Co-Sleep (`/family/`), Protection (`/protection/`), Duvet Covers (`/duvet-covers/`). Real photos placed at `public/images/categories/`. "Boarding Dorm" accessible via Shop by Product → Protectors → 6-Sided Encasement.
+**Requirement 3 — Category images:** 4 niche category cards confirmed: Marine & Yacht (`/marine/`), Family & Co-Sleep (`/family/`), Deep Pocket (`/deep-pocket/`), Pet Owner (`/pets/`). Real photos placed at `public/images/categories/`. Boarding Dorm and RV & Truck Cab accessible via Shop by Product.
 
 **Requirement 4 — Product images:** Top 5 real photos placed for: 3-sided-duvet, family-fitted-sheet, marine-fitted-sheet, mattress-encasement-general, bedbridge-connector. Rest use branded placeholders.
 
@@ -411,14 +411,14 @@ The homepage has **no configurator section** — the live price calculator is on
 1. HERO            — Full-bleed CI blue gradient + "Bedding Made Easy Again / Custom Sizes, Perfect Fits." + "Shop All Products" CTA
 2. TRUST BAR       — 4 icons: Precision Fit / Global Delivery / Top-Rated Etsy / Sensitive Skin Friendly
 3. SHOP BY PRODUCT — 5 cards: Sheets / Duvet Covers / Pillowcases / Protection / Accessories → `/[type]/`
-4. CHOOSE YOUR APPLICATION — 4 niche cards: Marine & Yacht / Family & Co-Sleep / Protection / Duvet Covers → `/[niche]/`
+4. CHOOSE YOUR APPLICATION — 4 niche cards: Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner → `/[niche]/`
 5. MATERIAL INTELLIGENCE — Side-by-side comparison grid (desktop) + accordion (mobile) + "Explore Full Fabric Details" CTA → `/fabric/`
 6. MOST POPULAR    — Horizontal-scroll carousel: 5 product cards with "View Options" button
-7. WHAT CUSTOMERS SAY — Reviews carousel with dots (2 reviews on homepage, 8 on `/reviews/`)
+7. WHAT CUSTOMERS SAY — D1-backed reviews carousel (20 cards on homepage, loaded from D1 via /api/products?reviews=true), product page reviews (10 cards via GET /api/products/:slug/reviews with 4-tier sort). Conditional photo display (1:1 square), "Show more" toggle (shown when text > 280 chars). Summary: "1,000+ verified buyers"
 8. GET 15% OFF YOUR FIRST ORDER — Blue gradient email signup with AJAX
 ```
 
-**Niche cards (Choose Your Application):** 4 cards — `/marine/`, `/family/`, `/protection/`, `/duvet-covers/`. Not 6. Boarding Dorm and RV Truck accessible via `/protection/` and `/sheets/` respectively.
+**Niche cards (Choose Your Application):** 4 cards — `/marine/`, `/family/`, `/deep-pocket/`, `/pets/`. Not 6. Boarding Dorm and RV Truck accessible via `/protection/` and `/sheets/` respectively.
 
 ---
 
@@ -626,7 +626,7 @@ After Droid finishes, open `http://localhost:8788` and review each section top t
 
 | Check | Expected |
 |---|---|
-| 4 cards visible | Marine & Yacht, Family & Co-Sleep, Specialized Protection, Duvet Covers (4 cards, not 6) |
+| 4 cards visible | Marine & Yacht, Family & Co-Sleep, Deep Pocket, Pet Owner (4 cards, not 6) |
 | Each card has image | Photo or colored placeholder |
 | Each card links somewhere | Clicking goes to the category listing |
 | Mobile | Cards stack to 2 columns |
@@ -778,7 +778,7 @@ Go through this checklist before moving to Phase 5:
 - [x] Hero headline reads: "Bedding Made Easy Again: Custom Sizes, Perfect Fits."
 - [x] Trust bar shows all 4 icons
 - [x] 5 product-type category cards visible (Fitted Sheets, Flat Sheets, Duvet Covers, Pillowcases, Protectors)
-- [x] 4 niche category cards visible: Marine & Yacht / Family & Co-Sleep / Specialized Protection / Duvet Covers (rest accessible via SHOP BY PRODUCT)
+- [x] 4 niche category cards visible: Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner (rest accessible via SHOP BY PRODUCT)
 - [x] Top 5 products show with prices in Most Popular carousel
 - [x] Product detail pages show two-mode configurator: "🛏 Fitted Bed Sheet" (W×L×D) and "⚓ V-Berth Boat Sheet" (HW×FW×L×D) — located on product detail pages, not homepage
 - [x] Fabric tabs all work (click each — panel changes)
