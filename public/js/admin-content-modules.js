@@ -2,8 +2,9 @@
   var BLOG_CATEGORIES = [
     "Marine & Yacht",
     "Family & Co-Sleep",
-    "Pet Owners",
+    "Pet Owner",
     "Deep Pocket",
+    "Boarding Dorm",
     "RV & Truck Cab",
     "Bedding Guide",
     "Product News",
@@ -19,7 +20,7 @@
     "RV & Truck Cab",
     "Sheets",
     "Pillowcases",
-    "Protections",
+    "Protection",
     "Duvet Covers",
     "Accessories"
   ];

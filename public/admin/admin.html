@@ -1524,11 +1524,13 @@ async function showProductEditor(){
   var catSelect = '<select id="ed-category" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
     catOptions.map(function(c){ return '<option value="'+c+'"'+(curCat===c?' selected':'')+'>'+catNames[c]+'</option>'; }).join('')+'</select>';
 
-  // Niche Type dropdown (tag)
+  // Niche Type dropdown (from D1 niches column)
   var nicheMap = {'marine':'Marine & Yacht','family':'Family & Co-Sleep','pets':'Pet Owner','deep-pocket':'Deep Pocket','boarding-dorm':'Boarding Dorm','rv-truck':'RV & Truck Cab'};
-  var curTags = Array.isArray(p.tags) ? p.tags : (p.tags||'').split(',').map(function(t){return t.trim();}).filter(Boolean);
   var curNiche = '';
-  Object.keys(nicheMap).forEach(function(k){ if (curTags.indexOf(k)>=0) curNiche = k; });
+  if (p.niches) {
+    var nicheParts = String(p.niches).split(',').map(function(t){return t.trim().toLowerCase();}).filter(Boolean);
+    nicheParts.forEach(function(n){ if (nicheMap[n]) curNiche = n; });
+  }
   var nicheSelect = '<select id="ed-niche" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
     '<option value="">— None —</option>'+
     Object.keys(nicheMap).map(function(k){ return '<option value="'+k+'"'+(curNiche===k?' selected':'')+'>'+nicheMap[k]+'</option>'; }).join('')+'</select>';
