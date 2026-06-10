@@ -304,12 +304,18 @@ function buildCustomizable(slug, p, prod) {
     replacements['{{FOOT_WIDTH_FIELD_HTML}}'] = '';
   }
 
-  // Dim diagram image: V-Berth for marine, standard mattress for all others
+  // Dim diagram image: per product type
   if (slug === 'marine-fitted-sheet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
     replacements['{{DIM_INPUTS_CLASS}}'] = ' vberth';
+  } else if (pt === 'duvet') {
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Duvet.png';
+    replacements['{{DIM_INPUTS_CLASS}}'] = '';
+  } else if (pt === 'pillowcase' || pt === 'pillow-protector') {
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Pillowcase.png';
+    replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else {
-    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram.jpg';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram-01.png';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   }
 

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2c96f4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a7fd4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="480" fill="url(#bg)"/>
+  <rect x="60" y="60" width="1080" height="360" rx="12" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  <text x="600" y="200" font-family="Quicksand, Arial, sans-serif" font-size="34" font-weight="700" fill="white" text-anchor="middle">Pet Co-Sleeping Bedding Guide</text>
+  <text x="600" y="250" font-family="Quicksand, Arial, sans-serif" font-size="20" font-weight="400" fill="rgba(255,255,255,0.8)" text-anchor="middle">How to Save Your Mattress and Sanity From Hair and Chaos</text>
+  <text x="600" y="330" font-family="Quicksand, Arial, sans-serif" font-size="14" font-weight="400" fill="rgba(255,255,255,0.5)" text-anchor="middle">Placeholder image — replace with actual photo</text>
+</svg>
