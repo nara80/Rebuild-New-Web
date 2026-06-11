@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Site Templates — MildMate Admin</title>
+  <style>
+    :root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-heading:#0F172A;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--color-success:#16a34a;--color-error:#dc2626;--radius:8px;--font-main:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-main);background:var(--color-surface);color:var(--color-text);line-height:1.6;padding:24px}
+    .container{max-width:900px;margin:0 auto}
+    h1{font-size:1.5rem;color:var(--color-heading);margin-bottom:4px}
+    .subtitle{font-size:0.875rem;color:var(--color-muted);margin-bottom:24px}
+    .card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius);padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+    .card h2{font-size:1rem;color:var(--color-heading);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .card h2 .badge{font-size:0.6875rem;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:var(--color-primary);color:#fff}
+    textarea{width:100%;min-height:300px;font-family:'Courier New',monospace;font-size:0.8125rem;padding:12px;border:1px solid var(--color-border);border-radius:var(--radius);resize:vertical;line-height:1.5}
+    textarea:focus{outline:none;border-color:var(--color-primary);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+    .btn{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:0.875rem;font-weight:600;padding:10px 20px;border:none;border-radius:var(--radius);cursor:pointer;transition:background 0.15s}
+    .btn-primary{background:var(--color-primary);color:#fff}
+    .btn-primary:hover{background:var(--color-primary-dark)}
+    .btn-outline{background:var(--color-bg);color:var(--color-text);border:1px solid var(--color-border)}
+    .btn-outline:hover{background:var(--color-surface)}
+    .btn-success{background:var(--color-success);color:#fff}
+    .btn-group{display:flex;gap:8px;margin-top:16px}
+    .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:var(--radius);font-weight:600;font-size:0.875rem;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;z-index:100}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast-success{background:#166534;color:#fff}
+    .toast-error{background:#991b1b;color:#fff}
+    .info{font-size:0.8125rem;color:var(--color-muted);margin-top:8px}
+    .nav-back{margin-bottom:16px;font-size:0.875rem}
+    .nav-back a{color:var(--color-primary);text-decoration:none}
+    .nav-back a:hover{text-decoration:underline}
+    .diff-hint{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 12px;font-size:0.8125rem;color:#92400e;margin-top:8px;display:none}
+    .diff-hint.show{display:block}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="nav-back"><a href="/admin/">&larr; Admin Dashboard</a></div>
+  <h1>Site Templates</h1>
+  <p class="subtitle">Edit the centralized header and footer. Changes are live immediately — no rebuild needed.</p>
+
+  <div id="templates-container"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/admin/templates';
+const SECRET = (() => { try { return localStorage.getItem('admin_secret') || ''; } catch { return ''; } })();
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast toast-' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function loadTemplates() {
+  const res = await fetch(API, { headers: { 'X-Admin-Secret': SECRET } });
+  if (!res.ok) {
+    document.getElementById('templates-container').innerHTML = '<div class="card"><p style="color:var(--color-error)">Failed to load: ' + res.status + '</p></div>';
+    return;
+  }
+  const data = await res.json();
+  const container = document.getElementById('templates-container');
+  container.innerHTML = '';
+
+  for (const tpl of data.templates) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h2><span class="badge">${escapeHtml(tpl.template_key)}</span> ${escapeHtml(tpl.template_key === 'header-standard' ? 'Standard Header' : 'Standard Footer')}</h2>
+      <p style="font-size:0.75rem;color:var(--color-muted);margin-bottom:12px">Last updated: ${tpl.updated_at || 'N/A'}</p>
+      <textarea id="ta-${tpl.template_key}" data-original="${escapeAttr(tpl.template_html)}">${escapeHtml(tpl.template_html)}</textarea>
+      <div class="diff-hint" id="hint-${tpl.template_key}">You have unsaved changes.</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="saveTemplate('${tpl.template_key}')">Save</button>
+        <button class="btn btn-outline" onclick="resetTemplate('${tpl.template_key}')">Reset</button>
+      </div>
+    `;
+    container.appendChild(card);
+
+    // Detect changes
+    const ta = document.getElementById('ta-' + tpl.template_key);
+    ta.addEventListener('input', () => {
+      const original = ta.getAttribute('data-original');
+      const hint = document.getElementById('hint-' + tpl.template_key);
+      if (ta.value !== original) hint.classList.add('show');
+      else hint.classList.remove('show');
+    });
+  }
+}
+
+async function saveTemplate(key) {
+  const ta = document.getElementById('ta-' + key);
+  const html = ta.value;
+  if (!html.trim()) { showToast('Template cannot be empty', 'error'); return; }
+
+  const res = await fetch(API, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': SECRET },
+    body: JSON.stringify({ key, html })
+  });
+
+  if (res.ok) {
+    ta.setAttribute('data-original', html);
+    document.getElementById('hint-' + key).classList.remove('show');
+    showToast('Saved! Cache invalidated — live now.', 'success');
+  } else {
+    const err = await res.json().catch(() => ({}));
+    showToast(err.error || 'Save failed', 'error');
+  }
+}
+
+function resetTemplate(key) {
+  const ta = document.getElementById('ta-' + key);
+  ta.value = ta.getAttribute('data-original');
+  document.getElementById('hint-' + key).classList.remove('show');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escapeAttr(str) {
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadTemplates();
+</script>
+</body>
+</html>

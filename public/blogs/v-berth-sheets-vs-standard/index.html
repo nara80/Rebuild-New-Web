@@ -4,358 +4,465 @@
   <meta charset="UTF-8">
   <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="MildMate Engineering Reference  -  Technical specifications and answers to common questions about custom marine bedding, family co-sleeping sheets, waterproof protectors, and international shipping.">
-  <title>FAQ  -  Engineering Reference & Technical Specifications | MildMate</title>
+  <meta name="description" content="V-Berth sheets vs standard flat sheets — 5 reasons custom boat sheets beat standard sheets for yacht and sailboat sleep. Includes fit, fabric, and cost comparison.">
+  <title>5 Reasons V-Berth Sheets Beat Standard Sheets on Your Boat  -  MildMate Blog</title>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    .faq-page { background: #f0f7ff; }
+    /* ── Blog Post Page ──────────────────────── */
+    .blog-post-page { background: #f0f7ff; }
 
-    /* ── Hero ─────────────────────────────── */
-    .faq-hero {
-      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
-      padding: 72px 24px 56px;
+    /* ── Hero Image ──────────────────────────── */
+    .blog-hero {
       position: relative;
+      height: 480px;
       overflow: hidden;
-      color: #fff;
     }
-    .faq-hero::before {
-      content: '';
+    .blog-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .blog-hero-overlay {
       position: absolute;
       inset: 0;
-      pointer-events: none;
-      opacity: 0.08;
-      background-image:
-        linear-gradient(#fff 1px, transparent 1px),
-        linear-gradient(90deg, #fff 1px, transparent 1px);
-      background-size: 40px 40px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
     }
-    .faq-hero-inner {
+    .blog-hero-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 48px 24px 40px;
       max-width: var(--container-max);
       margin: 0 auto;
-      position: relative;
-      z-index: 1;
-      text-align: center;
     }
-    .faq-hero-inner h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      line-height: 1.15;
-      margin-bottom: 16px;
-      color: #fff;
-    }
-    .faq-hero-inner .hero-sub {
-      font-size: 1.0625rem;
-      color: rgba(255,255,255,0.92);
-      max-width: 600px;
-      margin: 0 auto 28px;
-      line-height: 1.6;
-    }
-    .hero-specs-bar {
-      display: inline-flex;
-      gap: 32px;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(4px);
-      border-radius: 999px;
-      padding: 10px 28px;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-    }
-    .hero-specs-bar span {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .hero-specs-bar svg {
-      width: 16px; height: 16px;
-      stroke: #fff; stroke-width: 2.5;
-    }
-
-    /* ── Category Nav ──────────────────────── */
-    .cat-nav-section {
-      background: #fff;
-      padding: 24px;
-      border-bottom: 1px solid #d0e6fa;
-      position: sticky;
-      top: 60px;
-      z-index: 10;
-    }
-    .cat-nav-inner {
-      max-width: 960px;
-      margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-    .cat-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border: 1.5px solid #d0e6fa;
-      border-radius: 999px;
-      text-decoration: none;
-      color: var(--color-text);
-      font-weight: 600;
-      font-size: 0.8125rem;
-      transition: all 0.2s;
-      background: #f8fbff;
-    }
-    .cat-pill:hover, .cat-pill:focus {
-      border-color: var(--color-primary);
-      color: var(--color-primary);
-      box-shadow: 0 2px 8px rgba(44,150,244,0.10);
-    }
-    .cat-pill svg {
-      width: 16px; height: 16px;
-      stroke: currentColor;
-      stroke-width: 2;
-    }
-
-    /* ── FAQ Sections ───────────────────────── */
-    .faq-section {
-      background: transparent;
-      padding: 56px 24px;
-      border-bottom: 1px solid #d0e6fa;
-    }
-    .faq-section:nth-child(even) { background: transparent; }
-    .faq-section:last-of-type { border-bottom: none; }
-    .faq-inner {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .faq-kicker {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 20px;
-    }
-    .faq-card {
-      background: #f8fbff;
-      border: 1px solid #d0e6fa;
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 20px;
-      transition: box-shadow 0.2s, border-color 0.2s;
-    }
-    .faq-section:nth-child(even) .faq-card { background: #fff; }
-    .faq-card:hover {
-      border-color: var(--color-primary);
-      box-shadow: 0 4px 20px rgba(44,150,244,0.08);
-    }
-    .faq-card:last-child { margin-bottom: 0; }
-    .faq-q {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--color-text);
-      margin: 0 0 14px;
-      line-height: 1.4;
-    }
-    .faq-a {
-      font-size: 0.9375rem;
-      color: var(--color-muted);
-      line-height: 1.7;
-      margin: 0 0 16px;
-    }
-    .faq-a:last-child { margin-bottom: 0; }
-    .faq-list {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 16px;
-    }
-    .faq-list li {
-      position: relative;
-      padding-left: 24px;
-      margin-bottom: 10px;
-      font-size: 0.9375rem;
-      color: var(--color-muted);
-      line-height: 1.6;
-    }
-    .faq-list li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 8px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+    .blog-hero-caption .blog-category {
+      display: inline-block;
       background: var(--color-primary);
-      opacity: 0.5;
-    }
-    .faq-list li strong {
-      color: var(--color-text);
+      color: #fff;
+      font-size: 0.6875rem;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
     }
-    .faq-quote {
-      border-left: 3px solid var(--color-primary);
-      padding: 4px 0 4px 20px;
-      margin: 16px 0;
+    .blog-hero-caption h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      max-width: 800px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .blog-hero-caption .blog-meta {
+      margin-top: 16px;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.85);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .blog-hero-caption .blog-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Content Layout ──────────────────────── */
+    .blog-content-section {
+      background: #fff;
+      padding: 64px 24px 80px;
+    }
+    .blog-content-layout {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .blog-body {
+      font-size: 1.0625rem;
+      line-height: 1.8;
+      color: #444;
+    }
+    .blog-body h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin: 40px 0 16px;
+    }
+    .blog-body h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin: 32px 0 12px;
+    }
+    .blog-body p {
+      margin-bottom: 20px;
+    }
+    .blog-body ul, .blog-body ol {
+      padding-left: 24px;
+      margin-bottom: 20px;
+    }
+    .blog-body ul li { list-style: disc; margin-bottom: 8px; }
+    .blog-body ol li { list-style: decimal; margin-bottom: 8px; }
+    .blog-body a {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
+    .blog-body blockquote {
+      border-left: 4px solid var(--color-primary);
+      padding: 16px 24px;
+      margin: 32px 0;
+      background: #f0f7ff;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-style: italic;
+      font-size: 1.125rem;
+      color: #555;
+    }
+    .blog-body img {
+      width: 100%;
+      border-radius: var(--radius);
+      margin: 24px 0;
+    }
+
+    /* ── CTA Box ────────────────────────────── */
+    .blog-cta-box {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      text-align: center;
+      color: #fff;
+      margin: 40px 0;
+    }
+    .blog-cta-box h3 { font-size: 1.375rem; font-weight: 700; margin-bottom: 12px; color: #fff; }
+    .blog-cta-box p { font-size: 0.9375rem; color: rgba(255,255,255,0.88); margin-bottom: 24px; }
+    .blog-cta-box .btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background: #fff;
+      color: var(--color-primary);
+      border-radius: var(--radius);
+      font-weight: 700;
       font-size: 0.9375rem;
-      line-height: 1.7;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .blog-cta-box .btn:hover { background: #f0f7ff; }
+
+    /* ── Author Box ─────────────────────────── */
+    .blog-author {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 24px 0;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      margin: 40px 0;
+    }
+    .blog-author-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--color-surface);
+    }
+    .blog-author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .blog-author-info .author-name {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: var(--color-text);
+      margin-bottom: 4px;
+    }
+    .blog-author-info .author-bio {
+      font-size: 0.8125rem;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    /* ── Share Bar ──────────────────────────── */
+    .blog-share {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 32px 0;
+    }
+    .blog-share-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #888;
+    }
+    .blog-share a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--color-surface);
+      color: var(--color-text);
+      transition: background 0.2s, color 0.2s;
+    }
+    .blog-share a:hover { background: var(--color-primary); color: #fff; }
+
+    /* ── Related Products ───────────────────── */
+    .related-products-section {
+      background: #f0f7ff;
+      padding: 64px 24px 80px;
+      border-top: 1px solid var(--color-border);
+    }
+    .related-products-section h2 {
+      font-size: 1.625rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 40px;
       color: var(--color-text);
     }
-    .faq-quote p { margin: 0 0 12px; }
-    .faq-quote p:last-child { margin-bottom: 0; }
-    .faq-quote strong { color: var(--color-primary); font-weight: 700; }
-    .faq-related {
-      font-size: 0.8125rem;
-      color: var(--color-muted);
-      margin: 0;
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 24px;
     }
-    .faq-related a {
-      color: var(--color-primary);
+    .related-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .related-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+    }
+    .related-card .card-image {
+      position: relative;
+      overflow: hidden;
+      background: var(--color-surface);
+    }
+    .related-card .card-image img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s;
+    }
+    .related-card:hover .card-image img { transform: scale(1.04); }
+    .related-card .card-body {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .related-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .related-card .card-tag {
+      font-size: 0.6875rem;
       font-weight: 600;
-      text-decoration: none;
+      color: var(--color-primary);
+      background: #e8f4fd;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
-    .faq-related a:hover { text-decoration: underline; }
+    .related-card .card-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 10px;
+      line-height: 1.3;
+      flex: 1;
+    }
+    .related-card .card-price {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 6px;
+    }
+    .related-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
+    .related-card .btn {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: background 0.2s;
+      margin-top: auto;
+    }
+    .related-card .btn-primary { background: var(--color-primary); color: #fff; }
+    .related-card .btn-primary:hover { background: var(--color-primary-dark); }
 
-    /* ── Mobile ──────────────────────────────── */
+    /* ── Responsive ─────────────────────────── */
     @media (max-width: 768px) {
-      .faq-hero { padding: 48px 20px 36px; }
-      .faq-hero-inner h1 { font-size: 1.875rem; }
-      .hero-specs-bar { flex-direction: column; gap: 8px; border-radius: var(--radius); }
-      .cat-nav-section { top: 52px; padding: 16px; }
-      .cat-nav-inner { gap: 8px; }
-      .cat-pill { padding: 6px 12px; font-size: 0.75rem; }
-      .faq-section { padding: 40px 20px; }
-      .faq-card { padding: 20px; }
+      .blog-hero { height: 320px; }
+      .blog-hero-caption h1 { font-size: 1.625rem; }
+      .blog-hero-caption { padding: 24px 16px 32px; }
+      .blog-content-section { padding: 40px 16px 56px; }
+    }
+    @media (max-width: 480px) {
+      .related-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body class="faq-page">
+<body class="blog-post-page">
 
   <!-- __HEADER__ -->
 
   <main>
 
-    <!-- ===== HERO ===== -->
-    <section class="faq-hero">
-      <div class="faq-hero-inner">
-        <h1>Engineering Reference & Technical Specifications</h1>
-        <p class="hero-sub">Real customer questions answered with manufacturing precision. Every specification verified against production standards.</p>
-        <div class="hero-specs-bar">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> 5 Categories</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 12 Spec Sheets</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Updated May 2026</span>
+    <!-- Hero Image -->
+    <section class="blog-hero">
+      <img src="/images/products/marine-fitted-sheet/main.jpg" alt="V-Berth fitted sheet on a yacht — custom marine bedding by MildMate" width="1200" height="480" loading="eager" decoding="async">
+      <div class="blog-hero-overlay"></div>
+      <div class="blog-hero-caption">
+        <span class="blog-category">Marine</span>
+        <h1>5 Reasons V-Berth Sheets Beat Standard Sheets on Your Boat</h1>
+        <div class="blog-meta">
+          <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            May 12, 2026
+          </span>
+          <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            MildMate Team
+          </span>
+          <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            7 min read
+          </span>
         </div>
       </div>
     </section>
 
-    <!-- ===== CATEGORY NAV ===== -->
-    <section class="cat-nav-section">
-      <div class="cat-nav-inner">
-        <a href="#marine" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M2 12c0-5.5 4.5-10 10-10s10 4.5 10 10"/><path d="M2 12c0 5.5 4.5 10 10 10"/></svg>Marine & Yacht</a>
-        <a href="#family" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Family & Co-Sleep</a>
-        <a href="#protection" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Protection</a>
-        <a href="#dakimakura" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Pillowcase</a>
-        <a href="#duvet" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>Duvet & BedBridge</a>
-        <a href="#logistics" class="cat-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 20 16 16 16 16 8"/></svg>Logistics</a>
-      </div>
-    </section>
+    <!-- Content -->
+    <section class="blog-content-section">
+      <div class="blog-content-layout">
+        <article class="blog-body">
+          <p>If you've ever spent twenty minutes wrestling a flat sheet into a V-berth at 2am in a rolling anchorage, you already know: standard sheets were never built for boats. Here's why more yacht owners are switching to custom V-Berth fitted sheets  -  and never looking back.</p>
 
-    <!-- ===== MARINE ===== -->
-    <section class="faq-section" id="marine">
-      <div class="faq-inner">
-        <div class="faq-kicker">Custom Marine & V-Berth Bedding</div>
-        <div class="faq-card">
-          <p class="faq-q">I have a specific boat model (e.g., Beneteau Antares 11, Apreamare Cabinato 11, or SS7 Bayliner). Do you have templates or fitments for these?</p>
-          <p class="faq-a">We specialize in bespoke fitments for these specific hull designs. While we maintain a library of common shapes, we treat every cabin bed as a unique project to ensure a "Built-In" appearance.</p>
-          <ul class="faq-list">
+<h2>1. A Secure Fit Means No More Midnight Readjustments</h2>
+<p>Standard sheets lift off the corners the moment your boat heels more than 10 degrees. V-Berth sheets are cut to your exact hull dimensions  -  including tapered cabin shapes  -  so the corners stay pinned. You set it once, and it stays put through the night.</p>
+<p>The science is simple: a rectangular sheet has no mechanism to resist lateral sliding. Your mattress corners are the only anchor points, and on an angled surface those corners don't hold. A custom V-Berth fitted sheet wraps the exact perimeter of your mattress, including any tapered sections, so gravity works <em>with</em> the shape rather than against it.</p>
 
-            <li><strong>Blueprint Verification:</strong> Before production, we generate a digital blueprint of your hull's geometry for your approval to confirm orientation (head vs. foot) and taper.</li>
-            <li><strong>Heavy-Motion Fitment:</strong> Sheets are custom-tailored to the exact taper of the hull, featuring a heavy-duty 360-degree elastic perimeter to stay anchored during heavy seas or when lifting mattresses for storage access.</li>
-          </ul>
-          <p class="faq-related">Related: <a href="/marine/">Marine & Yacht Collection &rarr;</a></p>
-        </div>
-      </div>
-    </section>
+<h2>2. CloudSoft Fabric Handles Salt Air Better</h2>
+<p>Regular cotton holds moisture and breaks down faster in salty, humid conditions. Our CloudSoft microfiber is engineered to resist moisture absorption while staying breathable  -  ideal for liveaboard and offshore environments. It dries faster between voyages and resists the salt crusting that damages natural fibers.</p>
+<ul>
+<li>Moisture-wicking: pulls sweat and condensation away from skin</li>
+<li>Quick-dry: often dry within 2 hours on a sunny deck</li>
+<li>Salt-resistant: no fiber degradation from seawater exposure</li>
+<li>OEKO-TEX certified: no harmful chemicals, safe for sensitive skin</li>
+</ul>
 
-    <!-- ===== FAMILY ===== -->
-    <section class="faq-section" id="family">
-      <div class="faq-inner">
-        <div class="faq-kicker">Family Co-Sleeping & "Mega-Bed" Systems</div>
-        <div class="faq-card">
-          <p class="faq-q">Can you create a single fitted sheet and protector for combined beds (e.g., 290 cm total width)?</p>
-          <p class="faq-a">Yes. We manufacture "Unified Surface" conversions for any combined footprint, including massive setups up to 290 cm x 183 cm.</p>
-          <ul class="faq-list">
-            <li><strong>Seamless Architecture:</strong> For large-format setups, we use a single, 100% seamless piece of fabric to eliminate the uncomfortable center ridge found in standard joined sheets.</li>
-            <li><strong>The Bridge-Buffer Layer:</strong> We recommend our quilted protector to act as a mechanical leveling layer, using its loft to flatten convex bumps and make the transition across a BedBridge imperceptible.</li>
-            <li><strong>The Mechanical Pinch Anchor:</strong> We include a 2-inch secure tuck-under beyond your pocket depth. This uses the mattresses' own weight to "pinch" the fabric in place, preventing it from sliding.</li>
-            <li><strong>Multi-Sheet Discounts:</strong> We offer a 20% discount for customers ordering two or more custom family sheets.</li>
-          </ul>
-          <p class="faq-related">Related: <a href="/family/">Family & Co-Sleep Collection &rarr;</a></p>
-        </div>
-      </div>
-    </section>
+<h2>3. Tapered Corners  -  Tapered Design</h2>
+<p>Most V-berths have one wide end and one narrow end, or compound angles where the hull meets the cabin wall. A standard rectangular sheet simply can't cover these shapes properly  -  there's always a gap, a fold, or a exposed corner where the sheet doesn't reach.</p>
+<p>Custom V-Berth sheets are patterned to your exact angles. Our Photo-Measurement process captures your hull geometry, and we build a pattern within 1cm accuracy. Every inch of your mattress gets covered  -  including those awkward tapered zones that standard sheets simply ignore.</p>
 
-    <!-- ===== PROTECTION ===== -->
-    <section class="faq-section" id="protection">
-      <div class="faq-inner">
-        <div class="faq-kicker">Specialized Waterproof Protection</div>
-        <div class="faq-card">
-          <p class="faq-q">Can you make custom waterproof protectors for pets (e.g., 132" x 80")?</p>
-          <p class="faq-a">Yes. We build "Asset-Shield" protectors to any dimensions to preserve luxury mattress foam from pet accidents.</p>
-          <ul class="faq-list">
-            <li><strong>Stability Fit:</strong> We tailor the pocket depth (customizable up to 24"+) to ensure sidewalls stay locked during the lateral force of pets jumping on the bed.</li>
-            <li><strong>6-Sided Low-Lift Design:</strong> For RVs or tight spaces, our 6-sided encasements feature top-perimeter zippers so they can be installed without fully lifting heavy mattresses.</li>
-          </ul>
-          <p class="faq-related">Related: <a href="/protection/">Protection Collection &rarr;</a></p>
-        </div>
-      </div>
-    </section>
+<blockquote>"I replaced our standard sheet with a MildMate V-Berth sheet two seasons ago. I wish I'd done it the first year."  -  James K., S/Y Meridian</blockquote>
 
-    <!-- ===== DAKIMAKURA ===== -->
-    <section class="faq-section" id="dakimakura">
-      <div class="faq-inner">
-        <div class="faq-kicker">Dakimakura (Body Pillow) Modular System</div>
-        <div class="faq-card">
-          <p class="faq-q">Why do you recommend a 2-layer system instead of a single-layer sewn TPU unit?</p>
-          <p class="faq-a">Our Professional 2-Layer System is superior for three reasons:</p>
-          <ul class="faq-list">
-            <li><strong>Durability:</strong> Frequent washing can cause TPU membranes to delaminate if sewn directly to outer fabric. Our system lets you wash the outer cover (PremaCotton or BreezePlus) while the TPU liner remains protected.</li>
-            <li><strong>Waterproof Integrity:</strong> Sewing TPU directly creates needle holes that can leak. A separate inner liner provides 100% spill-proof protection.</li>
-            <li><strong>Acoustics & Feel:</strong> Separate layers ensure the pillow stays soft and quiet; bonding them creates a "crinkly" or stiff feel.</li>
-          </ul>
-          <p class="faq-related">Related: <a href="/pillowcases/">Pillowcases Collection &rarr;</a></p>
-        </div>
-      </div>
-    </section>
+<h2>4. One Piece, Not Two  -  Simpler Changeovers</h2>
+<p>With a properly fitted V-Berth sheet, many boat owners skip the flat sheet entirely and use just the fitted sheet and a duvet. This means:</p>
+<ul>
+<li>Less laundry  -  one sheet instead of two</li>
+<li>Fewer crease complaints from crew</li>
+<li>Faster morning turndowns in narrow bunk spaces</li>
+<li>Less storage required for spare linens</li>
+</ul>
+<p>The result is a simpler, faster bedding routine that works with limited space and no iron.</p>
 
-    <!-- ===== DUVET ===== -->
-    <section class="faq-section" id="duvet">
-      <div class="faq-inner">
-        <div class="faq-kicker">Duvet Covers & BedBridge Connector</div>
-        <div class="faq-card">
-          <p class="faq-q">What makes the 3-sided zipper better for heavy duvets?</p>
-          <p class="faq-a">The "Suitcase-Style" load allows the top layer to flip back completely. You simply lay the heavy insert flat and zip it closed, cutting bed-making time by ~90% and eliminating heavy lifting.</p>
-          <div class="faq-quote">
-            <p><strong>BedBridge Mechanics:</strong> This is a mechanical component sold separately from sheets. It requires mattresses to stay at the same height; independent adjustment of split beds will dislodge the bridge.</p>
+<h2>5. Easy-Change Zipper Duvets Pair Perfectly</h2>
+<p>Pair your V-Berth fitted sheet with our 3-Sided Zipper Duvet Cover for the ultimate easy-change system. The three-sided zipper runs along the open edge of the duvet cover  -  top and two sides  -  so you zip off the dirty cover and zip on a clean one in under two minutes. No wrestling with corners in a narrow cabin.</p>
+
+<h3>Ready to Measure Your V-Berth?</h3>
+<p>Our Photo-Measurement process takes about 10 minutes. You'll need a credit card (for scale reference), a friend to help hold the tape, and your phone camera.</p>
+<ol>
+<li>Clear the mattress completely</li>
+<li>Place a credit card flat against the hull at the head width point</li>
+<li>Take a photo from directly above</li>
+<li>Repeat at the foot width and center length</li>
+<li>Upload via our <a href="/custom-measurement/">Custom Measurement form</a></li>
+</ol>
+<p>Our pattern team builds your custom sheet within 48 hours. Most marine orders ship within 5 - 7 business days.</p>
+        </article>
+
+        <!-- CTA -->
+        <div class="blog-cta-box">
+<h3>Get a Custom V-Berth Sheet</h3>
+<p>Made to your exact hull dimensions. CloudSoft fabric, OEKO-TEX certified, ships worldwide.</p>
+<a href="/marine/" class="btn">Shop Marine Bedding</a>
+</div>
+
+        <!-- Author Box -->
+        <div class="blog-author">
+          <div class="blog-author-avatar">
+            <img src="/images/products/bedbridge-connector/main.jpg" alt="MildMate Team" width="56" height="56" loading="lazy">
           </div>
-          <p class="faq-related">Related: <a href="/duvet-covers/">Duvet Collection &rarr;</a></p>
+          <div class="blog-author-info">
+            <div class="author-name">MildMate Team</div>
+            <div class="author-bio">Bedding engineers and marine sleep enthusiasts. We measure, pattern, and ship custom bedding to yachts and homes across 40+ countries.</div>
+          </div>
         </div>
+
+        <!-- Share -->
+        <div class="blog-share">
+          <span class="blog-share-label">Share:</span>
+          <a href="#" aria-label="Share on Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a href="#" aria-label="Share on X"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <a href="#" aria-label="Share via Email"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></a>
+        </div>
+
       </div>
     </section>
 
-    <!-- ===== LOGISTICS ===== -->
-    <section class="faq-section" id="logistics">
-      <div class="faq-inner">
-        <div class="faq-kicker">Logistics & International Shipping</div>
-        <div class="faq-card">
-          <p class="faq-q">What is the lead time and do you ship to Australia?</p>
-          <ul class="faq-list">
-            <li><strong>Production:</strong> Most custom orders are prepared for shipping within 48 hours to a few days depending on complexity.</li>
-            <li><strong>International:</strong> We ship globally, including to Australia and the UK. Arrival times vary based on regional courier performance.</li>
-          </ul>
-          <p class="faq-related">For full details see <a href="/shipping/">Returns & Delivery &rarr;</a></p>
+    <!-- Related Products -->
+    <section class="related-products-section">
+      <div class="container">
+        <h2>Products Mentioned in This Article</h2>
+        <div class="related-grid">
+                    <article class="related-card">
+            <div class="card-image">
+              <img src="/images/products/marine-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">Marine</span><span class="card-tag">Fitted Sheets</span></div>
+              <h3 class="card-title">Marine Fitted Sheet</h3>
+              <div class="card-price">From USD 55.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <a href="/product/marine-fitted-sheet/" class="btn btn-primary">View Options</a>
+            </div>
+          </article>
+          <article class="related-card">
+            <div class="card-image">
+              <img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">Marine</span><span class="card-tag">Protection</span></div>
+              <h3 class="card-title">6-Sided Mattress Encasement</h3>
+              <div class="card-price">From USD 55.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <a href="/product/mattress-encasement-general/" class="btn btn-primary">View Options</a>
+            </div>
+          </article>
+          <article class="related-card">
+            <div class="card-image">
+              <img src="/images/products/3-sided-duvet/main.jpg" alt="3-Sided Zipper Duvet Cover" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><span class="card-tag">Marine</span><span class="card-tag">Duvet</span></div>
+              <h3 class="card-title">3-Sided Zipper Duvet Cover</h3>
+              <div class="card-price">USD 65.00</div>
+              <div class="card-price-note">Excludes shipping, tax &amp; tariff</div>
+              <a href="/product/3-sided-duvet/" class="btn btn-primary">View Options</a>
+            </div>
+          </article>
         </div>
       </div>
     </section>
-
-
 
   </main>
 
@@ -363,7 +470,5 @@
 
   <script src="/js/nav.js"></script>
   <script src="/js/clerk.js"></script>
-  <script src="/js/cart.js"></script>
-  <script src="/js/cookie-consent.js"></script>
 </body>
 </html>

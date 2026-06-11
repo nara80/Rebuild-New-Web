@@ -14,7 +14,7 @@
   function onScroll() {
     if (!headerTicking) {
       requestAnimationFrame(function () {
-        header.classList.toggle('scrolled', window.scrollY > 20);
+        if (header) header.classList.toggle('scrolled', window.scrollY > 20);
         headerTicking = false;
       });
       headerTicking = true;

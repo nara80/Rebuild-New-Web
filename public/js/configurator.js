@@ -15,14 +15,14 @@
   const THB_TO_USD = 30;
   const MAX_WIDTH_CM = 220;
 
-  const FABRIC_COST_PER_YARD: Record<string, number> = {
+  const FABRIC_COST_PER_YARD = {
     cloudsoft: 100,
     breezeplus: 180,
     premacotton: 180,
     ecoluxe: 180,
   };
 
-  const SEWING_TIERS: { max: number; cost: number }[] = [
+  const SEWING_TIERS = [
     { max: 51600, cost: 120 },
     { max: 71000, cost: 200 },
     { max: 91200, cost: 300 },
@@ -30,14 +30,14 @@
     { max: Infinity, cost: 500 },
   ];
 
-  function getSewingCost(area: number): number {
+  function getSewingCost(area) {
     for (const tier of SEWING_TIERS) {
       if (area <= tier.max) return tier.cost;
     }
     return 500;
   }
 
-  function calcFittedSheet(w: number, l: number, d: number, fabric: string): { thb: number; usd: number } {
+  function calcFittedSheet(w, l, d, fabric) {
     const fw = w + 2 * d + 14;
     const fl = l + 2 * d + 14;
     const area = fw * fl;
@@ -114,7 +114,7 @@
     return 'THB';
   }
 
-  function formatPrice(amount: number, currency: string): string {
+  function formatPrice(amount, currency) {
     if (currency === 'THB') {
       return '\u0E3F' + amount.toLocaleString();
     }
@@ -123,11 +123,11 @@
 
   function calculatePrice() {
     if (!priceDisplay) return;
-    const w = parseFloat((document.getElementById('cfg-width') as HTMLInputElement)?.value) || 0;
-    const l = parseFloat((document.getElementById('cfg-length') as HTMLInputElement)?.value) || 0;
-    const d = parseFloat((document.getElementById('cfg-depth') as HTMLInputElement)?.value) || 0;
-    const head = parseFloat((document.getElementById('cfg-head') as HTMLInputElement)?.value) || 0;
-    const foot = parseFloat((document.getElementById('cfg-foot') as HTMLInputElement)?.value) || 0;
+    const w = parseFloat(document.getElementById('cfg-width')?.value) || 0;
+    const l = parseFloat(document.getElementById('cfg-length')?.value) || 0;
+    const d = parseFloat(document.getElementById('cfg-depth')?.value) || 0;
+    const head = parseFloat(document.getElementById('cfg-head')?.value) || 0;
+    const foot = parseFloat(document.getElementById('cfg-foot')?.value) || 0;
 
     const currency = getCurrency();
 
@@ -161,21 +161,21 @@
     }
   }
 
-  function switchMode(mode: string) {
+  function switchMode(mode) {
     state.mode = mode;
-    tabs.forEach(function (t) { t.classList.toggle('active', (t as HTMLElement).dataset.mode === mode); });
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.mode === mode); });
     renderInputs();
     renderDiagram();
     calculatePrice();
   }
 
-  function switchUnit(unit: string) {
+  function switchUnit(unit) {
     if (state.unit === unit) return;
     const oldUnit = state.unit;
     state.unit = unit;
-    unitBtns.forEach(function (b) { b.classList.toggle('active', (b as HTMLElement).dataset.unit === unit); });
+    unitBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.unit === unit); });
     if (inputsContainer) {
-      inputsContainer.querySelectorAll('input').forEach(function (inp: HTMLInputElement) {
+      inputsContainer.querySelectorAll('input').forEach(function (inp) {
         const val = parseFloat(inp.value);
         if (!isNaN(val)) {
           if (oldUnit === 'cm' && unit === 'inch') {
@@ -189,27 +189,27 @@
     calculatePrice();
   }
 
-  function switchFabric(fabric: string) {
+  function switchFabric(fabric) {
     state.fabric = fabric;
-    fabricChips.forEach(function (c) { c.classList.toggle('active', (c as HTMLElement).dataset.fabric === fabric); });
+    fabricChips.forEach(function (c) { c.classList.toggle('active', c.dataset.fabric === fabric); });
     calculatePrice();
   }
 
   tabs.forEach(function (t) {
-    t.addEventListener('click', function () { switchMode((t as HTMLElement).dataset.mode || 'sheet'); });
+    t.addEventListener('click', function () { switchMode(t.dataset.mode || 'sheet'); });
   });
 
   unitBtns.forEach(function (b) {
-    b.addEventListener('click', function () { switchUnit((b as HTMLElement).dataset.unit || 'cm'); });
+    b.addEventListener('click', function () { switchUnit(b.dataset.unit || 'cm'); });
   });
 
   fabricChips.forEach(function (c) {
-    c.addEventListener('click', function () { switchFabric((c as HTMLElement).dataset.fabric || 'cloudsoft'); });
+    c.addEventListener('click', function () { switchFabric(c.dataset.fabric || 'cloudsoft'); });
   });
 
   if (addBtn) {
     addBtn.addEventListener('click', function () {
-      const item: any = {
+      const item = {
         id: 'cfg-' + Date.now(),
         type: state.mode === 'sheet' ? 'Fitted Bed Sheet' : 'V-Berth Boat Sheet',
         fabric: state.fabric,
@@ -219,17 +219,17 @@
         qty: 1
       };
       if (state.mode === 'sheet') {
-        item.dimensions.width = (document.getElementById('cfg-width') as HTMLInputElement)?.value || '';
-        item.dimensions.length = (document.getElementById('cfg-length') as HTMLInputElement)?.value || '';
-        item.dimensions.depth = (document.getElementById('cfg-depth') as HTMLInputElement)?.value || '';
+        item.dimensions.width = document.getElementById('cfg-width')?.value || '';
+        item.dimensions.length = document.getElementById('cfg-length')?.value || '';
+        item.dimensions.depth = document.getElementById('cfg-depth')?.value || '';
       } else {
-        item.dimensions.head = (document.getElementById('cfg-head') as HTMLInputElement)?.value || '';
-        item.dimensions.foot = (document.getElementById('cfg-foot') as HTMLInputElement)?.value || '';
-        item.dimensions.length = (document.getElementById('cfg-length') as HTMLInputElement)?.value || '';
-        item.dimensions.depth = (document.getElementById('cfg-depth') as HTMLInputElement)?.value || '';
+        item.dimensions.head = document.getElementById('cfg-head')?.value || '';
+        item.dimensions.foot = document.getElementById('cfg-foot')?.value || '';
+        item.dimensions.length = document.getElementById('cfg-length')?.value || '';
+        item.dimensions.depth = document.getElementById('cfg-depth')?.value || '';
       }
-      if ((window as any).MildMateCart) {
-        (window as any).MildMateCart.add(item);
+      if (window.MildMateCart) {
+        window.MildMateCart.add(item);
       }
     });
   }
@@ -242,12 +242,12 @@
   /* ── Fabric Showcase Tabs (Homepage) ─────── */
   document.querySelectorAll('.fabric-tabs').forEach(function (tabContainer) {
     const buttons = tabContainer.querySelectorAll('.fabric-tab');
-    const panels = (tabContainer.parentElement as HTMLElement).querySelectorAll('.fabric-panel');
+    const panels = tabContainer.parentElement.querySelectorAll('.fabric-panel');
     buttons.forEach(function (btn) {
       btn.addEventListener('click', function () {
-        const fabric = (btn as HTMLElement).dataset.fabric;
-        buttons.forEach(function (b) { b.classList.toggle('active', (b as HTMLElement).dataset.fabric === fabric); });
-        panels.forEach(function (p) { (p as HTMLElement).classList.toggle('active', (p as HTMLElement).dataset.fabric === fabric); });
+        const fabric = btn.dataset.fabric;
+        buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.fabric === fabric); });
+        panels.forEach(function (p) { p.classList.toggle('active', p.dataset.fabric === fabric); });
       });
     });
   });

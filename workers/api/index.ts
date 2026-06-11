@@ -26,6 +26,7 @@ import { handleAdminPromo } from "./admin-promo";
 import { handleAdminBlog } from "./admin-blog";
 import { handleBlogPosts } from "./blog-posts";
 import { handleAdminContacts } from "./admin-contacts";
+import { handleAdminTemplates } from "./admin-templates";
 import { handleFavorites } from "./favorites";
 import { handleReviews, handleAdminReviews } from "./reviews";
 import { handleCheckout } from "./checkout";
@@ -125,6 +126,11 @@ export default {
     // Admin Blog Posts — CRUD
     if (path === "/api/admin/blog" || path === "/api/admin/blog/") {
       return handleAdminBlog(request, env);
+    }
+
+    // Admin Templates — header/footer management
+    if (path === "/api/admin/templates" || path === "/api/admin/templates/") {
+      return handleAdminTemplates(request, env);
     }
 
     // Public Blog Posts — listing + single post
