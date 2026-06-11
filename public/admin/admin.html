@@ -192,11 +192,16 @@ async function showPage(name) {
     exchange:'Exchange Rates',marketing:'Marketing',blog:'Blog',reviews:'Reviews',products:'Products',orders:'Orders',quotes:'Quotes',
     customers:'Customers',contacts:'Contacts',subscribers:'Newsletter',accounts:'Admin Accounts'
   }[name];
-  var result = renderPage(name);
-  if (result && typeof result.then === 'function') {
-    document.getElementById('page-content').innerHTML = await result;
-  } else {
-    document.getElementById('page-content').innerHTML = result;
+  try {
+    var result = renderPage(name);
+    if (result && typeof result.then === 'function') {
+      document.getElementById('page-content').innerHTML = await result;
+    } else {
+      document.getElementById('page-content').innerHTML = result;
+    }
+  } catch(e) {
+    document.getElementById('page-content').innerHTML = '<div class="card"><div class="card-body" style="color:var(--c-red);padding:24px"><strong>Error loading page:</strong> ' + (e.message || String(e)) + '</div></div>';
+    console.error('showPage error:', e);
   }
 }
 
