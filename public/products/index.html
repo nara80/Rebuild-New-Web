@@ -23,6 +23,25 @@
     .product-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
     .product-card .btn-primary { background: var(--color-primary); color: #fff; }
     .product-card .btn-primary:hover { background: var(--color-primary-dark); }
+
+    /* ── Filter Chips ─────────────────────── */
+    .filter-section { margin-bottom: 28px; }
+    .filter-label { font-size: 0.8125rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .filter-chip { padding: 10px 20px; border-radius: 999px; border: 2px solid var(--color-border); background: var(--color-bg); color: var(--color-text); font-family: var(--font-main); font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .filter-chip:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .filter-chip.active { border-color: var(--color-primary); background: #e8f4fd; color: var(--color-primary); font-weight: 700; }
+
+    /* ── Card baseline fixes ──────────────── */
+    .product-card .product-tags { overflow: hidden; max-height: 24px; flex-wrap: nowrap; }
+    .product-card .product-title { min-height: 2.6em; }
+
+    /* ── Mobile: horizontal scroll on chips ── */
+    @media (max-width: 768px) {
+      .filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+      .filter-chips::-webkit-scrollbar { display: none; }
+      .filter-chip { flex-shrink: 0; }
+    }
     @media (max-width: 480px) { .product-card .product-image img { aspect-ratio: 16/9; } }
   </style>
 </head>
@@ -41,37 +60,29 @@
 
     <section class="section">
       <div class="container">
-        <div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:32px; padding:16px; background:var(--color-surface); border-radius:var(--radius);">
-          <div class="filter-group">
-            <label for="filter-category" style="font-weight:600; margin-right:8px;">Category:</label>
-            <select id="filter-category" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
-              <optgroup label="Shop by Product">
-              <option value="all">All Products</option>
-              <option value="sheets">Sheets</option>
-              <option value="duvet-covers">Duvet Covers</option>
-              <option value="pillowcases">Pillowcases</option>
-              <option value="protection">Protection</option>
-              <option value="accessories">Accessories</option>
-              </optgroup>
-              <optgroup label="Shop by Niche">
-              <option value="marine">Marine & Yacht</option>
-              <option value="family">Family & Co-Sleep</option>
-              <option value="pets">Pet Owner</option>
-              <option value="deep-pocket">Deep Pocket</option>
-              <option value="boarding-dorm">Boarding Dorm</option>
-              <option value="rv-truck">RV & Truck Cab</option>
-              </optgroup>
-            </select>
+        <!-- Filter Chips: Product Types -->
+        <div class="filter-section">
+          <div class="filter-label">Shop by Product Type</div>
+          <div class="filter-chips" id="filter-chips-type">
+            <button class="filter-chip active" data-filter="all">All Products</button>
+            <button class="filter-chip" data-filter="sheets">Sheets</button>
+            <button class="filter-chip" data-filter="duvet-covers">Duvet Covers</button>
+            <button class="filter-chip" data-filter="pillowcases">Pillowcases</button>
+            <button class="filter-chip" data-filter="protection">Protection</button>
+            <button class="filter-chip" data-filter="accessories">Accessories</button>
           </div>
-          <div class="filter-group">
-            <label for="filter-fabric" style="font-weight:600; margin-right:8px;">Fabric:</label>
-            <select id="filter-fabric" class="filter-select" style="padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main);">
-              <option value="all">All</option>
-              <option value="breezeplus">BreezePlus</option>
-              <option value="cloudsoft">CloudSoft</option>
-              <option value="premacotton">PremaCotton</option>
-              <option value="ecoluxe">EcoLuxe</option>
-            </select>
+        </div>
+
+        <!-- Filter Chips: Application Niches -->
+        <div class="filter-section">
+          <div class="filter-label">Shop by Application</div>
+          <div class="filter-chips" id="filter-chips-niche">
+            <button class="filter-chip" data-filter="family">Family &amp; Co-Sleep</button>
+            <button class="filter-chip" data-filter="marine">Marine &amp; Yacht</button>
+            <button class="filter-chip" data-filter="pets">Pet Owner</button>
+            <button class="filter-chip" data-filter="deep-pocket">Deep Pocket</button>
+            <button class="filter-chip" data-filter="boarding-dorm">Boarding Dorm</button>
+            <button class="filter-chip" data-filter="rv-truck">RV &amp; Truck Cab</button>
           </div>
         </div>
 
@@ -455,33 +466,44 @@
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
-    // Product Filter functionality
+    // Visual chip filter — single-select across both rows
     (function() {
-      var categorySelect = document.getElementById('filter-category');
-      var productCards = document.querySelectorAll('.product-card');
-      
-      window.filterProducts = function() {
-        var selectedCategory = categorySelect.value;
-        
-        Array.prototype.forEach.call(productCards, function(card) {
-          var categories = card.getAttribute('data-categories') || '';
-          var cats = categories.split(',');
-          var match = selectedCategory === 'all';
-          
-          for (var i = 0; i < cats.length; i++) {
-            if (cats[i].trim() === selectedCategory) {
-              match = true;
-              break;
+      var chips = document.querySelectorAll('.filter-chip');
+      var cards = document.querySelectorAll('.product-card');
+
+      function filterCards(activeFilter) {
+        Array.prototype.forEach.call(cards, function(card) {
+          if (activeFilter === 'all' || !activeFilter) {
+            card.style.display = '';
+          } else {
+            var cats = (card.getAttribute('data-categories') || '').split(',');
+            var match = false;
+            for (var i = 0; i < cats.length; i++) {
+              if (cats[i].trim() === activeFilter) { match = true; break; }
             }
+            card.style.display = match ? '' : 'none';
           }
-          
-          card.style.display = match ? '' : 'none';
         });
-      };
-      
-      if (categorySelect) {
-        categorySelect.addEventListener('change', window.filterProducts);
       }
+
+      Array.prototype.forEach.call(chips, function(chip) {
+        chip.addEventListener('click', function() {
+          var filter = this.getAttribute('data-filter');
+          var isActive = this.classList.contains('active');
+
+          // Deactivate all chips
+          Array.prototype.forEach.call(chips, function(c) { c.classList.remove('active'); });
+
+          if (isActive) {
+            // Clicked the already-active chip → reset to all
+            document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+            filterCards('all');
+          } else {
+            this.classList.add('active');
+            filterCards(filter);
+          }
+        });
+      });
     })();
   </script>
 </body>
