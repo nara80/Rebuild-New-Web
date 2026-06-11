@@ -3273,30 +3273,28 @@ async function calculateShippingQuote(env, input) {
       isFallback = true;
     }
   }
-  if (!row || !items.length) {
-    const firstItemThb2 = toAmount(row?.first_item_thb || 0);
-    const additionalItemThb = toAmount(row?.additional_item_thb || 0);
-    const amountThb2 = totalQty > 0 ? toAmount(firstItemThb2 + Math.max(0, totalQty - 1) * additionalItemThb) : 0;
-    const ratePerThb2 = await getRatePerThb(env, currency);
+  if (!row) {
     return {
       requested_country: requestedCountry,
       applied_country: appliedCountry,
-      country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
+      country_name: appliedCountry === "OTHER" ? "Other Countries" : appliedCountry,
       currency,
       total_qty: totalQty,
       highest_tier: 0,
-      first_item: currency === "THB" ? firstItemThb2 : toAmount(firstItemThb2 * ratePerThb2),
-      additional_item: currency === "THB" ? additionalItemThb : toAmount(additionalItemThb * ratePerThb2),
-      amount: currency === "THB" ? amountThb2 : toAmount(amountThb2 * ratePerThb2),
-      first_item_thb: firstItemThb2,
-      additional_item_thb: additionalItemThb,
-      amount_thb: amountThb2,
+      first_item: 0,
+      additional_item: 0,
+      amount: 0,
+      first_item_thb: 0,
+      additional_item_thb: 0,
+      amount_thb: 0,
       is_fallback: isFallback,
       blocked_th_only: false
     };
   }
+  const effectiveItems = items.length > 0 ? items : [{ slug: "_default", qty: totalQty || 1 }];
   const tierMap = /* @__PURE__ */ new Map();
-  for (const item of items) {
+  tierMap.set("_default", 2);
+  for (const item of effectiveItems) {
     if (tierMap.has(item.slug)) continue;
     const tRow = await env.DB.prepare(
       "SELECT tier FROM shipping_product_tiers WHERE product_slug = ?1 LIMIT 1"
@@ -3304,7 +3302,7 @@ async function calculateShippingQuote(env, input) {
     tierMap.set(item.slug, Number(tRow?.tier || 2));
   }
   let highestTier = 0;
-  for (const item of items) {
+  for (const item of effectiveItems) {
     const t = tierMap.get(item.slug) || 2;
     if (t > highestTier) highestTier = t;
   }
@@ -3318,7 +3316,7 @@ async function calculateShippingQuote(env, input) {
   const firstItemThb = toAmount(row["tier" + highestTier + "_first_thb"] || 0);
   let highestItemDeducted = false;
   let additionalThb = 0;
-  for (const item of items) {
+  for (const item of effectiveItems) {
     const t = tierMap.get(item.slug) || 2;
     const qty = item.qty || 0;
     const addRate = globalAddRates[t] || 0;
@@ -8081,7 +8079,7 @@ ${header}`);
 }
 __name(onRequest7, "onRequest");
 
-// ../.wrangler/tmp/pages-4wqeYD/functionsRoutes-0.6531653656698811.mjs
+// ../.wrangler/tmp/pages-4yPee8/functionsRoutes-0.9317351616593109.mjs
 var routes = [
   {
     routePath: "/api/:path*",

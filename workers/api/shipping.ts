@@ -208,34 +208,30 @@ export async function calculateShippingQuote(
     }
   }
 
-  if (!row || !items.length) {
-    // Fallback: use legacy flat rate
-    const firstItemThb = toAmount(row?.first_item_thb || 0);
-    const additionalItemThb = toAmount(row?.additional_item_thb || 0);
-    const amountThb = totalQty > 0 ? toAmount(firstItemThb + Math.max(0, totalQty - 1) * additionalItemThb) : 0;
-    const ratePerThb = await getRatePerThb(env, currency);
+  if (!row) {
+    // No rates configured at all — return 0
     return {
       requested_country: requestedCountry,
       applied_country: appliedCountry,
-      country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
+      country_name: appliedCountry === "OTHER" ? "Other Countries" : appliedCountry,
       currency,
       total_qty: totalQty,
       highest_tier: 0,
-      first_item: currency === "THB" ? firstItemThb : toAmount(firstItemThb * ratePerThb),
-      additional_item: currency === "THB" ? additionalItemThb : toAmount(additionalItemThb * ratePerThb),
-      amount: currency === "THB" ? amountThb : toAmount(amountThb * ratePerThb),
-      first_item_thb: firstItemThb,
-      additional_item_thb: additionalItemThb,
-      amount_thb: amountThb,
+      first_item: 0, additional_item: 0, amount: 0,
+      first_item_thb: 0, additional_item_thb: 0, amount_thb: 0,
       is_fallback: isFallback,
       blocked_th_only: false,
     };
   }
 
+  // When items are not provided (GET from checkout), default to tier 2 (medium)
+  const effectiveItems: CartShippingItem[] = items.length > 0 ? items : [{ slug: "_default", qty: totalQty || 1 }];
+
   // Tiered shipping calculation
   // Look up product tiers
   const tierMap = new Map<string, number>();
-  for (const item of items) {
+  tierMap.set("_default", 2); // Default tier for items without slug
+  for (const item of effectiveItems) {
     if (tierMap.has(item.slug)) continue;
     const tRow = await env.DB.prepare(
       "SELECT tier FROM shipping_product_tiers WHERE product_slug = ?1 LIMIT 1"
@@ -245,7 +241,7 @@ export async function calculateShippingQuote(
 
   // Find highest tier
   let highestTier = 0;
-  for (const item of items) {
+  for (const item of effectiveItems) {
     const t = tierMap.get(item.slug) || 2;
     if (t > highestTier) highestTier = t;
   }
@@ -265,7 +261,7 @@ export async function calculateShippingQuote(
   // Additional: all items except one from the highest tier, using global add rates
   let highestItemDeducted = false;
   let additionalThb = 0;
-  for (const item of items) {
+  for (const item of effectiveItems) {
     const t = tierMap.get(item.slug) || 2;
     const qty = item.qty || 0;
     const addRate = globalAddRates[t] || 0;
