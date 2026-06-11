@@ -21,6 +21,8 @@ export async function handlePricingParams(request: Request, env: any): Promise<R
     const margins: Record<string, number> = {};
     const sewingTiers: Array<{ max: number; cost: number }> = [];
     const duvetSewingTiers: Array<{ max: number; cost: number }> = [];
+    const protectorFabricTiers: Array<{ max: number; cost: number }> = [];
+    const protectorDepthTiers: Array<{ min: number; cost: number }> = [];
     const fixed: Record<string, number> = {};
 
     for (const row of (params as any[])) {
@@ -45,6 +47,20 @@ export async function handlePricingParams(request: Request, env: any): Promise<R
           const maxRow = (params as any[]).find((r: any) => r.key === maxKey);
           duvetSewingTiers.push({ max: maxRow ? maxRow.value : Infinity, cost: v });
         }
+      } else if (k.startsWith("protector_fabric_tier")) {
+        if (k.endsWith("_cost")) {
+          const tierNum = k.match(/protector_fabric_tier(\d+)_cost/)![1];
+          const maxKey = `protector_fabric_tier${tierNum}_max`;
+          const maxRow = (params as any[]).find((r: any) => r.key === maxKey);
+          protectorFabricTiers.push({ max: maxRow ? maxRow.value : Infinity, cost: v });
+        }
+      } else if (k.startsWith("protector_depth_tier")) {
+        if (k.endsWith("_cost")) {
+          const tierNum = k.match(/protector_depth_tier(\d+)_cost/)![1];
+          const minKey = `protector_depth_tier${tierNum}_min`;
+          const minRow = (params as any[]).find((r: any) => r.key === minKey);
+          protectorDepthTiers.push({ min: minRow ? minRow.value : 0, cost: v });
+        }
       } else {
         fixed[k] = v;
       }
@@ -55,6 +71,8 @@ export async function handlePricingParams(request: Request, env: any): Promise<R
       margins,
       sewing_tiers: sewingTiers.sort((a, b) => a.max - b.max),
       duvet_sewing_tiers: duvetSewingTiers.sort((a, b) => a.max - b.max),
+      protector_fabric_tiers: protectorFabricTiers.sort((a, b) => a.max - b.max),
+      protector_depth_tiers: protectorDepthTiers.sort((a, b) => a.min - b.min),
       fixed_costs: fixed,
       exchange_rates: rates,
     }), {

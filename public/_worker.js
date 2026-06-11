@@ -1508,6 +1508,8 @@ async function handlePricingParams(request, env) {
     const margins = {};
     const sewingTiers = [];
     const duvetSewingTiers = [];
+    const protectorFabricTiers = [];
+    const protectorDepthTiers = [];
     const fixed = {};
     for (const row of params) {
       const k = row.key;
@@ -1530,6 +1532,20 @@ async function handlePricingParams(request, env) {
           const maxRow = params.find((r) => r.key === maxKey);
           duvetSewingTiers.push({ max: maxRow ? maxRow.value : Infinity, cost: v });
         }
+      } else if (k.startsWith("protector_fabric_tier")) {
+        if (k.endsWith("_cost")) {
+          const tierNum = k.match(/protector_fabric_tier(\d+)_cost/)[1];
+          const maxKey = `protector_fabric_tier${tierNum}_max`;
+          const maxRow = params.find((r) => r.key === maxKey);
+          protectorFabricTiers.push({ max: maxRow ? maxRow.value : Infinity, cost: v });
+        }
+      } else if (k.startsWith("protector_depth_tier")) {
+        if (k.endsWith("_cost")) {
+          const tierNum = k.match(/protector_depth_tier(\d+)_cost/)[1];
+          const minKey = `protector_depth_tier${tierNum}_min`;
+          const minRow = params.find((r) => r.key === minKey);
+          protectorDepthTiers.push({ min: minRow ? minRow.value : 0, cost: v });
+        }
       } else {
         fixed[k] = v;
       }
@@ -1539,6 +1555,8 @@ async function handlePricingParams(request, env) {
       margins,
       sewing_tiers: sewingTiers.sort((a, b) => a.max - b.max),
       duvet_sewing_tiers: duvetSewingTiers.sort((a, b) => a.max - b.max),
+      protector_fabric_tiers: protectorFabricTiers.sort((a, b) => a.max - b.max),
+      protector_depth_tiers: protectorDepthTiers.sort((a, b) => a.min - b.min),
       fixed_costs: fixed,
       exchange_rates: rates
     }), {
@@ -7776,7 +7794,7 @@ ${header}`);
 }
 __name(onRequest7, "onRequest");
 
-// ../.wrangler/tmp/pages-39iUU2/functionsRoutes-0.745967976522511.mjs
+// ../.wrangler/tmp/pages-0bbfTa/functionsRoutes-0.5030925766365427.mjs
 var routes = [
   {
     routePath: "/api/:path*",

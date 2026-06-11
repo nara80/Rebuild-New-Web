@@ -74,6 +74,7 @@
   var DELIVERY = pVal('delivery_cost', 50);
   var OP_RATE = pctVal('ops_rate', 15);
   var MKT_RATE = pctVal('mkt_rate', 20);
+  var CUSTOM_QUOTE_SURCHARGE = pctVal('custom_quote_surcharge', 15);
   var WASTE_FABRIC = 1 + pVal('waste_factor_fabric', 20) / 100;
   var ACCESSORIES_RATE = pctVal('accessories_rate', 10);
   var MARGIN_RATE = isMarineFitted ? pctVal('marine', 680)
@@ -175,15 +176,25 @@
 
   // -- Mattress Protector constants --
   // Fabric tier cost based on W—L area in sq.inch
-  var PROTECTOR_FABRIC_TIERS = [
-    { maxSqInch: 3200, cost: 550 },
-    { maxSqInch: 6620, cost: 670 },
-    { maxSqInch: 8000, cost: 920 },
-    { maxSqInch: 9000, cost: 980 },
-    { maxSqInch: 10300, cost: 1100 },
-    { maxSqInch: 11300, cost: 1200 },
-    { maxSqInch: Infinity, cost: 1300 }
-  ];
+  var PROTECTOR_FABRIC_TIERS = (apiParams && apiParams.protector_fabric_tiers && apiParams.protector_fabric_tiers.length)
+    ? apiParams.protector_fabric_tiers
+    : [
+        { max: 3200, cost: 550 },
+        { max: 6620, cost: 670 },
+        { max: 8000, cost: 920 },
+        { max: 9000, cost: 980 },
+        { max: 10300, cost: 1100 },
+        { max: 11300, cost: 1200 },
+        { max: Infinity, cost: 1300 }
+      ];
+  var PROTECTOR_DEPTH_TIERS = (apiParams && apiParams.protector_depth_tiers && apiParams.protector_depth_tiers.length)
+    ? apiParams.protector_depth_tiers
+    : [
+        { min: 0, cost: 0 },
+        { min: 30, cost: 200 },
+        { min: 52, cost: 400 },
+        { min: 57, cost: 600 }
+      ];
   var PROTECTOR_PACKING = pVal('protector_packing', 200);
   var PROTECTOR_DELIVERY = pVal('protector_delivery', 80);
   var PROTECTOR_OP = OP_RATE;
@@ -193,15 +204,15 @@
 
   function getProtectorFabricCost(areaSqInch) {
     for (var i = 0; i < PROTECTOR_FABRIC_TIERS.length; i++) {
-      if (areaSqInch <= PROTECTOR_FABRIC_TIERS[i].maxSqInch) return PROTECTOR_FABRIC_TIERS[i].cost;
+      if (areaSqInch <= PROTECTOR_FABRIC_TIERS[i].max) return PROTECTOR_FABRIC_TIERS[i].cost;
     }
     return 1300;
   }
 
   function getProtectorDepthCost(dCm) {
-    if (dCm > 56) return 600;
-    if (dCm >= 52) return 400;
-    if (dCm >= 30) return 200;
+    for (var i = PROTECTOR_DEPTH_TIERS.length - 1; i >= 0; i--) {
+      if (dCm >= PROTECTOR_DEPTH_TIERS[i].min) return PROTECTOR_DEPTH_TIERS[i].cost;
+    }
     return 0;
   }
 
@@ -346,11 +357,30 @@
   }
   var addToCartBtn = document.getElementById('add-to-cart');
   var customPrice = document.getElementById('custom-price');
+  var mobileCtaPrice = document.getElementById('mobile-cta-price');
+  var desktopStickyPriceBlock = document.querySelector('.desktop-cta-sticky .price-block');
 
   // Tab switching — Standard Sizes vs Custom Quote
   var configTabs = document.querySelectorAll('.config-tab');
   var tabStandard = document.getElementById('tab-standard');
   var tabCustom = document.getElementById('tab-custom');
+  function syncTabAwarePriceUI() {
+    var customActive = !!(tabCustom && tabCustom.classList.contains('active'));
+    if (desktopStickyPriceBlock) desktopStickyPriceBlock.style.display = customActive ? 'none' : '';
+    if (mobileCtaPrice) {
+      if (customActive && customPrice) {
+        mobileCtaPrice.innerHTML = '<span style="display:block;font-size:0.6875rem;font-weight:600;color:#64748b;line-height:1.15">Estimated Price</span>' + customPrice.innerHTML;
+      }
+      else if (priceDisplay) mobileCtaPrice.innerHTML = priceDisplay.innerHTML;
+    }
+  }
+  if (mobileCtaPrice || desktopStickyPriceBlock) {
+    if (priceDisplay) new MutationObserver(syncTabAwarePriceUI).observe(priceDisplay, { characterData: true, childList: true, subtree: true });
+    if (customPrice) new MutationObserver(syncTabAwarePriceUI).observe(customPrice, { characterData: true, childList: true, subtree: true });
+    if (tabStandard) new MutationObserver(syncTabAwarePriceUI).observe(tabStandard, { attributes: true, attributeFilter: ['class'] });
+    if (tabCustom) new MutationObserver(syncTabAwarePriceUI).observe(tabCustom, { attributes: true, attributeFilter: ['class'] });
+    syncTabAwarePriceUI();
+  }
   function switchToTab(name) {
     configTabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
     document.querySelectorAll('.config-tab-content').forEach(function(c) { c.classList.toggle('active', c.id === 'tab-' + name); });
@@ -361,20 +391,26 @@
     tab.addEventListener('click', function() { switchToTab(this.dataset.tab); });
   });
   function switchToStandard() {
+    var priceSummary = document.getElementById('price-summary');
+    if (priceSummary) priceSummary.style.display = '';
     if (addToCartBtn) {
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
       addToCartBtn.style.background = '';
       addToCartBtn.style.color = '';
     }
+    syncTabAwarePriceUI();
     validateForm();
   }
   function switchToCustom() {
+    var priceSummary = document.getElementById('price-summary');
+    if (priceSummary) priceSummary.style.display = 'none';
     if (addToCartBtn) {
       addToCartBtn.innerHTML = 'Request Custom Quote';
       addToCartBtn.disabled = false;
       addToCartBtn.style.background = '#f59e0b';
       addToCartBtn.style.color = '#fff';
     }
+    syncTabAwarePriceUI();
     validateForm();
   }
   // Helper for focusing first dim input after switching to custom tab
@@ -931,6 +967,13 @@
         if (addToCartBtn) addToCartBtn.disabled = true;
         return;
       }
+      var areaCheckInch = (dims.w * dims.l) / SQCM_PER_SQINCH;
+      var lastTier = PROTECTOR_FABRIC_TIERS[PROTECTOR_FABRIC_TIERS.length - 1];
+      if (lastTier && lastTier.max !== Infinity && areaCheckInch > lastTier.max) {
+        priceDisplay.textContent = 'Over max area \u2014 contact@mildmate.com';
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        return;
+      }
       result = calcMattressProtector(dims.w, dims.l, dims.d);
     } else if (isPillowProtector || isPillowcase) {
       if (dims.w > MAX_PILLOW || dims.l > MAX_PILLOW) {
@@ -966,16 +1009,24 @@
     var d = (isDuvet || isPillowProtector || isPillowcase) ? 0 : (parseFloat(dimD && dimD.value) || 0);
     if (!w || !l || (!isDuvet && !isPillowProtector && !isPillowcase && !d && !isMattressProtector)) {
       customPrice.textContent = '\u2014';
+      customPrice.style.fontSize = '';
+      if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
     var wCm = w, lCm = l, dCm = d;
     if (state.unit === 'in') { wCm = inchToCm(w); lCm = inchToCm(l); dCm = inchToCm(d); }
     if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && wCm > MAX_W) {
-      customPrice.textContent = 'Custom quote \u2014 Co-Sleep size';
+      var maxLabel = state.unit === 'in' ? Math.round(MAX_W / 2.54) + '\u2033' : MAX_W + 'cm';
+      customPrice.textContent = 'Custom quote \u2014 over ' + maxLabel;
+      customPrice.style.fontSize = '0.85rem';
+      if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
     if ((isPillowProtector || isPillowcase) && (wCm > MAX_PILLOW || lCm > MAX_PILLOW)) {
-      customPrice.textContent = 'Max 120cm';
+      var pMaxLabel = state.unit === 'in' ? Math.round(MAX_PILLOW / 2.54) + '\u2033' : MAX_PILLOW + 'cm';
+      customPrice.textContent = 'Max ' + pMaxLabel;
+      customPrice.style.fontSize = '0.85rem';
+      if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
 
@@ -984,15 +1035,19 @@
       var dimFootW = document.getElementById('dim-foot-width');
       var fw = parseFloat(dimFootW && dimFootW.value) || 0;
       if (state.unit === 'in') fw = inchToCm(fw);
-      if (fw <= 0) { customPrice.textContent = 'Enter Foot Width (FW)'; return; }
+      if (fw <= 0) { customPrice.textContent = 'Enter Foot Width (FW)'; customPrice.style.fontSize = '0.85rem'; if (addToCartBtn) addToCartBtn.disabled = true; return; }
       if (!dCm) {
-        // Default depth to 7 inches (17.78 cm) if user hasn't entered one, per spec
         dCm = state.unit === 'in' ? 7 : 17.78;
       }
       var result = calcVBerthFitted(wCm, fw, lCm, dCm, state.fabric);
+      var sf = 1 + CUSTOM_QUOTE_SURCHARGE;
+      result.thb = Math.ceil((result.thb * sf) / 100) * 100;
+      result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
       state.quotePriceThb = result.thb;
       state.quotePriceUsd = result.usd;
       customPrice.innerHTML = displayPrice(result.thb, result.usd);
+      customPrice.style.fontSize = '';
+      if (addToCartBtn) addToCartBtn.disabled = false;
       return;
     }
 
@@ -1001,7 +1056,18 @@
       result = calcEncasement(wCm, lCm, dCm);
     } else if (isMattressProtector) {
       if (!isProtectorFamily && (wCm > PROTECTOR_MAX_DIM || lCm > PROTECTOR_MAX_DIM)) {
-        customPrice.textContent = 'Over 210cm \u2014 see Family Protector';
+        var protMaxLabel = state.unit === 'in' ? Math.round(PROTECTOR_MAX_DIM / 2.54) + '\u2033' : PROTECTOR_MAX_DIM + 'cm';
+        customPrice.textContent = 'Over ' + protMaxLabel + ' \u2014 see Family Protector';
+        customPrice.style.fontSize = '0.85rem';
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        return;
+      }
+      var areaCheckInch2 = (wCm * lCm) / SQCM_PER_SQINCH;
+      var lastTier2 = PROTECTOR_FABRIC_TIERS[PROTECTOR_FABRIC_TIERS.length - 1];
+      if (lastTier2 && lastTier2.max !== Infinity && areaCheckInch2 > lastTier2.max) {
+        customPrice.textContent = 'Over max area \u2014 contact@mildmate.com';
+        customPrice.style.fontSize = '0.85rem';
+        if (addToCartBtn) addToCartBtn.disabled = true;
         return;
       }
       result = calcMattressProtector(wCm, lCm, dCm);
@@ -1016,9 +1082,14 @@
     } else {
       result = calcFittedSheet(wCm, lCm, dCm, state.fabric);
     }
+    var sf2 = 1 + CUSTOM_QUOTE_SURCHARGE;
+    result.thb = Math.ceil((result.thb * sf2) / 100) * 100;
+    result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
     state.quotePriceThb = result.thb;
     state.quotePriceUsd = result.usd;
     customPrice.innerHTML = displayPrice(result.thb, result.usd);
+    customPrice.style.fontSize = '';
+    if (addToCartBtn) addToCartBtn.disabled = false;
   }
 
   function updateAllPrices() {
@@ -1277,6 +1348,7 @@
     addToCartBtn.addEventListener('click', function () {
       // If Custom Quote tab is active, trigger quote popup instead of add-to-cart
       if (tabCustom && tabCustom.classList.contains('active')) {
+        if (addToCartBtn && addToCartBtn.disabled) return;
         var w = parseFloat(dimW && dimW.value) || 0;
         var l = parseFloat(dimL && dimL.value) || 0;
         var d = (isDuvet || isPillowProtector || isPillowcase) ? 0 : (parseFloat(dimD && dimD.value) || 0);

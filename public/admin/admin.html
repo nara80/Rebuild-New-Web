@@ -129,7 +129,6 @@ tr:hover td{background:#f8fafc}
     <a href="index.html" style="border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:12px;padding-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Hub</a>
     <a href="#" class="active" data-page="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Dashboard</a>
     <div class="sidebar-section">Admin Features</div>
-    <a href="#" data-page="marketing"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Marketing</a>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
     <a href="#" class="sidebar-action" onclick="startNewProduct()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Product</a>
     <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
@@ -251,6 +250,13 @@ function rBlog() {
 function rReviews() {
   if (typeof window.renderReviewsManagerModule === 'function') return window.renderReviewsManagerModule();
   return '<div class="card"><div class="card-header">Reviews</div><div class="card-body"><p style="color:var(--c-muted)">Loading reviews module...</p></div></div>';
+}
+
+function rMarketing() {
+  return '<div class="card"><div class="card-header">Marketing</div><div class="card-body">' +
+    '<p style="color:var(--c-muted);padding:40px;text-align:center">Marketing tools (promo codes, abandoned cart recovery, thankyou campaigns) are managed in the <strong>Super Admin Dashboard</strong>.</p>' +
+    '<p style="text-align:center"><a href="/admin/super-admin.html" class="btn btn-primary btn-sm" style="text-decoration:none">Open Super Admin</a></p>' +
+    '</div></div>';
 }
 
 function escHtml(s) { if (!s) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -1479,6 +1485,16 @@ function saveProducts(ps) { localStorage.setItem("sandbox_products", JSON.string
 
 var selectedProductIndex = -1;
 var _newProductDraft = { images: [], hero: '', youtube: '' };
+var _productsCache;
+var _pendingUploads = {};
+var _pendingDeletes = [];
+var _pendingBlobs = {};
+
+function _pendingCount() { return Object.keys(_pendingUploads).length + _pendingDeletes.length; }
+function _clearPending() {
+  Object.keys(_pendingBlobs).forEach(function(k){ try { URL.revokeObjectURL(_pendingBlobs[k]); } catch(e){} });
+  _pendingUploads = {}; _pendingDeletes = []; _pendingBlobs = {};
+}
 
 
 function selectProduct(idx){
