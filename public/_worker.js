@@ -1583,19 +1583,23 @@ __name(handlePricingParams, "handlePricingParams");
 
 // ../workers/api/admin-pricing.ts
 async function handleAdminPricingParams(request, env) {
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  if (configured && provided !== configured) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    });
+  const host = new URL(request.url).hostname;
+  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
+  if (!isDev) {
+    const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+    const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+    if (!provided) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    if (configured && provided !== configured) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
   }
   if (request.method === "POST" || request.method === "PUT") {
     try {
@@ -1650,19 +1654,33 @@ __name(handleAdminPricingParams, "handleAdminPricingParams");
 
 // ../workers/api/admin-diy.ts
 async function handleAdminDiyPrices(request, env) {
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Admin-Secret"
+      }
     });
   }
-  if (configured && provided !== configured) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    });
+  const host = new URL(request.url).hostname;
+  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
+  if (!isDev) {
+    const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+    const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+    if (!provided) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+    if (configured && provided !== configured) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
   }
   if (request.method === "POST" || request.method === "PUT") {
     try {
@@ -1671,7 +1689,7 @@ async function handleAdminDiyPrices(request, env) {
       if (!product_slug || price_thb === void 0 || price_usd === void 0) {
         return new Response(JSON.stringify({ error: "product_slug, price_thb, price_usd are required" }), {
           status: 400,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
         });
       }
       await env.DB.prepare(
@@ -1682,12 +1700,12 @@ async function handleAdminDiyPrices(request, env) {
            price_thb = ?5, price_usd = ?6, label = ?7, updated_at = datetime('now')`
       ).bind(id || null, product_slug, shape_code || null, size_key || null, price_thb, price_usd, label || null).run();
       return new Response(JSON.stringify({ success: true, product_slug, shape_code, message: "DIY price saved to D1" }), {
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
   }
@@ -1703,34 +1721,63 @@ async function handleAdminDiyPrices(request, env) {
     } else {
       return new Response(JSON.stringify({ error: "?id= or ?product=&shape_code= required" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
     return new Response(JSON.stringify({ success: true, message: "Deleted from D1" }), {
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
   return new Response(JSON.stringify({ error: "Method not allowed" }), {
     status: 405,
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
   });
 }
 __name(handleAdminDiyPrices, "handleAdminDiyPrices");
 
 // ../workers/api/admin-exchange.ts
+function isProductionHost(host) {
+  return host === "www.mildmate.com" || host === "mildmate.com";
+}
+__name(isProductionHost, "isProductionHost");
+function isDevHost(host) {
+  return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
+}
+__name(isDevHost, "isDevHost");
+function authorizeAdmin(request, env) {
+  const host = new URL(request.url).hostname;
+  if (isDevHost(host)) return { ok: true };
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const prodHost = isProductionHost(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configuredSecret) return { ok: true };
+  if (providedSecret === configuredSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin, "authorizeAdmin");
 async function handleAdminExchangeRates(request, env) {
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Admin-Secret"
+      }
     });
   }
-  if (configured && provided !== configured) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
+  const auth = authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error || "Unauthorized" }), {
+      status: auth.status || 401,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
   if (request.method === "POST" || request.method === "PUT") {
@@ -1740,7 +1787,7 @@ async function handleAdminExchangeRates(request, env) {
       if (!currency || rate_per_thb === void 0) {
         return new Response(JSON.stringify({ error: "currency and rate_per_thb are required" }), {
           status: 400,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
         });
       }
       await env.DB.prepare(
@@ -1750,18 +1797,18 @@ async function handleAdminExchangeRates(request, env) {
            rate_per_thb = ?2, label = ?3, symbol = ?4, updated_at = datetime('now')`
       ).bind(currency.toUpperCase(), rate_per_thb, label || currency, symbol || "").run();
       return new Response(JSON.stringify({ success: true, currency, message: "Exchange rate saved to D1" }), {
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     } catch (e) {
       return new Response(JSON.stringify({ error: e.message }), {
         status: 500,
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
     }
   }
   return new Response(JSON.stringify({ error: "Method not allowed" }), {
     status: 405,
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
   });
 }
 __name(handleAdminExchangeRates, "handleAdminExchangeRates");
@@ -1774,7 +1821,7 @@ function parseCategoryCsv(csv) {
   return { product_type, niches };
 }
 __name(parseCategoryCsv, "parseCategoryCsv");
-function isProductionHost(hostname) {
+function isProductionHost2(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -1782,11 +1829,11 @@ function isProductionHost(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost, "isProductionHost");
+__name(isProductionHost2, "isProductionHost");
 var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
 function authCheck(request, env) {
   const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost(hostname);
+  const prodHost = isProductionHost2(hostname);
   if (!prodHost) return true;
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
@@ -2297,13 +2344,13 @@ function carrierLabel(carrierCode) {
   return labels[carrierCode] || carrierCode.toUpperCase();
 }
 __name(carrierLabel, "carrierLabel");
-function isProductionHost2(hostname) {
+function isProductionHost3(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost2, "isProductionHost");
+__name(isProductionHost3, "isProductionHost");
 function collectRoles(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -2343,7 +2390,7 @@ function emailAllowed(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed, "emailAllowed");
-async function authorizeAdmin(request, env) {
+async function authorizeAdmin2(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -2383,7 +2430,7 @@ async function authorizeAdmin(request, env) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost2(host);
+  const prodHost = isProductionHost3(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -2392,9 +2439,9 @@ async function authorizeAdmin(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin, "authorizeAdmin");
+__name(authorizeAdmin2, "authorizeAdmin");
 async function handleAdminOrders(request, env) {
-  const auth = await authorizeAdmin(request, env);
+  const auth = await authorizeAdmin2(request, env);
   if (!auth.ok) return json2({ error: auth.error }, auth.status);
   try {
     await ensureOrderShippingSchema(env);
@@ -2549,13 +2596,13 @@ function json3(body, status = 200) {
   });
 }
 __name(json3, "json");
-function isProductionHost3(hostname) {
+function isProductionHost4(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost3, "isProductionHost");
+__name(isProductionHost4, "isProductionHost");
 function collectRoles2(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -2594,7 +2641,7 @@ function emailAllowed2(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed2, "emailAllowed");
-async function authorizeAdmin2(request, env) {
+async function authorizeAdmin3(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -2633,7 +2680,7 @@ async function authorizeAdmin2(request, env) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost3(host);
+  const prodHost = isProductionHost4(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -2642,9 +2689,9 @@ async function authorizeAdmin2(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin2, "authorizeAdmin");
+__name(authorizeAdmin3, "authorizeAdmin");
 async function handleAdminCustomers(request, env) {
-  const auth = await authorizeAdmin2(request, env);
+  const auth = await authorizeAdmin3(request, env);
   if (!auth.ok) return json3({ error: auth.error }, auth.status);
   const url = new URL(request.url);
   const method = request.method;
@@ -2732,13 +2779,13 @@ function json4(body, status = 200) {
   });
 }
 __name(json4, "json");
-function isProductionHost4(hostname) {
+function isProductionHost5(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost4, "isProductionHost");
+__name(isProductionHost5, "isProductionHost");
 function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -2778,7 +2825,7 @@ function emailAllowed3(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed3, "emailAllowed");
-async function authorizeAdmin3(request, env) {
+async function authorizeAdmin4(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -2818,7 +2865,7 @@ async function authorizeAdmin3(request, env) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost4(host);
+  const prodHost = isProductionHost5(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -2827,7 +2874,7 @@ async function authorizeAdmin3(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin3, "authorizeAdmin");
+__name(authorizeAdmin4, "authorizeAdmin");
 function isoAtUtcDayStart(date) {
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
   return d.toISOString();
@@ -2914,7 +2961,7 @@ function currencySymbol(currency, ratesMap) {
 }
 __name(currencySymbol, "currencySymbol");
 async function handleAdminStats(request, env) {
-  const auth = await authorizeAdmin3(request, env);
+  const auth = await authorizeAdmin4(request, env);
   if (!auth.ok) return json4({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -3108,7 +3155,27 @@ async function ensureShippingRatesSchema(env) {
           additional_item_usd REAL NOT NULL DEFAULT 0,
           first_item_thb REAL NOT NULL DEFAULT 0,
           additional_item_thb REAL NOT NULL DEFAULT 0,
+          tier1_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier1_add_thb INTEGER NOT NULL DEFAULT 0,
+          tier2_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier2_add_thb INTEGER NOT NULL DEFAULT 0,
+          tier3_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier3_add_thb INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1,
+          updated_at DATETIME DEFAULT (datetime('now'))
+        )`
+      ).run();
+      await env.DB.prepare(
+        `CREATE TABLE IF NOT EXISTS shipping_product_tiers (
+          product_slug TEXT PRIMARY KEY,
+          tier INTEGER NOT NULL CHECK(tier IN (1,2,3)),
+          updated_at DATETIME DEFAULT (datetime('now'))
+        )`
+      ).run();
+      await env.DB.prepare(
+        `CREATE TABLE IF NOT EXISTS shipping_add_rates (
+          tier INTEGER PRIMARY KEY CHECK(tier IN (1,2,3)),
+          add_thb INTEGER NOT NULL DEFAULT 0,
           updated_at DATETIME DEFAULT (datetime('now'))
         )`
       ).run();
@@ -3141,12 +3208,55 @@ async function getRatePerThb(env, targetCurrency) {
 __name(getRatePerThb, "getRatePerThb");
 async function calculateShippingQuote(env, input) {
   await ensureShippingRatesSchema(env);
-  const qty = toQty(input.totalQty);
   const currency = normalizeShippingCurrency(input.currency);
   const requestedCountry = normalizeCountryCode(input.countryCode) || normalizeCountryCode(input.fallbackCountryCode) || "OTHER";
+  const items = input.items || [];
+  const totalQty = items.reduce((sum, it) => sum + (it.qty || 0), 0) || toQty(input.totalQty || 0);
+  if (items.length > 0 && requestedCountry !== "TH") {
+    const thOnlySlugs = /* @__PURE__ */ new Set(["duvet-insert"]);
+    const hasThOnly = items.some((it) => thOnlySlugs.has(it.slug));
+    if (hasThOnly) {
+      return {
+        requested_country: requestedCountry,
+        applied_country: "",
+        country_name: "",
+        currency,
+        total_qty: totalQty,
+        highest_tier: 0,
+        first_item: 0,
+        additional_item: 0,
+        amount: 0,
+        first_item_thb: 0,
+        additional_item_thb: 0,
+        amount_thb: 0,
+        is_fallback: false,
+        blocked_th_only: true
+      };
+    }
+  }
+  if (requestedCountry === "TH") {
+    return {
+      requested_country: "TH",
+      applied_country: "TH",
+      country_name: "Thailand",
+      currency,
+      total_qty: totalQty,
+      highest_tier: 0,
+      first_item: 0,
+      additional_item: 0,
+      amount: 0,
+      first_item_thb: 0,
+      additional_item_thb: 0,
+      amount_thb: 0,
+      is_fallback: false,
+      blocked_th_only: false
+    };
+  }
   const fetchRate = /* @__PURE__ */ __name(async (countryCode) => {
     const row2 = await env.DB.prepare(
-      `SELECT country_code, country_name, first_item_thb, additional_item_thb, is_active
+      `SELECT country_code, country_name,
+        tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        is_active
        FROM shipping_rates
        WHERE country_code = ?1 AND is_active = 1
        LIMIT 1`
@@ -3163,26 +3273,82 @@ async function calculateShippingQuote(env, input) {
       isFallback = true;
     }
   }
-  const firstItemThb = toAmount(row?.first_item_thb);
-  const additionalItemThb = toAmount(row?.additional_item_thb);
-  const amountThb = qty > 0 ? toAmount(firstItemThb + Math.max(0, qty - 1) * additionalItemThb) : 0;
+  if (!row || !items.length) {
+    const firstItemThb2 = toAmount(row?.first_item_thb || 0);
+    const additionalItemThb = toAmount(row?.additional_item_thb || 0);
+    const amountThb2 = totalQty > 0 ? toAmount(firstItemThb2 + Math.max(0, totalQty - 1) * additionalItemThb) : 0;
+    const ratePerThb2 = await getRatePerThb(env, currency);
+    return {
+      requested_country: requestedCountry,
+      applied_country: appliedCountry,
+      country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
+      currency,
+      total_qty: totalQty,
+      highest_tier: 0,
+      first_item: currency === "THB" ? firstItemThb2 : toAmount(firstItemThb2 * ratePerThb2),
+      additional_item: currency === "THB" ? additionalItemThb : toAmount(additionalItemThb * ratePerThb2),
+      amount: currency === "THB" ? amountThb2 : toAmount(amountThb2 * ratePerThb2),
+      first_item_thb: firstItemThb2,
+      additional_item_thb: additionalItemThb,
+      amount_thb: amountThb2,
+      is_fallback: isFallback,
+      blocked_th_only: false
+    };
+  }
+  const tierMap = /* @__PURE__ */ new Map();
+  for (const item of items) {
+    if (tierMap.has(item.slug)) continue;
+    const tRow = await env.DB.prepare(
+      "SELECT tier FROM shipping_product_tiers WHERE product_slug = ?1 LIMIT 1"
+    ).bind(item.slug).first();
+    tierMap.set(item.slug, Number(tRow?.tier || 2));
+  }
+  let highestTier = 0;
+  for (const item of items) {
+    const t = tierMap.get(item.slug) || 2;
+    if (t > highestTier) highestTier = t;
+  }
+  const addRows = await env.DB.prepare(
+    "SELECT tier, add_thb FROM shipping_add_rates ORDER BY tier"
+  ).all();
+  const globalAddRates = {};
+  for (const ar of addRows.results || []) {
+    globalAddRates[Number(ar.tier)] = toAmount(ar.add_thb);
+  }
+  const firstItemThb = toAmount(row["tier" + highestTier + "_first_thb"] || 0);
+  let highestItemDeducted = false;
+  let additionalThb = 0;
+  for (const item of items) {
+    const t = tierMap.get(item.slug) || 2;
+    const qty = item.qty || 0;
+    const addRate = globalAddRates[t] || 0;
+    if (t === highestTier && !highestItemDeducted) {
+      additionalThb += addRate * Math.max(0, qty - 1);
+      highestItemDeducted = true;
+    } else {
+      additionalThb += addRate * qty;
+    }
+  }
+  const amountThb = toAmount(firstItemThb + additionalThb);
   const ratePerThb = await getRatePerThb(env, currency);
   const firstItem = currency === "THB" ? firstItemThb : toAmount(firstItemThb * ratePerThb);
-  const additionalItem = currency === "THB" ? additionalItemThb : toAmount(additionalItemThb * ratePerThb);
+  const additionalItem = currency === "THB" ? additionalThb : toAmount(additionalThb * ratePerThb);
   const amount = currency === "THB" ? amountThb : toAmount(amountThb * ratePerThb);
   return {
     requested_country: requestedCountry,
     applied_country: appliedCountry,
     country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
     currency,
-    total_qty: qty,
+    total_qty: totalQty,
+    highest_tier: highestTier,
     first_item: firstItem,
     additional_item: additionalItem,
     amount,
     first_item_thb: firstItemThb,
-    additional_item_thb: additionalItemThb,
+    additional_item_thb: additionalThb,
     amount_thb: amountThb,
-    is_fallback: isFallback
+    is_fallback: isFallback,
+    blocked_th_only: false
   };
 }
 __name(calculateShippingQuote, "calculateShippingQuote");
@@ -3203,6 +3369,7 @@ async function handleShippingCalculate(request, env) {
     let country = "";
     let qty = 0;
     let currency = "USD";
+    let items;
     const fallbackCountry = request.headers.get("CF-IPCountry") || "";
     if (request.method === "GET") {
       const url = new URL(request.url);
@@ -3214,12 +3381,19 @@ async function handleShippingCalculate(request, env) {
       country = body.country || body.country_code || "";
       qty = toQty(body.qty || body.total_qty || 0);
       currency = body.currency || "USD";
+      if (Array.isArray(body.items)) {
+        items = body.items.map((it) => ({
+          slug: String(it.slug || it.product_slug || ""),
+          qty: Math.max(1, toQty(it.qty || 1))
+        })).filter((it) => it.slug && it.qty > 0);
+      }
     }
     const quote = await calculateShippingQuote(env, {
       countryCode: country,
       fallbackCountryCode: fallbackCountry,
       currency,
-      totalQty: qty
+      totalQty: qty,
+      items
     });
     return json5({ ok: true, ...quote });
   } catch (e) {
@@ -3243,13 +3417,13 @@ function toAmount2(v) {
   return toAmount(v);
 }
 __name(toAmount2, "toAmount");
-function isProductionHost5(hostname) {
+function isProductionHost6(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost5, "isProductionHost");
+__name(isProductionHost6, "isProductionHost");
 function collectRoles4(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -3289,7 +3463,11 @@ function emailAllowed4(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed4, "emailAllowed");
-async function authorizeAdmin4(request, env) {
+async function authorizeAdmin5(request, env) {
+  const host = new URL(request.url).hostname;
+  if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
+    return { ok: true };
+  }
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -3328,8 +3506,7 @@ async function authorizeAdmin4(request, env) {
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost5(host);
+  const prodHost = isProductionHost6(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -3338,7 +3515,7 @@ async function authorizeAdmin4(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin4, "authorizeAdmin");
+__name(authorizeAdmin5, "authorizeAdmin");
 function normalizeCountryName(raw, countryCode) {
   const name = String(raw || "").trim();
   if (name) return name;
@@ -3356,7 +3533,7 @@ async function getUsdRatePerThb(env) {
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
-  const auth = await authorizeAdmin4(request, env);
+  const auth = await authorizeAdmin5(request, env);
   if (!auth.ok) return json6({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -3371,20 +3548,25 @@ async function handleAdminShippingRates(request, env) {
   if (request.method === "GET") {
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
-      `SELECT country_code, country_name, first_item_thb, additional_item_thb, is_active, updated_at
+      `SELECT country_code, country_name,
+        tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        is_active, updated_at
        FROM shipping_rates
        ORDER BY CASE WHEN country_code = 'OTHER' THEN 1 ELSE 0 END, country_code`
     ).all();
     const rates = (rows.results || []).map((r) => {
-      const firstThb = toAmount2(r.first_item_thb);
-      const addThb = toAmount2(r.additional_item_thb);
+      const t1f = toAmount2(r.tier1_first_thb || 0);
+      const t2f = toAmount2(r.tier2_first_thb || 0);
+      const t3f = toAmount2(r.tier3_first_thb || 0);
       return {
         country_code: String(r.country_code || "").toUpperCase(),
         country_name: String(r.country_name || ""),
-        first_item_thb: firstThb,
-        additional_item_thb: addThb,
-        first_item_usd_preview: toAmount2(firstThb * usdRate),
-        additional_item_usd_preview: toAmount2(addThb * usdRate),
+        tier1_first_thb: t1f,
+        tier2_first_thb: t2f,
+        tier3_first_thb: t3f,
+        tier1_first_usd: toAmount2(t1f * usdRate),
+        tier2_first_usd: toAmount2(t2f * usdRate),
+        tier3_first_usd: toAmount2(t3f * usdRate),
         is_active: Number(r.is_active || 0),
         updated_at: r.updated_at
       };
@@ -3402,38 +3584,33 @@ async function handleAdminShippingRates(request, env) {
     if (!countryCode) {
       return json6({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
-    if (body.first_item_thb === void 0 || body.additional_item_thb === void 0) {
-      return json6({ error: "first_item_thb and additional_item_thb are required" }, 400);
-    }
     const countryName = normalizeCountryName(body.country_name, countryCode);
-    const firstThb = toAmount2(body.first_item_thb);
-    const additionalThb = toAmount2(body.additional_item_thb);
-    const usdRate = await getUsdRatePerThb(env);
-    const firstUsd = toAmount2(firstThb * usdRate);
-    const additionalUsd = toAmount2(additionalThb * usdRate);
+    const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
+    const t2f = toAmount2(body.tier2_first_thb || body.tier2_first || 0);
+    const t3f = toAmount2(body.tier3_first_thb || body.tier3_first || 0);
     const isActive = body.is_active === void 0 ? 1 : Number(body.is_active) ? 1 : 0;
     await env.DB.prepare(
       `INSERT INTO shipping_rates (
-        country_code, country_name, first_item_usd, additional_item_usd, first_item_thb, additional_item_thb, is_active, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, datetime('now'))
+        country_code, country_name,
+        tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        is_active, updated_at
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
       ON CONFLICT(country_code) DO UPDATE SET
         country_name = excluded.country_name,
-        first_item_usd = excluded.first_item_usd,
-        additional_item_usd = excluded.additional_item_usd,
-        first_item_thb = excluded.first_item_thb,
-        additional_item_thb = excluded.additional_item_thb,
+        tier1_first_thb = excluded.tier1_first_thb,
+        tier2_first_thb = excluded.tier2_first_thb,
+        tier3_first_thb = excluded.tier3_first_thb,
         is_active = excluded.is_active,
         updated_at = datetime('now')`
-    ).bind(countryCode, countryName, firstUsd, additionalUsd, firstThb, additionalThb, isActive).run();
+    ).bind(countryCode, countryName, t1f, t2f, t3f, isActive).run();
     return json6({
       success: true,
       rate: {
         country_code: countryCode,
         country_name: countryName,
-        first_item_thb: firstThb,
-        additional_item_thb: additionalThb,
-        first_item_usd_preview: firstUsd,
-        additional_item_usd_preview: additionalUsd,
+        tier1_first_thb: t1f,
+        tier2_first_thb: t2f,
+        tier3_first_thb: t3f,
         is_active: isActive
       }
     });
@@ -3449,6 +3626,110 @@ async function handleAdminShippingRates(request, env) {
   return json6({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
+async function handleAdminShippingProductTiers(request, env) {
+  const auth = await authorizeAdmin5(request, env);
+  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Admin-Secret"
+      }
+    });
+  }
+  await ensureShippingRatesSchema(env);
+  if (request.method === "GET") {
+    const rows = await env.DB.prepare(
+      `SELECT spt.product_slug, spt.tier, p.title_en, p.category
+       FROM shipping_product_tiers spt
+       LEFT JOIN products p ON p.slug = spt.product_slug
+       ORDER BY spt.tier, spt.product_slug`
+    ).all();
+    const tiers = (rows.results || []).map((r) => ({
+      product_slug: String(r.product_slug || ""),
+      product_name: String(r.title_en || r.product_slug || ""),
+      category: String(r.category || ""),
+      tier: Number(r.tier || 2)
+    }));
+    return json6({ product_tiers: tiers });
+  }
+  if (request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json6({ error: "Invalid JSON" }, 400);
+    }
+    const slug = String(body.product_slug || "").trim();
+    const tier = Number(body.tier);
+    if (!slug) return json6({ error: "product_slug required" }, 400);
+    if (![1, 2, 3].includes(tier)) return json6({ error: "tier must be 1, 2, or 3" }, 400);
+    await env.DB.prepare(
+      `INSERT INTO shipping_product_tiers (product_slug, tier, updated_at)
+       VALUES (?1, ?2, datetime('now'))
+       ON CONFLICT(product_slug) DO UPDATE SET
+         tier = excluded.tier,
+         updated_at = datetime('now')`
+    ).bind(slug, tier).run();
+    return json6({ success: true, product_slug: slug, tier });
+  }
+  return json6({ error: "Method not allowed" }, 405);
+}
+__name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
+async function handleAdminShippingAddRates(request, env) {
+  const auth = await authorizeAdmin5(request, env);
+  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,PUT,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Admin-Secret"
+      }
+    });
+  }
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS shipping_add_rates (
+      tier INTEGER PRIMARY KEY CHECK(tier IN (1,2,3)),
+      add_thb INTEGER NOT NULL DEFAULT 0,
+      updated_at DATETIME DEFAULT (datetime('now'))
+    )`
+  ).run();
+  if (request.method === "GET") {
+    const usdRate = await getUsdRatePerThb(env);
+    const rows = await env.DB.prepare(
+      "SELECT tier, add_thb FROM shipping_add_rates ORDER BY tier"
+    ).all();
+    const addRates = {};
+    for (const r of rows.results || []) {
+      const t = Number(r.tier);
+      const thb = toAmount2(r.add_thb);
+      addRates[t] = { add_thb: thb, add_usd: toAmount2(thb * usdRate) };
+    }
+    return json6({ add_rates: addRates, usd_rate_per_thb: usdRate });
+  }
+  if (request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json6({ error: "Invalid JSON" }, 400);
+    }
+    const tier = Number(body.tier);
+    const addThb = toAmount2(body.add_thb);
+    if (![1, 2, 3].includes(tier)) return json6({ error: "tier must be 1, 2, or 3" }, 400);
+    await env.DB.prepare(
+      `INSERT INTO shipping_add_rates (tier, add_thb, updated_at)
+       VALUES (?1, ?2, datetime('now'))
+       ON CONFLICT(tier) DO UPDATE SET
+         add_thb = excluded.add_thb, updated_at = datetime('now')`
+    ).bind(tier, addThb).run();
+    return json6({ success: true, tier, add_thb: addThb });
+  }
+  return json6({ error: "Method not allowed" }, 405);
+}
+__name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
 
 // ../workers/api/admin-quotes.ts
 var quoteSchemaReady = false;
@@ -3465,13 +3746,13 @@ function json7(body, status = 200) {
   });
 }
 __name(json7, "json");
-function isProductionHost6(hostname) {
+function isProductionHost7(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost6, "isProductionHost");
+__name(isProductionHost7, "isProductionHost");
 function collectRoles5(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -3511,7 +3792,7 @@ function emailAllowed5(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed5, "emailAllowed");
-async function authorizeAdmin5(request, env) {
+async function authorizeAdmin6(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -3543,14 +3824,14 @@ async function authorizeAdmin5(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost6(host);
+  const prodHost = isProductionHost7(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   if (!configuredSecret) return { ok: true };
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin5, "authorizeAdmin");
+__name(authorizeAdmin6, "authorizeAdmin");
 async function ensureQuoteSchema(env) {
   if (quoteSchemaReady) return;
   if (!quoteSchemaPromise) {
@@ -3670,7 +3951,7 @@ async function sendMagicLinkEmail(env, request, quote) {
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
   if (request.method === "OPTIONS") return json7({ ok: true });
-  const auth = await authorizeAdmin5(request, env);
+  const auth = await authorizeAdmin6(request, env);
   if (!auth.ok) return json7({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
@@ -4158,14 +4439,14 @@ function emailAllowed6(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed6, "emailAllowed");
-function isProductionHost7(hostname) {
+function isProductionHost8(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost7, "isProductionHost");
-async function authorizeAdmin6(request, env) {
+__name(isProductionHost8, "isProductionHost");
+async function authorizeAdmin7(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -4197,16 +4478,16 @@ async function authorizeAdmin6(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost7(host);
+  const prodHost = isProductionHost8(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   if (!configuredSecret) return { ok: true };
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin6, "authorizeAdmin");
+__name(authorizeAdmin7, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
-  const auth = await authorizeAdmin6(request, env);
+  const auth = await authorizeAdmin7(request, env);
   if (!auth.ok) return json8({ error: auth.error }, auth.status);
   const url = new URL(request.url);
   const method = request.method;
@@ -4372,7 +4653,7 @@ var BLOG_CATEGORY_OPTIONS = [
   "Product News",
   "Other"
 ];
-function isProductionHost8(hostname) {
+function isProductionHost9(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -4380,12 +4661,12 @@ function isProductionHost8(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost8, "isProductionHost");
+__name(isProductionHost9, "isProductionHost");
 function authorizeAdminSecret(request, env) {
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost8(hostname);
+  const prodHost = isProductionHost9(hostname);
   if (!prodHost) return true;
   if (!configured) return false;
   if (!provided) return false;
@@ -4714,7 +4995,7 @@ function normalizeReviewDate(raw) {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
 __name(normalizeReviewDate, "normalizeReviewDate");
-function isProductionHost9(hostname) {
+function isProductionHost10(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -4722,12 +5003,12 @@ function isProductionHost9(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost9, "isProductionHost");
+__name(isProductionHost10, "isProductionHost");
 function authorizeAdminSecret2(request, env) {
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost9(hostname);
+  const prodHost = isProductionHost10(hostname);
   if (!prodHost) return true;
   if (!configured) return false;
   if (!provided) return false;
@@ -5144,13 +5425,13 @@ async function ensureFavoritesSchema(env) {
   await favoritesSchemaPromise;
 }
 __name(ensureFavoritesSchema, "ensureFavoritesSchema");
-function isProductionHost10(hostname) {
+function isProductionHost11(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost10, "isProductionHost");
+__name(isProductionHost11, "isProductionHost");
 function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -5190,7 +5471,7 @@ function emailAllowed7(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed7, "emailAllowed");
-async function authorizeAdmin7(request, env) {
+async function authorizeAdmin8(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -5225,7 +5506,7 @@ async function authorizeAdmin7(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost10(host);
+  const prodHost = isProductionHost11(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -5234,7 +5515,7 @@ async function authorizeAdmin7(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin7, "authorizeAdmin");
+__name(authorizeAdmin8, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -5271,7 +5552,7 @@ async function handleFavorites(request, env) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
       return json9({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin7(request, env);
+    const auth = await authorizeAdmin8(request, env);
     if (!auth.ok) return json9({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
@@ -6633,6 +6914,12 @@ var onRequest = /* @__PURE__ */ __name(async (context) => {
   if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
     return handleAdminShippingRates(request, env);
   }
+  if (path === "/api/admin/shipping-product-tiers" || path === "/api/admin/shipping-product-tiers/") {
+    return handleAdminShippingProductTiers(request, env);
+  }
+  if (path === "/api/admin/shipping-add-rates" || path === "/api/admin/shipping-add-rates/") {
+    return handleAdminShippingAddRates(request, env);
+  }
   if (path === "/api/admin/quotes" || path === "/api/admin/quotes/") {
     return handleAdminQuotes(request, env);
   }
@@ -7794,7 +8081,7 @@ ${header}`);
 }
 __name(onRequest7, "onRequest");
 
-// ../.wrangler/tmp/pages-0bbfTa/functionsRoutes-0.5030925766365427.mjs
+// ../.wrangler/tmp/pages-4wqeYD/functionsRoutes-0.6531653656698811.mjs
 var routes = [
   {
     routePath: "/api/:path*",

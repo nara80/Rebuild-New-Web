@@ -802,10 +802,10 @@ async function saveExRow(idx) {
   var val = parseFloat(document.getElementById('ex-rate-edit-'+idx).value);
   if (isNaN(val)) { toast('Invalid rate value'); return; }
   try {
-    var secret = localStorage.getItem('admin_secret') || '';
+    var headers = await getAdminAuthHeaders(true);
     var resp = await fetch('/api/admin/exchange-rates', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': secret },
+      headers: headers,
       body: JSON.stringify({ currency: r.currency, rate_per_thb: val, label: r.label, symbol: r.symbol })
     });
     if (resp.ok) {
@@ -878,49 +878,119 @@ async function renderShippingRates() {
     var usdRate = Number(data.usd_rate_per_thb || 0);
     window._shippingRates = rates;
 
-    var html = '<div class="card"><div class="card-header">Country Shipping Rates</div><div class="card-body">' +
-      '<p style="color:var(--c-muted);font-size:0.8125rem;margin-bottom:14px">Shipping rates are THB-only source of truth. Checkout auto-converts using Exchange Rates (USD rate per THB: ' + (usdRate ? usdRate : 'N/A') + '). If a country is missing/inactive, OTHER is applied automatically.</p>' +
-      '<div style="overflow-x:auto"><table><thead><tr><th>Country</th><th>First (THB)</th><th>Add. (THB)</th><th>USD Preview</th><th>Active</th><th></th></tr></thead><tbody>';
+    // 1. Product Tiers section
+    var html = '<div class="card"><div class="card-header">Shipping Product Tiers</div><div class="card-body">' +
+      '<p style="color:var(--c-muted);font-size:0.8125rem;margin-bottom:14px">Products are assigned to weight/volume tiers. The highest tier in the cart determines the base shipping cost. <strong>Duvet Insert ships Thailand only.</strong></p>';
+
+    try {
+      var tierResp = await fetch('/api/admin/shipping-product-tiers', { headers: await getAdminAuthHeaders(false) });
+      if (tierResp.ok) {
+        var tierData = await tierResp.json();
+        var tiers = tierData.product_tiers || [];
+        window._shippingProductTiers = tiers;
+
+        var tierGroups = {1:[],2:[],3:[]};
+        tiers.forEach(function(t) { if (tierGroups[t.tier]) tierGroups[t.tier].push(t); });
+
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">';
+        [1,2,3].forEach(function(tn) {
+          var label = tn === 1 ? 'Heavy (Protectors, Duvets)' : tn === 2 ? 'Medium (Sheets, Encasement)' : 'Light (Pillowcases, Accessories)';
+          html += '<div style="background:#f8fafc;border-radius:8px;padding:12px;border:1px solid var(--c-border)">' +
+            '<strong style="font-size:0.8125rem;display:block;margin-bottom:8px">Tier ' + tn + ' — ' + label + '</strong>';
+          (tierGroups[tn]||[]).forEach(function(p) {
+            html += '<div style="display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;padding:4px 0;border-bottom:1px solid #f1f5f9">' +
+              '<span>' + escHtml(p.product_name || p.product_slug) + '</span>' +
+              '<select onchange="updateProductTier(\'' + escHtml(p.product_slug) + '\',this.value)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.6875rem">' +
+                '<option value="1"' + (p.tier===1?' selected':'') + '>Tier 1</option>' +
+                '<option value="2"' + (p.tier===2?' selected':'') + '>Tier 2</option>' +
+                '<option value="3"' + (p.tier===3?' selected':'') + '>Tier 3</option>' +
+              '</select></div>';
+          });
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+    } catch(e) {}
+    html += '</div></div>';
+
+    // 2. Country Rates table
+    // Fetch global add rates
+    var addRates = {};
+    var liveUsdRate = usdRate;
+    try {
+      var addResp = await fetch('/api/admin/shipping-add-rates', { headers: await getAdminAuthHeaders(false) });
+      if (addResp.ok) {
+        var addData = await addResp.json();
+        addRates = addData.add_rates || {};
+        if (addData.usd_rate_per_thb) liveUsdRate = addData.usd_rate_per_thb;
+      }
+    } catch(e) {}
+
+    html += '<div class="card"><div class="card-header">Global Addition Rates (same for all countries)</div><div class="card-body">' +
+      '<p style="color:var(--c-muted);font-size:0.75rem;margin-bottom:10px">USD converted using D1 Exchange Rates: <strong>' + liveUsdRate.toFixed(4) + '</strong> THB/USD</p>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
+    [1,2,3].forEach(function(tn) {
+      var label = tn === 1 ? 'Heavy' : tn === 2 ? 'Medium' : 'Light';
+      var ar = addRates[tn] || { add_thb: tn===1?600:tn===2?450:150, add_usd: 0 };
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border-radius:6px;border:1px solid var(--c-border)">' +
+        '<strong style="font-size:0.75rem;white-space:nowrap">T' + tn + ' ' + label + '</strong>' +
+        '<input id="add-rate-' + tn + '" type="number" min="0" value="' + ar.add_thb + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right">' +
+        '<span style="font-size:0.6875rem;color:var(--c-muted)">THB</span>' +
+        '<span style="font-size:0.6875rem;color:var(--c-muted)">≈ $' + (ar.add_thb * liveUsdRate).toFixed(0) + '</span>' +
+        '<button class="btn btn-primary btn-sm" onclick="saveAddRate(' + tn + ')">Save</button>' +
+      '</div>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="card"><div class="card-header">Country Shipping Rates</div><div class="card-body">' +
+      '<p style="color:var(--c-muted);font-size:0.8125rem;margin-bottom:8px">Country-specific initial costs in THB. USD preview uses D1 Exchange Rates (<strong>' + liveUsdRate.toFixed(4) + '</strong> THB/USD). <strong>TH = free domestic.</strong> Missing/inactive countries fall back to OTHER.</p>' +
+      '<div style="overflow-x:auto"><table><thead><tr>' +
+        '<th>Country</th>' +
+        '<th style="text-align:center;background:#fef2f2">Tier 1<br>Initial</th>' +
+        '<th style="text-align:center;background:#fffbeb">Tier 2<br>Initial</th>' +
+        '<th style="text-align:center;background:#f0fdf4">Tier 3<br>Initial</th>' +
+        '<th>Active</th><th></th>' +
+      '</tr></thead><tbody>';
 
     if (!rates.length) {
       html += '<tr><td colspan="6" style="text-align:center;color:var(--c-muted);padding:24px">No rates configured yet.</td></tr>';
     } else {
       rates.forEach(function(r) {
         var code = String(r.country_code || '').toUpperCase();
-        var firstUsdPreview = Number(r.first_item_usd_preview || 0);
-        var addUsdPreview = Number(r.additional_item_usd_preview || 0);
         html += '<tr id="ship-row-' + code + '">' +
-          '<td><strong>' + escHtml(code) + '</strong><div style="font-size:0.75rem;color:var(--c-muted)">' + escHtml(r.country_name || code) + '</div></td>' +
-          '<td><input id="ship-first-thb-' + code + '" type="number" min="0" step="1" value="' + Number(r.first_item_thb || 0) + '" style="width:96px;padding:6px 8px;border:1px solid var(--c-border);border-radius:4px"></td>' +
-          '<td><input id="ship-add-thb-' + code + '" type="number" min="0" step="1" value="' + Number(r.additional_item_thb || 0) + '" style="width:96px;padding:6px 8px;border:1px solid var(--c-border);border-radius:4px"></td>' +
-          '<td style="font-size:0.75rem;color:var(--c-muted)">$' + firstUsdPreview.toFixed(2) + ' / +$' + addUsdPreview.toFixed(2) + '</td>' +
+          '<td><strong>' + escHtml(code) + '</strong><div style="font-size:0.6875rem;color:var(--c-muted)">' + escHtml(r.country_name || code) + '</div></td>' +
+          '<td><input id="ship-t1f-' + code + '" type="number" min="0" value="' + (r.tier1_first_thb||0) + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><div style="font-size:0.625rem;color:var(--c-muted);text-align:right">$' + ((r.tier1_first_usd||0).toFixed(0)) + '</div></td>' +
+          '<td><input id="ship-t2f-' + code + '" type="number" min="0" value="' + (r.tier2_first_thb||0) + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><div style="font-size:0.625rem;color:var(--c-muted);text-align:right">$' + ((r.tier2_first_usd||0).toFixed(0)) + '</div></td>' +
+          '<td><input id="ship-t3f-' + code + '" type="number" min="0" value="' + (r.tier3_first_thb||0) + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><div style="font-size:0.625rem;color:var(--c-muted);text-align:right">$' + ((r.tier3_first_usd||0).toFixed(0)) + '</div></td>' +
           '<td><input id="ship-active-' + code + '" type="checkbox" ' + (Number(r.is_active) ? 'checked' : '') + '></td>' +
           '<td style="white-space:nowrap">' +
             '<button class="btn btn-primary btn-sm" onclick="saveShippingRate(\'' + code + '\')">Save</button> ' +
             (code === 'OTHER'
-              ? '<span style="font-size:0.6875rem;color:var(--c-muted)">required fallback</span>'
-              : '<button class="btn btn-outline btn-sm" style="color:var(--c-red);border-color:#fecaca" onclick="deleteShippingRate(\'' + code + '\')">Delete</button>') +
+              ? '<span style="font-size:0.6875rem;color:var(--c-muted)">fallback</span>'
+              : '<button class="btn btn-outline btn-sm" style="color:var(--c-red);border-color:#fecaca" onclick="deleteShippingRate(\'' + code + '\')">Del</button>') +
           '</td>' +
         '</tr>';
       });
     }
     html += '</tbody></table></div></div></div>';
 
+    // 3. Add Country form (first costs only)
     var shippingCountryOptions = await loadShippingCountryOptions();
     var countryOptions = shippingCountryOptions.map(function(c) {
       var label = c.name + (c.is_fallback ? ' (Fallback)' : '');
       return '<option value="' + c.code + '"' + (c.code === 'TH' ? ' selected' : '') + '>' + escHtml(label) + ' (' + c.code + ')</option>';
     }).join('');
 
-    html += '<div class="card"><div class="card-header">Add Country Rate</div><div class="card-body">' +
-      '<div class="form-row" style="grid-template-columns:1.6fr 120px 120px">' +
-        '<div class="form-group"><label>Country</label><select id="ship-new-code" class="form-input">' + countryOptions + '</select></div>' +
-        '<div class="form-group"><label>First THB</label><input id="ship-new-first-thb" type="number" min="0" step="1" value="0"></div>' +
-        '<div class="form-group"><label>Add THB</label><input id="ship-new-add-thb" type="number" min="0" step="1" value="0"></div>' +
+    html += '<div class="card"><div class="card-header">Add Country</div><div class="card-body">' +
+      '<div style="display:grid;grid-template-columns:1.5fr repeat(3, 1fr);gap:8px;align-items:end;margin-bottom:8px">' +
+        '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">Country</label><select id="ship-new-code" class="form-input" style="padding:6px 8px;font-size:0.75rem">' + countryOptions + '</select></div>' +
+        '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">T1 Initial</label><input id="ship-new-t1f" type="number" min="0" value="0" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
+        '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">T2 Initial</label><input id="ship-new-t2f" type="number" min="0" value="0" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
+        '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">T3 Initial</label><input id="ship-new-t3f" type="number" min="0" value="0" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;align-items:center">' +
-        '<label style="font-size:0.8125rem;color:var(--c-muted);display:flex;gap:6px;align-items:center"><input id="ship-new-active" type="checkbox" checked> Active</label>' +
-        '<button class="btn btn-primary" onclick="createShippingRate()">Add / Save Country</button>' +
+        '<label style="font-size:0.75rem;color:var(--c-muted);display:flex;gap:6px;align-items:center"><input id="ship-new-active" type="checkbox" checked> Active</label>' +
+        '<button class="btn btn-primary btn-sm" onclick="createShippingRate()">Add Country</button>' +
       '</div>' +
     '</div></div>';
 
@@ -939,8 +1009,9 @@ async function saveShippingRate(countryCode) {
     var payload = {
       country_code: code,
       country_name: String(existing.country_name || (code === 'OTHER' ? 'Other Countries' : code)),
-      first_item_thb: Number((document.getElementById('ship-first-thb-' + code) || {}).value || 0),
-      additional_item_thb: Number((document.getElementById('ship-add-thb-' + code) || {}).value || 0),
+      tier1_first_thb: Number((document.getElementById('ship-t1f-' + code) || {}).value || 0),
+      tier2_first_thb: Number((document.getElementById('ship-t2f-' + code) || {}).value || 0),
+      tier3_first_thb: Number((document.getElementById('ship-t3f-' + code) || {}).value || 0),
       is_active: (document.getElementById('ship-active-' + code) || {}).checked ? 1 : 0
     };
     var resp = await fetch('/api/admin/shipping-rates', { method: 'POST', headers: headers, body: JSON.stringify(payload) });
@@ -965,8 +1036,9 @@ async function createShippingRate() {
     var payload = {
       country_code: code,
       country_name: name,
-      first_item_thb: Number((document.getElementById('ship-new-first-thb') || {}).value || 0),
-      additional_item_thb: Number((document.getElementById('ship-new-add-thb') || {}).value || 0),
+      tier1_first_thb: Number((document.getElementById('ship-new-t1f') || {}).value || 0),
+      tier2_first_thb: Number((document.getElementById('ship-new-t2f') || {}).value || 0),
+      tier3_first_thb: Number((document.getElementById('ship-new-t3f') || {}).value || 0),
       is_active: (document.getElementById('ship-new-active') || {}).checked ? 1 : 0
     };
     var resp = await fetch('/api/admin/shipping-rates', { method: 'POST', headers: headers, body: JSON.stringify(payload) });
@@ -998,6 +1070,46 @@ async function deleteShippingRate(countryCode) {
     showPage('shipping');
   } catch (e) {
     toast('Network error while deleting shipping rate');
+  }
+}
+
+async function updateProductTier(slug, tier) {
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var resp = await fetch('/api/admin/shipping-product-tiers', {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({ product_slug: slug, tier: Number(tier) })
+    });
+    if (!resp.ok) {
+      var err = await resp.json().catch(function(){ return {}; });
+      toast('Tier update failed: ' + (err.error || resp.status));
+      return;
+    }
+    toast(slug + ' → Tier ' + tier);
+  } catch (e) {
+    toast('Network error updating product tier');
+  }
+}
+
+async function saveAddRate(tier) {
+  var val = Number((document.getElementById('add-rate-' + tier) || {}).value);
+  if (isNaN(val) || val < 0) { toast('Invalid amount'); return; }
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var resp = await fetch('/api/admin/shipping-add-rates', {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({ tier: tier, add_thb: val })
+    });
+    if (!resp.ok) {
+      var err = await resp.json().catch(function(){ return {}; });
+      toast('Failed: ' + (err.error || resp.status));
+      return;
+    }
+    toast('Tier ' + tier + ' addition cost saved: ' + val + ' THB');
+  } catch (e) {
+    toast('Network error');
   }
 }
 // ── Orders (enhanced with status badges) ──

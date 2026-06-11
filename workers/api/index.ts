@@ -19,7 +19,7 @@ import { handleAdminUpload } from "./admin-upload";
 import { handleAdminOrders } from "./admin-orders";
 import { handleAdminCustomers } from "./admin-customers";
 import { handleAdminStats } from "./admin-stats";
-import { handleAdminShippingRates } from "./admin-shipping";
+import { handleAdminShippingRates, handleAdminShippingProductTiers, handleAdminShippingAddRates } from "./admin-shipping";
 import { handleAdminQuotes } from "./admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "./discount";
 import { handleAdminPromo } from "./admin-promo";
@@ -116,6 +116,12 @@ export default {
     // Admin API — shipping rates
     if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
       return handleAdminShippingRates(request, env);
+    }
+    if (path === "/api/admin/shipping-product-tiers" || path === "/api/admin/shipping-product-tiers/") {
+      return handleAdminShippingProductTiers(request, env);
+    }
+    if (path === "/api/admin/shipping-add-rates" || path === "/api/admin/shipping-add-rates/") {
+      return handleAdminShippingAddRates(request, env);
     }
 
     // Admin API — promo codes (create, list, revoke)

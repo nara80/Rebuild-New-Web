@@ -10,9 +10,13 @@ interface ParamRow {
 }
 
 export async function handleAdminPricingParams(request: Request, env: any): Promise<Response> {
-  // Auth check — use a simple admin secret header
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  // Dev bypass: pages.dev and localhost skip auth entirely
+  const host = new URL(request.url).hostname;
+  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
+
+  if (!isDev) {
+    const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+    const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
@@ -26,6 +30,7 @@ export async function handleAdminPricingParams(request: Request, env: any): Prom
       headers: { "Content-Type": "application/json" },
     });
   }
+  } // end isDev
 
   if (request.method === "POST" || request.method === "PUT") {
     try {

@@ -22,6 +22,12 @@
   var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
   var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
+
+  // Non-deep products — depth > 30 cm / 12″ should redirect to deep pocket variants
+  var isShallowFitted = path.indexOf('fitted-sheet') !== -1 && path.indexOf('deep-pocket-fitted-sheet') === -1 && !isMarineFitted && !isFamily && !isPetOwner;
+  var isStandardFlat = isFlatSheet && path.indexOf('flat-sheet-extra-deep-pocket') === -1 && path.indexOf('flat-sheet-standard') !== -1;
+  var isShallowProtector = isProtectorStandard || isProtectorPetProof;
+  var MAX_SHALLOW_DEPTH_CM = 30; // ≈ 12″
   var pillowVariant = 'envelope';
   if (isPillowcase) {
     if (path.indexOf('zipper') !== -1) pillowVariant = 'zipper';
@@ -990,7 +996,8 @@
       result = calcFittedSheet(dims.w, dims.l, dims.d, state.fabric);
     }
     if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && dims.w > MAX_W) {
-      priceDisplay.textContent = 'Custom quote — Co-Sleep size';
+      var mLabel = Math.round(MAX_W / 2.54) + '\u2033';
+      priceDisplay.textContent = 'Over ' + mLabel + ' \u2014 see Family Fitted Sheet';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
@@ -1015,10 +1022,21 @@
     }
     var wCm = w, lCm = l, dCm = d;
     if (state.unit === 'in') { wCm = inchToCm(w); lCm = inchToCm(l); dCm = inchToCm(d); }
+    if ((isShallowFitted || isStandardFlat || isShallowProtector) && dCm > MAX_SHALLOW_DEPTH_CM) {
+      var dpSlug, dpLabel;
+      if (isShallowFitted) { dpSlug = '/product/deep-pocket-fitted-sheet/'; dpLabel = 'Deep Pocket Fitted Sheet'; }
+      else if (isStandardFlat) { dpSlug = '/product/flat-sheet-extra-deep-pocket/'; dpLabel = 'Flat Sheet — Extra Deep Pocket'; }
+      else { dpSlug = '/product/mattress-protector-deep-pocket/'; dpLabel = 'Mattress Protector — Deep Pocket'; }
+      var maxDLabel = state.unit === 'in' ? Math.round(MAX_SHALLOW_DEPTH_CM / 2.54) + '\u2033' : MAX_SHALLOW_DEPTH_CM + 'cm';
+      customPrice.innerHTML = '<span style="font-size:0.85rem;color:#64748b">Over ' + maxDLabel + ' — see <a href="' + dpSlug + '" style="color:#2c96f4;font-weight:600">' + dpLabel + '</a></span>';
+      customPrice.style.fontSize = '';
+      if (addToCartBtn) addToCartBtn.disabled = true;
+      return;
+    }
     if (!isFlatSheet && !isDuvet && !isPillowProtector && !isPillowcase && !isMattressProtector && wCm > MAX_W) {
       var maxLabel = state.unit === 'in' ? Math.round(MAX_W / 2.54) + '\u2033' : MAX_W + 'cm';
-      customPrice.textContent = 'Custom quote \u2014 over ' + maxLabel;
-      customPrice.style.fontSize = '0.85rem';
+      customPrice.innerHTML = '<span style="font-size:0.85rem;color:#64748b">Over ' + maxLabel + ' — see <a href="/product/family-fitted-sheet/" style="color:#2c96f4;font-weight:600">Family Fitted Sheet</a></span>';
+      customPrice.style.fontSize = '';
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }

@@ -17,7 +17,7 @@ import { handleAdminUpload } from "../../workers/api/admin-upload";
 import { handleAdminOrders } from "../../workers/api/admin-orders";
 import { handleAdminCustomers } from "../../workers/api/admin-customers";
 import { handleAdminStats } from "../../workers/api/admin-stats";
-import { handleAdminShippingRates } from "../../workers/api/admin-shipping";
+import { handleAdminShippingRates, handleAdminShippingProductTiers, handleAdminShippingAddRates } from "../../workers/api/admin-shipping";
 import { handleAdminQuotes } from "../../workers/api/admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "../../workers/api/discount";
 import { handleAdminContacts } from "../../workers/api/admin-contacts";
@@ -125,6 +125,14 @@ export const onRequest: PagesFunction<{
   // Admin shipping rates
   if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
     return handleAdminShippingRates(request, env);
+  }
+  // Admin shipping product tiers
+  if (path === "/api/admin/shipping-product-tiers" || path === "/api/admin/shipping-product-tiers/") {
+    return handleAdminShippingProductTiers(request, env);
+  }
+  // Admin shipping add rates
+  if (path === "/api/admin/shipping-add-rates" || path === "/api/admin/shipping-add-rates/") {
+    return handleAdminShippingAddRates(request, env);
   }
 
   // Admin sales quotes
