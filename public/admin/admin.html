@@ -1495,6 +1495,8 @@ function _clearPending() {
   Object.keys(_pendingBlobs).forEach(function(k){ try { URL.revokeObjectURL(_pendingBlobs[k]); } catch(e){} });
   _pendingUploads = {}; _pendingDeletes = []; _pendingBlobs = {};
 }
+function _isR2Url(u) { return typeof u === 'string' && u.indexOf('/r2/') === 0; }
+function _r2KeyFromUrl(u) { return _isR2Url(u) ? u.substring(4) : null; }
 
 
 function selectProduct(idx){
