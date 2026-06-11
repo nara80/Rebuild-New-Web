@@ -37,14 +37,24 @@ function parseCategoryCsv(csv: string): { product_type: string; niches: string }
   return { product_type, niches };
 }
 
+function isProductionHost(hostname: string): boolean {
+  if (!hostname) return false;
+  const host = hostname.toLowerCase().split(":")[0];
+  if (host === "localhost" || host === "127.0.0.1") return false;
+  if (host.endsWith(".pages.dev")) return false;
+  if (host.endsWith(".local")) return false;
+  return host === "www.mildmate.com" || host === "mildmate.com";
+}
 const ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
 
 function authCheck(request: Request, env: any): boolean {
+  const hostname = request.headers.get("Host") || "";
+  const prodHost = isProductionHost(hostname);
+  if (!prodHost) return true;
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return false;
-  // Dev bypass: if ADMIN_SECRET not set in Cloudflare, allow any non-empty secret from browser
-  if (!configured) return true;
+  if (!configured) return false;
   return provided === configured;
 }
 
