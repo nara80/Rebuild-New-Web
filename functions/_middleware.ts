@@ -260,6 +260,7 @@ export async function onRequest(context: any): Promise<Response> {
   // Flip language toggle for Thai pages
   if (html.includes('<html lang="th"')) {
     html = html
+      // Toggle appearance
       .replace(
         /<span data-lang="en"[^>]*class="active"[^>]*>EN<\/span>/,
         '<span data-lang="en" style="color:var(--color-muted)">EN</span>'
@@ -267,7 +268,19 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(
         /<span data-lang="th"[^>]*>TH<\/span>/,
         '<span data-lang="th" class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px">TH</span>'
-      );
+      )
+      // Desktop nav links
+      .replace(/"nav-link">Shop<\/a>/g, '"nav-link">สินค้า</a>')
+      .replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">เนื้อผ้า</a>')
+      .replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">คู่มือขนาด</a>')
+      .replace(/"nav-link">Blog<\/a>/g, '"nav-link">บทความ</a>')
+      // Mobile drawer nav links (no class)
+      .replace(/<a href="\/products\/">Shop<\/a>/g, '<a href="/products/">สินค้า</a>')
+      .replace(/<a href="\/fabric\/">Fabrics<\/a>/g, '<a href="/fabric/">เนื้อผ้า</a>')
+      .replace(/<a href="\/sizeguide\/">Size Guide<\/a>/g, '<a href="/sizeguide/">คู่มือขนาด</a>')
+      .replace(/<a href="\/blogs\/">Blog<\/a>/g, '<a href="/blogs/">บทความ</a>')
+      // Sign In text
+      .replace(/>Sign In</g, '>เข้าสู่ระบบ<');
   }
 
   // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
