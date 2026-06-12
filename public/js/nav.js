@@ -54,8 +54,22 @@
   }
 
   /* ── 3. Language toggle — actual navigation ── */
-  // Pages known to have both EN and TH versions (expand as TH pages are built)
-  const BILINGUAL_PAGES = ['/', '/about/', '/contact/', '/faq/', '/fabric/', '/sizeguide/', '/reviews/', '/how-to-measure-mattress-size/', '/custom-measurement/', '/products/', '/fitted-sheets/', '/flat-sheets/', '/duvet-covers/', '/pillowcases/', '/mattress-protectors/', '/pets/', '/marine/', '/family/', '/duvet/', '/boarding-dorm/', '/rv-truck/', '/shipping/', '/policy/'];
+  // Pages with both EN and TH versions (TH pages served via SSR or static files)
+  // IMPORTANT: only add paths here when TH pages actually exist
+  const BILINGUAL_PAGES = [
+    // Blog (SSR via /functions/th/blogs/[[path]].ts — all blog posts have TH now)
+    '/blogs/', '/blogs',
+    // Homepage — TH homepage pending
+    '/'
+  ];
+  // Normalize path to handle both trailing-slash and non-trailing-slash variants
+  const hasTHVersion = (enPath) => {
+    return BILINGUAL_PAGES.includes(enPath) ||
+           BILINGUAL_PAGES.includes(enPath + '/') ||
+           BILINGUAL_PAGES.includes(enPath.replace(/\/$/, '') || '/') ||
+           // Blog posts always have TH versions
+           enPath.startsWith('/blogs/');
+  };
   const langToggle = document.querySelector('.lang-toggle');
   if (langToggle) {
     langToggle.addEventListener('click', function (e) {
@@ -68,13 +82,13 @@
       const enPath = isTh ? path.replace(/^\/th/, '') || '/' : path;
 
       if (targetLang === 'th' && !isTh) {
-        // EN → TH: blog posts always have TH; other pages check BILINGUAL_PAGES
-        // If no TH version exists, stay on EN page (do nothing)
-        if (enPath.startsWith('/blogs/') || BILINGUAL_PAGES.includes(enPath)) {
+        // EN → TH: navigate only if TH version exists
+        if (hasTHVersion(enPath)) {
           window.location.href = '/th' + enPath;
         }
+        // else: no TH version, stay on EN page (do nothing)
       } else if (targetLang === 'en' && isTh) {
-        // TH → EN: strip /th/ prefix
+        // TH → EN: always strip /th/ prefix
         window.location.href = enPath;
       }
       // else: Already on target language, do nothing
