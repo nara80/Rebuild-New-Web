@@ -308,7 +308,11 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/href="\/blogs\/"/g, 'href="/th/blogs/"')
       .replace(/href="\/policy\/"/g, 'href="/th/policy/"')
       .replace(/href="\/shipping\/"/g, 'href="/th/shipping/"')
-      .replace(/href="\/reviews\/"/g, 'href="/th/reviews/"');
+      .replace(/href="\/reviews\/"/g, 'href="/th/reviews/"')
+      .replace(/href="\/how-to-measure-mattress-size\/"/g, 'href="/th/how-to-measure-mattress-size/"')
+      .replace(/href="\/custom-measurement\/"/g, 'href="/th/custom-measurement/"')
+      // Homepage logo — land on TH homepage
+      .replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
 
   // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
