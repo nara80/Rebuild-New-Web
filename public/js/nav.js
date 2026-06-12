@@ -57,10 +57,11 @@
   // Pages with both EN and TH versions (TH pages served via SSR or static files)
   // IMPORTANT: only add paths here when TH pages actually exist
   const BILINGUAL_PAGES = [
-    // Blog (SSR via /functions/th/blogs/[[path]].ts — all blog posts have TH now)
+    // Blog (SSR — all blog posts have TH now)
     '/blogs/', '/blogs',
-    // Size Guide — static TH page at /th/sizeguide/
+    // Static TH pages
     '/sizeguide/', '/sizeguide',
+    '/how-to-measure-mattress-size/', '/how-to-measure-mattress-size',
     // Homepage — TH homepage pending
     '/'
   ];
