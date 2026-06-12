@@ -119,7 +119,16 @@ async function buildBlogPostHTML(post, env, lang = "en") {
   const author = escHtml(post.author || "MildMate Team");
   const readTime = isThai ? escHtml(post.read_time_th || post.read_time_en || "5 min read") : escHtml(post.read_time_en || "5 min read");
   const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
-  const body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
+  let body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
+  if (isThai && post.body_th && post.body_en && !/<img\b/i.test(post.body_th)) {
+    const imgRegex = /<img\b[^>]*>/gi;
+    const enImages = post.body_en.match(imgRegex);
+    if (enImages && enImages.length > 0) {
+      body += '<div style="margin-top:24px">' + enImages.map(
+        (img) => img.replace(/<img/, '<img style="max-width:100%;border-radius:8px;margin:12px 0"')
+      ).join("\n") + "</div>";
+    }
+  }
   const createdAt = formatDate(post.created_at);
   const imageAlt = isThai ? escHtml(post.featured_image_alt_th || post.title_th || title) : escHtml(post.featured_image_alt_en || title);
   const hasImage = featuredImage ? "true" : "false";
@@ -8110,6 +8119,15 @@ async function onRequest8(context) {
   if (html.includes("<!-- __FOOTER__ -->")) {
     html = html.replace("<!-- __FOOTER__ -->", footer);
   }
+  if (html.includes('<html lang="th"')) {
+    html = html.replace(
+      /<span data-lang="en"[^>]*class="active"[^>]*>EN<\/span>/,
+      '<span data-lang="en" style="color:var(--color-muted)">EN</span>'
+    ).replace(
+      /<span data-lang="th"[^>]*>TH<\/span>/,
+      '<span data-lang="th" class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px">TH</span>'
+    );
+  }
   const hasStandardHeader = html.includes('<header class="site-header"');
   const hasAnyHeader = /<header\b/i.test(html);
   if (!hasStandardHeader && !hasAnyHeader) {
@@ -8126,7 +8144,7 @@ ${header}`);
 }
 __name(onRequest8, "onRequest");
 
-// ../.wrangler/tmp/pages-Iiv3Iq/functionsRoutes-0.29269198037438227.mjs
+// ../.wrangler/tmp/pages-itjWnn/functionsRoutes-0.3588089468309623.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

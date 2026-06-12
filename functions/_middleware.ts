@@ -257,6 +257,19 @@ export async function onRequest(context: any): Promise<Response> {
     html = html.replace('<!-- __FOOTER__ -->', footer);
   }
 
+  // Flip language toggle for Thai pages
+  if (html.includes('<html lang="th"')) {
+    html = html
+      .replace(
+        /<span data-lang="en"[^>]*class="active"[^>]*>EN<\/span>/,
+        '<span data-lang="en" style="color:var(--color-muted)">EN</span>'
+      )
+      .replace(
+        /<span data-lang="th"[^>]*>TH<\/span>/,
+        '<span data-lang="th" class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px">TH</span>'
+      );
+  }
+
   // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
   // Inject by structure when standard chrome is missing.
   const hasStandardHeader = html.includes('<header class="site-header"');

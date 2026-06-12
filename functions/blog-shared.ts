@@ -145,9 +145,19 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
     ? escHtml(post.read_time_th || post.read_time_en || "5 min read")
     : escHtml(post.read_time_en || "5 min read");
   const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
-  const body = isThai
+  let body = isThai
     ? (post.body_th || post.body_en || "<p>บทความนี้กำลังจะมาเร็วๆ นี้</p>")
     : (post.body_en || "<p>This article is coming soon.</p>");
+  // If Thai body exists but lacks images and EN body has images, copy them over
+  if (isThai && post.body_th && post.body_en && !/<img\b/i.test(post.body_th)) {
+    const imgRegex = /<img\b[^>]*>/gi;
+    const enImages = post.body_en.match(imgRegex);
+    if (enImages && enImages.length > 0) {
+      body += "<div style=\"margin-top:24px\">" + enImages.map((img: string) =>
+        img.replace(/<img/, '<img style="max-width:100%;border-radius:8px;margin:12px 0"')
+      ).join("\n") + "</div>";
+    }
+  }
   const createdAt = formatDate(post.created_at);
   const imageAlt = isThai
     ? escHtml(post.featured_image_alt_th || post.title_th || title)
