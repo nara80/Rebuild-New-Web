@@ -280,7 +280,25 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/<a href="\/sizeguide\/">Size Guide<\/a>/g, '<a href="/sizeguide/">คู่มือขนาด</a>')
       .replace(/<a href="\/blogs\/">Blog<\/a>/g, '<a href="/blogs/">บทความ</a>')
       // Sign In text
-      .replace(/>Sign In</g, '>เข้าสู่ระบบ<');
+      .replace(/>Sign In</g, '>เข้าสู่ระบบ<')
+      // Footer section headings
+      .replace(/>Customer Service</g, '>บริการลูกค้า<')
+      .replace(/>FAQ</g, '>คำถามที่พบบ่อย<')
+      .replace(/>Shop With Us</g, '>ช่องทางสั่งซื้อ<')
+      .replace(/>Contact</g, '>ติดต่อเรา<')
+      // Footer bottom links
+      .replace(/>Privacy Policy</g, '>นโยบายความเป็นส่วนตัว<')
+      .replace(/>Returns &amp; Delivery</g, '>การคืนสินค้าและการจัดส่ง<')
+      // Footer About Us / Contact Us links
+      .replace(/>About Us</g, '>เกี่ยวกับเรา<')
+      .replace(/>Contact Us</g, '>ติดต่อเรา<')
+      // Mobile drawer
+      .replace(/>Home</g, '>หน้าแรก<')
+      .replace(/>Language:</g, '>ภาษา:<')
+      // Reviews nav link
+      .replace(/>Reviews</g, '>รีวิว<')
+      // Search placeholder
+      .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."');
   }
 
   // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
