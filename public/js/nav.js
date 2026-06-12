@@ -66,19 +66,18 @@
       const path = window.location.pathname;
       const isTh = path.startsWith('/th/');
       const enPath = isTh ? path.replace(/^\/th/, '') || '/' : path;
-      let newPath;
 
       if (targetLang === 'th' && !isTh) {
-        // EN → TH: if page has TH version, go there; else go to TH homepage
-        newPath = BILINGUAL_PAGES.includes(enPath) ? '/th' + enPath : '/th/';
+        // EN → TH: blog posts always have TH; other pages check BILINGUAL_PAGES
+        // If no TH version exists, stay on EN page (do nothing)
+        if (enPath.startsWith('/blogs/') || BILINGUAL_PAGES.includes(enPath)) {
+          window.location.href = '/th' + enPath;
+        }
       } else if (targetLang === 'en' && isTh) {
         // TH → EN: strip /th/ prefix
-        newPath = enPath;
-      } else {
-        return; // Already on target language
+        window.location.href = enPath;
       }
-
-      window.location.href = newPath;
+      // else: Already on target language, do nothing
     });
   }
 
