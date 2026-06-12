@@ -62,6 +62,7 @@
     // Static TH pages
     '/sizeguide/', '/sizeguide',
     '/how-to-measure-mattress-size/', '/how-to-measure-mattress-size',
+    '/custom-measurement/', '/custom-measurement',
     // Homepage — TH homepage pending
     '/'
   ];
