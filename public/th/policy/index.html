@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="นโยบายความเป็นส่วนตัวของ MildMate  -  วิธีที่เราเก็บรวบรวม ใช้ และปกป้องข้อมูลส่วนบุคคลของคุณ">
+  <title>นโยบายความเป็นส่วนตัว  -  MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+</head>
+<body>
+
+  <!-- __HEADER__ -->
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>นโยบายความเป็นส่วนตัว</h1>
+        <p>อัปเดตล่าสุด: พฤษภาคม 2026</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container" style="max-width:800px;">
+        <h2>1. บทนำ</h2>
+        <p>MildMate ("เรา", "ของเรา") เคารพความเป็นส่วนตัวของคุณและมุ่งมั่นที่จะปกป้องข้อมูลส่วนบุคคลของคุณ นโยบายความเป็นส่วนตัวนี้อธิบายวิธีที่เราเก็บรวบรวม ใช้ และปกป้องข้อมูลของคุณเมื่อคุณเยี่ยมชมเว็บไซต์ของเราหรือทำการซื้อสินค้า นโยบายนี้มีผลบังคับใช้ตั้งแต่เดือนพฤษภาคม 2026</p>
+
+        <h2>2. ข้อมูลที่เราเก็บรวบรวม</h2>
+        <p>เราอาจเก็บรวบรวมข้อมูลประเภทต่อไปนี้:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>ข้อมูลติดต่อ:</strong> ชื่อ ที่อยู่อีเมล หมายเลขโทรศัพท์ ที่อยู่จัดส่ง</li>
+          <li><strong>รายละเอียดคำสั่งซื้อ:</strong> ข้อมูลจำเพาะของสินค้า ขนาด ตัวเลือกผ้า</li>
+          <li><strong>ข้อมูลการชำระเงิน:</strong> ดำเนินการอย่างปลอดภัยโดย Stripe  -  เราไม่เก็บหมายเลขบัตรเต็ม</li>
+          <li><strong>ข้อมูลการใช้งาน:</strong> ที่อยู่ IP ประเภทเบราว์เซอร์ หน้าที่เยี่ยมชม (ผ่าน Google Analytics 4)</li>
+          <li><strong>การสื่อสาร:</strong> อีเมล ข้อความ และคำขอรับการสนับสนุน</li>
+          <li><strong>ข้อมูลอุปกรณ์:</strong> ขนาดหน้าจอ ระบบปฏิบัติการ (เพื่อปรับปรุงเว็บไซต์)</li>
+        </ul>
+
+        <h2>3. วิธีที่เราใช้ข้อมูลของคุณ</h2>
+        <p>เราใช้ข้อมูลส่วนบุคคลของคุณเพื่อ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>ดำเนินการและจัดส่งคำสั่งซื้อของคุณ</li>
+          <li>สื่อสารเกี่ยวกับสถานะคำสั่งซื้อของคุณ</li>
+          <li>ให้การสนับสนุนลูกค้า</li>
+          <li>ส่งอีเมลส่งเสริมการขาย (โดยได้รับความยินยอมจากคุณ  -  ดูหัวข้อ 3A ด้านล่าง)</li>
+          <li>วิเคราะห์ปริมาณการเข้าชมเว็บไซต์และปรับปรุงประสบการณ์ผู้ใช้</li>
+          <li>วัดประสิทธิภาพโฆษณา (Facebook Pixel)</li>
+          <li>ปฏิบัติตามข้อผูกพันทางกฎหมาย</li>
+        </ul>
+
+        <h2>3A. การตลาดและการสื่อสาร</h2>
+        <p>หากคุณยินยอม เราอาจส่งอีเมลส่งเสริมการขายเกี่ยวกับสินค้าใหม่ ข้อเสนอพิเศษ และเคล็ดลับเครื่องนอน อีเมลการตลาดทุกฉบับจะมี <strong>ลิงก์ยกเลิกการสมัคร</strong> ในส่วนท้ายที่นำคุณไปยัง <a href="/unsubscribe/">mildmate.com/unsubscribe/</a> คุณยังสามารถส่งอีเมลไปที่ <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> ด้วยหัวเรื่อง "Unsubscribe" และเราจะลบคุณออกภายใน 48 ชั่วโมง</p>
+        <p>อีเมลยืนยันคำสั่งซื้อและการแจ้งเตือนการจัดส่งถือเป็นอีเมลธุรกรรมและไม่สามารถเลือกไม่รับได้ เนื่องจากจำเป็นต่อการดำเนินการตามคำสั่งซื้อของคุณ</p>
+
+        <h2>4. บริการของบุคคลที่สาม</h2>
+        <p>เราแบ่งปันข้อมูลในวงจำกัดกับบุคคลที่สามที่เชื่อถือได้ซึ่งจำเป็นต่อการดำเนินธุรกิจของเรา:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>Stripe:</strong> การประมวลผลการชำระเงิน  -  รายละเอียดบัตรถูกแปลงเป็นโทเค็น เราไม่เห็นหมายเลขบัตรเต็ม</li>
+          <li><strong>MailChannels (ผ่าน Cloudflare):</strong> การส่งอีเมลธุรกรรมและการตลาด</li>
+          <li><strong>บริษัทขนส่ง (ไปรษณีย์ไทย, DHL, FedEx):</strong> ที่อยู่จัดส่งบนป้ายจัดส่งเท่านั้น ไม่มีการแบ่งปันข้อมูลผ่าน API</li>
+          <li><strong>Cloudflare:</strong> ความปลอดภัยเว็บไซต์ การป้องกัน DDoS และโฮสติ้ง</li>
+          <li><strong>Google Analytics 4:</strong> สถิติการใช้งานเว็บไซต์แบบไม่ระบุตัวตน</li>
+          <li><strong>Meta (Facebook Pixel):</strong> การติดตาม Conversion เพื่อวัดประสิทธิภาพโฆษณา</li>
+        </ul>
+
+        <h2>5. คุกกี้และเทคโนโลยีการติดตาม</h2>
+        <p>เราใช้คุกกี้และเทคโนโลยีที่คล้ายคลึงกันเพื่อดำเนินการและปรับปรุงเว็บไซต์ของเรา เมื่อคุณเข้าชมครั้งแรก แบนเนอร์ขอความยินยอมคุกกี้จะให้คุณเลือกหมวดหมู่ที่ต้องการยอมรับ คุณสามารถอัปเดตการตั้งค่าได้ทุกเมื่อโดยล้างคุกกี้ของเบราว์เซอร์  -  แบนเนอร์จะปรากฏอีกครั้งในการเยี่ยมชมครั้งถัดไป</p>
+
+        <table style="width:100%; border-collapse:collapse; margin:16px 0; font-size:0.875rem;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--color-border);">
+              <th style="text-align:left; padding:8px;">หมวดหมู่</th>
+              <th style="text-align:left; padding:8px;">วัตถุประสงค์</th>
+              <th style="text-align:left; padding:8px;">ผู้ให้บริการ</th>
+              <th style="text-align:left; padding:8px;">ระยะเวลา</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <td style="padding:8px;"><strong>จำเป็น</strong></td>
+              <td style="padding:8px;">ตะกร้าสินค้า การตั้งค่าภาษา เซสชัน</td>
+              <td style="padding:8px;">MildMate (บุคคลที่หนึ่ง)</td>
+              <td style="padding:8px;">เซสชัน  -  30 วัน</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <td style="padding:8px;"><strong>วิเคราะห์</strong></td>
+              <td style="padding:8px;">จำนวนผู้ชม พฤติกรรมผู้เยี่ยมชม แหล่งที่มา</td>
+              <td style="padding:8px;">Google Analytics 4</td>
+              <td style="padding:8px;">สูงสุด 14 เดือน</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--color-border);">
+              <td style="padding:8px;"><strong>โฆษณา</strong></td>
+              <td style="padding:8px;">การติดตาม Conversion การวัดประสิทธิภาพโฆษณา</td>
+              <td style="padding:8px;">Meta (Facebook Pixel)</td>
+              <td style="padding:8px;">สูงสุด 180 วัน</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>คุณสามารถควบคุมคุกกี้ได้ผ่านการตั้งค่าเบราว์เซอร์ สำหรับข้อมูลเพิ่มเติม เยี่ยมชม <a href="https://www.aboutcookies.org" target="_blank" rel="noopener noreferrer">AboutCookies.org</a></p>
+
+        <h2>6. การเก็บรักษาข้อมูล</h2>
+        <p>เราเก็บรักษาข้อมูลส่วนบุคคลของคุณตราบเท่าที่จำเป็นเพื่อบรรลุวัตถุประสงค์ที่ระบุในนโยบายนี้ หรือตามที่กฎหมายกำหนด:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>บันทึกคำสั่งซื้อ:</strong> 7 ปี เพื่อวัตถุประสงค์ทางภาษีและการรับประกัน</li>
+          <li><strong>สมาชิกอีเมล:</strong> จนกว่าคุณจะยกเลิกการสมัครหรือขอให้ลบ</li>
+          <li><strong>ข้อมูลวิเคราะห์:</strong> 14 เดือน (ค่าเริ่มต้นของ Google Analytics)</li>
+          <li><strong>ข้อมูลตะกร้าสินค้าที่ถูกทิ้ง:</strong> 30 วัน จากนั้นจะถูกลบโดยอัตโนมัติ</li>
+        </ul>
+
+        <h2>7. สิทธิ์ของคุณ</h2>
+        <p>ขึ้นอยู่กับสถานที่ตั้งของคุณ คุณอาจมีสิทธิ์ดังต่อไปนี้:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>การเข้าถึง:</strong> ขอสำเนาข้อมูลส่วนบุคคลของคุณ</li>
+          <li><strong>การแก้ไข:</strong> อัปเดตข้อมูลที่ไม่ถูกต้องหรือไม่สมบูรณ์</li>
+          <li><strong>การลบ:</strong> ขอลบข้อมูลของคุณ (ดูหัวข้อ 11)</li>
+          <li><strong>การโอนย้าย:</strong> รับข้อมูลของคุณในรูปแบบที่เครื่องอ่านได้</li>
+          <li><strong>การคัดค้าน:</strong> คัดค้านกิจกรรมการประมวลผลบางอย่าง</li>
+          <li><strong>การเพิกถอนความยินยอม:</strong> ยกเลิกการสมัครรับข้อมูลการตลาดได้ทุกเมื่อ</li>
+        </ul>
+        <p>เพื่อใช้สิทธิ์เหล่านี้ ส่งอีเมลไปที่ <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> ด้วยหัวเรื่อง "คำขอความเป็นส่วนตัว" เราจะตอบกลับภายใน 30 วัน</p>
+
+        <h2>7A. สิทธิ์ความเป็นส่วนตัวของแคลิฟอร์เนีย (CCPA)</h2>
+        <p>หากคุณเป็นผู้อยู่อาศัยในรัฐแคลิฟอร์เนีย คุณมีสิทธิ์ที่จะ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>ทราบว่าข้อมูลส่วนบุคคลใดที่เราเก็บรวบรวมเกี่ยวกับคุณ</li>
+          <li>ทราบว่าข้อมูลส่วนบุคคลของคุณถูกขายหรือแบ่งปันหรือไม่ (เรา <strong>ไม่</strong> ขายข้อมูลส่วนบุคคล)</li>
+          <li>ขอให้ลบข้อมูลส่วนบุคคลของคุณ</li>
+          <li>ไม่ถูกเลือกปฏิบัติจากการใช้สิทธิ์ความเป็นส่วนตัวของคุณ</li>
+        </ul>
+        <p>ในการยื่นคำขอ CCPA ส่งอีเมลไปที่ <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> ด้วยหัวเรื่อง "คำขอ CCPA"</p>
+
+        <h2>8. ความปลอดภัย</h2>
+        <p>เราดำเนินมาตรการทางเทคนิคและองค์กรที่เหมาะสมเพื่อปกป้องข้อมูลส่วนบุคคลของคุณ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>ข้อมูลทั้งหมดถูกเข้ารหัสระหว่างการส่ง (HTTPS/TLS 1.3)</li>
+          <li>ข้อมูลการชำระเงินจัดการโดย Stripe  -  เป็นไปตามมาตรฐาน PCI DSS</li>
+          <li>การเข้าถึงฐานข้อมูลจำกัดเฉพาะบุคลากรที่ได้รับอนุญาตเท่านั้น</li>
+          <li>การตรวจสอบความปลอดภัยเป็นประจำของ Cloudflare Workers และฐานข้อมูล D1</li>
+        </ul>
+
+        <h2>9. ความเป็นส่วนตัวของเด็ก</h2>
+        <p>เว็บไซต์ของเราไม่ได้มุ่งเป้าไปที่เด็กอายุต่ำกว่า 13 ปี เราไม่เก็บรวบรวมข้อมูลส่วนบุคคลจากเด็กอายุต่ำกว่า 13 ปีโดยรู้เท่าทัน หากคุณเชื่อว่าเราได้เก็บรวบรวมข้อมูลดังกล่าวโดยไม่ได้ตั้งใจ กรุณาติดต่อเราทันทีที่ <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> และเราจะลบข้อมูลนั้นโดยเร็ว</p>
+
+        <h2>10. การแจ้งเตือนการละเมิดข้อมูล</h2>
+        <p>ในเหตุการณ์ที่ไม่คาดคิดของการละเมิดข้อมูลที่ส่งผลต่อข้อมูลส่วนบุคคลของคุณ เราจะ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>แจ้งผู้ใช้ที่ได้รับผลกระทบทางอีเมลภายใน <strong>72 ชั่วโมง</strong> หลังจากพบเหตุ</li>
+          <li>โพสต์ประกาศบนหน้าแรกของเว็บไซต์ของเรา</li>
+          <li>รายงานต่อหน่วยงานที่เกี่ยวข้องตามที่กฎหมายกำหนด (เช่น PDPC ไทย, หน่วยงานกำกับดูแลของสหภาพยุโรป)</li>
+          <li>ดำเนินการทันทีเพื่อควบคุมการละเมิดและป้องกันไม่ให้เกิดซ้ำ</li>
+        </ul>
+
+        <h2>11. การลบบัญชี</h2>
+        <p>เมื่อบัญชีผู้ใช้ของฉันพร้อมใช้งาน (ระยะที่ 5) ผู้ใช้ที่ลงทะเบียนสามารถลบบัญชีของตนได้ทุกเมื่อผ่านหน้าการตั้งค่าบัญชี เมื่อลบ:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>โปรไฟล์บัญชีและที่อยู่ที่บันทึกไว้จะถูกลบอย่างถาวร</li>
+          <li>ประวัติคำสั่งซื้อจะถูก <strong>ทำให้ไม่ระบุตัวตน</strong> (เก็บไว้ 7 ปีตามข้อกำหนดทางภาษี/กฎหมาย แต่จะลบข้อมูลระบุตัวตน)</li>
+          <li>การสมัครรับอีเมลจะถูกยกเลิกโดยอัตโนมัติ</li>
+        </ul>
+        <p>จนกว่าบัญชีผู้ใช้จะพร้อมใช้งาน คุณสามารถขอให้ลบได้โดยส่งอีเมลไปที่ <a href="mailto:contact@mildmate.com">contact@mildmate.com</a> ด้วยหัวเรื่อง "การลบบัญชี"</p>
+
+        <h2>12. การโอนข้อมูลระหว่างประเทศ</h2>
+        <p>MildMate ตั้งอยู่ในประเทศไทย เมื่อคุณสั่งซื้อสินค้าหรือเรียกดูเว็บไซต์ของเรา ข้อมูลของคุณอาจถูกประมวลผลใน:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li><strong>ประเทศไทย:</strong> การดำเนินธุรกิจหลักและการจัดส่งคำสั่งซื้อ</li>
+          <li><strong>สหรัฐอเมริกา:</strong> โฮสติ้ง Cloudflare, การประมวลผลชำระเงิน Stripe, Google Analytics, อีเมล MailChannels</li>
+          <li><strong>สหภาพยุโรป:</strong> ที่อยู่จัดส่งของคุณจะปรากฏในใบขนศุลกากรสำหรับการจัดส่งไปยังสหภาพยุโรป</li>
+        </ul>
+        <p>การโอนระหว่างประเทศทั้งหมดใช้มาตรการป้องกันที่เหมาะสม รวมถึงข้อกำหนดสัญญามาตรฐาน (ถ้ามี) และการเข้ารหัสระหว่างการส่ง</p>
+
+        <h2>13. การเปลี่ยนแปลงนโยบายนี้</h2>
+        <p>เราอาจอัปเดตนโยบายความเป็นส่วนตัวนี้เป็นครั้งคราว การเปลี่ยนแปลงจะถูกโพสต์บนหน้านี้พร้อมวันที่แก้ไขที่อัปเดต สำหรับการเปลี่ยนแปลงที่สำคัญ เราจะแจ้งให้คุณทราบทางอีเมลหรือผ่านประกาศที่เห็นได้ชัดบนเว็บไซต์ของเรา</p>
+
+        <h2>14. ติดต่อเรา</h2>
+        <p>หากคุณมีคำถามใดๆ เกี่ยวกับนโยบายความเป็นส่วนตัวนี้หรือแนวปฏิบัติด้านข้อมูลของเรา กรุณาติดต่อเรา:</p>
+        <ul style="list-style:disc; padding-left:24px; margin-bottom:16px;">
+          <li>อีเมล: <a href="mailto:contact@mildmate.com">contact@mildmate.com</a></li>
+          <li>WhatsApp: <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer">+66 (0)87 236 2364</a></li>
+          <li>LINE Official: <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer">@MildMate</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MildMate  -  เครื่องนอนแม่นยำที่ออกแบบทางวิศวกรรมเพื่อทุกสรีระการนอน ถ่ายรูปวัดขนาด ออกแบบแบบแปลนดิจิทัล และสิ่งทอที่รับรอง OEKO-TEX ตั้งแต่ปี 2019">
+  <title>เกี่ยวกับ  -  วิศวกรรมเครื่องนอนแม่นยำ | MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .about-page { background: #f9f9f9; }
+
+    /* ── Hero ─────────────────────────────── */
+    .about-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .about-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .about-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .about-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Section 2: Engineering Genesis ─────────── */
+    .genesis-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .genesis-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .genesis-image {
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .genesis-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .genesis-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .genesis-section h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 24px;
+    }
+    .genesis-quote {
+      border-left: 3px solid var(--color-primary);
+      padding: 4px 0 4px 24px;
+      margin: 24px 0;
+      font-size: 1.0625rem;
+      line-height: 1.7;
+      color: var(--color-text);
+      font-style: normal;
+    }
+    .genesis-quote p {
+      margin: 0 0 16px;
+    }
+    .genesis-quote p:last-child { margin-bottom: 0; }
+    .genesis-quote strong {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    /* ── Section 3: Authority Timeline ──────────── */
+    .timeline-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+    }
+    .timeline-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .timeline-header h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-header p {
+      color: var(--color-muted);
+      max-width: 540px;
+      margin: 0 auto;
+    }
+    .timeline-container {
+      max-width: 760px;
+      margin: 0 auto;
+      position: relative;
+      padding-left: 40px;
+    }
+    .timeline-container::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--color-primary);
+      opacity: 0.25;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 40px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -33px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      border: 3px solid #f9f9f9;
+      box-shadow: 0 0 0 2px var(--color-primary);
+    }
+    .timeline-year-badge {
+      display: inline-block;
+      background: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      padding: 4px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+    .timeline-content h3 {
+      font-size: 1.1875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .timeline-content p {
+      color: var(--color-muted);
+      font-size: 0.9375rem;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    /* ── Section 4: Material Standards ──────────── */
+    .materials-section {
+      background: #fff;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .materials-header {
+      text-align: center;
+      margin-bottom: 48px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .materials-header h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .materials-header p {
+      color: var(--color-muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .materials-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 880px;
+      margin: 0 auto 40px;
+    }
+    .material-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+    }
+    .material-card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      display: block;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .material-card-body {
+      padding: 24px 26px 28px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .material-card .kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+    }
+    .material-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .material-card .cert-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(44,150,244,0.1);
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+    .material-card p {
+      font-size: 0.9375rem;
+      color: var(--color-muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+    .spec-tag {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      background: rgba(44,150,244,0.06);
+      padding: 4px 10px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+    .cert-logos {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0 16px;
+      flex-wrap: wrap;
+    }
+    .cert-logos img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.9;
+    }
+    .materials-cta {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .materials-cta .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      padding: 14px 32px;
+      font-size: 1rem;
+    }
+    .materials-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+
+    /* ── Section 5: Video ──────────────────────── */
+    .video-demo-section {
+      padding: 72px 24px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    .video-demo-section h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .video-demo-section .video-sub {
+      color: var(--color-muted);
+      margin-bottom: 36px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .iframe-wrapper {
+      position: relative;
+      max-width: 350px;
+      margin: 0 auto;
+      aspect-ratio: 9 / 16;
+      border: 8px solid #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      background: #000;
+    }
+    .iframe-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ── Section 6: Global Reach ───────────────── */
+    .global-reach-section {
+      background: #f9f9f9;
+      padding: 72px 24px;
+      border-top: 1px solid var(--color-border);
+    }
+    .global-reach-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      text-align: center;
+    }
+    .global-reach-inner h2 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .global-reach-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+    .global-cities-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      text-align: left;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .city-col h4 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-primary);
+    }
+    .city-col ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .city-col li {
+      font-size: 1rem;
+      color: var(--color-text);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .city-col li:last-child { border-bottom: none; }
+
+    /* ── Buttons reuse ─────────────────────────── */
+    .about-hero-cta .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      padding: 13px 28px;
+      font-size: 0.9375rem;
+    }
+    .about-hero-cta .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+
+    /* ── Mobile ──────────────────────────────── */
+    @media (max-width: 768px) {
+      .about-hero { padding: 48px 20px 36px; }
+      .about-hero-inner h1 { font-size: 1.875rem; }
+      .genesis-section,
+      .timeline-section,
+      .materials-section,
+      .video-demo-section { padding: 56px 20px; }
+      .genesis-section h2,
+      .timeline-header h2,
+      .materials-header h2,
+      .video-demo-section h2 { font-size: 1.5rem; }
+      .genesis-inner { grid-template-columns: 1fr; gap: 32px; }
+      .genesis-image { order: -1; }
+      .materials-grid { grid-template-columns: 1fr; }
+      .global-cities-grid { grid-template-columns: 1fr; gap: 24px; }
+      .cert-logos img { height: 34px; }
+      .timeline-container { padding-left: 32px; }
+      .timeline-container::before { left: 7px; }
+      .timeline-dot { left: -41px; width: 14px; height: 14px; }
+      .iframe-wrapper {
+        max-width: 280px;
+        border-width: 6px;
+        border-radius: 16px;
+      }
+    }
+  </style>
+</head>
+<body class="about-page">
+
+  <!-- ===== HEADER ===== -->
+  <!-- __HEADER__ -->
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="about-hero">
+      <div class="about-hero-inner">
+        <h1>ออกแบบชุดเครื่องนอนได้ทุกขนาด</h1>
+        <p class="hero-sub">ตั้งแต่ปี 2019 MildMate ได้ขจัด "ความยุ่งยากทางคณิตศาสตร์" สำหรับพื้นผิวการนอนที่ไม่ได้มาตรฐาน ตั้งแต่เตียงครอบครัวขนาดใหญ่ไปจนถึงรถบ้าน เรามอบการออกแบบแบบแปลนดิจิทัลและประสิทธิภาพสิ่งทอที่ผ่านการตรวจสอบทางคลินิก</p>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 2. THE ENGINEERING GENESIS (The 2019 Problem)  -->
+    <!-- ============================================== -->
+    <section class="genesis-section">
+      <div class="genesis-inner">
+        <div class="genesis-text">
+          <div class="genesis-kicker">เริ่มจากการแก้ปัญหาปี 2019</div>
+          <h2>การแก้ปัญหาความขัดแย้ง "ช่องว่างระหว่างที่นอน"</h2>
+          <div class="genesis-quote">
+            <p>MildMate ก่อตั้งขึ้นในปี 2019 เพื่อแก้ <strong>ความล้มเหลวทางเรขาคณิต</strong>: การเปลี่ยนผ่านที่ "ไม่เรียบ" ของที่นอนที่ต่อกันในสภาพแวดล้อมการนอนร่วม เครื่องนอนมาตรฐานทั่วไปไม่สามารถรักษาความตึงของโครงสร้างที่จำเป็นสำหรับ <strong>พื้นผิวการนอนครอบครัวที่เป็นหนึ่งเดียว</strong></p>
+            <p>เราเปลี่ยนจากบ้านครอบครัวในประเทศไทยมาเป็นห้องปฏิบัติการวิศวกรรมเฉพาะทาง โดยปฏิบัติต่อเตียงทุกเตียงไม่ใช่แค่เฟอร์นิเจอร์ แต่เป็นสินทรัพย์ทางเทคนิค เราแทนที่การ "เดา" แบบ DIY ด้วยโปรโตคอลการวัดที่เข้มงวด</p>
+          </div>
+        </div>
+        <div class="genesis-image">
+          <img src="/images/about/about-genesis.jpg" alt="ความขัดแย้งช่องว่างที่นอน  -  ที่นอนต่อกันทำให้เกิดรอยต่อไม่เรียบ" width="500" height="380" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 3. THE AUTHORITY TIMELINE                       -->
+    <!-- ============================================== -->
+    <section class="timeline-section">
+      <div class="timeline-header">
+        <h2>จากจุดเริ่มต้นก่อตั้งสู่การผลิตส่งทั่วโลก</h2>
+        <p>เจ็ดปีของวินัยทางวิศวกรรมที่ทวีคูณ</p>
+      </div>
+      <div class="timeline-container">
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2019</span>
+            <h3>จุดเริ่มต้นการก่อตั้ง</h3>
+            <p>เปิดตัวในประเทศไทยเพื่อแก้ปัญหาเรขาคณิตการนอนร่วมและปัญหาช่องว่างที่นอน ระบบการวัดแบบพาราเมตริกแรกที่แทนที่การเดาสำหรับเตียงครอบครัวที่ต่อกัน</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2022</span>
+            <h3>มาตรฐานความปลอดภัยวัสดุ</h3>
+            <p>ได้รับการรับรอง OEKO-TEX® Standard 100 สำหรับคอลเลกชัน PremaCotton เพื่อรับประกันเส้นใยที่ปลอดภัย 100% สำหรับทารกและผิวแพ้ง่าย</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2024</span>
+            <h3>โครงสร้างพื้นฐานระดับโลก</h3>
+            <p>เปิดตัวการดำเนินงานระหว่างประเทศผ่านระบบ Etsy และ eBay เพื่อจัดส่งเครื่องนอนสั่งทำแม่นยำไปยัง 11+ เมืองทั่วโลก</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <span class="timeline-year-badge">2026</span>
+            <h3>ห้องปฏิบัติการในการผลิต</h3>
+            <p>ปัจจุบัน MildMate ดำเนินงานในฐานะบริษัทสิ่งทอสั่งทำพิเศษด้วยมาตรฐานความคลาดเคลื่อนทางเรขาคณิต 1 - 2 ซม. สำหรับทุกรูปทรงที่นอนบนโลก</p>
+            <img src="/images/about/EngineeringLab.jpg" alt="ห้องปฏิบัติการวิศวกรรม MildMate  -  การผลิตสิ่งทอสั่งทำพิเศษ" width="600" height="340" loading="lazy" style="margin-top: 18px; width: 100%; max-width: 520px; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);">
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 4. THE MATERIAL STANDARDS                       -->
+    <!-- ============================================== -->
+    <section class="materials-section">
+      <div class="materials-header">
+        <h2>มาตรฐานวัสดุ MildMate</h2>
+        <p>เราไม่ใช้เครื่องนอน "สำเร็จรูป" เราเลือกและออกแบบวิศวกรรมสิ่งทอตามการนำความร้อน ความทนทานเชิงกล และความปลอดภัยต่อมนุษย์</p>
+      </div>
+
+      <div class="materials-grid">
+
+        <div class="material-card">
+          <img src="/images/about/swatch-premacotton.jpg" alt="PremaCotton fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าที่ 01  -  ชั้นสุขอนามัย</div>
+            <h3>PremaCotton</h3>
+            <div class="spec-tag">Spec: ปลอดภัยต่อมนุษย์ 100% | OEKO-TEX® Std 100</div>
+            <p>รับรองมาตรฐาน OEKO-TEX Standard 100 ปลอดภัยไร้สารพิษสำหรับทารกและผิวแพ้ง่าย เกณฑ์มาตรฐานสำหรับความปลอดภัยวัสดุที่ผ่านการตรวจสอบทางคลินิก</p>
+          </div>
+        </div>
+
+        <div class="material-card">
+          <img src="/images/about/swatch-breezeplus.jpg" alt="BreezePlus fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าที่ 02  -  ชั้นระบายความร้อน</div>
+            <h3>BreezePlus</h3>
+            <div class="spec-tag">Spec: 50/50 เส้นยาว | ควบคุมอุณหภูมิ 3 - 5°C</div>
+            <p>ผสมผสานเส้นใยยาว 50/50 ควบคุมอุณหภูมิแบบแอคทีฟ 3 - 5°C เทคโนโลยีป้องกันไรฝุ่นที่ผ่านการรับรองโดยคณะแพทยศาสตร์ศิริราชพยาบาล ออกแบบทางวิศวกรรมสำหรับสภาพแวดล้อมการนอนในเขตร้อน ทะเล และความชื้นสูง</p>
+          </div>
+        </div>
+
+        <div class="material-card">
+          <img src="/images/about/swatch-cloudsoft.jpg" alt="CloudSoft fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าที่ 03  -  ชั้นความสบาย</div>
+            <h3>CloudSoft</h3>
+            <div class="spec-tag">Spec: 120 GSM | ไมโครไฟเบอร์แปรงสองด้าน</div>
+            <p>ไมโครไฟเบอร์แปรงสองด้าน 120 GSM ทนความชื้นระดับเรือด้วยลายทอที่ทนทาน ไม่เป็นขุย สำหรับความหรูหราในทุกวัน</p>
+          </div>
+        </div>
+
+        <div class="material-card">
+          <img src="/images/about/swatch-ecoluxe.jpg" alt="EcoLuxe fabric swatch" class="material-card-img" width="440" height="160" loading="lazy">
+          <div class="material-card-body">
+            <div class="kicker">ผ้าที่ 04  -  ชั้นยั่งยืน</div>
+            <h3>EcoLuxe</h3>
+            <div class="spec-tag">Spec: เส้นใยไม่ฟอกขาวธรรมชาติ | ย่อยสลายได้</div>
+            <p>เส้นใยยั่งยืนไม่ฟอกขาวธรรมชาติสำหรับการนอนแบบไบโอฟิลิก ผ่านกระบวนการน้อยที่สุด ระบายอากาศสูงสุด ย่อยสลายได้ทางชีวภาพเต็มรูปแบบเมื่อสิ้นอายุการใช้งาน</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="materials-cta">
+        <a href="/th/fabric/" class="btn btn-primary">ดูคอลเลกชันเนื้อผ้าทั้งหมด</a>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 5. THE VIDEO (The Result)                       -->
+    <!-- ============================================== -->
+    <section class="video-demo-section">
+      <h2>มาตรฐาน MildMate</h2>
+      <p class="video-sub">ผ้าที่ผ่านการรับรองความปลอดภัย พอดีตามสั่ง และฝีมือช่างไทย  -  สามเสาหลักของทุกชิ้นที่เราออกแบบทางวิศวกรรม</p>
+      <div class="iframe-wrapper">
+        <iframe
+          src="https://www.youtube.com/embed/Ooqvv3SVll8?si=ODaYtzXlYuDhXjyC&rel=0"
+          title="MildMate Engineering Demo"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- 6. GLOBAL REACH                                 -->
+    <!-- ============================================== -->
+    <section class="global-reach-section">
+      <div class="global-reach-inner">
+        <h2>การจัดส่งทั่วโลก</h2>
+        <p>เครื่องนอนสั่งทำแม่นยำที่ออกแบบทางวิศวกรรมในประเทศไทย ส่งถึง 11+ เมืองใน 2 ทวีป</p>
+        <div class="global-cities-grid">
+          <div class="city-col">
+            <h4>อเมริกาเหนือ</h4>
+            <ul>
+              <li>อลาสก้า</li>
+              <li>ฟลอริดา</li>
+              <li>แอริโซนา</li>
+              <li>อัลเบอร์ตา</li>
+              <li>แวนคูเวอร์</li>
+            </ul>
+          </div>
+          <div class="city-col">
+            <h4>ยุโรปและตะวันออกกลาง</h4>
+            <ul>
+              <li>ลอนดอน</li>
+              <li>ไฮแลนด์เคาน์ซิล</li>
+              <li>เบอร์ลิน</li>
+              <li>ดูไบ</li>
+              <li>อัมสเตอร์ดัม</li>
+            </ul>
+          </div>
+          <div class="city-col">
+            <h4>เอเชีย-แปซิฟิก</h4>
+            <ul>
+              <li>สิงคโปร์</li>
+              <li>โตเกียว</li>
+              <li>โซล</li>
+              <li>ซิดนีย์</li>
+              <li>กรุงเทพฯ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

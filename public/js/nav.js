@@ -63,6 +63,13 @@
     '/sizeguide/', '/sizeguide',
     '/how-to-measure-mattress-size/', '/how-to-measure-mattress-size',
     '/custom-measurement/', '/custom-measurement',
+    '/shipping/', '/shipping',
+    '/policy/', '/policy',
+    '/fabric/', '/fabric',
+    '/faq/', '/faq',
+    '/about/', '/about',
+    '/contact/', '/contact',
+    '/reviews/', '/reviews',
     // Homepage — TH homepage pending
     '/'
   ];

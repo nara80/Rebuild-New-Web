@@ -298,7 +298,17 @@ export async function onRequest(context: any): Promise<Response> {
       // Reviews nav link
       .replace(/>Reviews</g, '>รีวิว<')
       // Search placeholder
-      .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."');
+      .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."')
+      // Rewrite hrefs to /th/ for pages that have Thai versions
+      .replace(/href="\/about\/"/g, 'href="/th/about/"')
+      .replace(/href="\/contact\/"/g, 'href="/th/contact/"')
+      .replace(/href="\/faq\/"/g, 'href="/th/faq/"')
+      .replace(/href="\/fabric\/"/g, 'href="/th/fabric/"')
+      .replace(/href="\/sizeguide\/"/g, 'href="/th/sizeguide/"')
+      .replace(/href="\/blogs\/"/g, 'href="/th/blogs/"')
+      .replace(/href="\/policy\/"/g, 'href="/th/policy/"')
+      .replace(/href="\/shipping\/"/g, 'href="/th/shipping/"')
+      .replace(/href="\/reviews\/"/g, 'href="/th/reviews/"');
   }
 
   // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
