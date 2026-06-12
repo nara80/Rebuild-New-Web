@@ -1,4 +1,4 @@
-# MildMate Web Rebuild â€” Full Framework Plan
+﻿# MildMate Web Rebuild â€” Full Framework Plan
 
 ## Stack Confirmed
 - **Frontend:** Vanilla HTML + CSS + minimal JS
@@ -427,8 +427,8 @@ Customer opens link â†’ sees locked quote with "Add to Cart â€” $89.00
 
 [PRODUCT TABS]  Description | Fabric Details | Size Guide | Care
 
-[CUSTOMER REVIEWS]  → D1-backed dynamic carousel (added 2026-06-10)
-  Loaded via GET /api/products/{slug}/reviews → returns up to 10 reviews sorted by:
+[CUSTOMER REVIEWS]  -> D1-backed dynamic carousel (added 2026-06-10)
+  Loaded via GET /api/products/{slug}/reviews -> returns up to 10 reviews sorted by:
     Tier 0: Niche match with photo (newest first)
     Tier 1: Product match with photo
     Tier 2: Marketplace reviews
@@ -822,7 +822,7 @@ mildmate-web/
     â”œâ”€â”€ 019_discount_pct.sql        â† discount_pct column on thankyou_queue
     â”œâ”€â”€ 020_thankyou_queue.sql      â† thankyou_queue table (post-purchase discount emails)
     â”œâ”€â”€ 021_promo_codes.sql         â† promo_codes + promo_redemptions tables (admin-created custom promo)
-    â”œâ”€â”€ 022_promo_min_usd.sql       â† order_minimum_thb → order_minimum_usd on promo_codes
+    â”œâ”€â”€ 022_promo_min_usd.sql       â† order_minimum_thb -> order_minimum_usd on promo_codes
     â”œâ”€â”€ 023_blog_posts.sql          â† blog_posts table (bilingual EN/TH CMS)
     â””â”€â”€ 026_product_type_niches.sql â† product_type + niches columns on products (applied directly)
 â””â”€â”€ MildMateDataBase/ExistingWeb/    â† WordPress URL source data
@@ -844,7 +844,7 @@ Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** â€�
 | Product URLs | 81 | `_redirects` â†’ 27 product pages (1:1 where possible, category redirect for size variants) |
 | Static page URLs | ~102 | `_redirects` â†’ existing new site pages, or â†’ `/` for orphaned URLs |
 | Clean EN slugs | ~80 | Redirect or preserve depending on new site match |
-| `/th/` prefixed pages | ~20 | Redirect â†’ `/th/` pages (not yet built) or â†’ EN equivalent |
+| `/th/` prefixed pages | ~20 | Redirect ? `/th/` pages (? Homepage, About, Contact, Fabric, Size Guide, FAQ, Shipping, Policy, Reviews, Custom Measurement, How to Measure now built) or ? EN equivalent for pages without TH version |
 | Duplicate/junk slugs | ~60 | `_redirects` 301 â†’ canonical |
 
 ---

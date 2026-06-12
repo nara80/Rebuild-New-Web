@@ -139,7 +139,7 @@ Your current project at `D:\00_MildMate\Re-Bulit_Web` already has:
 | `public/js/configurator.js` | Empty JS file ready for Phase 4 price calculator (both Bed Sheet and V-Berth modes) |
 | `public/js/geo.js` | Empty JS file ready for Phase 4 currency toggle |
 | `public/images/` | Folder for your logo and product photos |
-| `public/_redirects` | Empty ΓÇö will be filled in Phase 2 |
+| `public/_redirects` | Redirect rules (admin sandbox 301, WordPress-era URLs, Phase 2 SEO URLs) — populated across multiple phases |
 | `public/_headers` | Security rules file (CSP, HSTS) |
 | `workers/api/` | Folder for all Cloudflare Worker backend code |
 | `workers/admin/` | Folder for all Admin dashboard backend code |
@@ -150,7 +150,7 @@ Your current project at `D:\00_MildMate\Re-Bulit_Web` already has:
 
 ## Setup — Executed
 
-All Phase 1 setup steps confirmed executed. All 9 migrations executed against `mildmate-db`. Phase 1 is **complete**. Phase 2 (SEO URL Preservation) **intentionally deferred** — runs pre-launch after Phase 7.
+All Phase 1 setup steps confirmed executed. All migrations through 026 applied against `mildmate-db`. Phase 1 is **complete**. Phase 2 (SEO URL Preservation) **intentionally deferred** — runs pre-launch after Phase 8.
 
 Move to **Phase 3 — Design System + Shared Components**.
 

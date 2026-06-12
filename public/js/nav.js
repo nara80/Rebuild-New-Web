@@ -70,7 +70,7 @@
     '/about/', '/about',
     '/contact/', '/contact',
     '/reviews/', '/reviews',
-    // Homepage — TH homepage pending
+    // Homepage — TH homepage now live at /th/
     '/'
   ];
   // Normalize path to handle both trailing-slash and non-trailing-slash variants

@@ -71,7 +71,7 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 | `workers/api/admin-shipping.ts` | Super-admin shipping rates CRUD — THB-only upsert with USD preview column; OTHER rate protected (cannot be deleted). Ships alongside Exchange Rates tab in super-admin dashboard. |
 | `workers/api/countries.ts` | Centralized country master list — D1 `countries_master` table (95 countries + OTHER), `GET /api/countries` endpoint consumed by checkout, /account, and super-admin dropdowns. |
 | `workers/api/admin-contacts.ts` | Admin: contacts management — list, view, delete contact form submissions from D1. |
-| `workers/api/admin-stats.ts` | Admin: dashboard statistics (today/7d/30d orders + revenue) — schema self-heal, dual-currency. **Wired to super-admin Dashboard tab?** Check: if not yet, add `loadStats()` call in super-admin.html sidebar SPA init. |
+| `workers/api/admin-stats.ts` | Admin: dashboard statistics (today/7d/30d orders + revenue) — schema self-heal, dual-currency. **Wired to super-admin Dashboard tab ✅** (`loadStats()` called in sidebar SPA init). |
 | `workers/api/clerk-verify.ts` | Shared Clerk JWT verification via Web Crypto + JWKS |
 
 ### Migrations Applied by Phase 7
@@ -150,10 +150,6 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 | Item | Status |
 |---|---|
 | Option B — Cloudflare Access | **Planned for launch** — defense-in-depth, no code changes needed |
-| AfterShip tracking widget | Not built — Option A tracking implemented instead (carrier + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel and admin Orders table. No external API needed.) |
-| Dashboard overview (live stats) | Currently shows static sample; `workers/api/admin-stats.ts` exists with schema self-heal but not yet wired to UI in super-admin dashboard |
-| Shipping Rates management UI | Built in super-admin.html (Shipping Rates tab) — uses `workers/api/admin-shipping.ts`; countries dropdown from `workers/api/countries.ts`; THB-only inputs with USD preview |
-| Old sandbox files cleanup | `/admin/sandbox/` files removed 2026-06-10; 301 redirect in `_redirects` still covers production URLs |
 
 ---
 

@@ -115,11 +115,10 @@ Clerk handles auth as a managed service. The current implementation uses:
 - **Google** — OAuth sign-in via Clerk hosted pages
 - **Facebook** — OAuth sign-in via Clerk hosted pages (requires Clerk dashboard configuration)
 - **Email** — magic link or email/password via Clerk hosted pages
-- **LINE** — NOT built; international positioning deprioritizes LINE-specific login
 
 Checkout is **guest-first**: customers can complete payment without logging in. Social login is optional — it enables saved addresses and order history in `/account/`.
 
-> To add LINE or Facebook login: configure them as social providers in your Clerk Dashboard → User Management → Social providers. No code changes needed — Clerk handles the UI automatically.
+> To add Facebook login: configure it as a social provider in your Clerk Dashboard → User Management → Social providers. No code changes needed — Clerk handles the UI automatically.
 
 ---
 
@@ -436,7 +435,7 @@ Once all requirements are ready and your Stripe keys are stored as Cloudflare se
 > - STRIPE_WEBHOOK_SECRET ✓
 > **Requirement 5 — Order notification email:** [your email]
 > **Requirement 6 — Email sender:** [Sender Name] <[sender address]>
-> **Requirement 7 — Social login:** [Build with Google + LINE / Skip for now — add later]
+> **Requirement 7 — Social login:** [Build with Google + Facebook / Skip for now — add later]
 >
 > Build the 3-step checkout page (guest checkout with optional social login), Stripe session Worker, webhook Worker, Resend email system, My Account page with inline Option A tracking (carrier + tracking number entered by admin on shipped, URL auto-generated from carrier template), and the magic quote `/quote/QT-XXXXX/` page.
 
@@ -470,7 +469,7 @@ Tracking link is shown inline in the customer `/account` Orders panel and the ad
 4. `workers/api/checkout.ts` — Stripe Checkout Session creator with shipping line item injection + `shipping_amount_thb` metadata
 5. `workers/api/webhook.ts` — payment confirmation handler (saves order to D1 + sends Resend emails)
 6. `workers/api/email.ts` — Resend email sender
-7. `workers/api/auth.ts` — Clerk JWT verification (Google/Email via Clerk hosted pages; Facebook/LINE NOT implemented)
+7. `workers/api/auth.ts` — Clerk JWT verification (Google/Email/Facebook via Clerk hosted pages)
 8. `workers/api/customers.ts` — Customer profile, order history with dual-match thumbnail resolution, cart sync, addresses CRUD
 9. `workers/api/shipping.ts` — Centralized shipping-quote engine (THB-only rates, exchange-rate conversion, geo-country detection, OTHER fallback)
 10. `workers/api/countries.ts` — Centralized country master list (D1 `countries_master`, 95 countries + OTHER)

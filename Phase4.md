@@ -1,9 +1,11 @@
 # Phase 4 — Homepage + Product Pages
-**Status (2026-06-10): ✅ COMPLETE — Homepage, 27 product pages, all category/SEO/niche landing pages, blog, size guides, Workers API, all migrations through 026 applied. Language-driven currency (EN → USD, TH → THB). Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Centralized country master list. D1-backed dynamic product reviews on all 27 product pages. product_type + niches columns added to D1 products table. Homepage "Choose Your Application" updated to Deep Pocket + Pet Owner. See Completion Summary below for full details.**
+**Status (2026-06-12): ✅ COMPLETE — Homepage, 27 product pages, all category/SEO/niche landing pages, blog, size guides, Workers API, all migrations through 026 applied. Language-driven currency (EN → USD, TH → THB). Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Centralized country master list. D1-backed dynamic product reviews on all 27 product pages. product_type + niches columns added to D1 products table. Homepage "Choose Your Application" updated to Deep Pocket + Pet Owner. Thai localization marketing audits applied to TH homepage, about, and contact pages. Thai nav link routing fixed (middleware order + client-side safeguard). See Completion Summary below for full details.**
 
-**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (Deep Pocket + Pet Owner). This document reflects the final verified state.**
+**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10, 2026-06-12) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (Deep Pocket + Pet Owner), Thai marketing audit copy applied to TH homepage/about/contact, Thai nav routing fix (middleware order + client-side nav.js safeguard), project documentation reconciliation (AGENTS.md, Framework.md, Phase4–6). This document reflects the final verified state.**
 
 > **Reconciliation note (2026-06-10):** Migrations now extend through 026: 024_reviews (reviews table), 024_blog_categories_json (blog categories), 025_reviews_review_date (review_date index), 026_product_type_niches (product_type + niches columns on products). Homepage "Choose Your Application" cards changed from (Marine & Yacht, Family & Co-Sleep, Specialized Protection, Duvet Covers) to (Marine & Yacht, Family & Co-Sleep, Deep Pocket, Pet Owner). Product reviews are now D1-backed (GET /api/products/:slug/reviews with 4-tier sort, LIMIT 10) instead of static HTML.
+>
+> **Reconciliation note (2026-06-12):** Thai marketing audits applied to TH homepage (hero, trust bar, product section, fabric table, most popular), TH contact (hero, form, channels, marketplace, B2B, trust bar), TH about (hero, story, timeline, fabric cards, video, shipping). Thai nav routing fixed — middleware rewrite order corrected to run after header/footer injection; client-side nav.js `normalizeThaiNavLinks()` added as bidirectional safeguard for 12+ bilingual routes. All three Phase docs reconciled to reflect completed Thai localization.
 **Goal:** Build all real content pages — the homepage with every section filled, the product listing grid, individual product detail pages, and the size guide SEO hub pages.
 
 **End Result:** A fully functional shopping experience. Visitors can land on the homepage, browse products by category, enter their mattress dimensions, and see a live price update — all before Phase 5 adds the actual payment step.
@@ -32,7 +34,7 @@ All Phase 4 requirements were collected and built. Below is the final record of 
 
 **Requirement 9 — Configurator:** `public/js/product-configurator.js` — shared configurator on all 27 product detail pages (`/product/[slug]/`). Auto-detects product type from URL path. 7 formula types. Path A (Standard Size) + Path B (Custom Size) with W×L×D inputs + unit toggle + diagram + fabric selector + live price + Custom Quote modal → POST `/api/quote`. V-Berth tab with HW/FW/L/D inputs + shape selector (A-H fixed prices, I custom quote). Marine Fitted Sheet uses `calcVBerthFitted()` with VERTH_MARKUP=8.15.
 
-**Requirement 10 — Static pages:** All content built and deployed — `/about/`, `/contact/`, `/fabric/`, `/shipping/`, `/policy/`, `/reviews/`, `/unsubscribe/` (EN). **Note:** Thai versions of static pages not built — Phase 3's lang-toggle uses URL prefix `/th/` but no `/th/` pages exist yet. Thai visitors see English pages with Sarabun font.
+**Requirement 10 — Static pages:** All content built and deployed — `/about/`, `/contact/`, `/fabric/`, `/shipping/`, `/policy/`, `/reviews/`, `/unsubscribe/` (EN). All 22+ Thai versions built at `/th/` paths with marketing audit copy applied for homepage, about, and contact. Thai nav links fixed to stay within `/th/` namespace via middleware rewrite order + client-side route map.
 
 **Requirement 11 — Blog:** Blog index at `/blogs/` (17 posts, 2 pages with featured post), pagination page at `/blogs/page/2/`, first real post at `/blogs/v-berth-sheets-vs-standard/`. Blog post template deleted after use (not needed as standalone file).
 
@@ -332,7 +334,7 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 | `public/js/cookie-consent.js` | GDPR Cookie Consent Banner |
 | `public/custom-measurement/index.html` | Custom Measurement guide |
 
-**Note:** Thai versions (`/th/...`) of static pages were planned but not built. Lang toggle exists but routes to non-existent TH pages.
+**Note:** All Thai versions (`/th/...`) built and live — 22+ TH static pages (see completion summary below for full table). Marketing audit copy applied to TH homepage, about, and contact pages. Lang toggle now correctly routes between EN/TH pairs.
 
 ### Blog Pages
 | Page / File | What It Is |
@@ -385,7 +387,7 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 
 | workers/api/checkout.ts | Stripe Checkout Sessions + PromptPay + shipping line item injection | Phase 5 |
 | workers/api/webhook.ts | Payment webhook → D1 order + Resend emails | Phase 5 |
-| workers/api/auth.ts | Clerk JWT verification (Google/Email; Facebook/LINE NOT implemented) | Phase 5 |
+| workers/api/auth.ts | Clerk JWT verification (Google/Email/Facebook) | Phase 5 |
 | workers/api/customers.ts | Order history (dual-match thumbnail) + cart sync + addresses CRUD | Phase 5 |
 | workers/api/shipping.ts | Centralized shipping-quote engine (THB rates, exchange-rate conversion, geo-country, OTHER fallback) | Phase 5 |
 | workers/api/countries.ts | Centralized country master list (D1 countries_master, 95 countries + OTHER) | Phase 5 |
@@ -1029,7 +1031,7 @@ After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Prior
 | My Account | `/account/` | Low | Phase 5 gated; redirect logged-out users |
 | Checkout | `/checkout/` | Low | Phase 5 payment flow; not SEO-critical |
 | Order Confirmed | `/order-confirmed/` | Low | Phase 5 post-payment page |
-| Blog Index | `/blogs/` | Low | Blog not built yet |
+| ~~Blog Index~~ | ~~`/blogs/`~~ | — | **Blog built** — D1-backed SSR listing + pagination + admin CMS at `/admin/blog.html` |
 
 **WordPress redirects — no separate TH pages needed:**
 The `_redirects` file handles ALL old WordPress URLs with 301 redirects to the new bilingual structure:
