@@ -120,6 +120,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
   const readTime = isThai ? escHtml(post.read_time_th || post.read_time_en || "5 min read") : escHtml(post.read_time_en || "5 min read");
   const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
   let body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
+  body = body.replace(/(\w+)=""([^"]*?)""/g, '$1="$2"');
   if (isThai && post.body_th && post.body_en && !/<img\b/i.test(post.body_th)) {
     const imgRegex = /<img\b[^>]*>/gi;
     const enImages = post.body_en.match(imgRegex);
@@ -8144,7 +8145,7 @@ ${header}`);
 }
 __name(onRequest8, "onRequest");
 
-// ../.wrangler/tmp/pages-itjWnn/functionsRoutes-0.3588089468309623.mjs
+// ../.wrangler/tmp/pages-qs3ITj/functionsRoutes-0.8731493429715319.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

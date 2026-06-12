@@ -148,6 +148,8 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
   let body = isThai
     ? (post.body_th || post.body_en || "<p>บทความนี้กำลังจะมาเร็วๆ นี้</p>")
     : (post.body_en || "<p>This article is coming soon.</p>");
+  // Fix double-escaped HTML attributes from translation (e.g. src=""..."" → src="...")
+  body = body.replace(/(\w+)=""([^"]*?)""/g, '$1="$2"');
   // If Thai body exists but lacks images and EN body has images, copy them over
   if (isThai && post.body_th && post.body_en && !/<img\b/i.test(post.body_th)) {
     const imgRegex = /<img\b[^>]*>/gi;
