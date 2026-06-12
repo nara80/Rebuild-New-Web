@@ -1,19 +1,19 @@
-// Blog post pages — /blogs/{slug}/
-import { buildBlogListingHTML, buildBlogPostHTML } from "../blog-shared";
+// Thai blog pages — /th/blogs/{slug}/
+import { buildBlogListingHTML, buildBlogPostHTML } from "../../blog-shared";
 
 export async function onRequest(context): Promise<Response> {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // /blogs/ → SSR listing page
-  if (path === "/blogs/" || path === "/blogs") {
+  // /th/blogs/ → Thai SSR listing page
+  if (path === "/th/blogs/" || path === "/th/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
-    return buildBlogListingHTML(env, page, "en");
+    return buildBlogListingHTML(env, page, "th");
   }
 
-  // Let static assets under /blogs/* pass through
-  const segments = path.replace(/^\/blogs\/?/, "").split("/").filter(Boolean);
+  // /th/blogs/{slug}/ → Thai SSR blog post
+  const segments = path.replace(/^\/th\/blogs\/?/, "").split("/").filter(Boolean);
   if (segments.length !== 1 || segments[0].includes(".")) {
     return next();
   }
@@ -32,7 +32,7 @@ export async function onRequest(context): Promise<Response> {
       });
     }
 
-    const html = await buildBlogPostHTML(post, env, "en");
+    const html = await buildBlogPostHTML(post, env, "th");
     return new Response(html, {
       status: 200,
       headers: {
@@ -42,7 +42,7 @@ export async function onRequest(context): Promise<Response> {
       }
     });
   } catch (err) {
-    console.error("Blog post error:", err);
+    console.error("Blog post TH error:", err);
     return new Response("Server error", { status: 500 });
   }
 }

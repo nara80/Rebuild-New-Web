@@ -1,6 +1,341 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
+// blog-shared.ts
+function escHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+__name(escHtml, "escHtml");
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  } catch {
+    return dateStr;
+  }
+}
+__name(formatDate, "formatDate");
+async function buildBlogListingHTML(env, page = 1, lang = "en") {
+  const isThai = lang === "th";
+  const prefix = isThai ? "/th" : "";
+  try {
+    const PER_PAGE = 8;
+    const countStmt = env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published'");
+    const countResult = await countStmt.first();
+    const totalPosts = countResult?.total || 0;
+    const totalPages = Math.max(1, Math.ceil(totalPosts / PER_PAGE));
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    const offset = (page - 1) * PER_PAGE;
+    const stmt = env.DB.prepare(
+      "SELECT id,slug,title_en,meta_description_en,featured_image,featured_image_alt_en,category,categories_json,author,read_time_en,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+    ).bind(PER_PAGE, offset);
+    const { results } = await stmt.all();
+    const posts = results || [];
+    const parseCats = /* @__PURE__ */ __name((raw) => {
+      try {
+        const arr = JSON.parse(raw || "[]");
+        if (!Array.isArray(arr)) return [];
+        return arr.map((x) => String(x || "").trim()).filter(Boolean);
+      } catch {
+        return [];
+      }
+    }, "parseCats");
+    const categorySet = /* @__PURE__ */ new Set(["All"]);
+    posts.forEach((p) => {
+      const cats = parseCats(p.categories_json);
+      if (cats.length) {
+        cats.forEach((c) => categorySet.add(c));
+      } else if (p.category) {
+        categorySet.add(p.category);
+      }
+    });
+    const categories = Array.from(categorySet);
+    const esc = /* @__PURE__ */ __name((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
+    let featuredHtml = "";
+    let gridHtml = "";
+    posts.forEach((post, i) => {
+      const img = post.featured_image ? esc(post.featured_image) : "";
+      const alt = esc(post.featured_image_alt_en || post.title_en || "");
+      const slug = esc(post.slug);
+      const title = esc(post.title_en || "");
+      const desc = esc(post.meta_description_en || "").substring(0, 140);
+      const cats = parseCats(post.categories_json);
+      const cat = esc(cats[0] || post.category || "General");
+      const date = formatDate(post.created_at);
+      const link = (isThai ? "/th" : "") + "/blogs/" + slug + "/";
+      const card = '<div class="blog-card"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="lazy"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
+      if (page === 1 && i === 0 && post.is_featured) {
+        featuredHtml = '<div class="featured-post"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="eager"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + esc(post.meta_description_en || "") + '</p><a href="' + link + '" class="card-read-more">Read article <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
+      } else {
+        gridHtml += card;
+      }
+    });
+    const filterBtns = categories.map(
+      (c) => '<button class="filter-tab' + (c === "All" ? " active" : "") + `" onclick="window.location.href='` + (isThai ? "/th" : "") + `/blogs/'">` + c + "</button>"
+    ).join("");
+    const newsletter = "";
+    let paginationHtml = "";
+    if (totalPages > 1) {
+      const prevPage = page > 1 ? page - 1 : 1;
+      const nextPage = page < totalPages ? page + 1 : totalPages;
+      const prevDisabled = page <= 1;
+      const nextDisabled = page >= totalPages;
+      const escAttr = /* @__PURE__ */ __name((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
+      const baseUrl = (isThai ? "/th" : "") + "/blogs/";
+      let dotsHtml = "";
+      for (let p = 1; p <= totalPages; p++) {
+        dotsHtml += '<button class="pag-dot' + (p === page ? " active" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + p) + `'" aria-label="Page ` + p + '"></button>';
+      }
+      paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + (prevPage > 1 ? "?page=" + prevPage : "")) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + nextPage) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
+    }
+    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E25\u0E47\u0E2D\u0E01 MildMate - \u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E40\u0E04\u0E25\u0E47\u0E14\u0E25\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19 \u0E41\u0E25\u0E30\u0E04\u0E33\u0E41\u0E19\u0E30\u0E19\u0E33\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E04\u0E19\u0E23\u0E31\u0E01\u0E17\u0E30\u0E40\u0E25 \u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27 \u0E41\u0E25\u0E30\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E25\u0E47\u0E2D\u0E01 MildMate - \u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E41\u0E25\u0E30\u0E40\u0E04\u0E25\u0E47\u0E14\u0E25\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:280px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:20px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.drawer-search-form input{flex:1;padding:8px 10px;border:none;outline:none;font-size:0.8125rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:8px 10px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:10px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1.35rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E25\u0E47\u0E2D\u0E01 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14 \u0E40\u0E04\u0E25\u0E47\u0E14\u0E25\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A \u0E41\u0E25\u0E30\u0E04\u0E33\u0E41\u0E19\u0E30\u0E19\u0E33\u0E08\u0E32\u0E01\u0E27\u0E34\u0E28\u0E27\u0E01\u0E23\u0E02\u0E2D\u0E07 MildMate \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E04\u0E19\u0E23\u0E31\u0E01\u0E17\u0E30\u0E40\u0E25 \u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27 \u0E41\u0E25\u0E30\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
+    return new Response(html, {
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" }
+    });
+  } catch (e) {
+    return new Response("<html><body style='font-family:sans-serif;padding:40px'><h2>Server Error</h2><p>" + escHtml(e.message || String(e)) + "</p></body></html>", { status: 500 });
+  }
+}
+__name(buildBlogListingHTML, "buildBlogListingHTML");
+async function buildBlogPostHTML(post, env, lang = "en") {
+  const isThai = lang === "th";
+  const title = isThai ? escHtml(post.title_th || post.title_en || "MildMate Blog") : escHtml(post.title_en || "MildMate Blog");
+  const metaDesc = isThai ? escHtml(post.meta_description_th || post.meta_description_en || post.title_th || "") : escHtml(post.meta_description_en || post.title_en || "");
+  let categoryLabel = post.category || "General";
+  try {
+    const cats = JSON.parse(post.categories_json || "[]");
+    if (Array.isArray(cats) && cats.length && String(cats[0] || "").trim()) {
+      categoryLabel = String(cats[0]).trim();
+    }
+  } catch {
+  }
+  const category = escHtml(categoryLabel);
+  const author = escHtml(post.author || "MildMate Team");
+  const readTime = isThai ? escHtml(post.read_time_th || post.read_time_en || "5 min read") : escHtml(post.read_time_en || "5 min read");
+  const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
+  const body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
+  const createdAt = formatDate(post.created_at);
+  const imageAlt = isThai ? escHtml(post.featured_image_alt_th || post.title_th || title) : escHtml(post.featured_image_alt_en || title);
+  const hasImage = featuredImage ? "true" : "false";
+  const CATEGORY_NICHE_MAP = {
+    "Marine & Yacht": "marine",
+    "Family & Co-Sleep": "family",
+    "RV & Truck Cab": "rv-truck",
+    "Boarding Dorm": "boarding-dorm",
+    "Pet Owner": "pets",
+    "Deep Pocket": "deep-pocket",
+    "Bedding Guide": "sheets"
+  };
+  const mappedNiche = CATEGORY_NICHE_MAP[categoryLabel] || "sheets";
+  let relatedProductsHtml = "";
+  try {
+    const prodStmt = env.DB.prepare(
+      "SELECT slug, title_en, image_url, base_price_usd FROM products WHERE niches LIKE ? AND is_active = 1 ORDER BY sort_order ASC LIMIT 4"
+    ).bind("%" + mappedNiche + "%");
+    const { results: products } = await prodStmt.all();
+    if (products && products.length) {
+      relatedProductsHtml = products.map((p) => {
+        const pSlug = escHtml(p.slug);
+        const pTitle = escHtml(p.title_en || "");
+        const pImg = p.image_url ? escHtml(p.image_url) : "/images/placeholder.svg";
+        const pPrice = p.base_price_usd ? "$" + Math.round(p.base_price_usd) : "";
+        const pLink = "/product/" + pSlug + "/";
+        return '<div class="related-card"><a href="' + pLink + '" class="card-image"><img src="' + pImg + '" alt="' + pTitle + '" loading="lazy"></a><div class="card-body"><div class="card-title"><a href="' + pLink + '" style="color:inherit;text-decoration:none">' + pTitle + "</a></div>" + (pPrice ? '<div class="card-price">' + pPrice + "</div>" : "") + '<a href="' + pLink + '" class="btn btn-primary">Shop Now</a></div></div>';
+      }).join("");
+    }
+  } catch (e) {
+    console.error("Related products query error:", e);
+    relatedProductsHtml = "";
+  }
+  const relatedSectionHtml = relatedProductsHtml ? '<section class="related-products-section"><div class="container"><h2>You Might Also Like</h2><div class="related-grid">' + relatedProductsHtml + "</div></div></section>" : "";
+  return `<!DOCTYPE html>
+<html lang="${isThai ? "th" : "en"}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="${metaDesc}">
+  <title>${title} - MildMate Blog</title>
+  <link rel="canonical" href="/${isThai ? "th/" : ""}blogs/${escHtml(post.slug)}/">
+  <link rel="alternate" hreflang="en" href="/blogs/${escHtml(post.slug)}/">
+  <link rel="alternate" hreflang="th" href="/th/blogs/${escHtml(post.slug)}/">
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    body{background:#f0f7ff}
+    .blog-post-page{min-height:100vh}
+    .blog-hero{position:relative;height:480px;overflow:hidden;background:#1e293b}
+    .blog-hero img{width:100%;height:100%;object-fit:cover;display:block}
+    .blog-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.55) 100%)}
+    .blog-hero-caption{position:absolute;bottom:0;left:0;right:0;padding:48px 24px 40px;max-width:1200px;margin:0 auto}
+    .blog-category{display:inline-block;background:#2c96f4;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:4px 12px;border-radius:20px;margin-bottom:16px}
+    .blog-hero-title{color:#fff;font-size:2.25rem;font-weight:700;line-height:1.2;max-width:800px;text-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .blog-hero-meta{color:rgba(255,255,255,0.85);font-size:0.875rem;margin-top:16px;display:flex;gap:16px;align-items:center}
+    .blog-hero-meta span{display:flex;align-items:center;gap:6px}
+    .blog-container{max-width:760px;margin:0 auto;padding:48px 24px 80px}
+    .blog-body{background:#fff;border-radius:12px;padding:40px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+    .blog-body h2{font-size:1.5rem;font-weight:700;margin:32px 0 16px;color:#0f172a}
+    .blog-body h3{font-size:1.25rem;font-weight:600;margin:24px 0 12px;color:#0f172a}
+    .blog-body p{color:#334155;line-height:1.75;margin-bottom:16px;font-size:1.0625rem}
+    .blog-body ul,.blog-body ol{padding-left:24px;margin-bottom:16px}
+    .blog-body li{color:#334155;line-height:1.7;margin-bottom:8px;font-size:1.0625rem}
+    .blog-body blockquote{border-left:4px solid #2c96f4;padding:16px 20px;margin:24px 0;background:#f8fafc;border-radius:0 8px 8px 0;font-style:italic;color:#475569}
+    .blog-body img{max-width:100%;height:auto;border-radius:8px;margin:24px 0}
+    .blog-body a{color:#2c96f4;text-decoration:underline}
+    .blog-body strong{color:#0f172a;font-weight:700}
+    .blog-share{background:#fff;border-radius:12px;padding:24px;margin-top:24px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+    .blog-share p{font-weight:600;color:#0f172a;margin-bottom:12px}
+    .share-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .share-btn{padding:10px 24px;border-radius:8px;font-weight:600;font-size:0.875rem;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
+    .share-btn.twitter{background:#1da1f2;color:#fff}
+    .share-btn.facebook{background:#1877f2;color:#fff}
+    .share-btn.linkedin{background:#0a66c2;color:#fff}
+    .blog-back{margin-bottom:32px}
+    .blog-back a{display:inline-flex;align-items:center;gap:8px;color:#2c96f4;font-weight:600;text-decoration:none;font-size:0.9375rem}
+    .blog-back a:hover{color:#1a7fd4}
+    .no-image-hero{height:280px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2c96f4,#1a7fd4)}
+    .no-image-hero .blog-hero-title{color:#fff;font-size:2rem;text-shadow:none}
+    .related-products-section{background:#f0f7ff;padding:64px 24px 80px;border-top:1px solid #e2e8f0}
+    .related-products-section h2{font-size:1.5rem;font-weight:700;text-align:center;margin-bottom:40px;color:#0f172a}
+    .related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px}
+    .related-card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;display:flex;flex-direction:column}
+    .related-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12)}
+    .related-card .card-image{position:relative;overflow:hidden;background:#f8fafc}
+    .related-card .card-image img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.3s}
+    .related-card:hover .card-image img{transform:scale(1.04)}
+    .related-card .card-body{padding:20px;flex:1;display:flex;flex-direction:column}
+    .related-card .card-title{font-size:0.9375rem;font-weight:700;color:#1e293b;margin-bottom:10px;line-height:1.3;flex:1}
+    .related-card .card-price{font-size:1.0625rem;font-weight:700;color:#2c96f4;margin-bottom:12px}
+    .related-card .btn{display:block;text-align:center;text-decoration:none;padding:10px;border-radius:8px;font-weight:600;font-size:0.875rem;transition:background 0.2s;margin-top:auto}
+    .related-card .btn-primary{background:#2c96f4;color:#fff}
+    .related-card .btn-primary:hover{background:#1a7fd4}
+    @media(max-width:768px){
+      .blog-hero{height:320px}
+      .blog-hero-title{font-size:1.5rem}
+      .blog-body{padding:24px}
+      .blog-container{padding:24px 16px 60px}
+      .related-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body class="blog-post-page">
+  <!-- __HEADER__ -->
+
+  ${featuredImage ? `
+  <div class="blog-hero">
+    <img src="${featuredImage}" alt="${imageAlt}" loading="eager">
+    <div class="blog-hero-overlay"></div>
+    <div class="blog-hero-caption">
+      <div class="blog-category">${category}</div>
+      <h1 class="blog-hero-title">${title}</h1>
+      <div class="blog-hero-meta">
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${author}</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${readTime}</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${createdAt}</span>
+      </div>
+    </div>
+  </div>` : `
+  <div style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:80px 24px 60px">
+    <div style="max-width:1200px;margin:0 auto">
+      <div class="blog-category" style="margin-bottom:16px">${category}</div>
+      <h1 style="color:#fff;font-size:2.25rem;font-weight:700;max-width:800px;line-height:1.2">${title}</h1>
+      <div class="blog-hero-meta" style="margin-top:16px">
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${author}</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${readTime}</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${createdAt}</span>
+      </div>
+    </div>
+  </div>`}
+
+  <div class="blog-container">
+    <div class="blog-back">
+      <a href="/blogs/">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Blog
+      </a>
+    </div>
+
+    <article class="blog-body">
+      ${body}
+    </article>
+
+    <div class="blog-share">
+      <p>Share this article</p>
+      <div class="share-btns">
+        <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}" target="_blank" rel="noopener" class="share-btn twitter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Twitter/X
+        </a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}" target="_blank" rel="noopener" class="share-btn facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          Facebook
+        </a>
+        <a href="https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}&title=${encodeURIComponent(title)}" target="_blank" rel="noopener" class="share-btn linkedin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+  </div>
+
+  ${relatedSectionHtml}
+
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"><\/script>
+  <script src="/js/clerk.js"><\/script>
+  <script src="/js/cart.js"><\/script>
+</body>
+</html>`;
+}
+__name(buildBlogPostHTML, "buildBlogPostHTML");
+
+// th/blogs/[[path]].ts
+async function onRequest(context) {
+  const { request, env, next } = context;
+  const url = new URL(request.url);
+  const path = url.pathname;
+  if (path === "/th/blogs/" || path === "/th/blogs") {
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    return buildBlogListingHTML(env, page, "th");
+  }
+  const segments = path.replace(/^\/th\/blogs\/?/, "").split("/").filter(Boolean);
+  if (segments.length !== 1 || segments[0].includes(".")) {
+    return next();
+  }
+  const slug = decodeURIComponent(segments[0]);
+  try {
+    const stmt = env.DB.prepare(
+      "SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'"
+    ).bind(slug);
+    const post = await stmt.first();
+    if (!post) {
+      return new Response("Blog post not found", {
+        status: 404,
+        headers: { "Content-Type": "text/html; charset=utf-8" }
+      });
+    }
+    const html = await buildBlogPostHTML(post, env, "th");
+    return new Response(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+        "X-Robots-Tag": "index, follow"
+      }
+    });
+  } catch (err) {
+    console.error("Blog post TH error:", err);
+    return new Response("Server error", { status: 500 });
+  }
+}
+__name(onRequest, "onRequest");
+
 // ../workers/api/products.ts
 var PRODUCT_TYPE_DISPLAY = {
   "sheets": "Sheets",
@@ -5308,10 +5643,10 @@ async function sendRecoveryEmail(env, to, subject, html) {
   }
 }
 __name(sendRecoveryEmail, "sendRecoveryEmail");
-function escHtml(s) {
+function escHtml2(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-__name(escHtml, "escHtml");
+__name(escHtml2, "escHtml");
 function formatPrice(thb, usd) {
   const parts = [];
   if (thb) parts.push("\u0E3F" + Math.round(thb).toLocaleString());
@@ -5365,7 +5700,7 @@ async function handleAdminRecoveryTest(request, env) {
       items.forEach((item) => {
         const dims = item.dimensions ? [item.dimensions.w, item.dimensions.l, item.dimensions.d].filter(Boolean).join("\xD7") + " " + (item.dimensions.unit || "cm") : "";
         const specs = [item.fabric, item.color, dims].filter(Boolean).join(" \xB7 ");
-        rows += `<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0"><div style="font-weight:700;color:#0F172A;font-size:15px">${escHtml(item.product_name || "Custom Order")}</div>${specs ? `<div style="font-size:13px;color:#64748b;margin-top:2px">${escHtml(specs)}</div>` : ""}</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;font-size:15px">${formatPrice(item.price_thb, item.price_usd)}</td></tr>`;
+        rows += `<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0"><div style="font-weight:700;color:#0F172A;font-size:15px">${escHtml2(item.product_name || "Custom Order")}</div>${specs ? `<div style="font-size:13px;color:#64748b;margin-top:2px">${escHtml2(specs)}</div>` : ""}</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;font-size:15px">${formatPrice(item.price_thb, item.price_usd)}</td></tr>`;
       });
       const subject = "You left something behind \u2014 your MildMate cart";
       const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">You left something behind</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Your MildMate cart is waiting for you</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Hi there, we noticed you added custom bedding to your cart but didn&rsquo;t complete your order.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s)</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="https://mildmate-new.pages.dev/checkout/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Return to Your Cart</a></td></tr></table></td></tr></table></body></html>`;
@@ -6858,7 +7193,7 @@ async function handleOrderConfirmed(request, env) {
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
 // api/[[path]].ts
-var onRequest = /* @__PURE__ */ __name(async (context) => {
+var onRequest2 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -7021,38 +7356,10 @@ var onRequest = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // blogs/[[path]].ts
-async function onRequest2(context) {
+async function onRequest3(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
-  if (path === "/th/blogs/" || path === "/th/blogs") {
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    return buildBlogListingHTML(env, page, "th");
-  }
-  if (path.startsWith("/th/blogs/")) {
-    const thSegments = path.replace(/^\/th\/blogs\/?/, "").split("/").filter(Boolean);
-    if (thSegments.length !== 1 || thSegments[0].includes(".")) return next();
-    const slug2 = decodeURIComponent(thSegments[0]);
-    try {
-      const stmt = env.DB.prepare(
-        "SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'"
-      ).bind(slug2);
-      const post = await stmt.first();
-      if (!post) return new Response("Blog post not found", { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } });
-      const html = await buildBlogPostHTML(post, env, "th");
-      return new Response(html, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=300",
-          "X-Robots-Tag": "index, follow"
-        }
-      });
-    } catch (err) {
-      console.error("Blog post TH error:", err);
-      return new Response("Server error", { status: 500 });
-    }
-  }
   if (path === "/blogs/" || path === "/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     return buildBlogListingHTML(env, page, "en");
@@ -7087,303 +7394,10 @@ async function onRequest2(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest2, "onRequest");
-async function buildBlogListingHTML(env, page = 1, lang = "en") {
-  const isThai = lang === "th";
-  const prefix = isThai ? "/th" : "";
-  try {
-    const PER_PAGE = 8;
-    const countStmt = env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published'");
-    const countResult = await countStmt.first();
-    const totalPosts = countResult?.total || 0;
-    const totalPages = Math.max(1, Math.ceil(totalPosts / PER_PAGE));
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-    const offset = (page - 1) * PER_PAGE;
-    const stmt = env.DB.prepare(
-      "SELECT id,slug,title_en,meta_description_en,featured_image,featured_image_alt_en,category,categories_json,author,read_time_en,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
-    ).bind(PER_PAGE, offset);
-    const { results } = await stmt.all();
-    const posts = results || [];
-    const parseCats = /* @__PURE__ */ __name((raw) => {
-      try {
-        const arr = JSON.parse(raw || "[]");
-        if (!Array.isArray(arr)) return [];
-        return arr.map((x) => String(x || "").trim()).filter(Boolean);
-      } catch {
-        return [];
-      }
-    }, "parseCats");
-    const categorySet = /* @__PURE__ */ new Set(["All"]);
-    posts.forEach((p) => {
-      const cats = parseCats(p.categories_json);
-      if (cats.length) {
-        cats.forEach((c) => categorySet.add(c));
-      } else if (p.category) {
-        categorySet.add(p.category);
-      }
-    });
-    const categories = Array.from(categorySet);
-    const esc = /* @__PURE__ */ __name((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
-    let featuredHtml = "";
-    let gridHtml = "";
-    posts.forEach((post, i) => {
-      const img = post.featured_image ? esc(post.featured_image) : "";
-      const alt = esc(post.featured_image_alt_en || post.title_en || "");
-      const slug = esc(post.slug);
-      const title = esc(post.title_en || "");
-      const desc = esc(post.meta_description_en || "").substring(0, 140);
-      const cats = parseCats(post.categories_json);
-      const cat = esc(cats[0] || post.category || "General");
-      const date = formatDate(post.created_at);
-      const link = (isThai ? "/th" : "") + "/blogs/" + slug + "/";
-      const card = '<div class="blog-card"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="lazy"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
-      if (page === 1 && i === 0 && post.is_featured) {
-        featuredHtml = '<div class="featured-post"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="eager"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + esc(post.meta_description_en || "") + '</p><a href="' + link + '" class="card-read-more">Read article <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
-      } else {
-        gridHtml += card;
-      }
-    });
-    const filterBtns = categories.map(
-      (c) => '<button class="filter-tab' + (c === "All" ? " active" : "") + `" onclick="window.location.href='` + (isThai ? "/th" : "") + `/blogs/'">` + c + "</button>"
-    ).join("");
-    const newsletter = "";
-    let paginationHtml = "";
-    if (totalPages > 1) {
-      const prevPage = page > 1 ? page - 1 : 1;
-      const nextPage = page < totalPages ? page + 1 : totalPages;
-      const prevDisabled = page <= 1;
-      const nextDisabled = page >= totalPages;
-      const escAttr = /* @__PURE__ */ __name((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
-      const baseUrl = (isThai ? "/th" : "") + "/blogs/";
-      let dotsHtml = "";
-      for (let p = 1; p <= totalPages; p++) {
-        dotsHtml += '<button class="pag-dot' + (p === page ? " active" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + p) + `'" aria-label="Page ` + p + '"></button>';
-      }
-      paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + (prevPage > 1 ? "?page=" + prevPage : "")) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + nextPage) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
-    }
-    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E25\u0E47\u0E2D\u0E01 MildMate - \u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E40\u0E04\u0E25\u0E47\u0E14\u0E25\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19 \u0E41\u0E25\u0E30\u0E04\u0E33\u0E41\u0E19\u0E30\u0E19\u0E33\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E04\u0E19\u0E23\u0E31\u0E01\u0E17\u0E30\u0E40\u0E25 \u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27 \u0E41\u0E25\u0E30\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E25\u0E47\u0E2D\u0E01 MildMate - \u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E41\u0E25\u0E30\u0E40\u0E04\u0E25\u0E47\u0E14\u0E25\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:280px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:20px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.drawer-search-form input{flex:1;padding:8px 10px;border:none;outline:none;font-size:0.8125rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:8px 10px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:10px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1.35rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E25\u0E47\u0E2D\u0E01 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14 \u0E40\u0E04\u0E25\u0E47\u0E14\u0E25\u0E31\u0E1A\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A \u0E41\u0E25\u0E30\u0E04\u0E33\u0E41\u0E19\u0E30\u0E19\u0E33\u0E08\u0E32\u0E01\u0E27\u0E34\u0E28\u0E27\u0E01\u0E23\u0E02\u0E2D\u0E07 MildMate \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E04\u0E19\u0E23\u0E31\u0E01\u0E17\u0E30\u0E40\u0E25 \u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27 \u0E41\u0E25\u0E30\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
-    return new Response(html, {
-      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" }
-    });
-  } catch (e) {
-    return new Response("<html><body style='font-family:sans-serif;padding:40px'><h2>Server Error</h2><p>" + escHtml2(e.message || String(e)) + "</p></body></html>", { status: 500 });
-  }
-}
-__name(buildBlogListingHTML, "buildBlogListingHTML");
-async function buildBlogPostHTML(post, env, lang = "en") {
-  const isThai = lang === "th";
-  const title = isThai ? escHtml2(post.title_th || post.title_en || "MildMate Blog") : escHtml2(post.title_en || "MildMate Blog");
-  const metaDesc = isThai ? escHtml2(post.meta_description_th || post.meta_description_en || post.title_th || "") : escHtml2(post.meta_description_en || post.title_en || "");
-  let categoryLabel = post.category || "General";
-  try {
-    const cats = JSON.parse(post.categories_json || "[]");
-    if (Array.isArray(cats) && cats.length && String(cats[0] || "").trim()) {
-      categoryLabel = String(cats[0]).trim();
-    }
-  } catch {
-  }
-  const category = escHtml2(categoryLabel);
-  const author = escHtml2(post.author || "MildMate Team");
-  const readTime = isThai ? escHtml2(post.read_time_th || post.read_time_en || "5 min read") : escHtml2(post.read_time_en || "5 min read");
-  const featuredImage = post.featured_image ? escHtml2(post.featured_image) : "";
-  const body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
-  const createdAt = formatDate(post.created_at);
-  const imageAlt = isThai ? escHtml2(post.featured_image_alt_th || post.title_th || title) : escHtml2(post.featured_image_alt_en || title);
-  const hasImage = featuredImage ? "true" : "false";
-  const CATEGORY_NICHE_MAP = {
-    "Marine & Yacht": "marine",
-    "Family & Co-Sleep": "family",
-    "RV & Truck Cab": "rv-truck",
-    "Boarding Dorm": "boarding-dorm",
-    "Pet Owner": "pets",
-    "Deep Pocket": "deep-pocket",
-    "Bedding Guide": "sheets"
-  };
-  const mappedNiche = CATEGORY_NICHE_MAP[categoryLabel] || "sheets";
-  let relatedProductsHtml = "";
-  try {
-    const prodStmt = env.DB.prepare(
-      "SELECT slug, title_en, image_url, base_price_usd FROM products WHERE niches LIKE ? AND is_active = 1 ORDER BY sort_order ASC LIMIT 4"
-    ).bind("%" + mappedNiche + "%");
-    const { results: products } = await prodStmt.all();
-    if (products && products.length) {
-      relatedProductsHtml = products.map((p) => {
-        const pSlug = escHtml2(p.slug);
-        const pTitle = escHtml2(p.title_en || "");
-        const pImg = p.image_url ? escHtml2(p.image_url) : "/images/placeholder.svg";
-        const pPrice = p.base_price_usd ? "$" + Math.round(p.base_price_usd) : "";
-        const pLink = "/product/" + pSlug + "/";
-        return '<div class="related-card"><a href="' + pLink + '" class="card-image"><img src="' + pImg + '" alt="' + pTitle + '" loading="lazy"></a><div class="card-body"><div class="card-title"><a href="' + pLink + '" style="color:inherit;text-decoration:none">' + pTitle + "</a></div>" + (pPrice ? '<div class="card-price">' + pPrice + "</div>" : "") + '<a href="' + pLink + '" class="btn btn-primary">Shop Now</a></div></div>';
-      }).join("");
-    }
-  } catch (e) {
-    console.error("Related products query error:", e);
-    relatedProductsHtml = "";
-  }
-  const relatedSectionHtml = relatedProductsHtml ? '<section class="related-products-section"><div class="container"><h2>You Might Also Like</h2><div class="related-grid">' + relatedProductsHtml + "</div></div></section>" : "";
-  return `<!DOCTYPE html>
-<html lang="${isThai ? "th" : "en"}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="${metaDesc}">
-  <title>${title} - MildMate Blog</title>
-  <link rel="canonical" href="/${isThai ? "th/" : ""}blogs/${escHtml2(post.slug)}/">
-  <link rel="alternate" hreflang="en" href="/blogs/${escHtml2(post.slug)}/">
-  <link rel="alternate" hreflang="th" href="/th/blogs/${escHtml2(post.slug)}/">
-  <link href="/css/fonts.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.min.css">
-  <style>
-    body{background:#f0f7ff}
-    .blog-post-page{min-height:100vh}
-    .blog-hero{position:relative;height:480px;overflow:hidden;background:#1e293b}
-    .blog-hero img{width:100%;height:100%;object-fit:cover;display:block}
-    .blog-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.55) 100%)}
-    .blog-hero-caption{position:absolute;bottom:0;left:0;right:0;padding:48px 24px 40px;max-width:1200px;margin:0 auto}
-    .blog-category{display:inline-block;background:#2c96f4;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:4px 12px;border-radius:20px;margin-bottom:16px}
-    .blog-hero-title{color:#fff;font-size:2.25rem;font-weight:700;line-height:1.2;max-width:800px;text-shadow:0 2px 8px rgba(0,0,0,0.3)}
-    .blog-hero-meta{color:rgba(255,255,255,0.85);font-size:0.875rem;margin-top:16px;display:flex;gap:16px;align-items:center}
-    .blog-hero-meta span{display:flex;align-items:center;gap:6px}
-    .blog-container{max-width:760px;margin:0 auto;padding:48px 24px 80px}
-    .blog-body{background:#fff;border-radius:12px;padding:40px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
-    .blog-body h2{font-size:1.5rem;font-weight:700;margin:32px 0 16px;color:#0f172a}
-    .blog-body h3{font-size:1.25rem;font-weight:600;margin:24px 0 12px;color:#0f172a}
-    .blog-body p{color:#334155;line-height:1.75;margin-bottom:16px;font-size:1.0625rem}
-    .blog-body ul,.blog-body ol{padding-left:24px;margin-bottom:16px}
-    .blog-body li{color:#334155;line-height:1.7;margin-bottom:8px;font-size:1.0625rem}
-    .blog-body blockquote{border-left:4px solid #2c96f4;padding:16px 20px;margin:24px 0;background:#f8fafc;border-radius:0 8px 8px 0;font-style:italic;color:#475569}
-    .blog-body img{max-width:100%;height:auto;border-radius:8px;margin:24px 0}
-    .blog-body a{color:#2c96f4;text-decoration:underline}
-    .blog-body strong{color:#0f172a;font-weight:700}
-    .blog-share{background:#fff;border-radius:12px;padding:24px;margin-top:24px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
-    .blog-share p{font-weight:600;color:#0f172a;margin-bottom:12px}
-    .share-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .share-btn{padding:10px 24px;border-radius:8px;font-weight:600;font-size:0.875rem;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all 0.2s}
-    .share-btn.twitter{background:#1da1f2;color:#fff}
-    .share-btn.facebook{background:#1877f2;color:#fff}
-    .share-btn.linkedin{background:#0a66c2;color:#fff}
-    .blog-back{margin-bottom:32px}
-    .blog-back a{display:inline-flex;align-items:center;gap:8px;color:#2c96f4;font-weight:600;text-decoration:none;font-size:0.9375rem}
-    .blog-back a:hover{color:#1a7fd4}
-    .no-image-hero{height:280px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2c96f4,#1a7fd4)}
-    .no-image-hero .blog-hero-title{color:#fff;font-size:2rem;text-shadow:none}
-    .related-products-section{background:#f0f7ff;padding:64px 24px 80px;border-top:1px solid #e2e8f0}
-    .related-products-section h2{font-size:1.5rem;font-weight:700;text-align:center;margin-bottom:40px;color:#0f172a}
-    .related-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px}
-    .related-card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;display:flex;flex-direction:column}
-    .related-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12)}
-    .related-card .card-image{position:relative;overflow:hidden;background:#f8fafc}
-    .related-card .card-image img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transition:transform 0.3s}
-    .related-card:hover .card-image img{transform:scale(1.04)}
-    .related-card .card-body{padding:20px;flex:1;display:flex;flex-direction:column}
-    .related-card .card-title{font-size:0.9375rem;font-weight:700;color:#1e293b;margin-bottom:10px;line-height:1.3;flex:1}
-    .related-card .card-price{font-size:1.0625rem;font-weight:700;color:#2c96f4;margin-bottom:12px}
-    .related-card .btn{display:block;text-align:center;text-decoration:none;padding:10px;border-radius:8px;font-weight:600;font-size:0.875rem;transition:background 0.2s;margin-top:auto}
-    .related-card .btn-primary{background:#2c96f4;color:#fff}
-    .related-card .btn-primary:hover{background:#1a7fd4}
-    @media(max-width:768px){
-      .blog-hero{height:320px}
-      .blog-hero-title{font-size:1.5rem}
-      .blog-body{padding:24px}
-      .blog-container{padding:24px 16px 60px}
-      .related-grid{grid-template-columns:1fr}
-    }
-  </style>
-</head>
-<body class="blog-post-page">
-  <!-- __HEADER__ -->
-
-  ${featuredImage ? `
-  <div class="blog-hero">
-    <img src="${featuredImage}" alt="${imageAlt}" loading="eager">
-    <div class="blog-hero-overlay"></div>
-    <div class="blog-hero-caption">
-      <div class="blog-category">${category}</div>
-      <h1 class="blog-hero-title">${title}</h1>
-      <div class="blog-hero-meta">
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${author}</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${readTime}</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${createdAt}</span>
-      </div>
-    </div>
-  </div>` : `
-  <div style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:80px 24px 60px">
-    <div style="max-width:1200px;margin:0 auto">
-      <div class="blog-category" style="margin-bottom:16px">${category}</div>
-      <h1 style="color:#fff;font-size:2.25rem;font-weight:700;max-width:800px;line-height:1.2">${title}</h1>
-      <div class="blog-hero-meta" style="margin-top:16px">
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${author}</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${readTime}</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${createdAt}</span>
-      </div>
-    </div>
-  </div>`}
-
-  <div class="blog-container">
-    <div class="blog-back">
-      <a href="/blogs/">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Blog
-      </a>
-    </div>
-
-    <article class="blog-body">
-      ${body}
-    </article>
-
-    <div class="blog-share">
-      <p>Share this article</p>
-      <div class="share-btns">
-        <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}" target="_blank" rel="noopener" class="share-btn twitter">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          Twitter/X
-        </a>
-        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}" target="_blank" rel="noopener" class="share-btn facebook">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          Facebook
-        </a>
-        <a href="https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}&title=${encodeURIComponent(title)}" target="_blank" rel="noopener" class="share-btn linkedin">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-          LinkedIn
-        </a>
-      </div>
-    </div>
-  </div>
-
-  ${relatedSectionHtml}
-
-  <!-- __FOOTER__ -->
-
-  <script src="/js/nav.js"><\/script>
-  <script src="/js/clerk.js"><\/script>
-  <script src="/js/cart.js"><\/script>
-
-</body>
-</html>`;
-}
-__name(buildBlogPostHTML, "buildBlogPostHTML");
-function escHtml2(str) {
-  if (!str) return "";
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-__name(escHtml2, "escHtml");
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  } catch {
-    return dateStr;
-  }
-}
-__name(formatDate, "formatDate");
+__name(onRequest3, "onRequest");
 
 // quote/[[path]].ts
-var onRequest3 = /* @__PURE__ */ __name(async (context) => {
+var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -7701,7 +7715,7 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // r2/[[path]].ts
-var onRequest4 = /* @__PURE__ */ __name(async (context) => {
+var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -7728,7 +7742,7 @@ function getClerkSessionToken(request) {
   return null;
 }
 __name(getClerkSessionToken, "getClerkSessionToken");
-var onRequest5 = /* @__PURE__ */ __name(async (context) => {
+var onRequest6 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -7809,7 +7823,7 @@ function emailAllowed8(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed8, "emailAllowed");
-var onRequest6 = /* @__PURE__ */ __name(async (context) => {
+var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -8075,7 +8089,7 @@ async function getChrome(db, key) {
 __name(getChrome, "getChrome");
 var SKIP_PREFIXES = ["/admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
-async function onRequest7(context) {
+async function onRequest8(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
   for (const prefix of SKIP_PREFIXES) {
@@ -8110,57 +8124,64 @@ ${header}`);
   }
   return new Response(html, { status: response.status, headers: response.headers });
 }
-__name(onRequest7, "onRequest");
+__name(onRequest8, "onRequest");
 
-// ../.wrangler/tmp/pages-bjzO2L/functionsRoutes-0.6845949914446078.mjs
+// ../.wrangler/tmp/pages-Iiv3Iq/functionsRoutes-0.29269198037438227.mjs
 var routes = [
+  {
+    routePath: "/th/blogs/:path*",
+    mountPath: "/th/blogs",
+    method: "",
+    middlewares: [],
+    modules: [onRequest]
+  },
   {
     routePath: "/api/:path*",
     mountPath: "/api",
     method: "",
     middlewares: [],
-    modules: [onRequest]
+    modules: [onRequest2]
   },
   {
     routePath: "/blogs/:path*",
     mountPath: "/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest3]
   },
   {
     routePath: "/quote/:path*",
     mountPath: "/quote",
     method: "",
     middlewares: [],
-    modules: [onRequest3]
+    modules: [onRequest4]
   },
   {
     routePath: "/r2/:path*",
     mountPath: "/r2",
     method: "",
     middlewares: [],
-    modules: [onRequest4]
+    modules: [onRequest5]
   },
   {
     routePath: "/account",
     mountPath: "/account",
     method: "",
-    middlewares: [onRequest5],
+    middlewares: [onRequest6],
     modules: []
   },
   {
     routePath: "/admin",
     mountPath: "/admin",
     method: "",
-    middlewares: [onRequest6],
+    middlewares: [onRequest7],
     modules: []
   },
   {
     routePath: "/",
     mountPath: "/",
     method: "",
-    middlewares: [onRequest7],
+    middlewares: [onRequest8],
     modules: []
   }
 ];
