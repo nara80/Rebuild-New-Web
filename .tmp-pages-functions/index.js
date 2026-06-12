@@ -33,7 +33,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
     if (page > totalPages) page = totalPages;
     const offset = (page - 1) * PER_PAGE;
     const stmt = env.DB.prepare(
-      "SELECT id,slug,title_en,meta_description_en,featured_image,featured_image_alt_en,category,categories_json,author,read_time_en,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+      "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
     ).bind(PER_PAGE, offset);
     const { results } = await stmt.all();
     const posts = results || [];
@@ -61,17 +61,17 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
     let gridHtml = "";
     posts.forEach((post, i) => {
       const img = post.featured_image ? esc(post.featured_image) : "";
-      const alt = esc(post.featured_image_alt_en || post.title_en || "");
+      const alt = esc(isThai ? post.featured_image_alt_th || post.title_th || post.title_en || "" : post.featured_image_alt_en || post.title_en || "");
       const slug = esc(post.slug);
-      const title = esc(post.title_en || "");
-      const desc = esc(post.meta_description_en || "").substring(0, 140);
+      const title = esc(isThai ? post.title_th || post.title_en || "" : post.title_en || "");
+      const desc = esc(isThai ? post.meta_description_th || post.meta_description_en || "" : post.meta_description_en || "").substring(0, 140);
       const cats = parseCats(post.categories_json);
       const cat = esc(cats[0] || post.category || "General");
       const date = formatDate(post.created_at);
       const link = (isThai ? "/th" : "") + "/blogs/" + slug + "/";
-      const card = '<div class="blog-card"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="lazy"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">Read more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
+      const card = '<div class="blog-card"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="lazy"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">' + (isThai ? "\u0E2D\u0E48\u0E32\u0E19\u0E15\u0E48\u0E2D" : "Read more") + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
       if (page === 1 && i === 0 && post.is_featured) {
-        featuredHtml = '<div class="featured-post"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="eager"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + esc(post.meta_description_en || "") + '</p><a href="' + link + '" class="card-read-more">Read article <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
+        featuredHtml = '<div class="featured-post"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="eager"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + esc(isThai ? post.meta_description_th || post.meta_description_en || "" : post.meta_description_en || "") + '</p><a href="' + link + '" class="card-read-more">' + (isThai ? "\u0E2D\u0E48\u0E32\u0E19\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21" : "Read article") + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
       } else {
         gridHtml += card;
       }
@@ -264,9 +264,9 @@ async function buildBlogPostHTML(post, env, lang = "en") {
 
   <div class="blog-container">
     <div class="blog-back">
-      <a href="/blogs/">
+      <a href="/${isThai ? "th/" : ""}blogs/">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-        Back to Blog
+        ${isThai ? "\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E2B\u0E19\u0E49\u0E32\u0E1A\u0E25\u0E47\u0E2D\u0E01" : "Back to Blog"}
       </a>
     </div>
 
@@ -8145,7 +8145,7 @@ ${header}`);
 }
 __name(onRequest8, "onRequest");
 
-// ../.wrangler/tmp/pages-qs3ITj/functionsRoutes-0.8731493429715319.mjs
+// ../.wrangler/tmp/pages-6p4Yh3/functionsRoutes-0.968151971510616.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
