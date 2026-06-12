@@ -69,6 +69,8 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
       "Family & Co-Sleep": "ครอบครัว",
       "Pet Owner": "ทาสหมา แมว",
       "Bedding Guide": "คู่มือเครื่องนอน",
+      "Boarding Dorm": "หอพักนักเรียน",
+      "RV & Truck Cab": "รถและรถบรรทุก",
       "All": "ทั้งหมด"
     };
 
@@ -150,7 +152,7 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
     }
   } catch {}
   const category = escHtml(categoryLabel);
-  const author = escHtml(post.author || "MildMate Team");
+  const author = escHtml(post.author || (isThai ? "ทีม MildMate" : "MildMate Team"));
   const readTime = isThai
     ? escHtml(post.read_time_th || post.read_time_en || "5 min read")
     : escHtml(post.read_time_en || "5 min read");
@@ -215,7 +217,7 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
   }
 
   const relatedSectionHtml = relatedProductsHtml
-    ? '<section class="related-products-section"><div class="container"><h2>You Might Also Like</h2><div class="related-grid">' + relatedProductsHtml + '</div></div></section>'
+    ? '<section class="related-products-section"><div class="container"><h2>' + (isThai ? "คุณอาจจะชอบ" : "You Might Also Like") + '</h2><div class="related-grid">' + relatedProductsHtml + '</div></div></section>'
     : '';
 
   return `<!DOCTYPE html>
@@ -329,7 +331,7 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
     </article>
 
     <div class="blog-share">
-      <p>Share this article</p>
+      <p>${isThai ? "แชร์บทความนี้" : "Share this article"}</p>
       <div class="share-btns">
         <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}" target="_blank" rel="noopener" class="share-btn twitter">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>

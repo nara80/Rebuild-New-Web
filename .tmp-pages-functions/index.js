@@ -64,6 +64,8 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       "Family & Co-Sleep": "\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27",
       "Pet Owner": "\u0E17\u0E32\u0E2A\u0E2B\u0E21\u0E32 \u0E41\u0E21\u0E27",
       "Bedding Guide": "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19",
+      "Boarding Dorm": "\u0E2B\u0E2D\u0E1E\u0E31\u0E01\u0E19\u0E31\u0E01\u0E40\u0E23\u0E35\u0E22\u0E19",
+      "RV & Truck Cab": "\u0E23\u0E16\u0E41\u0E25\u0E30\u0E23\u0E16\u0E1A\u0E23\u0E23\u0E17\u0E38\u0E01",
       "All": "\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14"
     };
     posts.forEach((post, i) => {
@@ -123,7 +125,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
   } catch {
   }
   const category = escHtml(categoryLabel);
-  const author = escHtml(post.author || "MildMate Team");
+  const author = escHtml(post.author || (isThai ? "\u0E17\u0E35\u0E21 MildMate" : "MildMate Team"));
   const readTime = isThai ? escHtml(post.read_time_th || post.read_time_en || "5 min read") : escHtml(post.read_time_en || "5 min read");
   const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
   let body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
@@ -170,7 +172,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
     console.error("Related products query error:", e);
     relatedProductsHtml = "";
   }
-  const relatedSectionHtml = relatedProductsHtml ? '<section class="related-products-section"><div class="container"><h2>You Might Also Like</h2><div class="related-grid">' + relatedProductsHtml + "</div></div></section>" : "";
+  const relatedSectionHtml = relatedProductsHtml ? '<section class="related-products-section"><div class="container"><h2>' + (isThai ? "\u0E04\u0E38\u0E13\u0E2D\u0E32\u0E08\u0E08\u0E30\u0E0A\u0E2D\u0E1A" : "You Might Also Like") + '</h2><div class="related-grid">' + relatedProductsHtml + "</div></div></section>" : "";
   return `<!DOCTYPE html>
 <html lang="${isThai ? "th" : "en"}">
 <head>
@@ -282,7 +284,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
     </article>
 
     <div class="blog-share">
-      <p>Share this article</p>
+      <p>${isThai ? "\u0E41\u0E0A\u0E23\u0E4C\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49" : "Share this article"}</p>
       <div class="share-btns">
         <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(`https://mildmate.com/blogs/${post.slug}/`)}" target="_blank" rel="noopener" class="share-btn twitter">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -8152,7 +8154,7 @@ ${header}`);
 }
 __name(onRequest8, "onRequest");
 
-// ../.wrangler/tmp/pages-4FmJm0/functionsRoutes-0.9311953849094499.mjs
+// ../.wrangler/tmp/pages-4HX2YL/functionsRoutes-0.664018346411772.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
