@@ -257,7 +257,22 @@ export async function onRequest(context: any): Promise<Response> {
     html = html.replace('<!-- __FOOTER__ -->', footer);
   }
 
-  // Flip language toggle for Thai pages
+  // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
+  // Inject by structure when standard chrome is missing.
+  const hasStandardHeader = html.includes('<header class="site-header"');
+  const hasAnyHeader = /<header\b/i.test(html);
+  if (!hasStandardHeader && !hasAnyHeader) {
+    html = html.replace(/<body([^>]*)>/i, `<body$1>\n${header}`);
+  }
+
+  const hasStandardFooter = html.includes('<footer class="site-footer"');
+  const hasAnyFooter = /<footer\b/i.test(html);
+  if (!hasStandardFooter && !hasAnyFooter) {
+    html = html.replace(/<\/body>/i, `${footer}\n</body>`);
+  }
+
+  // 3) Flip language toggle + rewrite links for Thai pages.
+  // Run AFTER chrome injection so injected header/footer links are localized too.
   if (html.includes('<html lang="th"')) {
     html = html
       // Toggle appearance
@@ -313,20 +328,6 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/href="\/custom-measurement\/"/g, 'href="/th/custom-measurement/"')
       // Homepage logo — land on TH homepage
       .replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
-  }
-
-  // 2) Fallback: some pipelines strip HTML comments, so markers disappear.
-  // Inject by structure when standard chrome is missing.
-  const hasStandardHeader = html.includes('<header class="site-header"');
-  const hasAnyHeader = /<header\b/i.test(html);
-  if (!hasStandardHeader && !hasAnyHeader) {
-    html = html.replace(/<body([^>]*)>/i, `<body$1>\n${header}`);
-  }
-
-  const hasStandardFooter = html.includes('<footer class="site-footer"');
-  const hasAnyFooter = /<footer\b/i.test(html);
-  if (!hasStandardFooter && !hasAnyFooter) {
-    html = html.replace(/<\/body>/i, `${footer}\n</body>`);
   }
 
   return new Response(html, { status: response.status, headers: response.headers });
