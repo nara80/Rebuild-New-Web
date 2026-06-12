@@ -106,6 +106,55 @@
     });
   }
 
+  /* ── 3b. Thai nav href safeguard ─────────── */
+  (function normalizeThaiNavLinks() {
+    const path = window.location.pathname;
+    const isThPage = path === '/th' || path.startsWith('/th/');
+    if (!isThPage) return;
+
+    const thaiRouteMap = {
+      '/about': '/th/about/',
+      '/about/': '/th/about/',
+      '/contact': '/th/contact/',
+      '/contact/': '/th/contact/',
+      '/faq': '/th/faq/',
+      '/faq/': '/th/faq/',
+      '/fabric': '/th/fabric/',
+      '/fabric/': '/th/fabric/',
+      '/sizeguide': '/th/sizeguide/',
+      '/sizeguide/': '/th/sizeguide/',
+      '/blogs': '/th/blogs/',
+      '/blogs/': '/th/blogs/',
+      '/policy': '/th/policy/',
+      '/policy/': '/th/policy/',
+      '/shipping': '/th/shipping/',
+      '/shipping/': '/th/shipping/',
+      '/reviews': '/th/reviews/',
+      '/reviews/': '/th/reviews/',
+      '/how-to-measure-mattress-size': '/th/how-to-measure-mattress-size/',
+      '/how-to-measure-mattress-size/': '/th/how-to-measure-mattress-size/',
+      '/custom-measurement': '/th/custom-measurement/',
+      '/custom-measurement/': '/th/custom-measurement/'
+    };
+
+    document.querySelectorAll('a[href]').forEach(function (link) {
+      const rawHref = link.getAttribute('href');
+      if (!rawHref) return;
+      if (rawHref.startsWith('#')) return;
+      if (/^(mailto:|tel:|javascript:)/i.test(rawHref)) return;
+
+      try {
+        const url = new URL(rawHref, window.location.origin);
+        if (url.origin !== window.location.origin) return;
+        const mappedPath = thaiRouteMap[url.pathname];
+        if (!mappedPath) return;
+        link.setAttribute('href', mappedPath + (url.search || '') + (url.hash || ''));
+      } catch (_) {
+        // ignore malformed hrefs
+      }
+    });
+  })();
+
   /* ── 4. Cart count (Phase 4 hook) ────────── */
   window.updateCartCount = function (count) {
     const badge = document.querySelector('.cart-count');

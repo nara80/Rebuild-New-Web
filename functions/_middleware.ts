@@ -290,10 +290,10 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">คู่มือขนาด</a>')
       .replace(/"nav-link">Blog<\/a>/g, '"nav-link">บทความ</a>')
       // Mobile drawer nav links (no class)
-      .replace(/<a href="\/products\/">Shop<\/a>/g, '<a href="/products/">สินค้า</a>')
-      .replace(/<a href="\/fabric\/">Fabrics<\/a>/g, '<a href="/fabric/">เนื้อผ้า</a>')
-      .replace(/<a href="\/sizeguide\/">Size Guide<\/a>/g, '<a href="/sizeguide/">คู่มือขนาด</a>')
-      .replace(/<a href="\/blogs\/">Blog<\/a>/g, '<a href="/blogs/">บทความ</a>')
+      .replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">สินค้า</a>')
+      .replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">เนื้อผ้า</a>')
+      .replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">คู่มือขนาด</a>')
+      .replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">บทความ</a>')
       // Sign In text
       .replace(/>Sign In</g, '>เข้าสู่ระบบ<')
       // Footer section headings
@@ -307,6 +307,9 @@ export async function onRequest(context: any): Promise<Response> {
       // Footer About Us / Contact Us links
       .replace(/>About Us</g, '>เกี่ยวกับเรา<')
       .replace(/>Contact Us</g, '>ติดต่อเรา<')
+      // Footer quick links heading
+      .replace(/>QUICK LINKS</g, '>ลิงก์ด่วน<')
+      .replace(/>Quick Links</g, '>ลิงก์ด่วน<')
       // Mobile drawer
       .replace(/>Home</g, '>หน้าแรก<')
       .replace(/>Language:</g, '>ภาษา:<')
@@ -315,17 +318,17 @@ export async function onRequest(context: any): Promise<Response> {
       // Search placeholder
       .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."')
       // Rewrite hrefs to /th/ for pages that have Thai versions
-      .replace(/href="\/about\/"/g, 'href="/th/about/"')
-      .replace(/href="\/contact\/"/g, 'href="/th/contact/"')
-      .replace(/href="\/faq\/"/g, 'href="/th/faq/"')
-      .replace(/href="\/fabric\/"/g, 'href="/th/fabric/"')
-      .replace(/href="\/sizeguide\/"/g, 'href="/th/sizeguide/"')
-      .replace(/href="\/blogs\/"/g, 'href="/th/blogs/"')
-      .replace(/href="\/policy\/"/g, 'href="/th/policy/"')
-      .replace(/href="\/shipping\/"/g, 'href="/th/shipping/"')
-      .replace(/href="\/reviews\/"/g, 'href="/th/reviews/"')
-      .replace(/href="\/how-to-measure-mattress-size\/"/g, 'href="/th/how-to-measure-mattress-size/"')
-      .replace(/href="\/custom-measurement\/"/g, 'href="/th/custom-measurement/"')
+      .replace(/href="\/about\/?"/g, 'href="/th/about/"')
+      .replace(/href="\/contact\/?"/g, 'href="/th/contact/"')
+      .replace(/href="\/faq\/?"/g, 'href="/th/faq/"')
+      .replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"')
+      .replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"')
+      .replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"')
+      .replace(/href="\/policy\/?"/g, 'href="/th/policy/"')
+      .replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"')
+      .replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"')
+      .replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"')
+      .replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"')
       // Homepage logo — land on TH homepage
       .replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
