@@ -679,10 +679,15 @@
         setText('pay-shipping-sidebar', 'Calculating...');
 
         try {
-          var url = '/api/shipping/calculate?country=' + encodeURIComponent(country) +
-            '&qty=' + encodeURIComponent(qty) +
-            '&currency=' + encodeURIComponent(currency);
-          var resp = await fetch(url);
+          var cart = MildMateCart.get();
+          var items = (cart.items || []).map(function(it) {
+            return { slug: it.product_slug || it.slug || '', qty: it.qty || 1 };
+          }).filter(function(it) { return it.slug && it.qty > 0; });
+          var resp = await fetch('/api/shipping/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ country: country, currency: currency, qty: qty, items: items })
+          });
           var data = await resp.json().catch(function() { return {}; });
           if (requestId !== shippingRequestSeq) return;
           if (!resp.ok || !data.ok) throw new Error(data.error || 'Shipping quote failed');
@@ -1023,6 +1028,7 @@
           countrySel.dataset.boundShippingChange = '1';
         }
         refreshSelectLabels();
+        refreshShippingQuote(countrySel.value || ((window.MildMateGeo && window.MildMateGeo.country) || 'OTHER'));
       }
 
       function populateCountrySelects() {
@@ -1058,13 +1064,6 @@
           countrySel.dataset.boundShippingChange = '1';
         }
         refreshSelectLabels();
-      }
-
-      async function initCountrySelects() {
-        populateCountrySelects();
-        await loadCountryMaster();
-        populateCountrySelects();
-        refreshShippingQuote(document.getElementById('cust-country').value || ((window.MildMateGeo && window.MildMateGeo.country) || 'OTHER'));
       }
 
       function refreshSelectLabels() {
