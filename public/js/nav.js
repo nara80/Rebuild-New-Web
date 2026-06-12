@@ -59,6 +59,8 @@
   const BILINGUAL_PAGES = [
     // Blog (SSR via /functions/th/blogs/[[path]].ts — all blog posts have TH now)
     '/blogs/', '/blogs',
+    // Size Guide — static TH page at /th/sizeguide/
+    '/sizeguide/', '/sizeguide',
     // Homepage — TH homepage pending
     '/'
   ];

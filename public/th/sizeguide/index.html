@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="คู่มือขนาดที่นอนและเครื่องนอนโดย MildMate ขนาดไทย ขนาดสากล วิธีวัดและการเลือกผ้าปูที่เหมาะสม">
+  <title>คู่มือขนาด  -  MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+  <style>
+    .sizeguide-page { background: #f0f7ff; }
+
+    /* ── Hero ─────────────────────────────── */
+    .sizeguide-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .sizeguide-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .sizeguide-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .sizeguide-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .sizeguide-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    /* ── Main Layout ────────────────────────── */
+    .sizeguide-main {
+      padding: 56px 24px;
+    }
+    .sizeguide-container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .info-section {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d0e6fa;
+      margin-bottom: 40px;
+    }
+
+    .section-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 16px;
+    }
+
+    .info-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+
+    /* ── Country Grid ─────────────────────── */
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .country-btn {
+      background: #f8fbff;
+      border: 1.5px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      font-family: var(--font-main);
+    }
+    .country-btn:hover, .country-btn.active {
+      border-color: var(--color-primary);
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(44,150,244,0.12);
+      transform: translateY(-2px);
+    }
+    .country-btn.active {
+      border-color: var(--color-primary);
+      border-width: 2px;
+      background: #fff;
+    }
+    .country-btn .flag { font-size: 1.75rem; line-height: 1; }
+    .country-btn .label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); }
+
+    /* ── Type Tabs ────────────────────────── */
+    .type-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .type-btn {
+      background: #fff;
+      border: 1.5px solid #d0e6fa;
+      border-radius: 999px;
+      padding: 10px 24px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      transition: all 0.2s;
+    }
+    .type-btn:hover, .type-btn.active {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 12px rgba(44,150,244,0.2);
+    }
+
+    /* ── Size Table ────────────────────────── */
+    .size-table-wrap {
+      background: #fff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .table-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: #f8fbff;
+      border-bottom: 1px solid #d0e6fa;
+    }
+    .table-header-row h3 { font-size: 1rem; font-weight: 700; margin: 0; color: var(--color-primary); }
+    .table-header-row span { font-size: 0.75rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; }
+
+    .size-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 16px 24px;
+      border-bottom: 1px solid #f0f7ff;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .size-row:last-child { border-bottom: none; }
+    .size-row:hover { background: #fcfdff; }
+    .size-row.header {
+      background: #f8fbff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-muted);
+      border-bottom: 1px solid #d0e6fa;
+    }
+    .size-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
+    .size-name-sub { font-weight: 400; color: var(--color-muted); font-size: 0.8125rem; display: block; }
+    .size-dims { text-align: right; }
+    .size-dims .cm { font-weight: 600; font-size: 0.9375rem; color: var(--color-text); display: block; }
+    .size-dims .in { color: var(--color-muted); font-size: 0.8125rem; display: block; }
+
+    /* ── CTAs ─────────────────────────────── */
+    .cta-block {
+      background: var(--color-text);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 48px;
+      text-align: center;
+      margin-top: 56px;
+    }
+    .cta-block h2 { color: #fff; margin-bottom: 12px; }
+    .cta-block p { opacity: 0.8; margin-bottom: 32px; }
+
+    @media (max-width: 768px) {
+      .sizeguide-hero h1 { font-size: 1.875rem; }
+      .info-section { padding: 32px 20px; }
+      .country-grid { grid-template-columns: repeat(2, 1fr); }
+      .cta-block { padding: 40px 24px; }
+    }
+    @media (max-width: 480px) {
+      .size-row { padding: 14px 16px; }
+    }
+  </style>
+</head>
+<body class="sizeguide-page">
+
+  <!-- __HEADER__ -->
+
+  <main>
+    
+    <!-- ===== HERO ===== -->
+    <section class="sizeguide-hero">
+      <div class="sizeguide-hero-inner">
+        <h1>คู่มือขนาดมาตรฐานสากล</h1>
+        <p class="hero-sub">ขนาดมาตรฐานที่แม่นยำจาก 13 ประเทศ ข้อมูลทางเทคนิคทั้งเซนติเมตรและนิ้ว</p>
+      </div>
+    </section>
+
+    <div class="sizeguide-main">
+      <div class="sizeguide-container">
+
+        <!-- ===== STEP 1: COUNTRY ===== -->
+        <div class="info-section">
+          <div class="section-kicker"></div>
+          <h2>เลือกภูมิภาคของคุณ</h2>
+          <p>MildMate ผลิตตามมาตรฐานสากล เลือกภูมิภาคของคุณเพื่อดูขนาดที่ผ่านการรับรอง</p>
+          <div id="country-grid" class="country-grid">
+            <button class="country-btn active" data-country="us">
+              <span class="flag">🇺🇸</span>
+              <span class="label">สหรัฐฯ / แคนาดา</span>
+            </button>
+            <button class="country-btn" data-country="uk">
+              <span class="flag">🇬🇧</span>
+              <span class="label">สหราชอาณาจักร</span>
+            </button>
+            <button class="country-btn" data-country="eu">
+              <span class="flag">🇪🇺</span>
+              <span class="label">ยุโรป</span>
+            </button>
+            <button class="country-btn" data-country="au">
+              <span class="flag">🇦🇺</span>
+              <span class="label">ออสเตรเลีย</span>
+            </button>
+            <button class="country-btn" data-country="th">
+              <span class="flag">🇹🇭</span>
+              <span class="label">ไทย</span>
+            </button>
+            <button class="country-btn" data-country="my">
+              <span class="flag">🇲🇾</span>
+              <span class="label">มาเลเซีย / สิงคโปร์</span>
+            </button>
+            <button class="country-btn" data-country="in">
+              <span class="flag">🇮🇳</span>
+              <span class="label">อินเดีย</span>
+            </button>
+            <button class="country-btn" data-country="jp">
+              <span class="flag">🇯🇵</span>
+              <span class="label">ญี่ปุ่น</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===== STEP 2: CATEGORY ===== -->
+        <div class="info-section">
+          <div class="section-kicker"></div>
+          <h2>เลือกประเภทสินค้า</h2>
+          <div id="type-tabs" class="type-tabs">
+            <button class="type-btn active" data-type="standard">ที่นอนมาตรฐาน</button>
+            <button class="type-btn" data-type="family">ครอบครัว / นอนร่วม</button>
+            <button class="type-btn" data-type="pillow">หมอน</button>
+            <button class="type-btn" data-type="duvet">ผ้านวม / ปลอกนวม</button>
+          </div>
+
+          <div id="size-table-wrap" class="size-table-wrap">
+            <div class="table-header-row">
+              <h3 id="table-title">สหรัฐฯ / แคนาดา  -  ที่นอนมาตรฐาน</h3>
+              <span>ซม. / นิ้ว</span>
+            </div>
+            <div id="size-table-rows">
+              <div id="size-data-body">
+                <!-- Injected by JS (includes header row) -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CTA ===== -->
+        <div class="cta-block">
+          <h2>ขนาดพิเศษหรือรูปทรงเฉพาะ?</h2>
+          <p>สำหรับเตียง V-Berth เรือ รถบ้าน รถบรรทุก หรือเตียงพื้นแบบสั่งทำ เรามีบริการ Engineering Blueprint</p>
+          <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;">
+            <a href="/how-to-measure-mattress-size/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:13px 32px; border-radius:var(--radius); text-decoration:none; font-weight:700;">วิธีวัดขนาด</a>
+            <a href="/custom-measurement/" class="btn-outline" style="background:transparent; color:#fff; border:1.5px solid #fff; padding:12px 30px; border-radius:var(--radius); text-decoration:none; font-weight:700;">รูปทรงสั่งทำ</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <style>
+    .country-btn {
+      background: #fff;
+      border: 1.5px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: var(--font-main);
+    }
+    .country-btn:hover, .country-btn.active {
+      border-color: var(--color-primary);
+      box-shadow: 0 2px 12px rgba(44,150,244,0.10);
+    }
+    .country-btn.active {
+      background: #f8fbff;
+    }
+    .country-btn .flag { font-size: 1.5rem; line-height: 1; }
+    .country-btn .label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); }
+
+    .type-btn {
+      background: #fff;
+      border: 1.5px solid #d0e6fa;
+      border-radius: 999px;
+      padding: 8px 18px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      transition: all 0.2s;
+    }
+    .type-btn:hover, .type-btn.active {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+    }
+
+    .size-table-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      padding: 14px 20px;
+      border-bottom: 1px solid #eef4fb;
+      align-items: center;
+    }
+    .size-table-row:last-child { border-bottom: none; }
+    .size-table-row.header {
+      background: #f8fbff;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-primary);
+    }
+    .size-table-row .size-name { font-weight: 700; }
+    .size-table-row .size-dims {
+      font-size: 0.9375rem;
+      color: var(--color-text);
+    }
+    .size-table-row .size-dims .in {
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      margin-left: 6px;
+    }
+    .size-table-row .size-price {
+      font-weight: 700;
+      color: var(--color-primary);
+      text-align: right;
+    }
+    @media (max-width: 640px) {
+      .size-table-row { grid-template-columns: 1fr 1fr; padding: 12px 16px; }
+      .size-table-row .size-price { display: none; }
+      .country-btn { padding: 12px 8px; }
+    }
+  </style>
+
+  <script>
+    (function() {
+      const data = {
+        us: {
+          label: 'สหรัฐฯ / แคนาดา',
+          standard: [
+            { name: 'Twin / Single', cm: '99 × 191', in: '39 × 75', price: '$35' },
+            { name: 'Twin XL', cm: '99 × 203', in: '39 × 80', price: '$38' },
+            { name: 'Full / Double', cm: '137 × 191', in: '54 × 75', price: '$42' },
+            { name: 'Queen', cm: '153 × 203', in: '60 × 80', price: '$49' },
+            { name: 'King', cm: '193 × 203', in: '76 × 80', price: '$55' },
+            { name: 'Cal King', cm: '183 × 213', in: '72 × 84', price: '$58' },
+          ],
+          family: [
+            { name: '2× Twin XL', cm: '198 × 203', in: '78 × 80', price: 'Quote' },
+            { name: 'Twin XL + Queen', cm: '252 × 203', in: '99 × 80', price: 'Quote' },
+            { name: 'Twin XL + King', cm: '292 × 203', in: '115 × 80', price: 'Quote' },
+            { name: '2 × Queen', cm: '306 × 203', in: '120 × 80', price: 'Quote' },
+            { name: 'Queen + King', cm: '346 × 203', in: '136 × 80', price: 'Quote' },
+            { name: '2 × King', cm: '386 × 203', in: '152 × 80', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '51 × 66', in: '20 × 26', price: '$12' },
+            { name: 'Queen', cm: '51 × 76', in: '20 × 30', price: '$14' },
+            { name: 'King', cm: '51 × 92', in: '20 × 36', price: '$16' },
+            { name: 'Euro Square', cm: '66 × 66', in: '26 × 26', price: '$18' },
+            { name: 'Travel / Boudoir', cm: '30 × 40', in: '12 × 16', price: '$8' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Twin', cm: '173 × 218', in: '68 × 86', price: '$55' },
+            { name: 'Twin XL', cm: '173 × 229', in: '68 × 90', price: '$58' },
+            { name: 'Full', cm: '203 × 226', in: '80 × 89', price: '$65' },
+            { name: 'Queen', cm: '229 × 229', in: '90 × 90', price: '$68' },
+            { name: 'King', cm: '264 × 229', in: '104 × 90', price: '$78' },
+            { name: 'Cal King', cm: '279 × 254', in: '110 × 100', price: '$88' },
+          ],
+        },
+        uk: {
+          label: 'สหราชอาณาจักร',
+          standard: [
+            { name: 'Single', cm: '90 × 190', in: '35 × 75', price: '$35' },
+            { name: 'Small Double', cm: '120 × 190', in: '47 × 75', price: '$40' },
+            { name: 'Double', cm: '135 × 190', in: '53 × 75', price: '$42' },
+            { name: 'King', cm: '150 × 200', in: '59 × 79', price: '$49' },
+            { name: 'Super King', cm: '180 × 200', in: '71 × 79', price: '$55' },
+          ],
+          family: [
+            { name: '2× Small Double', cm: '240 × 190', in: '94 × 75', price: 'Quote' },
+            { name: '2× Double', cm: '270 × 190', in: '106 × 75', price: 'Quote' },
+            { name: '2× King', cm: '300 × 200', in: '118 × 79', price: 'Quote' },
+            { name: '2× Super King', cm: '360 × 200', in: '142 × 79', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '50 × 75', in: '20 × 30', price: '$12' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Super King', cm: '50 × 100', in: '20 × 39', price: '$18' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster / Neck Roll', cm: '38 × 190', in: '15 × 75', price: '$22' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Single', cm: '135 × 200', in: '53 × 79', price: '$52' },
+            { name: 'Double', cm: '200 × 200', in: '79 × 79', price: '$62' },
+            { name: 'King', cm: '225 × 220', in: '89 × 87', price: '$72' },
+            { name: 'Super King', cm: '260 × 220', in: '102 × 87', price: '$82' },
+          ],
+        },
+        eu: {
+          label: 'ยุโรป',
+          standard: [
+            { name: 'Single', cm: '90 × 200', in: '35 × 79', price: '$35' },
+            { name: 'Small Double', cm: '120 × 200', in: '47 × 79', price: '$40' },
+            { name: 'Double', cm: '140 × 200', in: '55 × 79', price: '$44' },
+            { name: 'Queen', cm: '160 × 200', in: '63 × 79', price: '$50' },
+            { name: 'King', cm: '180 × 200', in: '71 × 79', price: '$55' },
+            { name: 'Super King', cm: '200 × 200', in: '79 × 79', price: '$60' },
+          ],
+          family: [
+            { name: '2× Double', cm: '280 × 200', in: '110 × 79', price: 'Quote' },
+            { name: 'Double + Queen', cm: '300 × 200', in: '118 × 79', price: 'Quote' },
+            { name: 'Double + King', cm: '320 × 200', in: '126 × 79', price: 'Quote' },
+            { name: '2× Queen', cm: '320 × 200', in: '126 × 79', price: 'Quote' },
+            { name: 'Queen + King', cm: '340 × 200', in: '134 × 79', price: 'Quote' },
+            { name: '2× King', cm: '360 × 200', in: '142 × 79', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '50 × 75', in: '20 × 30', price: '$12' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Body / Pregnancy', cm: '40 × 140', in: '16 × 55', price: '$28' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Single', cm: '140 × 200', in: '55 × 79', price: '$52' },
+            { name: 'Double', cm: '200 × 200', in: '79 × 79', price: '$62' },
+            { name: 'King', cm: '240 × 220', in: '94 × 87', price: '$72' },
+            { name: 'Super King', cm: '260 × 220', in: '102 × 87', price: '$85' },
+          ],
+        },
+        au: {
+          label: 'ออสเตรเลีย',
+          standard: [
+            { name: 'Single', cm: '92 × 188', in: '36 × 74', price: '$35' },
+            { name: 'King Single', cm: '107 × 203', in: '42 × 80', price: '$38' },
+            { name: 'Double', cm: '138 × 188', in: '54 × 74', price: '$42' },
+            { name: 'Queen', cm: '153 × 203', in: '60 × 80', price: '$49' },
+            { name: 'King', cm: '183 × 203', in: '72 × 80', price: '$55' },
+            { name: 'Super King', cm: '204 × 203', in: '80 × 80', price: '$62' },
+          ],
+          family: [
+            { name: '2× King Single', cm: '214 × 203', in: '84 × 80', price: 'Quote' },
+            { name: '2× Double', cm: '276 × 188', in: '109 × 74', price: 'Quote' },
+            { name: 'King Single + Queen', cm: '260 × 203', in: '102 × 80', price: 'Quote' },
+            { name: 'King Single + King', cm: '290 × 203', in: '114 × 80', price: 'Quote' },
+            { name: '2× Queen', cm: '306 × 203', in: '120 × 80', price: 'Quote' },
+            { name: 'Queen + King', cm: '336 × 203', in: '132 × 80', price: 'Quote' },
+            { name: '2× King', cm: '366 × 203', in: '144 × 80', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '50 × 75', in: '20 × 30', price: '$12' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'U-Shaped / Pregnancy', cm: '35 × 170', in: '14 × 67', price: '$32' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Single', cm: '140 × 210', in: '55 × 83', price: '$52' },
+            { name: 'Double', cm: '180 × 210', in: '71 × 83', price: '$60' },
+            { name: 'Queen', cm: '210 × 210', in: '83 × 83', price: '$68' },
+            { name: 'King', cm: '240 × 210', in: '94 × 83', price: '$75' },
+            { name: 'Super King', cm: '270 × 240', in: '106 × 94', price: '$88' },
+          ],
+        },
+        th: {
+          label: 'ไทย',
+          standard: [
+            { name: '3 ฟุต (Single)', cm: '90 × 198', in: '35 × 78', price: '$32' },
+            { name: '3.5 ฟุต (Single)', cm: '107 × 198', in: '42 × 78', price: '$35' },
+            { name: '5 ฟุต (Queen)', cm: '152 × 198', in: '60 × 78', price: '$49' },
+            { name: '6 ฟุต (King)', cm: '183 × 198', in: '72 × 78', price: '$55' },
+            { name: '7 ฟุต (Super King)', cm: '213 × 198', in: '84 × 78', price: '$62' },
+          ],
+          family: [
+            { name: '7FT\n(2×3.5 FT)', cm: '214 × 198', in: '84 × 78', price: 'Quote' },
+            { name: '8FT\n(5+3 FT)', cm: '242 × 198', in: '95 × 78', price: 'Quote' },
+            { name: '8.5FT\n(5+3.5 FT)', cm: '259 × 198', in: '102 × 78', price: 'Quote' },
+            { name: '9FT\n(6+3 FT)', cm: '273 × 198', in: '107 × 78', price: 'Quote' },
+            { name: '9.5FT\n(6+3.5 FT)', cm: '290 × 198', in: '114 × 78', price: 'Quote' },
+            { name: '10FT\n(2×5 FT)', cm: '304 × 198', in: '120 × 78', price: 'Quote' },
+            { name: '11FT\n(5+6 FT)', cm: '335 × 198', in: '132 × 78', price: 'Quote' },
+            { name: '12FT\n(2×6 FT)', cm: '366 × 198', in: '144 × 78', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '48 × 74', in: '19 × 29', price: '$12' },
+            { name: 'King (Hotel)', cm: '48 × 89', in: '19 × 35', price: '$14' },
+            { name: 'Jumbo', cm: '61 × 89', in: '24 × 35', price: '$18' },
+            { name: 'Bolster', cm: '35 × 112', in: '14 × 44', price: '$12' },
+            { name: 'Body', cm: '48 × 124', in: '19 × 49', price: '$28' },
+          ],
+          duvet: [
+            { name: '3FT, 3.5FT', cm: '178 × 229', in: '70 × 90', price: '$52' },
+            { name: '5FT, 6FT', cm: '229 × 254', in: '90 × 100', price: '$65' },
+            { name: '7FT', cm: '279 × 254', in: '110 × 100', price: '$78' },
+            { name: '9FT, 9.5FT', cm: '318 × 254', in: '125 × 100', price: '$92' },
+          ],
+        },
+        my: {
+          label: 'มาเลเซีย / สิงคโปร์',
+          standard: [
+            { name: 'Single', cm: '91 × 190', in: '36 × 75', price: '$32' },
+            { name: 'Super Single', cm: '107 × 190', in: '42 × 75', price: '$36' },
+            { name: 'Queen', cm: '152 × 190', in: '60 × 75', price: '$48' },
+            { name: 'King', cm: '183 × 190', in: '72 × 75', price: '$55' },
+          ],
+          family: [
+            { name: '2× Super Single', cm: '214 × 190', in: '84 × 75', price: 'Quote' },
+            { name: 'Super Single + Queen', cm: '259 × 190', in: '102 × 75', price: 'Quote' },
+            { name: 'Super Single + King', cm: '290 × 190', in: '114 × 75', price: 'Quote' },
+            { name: '2× Queen', cm: '304 × 190', in: '120 × 75', price: 'Quote' },
+            { name: 'Queen + King', cm: '335 × 190', in: '132 × 75', price: 'Quote' },
+            { name: '2× King', cm: '366 × 190', in: '144 × 75', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '48 × 73', in: '19 × 29', price: '$12' },
+            { name: 'King', cm: '48 × 84', in: '19 × 33', price: '$14' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster', cm: '13 × 90', in: '5 × 35', price: '$10' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Single', cm: '150 × 210', in: '59 × 83', price: '$52' },
+            { name: 'Queen', cm: '210 × 210', in: '83 × 83', price: '$65' },
+            { name: 'King', cm: '240 × 210', in: '94 × 83', price: '$75' },
+            { name: 'Super King', cm: '260 × 230', in: '102 × 91', price: '$88' },
+          ],
+        },
+        in: {
+          label: 'อินเดีย',
+          standard: [
+            { name: 'Single', cm: '91 × 183', in: '36 × 72', price: '$35' },
+            { name: 'Double', cm: '122 × 183', in: '48 × 72', price: '$40' },
+            { name: 'Queen', cm: '152 × 191', in: '60 × 75', price: '$48' },
+            { name: 'King', cm: '183 × 191', in: '72 × 75', price: '$55' },
+          ],
+          family: [
+            { name: '2× Double', cm: '244 × 183', in: '96 × 72', price: 'Quote' },
+            { name: '2× Queen', cm: '304 × 191', in: '120 × 75', price: 'Quote' },
+            { name: 'Queen + King', cm: '335 × 191', in: '132 × 75', price: 'Quote' },
+            { name: '2× King', cm: '366 × 191', in: '144 × 75', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '46 × 69', in: '18 × 27', price: '$10' },
+            { name: 'King', cm: '46 × 91', in: '18 × 36', price: '$14' },
+            { name: 'Euro Square', cm: '65 × 65', in: '26 × 26', price: '$18' },
+            { name: 'Bolster', cm: '13 × 90', in: '5 × 35', price: '$10' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Single', cm: '150 × 200', in: '59 × 79', price: '$50' },
+            { name: 'Double', cm: '200 × 200', in: '79 × 79', price: '$62' },
+            { name: 'King', cm: '240 × 220', in: '94 × 87', price: '$75' },
+          ],
+        },
+        jp: {
+          label: 'ญี่ปุ่น',
+          standard: [
+            { name: 'Semi-Single', cm: '85 × 195', in: '33 × 77', price: '$34' },
+            { name: 'Single', cm: '97 × 195', in: '38 × 77', price: '$35' },
+            { name: 'Semi-Double', cm: '122 × 195', in: '48 × 77', price: '$40' },
+            { name: 'Double', cm: '140 × 195', in: '55 × 77', price: '$44' },
+            { name: 'Queen', cm: '160 × 195', in: '63 × 77', price: '$50' },
+            { name: 'King', cm: '180 × 195', in: '71 × 77', price: '$55' },
+            { name: 'Wide-Double', cm: '200 × 195', in: '79 × 77', price: '$60' },
+          ],
+          family: [
+            { name: '2× Semi Double', cm: '170 × 195', in: '67 × 77', price: 'Quote' },
+            { name: '2× Double', cm: '280 × 195', in: '110 × 77', price: 'Quote' },
+            { name: 'Double + Queen', cm: '300 × 195', in: '118 × 77', price: 'Quote' },
+            { name: 'Double + King', cm: '320 × 195', in: '126 × 77', price: 'Quote' },
+            { name: '2× Queen', cm: '320 × 195', in: '126 × 77', price: 'Quote' },
+            { name: 'Queen + King', cm: '340 × 195', in: '134 × 77', price: 'Quote' },
+            { name: '2× King', cm: '360 × 195', in: '142 × 77', price: 'Quote' },
+          ],
+          pillow: [
+            { name: 'Standard', cm: '43 × 63', in: '17 × 25', price: '$11' },
+            { name: 'Semi-Double', cm: '50 × 70', in: '20 × 28', price: '$13' },
+            { name: 'Queen', cm: '50 × 75', in: '20 × 30', price: '$14' },
+            { name: 'King', cm: '50 × 90', in: '20 × 35', price: '$16' },
+            { name: 'Dakimakura (Body Pillow)', cm: '43 × 120', in: '17 × 47', price: '$28' },
+            { name: 'Dakimakura Half', cm: '43 × 60', in: '17 × 24', price: '$18' },
+          ],
+          duvet: [
+            { name: 'Single', cm: '150 × 210', in: '59 × 83', price: '$50' },
+            { name: 'Double', cm: '190 × 210', in: '75 × 83', price: '$60' },
+            { name: 'Queen', cm: '210 × 210', in: '83 × 83', price: '$68' },
+            { name: 'King', cm: '230 × 210', in: '91 × 83', price: '$75' },
+          ],
+        },
+      };
+
+      let currentCountry = 'us';
+      let currentType = 'standard';
+
+      function render() {
+        const country = data[currentCountry];
+        const rows = country[currentType] || [];
+        const typeLabel = document.querySelector('.type-btn.active').textContent;
+        const title = country.label + '  -  ' + typeLabel;
+        document.getElementById('table-title').textContent = title;
+
+        // Thailand duvet cover uses "Bed Size" / "Duvet Cover Size" headers
+        const isThailandDuvet = (currentCountry === 'th' && currentType === 'duvet');
+        const col1Label = isThailandDuvet ? 'ขนาดเตียง' : 'ชื่อขนาด';
+        const col2Label = isThailandDuvet ? 'ขนาดปลอกผ้านวม' : 'ขนาด';
+
+        let html = `
+          <div class="size-row header">
+            <div class="size-name">${col1Label}</div>
+            <div class="size-dims">${col2Label}</div>
+          </div>
+        `;
+        rows.forEach(r => {
+          const parts = r.name.split('\n');
+          const displayName = parts.length > 1
+            ? parts[0] + '<span class="size-name-sub">' + parts.slice(1).join('') + '</span>'
+            : r.name;
+          html += `
+            <div class="size-row">
+              <div class="size-name">${displayName}</div>
+              <div class="size-dims">
+                <span class="cm">${r.cm} cm</span>
+                <span class="in">(${r.in} in)</span>
+              </div>
+            </div>
+          `;
+        });
+        document.getElementById('size-data-body').innerHTML = html;
+      }
+
+      document.getElementById('country-grid').addEventListener('click', function(e) {
+        const btn = e.target.closest('.country-btn');
+        if (!btn) return;
+        document.querySelectorAll('.country-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCountry = btn.dataset.country;
+        render();
+      });
+
+      document.getElementById('type-tabs').addEventListener('click', function(e) {
+        const btn = e.target.closest('.type-btn');
+        if (!btn) return;
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentType = btn.dataset.type;
+        render();
+      });
+
+      render();
+    })();
+  </script>
+
+  <!-- ===== FOOTER ===== -->
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>
