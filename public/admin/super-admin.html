@@ -1362,6 +1362,9 @@ async function updateOrderStatus(orderId, newStatus, selectEl) {
 var quoteFilterStatus = 'all';
 
 var quoteFabricOptions = ['CloudSoft', 'BreezePlus', 'EcoLuxe', 'PremaCotton', 'Waterproof TPU', 'Other'];
+var quoteVirtualProducts = [
+  { slug: 'sample-fabric', title: 'Sample Fabric' }
+];
 
 async function fetchQuoteProducts() {
   try {
@@ -1369,14 +1372,19 @@ async function fetchQuoteProducts() {
     if (!resp.ok) return [];
     var data = await resp.json();
     var rows = data.products || data || [];
-    return rows.map(function(p){
+    var products = rows.map(function(p){
       return {
         slug: p.slug,
         title: p.title_en || p.name || p.slug
       };
     }).filter(function(p){ return !!p.slug; });
+    quoteVirtualProducts.forEach(function(vp){
+      var exists = products.some(function(p){ return p.slug === vp.slug; });
+      if (!exists) products.push({ slug: vp.slug, title: vp.title });
+    });
+    return products;
   } catch(e) {
-    return [];
+    return quoteVirtualProducts.slice();
   }
 }
 

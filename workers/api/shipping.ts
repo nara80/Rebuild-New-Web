@@ -92,6 +92,12 @@ export async function ensureShippingRatesSchema(env: any): Promise<void> {
         )`
       ).run();
 
+      // Virtual quote-only product used for shipping sample swatches.
+      await env.DB.prepare(
+        `INSERT OR IGNORE INTO shipping_product_tiers (product_slug, tier, updated_at)
+         VALUES ('sample-fabric', 3, datetime('now'))`
+      ).run();
+
       await env.DB.prepare(
         `CREATE TABLE IF NOT EXISTS shipping_add_rates (
           tier INTEGER PRIMARY KEY CHECK(tier IN (1,2,3)),
