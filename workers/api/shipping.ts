@@ -194,6 +194,7 @@ export async function calculateShippingQuote(
     const row = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        first_item_thb, additional_item_thb,
         is_active
        FROM shipping_rates
        WHERE country_code = ?1 AND is_active = 1
@@ -261,21 +262,44 @@ export async function calculateShippingQuote(
     globalAddRates[Number(ar.tier)] = toAmount(ar.add_thb);
   }
 
-  // Initial cost = highest tier's first rate (from country)
-  const firstItemThb = toAmount((row as any)["tier" + highestTier + "_first_thb"] || 0);
+  const legacyFirstThb = toAmount((row as any).first_item_thb || 0);
+  const legacyAddThb = toAmount((row as any).additional_item_thb || 0);
+  const tier1FirstThb = toAmount((row as any).tier1_first_thb || 0);
+  const tier2FirstThb = toAmount((row as any).tier2_first_thb || 0);
+  const tier3FirstThb = toAmount((row as any).tier3_first_thb || 0);
+  const hasTierFirstRates = tier1FirstThb > 0 || tier2FirstThb > 0 || tier3FirstThb > 0;
 
-  // Additional: all items except one from the highest tier, using global add rates
-  let highestItemDeducted = false;
+  let firstItemThb = 0;
   let additionalThb = 0;
-  for (const item of effectiveItems) {
-    const t = tierMap.get(item.slug) || 2;
-    const qty = item.qty || 0;
-    const addRate = globalAddRates[t] || 0;
-    if (t === highestTier && !highestItemDeducted) {
-      additionalThb += addRate * Math.max(0, qty - 1);
-      highestItemDeducted = true;
-    } else {
-      additionalThb += addRate * qty;
+
+  // Backward-compatible fallback: if tier-first rates are not configured yet,
+  // use legacy first/additional model so shipping never collapses to zero.
+  if (!hasTierFirstRates && legacyFirstThb > 0) {
+    highestTier = 0;
+    firstItemThb = legacyFirstThb;
+    additionalThb = legacyAddThb * Math.max(0, totalQty - 1);
+  } else {
+    if (highestTier <= 0) highestTier = 2;
+    const tierFirstLookup: Record<number, number> = {
+      1: tier1FirstThb,
+      2: tier2FirstThb,
+      3: tier3FirstThb,
+    };
+    firstItemThb = toAmount(tierFirstLookup[highestTier] || legacyFirstThb || 0);
+
+    // Additional: all items except one from the highest tier, using global add rates.
+    // If add rates aren't configured yet, fallback to legacy additional_item_thb.
+    let highestItemDeducted = false;
+    for (const item of effectiveItems) {
+      const t = tierMap.get(item.slug) || 2;
+      const qty = item.qty || 0;
+      const addRate = toAmount(globalAddRates[t] || legacyAddThb || 0);
+      if (t === highestTier && !highestItemDeducted) {
+        additionalThb += addRate * Math.max(0, qty - 1);
+        highestItemDeducted = true;
+      } else {
+        additionalThb += addRate * qty;
+      }
     }
   }
 
