@@ -123,7 +123,7 @@
       "fabricMode": "all"
     },
     "marine-fitted-sheet": {
-      "productType": "fitted-sheet",
+      "productType": "marine",
       "tagline": "Custom-fitted for V-berth, sailboat, and yacht bunks. OEKO-TEX certified. Stays put in rough seas.",
       "metaDescription": "Marine Fitted Sheet by MildMate  -  Custom-fitted for V-berth, sailboat, and yacht bunks. OEKO-TEX certified. Stays secure in rough seas. Ships worldwide.",
       "ratingCount": 42,
@@ -136,15 +136,20 @@
       "lockedFabric": "cloudsoft",
       "needsDepth": true,
       "marineShapes": [
-        {"code":"A","name":"V-Berth Narrow Foot","priceUsd":94,"lengthMin":180,"lengthMax":220,"headWidthMin":135,"headWidthMax":210,"footWidthMin":30,"footWidthMax":90,"type":"vberth"},
-        {"code":"B","name":"V-Berth Wide Foot","priceUsd":111,"lengthMin":180,"lengthMax":220,"headWidthMin":135,"headWidthMax":210,"footWidthMin":70,"footWidthMax":120,"type":"vberth"},
-        {"code":"C","name":"V-Berth King Size","priceUsd":125,"lengthMin":180,"lengthMax":230,"headWidthMin":170,"headWidthMax":240,"footWidthMin":50,"footWidthMax":110,"type":"vberth"},
-        {"code":"D","name":"Double Round End","priceUsd":125,"lengthMin":180,"lengthMax":220,"headWidthMin":115,"headWidthMax":175,"footWidthMin":null,"footWidthMax":null,"type":"round"},
-        {"code":"E","name":"King Size Round End","priceUsd":138,"lengthMin":180,"lengthMax":230,"headWidthMin":135,"headWidthMax":210,"footWidthMin":null,"footWidthMax":null,"type":"round"},
-        {"code":"F","name":"Single Quarter Berth","priceUsd":110,"lengthMin":180,"lengthMax":220,"headWidthMin":60,"headWidthMax":120,"footWidthMin":30,"footWidthMax":70,"type":"complex","subtype":"single"},
-        {"code":"G","name":"Cut Off Corner","priceUsd":108,"lengthMin":180,"lengthMax":220,"headWidthMin":120,"headWidthMax":180,"footWidthMin":125,"footWidthMax":190,"type":"complex"},
-        {"code":"H","name":"Octagonal Berth","priceUsd":132,"lengthMin":180,"lengthMax":220,"headWidthMin":50,"headWidthMax":180,"footWidthMin":50,"footWidthMax":100,"type":"complex"},
-        {"code":"I","name":"Custom / Template","priceUsd":null,"lengthMin":null,"lengthMax":null,"headWidthMin":null,"headWidthMax":null,"footWidthMin":null,"footWidthMax":null,"type":"custom","quoteOnly":true}
+        {"code":"01","name":"V-Berth \u2013 4 Sides","schematic":"/images/BoatShapes/001_V-Berth.jpg","formula":"vberth-4sides"},
+        {"code":"02","name":"V-Berth Cut Corner \u2013 6 Sides","schematic":"/images/BoatShapes/002_V-Berth_CutCorner.jpg","formula":"vberth-cut-corner"},
+        {"code":"03","name":"V-Berth Rounded Nose","schematic":"/images/BoatShapes/003_V-Berth_RoundedNose.jpg","formula":"vberth-rounded-nose"},
+        {"code":"04","name":"V-Berth Split \u2013 2 Pieces","schematic":"/images/BoatShapes/004_V-Berth_2Pieces.jpg","formula":"vberth-split"},
+        {"code":"05","name":"Island 6 Sides / Hexagon Bunk","schematic":"/images/BoatShapes/005_HexagonBunk.jpg","formula":"island-6"},
+        {"code":"06","name":"Island 7 Sides","schematic":"/images/BoatShapes/006_Island_7Sides.jpg","formula":"island-7"},
+        {"code":"07","name":"Island 8 Sides / Octagon Bunk","schematic":"/images/BoatShapes/007_Island_8Sides.jpg","formula":"island-8"},
+        {"code":"08","name":"Rectangle","schematic":"/images/BoatShapes/008_Rectangle.jpg","formula":"rectangle"},
+        {"code":"09","name":"Rectangle Cut-Off Corner \u2013 5 Sides","schematic":"/images/BoatShapes/009_Rectangle_CutOff.jpg","formula":"rect-cut-1"},
+        {"code":"10","name":"Rectangle Two Cut-Off Corners \u2013 6 Sides","schematic":"/images/BoatShapes/010_Rectangle_TwoCutOff.jpg","formula":"rect-cut-2"},
+        {"code":"11","name":"Radius Corner Rectangle","schematic":"/images/BoatShapes/011_RadiusCorner.jpg","formula":"radius-rect"},
+        {"code":"12","name":"Quarter Berth / Side Berth Tapered","schematic":"/images/BoatShapes/012_QuarterBerth.jpg","formula":"quarter-berth"},
+        {"code":"13","name":"Aft Cabin Irregular Mattress","schematic":"/images/BoatShapes/013_AftCabin.jpg","formula":"aft-cabin"},
+        {"code":"14","name":"Notched Mattress / Obstruction Cut-Out","schematic":"/images/BoatShapes/014_NotchedMattress.jpg","formula":"notched"}
       ],
       "tags": [
         {

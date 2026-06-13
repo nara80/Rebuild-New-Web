@@ -2,12 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.10);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-muted);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2;color:var(--color-text)}h2{font-size:1.75rem;font-weight:700;line-height:1.3;color:var(--color-text)}h3{font-size:1.25rem;font-weight:600;line-height:1.4;color:var(--color-text)}p{font-size:1rem;font-weight:400;margin-bottom:1rem;color:var(--color-muted)}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#1E293B;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.10);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section { background: var(--color-surface); }
-    .configurator-box { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; max-width: 900px; margin: 0 auto; }
-    .config-block { padding: 16px; border-radius: 8px; margin-bottom: 20px; background: #fff; }
-    .pricing-panel { padding: 16px; border-radius: 8px; margin-bottom: 20px; background: var(--color-surface); }
-    .panel-section { padding: 16px; border-radius: 8px; margin-bottom: 16px; background: #fff; }
-    .panel-section:last-child { margin-bottom: 0; }</style>
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.10);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-muted);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2;color:var(--color-text)}h2{font-size:1.75rem;font-weight:700;line-height:1.3;color:var(--color-text)}h3{font-size:1.25rem;font-weight:600;line-height:1.4;color:var(--color-text)}p{font-size:1rem;font-weight:400;margin-bottom:1rem;color:var(--color-muted)}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Marine Fitted Sheet by MildMate  -  Custom-fitted for V-berth, sailboat, and yacht bunks. OEKO-TEX certified. Stays secure in rough seas. Ships worldwide.">
   <meta name="product-image" content="/images/products/boat-fitted-sheet/main.jpg">
@@ -15,301 +10,159 @@
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    .product-page { background: #F8FAFC; }
-    .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 56px; display: grid; grid-template-columns: minmax(0, 55%) minmax(0, 45%); gap: 40px; align-items: start; }
-    .product-gallery { position: sticky; top: 96px; min-width: 0; align-self: start; }
-    .product-info { min-width: 0; --desktop-col-height: calc(100vh - 120px); height: var(--desktop-col-height); max-height: var(--desktop-col-height); overflow-y: auto; padding-right: 8px; }
-    .product-info::-webkit-scrollbar { width: 8px; }
-    .product-info::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
-
-    /* --- 1:1 swipeable carousel --- */
-    .carousel-wrap { position: relative; overflow: hidden; background: #F8FAFC; border-radius: 8px; border: 1px solid #e2e8f0; }
-    .carousel-track { display: flex; transition: transform 0.35s ease; will-change: transform; }
-    .carousel-track.no-transition { transition: none; }
-    .carousel-slide { flex: 0 0 100%; width: 100%; aspect-ratio: 1/1; }
-    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; }
-    .carousel-slide-video { position: relative; background: #000; cursor: pointer; }
-    .carousel-slide-video .yt-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .carousel-slide-video .yt-play-btn { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-    .carousel-slide-video .yt-play-circle { width: 68px; height: 48px; border-radius: 12px; background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-    .carousel-slide-video:hover .yt-play-circle { background: #ff0000; }
-    .carousel-slide-video .yt-play-circle svg { width: 24px; height: 24px; fill: #fff; }
-    .carousel-slide-video iframe { width: 100%; height: 100%; border: none; display: block; }
-    .carousel-thumb.thumb-video { position: relative; }
-    .carousel-thumb.thumb-video::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
-    .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: background 0.15s; }
-    .carousel-prev:hover, .carousel-next:hover { background: #fff; }
-    .carousel-prev { left: 10px; }
-    .carousel-next { right: 10px; }
-    .carousel-prev svg, .carousel-next svg { stroke: #1E293B; }
-    .carousel-dots-wrap { position: absolute; left: 0; right: 0; bottom: 10px; z-index: 6; display: flex; justify-content: center; align-items: center; gap: 6px; pointer-events: none; }
-    .carousel-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #cbd5e1; cursor: pointer; transition: all 0.2s; padding: 0; }
-    .carousel-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }
-    .carousel-dot { pointer-events: auto; }
-    .carousel-thumbs { display: none; }
-    .carousel-thumb { width: 64px; height: 64px; border-radius: 8px; border: 2px solid #dbe3ee; background: #fff; padding: 0; overflow: hidden; flex: 0 0 auto; }
-    .carousel-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .carousel-thumb.active { border-color: #2c96f4; box-shadow: 0 0 0 2px rgba(44,150,244,0.2); }
-    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .product-info {}
-    .product-breadcrumb { font-size: 0.8125rem; color: #64748b; margin-bottom: 16px; }
-    .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
-    .product-breadcrumb a:hover { text-decoration: underline; }
-    .product-title { font-size: 2.25rem; font-weight: 700; color: #1E293B; line-height: 1.2; margin-bottom: 8px; }
-    .product-title-row { display: flex; align-items: center; gap: 12px; }
-    .favorite-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--color-border); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all var(--transition); flex-shrink: 0; padding: 0; }
-    .favorite-btn:hover { border-color: #dc2626; transform: scale(1.1); }
-    .favorite-btn.active { border-color: #dc2626; background: #fef2f2; }
-    .favorite-toast { font-size: 0.75rem; color: var(--color-muted); margin-top: 4px; min-height: 1.2em; }
-    .sale-badge { display: inline; background: #dc2626; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 4px; }
-    .sale-countdown { display: inline; font-size: 0.75rem; color: #dc2626; font-weight: 600; }
-    .price-strike { text-decoration: line-through; color: var(--color-muted); font-size: 1rem; margin-right: 8px; }
-    .price-sale { font-size: 2rem; font-weight: 700; color: #16a34a; }
-    .product-tagline { font-size: 1rem; color: #64748b; margin-bottom: 16px; line-height: 1.5; }
-
-    .price-summary { background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; }
-    .price-summary .price-value { font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }
-    .price-summary .price-sub { font-size: 0.75rem; color: #64748b; }
-
-    .pricing-panel { background: #fff; border: 1px solid #e2e8f0; border-radius: var(--radius); padding: 16px; margin-bottom: 24px; }
-    .panel-section { padding: 16px; border-radius: 8px; margin-bottom: 20px; background: #fff; border: 1px solid #e2e8f0; }
-    .panel-section:last-child { margin-bottom: 0; }
-    .panel-label { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .size-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-    .size-select:focus { outline: none; border-color: var(--color-primary); }
-    .size-select, .fabric-select, .shape-select { min-height: 48px; }
-    .size-hint { font-size: 0.75rem; color: #64748b; margin-top: 6px; }
-    .size-hint a { color: var(--color-primary); text-decoration: none; }
-    .size-hint a:hover { text-decoration: underline; }
-    .sr-select { position: absolute !important; opacity: 0 !important; pointer-events: none !important; width: 1px !important; height: 1px !important; margin: 0 !important; }
-    .selection-pills { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; max-height: 240px; overflow-y: auto; margin-top: 10px; padding: 4px; border-radius: 8px; background: #F8FAFC; }
-    .selection-pill { min-height: 48px; padding: 10px 12px; border-radius: 8px; border: 2px solid #dbe3ee; background: #fff; color: #1E293B; font-size: 0.8125rem; font-weight: 600; line-height: 1.3; text-align: left; display: flex; flex-direction: column; justify-content: center; gap: 4px; transition: border-color .15s, background-color .15s, box-shadow .15s; }
-    .selection-pill:hover { border-color: var(--color-primary); }
-    .selection-pill.active { border: 2px solid var(--color-primary); background: #eff6ff; box-shadow: 0 0 0 3px rgba(44,150,244,.12); }
-    .selection-pill-group { font-size: 0.625rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #64748b; }
-    .selection-pill-label { font-size: 0.8125rem; font-weight: 600; color: #1E293B; }
-    .size-picker { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
-    .size-country-chips { display: flex; flex-wrap: wrap; gap: 12px; overflow: visible; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
-    .size-country-chip { min-height: 48px; padding: 10px 14px; border-radius: 8px; border: 2px solid #dbe3ee; background: #fff; color: #1E293B; font-size: 0.8125rem; font-weight: 700; white-space: nowrap; }
-    .size-country-chip.active { border-color: #2c96f4; background: #eff6ff; color: #2c96f4; }
-    .size-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-    .size-option-pill { min-height: 48px; }
-    .size-toggle-btn { min-height: 44px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #F8FAFC; color: #1E293B; font-size: 0.8125rem; font-weight: 700; }
-    .size-toggle-btn:hover { border-color: #2c96f4; color: #2c96f4; }
-
-    /* Phase 2: Fabric Pill Selectors */
-    .validation-notice {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #c2410c;
+    .product-page{background:#F8FAFC}
+    .product-layout{max-width:1280px;margin:0 auto;padding:40px 24px 56px;display:grid;grid-template-columns:minmax(0,55%) minmax(0,45%);gap:40px;align-items:start}
+    .product-gallery{position:sticky;top:96px;min-width:0;align-self:start}
+    .product-info{min-width:0;--desktop-col-height:calc(100vh - 120px);height:var(--desktop-col-height);max-height:var(--desktop-col-height);overflow-y:auto;padding-right:8px}
+    .product-info::-webkit-scrollbar{width:8px}
+    .product-info::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+    .carousel-wrap{position:relative;overflow:hidden;background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0}
+    .carousel-track{display:flex;transition:transform 0.35s ease;will-change:transform}
+    .carousel-track.no-transition{transition:none}
+    .carousel-slide{flex:0 0 100%;width:100%;aspect-ratio:1/1}
+    .carousel-slide img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none}
+    .carousel-slide-video{position:relative;background:#000;cursor:pointer}
+    .carousel-slide-video .yt-thumb{width:100%;height:100%;object-fit:cover;display:block}
+    .carousel-slide-video .yt-play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .carousel-slide-video .yt-play-circle{width:68px;height:48px;border-radius:12px;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+    .carousel-slide-video:hover .yt-play-circle{background:#ff0000}
+    .carousel-slide-video .yt-play-circle svg{width:24px;height:24px;fill:#fff}
+    .carousel-slide-video iframe{width:100%;height:100%;border:none;display:block}
+    .carousel-prev,.carousel-next{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.88);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:background 0.15s}
+    .carousel-prev:hover,.carousel-next:hover{background:#fff}
+    .carousel-prev{left:10px}.carousel-next{right:10px}
+    .carousel-prev svg,.carousel-next svg{stroke:#1E293B}
+    .carousel-dots-wrap{position:absolute;left:0;right:0;bottom:10px;z-index:6;display:flex;justify-content:center;align-items:center;gap:6px;pointer-events:none}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:#cbd5e1;cursor:pointer;transition:all 0.2s;padding:0}
+    .carousel-dot.active{background:#2c96f4;width:24px;border-radius:4px}
+    .carousel-dot{pointer-events:auto}
+    .carousel-thumbs{display:none}
+    .carousel-thumb{width:64px;height:64px;border-radius:8px;border:2px solid #dbe3ee;background:#fff;padding:0;overflow:hidden;flex:0 0 auto}
+    .carousel-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .carousel-thumb.active{border-color:#2c96f4;box-shadow:0 0 0 2px rgba(44,150,244,0.2)}
+    .product-info{}
+    .product-breadcrumb{font-size:0.8125rem;color:#64748b;margin-bottom:16px}
+    .product-breadcrumb a{color:var(--color-primary);text-decoration:none}
+    .product-breadcrumb a:hover{text-decoration:underline}
+    .product-title{font-size:2.25rem;font-weight:700;color:#1E293B;line-height:1.2;margin-bottom:8px}
+    .product-title-row{display:flex;align-items:center;gap:12px}
+    .favorite-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--color-border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.125rem;transition:all var(--transition);flex-shrink:0;padding:0}
+    .favorite-btn:hover{border-color:#dc2626;transform:scale(1.1)}
+    .favorite-btn.active{border-color:#dc2626;background:#fef2f2}
+    .favorite-toast{font-size:0.75rem;color:var(--color-muted);margin-top:4px;min-height:1.2em}
+    .product-tagline{font-size:1rem;color:#64748b;margin-bottom:16px;line-height:1.5}
+    .price-summary{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+    .price-summary .price-value{font-size:1.75rem;font-weight:700;color:var(--color-primary)}
+    .price-summary .price-sub{font-size:0.75rem;color:#64748b}
+    .pricing-panel{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius);padding:16px;margin-bottom:24px}
+    .panel-section{padding:16px;border-radius:8px;margin-bottom:20px;background:#fff;border:1px solid #e2e8f0}
+    .panel-section:last-child{margin-bottom:0}
+    .panel-label{font-size:0.8125rem;font-weight:700;color:var(--color-text);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .price-block{border-top:1px solid #e2e8f0;padding-top:20px;margin-top:20px}
+    .price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+    .price-row .price-label{font-size:0.8125rem;color:#64748b}
+    .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}
+    .price-sub{font-size:0.75rem;color:#94a3b8}
+    .desktop-cta-sticky{position:sticky;bottom:0;z-index:8;margin-top:12px;padding:12px 0 4px;border-top:1px solid #e2e8f0;background:linear-gradient(to top,#fff 82%,rgba(255,255,255,0.96) 100%)}
+    .desktop-cta-sticky .price-block{margin-top:0;padding-top:0;border-top:none}
+    .add-to-cart-row{display:flex;gap:12px;margin-top:20px}
+    .btn-add-cart{flex:1;padding:16px 24px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;font-weight:700;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-add-cart:hover{background:var(--color-primary-dark)}
+    .btn-add-cart:disabled{background:#94a3b8;cursor:not-allowed}
+    .fabric-badge{display:inline-block;padding:8px 16px;border:2px solid var(--color-primary);border-radius:var(--radius);font-weight:600;font-size:0.875rem;color:var(--color-primary);background:#eff6ff;margin-bottom:16px}
+    .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+    .spec-item{background:var(--color-surface);padding:12px 14px;border-radius:var(--radius);border:1px solid #e2e8f0}
+    .spec-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:4px}
+    .spec-value{font-size:0.9rem;font-weight:600;color:var(--color-text)}
+    .color-selector{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;max-width:360px}
+    .color-option{width:48px;height:48px;border-radius:50%;border:2px solid #cbd5e1;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08)}
+    .color-option.selected{border-color:var(--color-primary);border-width:3px;box-shadow:0 0 0 2px rgba(44,150,244,0.3)}
+    .color-option:not(.selected){opacity:0.55}
+    .color-option:hover{opacity:1;border-color:#94a3b8}
+    .selected-color-name{margin-top:8px;font-size:0.8125rem;font-weight:600;color:#1E293B}
+    .payment-badges{display:flex;align-items:center;gap:12px;margin-top:16px;font-size:0.75rem;color:#64748b;padding:10px 14px;background:var(--color-surface);border-radius:6px;border:1px solid #e2e8f0}
+    .payment-badge{display:flex;align-items:center;gap:4px}
+    .trust-signals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:14px 16px;background:#F8FAFC;border:1px solid #e2e8f0;border-radius:8px}
+    .trust-signals-mobile{display:none}
+    .trust-item{display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#1E293B;white-space:nowrap}
+    .trust-item svg{width:16px;height:16px;color:var(--color-primary);flex-shrink:0}
+    /* Marine Shape Configurator */
+    .shape-select{width:100%;padding:12px 14px;border:2px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;min-height:48px}
+    .shape-select:focus{outline:none;border-color:var(--color-primary)}
+    .shape-guide{border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;background:#fff}
+    .shape-guide img{width:100%;height:auto;display:block}
+    .shape-guide-caption{font-size:0.75rem;color:#64748b;padding:8px 12px;text-align:center;background:var(--color-surface)}
+    .shape-coming-soon{display:flex;align-items:center;gap:8px;padding:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius);margin-bottom:16px;color:#c2410c;font-size:0.875rem;font-weight:600}
+    .dim-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .dim-field{display:flex;flex-direction:column;gap:4px}
+    .dim-field label{font-size:0.75rem;font-weight:600;color:#64748b;display:flex;align-items:center;gap:4px}
+    .dim-field input{padding:12px 14px;border:2px solid var(--color-border);border-radius:8px;font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);width:100%;box-sizing:border-box;min-height:48px}
+    .dim-field input:focus{outline:2px solid var(--color-primary);outline-offset:2px;border-color:var(--color-primary)}
+    .dim-helper{font-size:0.6875rem;color:#94a3b8;margin-top:2px;line-height:1.4}
+    .unit-toggle{display:flex;gap:0;border:2px solid var(--color-border);border-radius:6px;overflow:hidden;width:fit-content}
+    .unit-btn{padding:8px 16px;border:none;background:#fff;font-size:0.875rem;font-weight:600;cursor:pointer;color:#64748b;font-family:var(--font-main);transition:all 0.15s}
+    .unit-btn.active{background:var(--color-primary);color:#fff}
+    .info-matrix{margin-top:10px}
+    .info-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .info-tab{min-height:48px;border:2px solid #dbe3ee;border-radius:8px;background:#fff;color:#1E293B;font-weight:700;font-size:0.9375rem;transition:border-color .15s,background-color .15s}
+    .info-tab:hover{border-color:var(--color-primary)}
+    .info-tab.active{border:2px solid var(--color-primary);background:#eff6ff;color:var(--color-primary)}
+    .info-panel{display:none;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px}
+    .info-panel.active{display:block}
+    .info-panel h3{font-size:1.125rem;font-weight:700;color:#1E293B;margin-bottom:12px}
+    .info-panel p{color:#64748b;line-height:1.7;margin-bottom:12px}
+    .info-panel ul{padding-left:20px;margin-bottom:16px}
+    .info-panel ul li{margin-bottom:6px;color:#64748b;line-height:1.5;list-style:disc}
+    .faq-item{border:1px solid #e2e8f0;border-radius:8px;background:#F8FAFC;padding:12px 14px;margin-bottom:10px}
+    .faq-item summary{font-size:0.875rem;font-weight:700;color:#1E293B;cursor:pointer}
+    .faq-item p,.faq-item ul{margin-top:8px;margin-bottom:0}
+    .related-section{margin-top:64px}
+    .related-section h2{font-size:1.5rem;font-weight:700;color:var(--color-text);margin-bottom:24px}
+    .related-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    .related-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid #e2e8f0;transition:transform 0.2s,box-shadow 0.2s}
+    .related-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+    .related-card .card-image{position:relative;overflow:hidden}
+    .related-card .card-image img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+    .related-card .card-body{padding:16px}
+    .related-card .card-title{font-size:0.875rem;font-weight:700;color:var(--color-text);margin-bottom:6px;line-height:1.3}
+    .related-card .card-price{font-size:0.9375rem;font-weight:700;color:var(--color-primary)}
+    .related-card .card-price-note{font-size:0.75rem;color:#94a3b8}
+    .tag-pill{display:inline-flex;align-items:center;padding:5px 12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:999px;font-size:0.75rem;font-weight:600;color:var(--color-text);text-decoration:none;transition:all 0.2s}
+    .tag-pill:hover{border-color:var(--color-primary);color:var(--color-primary);background:#eff6ff}
+    @media(max-width:1024px){
+      .product-layout{grid-template-columns:1fr;gap:32px}
+      .product-gallery{position:static}
+      .product-info{height:auto;max-height:none;overflow:visible;padding-right:0}
+      .related-grid{grid-template-columns:repeat(2,1fr)}
     }
-    .validation-notice.visible { display: flex; }
-    .validation-notice svg { flex-shrink: 0; }
-    .validation-notice .bullet { margin: 0 4px; opacity: .6; }
-    .fabric-pills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    @media (min-width: 641px) { .fabric-pills { display: grid; grid-template-columns: repeat(4, 1fr); } }
-    .fabric-pill { padding: 10px 18px; border: 2px solid var(--color-border); border-radius: var(--radius); background: #fff; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.15s; color: var(--color-text); font-family: var(--font-main); text-align: center; }
-    .fabric-pill:hover { border-color: var(--color-primary); }
-    .fabric-pill.active { border-color: var(--color-primary); background: #eff6ff; color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.12); }
-
-    .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-    .spec-item { background: var(--color-surface); padding: 12px 14px; border-radius: var(--radius); border: 1px solid #e2e8f0; }
-    .spec-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 4px; }
-    .spec-value { font-size: 0.9rem; font-weight: 600; color: var(--color-text); }
-
-    .fabric-badge { display: inline-block; padding: 8px 16px; border: 2px solid var(--color-primary); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; color: var(--color-primary); background: #eff6ff; margin-bottom: 16px; }
-
-    .color-selector { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; max-width: 360px; }
-    .color-option { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #cbd5e1; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
-    .color-option.selected { border-color: var(--color-primary); border-width: 3px; box-shadow: 0 0 0 2px rgba(44,150,244,0.3); }
-    .color-option:not(.selected) { opacity: 0.55; }
-    .color-option:hover { opacity: 1; border-color: #94a3b8; }
-    .selected-color-name { margin-top: 8px; font-size: 0.8125rem; font-weight: 600; color: #1E293B; }
-
-    .price-block { border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 20px; }
-    .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
-    .price-label { font-size: 0.8125rem; color: #64748b; }
-    .price-value { font-size: 2rem; font-weight: 700; color: var(--color-primary); }
-    .price-sub { font-size: 0.75rem; color: #94a3b8; }
-    .desktop-cta-sticky { position: sticky; bottom: 0; z-index: 8; margin-top: 12px; padding: 12px 0 4px; border-top: 1px solid #e2e8f0; background: linear-gradient(to top, #fff 82%, rgba(255,255,255,0.96) 100%); }
-    .desktop-cta-sticky .price-block { margin-top: 0; padding-top: 0; border-top: none; }
-
-    /* Config tabs */
-    .config-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px; }
-    .config-tab { flex: 1; padding: 12px 16px; border: none; background: transparent; font-family: var(--font-main); font-size: 0.875rem; font-weight: 700; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s, border-color 0.15s; }
-    .config-tab:hover { color: var(--color-primary); }
-    .config-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
-    .config-tab-content { display: none; }
-    .config-tab-content.active { display: block; }
-
-    .add-to-cart-row { display: flex; gap: 12px; margin-top: 20px; }
-    .btn-add-cart { flex: 1; padding: 16px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-family: var(--font-main); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-add-cart:hover { background: var(--color-primary-dark); }
-    .btn-add-cart:disabled { background: #94a3b8; cursor: not-allowed; }
-
-    .payment-badges { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 0.75rem; color: #64748b; padding: 10px 14px; background: var(--color-surface); border-radius: 6px; border: 1px solid #e2e8f0; }
-    .payment-badge { display: flex; align-items: center; gap: 4px; }
-
-    .trust-signals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 14px 16px; background: #F8FAFC; border: 1px solid #e2e8f0; border-radius: 8px; }
-    .trust-signals-mobile { display: none; }
-    .trust-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; color: #1E293B; white-space: nowrap; }
-    .trust-item svg { width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0; }
-
-    .custom-dimensions { display: none; }
-
-    .dim-diagram { background: #fff; border-radius: var(--radius); padding: 12px; margin-top: 12px; margin-bottom: 16px; text-align: center; border: 1px solid #e2e8f0; }
-    .dim-diagram img { width: 100%; height: auto; display: block; margin: 0 auto; }
-    .dim-diagram-caption { font-size: 0.75rem; color: #64748b; margin-top: 6px; }
-
-    .dim-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .dim-inputs.vberth { grid-template-columns: 1fr 1fr 1fr 1fr; }
-    .dim-inputs.vberth > :nth-child(1) { order: 1; }  /* Head Width */
-    .dim-inputs.vberth > :nth-child(4) { order: 2; }  /* Foot Width */
-    .dim-inputs.vberth > :nth-child(2) { order: 3; }  /* Centerline Length */
-    .dim-inputs.vberth > :nth-child(3) { order: 4; }  /* Depth */
-    .dim-field { display: flex; flex-direction: column; gap: 4px; }
-    .dim-field label { font-size: 0.75rem; font-weight: 600; color: #64748b; display: flex; align-items: center; gap: 4px; }
-    .dim-field input { padding: 12px 14px; border: 2px solid var(--color-border); border-radius: 8px; font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); width: 100%; box-sizing: border-box; min-height: 48px; }
-    .dim-field input:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; border-color: var(--color-primary); }
-    .dim-helper { font-size: 0.6875rem; color: #94a3b8; margin-top: 2px; line-height: 1.4; }
-    .dim-tooltip { position: relative; display: inline-flex; cursor: help; }
-    .dim-tooltip-icon { width: 14px; height: 14px; border-radius: 50%; background: #cbd5e1; color: #fff; font-size: 0.625rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .dim-tooltip:hover .dim-tooltip-icon { background: var(--color-primary); }
-    .dim-tooltip-text { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1E293B; color: #fff; font-size: 0.75rem; font-weight: 400; padding: 10px 14px; border-radius: 6px; white-space: normal; width: 260px; text-align: left; line-height: 1.5; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.15s ease, visibility 0.15s ease; z-index: 10; }
-    .dim-tooltip:hover .dim-tooltip-text { opacity: 1; visibility: visible; }
-    .unit-toggle { display: flex; gap: 0; border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; width: fit-content; }
-    .unit-btn { padding: 8px 16px; border: none; background: #fff; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #64748b; font-family: var(--font-main); transition: all 0.15s; }
-    .unit-btn.active { background: var(--color-primary); color: #fff; }
-
-    .info-matrix { margin-top: 10px; }
-    .info-tabs { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
-    .info-tab { min-height: 48px; border: 2px solid #dbe3ee; border-radius: 8px; background: #fff; color: #1E293B; font-weight: 700; font-size: 0.9375rem; transition: border-color .15s, background-color .15s; }
-    .info-tab:hover { border-color: var(--color-primary); }
-    .info-tab.active { border: 2px solid var(--color-primary); background: #eff6ff; color: var(--color-primary); }
-    .info-panel { display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; }
-    .info-panel.active { display: block; }
-    .info-panel h3 { font-size: 1.125rem; font-weight: 700; color: #1E293B; margin-bottom: 12px; }
-    .info-panel p { color: #64748b; line-height: 1.7; margin-bottom: 12px; }
-    .info-panel ul { padding-left: 20px; margin-bottom: 16px; }
-    .info-panel ul li { margin-bottom: 6px; color: #64748b; line-height: 1.5; list-style: disc; }
-    .faq-item { border: 1px solid #e2e8f0; border-radius: 8px; background: #F8FAFC; padding: 12px 14px; margin-bottom: 10px; }
-    .faq-item summary { font-size: 0.875rem; font-weight: 700; color: #1E293B; cursor: pointer; }
-    .faq-item p, .faq-item ul { margin-top: 8px; margin-bottom: 0; }
-
-    /* --- Phase 6: Reviews — now after fabric comparison in markup, positioned naturally --- */
-    .reviews-section { margin-top: 48px; }
-    .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .reviews-header h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); }
-    .reviews-summary { display: flex; align-items: center; gap: 16px; background: #fff; padding: 20px 24px; border-radius: var(--radius); margin-bottom: 32px; width: 100%; box-sizing: border-box; border: 1px solid #e2e8f0; box-shadow: var(--shadow); }
-    .summary-score { font-size: 3rem; font-weight: 700; color: var(--color-text); line-height: 1; }
-    .summary-detail { flex: 1; }
-    .summary-stars { color: #f59e0b; font-size: 1.25rem; margin-bottom: 4px; }
-    .summary-text { font-size: 0.875rem; color: #64748b; }
-    .review-card { background: #fff; border-radius: var(--radius); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid #e2e8f0; }
-    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .review-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--color-primary); color: #fff; font-weight: 700; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
-    .review-meta { flex: 1; }
-    .review-name { font-weight: 700; color: var(--color-text); font-size: 0.9375rem; }
-    .review-country { font-size: 0.8125rem; color: #64748b; }
-    .review-stars { color: #f59e0b; font-size: 0.875rem; }
-    .review-text { color: #64748b; line-height: 1.7; font-size: 0.9375rem; }
-    .review-photo { width: 100%; aspect-ratio: 1/1; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; background: var(--color-surface); }
-    .review-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .review-text-wrap { max-height: 160px; overflow: hidden; position: relative; }
-    .review-text-wrap.expanded { max-height: none; }
-    .review-show-more { display: inline-block; font-size: 0.8125rem; font-weight: 600; color: var(--color-primary); background: none; border: none; cursor: pointer; padding: 4px 0 8px; font-family: var(--font-main); }
-    .review-show-more:hover { text-decoration: underline; }
-    .review-product { font-size: 0.8125rem; color: #64748b; margin-top: 8px; }
-
-    .related-section { margin-top: 64px; }
-    .related-section h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-text); margin-bottom: 24px; }
-    .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .related-card { background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid #e2e8f0; transition: transform 0.2s, box-shadow 0.2s; }
-    .related-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-    .related-card .card-image { position: relative; overflow: hidden; }
-    .related-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-    .related-card .card-body { padding: 16px; }
-    .related-card .card-title { font-size: 0.875rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; line-height: 1.3; }
-    .related-card .card-price { font-size: 0.9375rem; font-weight: 700; color: var(--color-primary); }
-    .related-card .card-price-note { font-size: 0.75rem; color: #94a3b8; }
-
-    .tag-pill { display: inline-flex; align-items: center; padding: 5px 12px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 999px; font-size: 0.75rem; font-weight: 600; color: var(--color-text); text-decoration: none; transition: all 0.2s; }
-    .tag-pill:hover { border-color: var(--color-primary); color: var(--color-primary); background: #eff6ff; }
-
-    /* Marine shape selector */
-    .marine-shape-section { margin-bottom: 20px; }
-    .shape-guide img, .shape-guide svg { display: block; }
-    .shape-select { width: 100%; padding: 12px 14px; border: 2px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-    .field-foot { display: none; }
-    .field-foot.visible { display: block; }
-    .dim-inputs.vberth .field-foot { display: block; }
-
-    /* --- Phase 4: Mobile Optimization --- */
-    @media (max-width: 1024px) {
-      .product-layout { grid-template-columns: 1fr; gap: 32px; }
-      .product-gallery { position: static; }
-      .product-info { height: auto; max-height: none; overflow: visible; padding-right: 0; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .reviews-grid { grid-template-columns: 1fr; }
-      .dim-inputs.vberth { grid-template-columns: 1fr 1fr; }
-      .trust-signals-desktop { grid-template-columns: 1fr 1fr; }
-
+    @media(max-width:640px){
+      .product-layout{grid-template-columns:1fr;gap:16px;padding:24px 16px 24px}
+      .product-gallery{position:static;width:100%}
+      .product-title{font-size:1.75rem}
+      .pricing-panel{padding:12px;margin-bottom:12px}
+      .panel-section{margin-bottom:12px;padding:12px}
+      .price-summary{padding:12px 14px}
+      .dim-inputs{grid-template-columns:1fr}
+      .trust-signals-mobile{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px 12px;margin-bottom:16px}
+      .trust-signals-mobile .trust-item{flex-direction:column;text-align:center;gap:4px;font-size:0.75rem;font-weight:700}
+      .trust-signals-mobile .trust-item svg{width:18px;height:18px}
+      .carousel-thumbs{display:flex;gap:12px;overflow-x:auto;padding:10px 2px 2px}
+      .carousel-thumbs::-webkit-scrollbar{display:none}
+      .carousel-prev,.carousel-next{display:none}
+      .trust-signals-desktop-wrap{display:none}
+      .trust-signals-desktop{display:none}
+      .desktop-cta-sticky{position:static;margin-top:8px;padding:0;border-top:none;background:transparent}
+      .desktop-cta-sticky .price-block{border-top:1px solid #e2e8f0;padding-top:20px}
+      .related-grid{grid-template-columns:repeat(2,1fr)}
+      .mobile-cta-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #e2e8f0;padding:12px 16px;z-index:200;display:flex;gap:12px;align-items:center;box-shadow:0 -4px 16px rgba(0,0,0,0.10)}
+      .mobile-cta-bar .cta-price{flex:1;font-weight:700;font-size:0.9375rem;color:var(--color-text)}
+      .mobile-cta-bar .cta-btn{padding:12px 24px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius);font-weight:700;font-size:0.9375rem;font-family:var(--font-main);cursor:pointer;white-space:nowrap;transition:background 0.15s}
+      .mobile-cta-bar .cta-btn:hover{background:var(--color-primary-dark)}
+      .mobile-cta-bar .cta-btn:disabled{background:#94a3b8;cursor:not-allowed}
     }
-
-    @media (max-width: 640px) {
-      .product-layout { grid-template-columns: 1fr; gap: 16px; padding: 24px 16px 24px; }
-      .product-gallery { position: static; width: 100%; }
-      .product-title { font-size: 1.75rem; }
-      .pricing-panel { padding: 12px; margin-bottom: 12px; }
-      .panel-section { margin-bottom: 12px; padding: 12px; }
-      .price-summary { padding: 12px 14px; }
-      .dim-inputs { grid-template-columns: 1fr 1fr; }
-      .dim-inputs.vberth { grid-template-columns: 1fr 1fr; }
-      .color-selector { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 4px; max-width: none; }
-      .color-option { flex-shrink: 0; }
-      .carousel-thumbs { display: flex; gap: 12px; overflow-x: auto; padding: 10px 2px 2px; }
-      .carousel-thumbs::-webkit-scrollbar { display: none; }
-      .carousel-prev, .carousel-next { display: none; }
-      .trust-signals-desktop-wrap { display: none; }
-      .trust-signals-desktop { display: none; }
-      .trust-signals-mobile { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; padding: 10px 12px; margin-bottom: 16px; }
-      .trust-signals-mobile .trust-item { flex-direction: column; text-align: center; gap: 4px; font-size: 0.75rem; font-weight: 700; }
-      .trust-signals-mobile .trust-item svg { width: 18px; height: 18px; }
-      .info-matrix { margin-top: 0; }
-      .desktop-cta-sticky { position: static; margin-top: 8px; padding: 0; border-top: none; background: transparent; }
-      .desktop-cta-sticky .price-block { border-top: 1px solid #e2e8f0; padding-top: 20px; }
-
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .trust-item { font-size: 0.75rem; }
-      .selection-pills { grid-template-columns: 1fr 1fr; max-height: none; }
-      .size-options-grid { grid-template-columns: 1fr 1fr; }
-
-      /* Mobile sticky CTA bar */
-      .mobile-cta-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid #e2e8f0; padding: 12px 16px; z-index: 200; display: flex; gap: 12px; align-items: center; box-shadow: 0 -4px 16px rgba(0,0,0,0.10); }
-      .mobile-cta-bar .cta-price { flex: 1; font-weight: 700; font-size: 0.9375rem; color: var(--color-text); }
-      .mobile-cta-bar .cta-price .cta-price-strike { text-decoration: line-through; color: #94a3b8; font-size: 0.8125rem; margin-right: 6px; }
-      .mobile-cta-bar .cta-price .cta-price-sale { color: #16a34a; }
-      .mobile-cta-bar .cta-btn { padding: 12px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-weight: 700; font-size: 0.9375rem; font-family: var(--font-main); cursor: pointer; white-space: nowrap; transition: background 0.15s; }
-      .mobile-cta-bar .cta-btn:hover { background: var(--color-primary-dark); }
-      .mobile-cta-bar .cta-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-    }
-
-    @media (max-width: 480px) {
-      .reviews-grid { grid-template-columns: 1fr; }
-      .dim-inputs { grid-template-columns: 1fr; }
-      .dim-inputs.vberth { grid-template-columns: 1fr; }
-      .related-grid { grid-template-columns: 1fr; }
-      .trust-signals-mobile { grid-template-columns: repeat(4, minmax(0,1fr)); }
-      .selection-pills { grid-template-columns: 1fr; }
-      .size-options-grid { grid-template-columns: 1fr; }
+    @media(max-width:480px){
+      .dim-inputs{grid-template-columns:1fr}
+      .related-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -350,68 +203,78 @@
         <p class="product-tagline">Custom-fitted for V-berth, sailboat, and yacht bunks. OEKO-TEX certified. Stays put in rough seas.</p>
         <div class="price-summary" id="price-summary">
           <div class="price-row">
-            <span class="price-label">Price</span>
-            <span class="price-value" id="price-display-top">USD 52.00</span>
+            <span class="price-label">Estimated Price</span>
+            <span class="price-value" id="price-display-top"> — </span>
           </div>
-          <span class="price-sub" id="price-top-sub">Starting from</span>
+          <span class="price-sub" id="price-top-sub">Enter your mattress dimensions below</span>
         </div>
         <div class="trust-signals trust-signals-mobile">
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>OEKO-TEX</div>
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7 9 18l-5-5"/></svg>Custom Fit</div>
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Human Safe</div>
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1 1 3 1 3-1 5-1 3 1 5 1 3-1 3-1"/><path d="M3 19h18"/><path d="M4 11c2-2 3-4 8-4s6 2 8 4"/></svg>Pet Resist</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top-Rated</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7L9 18l-5-5"/></svg>Custom Fit</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Worldwide</div>
         </div>
-        <div class="pricing-panel">
-          <div class="config-tabs">
-            <button class="config-tab active" data-tab="standard">Standard Sizes</button>
-            <button class="config-tab" data-tab="custom">Custom Quote</button>
+        <div class="pricing-panel" id="marine-configurator">
+          <!-- Shape Selector -->
+          <div class="panel-section">
+            <div class="panel-label">Choose Your Boat Mattress Shape</div>
+            <select class="shape-select" id="marine-shape-select">
+              <option value=""> — Select a shape — </option>
+            </select>
           </div>
-          <div class="panel-section marine-shape-section"><div class="panel-label">Choose Your Berth Shape</div><div class="shape-guide" style="margin-bottom:16px; border:1px solid var(--color-border); border-radius:var(--radius); overflow:hidden;"><img src="/images/products/marine-fitted-sheet/005-Measure-04.png" alt="Marine Berth Shape Guide — Shapes A through I" style="width:100%; height:auto; display:block;"></div><select class="shape-select" id="marine-shape-select" style="width:100%; padding:12px 14px; border:2px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); font-size:0.9375rem; color:var(--color-text); background:#fff; cursor:pointer; appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center;"><option value=""> — Select shape — </option><option value="A" data-price="94" data-length-min="180" data-length-max="220" data-head-min="135" data-head-max="210" data-foot-min="30" data-foot-max="90" data-type="vberth">A  —  V-Berth Narrow Foot ($94)</option><option value="B" data-price="111" data-length-min="180" data-length-max="220" data-head-min="135" data-head-max="210" data-foot-min="70" data-foot-max="120" data-type="vberth">B  —  V-Berth Wide Foot ($111)</option><option value="C" data-price="125" data-length-min="180" data-length-max="230" data-head-min="170" data-head-max="240" data-foot-min="50" data-foot-max="110" data-type="vberth">C  —  V-Berth King Size ($125)</option><option value="D" data-price="125" data-length-min="180" data-length-max="220" data-head-min="115" data-head-max="175" data-foot-min="" data-foot-max="" data-type="round">D  —  Double Round End ($125)</option><option value="E" data-price="138" data-length-min="180" data-length-max="230" data-head-min="135" data-head-max="210" data-foot-min="" data-foot-max="" data-type="round">E  —  King Size Round End ($138)</option><option value="F" data-price="110" data-length-min="180" data-length-max="220" data-head-min="60" data-head-max="120" data-foot-min="30" data-foot-max="70" data-type="complex">F  —  Single Quarter Berth ($110)</option><option value="G" data-price="108" data-length-min="180" data-length-max="220" data-head-min="120" data-head-max="180" data-foot-min="125" data-foot-max="190" data-type="complex">G  —  Cut Off Corner ($108)</option><option value="H" data-price="132" data-length-min="180" data-length-max="220" data-head-min="50" data-head-max="180" data-foot-min="50" data-foot-max="100" data-type="complex">H  —  Octagonal Berth ($132)</option><option value="I" data-quote-only="1" data-length-min="" data-length-max="" data-head-min="" data-head-max="" data-foot-min="" data-foot-max="" data-type="custom">I  —  Custom / Template (Custom Quote)</option></select><div class="shape-dims-hint" id="shape-dims-hint" style="font-size:0.8125rem; color:#888; margin-top:8px;"></div></div>
-          <div class="panel-label">Fabric</div><div class="specs-grid"><div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value">CloudSoft</div></div><div class="spec-item"><div class="spec-label">Drying</div><div class="spec-value">Quick-Dry</div></div><div class="spec-item"><div class="spec-label">Climate</div><div class="spec-value">Moisture-Wicking</div></div><div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">100% Long-Staple Cotton</div></div></div>
-          <div class="panel-section fabric-color-group" data-fabric="breezeplus" style="display:none"><div class="panel-label">Color — BreezePlus</div><div class="color-selector"><div class="color-option selected" data-color="dark-grey" style="background:#4D545B;" title="Dark Grey"></div><div class="color-option" data-color="silver" style="background:#B7BEC8;" title="Silver"></div><div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div><div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div><div class="color-option" data-color="emerald" style="background:#618283;" title="Emerald"></div><div class="color-option" data-color="sea" style="background:#5A7DA2;" title="Sea"></div><div class="color-option" data-color="pure-white" style="background:#FFFFFF; border:2px solid #ccc;" title="Pure White"></div><div class="color-option" data-color="baby-pink" style="background:#E9B7BF;" title="Baby Pink"></div><div class="color-option" data-color="ivory" style="background:#F1EFE1;" title="Ivory"></div></div></div><div class="panel-section fabric-color-group" data-fabric="cloudsoft"><div class="panel-label">Color — CloudSoft</div><div class="color-selector"><div class="color-option selected" data-color="mint" style="background:#67E4D3;" title="Mint"></div><div class="color-option" data-color="charcoal" style="background:#5E5E5E;" title="Charcoal"></div><div class="color-option" data-color="grey" style="background:#A5A9B4;" title="Grey"></div><div class="color-option" data-color="sapphire" style="background:#385E9D;" title="Sapphire"></div><div class="color-option" data-color="forest" style="background:#486C6A;" title="Forest"></div><div class="color-option" data-color="denim" style="background:#1E4477;" title="Denim"></div><div class="color-option" data-color="rosegold" style="background:#D48C98;" title="RoseGold"></div><div class="color-option" data-color="beige" style="background:#E1D1B1;" title="Beige"></div><div class="color-option" data-color="ovaltine" style="background:#B99F87;" title="Ovaltine"></div><div class="color-option" data-color="white" style="background:#FFFFFF;" title="White"></div><div class="color-option" data-color="lavender" style="background:#9581B1;" title="Lavender"></div><div class="color-option" data-color="olive" style="background:#93B09D;" title="Olive"></div></div></div><div class="panel-section fabric-color-group" data-fabric="premacotton" style="display:none"><div class="panel-label">Color — PremaCotton</div><div class="color-selector"><div class="color-option selected" data-color="snow-white" style="background:#ffffff; border:2px solid #ccc;" title="Snow White"></div></div></div><div class="panel-section fabric-color-group" data-fabric="ecoluxe" style="display:none"><div class="panel-label">Color — EcoLuxe</div><div class="color-selector"><div class="color-option selected" data-color="vanilla-linen" style="background:#f3e5ab;" title="Vanilla Linen"></div></div></div>
-          <div class="config-tab-content active" id="tab-standard">
-            <div class="panel-section">
-              <div id="sale-info"></div>
-              <div class="panel-label">Select Mattress Size</div>
-              <select class="size-select" id="size-select">
-                <option value=""> — Choose size — </option>
-              </select>
-              <div class="size-hint"><a href="/sizeguide/">View full size guide</a></div>
+          <!-- Schematic Diagram -->
+          <div class="shape-guide" id="shape-guide-wrap">
+            <img src="" alt="Shape diagram" id="shape-guide-img" style="display:none;">
+            <div class="shape-guide-caption" id="shape-caption" style="display:none;"></div>
+            <div id="shape-guide-placeholder" style="padding:40px 20px;text-align:center;color:#94a3b8;font-size:0.875rem;">
+              Select a shape above to see the measurement diagram
             </div>
           </div>
-          <div class="config-tab-content" id="tab-custom">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-              <strong style="font-size:0.9375rem;">Enter your exact mattress dimensions</strong>
-              <div class="unit-toggle">
-                <button class="unit-btn active" id="unit-cm">cm</button>
-                <button class="unit-btn" id="unit-in">inch</button>
-              </div>
-            </div>
-            <div class="dim-diagram">
-              <img src="/images/products/common/measure-VBerth-diagram.png" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)">
-              <p class="dim-diagram-caption">Measure your mattress at its widest, longest, and deepest points</p>
-            </div>
-            <div class="dim-inputs vberth">
-              <div class="dim-field"><label for="dim-width">Width (W)</label><input type="number" id="dim-width" placeholder="e.g. 153" min="30" max="300"></div>
-              <div class="dim-field"><label for="dim-length">Length (L)</label><input type="number" id="dim-length" placeholder="e.g. 203" min="30" max="300"></div>
-              <div class="dim-field"><label for="dim-depth">Depth (D)</label><input type="number" id="dim-depth" placeholder="e.g. 30" min="5" max="60"></div>
-              <div class="dim-field field-foot" id="field-foot-width"><label for="dim-foot-width">Foot Width (FW)</label><input type="number" id="dim-foot-width" placeholder="e.g. 75" min="10" max="200"></div>
-            </div>
-            <div class="price-row" style="margin-bottom:12px;">
-              <span class="price-label">Estimated price</span>
-              <span class="price-value" id="custom-price" style="font-size:1.5rem;"> — </span>
+          <!-- Coming Soon Message -->
+          <div class="shape-coming-soon" id="shape-coming-soon" style="display:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>This shape's measurement form is coming soon. In the meantime, please contact us directly for a custom quote.</span>
+          </div>
+          <!-- CloudSoft Fabric Badge -->
+          <div class="fabric-badge">CloudSoft — Marine Edition</div>
+          <div class="specs-grid">
+            <div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value">CloudSoft</div></div>
+            <div class="spec-item"><div class="spec-label">Drying</div><div class="spec-value">Quick-Dry</div></div>
+            <div class="spec-item"><div class="spec-label">Climate</div><div class="spec-value">Moisture-Wicking</div></div>
+            <div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">100% Cotton</div></div>
+          </div>
+          <!-- Dimension Inputs (dynamic per shape) -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <strong style="font-size:0.9375rem;">Enter your exact mattress dimensions</strong>
+            <div class="unit-toggle">
+              <button class="unit-btn active" id="unit-cm">cm</button>
+              <button class="unit-btn" id="unit-in">inch</button>
             </div>
           </div>
+          <div class="dim-inputs" id="dim-inputs-container">
+            <!-- Populated by JS -->
+          </div>
+          <div id="bf-note" style="display:none; font-size:0.75rem; color:#64748b; margin-bottom:8px; font-style:italic;">Cut corner fields (B, F) are for measurement verification only — they do not affect pricing.</div>
+          <div class="area-warning" id="area-warning" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#b91c1c; font-size:0.875rem; font-weight:600; line-height:1.5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
+          </div>
+          <div class="price-row" style="margin-bottom:12px;">
+            <span class="price-label">Estimated Price</span>
+            <span class="price-value" id="custom-price" style="font-size:1.5rem;"> — </span>
+          </div>
+          <!-- Color Selector -->
+          
           <div class="desktop-cta-sticky">
             <div class="price-block">
               <div class="price-row">
                 <span class="price-label">Price</span>
-                <span class="price-value" id="price-display">USD 52.00</span>
+                <span class="price-value" id="price-display"> — </span>
               </div>
             </div>
             <button class="btn-add-cart" id="add-to-cart" disabled>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-              Add to Cart
+              Custom Quote
             </button>
           </div>
           <div class="payment-badges">
@@ -421,7 +284,7 @@
         </div>
       </div>
     </div>
-    <div class="container trust-signals-desktop-wrap" style="max-width:1280px; padding:0 24px 28px;">
+    <div class="container trust-signals-desktop-wrap" style="max-width:1280px;padding:0 24px 28px;">
       <div class="trust-signals trust-signals-desktop">
         <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div>
         <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div>
@@ -429,7 +292,7 @@
         <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div>
       </div>
     </div>
-    <div class="container" style="max-width:1280px; padding:0 24px;">
+    <div class="container" style="max-width:1280px;padding:0 24px;">
       <div class="info-matrix">
         <div class="info-tabs">
           <button class="info-tab active" type="button" data-info-tab="description">Description</button>
@@ -438,38 +301,17 @@
         <div class="info-panel active" id="info-panel-description">
           <h3>Custom-Fitted for Marine V-Berth &amp; Sailboat Bunks</h3>
           <p>Boat mattresses are anything but standard  -  V-berths, sailboat bunks, and yacht cabins demand custom-fitted sheets that won't slip, bunch, or come loose when the seas get rough. CloudSoft is engineered to handle the marine environment: quick-dry, moisture-wicking, and stays secure with our full-perimeter elastic.</p>
-          <ul>
-            <li>Custom-made to your exact W  —  L  —  D mattress dimensions</li><li>Full-perimeter elastic for a secure, non-slip fit</li><li>Quick-dry after washing  -  ready by morning</li><li>Moisture-wicking for damp marine environments</li><li>OEKO-TEX certified  -  no toxic dye or finish</li><li>Available in 4 marine-appropriate colors</li>
-          </ul>
+          <ul><li>Custom-made to your exact W  —  L  —  D mattress dimensions</li><li>Full-perimeter elastic for a secure, non-slip fit</li><li>Quick-dry after washing  -  ready by morning</li><li>Moisture-wicking for damp marine environments</li><li>OEKO-TEX certified  -  no toxic dye or finish</li><li>Available in 4 marine-appropriate colors</li></ul>
           <h3>CloudSoft — Marine Edition</h3>
           <p>CloudSoft is engineered for marine environments with quick-dry, moisture-wicking properties. Full-perimeter elastic keeps the sheet secure in rough seas. OEKO-TEX certified with no toxic dye or finish.</p>
-          <ul>
-            <li>Quick-dry — ready by morning</li><li>Moisture-wicking for damp marine environments</li><li>Full-perimeter elastic — secure in rough seas</li><li>OEKO-TEX certified</li><li>4 marine-appropriate colors</li>
-          </ul>
+          <ul><li>Quick-dry — ready by morning</li><li>Moisture-wicking for damp marine environments</li><li>Full-perimeter elastic — secure in rough seas</li><li>OEKO-TEX certified</li><li>4 marine-appropriate colors</li></ul>
         </div>
         <div class="info-panel" id="info-panel-faq">
-          <details class="faq-item" open>
-            <summary>How do I pick the right size?</summary>
-            <p>Use our <a href="/sizeguide/">size guide</a> for standard sizes, or use the custom dimensions form for made-to-order sizing.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Can I order a custom size?</summary>
-            <p>Yes. Click <strong>Custom Size</strong>, enter your dimensions, and submit a custom quote request.</p>
-          </details>
-          <details class="faq-item">
-            <summary>What fabric and care details should I know?</summary>
-            <ul>
-              <li>Machine wash cold (30°C / 86°F)  -  gentle cycle</li><li>Do not bleach  -  mild detergent only</li><li>Tumble dry low or hang dry</li><li>No ironing needed  -  wrinkle-resistant by design</li><li>Quick-dry  -  ready within hours, not days</li>
-            </ul>
-          </details>
-          <details class="faq-item">
-            <summary>How long does shipping take?</summary>
-            <p>Production is made-to-order in Thailand. Delivery timing varies by destination and will be confirmed in your quote/order email.</p>
-          </details>
+          <details class="faq-item" open><summary>What fabric and care details should I know?</summary><ul><li>Machine wash cold (30°C / 86°F)  -  gentle cycle</li><li>Do not bleach  -  mild detergent only</li><li>Tumble dry low or hang dry</li><li>No ironing needed  -  wrinkle-resistant by design</li><li>Quick-dry  -  ready within hours, not days</li></ul></details><details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for a secure fitted-sheet fit.</p></details><details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each sheet is custom-made to your exact shape and dimensions. Production takes 5–7 business days. Shipping times vary by destination — you'll receive a tracking number once dispatched.</p></details><details class="faq-item"><summary>What if my shape isn't listed?</summary><p>Choose the closest shape and add notes in the quote form — we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>
         </div>
       </div>
     </div>
-    <div class="container" id="reviews" style="max-width:1280px; padding:0 24px;">
+    <div class="container" id="reviews" style="max-width:1280px;padding:0 24px;">
       <div class="reviews-section">
         <div class="reviews-header"><h2>Customer Reviews</h2></div>
         <div class="reviews-summary" id="product-review-summary">
@@ -479,7 +321,7 @@
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
-        <div class="reviews-carousel-wrapper" id="product-reviews-wrapper" style="padding:0 44px; position:relative;">
+        <div class="reviews-carousel-wrapper" id="product-reviews-wrapper" style="padding:0 44px;position:relative;">
           <button class="carousel-arrow carousel-prev reviews-prev" aria-label="Previous review" style="left:0;">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
@@ -491,17 +333,15 @@
         <div class="rc-dots" id="product-review-dots"></div>
       </div>
     </div>
-    <div class="container" style="max-width:1280px; padding:0 24px;">
+    <div class="container" style="max-width:1280px;padding:0 24px;">
       <div class="related-section">
         <h2>You might also like</h2>
-        <div class="related-grid">
-          <a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/rv-truck-mattress-encasement/" class="related-card"><div class="card-image"><img src="/images/products/rv-truck-mattress-encasement/main.jpg" alt="RV & Truck Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">RV & Truck Mattress Encasement</div><div class="card-price">From USD 58.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillow-protector-general/" class="related-card"><div class="card-image"><img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Pillow Protector</div><div class="card-price">From USD 18.00</div><div class="card-price-note">CloudSoft</div></div></a>
-        </div>
+        <div class="related-grid"><a href="/product/mattress-encasement-general/" class="related-card"><div class="card-image"><img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">6-Sided Mattress Encasement</div><div class="card-price">From USD 55.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/rv-truck-mattress-encasement/" class="related-card"><div class="card-image"><img src="/images/products/rv-truck-mattress-encasement/main.jpg" alt="RV & Truck Mattress Encasement" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">RV & Truck Mattress Encasement</div><div class="card-price">From USD 58.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillow-protector-general/" class="related-card"><div class="card-image"><img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Pillow Protector</div><div class="card-price">From USD 18.00</div><div class="card-price-note">CloudSoft</div></div></a></div>
       </div>
     </div>
-    <div class="container" style="max-width:1280px; padding:0 24px 64px;">
-      <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-        <span style="font-size:0.75rem; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">Tags:</span>
+    <div class="container" style="max-width:1280px;padding:0 24px 64px;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <span style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;">Tags:</span>
         <a href="/sheets/" class="tag-pill">Sheets</a><a href="/marine/" class="tag-pill">Marine &amp; Yacht</a>
       </div>
     </div>
@@ -511,367 +351,1058 @@
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
-  <script src="/js/product-sizes.js"></script>
   <script src="/js/campaign-state.js?v=20260601"></script>
-  <script src="/js/product-configurator.js"></script>
   <script src="/js/reviews-carousel.js"></script>
-    <div class="mobile-cta-bar" id="mobile-cta-bar">
-      <span class="cta-price" id="mobile-cta-price">USD 52.00</span>
-      <button class="cta-btn" id="mobile-add-to-cart" disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        Add to Cart
-      </button>
-    </div>
-    <script>
-      /* Mobile CTA — persistent bottom bar */
-      (function() {
-        var bar = document.getElementById('mobile-cta-bar');
-        var desktopBtn = document.getElementById('add-to-cart');
-        var mobileBtn = document.getElementById('mobile-add-to-cart');
-        var priceDisplay = document.getElementById('price-display');
-        var mobilePrice = document.getElementById('mobile-cta-price');
-        if (!bar || !desktopBtn || !mobileBtn) return;
-
-        // 2. Sync price from desktop (including sale HTML)
-        if (priceDisplay && mobilePrice) {
-          var priceObserver = new MutationObserver(function() {
-            mobilePrice.innerHTML = priceDisplay.innerHTML;
-          });
-          priceObserver.observe(priceDisplay, { childList: true, characterData: true, subtree: true });
-          mobilePrice.innerHTML = priceDisplay.innerHTML;
-        }
-        // 3. Sync disabled state and button text
-        if (desktopBtn && mobileBtn) {
-          var disabledObserver = new MutationObserver(function() {
-            mobileBtn.disabled = desktopBtn.disabled;
-          });
-          disabledObserver.observe(desktopBtn, { attributes: true, attributeFilter: ['disabled'] });
-          mobileBtn.disabled = desktopBtn.disabled;
-          var textObserver = new MutationObserver(function() {
-            mobileBtn.innerHTML = desktopBtn.innerHTML;
-          });
-          textObserver.observe(desktopBtn, { childList: true, characterData: true, subtree: true });
-          mobileBtn.innerHTML = desktopBtn.innerHTML;
-        }
-        // 4. Mobile CTA click → trigger desktop Add to Cart
-        if (mobileBtn && desktopBtn) {
-          mobileBtn.addEventListener('click', function() {
-            desktopBtn.click();
-          });
-        }
-      })();
-
-
-      // ── Favorite Toggle ──
-      var productSlug = 'marine-fitted-sheet';
-      var productName = 'Marine Fitted Sheet';
-
-      function updateFavUI() {
-        var btn = document.getElementById('fav-btn');
-        var toast = document.getElementById('fav-toast');
-        if (!btn) return;
-        var isFav = MildMateCampaigns.isFavorite(productSlug);
-        btn.innerHTML = isFav ? '♥' : '♡';
-        btn.className = isFav ? 'favorite-btn active' : 'favorite-btn';
-        btn.title = isFav ? 'Remove from favorites' : 'Save to favorites';
+  <div class="mobile-cta-bar" id="mobile-cta-bar">
+    <span class="cta-price" id="mobile-cta-price"> — </span>
+    <button class="cta-btn" id="mobile-add-to-cart" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Custom Quote
+    </button>
+  </div>
+  <script>
+    /* ── Mobile CTA sync ── */
+    (function(){
+      var bar=document.getElementById('mobile-cta-bar');
+      var desktopBtn=document.getElementById('add-to-cart');
+      var mobileBtn=document.getElementById('mobile-add-to-cart');
+      var priceDisplay=document.getElementById('price-display');
+      var mobilePrice=document.getElementById('mobile-cta-price');
+      if(!bar||!desktopBtn||!mobileBtn)return;
+      if(priceDisplay&&mobilePrice){
+        var priceObserver=new MutationObserver(function(){mobilePrice.innerHTML=priceDisplay.innerHTML});
+        priceObserver.observe(priceDisplay,{childList:true,characterData:true,subtree:true});
+        mobilePrice.innerHTML=priceDisplay.innerHTML;
       }
+      if(desktopBtn&&mobileBtn){
+        var disabledObserver=new MutationObserver(function(){mobileBtn.disabled=desktopBtn.disabled});
+        disabledObserver.observe(desktopBtn,{attributes:true,attributeFilter:['disabled']});
+        mobileBtn.disabled=desktopBtn.disabled;
+        var textObserver=new MutationObserver(function(){mobileBtn.innerHTML=desktopBtn.innerHTML});
+        textObserver.observe(desktopBtn,{childList:true,characterData:true,subtree:true});
+        mobileBtn.innerHTML=desktopBtn.innerHTML;
+      }
+      if(mobileBtn&&desktopBtn){mobileBtn.addEventListener('click',function(){desktopBtn.click()})}
+    })();
 
-      window.toggleFavoriteProduct = async function() {
-        // Optimistic local toggle — instant UI feedback
-        var isFav = MildMateCampaigns.toggleFavorite(productSlug, productName);
-        updateFavUI();
-        var toast = document.getElementById('fav-toast');
-        if (toast) {
-          if (isFav) {
-            var offer = MildMateCampaigns.getOffers().favorite || 15;
-            toast.textContent = '♥ Saved!';
-            toast.style.color = '#dc2626';
-          } else {
-            toast.textContent = '';
-          }
+    /* ── Favorite Toggle ── */
+    var productSlug='marine-fitted-sheet';
+    var productName='Marine Fitted Sheet';
+    function updateFavUI(){
+      var btn=document.getElementById('fav-btn');
+      var toast=document.getElementById('fav-toast');
+      if(!btn)return;
+      var isFav=MildMateCampaigns.isFavorite(productSlug);
+      btn.innerHTML=isFav?'♥':'♡';
+      btn.className=isFav?'favorite-btn active':'favorite-btn';
+      btn.title=isFav?'Remove from favorites':'Save to favorites';
+    }
+    window.toggleFavoriteProduct=async function(){
+      var isFav=MildMateCampaigns.toggleFavorite(productSlug,productName);
+      updateFavUI();
+      var toast=document.getElementById('fav-toast');
+      if(toast){toast.textContent=isFav?'♥ Saved!':'';toast.style.color='#dc2626'}
+      if(window.MildMateCampaigns&&typeof MildMateCampaigns.toggleFavoriteServer==='function'){
+        var result=await MildMateCampaigns.toggleFavoriteServer(productSlug,productName);
+        if(!result.ok){MildMateCampaigns.toggleFavorite(productSlug,productName);updateFavUI()}
+      }
+    };
+    async function hydrateFavorites(){
+      if(window.MildMateCampaigns&&typeof MildMateCampaigns.syncFavoritesFromServer==='function'){await MildMateCampaigns.syncFavoritesFromServer()}
+      updateFavUI();
+    }
+    hydrateFavorites();
+    window.addEventListener('clerk:signed-in',hydrateFavorites);
+    window.addEventListener('clerk:signed-out',updateFavUI);
+
+    /* ── Desktop columns sync ── */
+    (function(){
+      function syncDesktopColumnsHeight(){
+        var infoCol=document.querySelector('.product-info');
+        var mediaCol=document.querySelector('.product-gallery');
+        if(!infoCol||!mediaCol)return;
+        if(window.innerWidth<=1024){infoCol.style.removeProperty('--desktop-col-height');return}
+        var mediaHeight=Math.round(mediaCol.getBoundingClientRect().height);
+        if(mediaHeight>0)infoCol.style.setProperty('--desktop-col-height',mediaHeight+'px');
+      }
+      window.syncDesktopColumnsHeight=syncDesktopColumnsHeight;
+      window.addEventListener('load',syncDesktopColumnsHeight);
+      window.addEventListener('resize',syncDesktopColumnsHeight);
+      setTimeout(syncDesktopColumnsHeight,200);
+    })();
+  </script>
+
+  <script>
+    /* ── Image Carousel ── */
+    (function(){
+      var slug=location.pathname.split('/').filter(Boolean).pop();
+      var currentSlide=0;
+      var gallery=[];
+      function extractYouTubeId(url){
+        if(!url)return'';
+        var m=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        return m?m[1]:'';
+      }
+      function buildCarousel(){
+        var wrap=document.getElementById('carousel-wrap');
+        var track=document.getElementById('carousel-track');
+        var dotsWrap=document.getElementById('carousel-dots-wrap');
+        var thumbsWrap=document.getElementById('carousel-thumbs');
+        if(!wrap||!track||!gallery.length)return;
+        if(gallery.length===1){
+          var prevBtn=document.getElementById('carousel-prev');
+          var nextBtn=document.getElementById('carousel-next');
+          if(prevBtn)prevBtn.style.display='none';
+          if(nextBtn)nextBtn.style.display='none';
+          if(dotsWrap)dotsWrap.style.display='none';
+          if(thumbsWrap)thumbsWrap.style.display='none';
         }
-
-        // Background server sync
-        if (window.MildMateCampaigns && typeof MildMateCampaigns.toggleFavoriteServer === 'function') {
-          var result = await MildMateCampaigns.toggleFavoriteServer(productSlug, productName);
-          if (!result.ok) {
-            // Undo local toggle — server rejected it
-            MildMateCampaigns.toggleFavorite(productSlug, productName);
-            updateFavUI();
-            if (toast) {
-              toast.textContent = result.requiresAuth ? 'Please sign in to save favorites.' : 'Could not save favorite. Please try again.';
-              toast.style.color = '#dc2626';
+        track.innerHTML=gallery.map(function(item){
+          if(typeof item==='object'&&item.videoId){
+            var thumb='https://img.youtube.com/vi/'+item.videoId+'/hqdefault.jpg';
+            return '<div class="carousel-slide carousel-slide-video" data-video-id="'+item.videoId+'"><img class="yt-thumb" src="'+thumb+'" alt="Product video" width="480" height="360" loading="lazy"><div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
+          }
+          return '<div class="carousel-slide"><img src="'+item+'" alt="Product image" width="800" height="800" loading="eager"></div>';
+        }).join('');
+        dotsWrap.innerHTML=gallery.map(function(item,i){
+          return '<button class="carousel-dot'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="'+(typeof item==='object'&&item.videoId?'Video':'Image '+(i+1))+'"></button>';
+        }).join('');
+        if(thumbsWrap){
+          thumbsWrap.innerHTML=gallery.map(function(item,i){
+            if(typeof item==='object'&&item.videoId){
+              var thumb='https://img.youtube.com/vi/'+item.videoId+'/default.jpg';
+              return '<button class="carousel-thumb thumb-video'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Video thumbnail"><img src="'+thumb+'" alt="Video thumb" loading="lazy"></button>';
             }
-            if (result.requiresAuth && typeof signInWithClerk === 'function') signInWithClerk(window.location.href);
-            return;
-          }
-          // Server confirmed — no extra toast needed
+            return '<button class="carousel-thumb'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Thumbnail '+(i+1)+'"><img src="'+item+'" alt="Product thumbnail '+(i+1)+'" loading="lazy"></button>';
+          }).join('');
         }
+        track.addEventListener('click',function(e){
+          var slide=e.target.closest('.carousel-slide-video');
+          if(!slide)return;
+          var videoId=slide.getAttribute('data-video-id');
+          if(!videoId||slide.querySelector('iframe'))return;
+          slide.innerHTML='<iframe src="https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+        });
+        dotsWrap.querySelectorAll('.carousel-dot').forEach(function(dot){
+          dot.addEventListener('click',function(){goToSlide(parseInt(dot.getAttribute('data-idx'),10))});
+        });
+        if(thumbsWrap){
+          thumbsWrap.querySelectorAll('.carousel-thumb').forEach(function(thumb){
+            thumb.addEventListener('click',function(){goToSlide(parseInt(thumb.getAttribute('data-idx'),10))});
+          });
+        }
+        var prevBtn=document.getElementById('carousel-prev');
+        var nextBtn=document.getElementById('carousel-next');
+        if(prevBtn)prevBtn.addEventListener('click',function(){goToSlide(currentSlide-1)});
+        if(nextBtn)nextBtn.addEventListener('click',function(){goToSlide(currentSlide+1)});
+        var touchStartX=0;
+        wrap.addEventListener('touchstart',function(e){touchStartX=e.changedTouches[0].screenX},{passive:true});
+        wrap.addEventListener('touchend',function(e){
+          var dx=e.changedTouches[0].screenX-touchStartX;
+          if(Math.abs(dx)>50){if(dx<0)goToSlide(currentSlide+1);else goToSlide(currentSlide-1)}
+        },{passive:true});
+        goToSlide(0);
+        if(typeof window.syncDesktopColumnsHeight==='function')window.syncDesktopColumnsHeight();
+      }
+      function goToSlide(idx){
+        if(!gallery.length)return;
+        if(idx<0)idx=gallery.length-1;
+        if(idx>=gallery.length)idx=0;
+        currentSlide=idx;
+        var track=document.getElementById('carousel-track');
+        if(track){track.classList.remove('no-transition');track.style.transform='translateX(-'+(idx*100)+'%)'}
+        document.querySelectorAll('.carousel-dot').forEach(function(d){d.classList.remove('active')});
+        var dots=document.querySelectorAll('.carousel-dot');
+        if(dots[idx])dots[idx].classList.add('active');
+        var thumbs=document.querySelectorAll('.carousel-thumb');
+        thumbs.forEach(function(t){t.classList.remove('active')});
+        if(thumbs[idx]){thumbs[idx].classList.add('active');if(typeof thumbs[idx].scrollIntoView==='function'){thumbs[idx].scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}}
+      }
+      fetch('/api/products/'+slug)
+        .then(function(r){return r.json()})
+        .then(function(payload){
+          var p=payload&&(payload.product||payload);
+          if(!p)return;
+          var imgs=[];
+          try{imgs=JSON.parse(p.images||"[]")}catch(e){imgs=[]}
+          while(imgs.length<20)imgs.push("");
+          var fallback=p.image_url||"";
+          var heroImg=imgs[0]||fallback;
+          if(heroImg)gallery.push(heroImg);
+          var ytId=extractYouTubeId(p.youtube_url||'');
+          if(ytId)gallery.push({videoId:ytId});
+          for(var i=1;i<imgs.length;i++)if(imgs[i])gallery.push(imgs[i]);
+          if(!gallery.length&&fallback)gallery.push(fallback);
+          buildCarousel();
+          if(typeof window.syncDesktopColumnsHeight==='function')window.syncDesktopColumnsHeight();
+          if(p.description_en){
+            var descPanel=document.getElementById('info-panel-description');
+            if(descPanel)descPanel.innerHTML=p.description_en;
+          }
+        }).catch(function(){});
+    })();
+  </script>
+
+  <script>
+    /* ── Marine Shape Configurator ── */
+    (function(){
+      var shapes = [{"code":"01","name":"V-Berth – 4 Sides","schematic":"/images/BoatShapes/001_V-Berth.jpg","formula":"vberth-4sides"},{"code":"02","name":"V-Berth Cut Corner – 6 Sides","schematic":"/images/BoatShapes/002_V-Berth_CutCorner.jpg","formula":"vberth-cut-corner"},{"code":"03","name":"V-Berth Rounded Nose","schematic":"/images/BoatShapes/003_V-Berth_RoundedNose.jpg","formula":"vberth-rounded-nose"},{"code":"04","name":"V-Berth Split – 2 Pieces","schematic":"/images/BoatShapes/004_V-Berth_2Pieces.jpg","formula":"vberth-split"},{"code":"05","name":"Island 6 Sides / Hexagon Bunk","schematic":"/images/BoatShapes/005_HexagonBunk.jpg","formula":"island-6"},{"code":"06","name":"Island 7 Sides","schematic":"/images/BoatShapes/006_Island_7Sides.jpg","formula":"island-7"},{"code":"07","name":"Island 8 Sides / Octagon Bunk","schematic":"/images/BoatShapes/007_Island_8Sides.jpg","formula":"island-8"},{"code":"08","name":"Rectangle","schematic":"/images/BoatShapes/008_Rectangle.jpg","formula":"rectangle"},{"code":"09","name":"Rectangle Cut-Off Corner – 5 Sides","schematic":"/images/BoatShapes/009_Rectangle_CutOff.jpg","formula":"rect-cut-1"},{"code":"10","name":"Rectangle Two Cut-Off Corners – 6 Sides","schematic":"/images/BoatShapes/010_Rectangle_TwoCutOff.jpg","formula":"rect-cut-2"},{"code":"11","name":"Radius Corner Rectangle","schematic":"/images/BoatShapes/011_RadiusCorner.jpg","formula":"radius-rect"},{"code":"12","name":"Quarter Berth / Side Berth Tapered","schematic":"/images/BoatShapes/012_QuarterBerth.jpg","formula":"quarter-berth"},{"code":"13","name":"Aft Cabin Irregular Mattress","schematic":"/images/BoatShapes/013_AftCabin.jpg","formula":"aft-cabin"},{"code":"14","name":"Notched Mattress / Obstruction Cut-Out","schematic":"/images/BoatShapes/014_NotchedMattress.jpg","formula":"notched"}];
+
+      var shapeSelect = document.getElementById('marine-shape-select');
+      var guideImg = document.getElementById('shape-guide-img');
+      var guideCaption = document.getElementById('shape-caption');
+      var guidePlaceholder = document.getElementById('shape-guide-placeholder');
+      var comingSoon = document.getElementById('shape-coming-soon');
+      var dimsContainer = document.getElementById('dim-inputs-container');
+      var customPrice = document.getElementById('custom-price');
+      var priceDisplay = document.getElementById('price-display');
+      var priceDisplayTop = document.getElementById('price-display-top');
+      var priceTopSub = document.getElementById('price-top-sub');
+      var addToCartBtn = document.getElementById('add-to-cart');
+
+      /* Populate shape dropdown */
+      shapes.forEach(function(s){
+        var opt = document.createElement('option');
+        opt.value = s.code;
+        opt.textContent = s.code + '. ' + s.name + (s.comingSoon ? ' (Coming Soon)' : '');
+        if(s.comingSoon) opt.disabled = true;
+        shapeSelect.appendChild(opt);
+      });
+
+      /* ── Dimension field definitions per shape ── */
+      var shapeFields = {
+        '01': [
+          {id:'D',label:'Head Top (D) *',placeholder:'e.g. 180',required:true},
+          {id:'A',label:'Foot Bottom (A) *',placeholder:'e.g. 70',required:true},
+          {id:'L',label:'Center Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
+          {id:'B',label:'Left Side (B) — mirrors C',placeholder:'auto',optional:true},
+          {id:'C',label:'Right Side (C)',placeholder:'auto',optional:true}
+        ],
+        '02': [
+          {id:'D',label:'Head Top (D) *',placeholder:'e.g. 180',required:true},
+          {id:'A',label:'Foot Bottom (A) *',placeholder:'e.g. 70',required:true},
+          {id:'L',label:'Center Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
+          {id:'C',label:'Left Side (C) — mirrors E',placeholder:'auto',required:true},
+          {id:'E',label:'Right Side (E)',placeholder:'auto',required:true},
+          {id:'B',label:'Cut Corner L — foot (B) — mirrors F',placeholder:'auto',required:true},
+          {id:'F',label:'Cut Corner R — foot (F)',placeholder:'auto',required:true}
+        ],
+        '03': [
+          {id:'C',label:'Head Top — Rounded (C) *',placeholder:'e.g. 180',required:true},
+          {id:'A',label:'Foot Bottom (A) *',placeholder:'e.g. 70',required:true},
+          {id:'L',label:'Center Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
+          {id:'B',label:'Left Side (B) — mirrors D',placeholder:'auto',required:true},
+          {id:'D',label:'Right Side (D)',placeholder:'auto',required:true}
+        ],
+        '04': [
+          {id:'C',label:'Head Top — Left (C) * — mirrors E',placeholder:'e.g. 90',required:true},
+          {id:'E',label:'Head Top — Right (E) *',placeholder:'e.g. 90',required:true},
+          {id:'A',label:'Foot Bottom — Total (A) *',placeholder:'e.g. 180',required:true},
+          {id:'D',label:'Center Length (D) *',placeholder:'e.g. 210',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
+          {id:'B',label:'Left Side (B) — mirrors F',placeholder:'auto',required:true},
+          {id:'F',label:'Right Side (F)',placeholder:'auto',required:true}
+        ],
+        '05': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 80',required:true},
+          {id:'D',label:'Foot Bottom (D) *',placeholder:'e.g. 100',required:true},
+          {id:'B',label:'Left Upper (B) — mirrors F',placeholder:'e.g. 80',required:true},
+          {id:'F',label:'Right Upper (F)',placeholder:'e.g. 80',required:true},
+          {id:'C',label:'Left Lower (C) — mirrors E',placeholder:'e.g. 80',required:true},
+          {id:'E',label:'Right Lower (E)',placeholder:'e.g. 80',required:true},
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '06': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 70',required:true},
+          {id:'B',label:'Left Side 1 (B) — mirrors G',placeholder:'e.g. 70',required:true},
+          {id:'G',label:'Right Side 1 (G)',placeholder:'e.g. 70',required:true},
+          {id:'C',label:'Left Side 2 (C) — mirrors F',placeholder:'e.g. 70',required:true},
+          {id:'F',label:'Right Side 2 (F)',placeholder:'e.g. 70',required:true},
+          {id:'D',label:'Left Side 3 (D) — mirrors E',placeholder:'e.g. 70',required:true},
+          {id:'E',label:'Right Side 3 (E)',placeholder:'e.g. 70',required:true},
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '07': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 60',required:true},
+          {id:'E',label:'Foot Bottom (E) *',placeholder:'e.g. 80',required:true},
+          {id:'B',label:'Left Side 1 (B) — mirrors H',placeholder:'e.g. 60',required:true},
+          {id:'H',label:'Right Side 1 (H)',placeholder:'e.g. 60',required:true},
+          {id:'C',label:'Left Side 2 (C) — mirrors G',placeholder:'e.g. 60',required:true},
+          {id:'G',label:'Right Side 2 (G)',placeholder:'e.g. 60',required:true},
+          {id:'D',label:'Left Side 3 (D) — mirrors F',placeholder:'e.g. 60',required:true},
+          {id:'F',label:'Right Side 3 (F)',placeholder:'e.g. 60',required:true},
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '08': [
+          {id:'A',label:'Width 1 (A) * — mirrors C',placeholder:'e.g. 150',required:true},
+          {id:'C',label:'Width 2 (C)',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Length 1 (B) * — mirrors D',placeholder:'e.g. 200',required:true},
+          {id:'D',label:'Length 2 (D)',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '09': [
+          {id:'D',label:'Bottom (D) * — D > A',placeholder:'e.g. 180',required:true},
+          {id:'A',label:'Top (A) *',placeholder:'e.g. 150',required:true},
+          {id:'E',label:'Side (E) * — E > C',placeholder:'e.g. 200',required:true},
+          {id:'C',label:'Side (C) *',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Cut Corner (B) — auto',placeholder:'auto',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '10': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 60',required:true},
+          {id:'D',label:'Foot Bottom (D) *',placeholder:'e.g. 74',required:true},
+          {id:'L',label:'Center Length (L) *',placeholder:'e.g. 67',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 8',required:true},
+          {id:'C',label:'Left Side (C)',placeholder:'auto'},
+          {id:'E',label:'Right Side (E) — mirrors C',placeholder:'auto'},
+          {id:'B',label:'Cut Corner — L (B) — optional',placeholder:'auto',optional:true},
+          {id:'F',label:'Cut Corner — R (F) — optional',placeholder:'auto',optional:true}
+        ],
+        '11': [
+          {id:'A',label:'Width 1 (A) * — mirrors C',placeholder:'e.g. 150',required:true},
+          {id:'C',label:'Width 2 (C)',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Length 1 (B) * — mirrors D',placeholder:'e.g. 200',required:true},
+          {id:'D',label:'Length 2 (D)',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '12': [
+          {id:'B',label:'Parallel Side 1 (B) *',placeholder:'e.g. 210',required:true},
+          {id:'D',label:'Parallel Side 2 (D) *',placeholder:'e.g. 70',required:true},
+          {id:'C',label:'Height (C) *',placeholder:'e.g. 200',required:true},
+          {id:'A',label:'Side (A) — auto',placeholder:'auto',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '13': [
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'A',label:'Top (A)',placeholder:'e.g. 120',required:true},
+          {id:'D',label:'Bottom (D)',placeholder:'e.g. 180',required:true},
+          {id:'C',label:'Left (C)',placeholder:'e.g. 80',required:true},
+          {id:'F',label:'Right (F)',placeholder:'e.g. 90',required:true},
+          {id:'B',label:'Diagonal 1 (B) — auto',placeholder:'auto',required:true},
+          {id:'E',label:'Diagonal 2 (E) — auto',placeholder:'auto',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '14': [
+          {id:'A',label:'Long Side 1 (A) * — mirrors G',placeholder:'e.g. 150',required:true},
+          {id:'G',label:'Long Side 2 (G)',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Upper Side (B)',placeholder:'e.g. 50',required:true},
+          {id:'D',label:'Notch Width (D)',placeholder:'e.g. 30',required:true},
+          {id:'F',label:'Lower Side (F)',placeholder:'e.g. 50',required:true},
+          {id:'H',label:'Total Side (H) — auto',placeholder:'auto',required:true},
+          {id:'C',label:'Notch Depth (C) — mirrors E',placeholder:'e.g. 30',required:true},
+          {id:'E',label:'Notch Depth (E)',placeholder:'e.g. 30',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ]
       };
 
-      // ── Sale Price + Countdown ──
-      function updateSaleDisplay() {
-        var el = document.getElementById('sale-info');
-        var priceEl = document.getElementById('price-display');
-        if (!el || !priceEl) return;
-        var discount = MildMateCampaigns.getDiscountForProduct(productSlug);
-        if (!discount || !discount.discount || !discount.campaign) {
-          el.innerHTML = '';
+      function buildDimInputs(shapeCode){
+        dimsContainer.innerHTML = '';
+        var fields = shapeFields[shapeCode];
+        if(!fields) return;
+        fields.forEach(function(f){
+          var div = document.createElement('div');
+          div.className = 'dim-field';
+          var attrs = '';
+          if(f.required) attrs += ' required';
+          if(f.readonly) attrs += ' readonly style="background:#f1f5f9;color:#64748b;"';
+          if(f.optional) attrs += ' style="border-style:dashed;"';
+          div.innerHTML = '<label for="dim-'+f.id+'">'+f.label+'</label><input type="number" id="dim-'+f.id+'" placeholder="'+f.placeholder+'" min="1" max="600"'+attrs+'>';
+          dimsContainer.appendChild(div);
+        });
+      }
+
+      /* ── Area Calculation Formulas ── */
+      function getVal(id){
+        var el = document.getElementById('dim-'+id);
+        if(!el) return 0;
+        var v = parseFloat(el.value) || 0;
+        if(currentUnit === 'in' && v > 0) v = v * 2.54;
+        return v;
+      }
+
+      function calcArea(shapeCode){
+        var A,B,C,D,E,F,G,H,W,L,T,NW,NL,topArea,perimeter;
+
+        switch(shapeCode){
+          case '01': /* V-Berth: trapezoid area ((A+D)/2)×L, perimeter A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');L=getVal('L');T=getVal('T');
+            if(!A||!D||!L||!T) return 0;
+            topArea = ((A+D)/2) * L;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '02': /* V-Berth Cut Corner: trapezoid area ((A+D)/2)×L, perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
+            if(!A||!D||!L||!T) return 0;
+            topArea = ((A+D)/2) * L;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '03': /* V-Berth Rounded Nose: trapezoid area ((A+C)/2)×L, perimeter A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');L=getVal('L');T=getVal('T');
+            if(!A||!C||!L||!T) return 0;
+            topArea = ((A+C)/2) * L;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '04': /* V-Berth Split: ((C+E+A)/2)×D, perimeter C+E+A+2D+B+F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');T=getVal('T');
+            if(!C||!E||!A||!D||!T) return 0;
+            topArea = ((C + E + A) / 2) * D;
+            perimeter = C + E + A + 2*D + B + F;
+            return topArea + (perimeter * (T + 10));
+
+          case '05': /* Island 6-Sides: bounding rectangle W×L, perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
+            if(!W||!L||!T) return 0;
+            topArea = W * L;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '06': /* Island 7-Sides: polygon/grid method — bounding rectangle W×L */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');W=getVal('W');L=getVal('L');T=getVal('T');
+            if(!W||!L||!T) return 0;
+            topArea = W * L;
+            perimeter = A+B+C+D+E+F+G;
+            return topArea + (perimeter * (T + 10));
+
+          case '07': /* Island 8-Sides: polygon/grid method — bounding rectangle W×L */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');W=getVal('W');L=getVal('L');T=getVal('T');
+            if(!W||!L||!T) return 0;
+            topArea = W * L;
+            perimeter = A+B+C+D+E+F+G+H;
+            return topArea + (perimeter * (T + 10));
+
+          case '08': /* Rectangle: A×B (Width × Length), perimeter = A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
+            if(!A||!B||!T) return 0;
+            topArea = A * B;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '09': /* Rectangle Cut-Off: C×D + ((D+A)/2)×(E-C), perimeter A-E */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');T=getVal('T');
+            if(!A||!D||!C||!E||!T) return 0;
+            topArea = C * D + ((D + A) / 2) * (E - C);
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E;
+            return topArea + (perimeter * (T + 10));
+
+          case '10': /* Rectangle Two Cut-Off: D×L − (L−C)(D−A), perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
+            if(!A||!D||!L||!C||!T) return 0;
+            topArea = D * L - (L - C) * (D - A);
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '11': /* Radius Corner Rectangle: same as Rectangle — A×B */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
+            if(!A||!B||!T) return 0;
+            topArea = A * B;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '12': /* Quarter Berth: trapezoid ((B+D)/2)×C, perimeter A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
+            if(!B||!D||!C||!T) return 0;
+            topArea = ((B + D) / 2) * C;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '13': /* Aft Cabin: W×L − ((L-C)(W-A))/2 − ((L-F)(W-D))/2, perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
+            if(!W||!L||!T) return 0;
+            topArea = W * L - ((L - C) * (W - A)) / 2 - ((L - F) * (W - D)) / 2;
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '14': /* Notched Mattress: A×H − D×C, perimeter A-H */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');T=getVal('T');
+            if(!A||!H||!T) return 0;
+            topArea = A * H - D * C;
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F+G+H;
+            return topArea + (perimeter * (T + 10));
+
+          default:
+            return 0;
+        }
+      }
+
+      /* ── Area limit ── */
+      var MAX_TOP_AREA_CM = 41300; /* 6,400 sq.inch */
+
+      function getTopArea(shapeCode){
+        /* Returns the bounding-rectangle top area used in calcArea */
+        if(!shapeCode) return 0;
+        switch(shapeCode){
+          case '01': return ((getVal('A')+getVal('D'))/2) * getVal('L');
+          case '02': return ((getVal('A')+getVal('D'))/2) * getVal('L');
+          case '03': return ((getVal('A')+getVal('C'))/2) * getVal('L');
+          case '04': return ((getVal('C')+getVal('E')+getVal('A'))/2) * getVal('D');
+          case '05': case '06': case '07': return getVal('W') * getVal('L');
+          case '13': var a13=getVal('A'),c13=getVal('C'),d13=getVal('D'),f13=getVal('F'),w13=getVal('W'),l13=getVal('L'); return Math.max(0, w13*l13 - ((l13-c13)*(w13-a13))/2 - ((l13-f13)*(w13-d13))/2);
+          case '09': var a09=getVal('A'),c09=getVal('C'),d09=getVal('D'),e09=getVal('E'); return Math.max(0, c09*d09 + ((d09+a09)/2)*(e09-c09));
+          case '10': var a10=getVal('A'),d10=getVal('D'),l10=getVal('L'),c10=getVal('C'); return d10*l10 - (l10-c10)*(d10-a10);
+          case '12': return ((getVal('B')+getVal('D'))/2) * getVal('C');
+          case '14': var a14=getVal('A'),h14=getVal('H'),d14=getVal('D'),c14=getVal('C'); return Math.max(0, a14*h14 - d14*c14);
+          default: return getVal('A') * getVal('B');
+        }
+      }
+
+      /* ── Marine fitted-sheet pricing (same formula as server, marine margin) ── */
+      var SQCM_PER_YARD = 23774.4;       // 91.44 × 260
+      var CLOUDSOFT_RATE = 100;          // THB/yard
+      var FABRIC_WASTE = 1.20;           // 20% waste
+      var ACC_RATE = 0.10;               // accessories = 10% of fabric
+      var PACK_COST = 100;               // THB
+      var DELIVERY_COST = 50;            // THB
+      var OP_RATE = 0.15;                // operating
+      var MKT_RATE = 0.20;               // marketing
+      var MARINE_MARGIN_RATE = 6.80;     // marine-specific margin (680%)
+      var THB_PER_USD = 30;              // approximate
+      var SEWING_TIERS = [               // tiered by fabric area (cm²)
+        {max:24000,cost:120},{max:33600,cost:180},{max:38400,cost:240},
+        {max:48000,cost:300},{max:60000,cost:360},{max:84000,cost:420},
+        {max:91200,cost:500},{max:120000,cost:650},{max:Infinity,cost:800}
+      ];
+      function getMarineSewingCost(area){
+        for(var i=0;i<SEWING_TIERS.length;i++){
+          if(area<=SEWING_TIERS[i].max) return SEWING_TIERS[i].cost;
+        }
+        return 800;
+      }
+      function calcMarinePriceTHB(fabricAreaSqCm){
+        /* Same formula as server calculateFittedSheetPrice, marine margin */
+        var fabricCost = (fabricAreaSqCm * CLOUDSOFT_RATE / SQCM_PER_YARD) * FABRIC_WASTE;
+        var sewingCost = getMarineSewingCost(fabricAreaSqCm);
+        var accessories = fabricCost * ACC_RATE;
+        var subtotal = fabricCost + sewingCost + accessories + PACK_COST + DELIVERY_COST;
+        var operating = subtotal * OP_RATE;
+        var marketing  = subtotal * MKT_RATE;
+        var margin     = subtotal * MARINE_MARGIN_RATE;
+        var total = subtotal + operating + marketing + margin;
+        return Math.ceil(total / 100) * 100; // round up to nearest 100 THB
+      }
+      function formatPrice(priceThb){
+        /* EN page → USD, TH page → THB */
+        var isThai = document.documentElement.lang === 'th';
+        if(isThai){
+          return '฿' + priceThb.toLocaleString();
+        }
+        var usd = Math.round(priceThb / THB_PER_USD);
+        return '$' + usd.toLocaleString();
+      }
+
+      function updatePrice(){
+        var code = shapeSelect.value;
+        var warningEl = document.getElementById('area-warning');
+        if(!code || shapeFields[code] === undefined){
+          customPrice.textContent = ' — ';
+          priceDisplay.textContent = ' — ';
+          priceDisplayTop.textContent = ' — ';
+          priceTopSub.textContent = 'Enter your mattress dimensions below';
+          addToCartBtn.disabled = true;
+          if(warningEl) warningEl.style.display = 'none';
           return;
         }
-        var countdown = MildMateCampaigns.getCampaignCountdown(productSlug);
-        var cdStr = countdown ? ('\u00A0\u00A0(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)') : '';
-        var html = '<span class="sale-badge">-' + discount.discount + '% SALE</span>' + cdStr;
-        el.innerHTML = html;
-
-        if (!window._saleTimer) {
-          window._saleTimer = setInterval(function() {
-            var cd = MildMateCampaigns.getCampaignCountdown(productSlug);
-            if (!cd) { clearInterval(window._saleTimer); window._saleTimer = null; el.innerHTML = ''; return; }
-            el.innerHTML = '<span class="sale-badge">-' + discount.discount + '% SALE</span>\u00A0\u00A0(' + cd.days + 'd ' + cd.hours + 'h ' + cd.mins + 'm left)';
-          }, 60000);
+        /* Check top area limit */
+        var topArea = getTopArea(code);
+        if(topArea > MAX_TOP_AREA_CM){
+          if(warningEl) warningEl.style.display = 'block';
+          if(warningEl) warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.';
+          customPrice.textContent = ' — ';
+          addToCartBtn.disabled = true;
+          return;
         }
+        /* Shape 01-05 + 10 geometric validation */
+        if(code === '01' || code === '02' || code === '03' || code === '04' || code === '05' || code === '07' || code === '09' || code === '10'){
+          var msgs = [];
+          if(code === '01'){
+            var a01 = getVal('A'), d01 = getVal('D');
+            if(a01 > 0 && d01 > 0 && a01 <= d01) msgs.push('Foot (A) must be greater than Head (D)');
+          } else if(code === '02'){
+            var a02 = getVal('A'), d02 = getVal('D');
+            if(a02 > 0 && d02 > 0 && a02 <= d02) msgs.push('Foot (A) must be greater than Head (D)');
+          } else if(code === '03'){
+            var a03 = getVal('A'), c03 = getVal('C');
+            if(a03 > 0 && c03 > 0 && a03 <= c03) msgs.push('Foot (A) must be greater than Head (C)');
+          } else if(code === '04'){
+            var a04 = getVal('A'), c04 = getVal('C'), e04 = getVal('E');
+            if(a04 > 0 && c04 > 0 && e04 > 0 && (c04 + e04) >= a04) msgs.push('Total head (C + E) must be less than Foot (A)');
+          } else if(code === '05'){
+            var a05 = getVal('A'), d05 = getVal('D');
+            if(a05 > 0 && d05 > 0 && a05 > d05) msgs.push('Foot (D) must be greater than Head (A)');
+          } else if(code === '07'){
+            var a07 = getVal('A'), e07 = getVal('E');
+            if(a07 > 0 && e07 > 0 && e07 <= a07) msgs.push('Foot (E) must be greater than Head (A)');
+          } else if(code === '09'){
+            var a09 = getVal('A'), d09 = getVal('D'), c09 = getVal('C'), e09 = getVal('E');
+            if(a09 > 0 && d09 > 0 && d09 <= a09) msgs.push('Bottom (D) must be greater than Top (A)');
+            if(c09 > 0 && e09 > 0 && e09 <= c09) msgs.push('Side (E) must be greater than Side (C)');
+          } else if(code === '10'){
+            var a10 = getVal('A'), d10 = getVal('D'), l10 = getVal('L'), c10 = getVal('C'), e10 = getVal('E');
+            if(a10 > 0 && d10 > 0 && d10 <= a10) msgs.push('Foot (D) must be greater than Head (A)');
+            if(l10 > 0 && c10 > 0 && c10 >= l10) msgs.push('Left side (C) must be less than Center Length (L)');
+            if(l10 > 0 && e10 > 0 && e10 >= l10) msgs.push('Right side (E) must be less than Center Length (L)');
+          }
+          if(msgs.length > 0){
+            if(warningEl){ warningEl.style.display = 'block'; warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+msgs.join('; ')+'.'; }
+            customPrice.textContent = ' — ';
+            addToCartBtn.disabled = true;
+            return;
+          }
+        }
+        if(warningEl) warningEl.style.display = 'none';
+        var fabricArea = calcArea(code);
+        if(fabricArea <= 0){
+          customPrice.textContent = ' — ';
+          addToCartBtn.disabled = true;
+          return;
+        }
+        var priceThb = calcMarinePriceTHB(fabricArea);
+        var priceStr = formatPrice(priceThb);
+        customPrice.textContent = priceStr;
+        priceDisplay.textContent = priceStr;
+        priceDisplayTop.textContent = priceStr;
+        priceTopSub.textContent = 'Estimated — Exact price confirmed in quote';
+        addToCartBtn.disabled = false;
       }
 
-      async function hydrateFavorites() {
-        if (window.MildMateCampaigns && typeof MildMateCampaigns.syncFavoritesFromServer === 'function') {
-          await MildMateCampaigns.syncFavoritesFromServer();
+      shapeSelect.addEventListener('change', function(){
+        var code = shapeSelect.value;
+        if(!code) return;
+
+        var shape = shapes.find(function(s){return s.code===code});
+
+        /* Schematic image */
+        if(shape && shape.schematic){
+          guideImg.src = shape.schematic;
+          guideImg.style.display = 'block';
+          guideCaption.textContent = shape.name + ' — Measurement Diagram';
+          guideCaption.style.display = 'block';
+          guidePlaceholder.style.display = 'none';
+        } else {
+          guideImg.style.display = 'none';
+          guideCaption.style.display = 'none';
+          guidePlaceholder.style.display = 'block';
         }
-        updateFavUI();
-      }
 
-      hydrateFavorites();
-      window.addEventListener('clerk:signed-in', hydrateFavorites);
-      window.addEventListener('clerk:signed-out', updateFavUI);
-      updateSaleDisplay();
-    </script>
-
-<script>
-(function(){
-  function syncDesktopColumnsHeight() {
-    var infoCol = document.querySelector('.product-info');
-    var mediaCol = document.querySelector('.product-gallery');
-    if (!infoCol || !mediaCol) return;
-    if (window.innerWidth <= 1024) {
-      infoCol.style.removeProperty('--desktop-col-height');
-      return;
-    }
-    var mediaHeight = Math.round(mediaCol.getBoundingClientRect().height);
-    if (mediaHeight > 0) infoCol.style.setProperty('--desktop-col-height', mediaHeight + 'px');
-  }
-  window.syncDesktopColumnsHeight = syncDesktopColumnsHeight;
-  window.addEventListener('load', syncDesktopColumnsHeight);
-  window.addEventListener('resize', syncDesktopColumnsHeight);
-  setTimeout(syncDesktopColumnsHeight, 200);
-})();
-</script>
-
-<script>
-(function(){
-  var slug = location.pathname.split('/').filter(Boolean).pop();
-  var currentSlide = 0;
-  var gallery = [];
-
-  function extractYouTubeId(url) {
-    if (!url) return '';
-    var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return m ? m[1] : '';
-  }
-
-  function buildCarousel() {
-    var wrap = document.getElementById('carousel-wrap');
-    var track = document.getElementById('carousel-track');
-    var dotsWrap = document.getElementById('carousel-dots-wrap');
-    var thumbsWrap = document.getElementById('carousel-thumbs');
-    if (!wrap || !track || !gallery.length) return;
-
-    // Hide arrows on single image
-    var prevBtn = document.getElementById('carousel-prev');
-    var nextBtn = document.getElementById('carousel-next');
-    if (gallery.length === 1) {
-      if (prevBtn) prevBtn.style.display = 'none';
-      if (nextBtn) nextBtn.style.display = 'none';
-      if (dotsWrap) dotsWrap.style.display = 'none';
-      if (thumbsWrap) thumbsWrap.style.display = 'none';
-    }
-
-    // Build slides
-    track.innerHTML = gallery.map(function(item){
-      if (typeof item === 'object' && item.videoId) {
-        var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg';
-        return '<div class="carousel-slide carousel-slide-video" data-video-id="' + item.videoId + '">' +
-          '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy">' +
-          '<div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
-      }
-      return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="800" loading="eager"></div>';
-    }).join('');
-
-    // Build dots
-    dotsWrap.innerHTML = gallery.map(function(item, i){
-      return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="' + (typeof item === 'object' && item.videoId ? 'Video' : 'Image ' + (i+1)) + '"></button>';
-    }).join('');
-
-    if (thumbsWrap) {
-      thumbsWrap.innerHTML = gallery.map(function(item, i){
-        if (typeof item === 'object' && item.videoId) {
-          var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/default.jpg';
-          return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy"></button>';
+        /* Coming soon flag */
+        if(shape && shape.comingSoon){
+          comingSoon.style.display = 'flex';
+          dimsContainer.innerHTML = '';
+          customPrice.textContent = ' — ';
+          addToCartBtn.disabled = true;
+          return;
         }
-        return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy"></button>';
-      }).join('');
-    }
+        comingSoon.style.display = 'none';
 
-    // Click handler on video slides: swap thumbnail for iframe
-    track.addEventListener('click', function(e) {
-      var slide = e.target.closest('.carousel-slide-video');
-      if (!slide) return;
-      var videoId = slide.getAttribute('data-video-id');
-      if (!videoId || slide.querySelector('iframe')) return;
-      slide.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
-    });
-
-    // Dot click
-    dotsWrap.querySelectorAll('.carousel-dot').forEach(function(dot){
-      dot.addEventListener('click', function(){
-        goToSlide(parseInt(dot.getAttribute('data-idx'), 10));
+        buildDimInputs(code);
+        autoComputeShape10();
+        updatePrice();
       });
-    });
-    if (thumbsWrap) {
-      thumbsWrap.querySelectorAll('.carousel-thumb').forEach(function(thumb){
-        thumb.addEventListener('click', function(){
-          goToSlide(parseInt(thumb.getAttribute('data-idx'), 10));
-        });
-      });
-    }
 
-    // Arrow click
-    if (prevBtn) prevBtn.addEventListener('click', function(){ goToSlide(currentSlide - 1); });
-    if (nextBtn) nextBtn.addEventListener('click', function(){ goToSlide(currentSlide + 1); });
-
-    // Touch swipe
-    var touchStartX = 0;
-    wrap.addEventListener('touchstart', function(e){ touchStartX = e.changedTouches[0].screenX; }, {passive:true});
-    wrap.addEventListener('touchend', function(e){
-      var dx = e.changedTouches[0].screenX - touchStartX;
-      if (Math.abs(dx) > 50) {
-        if (dx < 0) goToSlide(currentSlide + 1);
-        else goToSlide(currentSlide - 1);
-      }
-    }, {passive:true});
-
-    goToSlide(0);
-    if (typeof window.syncDesktopColumnsHeight === 'function') window.syncDesktopColumnsHeight();
-  }
-
-  function goToSlide(idx) {
-    if (!gallery.length) return;
-    if (idx < 0) idx = gallery.length - 1;
-    if (idx >= gallery.length) idx = 0;
-    currentSlide = idx;
-    var track = document.getElementById('carousel-track');
-    if (track) {
-      track.classList.remove('no-transition');
-      track.style.transform = 'translateX(-' + (idx * 100) + '%)';
-    }
-    document.querySelectorAll('.carousel-dot').forEach(function(d){ d.classList.remove('active'); });
-    var dots = document.querySelectorAll('.carousel-dot');
-    if (dots[idx]) dots[idx].classList.add('active');
-    var thumbs = document.querySelectorAll('.carousel-thumb');
-    thumbs.forEach(function(t){ t.classList.remove('active'); });
-    if (thumbs[idx]) {
-      thumbs[idx].classList.add('active');
-      if (typeof thumbs[idx].scrollIntoView === 'function') {
-        thumbs[idx].scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-      }
-    }
-  }
-
-  fetch('/api/products/' + slug)
-    .then(function(r){ return r.json(); })
-    .then(function(payload){
-      var p = payload && (payload.product || payload);
-      if (!p) return;
-
-      var imgs = [];
-      try { imgs = JSON.parse(p.images || "[]"); } catch(e) { imgs = []; }
-      while (imgs.length < 20) imgs.push("");
-
-      var fallback = p.image_url || "";
-      var heroImg = imgs[0] || fallback;
-      if (heroImg) gallery.push(heroImg);
-
-      // Push YouTube video as second slide
-      var ytId = extractYouTubeId(p.youtube_url || '');
-      if (ytId) gallery.push({ videoId: ytId });
-
-      for (var i = 1; i < imgs.length; i++) if (imgs[i]) gallery.push(imgs[i]);
-      if (!gallery.length && fallback) gallery.push(fallback);
-
-      buildCarousel();
-      if (typeof window.syncDesktopColumnsHeight === 'function') window.syncDesktopColumnsHeight();
-
-      // Option C: Override description panel with D1 content if present
-      if (p.description_en) {
-        var descPanel = document.getElementById('info-panel-description');
-        if (descPanel) descPanel.innerHTML = p.description_en;
-      }
-
-      // Option D: Update fabric options based on D1 fabric_options
-      if (p.fabric_options) {
-        var fabList = p.fabric_options.toLowerCase().split(/\s*,\s*/).filter(Boolean);
-        var fabSelect = document.getElementById('fabric-select');
-
-        if (fabSelect && fabList.length > 0) {
-          // Hide options not in fabric_options
-          Array.from(fabSelect.options).forEach(function(o) {
-            o.hidden = fabList.indexOf(o.value.toLowerCase()) < 0;
-          });
-          // Select first visible option
-          var first = fabSelect.querySelector('option:not([hidden])');
-          if (first) { fabSelect.value = first.value; }
-
-          // Update pills UI (already generated by configurator before this fetch)
-          var pillsWrap = document.querySelector('.selection-pills[data-select-id="fabric-select"]');
-          if (pillsWrap) {
-            pillsWrap.querySelectorAll('.selection-pill').forEach(function(pill) {
-              pill.style.display = fabList.indexOf(pill.getAttribute('data-value')) >= 0 ? '' : 'none';
-            });
-            var firstPill = pillsWrap.querySelector('.selection-pill:not([style*="display:none"])');
-            if (firstPill) {
-              pillsWrap.querySelectorAll('.selection-pill').forEach(function(p) { p.classList.remove('active'); });
-              firstPill.classList.add('active');
+      /* Auto-fill B/C (shape 01) or C/E (shape 10) + compute optional fields */
+      var _mirroring = false;
+      function autoComputeShape10(){
+        var code = shapeSelect.value;
+        var lEl = document.getElementById('dim-L');
+        var lVal = parseFloat(lEl?.value) || 0;
+        if(code === '01'){
+          /* Shape 01: auto-fill B=C=L-1 if empty, compute nothing else */
+          var bEl = document.getElementById('dim-B');
+          var cEl = document.getElementById('dim-C');
+          if(bEl && cEl && lVal > 0){
+            var bVal = parseFloat(bEl.value) || 0;
+            var cVal = parseFloat(cEl.value) || 0;
+            if(bVal <= 0 && cVal <= 0){
+              var defV = Math.max(1, lVal - 1);
+              bEl.value = defV;
+              cEl.value = defV;
+            }
+          }
+        } else if(code === '02'){
+          /* Shape 02: auto-fill C=E=L-1 if empty, compute B/F from C/L/A/D */
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          var fEl = document.getElementById('dim-F');
+          if(!cEl || !eEl || !bEl || !fEl || !lEl) return;
+          var cVal = parseFloat(cEl.value) || 0;
+          var eVal = parseFloat(eEl.value) || 0;
+          if(lVal > 0 && cVal <= 0 && eVal <= 0){
+            var defC = Math.max(1, lVal - 1);
+            cEl.value = defC;
+            eEl.value = defC;
+            cVal = defC;
+          }
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var aVal = parseFloat(aEl?.value) || 0;
+          var dVal = parseFloat(dEl?.value) || 0;
+          cVal = parseFloat(cEl.value) || 0;
+          if(aVal > 0 && dVal > 0 && lVal > 0 && cVal > 0){
+            var hCut = (dVal - aVal) / 2;
+            if(hCut < 0) hCut = 0;
+            var vCut = lVal - cVal;
+            if(vCut < 0) vCut = 0;
+            var bf = Math.round(Math.sqrt(hCut*hCut + vCut*vCut));
+            if(!isNaN(bf) && bf > 0){
+              bEl.value = bf;
+              fEl.value = bf;
+            }
+          }
+        } else if(code === '03'){
+          /* Shape 03: auto-fill B=D=L-1 if empty */
+          var bEl = document.getElementById('dim-B');
+          var dEl = document.getElementById('dim-D');
+          if(bEl && dEl && lVal > 0){
+            var bVal = parseFloat(bEl.value) || 0;
+            var dVal = parseFloat(dEl.value) || 0;
+            if(bVal <= 0 && dVal <= 0){
+              var defV = Math.max(1, lVal - 1);
+              bEl.value = defV;
+              dEl.value = defV;
+            }
+          }
+        } else if(code === '04'){
+          /* Shape 04: auto-fill C=E if empty, compute B/F from D/C/A */
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          var fEl = document.getElementById('dim-F');
+          var dEl = document.getElementById('dim-D');
+          if(!cEl || !eEl || !bEl || !fEl || !dEl) return;
+          var cVal = parseFloat(cEl.value) || 0;
+          var eVal = parseFloat(eEl.value) || 0;
+          var dVal = parseFloat(dEl.value) || 0;
+          if(cVal <= 0 && eVal <= 0){
+            var defC = Math.max(1, (dVal || 200) * 0.4);
+            cEl.value = Math.round(defC);
+            eEl.value = Math.round(defC);
+            cVal = Math.round(defC);
+          }
+          var aEl = document.getElementById('dim-A');
+          var aVal = parseFloat(aEl?.value) || 0;
+          cVal = parseFloat(cEl.value) || 0;
+          if(aVal > 0 && dVal > 0 && cVal > 0){
+            var hCut = (aVal/2 - cVal) / 2;
+            if(hCut < 0) hCut = 0;
+            var bf = Math.round(Math.sqrt(dVal*dVal + hCut*hCut));
+            if(!isNaN(bf) && bf > 0){
+              bEl.value = bf;
+              fEl.value = bf;
+            }
+          }
+        } else if(code === '09'){
+          /* Shape 09: auto-fill B = √((D-A)² + (E-C)²) */
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          if(aEl && dEl && cEl && eEl && bEl){
+            var aVal = parseFloat(aEl.value) || 0;
+            var dVal = parseFloat(dEl.value) || 0;
+            var cVal = parseFloat(cEl.value) || 0;
+            var eVal = parseFloat(eEl.value) || 0;
+            if(aVal > 0 && dVal > 0 && cVal > 0 && eVal > 0){
+              var bVal = Math.round(Math.sqrt((dVal-aVal)*(dVal-aVal) + (eVal-cVal)*(eVal-cVal)));
+              if(!isNaN(bVal) && bVal > 0) bEl.value = bVal;
+            }
+          }
+        } else if(code === '12'){
+          /* Shape 12: auto-fill A = √(C² + ((B-D)/2)²) */
+          var bEl_ = document.getElementById('dim-B');
+          var dEl_ = document.getElementById('dim-D');
+          var cEl_ = document.getElementById('dim-C');
+          var aEl_ = document.getElementById('dim-A');
+          if(bEl_ && dEl_ && cEl_ && aEl_){
+            var bVal_ = parseFloat(bEl_.value) || 0;
+            var dVal_ = parseFloat(dEl_.value) || 0;
+            var cVal_ = parseFloat(cEl_.value) || 0;
+            if(bVal_ > 0 && dVal_ > 0 && cVal_ > 0){
+              var hDiff = (bVal_ - dVal_) / 2;
+              var aVal = Math.round(Math.sqrt(cVal_*cVal_ + hDiff*hDiff));
+              if(!isNaN(aVal) && aVal > 0) aEl_.value = aVal;
+            }
+          }
+        } else if(code === '13'){
+          /* Shape 13: auto-fill B = √((W-A)²+(L-C)²), E = √((W-D)²+(L-F)²) */
+          var wEl = document.getElementById('dim-W');
+          var lEl = document.getElementById('dim-L');
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var cEl = document.getElementById('dim-C');
+          var fEl = document.getElementById('dim-F');
+          var bEl = document.getElementById('dim-B');
+          var eEl = document.getElementById('dim-E');
+          if(wEl && lEl && aEl && dEl && cEl && fEl && bEl && eEl){
+            var wV = parseFloat(wEl.value) || 0;
+            var lV = parseFloat(lEl.value) || 0;
+            var aV = parseFloat(aEl.value) || 0;
+            var dV = parseFloat(dEl.value) || 0;
+            var cV = parseFloat(cEl.value) || 0;
+            var fV = parseFloat(fEl.value) || 0;
+            if(wV > 0 && lV > 0){
+              var bVal = Math.round(Math.sqrt((wV-aV)*(wV-aV) + (lV-cV)*(lV-cV)));
+              if(!isNaN(bVal) && bVal > 0) bEl.value = bVal;
+              var eVal = Math.round(Math.sqrt((wV-dV)*(wV-dV) + (lV-fV)*(lV-fV)));
+              if(!isNaN(eVal) && eVal > 0) eEl.value = eVal;
+            }
+          }
+        } else if(code === '14'){
+          /* Shape 14: auto-fill H = B + D + F */
+          var bEl = document.getElementById('dim-B');
+          var dEl = document.getElementById('dim-D');
+          var fEl = document.getElementById('dim-F');
+          var hEl = document.getElementById('dim-H');
+          if(bEl && dEl && fEl && hEl){
+            var bVal = parseFloat(bEl.value) || 0;
+            var dVal = parseFloat(dEl.value) || 0;
+            var fVal = parseFloat(fEl.value) || 0;
+            if(bVal + dVal + fVal > 0){
+              hEl.value = Math.round(bVal + dVal + fVal);
+            }
+          }
+        } else if(code === '10'){
+          /* Shape 10: auto-fill C=E=L-1 if empty, compute B/F */
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          var fEl = document.getElementById('dim-F');
+          if(!cEl || !eEl || !bEl || !fEl || !lEl) return;
+          var cVal = parseFloat(cEl.value) || 0;
+          var eVal = parseFloat(eEl.value) || 0;
+          if(lVal > 0 && cVal <= 0 && eVal <= 0){
+            var defC = Math.max(1, lVal - 1);
+            cEl.value = defC;
+            eEl.value = defC;
+            cVal = defC;
+          }
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var aVal = parseFloat(aEl?.value) || 0;
+          var dVal = parseFloat(dEl?.value) || 0;
+          cVal = parseFloat(cEl.value) || 0;
+          if(aVal > 0 && dVal > 0 && lVal > 0 && cVal > 0){
+            var hCut = (dVal - aVal) / 2;
+            if(hCut < 0) hCut = 0;
+            var vCut = lVal - cVal;
+            if(vCut < 0) vCut = 0;
+            var bf = Math.round(Math.sqrt(hCut*hCut + vCut*vCut));
+            if(!isNaN(bf) && bf > 0){
+              bEl.value = bf;
+              fEl.value = bf;
             }
           }
         }
-
-        // If 1 fabric only, replace select and pills with badge
-        if (fabList.length === 1 && fabSelect) {
-          var pillsWrap = document.querySelector('.selection-pills[data-select-id="fabric-select"]');
-          var fabSection = fabSelect.closest('.panel-section');
-          if (fabSection) {
-            var fabName = fabList[0].charAt(0).toUpperCase() + fabList[0].slice(1);
-            fabSection.innerHTML = '<div class="panel-label">Fabric</div><div class="fabric-badge">' + fabName + '</div>';
+      }
+      /* Live price update + B↔C (shape 01) / C↔E (shape 10) mirroring */
+      dimsContainer.addEventListener('input', function(e){
+        if(e.target.tagName !== 'INPUT') return;
+        /* Mirror: Shape 01 B↔C, Shape 02 C↔E + B↔F, Shape 10 C↔E */
+        var code = shapeSelect.value;
+        if(!_mirroring){
+          if(code === '01'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '02'){
+            if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-B'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '03'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '04'){
+            if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-B'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '05'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '06'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var gEl = document.getElementById('dim-G'); if(gEl) gEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-G'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '07'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var hEl = document.getElementById('dim-H'); if(hEl) hEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-H'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var gEl = document.getElementById('dim-G'); if(gEl) gEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-G'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '08' || code === '11'){
+            if(e.target.id === 'dim-A'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var aEl = document.getElementById('dim-A'); if(aEl) aEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-B'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '14'){
+            if(e.target.id === 'dim-A'){
+              _mirroring = true; var gEl = document.getElementById('dim-G'); if(gEl) gEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-G'){
+              _mirroring = true; var aEl = document.getElementById('dim-A'); if(aEl) aEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '10'){
+            if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            }
           }
-          if (pillsWrap) pillsWrap.style.display = 'none';
         }
+        /* Optional fields: show measurement-only notice */
+        var optIds = (code === '01') ? ['dim-B','dim-C'] : (code === '10') ? ['dim-B','dim-F'] : [];
+        if(optIds.indexOf(e.target.id) !== -1){
+          var note = document.getElementById('bf-note');
+          if(note) note.style.display = 'block';
+        }
+        autoComputeShape10();
+        updatePrice();
+      });
 
-        // Hide fabric color groups not in list, then show only the active fabric
-        var activeFabric = (fabSelect && fabSelect.value) || fabList[0];
-        document.querySelectorAll('.fabric-color-group').forEach(function(g) {
-          var f = (g.getAttribute('data-fabric') || '').toLowerCase();
-          var inList = fabList.indexOf(f) >= 0;
-          g.style.display = (inList && f === activeFabric) ? '' : 'none';
+      /* Quote button */
+      addToCartBtn.addEventListener('click', function(){
+        var code = shapeSelect.value;
+        if(!code) return;
+        var shape = shapes.find(function(s){return s.code===code});
+        var dims = {};
+        var fields = shapeFields[code];
+        if(fields){
+          fields.forEach(function(f){
+            dims[f.label] = getVal(f.id);
+          });
+        }
+        var area = calcArea(code);
+        var priceStr = customPrice.textContent.trim();
+        /* Open quote modal or redirect — for now use the custom quote flow */
+        var q = new URLSearchParams();
+        q.set('shape', (shape?shape.name:code));
+        q.set('dims', JSON.stringify(dims));
+        q.set('area', Math.round(area));
+        q.set('price', priceStr);
+        window.location.href = '/contact/?quote=marine&' + q.toString();
+      });
+
+      /* Unit toggle cm/in */
+      var currentUnit = 'cm';
+      document.getElementById('unit-cm').addEventListener('click', function(){
+        if(currentUnit === 'cm') return;
+        currentUnit = 'cm';
+        this.classList.add('active');
+        document.getElementById('unit-in').classList.remove('active');
+        convertAllInputs('in','cm');
+        autoComputeShape10();
+        updatePrice();
+      });
+      document.getElementById('unit-in').addEventListener('click', function(){
+        if(currentUnit === 'in') return;
+        currentUnit = 'in';
+        this.classList.add('active');
+        document.getElementById('unit-cm').classList.remove('active');
+        convertAllInputs('cm','in');
+        autoComputeShape10();
+        updatePrice();
+      });
+
+      function convertAllInputs(fromUnit, toUnit){
+        var code = shapeSelect.value;
+        var fields = shapeFields[code];
+        if(!fields) return;
+        var factor = (fromUnit === 'cm' && toUnit === 'in') ? 0.393701 : 2.54;
+        fields.forEach(function(f){
+          if(f.readonly) return; /* skip computed fields */
+          var el = document.getElementById('dim-'+f.id);
+          if(!el) return;
+          var val = parseFloat(el.value);
+          if(!isNaN(val) && val > 0){
+            el.value = Math.round(val * factor);
+            if(fromUnit === 'in' && toUnit === 'cm' && val <= 2) el.value = '';
+          }
+          el.placeholder = (toUnit === 'cm') ? f.placeholder : f.placeholder.replace(/\d+(\.\d+)?/g, function(m){return Math.round(parseFloat(m)*0.393701)});
         });
       }
+    })();
+  </script>
 
-      var hero = document.querySelector('.hero-bg');
-      if (hero && heroImg) hero.src = heroImg;
-
-      var cards = document.querySelectorAll('[src*="/images/products/' + slug + '/main"]');
-      cards.forEach(function(img){ if (heroImg) img.src = heroImg; });
-    })
-    .catch(function(){});
-})();
-</script>
+  <script>
+    /* ── Info Tabs ── */
+    (function(){
+      document.querySelectorAll('[data-info-tab]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var tabId = btn.getAttribute('data-info-tab');
+          document.querySelectorAll('.info-tab').forEach(function(b){b.classList.remove('active')});
+          btn.classList.add('active');
+          document.querySelectorAll('.info-panel').forEach(function(p){p.classList.remove('active')});
+          var panel = document.getElementById('info-panel-' + tabId);
+          if(panel) panel.classList.add('active');
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

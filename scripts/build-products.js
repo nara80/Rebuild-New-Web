@@ -15,6 +15,7 @@ const content = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'product-content.
 // Load templates
 const customizableTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'product-customizable.html'), 'utf8');
 const fixedTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'product-fixed.html'), 'utf8');
+const marineTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'product-marine.html'), 'utf8');
 
 // Fabric display names
 const fabricNames = {
@@ -362,6 +363,54 @@ function buildFixed(slug, p, prod) {
 
   return html;
 }
+// Build marine product page
+function buildMarine(slug, p, prod) {
+  let html = marineTemplate;
+  const pt = p.productType;
+  const shortTitle = '';
+
+  // Inline shapes JSON for JS
+  const shapesJs = JSON.stringify(p.marineShapes || []);
+
+  // Build FAQ items from care bullets
+  let faqHtml = '';
+  if (p.tabCareBullets && p.tabCareBullets.length > 0) {
+    let careItems = p.tabCareBullets.map(b => '<li>' + b + '</li>').join('');
+    faqHtml += '<details class="faq-item" open><summary>What fabric and care details should I know?</summary><ul>' + careItems + '</ul></details>';
+  }
+  faqHtml += '<details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for a secure fitted-sheet fit.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each sheet is custom-made to your exact shape and dimensions. Production takes 5–7 business days. Shipping times vary by destination — you\'ll receive a tracking number once dispatched.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>What if my shape isn\'t listed?</summary><p>Choose the closest shape and add notes in the quote form — we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>';
+
+  const replacements = {
+    '{{META_DESCRIPTION}}': p.metaDescription || '',
+    '{{TITLE}}': p.breadcrumbName + ' — MildMate',
+    '{{BREADCRUMB_CATEGORY_URL}}': p.breadcrumbCategoryUrl || '/',
+    '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
+    '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
+    '{{IMAGE_PATH}}': prod.image || '/images/placeholder.jpg',
+    '{{PRODUCT_NAME}}': p.breadcrumbName || '',
+    '{{SHORT_TITLE}}': shortTitle,
+    '{{TAGLINE}}': p.tagline || '',
+    '{{PRICE_DISPLAY}}': p.priceDisplay || (prod.priceUsd ? 'USD ' + prod.priceUsd.toFixed(2) : 'USD 0.00'),
+    '{{COLORS_HTML}}': buildColorsHTML(p),
+    '{{TAB_DESCRIPTION_TITLE}}': p.tabDescriptionTitle || '',
+    '{{TAB_DESCRIPTION_P}}': p.tabDescriptionP || '',
+    '{{TAB_DESCRIPTION_BULLETS}}': buildBullets(p.tabDescriptionBullets),
+    '{{TAB_FABRIC_TITLE}}': p.tabFabricTitle || '',
+    '{{TAB_FABRIC_P}}': p.tabFabricP || '',
+    '{{TAB_FABRIC_BULLETS}}': buildBullets(p.tabFabricBullets),
+    '{{FAQ_ITEMS}}': faqHtml,
+    '{{RELATED_PRODUCTS}}': buildRelatedHTML(p.relatedSlugs),
+    '{{TAGS_HTML}}': buildTagsHTML(p.tags),
+    '{{PRODUCT_SLUG}}': slug,
+    '{{MARINE_SHAPES_JS}}': shapesJs,
+  };
+  for (const [key, value] of Object.entries(replacements)) {
+    html = html.split(key).join(value);
+  }
+  return html;
+}
 
 function buildShapeSelectorHTML(p) {
   if (!p.marineShapes || p.marineShapes.length === 0) return '';
@@ -517,7 +566,9 @@ products.products.forEach(prod => {
   let outHtml = '';
   const type = p.productType;
 
-  if (type === 'fixed') {
+  if (type === 'marine') {
+    outHtml = buildMarine(slug, p, prod);
+  } else if (type === 'fixed') {
     outHtml = buildFixed(slug, p, prod);
   } else {
     outHtml = buildCustomizable(slug, p, prod);
