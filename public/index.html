@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -18,8 +18,7 @@
   <link href="/css/fonts.css" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="preload" href="/css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/css/main.min.css"></noscript>
+  <link rel="stylesheet" href="/css/main.min.css">
   <style>
     .home-page .btn-primary {
       background: var(--color-primary);
@@ -141,7 +140,7 @@
       flex-shrink: 0;
     }
     .home-page .material-item[open] summary::after {
-      content: "−";
+      content: "-";
     }
     .home-page .material-body {
       padding: 0 16px 14px;
@@ -249,19 +248,58 @@
   <meta name="twitter:title" content="MildMate  -  Custom Bedding Made in Thailand">
   <meta name="twitter:description" content="MildMate  -  Custom bedding made in Thailand. Perfect fit for every mattress, from V-Berth boats to family mega-beds.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ESL161CNBV"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-ESL161CNBV');
-  </script>
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KLJZZM9');
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
   </script>
 </head>
 <body class="home-page">
@@ -485,7 +523,7 @@
         <div class="material-accordion" aria-label="Material intelligence accordion">
           <details class="material-item">
             <summary>BreezePlus Advanced Cooling Fabrics Collection</summary>
-            <div class="material-body">50/50 cotton-microfiber blend with 3-5°C cooler feel, ideal for hot sleepers and pet homes.</div>
+            <div class="material-body">50/50 cotton-microfiber blend with 3-5�C cooler feel, ideal for hot sleepers and pet homes.</div>
           </details>
           <details class="material-item">
             <summary>CloudSoft Moisture-Resistant Premium Microfibers</summary>
@@ -599,7 +637,7 @@
               <!-- REVIEWS-START -->
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;I had a custom 160×50 cm dakimakura waterproof encasement made, and the experience was excellent from start to finish. The seller was very responsive and handled detailed technical requirements without any issues. We went over specifications like zipper length and placement, fabric behavior, and overall construction, and they even created a prototype with measurements before final production to ensure the fit was correct. The final product is a 2-layer system (TPU liner + outer cover), and the fit is exactly as intended  -  snug, smooth, and well-balanced with no bunching. The zipper is properly concealed, and the overall construction feels durable and well thought out. What stood out most was their understanding of materials and willingness to explain design decisions clearly, especially regarding fit and long-term durability.&rdquo;</p>
+            <p class="review-text">&ldquo;I had a custom 160�50 cm dakimakura waterproof encasement made, and the experience was excellent from start to finish. The seller was very responsive and handled detailed technical requirements without any issues. We went over specifications like zipper length and placement, fabric behavior, and overall construction, and they even created a prototype with measurements before final production to ensure the fit was correct. The final product is a 2-layer system (TPU liner + outer cover), and the fit is exactly as intended  -  snug, smooth, and well-balanced with no bunching. The zipper is properly concealed, and the overall construction feels durable and well thought out. What stood out most was their understanding of materials and willingness to explain design decisions clearly, especially regarding fit and long-term durability.&rdquo;</p>
             <div class="review-author">&mdash; William, United States</div>
           </div>
           <div class="review-card">
@@ -609,7 +647,7 @@
           </div>
           <div class="review-card">
             <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-            <p class="review-text">&ldquo;My parents have a larger mattress cover and I’m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! It’s a joy to know they are sleeping in a chemically safe environment 🤍&rdquo;</p>
+            <p class="review-text">&ldquo;My parents have a larger mattress cover and I�m so grateful to have found this 100% human safe option that fits their bed! Thank you so much! It�s a joy to know they are sleeping in a chemically safe environment ??&rdquo;</p>
             <div class="review-author">&mdash; Clayton, United States</div>
           </div>
           <div class="review-card">
@@ -682,7 +720,7 @@
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
         btn.disabled = true;
-        btn.textContent = 'Subscribing…';
+        btn.textContent = 'Subscribing�';
         msg.textContent = '';
         msg.style.color = '';
 
@@ -775,3 +813,4 @@
   </div>
 </body>
 </html>
+

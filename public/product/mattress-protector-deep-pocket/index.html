@@ -13,8 +13,7 @@
   <meta name="product-image" content="/images/products/mattress-protector-deep-pocket/main.jpg">
   <title>Mattress Protector — Deep Pocket — MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
-  <link rel="preload" href="/css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/css/main.min.css"></noscript>
+  <link rel="stylesheet" href="/css/main.min.css">
   <style>
     .product-page { background: #F8FAFC; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 56px; display: grid; grid-template-columns: minmax(0, 55%) minmax(0, 45%); gap: 40px; align-items: start; }
@@ -329,19 +328,58 @@
   <meta name="twitter:title" content="Mattress Protector — Deep Pocket — MildMate">
   <meta name="twitter:description" content="Mattress Protector — Deep Pocket by MildMate. Extra-deep fitted protector with waterproof TPU layer for thick mattresses and pillow-tops. Custom-made. Ships worldwide.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ESL161CNBV"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-ESL161CNBV');
-  </script>
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KLJZZM9');
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
   </script>
 </head>
 <body class="product-page">
@@ -924,3 +962,4 @@
 </script>
 </body>
 </html>
+

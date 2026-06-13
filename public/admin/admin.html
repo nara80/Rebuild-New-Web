@@ -133,19 +133,58 @@ tr:hover td{background:#f8fafc}
   <meta name="twitter:title" content="MildMate Super Admin — Sandbox">
   <meta name="twitter:description" content="Custom bedding made in Thailand. Perfect fit for every mattress.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ESL161CNBV"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-ESL161CNBV');
-  </script>
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KLJZZM9');
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
   </script>
 </head>
 <body>

@@ -7,6 +7,7 @@
   'use strict';
 
   const STORAGE_KEY = 'mildmate-cookie-consent';
+  const GA4_ID = 'G-ESL161CNBV';
 
   // Default consent state (nothing accepted until user chooses)
   const defaultConsent = {
@@ -157,12 +158,18 @@
   function applyConsent() {
     // Analytics: Google Analytics 4
     if (consent.analytics) {
+      if (typeof window.__mildmateLoadAnalytics === 'function') {
+        window.__mildmateLoadAnalytics();
+        return;
+      }
       if (!window.gtag) {
-        loadScript('https://www.googletagmanager.com/gtag/js?id=G-0GWVSPJLVJ', true);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { window.dataLayer.push(arguments); };
         window.gtag('js', new Date());
-        window.gtag('config', 'G-0GWVSPJLVJ');
+        window.gtag('config', GA4_ID);
+      } else {
+        window.gtag('config', GA4_ID);
       }
     }
 

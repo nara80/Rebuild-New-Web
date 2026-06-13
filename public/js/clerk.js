@@ -257,6 +257,10 @@
     );
   }
 
+  function isMobileViewport() {
+    return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+  }
+
   function scheduleClerkInit() {
     if (_initScheduled) return;
     _initScheduled = true;
@@ -267,6 +271,26 @@
     };
     if (isAuthCriticalPath()) {
       startInit();
+      return;
+    }
+    if (isMobileViewport()) {
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        startInit();
+      };
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
       return;
     }
     if (typeof window.requestIdleCallback === 'function') {
