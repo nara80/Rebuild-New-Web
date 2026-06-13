@@ -5,7 +5,7 @@
 //   --prod    → https://mildmate-new.pages.dev (default)
 //
 // The admin secret is read from ADMIN_SECRET env var, or falls back to
-// "mildmate-sandbox-secret-2025" (sandbox default).
+// "mildmate-admin-secret-2025".
 
 const fs = require('fs');
 
@@ -13,7 +13,7 @@ const BASE = process.argv.includes('--local')
   ? 'http://localhost:8788'
   : 'https://mildmate-new.pages.dev';
 
-const SECRET = process.env.ADMIN_SECRET || 'mildmate-sandbox-secret-2025';
+const SECRET = process.env.ADMIN_SECRET || 'mildmate-admin-secret-2025';
 
 const content = JSON.parse(fs.readFileSync('data/product-content.json', 'utf8'));
 const products = content.products;

@@ -1,10 +1,6 @@
 # MildMate Redirects
 # Updated 2026-05-28
 
-# Admin sandbox to admin (Phase 7: middleware auth gating)
-/admin/sandbox/             /admin/                  301
-/admin/sandbox/*            /admin/:splat            301
-
 # Product URL changes
 /product/3-sided-zipper-duvet-cover-for-people-who-sleep-with-pets/   /product/3-sided-duvet/   301
 

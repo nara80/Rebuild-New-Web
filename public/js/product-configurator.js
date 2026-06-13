@@ -39,12 +39,12 @@
   try {
     var resp = await fetch('/api/pricing-params');
     if (resp.ok) apiParams = await resp.json();
-  } catch(e) { /* offline/local — check sandbox */ }
+  } catch(e) { /* offline/local — check local preview cache */ }
 
   // Sandbox localStorage fallback: Super Admin changes flow to product pages
   if (!apiParams) {
     try {
-      var sb = localStorage.getItem("sandbox_params");
+      var sb = localStorage.getItem("admin_params");
       if (sb) {
         var sa = JSON.parse(sb);
         apiParams = { fixed_costs: {}, fabric_rates: {}, margins: {}, sewing_tiers: [], duvet_sewing_tiers: [] };
