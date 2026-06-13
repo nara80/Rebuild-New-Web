@@ -188,6 +188,7 @@
     .unit-toggle { display: flex; gap: 0; border: 2px solid var(--color-border); border-radius: 6px; overflow: hidden; width: fit-content; }
     .unit-btn { padding: 8px 16px; border: none; background: #fff; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #64748b; font-family: var(--font-main); transition: all 0.15s; }
     .unit-btn.active { background: var(--color-primary); color: #fff; }
+    .unit-warning { margin-bottom: 12px; font-size: 0.75rem; color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 8px 10px; line-height: 1.45; }
 
     .info-matrix { margin-top: 10px; }
     .info-tabs { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
@@ -294,7 +295,8 @@
 
       /* Mobile sticky CTA bar */
       .mobile-cta-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid #e2e8f0; padding: 12px 16px; z-index: 200; display: flex; gap: 12px; align-items: center; box-shadow: 0 -4px 16px rgba(0,0,0,0.10); }
-      .mobile-cta-bar .cta-price { flex: 1; font-weight: 700; font-size: 0.9375rem; color: var(--color-text); }
+      .mobile-cta-bar .cta-price-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+      .mobile-cta-bar .cta-price { font-weight: 700; font-size: 0.9375rem; color: var(--color-text); }
       .mobile-cta-bar .cta-price .cta-price-strike { text-decoration: line-through; color: #94a3b8; font-size: 0.8125rem; margin-right: 6px; }
       .mobile-cta-bar .cta-price .cta-price-sale { color: #16a34a; }
       .mobile-cta-bar .cta-btn { padding: 12px 24px; background: var(--color-primary); color: #fff; border: none; border-radius: var(--radius); font-weight: 700; font-size: 0.9375rem; font-family: var(--font-main); cursor: pointer; white-space: nowrap; transition: background 0.15s; }
@@ -387,6 +389,7 @@
                 <button class="unit-btn" id="unit-in">inch</button>
               </div>
             </div>
+            <div class="unit-warning" id="unit-warning-note">Default: <strong>cm</strong>. Using inches? Switch to <strong>inch</strong> first.</div>
             <div class="dim-diagram">
               <img src="/images/products/common/measure-mattress-diagram-01.png" alt="Mattress dimension diagram: Width (W), Length (L), Depth (D)">
               <p class="dim-diagram-caption">Measure your mattress at its widest, longest, and deepest points</p>
@@ -516,7 +519,9 @@
   <script src="/js/product-configurator.js"></script>
   <script src="/js/reviews-carousel.js"></script>
     <div class="mobile-cta-bar" id="mobile-cta-bar">
-      <span class="cta-price" id="mobile-cta-price">USD 42.00</span>
+      <div class="cta-price-wrap">
+        <span class="cta-price" id="mobile-cta-price">USD 42.00</span>
+      </div>
       <button class="cta-btn" id="mobile-add-to-cart" disabled>
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
         Add to Cart
@@ -559,6 +564,19 @@
             desktopBtn.click();
           });
         }
+      })();
+
+      (function() {
+        var warning = document.getElementById('unit-warning-note');
+        var cmBtn = document.getElementById('unit-cm');
+        var inBtn = document.getElementById('unit-in');
+        if (!warning || !cmBtn || !inBtn) return;
+        function syncUnitWarning() {
+          warning.style.display = inBtn.classList.contains('active') ? 'none' : 'block';
+        }
+        cmBtn.addEventListener('click', syncUnitWarning);
+        inBtn.addEventListener('click', syncUnitWarning);
+        syncUnitWarning();
       })();
 
 

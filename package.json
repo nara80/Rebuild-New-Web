@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint \"public/js/**/*.js\" \"scripts/**/*.js\"",
     "deploy": "next build && wrangler pages deploy out"
   },
   "dependencies": {
@@ -25,10 +25,11 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "autoprefixer": "^10.4.0",
+    "eslint": "^10.5.0",
     "postcss": "^8.4.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.0",
     "typescript": "latest",
-    "wrangler": "^4.92.0"
+    "wrangler": "^4.100.0"
   }
 }

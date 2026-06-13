@@ -228,10 +228,40 @@ function buildQuoteEmail(
   quoteId: string, priceThb: number | null, priceUsd: number | null
 ): string {
   let dimStr = "—";
+  let shapeLine = "";
+  let areaLine = "";
   try {
-    const d = JSON.parse(dimsJson);
-    if (d.w && d.l) {
-      dimStr = d.d ? `${d.w} × ${d.l} × ${d.d} ${d.unit || "cm"}` : `${d.w} × ${d.l} ${d.unit || "cm"}`;
+    const d: any = JSON.parse(dimsJson);
+    if (d && typeof d === "object") {
+      const unit = d.unit || "cm";
+      if (d.shape_code || d.shape_name || d.values) {
+        const shapeCode = d.shape_code ? String(d.shape_code) : "";
+        const shapeName = d.shape_name ? String(d.shape_name) : "";
+        if (shapeCode || shapeName) {
+          shapeLine = `Boat Mattress Shape: ${shapeCode}${shapeCode && shapeName ? ". " : ""}${shapeName}`.trim();
+        }
+        if (d.area_cm2 && Number(d.area_cm2) > 0) {
+          areaLine = `Top Area: ${Number(d.area_cm2).toLocaleString()} cm²`;
+        }
+        if (d.values && typeof d.values === "object") {
+          const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+          const keys = Object.keys(d.values).sort((a, b) => {
+            const ai = order.indexOf(a);
+            const bi = order.indexOf(b);
+            if (ai === -1 && bi === -1) return a.localeCompare(b);
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+          });
+          dimStr = keys.map((k) => `${k}: ${d.values[k]} ${unit}`).join("\n");
+        } else {
+          dimStr = JSON.stringify(d);
+        }
+      } else if (d.w && d.l) {
+        dimStr = d.d ? `${d.w} × ${d.l} × ${d.d} ${unit}` : `${d.w} × ${d.l} ${unit}`;
+      } else {
+        dimStr = JSON.stringify(d);
+      }
     }
   } catch { dimStr = dimsJson; }
 
@@ -254,8 +284,8 @@ Address: ${address}
 Telephone: ${phone}
 
 ━━━ Order ━━━
-Dimensions: ${dimStr}
-Fabric: ${fabric}
+${shapeLine ? `${shapeLine}\n` : ""}Dimensions${dimStr.includes("\n") ? ":" : `: ${dimStr}`}
+${dimStr.includes("\n") ? `${dimStr}\n` : ""}${areaLine ? `${areaLine}\n` : ""}Fabric: ${fabric}
 Color: ${color}
 Price: ${priceLine}
 `;
