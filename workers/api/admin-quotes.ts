@@ -30,6 +30,11 @@ function isProductionHost(hostname: string): boolean {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 
+function isPreviewHashHost(hostname: string): boolean {
+  if (!hostname) return false;
+  return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
+}
+
 function collectRoles(raw: any): string[] {
   if (!raw || typeof raw !== "object") return [];
   const values: any[] = [];
@@ -64,6 +69,7 @@ function emailAllowed(email: string, env: any): boolean {
 async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
+  const host = new URL(request.url).hostname;
 
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
@@ -91,11 +97,16 @@ async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } 
     }
   }
 
+  // Temporary stage bypass for preview deployments only.
+  // Applies to hashed preview URLs like https://<hash>.mildmate-new.pages.dev
+  // and can be disabled by setting ADMIN_QUOTES_PREVIEW_BYPASS=false.
+  const bypassPreview = String(env.ADMIN_QUOTES_PREVIEW_BYPASS || "true").toLowerCase() !== "false";
+  if (bypassPreview && isPreviewHashHost(host)) return { ok: true };
+
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
 
-  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
