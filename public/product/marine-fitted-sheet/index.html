@@ -41,9 +41,9 @@
     .carousel-thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .carousel-thumb.active{border-color:#2c96f4;box-shadow:0 0 0 2px rgba(44,150,244,0.2)}
     .product-info{}
-    .product-breadcrumb{font-size:0.8125rem;color:#64748b;margin-bottom:16px}
-    .product-breadcrumb a{color:var(--color-primary);text-decoration:none}
-    .product-breadcrumb a:hover{text-decoration:underline}
+    .product-breadcrumb{font-size:0.8125rem;color:#475569;margin-bottom:16px}
+    .product-breadcrumb a{color:#1e40af;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+    .product-breadcrumb a:hover{color:#1e3a8a}
     .product-title{font-size:2.25rem;font-weight:700;color:#1E293B;line-height:1.2;margin-bottom:8px}
     .product-title-row{display:flex;align-items:center;gap:12px}
     .favorite-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--color-border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.125rem;transition:all var(--transition);flex-shrink:0;padding:0}
@@ -53,14 +53,14 @@
     .product-tagline{font-size:1rem;color:#64748b;margin-bottom:16px;line-height:1.5}
     .price-summary{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
     .price-summary .price-value{font-size:1.75rem;font-weight:700;color:var(--color-primary)}
-    .price-summary .price-sub{font-size:0.75rem;color:#64748b}
+    .price-summary .price-sub{font-size:0.75rem;color:#475569}
     .pricing-panel{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius);padding:16px;margin-bottom:24px}
     .panel-section{padding:16px;border-radius:8px;margin-bottom:20px;background:#fff;border:1px solid #e2e8f0}
     .panel-section:last-child{margin-bottom:0}
     .panel-label{font-size:0.8125rem;font-weight:700;color:var(--color-text);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
     .price-block{border-top:1px solid #e2e8f0;padding-top:20px;margin-top:20px}
     .price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
-    .price-row .price-label{font-size:0.8125rem;color:#64748b}
+    .price-row .price-label{font-size:0.8125rem;color:#475569}
     .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}
     .price-sub{font-size:0.75rem;color:#94a3b8}
     .price-breakdown{margin:8px 0 12px}
@@ -110,13 +110,13 @@
     .shape-estimate-note{font-size:0.75rem;color:#64748b}
     .unit-toggle{display:flex;gap:0;border:2px solid var(--color-border);border-radius:6px;overflow:hidden;width:fit-content}
     .unit-btn{padding:8px 16px;border:none;background:#fff;font-size:0.875rem;font-weight:600;cursor:pointer;color:#64748b;font-family:var(--font-main);transition:all 0.15s}
-    .unit-btn.active{background:var(--color-primary);color:#fff}
+    .unit-btn.active{background:#1e40af;color:#fff}
     .unit-warning{margin-bottom:12px;font-size:0.75rem;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px 10px;line-height:1.45}
     .info-matrix{margin-top:10px}
     .info-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}
     .info-tab{min-height:48px;border:2px solid #dbe3ee;border-radius:8px;background:#fff;color:#1E293B;font-weight:700;font-size:0.9375rem;transition:border-color .15s,background-color .15s}
     .info-tab:hover{border-color:var(--color-primary)}
-    .info-tab.active{border:2px solid var(--color-primary);background:#eff6ff;color:var(--color-primary)}
+    .info-tab.active{border:2px solid #1e40af;background:#dbeafe;color:#1e3a8a}
     .info-panel{display:none;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px}
     .info-panel.active{display:block}
     .info-panel h3{font-size:1.125rem;font-weight:700;color:#1E293B;margin-bottom:12px}
@@ -135,8 +135,9 @@
     .related-card .card-image img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
     .related-card .card-body{padding:16px}
     .related-card .card-title{font-size:0.875rem;font-weight:700;color:var(--color-text);margin-bottom:6px;line-height:1.3}
-    .related-card .card-price{font-size:0.9375rem;font-weight:700;color:var(--color-primary)}
-    .related-card .card-price-note{font-size:0.75rem;color:#94a3b8}
+    .related-card .card-price{font-size:0.9375rem;font-weight:700;color:#1e40af}
+    .related-card .card-price-note{font-size:0.75rem;color:#475569}
+    .related-card .rel-note{color:#475569}
     .tag-pill{display:inline-flex;align-items:center;padding:5px 12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:999px;font-size:0.75rem;font-weight:600;color:var(--color-text);text-decoration:none;transition:all 0.2s}
     .tag-pill:hover{border-color:var(--color-primary);color:var(--color-primary);background:#eff6ff}
     @media(max-width:1024px){
@@ -182,14 +183,14 @@
   <meta property="og:site_name" content="MildMate">
   <meta property="og:title" content="Marine Fitted Sheet — MildMate">
   <meta property="og:description" content="Marine Fitted Sheet by MildMate — 14 boat mattress shapes with instant online configurator. Custom-fitted for V-berth, sailboat, and yacht bunks. Quick-dry CloudSoft in 12 colors. Ships worldwide.">
-  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
-  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_Banner.png">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Marine Fitted Sheet — MildMate">
   <meta name="twitter:description" content="Marine Fitted Sheet by MildMate — 14 boat mattress shapes with instant online configurator. Custom-fitted for V-berth, sailboat, and yacht bunks. Quick-dry CloudSoft in 12 colors. Ships worldwide.">
-  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
@@ -261,7 +262,7 @@
         <div class="carousel-wrap" id="carousel-wrap">
           <div class="carousel-track" id="carousel-track">
             <div class="carousel-slide">
-              <img src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" id="gallery-main-img" width="800" height="800" loading="eager">
+              <img src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" id="gallery-main-img" width="800" height="800" loading="eager" fetchpriority="high" decoding="async">
             </div>
           </div>
           <button class="carousel-prev" id="carousel-prev" aria-label="Previous image">
@@ -297,7 +298,7 @@
         <div class="pricing-panel" id="marine-configurator">
           <!-- Shape Selector -->
           <div class="panel-section">
-            <div class="panel-label">Choose Your Boat Mattress Shape</div>
+            <label class="panel-label" for="marine-shape-select">Choose Your Boat Mattress Shape</label>
             <select class="shape-select" id="marine-shape-select">
               <option value=""> — Select a shape — </option>
             </select>
@@ -541,12 +542,12 @@
           if(dotsWrap)dotsWrap.style.display='none';
           if(thumbsWrap)thumbsWrap.style.display='none';
         }
-        track.innerHTML=gallery.map(function(item){
+        track.innerHTML=gallery.map(function(item,i){
           if(typeof item==='object'&&item.videoId){
             var thumb='https://img.youtube.com/vi/'+item.videoId+'/hqdefault.jpg';
             return '<div class="carousel-slide carousel-slide-video" data-video-id="'+item.videoId+'"><img class="yt-thumb" src="'+thumb+'" alt="Product video" width="480" height="360" loading="lazy"><div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
           }
-          return '<div class="carousel-slide"><img src="'+item+'" alt="Product image" width="800" height="800" loading="eager"></div>';
+          return '<div class="carousel-slide"><img src="'+item+'" alt="Product image" width="800" height="800" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+'></div>';
         }).join('');
         dotsWrap.innerHTML=gallery.map(function(item,i){
           return '<button class="carousel-dot'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="'+(typeof item==='object'&&item.videoId?'Video':'Image '+(i+1))+'"></button>';
@@ -1907,4 +1908,5 @@
   </script>
 </body>
 </html>
+
 

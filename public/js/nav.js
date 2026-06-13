@@ -182,7 +182,7 @@
     signInText.textContent = 'Sign In';
     signInText.setAttribute('aria-label', 'Sign in to your account');
     signInText.style.cssText =
-      'font-size:0.875rem;font-weight:600;color:var(--color-primary);' +
+      'font-size:0.875rem;font-weight:600;color:#1e3a8a;' +
       'border:none;background:none;cursor:pointer;white-space:nowrap;padding:0 2px;';
 
     // Store the default SVG HTML for sign-out fallback
@@ -250,7 +250,15 @@
       searchOverlay.classList.add('active');
       document.body.style.overflow = 'hidden';
       const input = searchOverlay.querySelector('input');
-      if (input) input.focus();
+      if (input) {
+        requestAnimationFrame(function () {
+          try {
+            input.focus({ preventScroll: true });
+          } catch (_) {
+            input.focus();
+          }
+        });
+      }
     }
   }
 

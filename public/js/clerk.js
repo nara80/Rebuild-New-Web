@@ -251,7 +251,6 @@
     var path = (window.location && window.location.pathname ? window.location.pathname : '/').toLowerCase();
     return (
       path.indexOf('/account') === 0 ||
-      path.indexOf('/checkout') === 0 ||
       path.indexOf('/admin') === 0 ||
       path.indexOf('/quote') === 0
     );

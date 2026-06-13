@@ -285,21 +285,19 @@
     /* Surface wells — replace white card bg with muted canvas */
     .surface-well{background:var(--color-surface)}
   </style>
-  <script src="https://js.stripe.com/v3/"></script>
-
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
   <meta property="og:title" content="Checkout — MildMate">
   <meta property="og:description" content="MildMate Checkout — Complete your custom bedding order.">
-  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
-  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_Banner.png">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com/checkout/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Checkout — MildMate">
   <meta name="twitter:description" content="MildMate Checkout — Complete your custom bedding order.">
-  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
     <script>
     (function () {
       var GTM_ID = 'GTM-KLJZZM9';
@@ -804,24 +802,38 @@
       var hasDefaultAddressPrefill = false;
       var prefilledCountryCode = '';
       var prefilledPhoneCode = '';
+      function hasClerkSessionHint() {
+        return /(?:^|;\s*)__session=/.test(document.cookie || '');
+      }
+      function scheduleAuthCheck() {
+        var run = function() {
+          if (!_checkingAuth) checkAuth();
+        };
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(run, { timeout: 2500 });
+        } else {
+          setTimeout(run, 1200);
+        }
+      }
 
       // Check auth state on load — single call, no concurrency
       var _authDone = false;
       var _checkingAuth = false;
-      checkAuth();
+      document.getElementById('login-banner').style.display = 'block';
+      scheduleAuthCheck();
       window.addEventListener('clerk:signed-in', function() {
-        if (!_checkingAuth) { checkAuth(); }
+        if (!_checkingAuth) { checkAuth({ force: true }); }
       });
       window.addEventListener('clerk:signed-out', function() {
         authedEmail = null;
         document.getElementById('login-banner').style.display = 'block';
       });
-      // Fallback: if no auth result after 6s, show banner
+      // Safety fallback: one forced auth probe after idle period
       setTimeout(function() {
-        if (!_authDone) {
-          document.getElementById('login-banner').style.display = 'block';
+        if (!_authDone && !_checkingAuth) {
+          checkAuth({ force: true });
         }
-      }, 6000);
+      }, 7000);
 
       // Render cart
       step1();
@@ -834,32 +846,44 @@
         });
       }
 
-      async function checkAuth() {
+      async function checkAuth(opts) {
+        opts = opts || {};
+        var force = !!opts.force;
         if (_checkingAuth) return;
         _checkingAuth = true;
 
-        // Fast path: Clerk SDK already has the user → hide banner immediately
-        if (window.clerk && window.clerk.user) {
-          document.getElementById('login-banner').style.display = 'none';
-        }
-
-        // Wait for Clerk SDK to initialize (if not already)
-        if (!window.clerk) {
-          await new Promise(function(resolve) {
-            window.addEventListener('clerk:ready', resolve, { once: true });
-            setTimeout(resolve, 5000);
-          });
-        }
-
         try {
+          var hasClerkUser = !!(window.clerk && window.clerk.user);
+          var hasSession = hasClerkSessionHint();
+          if (!force && !hasClerkUser && !hasSession) {
+            _authDone = true;
+            document.getElementById('login-banner').style.display = 'block';
+            return;
+          }
+
+          // Wait briefly for Clerk SDK only when auth hints are present
+          if (!window.clerk && (hasSession || force)) {
+            await new Promise(function(resolve) {
+              window.addEventListener('clerk:ready', resolve, { once: true });
+              setTimeout(resolve, 2500);
+            });
+          }
+
+          hasClerkUser = !!(window.clerk && window.clerk.user);
+
+          // Fast path: Clerk SDK already has the user → hide banner immediately
+          if (hasClerkUser) {
+            document.getElementById('login-banner').style.display = 'none';
+          }
+
           var authHeaders = {};
           var clerkEmail = (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress && window.clerk.user.primaryEmailAddress.emailAddress) || '';
           if (clerkEmail) {
             authHeaders['X-User-Email'] = clerkEmail;
           }
-          if (typeof window.getClerkToken === 'function') {
-            // Retry token fetch — SDK may need a moment after init
-            for (var i = 0; i < 50; i++) {
+          if (hasClerkUser && typeof window.getClerkToken === 'function') {
+            // Retry token fetch — SDK may need a short moment after init
+            for (var i = 0; i < 15; i++) {
               try {
                 var token = await window.getClerkToken();
                 if (token) {
@@ -874,17 +898,24 @@
           }
           if (authHeaders.Authorization) {
             _authRetryCount = 0;
-          } else if (window.clerk && window.clerk.user && _authRetryCount < 3) {
+          } else if (hasClerkUser && _authRetryCount < 3) {
             _authRetryCount++;
             setTimeout(function() {
               if (!_checkingAuth) checkAuth();
             }, 1200);
           }
 
+          // Guest checkout default: skip /api/auth/me if no auth context is available
+          if (!authHeaders.Authorization && !clerkEmail) {
+            _authDone = true;
+            document.getElementById('login-banner').style.display = 'block';
+            return;
+          }
+
           var resp = await fetch('/api/auth/me', { headers: authHeaders });
           var data = await resp.json();
+          _authDone = true;
           if (data.authenticated) {
-            _authDone = true;
             authedEmail = data.email;
             var clerkEmail = (window.clerk && window.clerk.user && window.clerk.user.primaryEmailAddress && window.clerk.user.primaryEmailAddress.emailAddress) || '';
             var prefilledEmail = data.email || clerkEmail || '';
@@ -911,6 +942,8 @@
                 }
               } catch(e) {}
             }
+          } else {
+            document.getElementById('login-banner').style.display = 'block';
           }
 
           // Pre-fill shipping from default address (runs regardless of /api/auth/me result, if we have a token)
