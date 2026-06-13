@@ -703,27 +703,30 @@
         ],
         '06': [
           {id:'A',label:'Head Top (A) *',placeholder:'e.g. 70',required:true},
-          {id:'B',label:'Left Side 1 (B) — mirrors G',placeholder:'e.g. 70',required:true},
-          {id:'G',label:'Right Side 1 (G)',placeholder:'e.g. 70',required:true},
+          {id:'B',label:'Left Side 1 (B) — mirrors G',placeholder:'auto',required:true},
+          {id:'G',label:'Right Side 1 (G)',placeholder:'auto',required:true},
           {id:'C',label:'Left Side 2 (C) — mirrors F',placeholder:'e.g. 70',required:true},
           {id:'F',label:'Right Side 2 (F)',placeholder:'e.g. 70',required:true},
-          {id:'D',label:'Left Side 3 (D) — mirrors E',placeholder:'e.g. 70',required:true},
-          {id:'E',label:'Right Side 3 (E)',placeholder:'e.g. 70',required:true},
+          {id:'D',label:'Left Side 3 (D) — mirrors E',placeholder:'auto',required:true},
+          {id:'E',label:'Right Side 3 (E)',placeholder:'auto',required:true},
           {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
-          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'L1',label:'Length 1 (L1) — Head to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'L2',label:'Length 2 (L2) — Bottom corner to C line (90°) *',placeholder:'e.g. 60',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '07': [
           {id:'A',label:'Head Top (A) *',placeholder:'e.g. 60',required:true},
           {id:'E',label:'Foot Bottom (E) *',placeholder:'e.g. 80',required:true},
           {id:'B',label:'Left Side 1 (B) — mirrors H',placeholder:'e.g. 60',required:true},
-          {id:'H',label:'Right Side 1 (H)',placeholder:'e.g. 60',required:true},
+          {id:'H',label:'Right Side 1 (H) — mirrors B',placeholder:'e.g. 60',required:true},
           {id:'C',label:'Left Side 2 (C) — mirrors G',placeholder:'e.g. 60',required:true},
-          {id:'G',label:'Right Side 2 (G)',placeholder:'e.g. 60',required:true},
+          {id:'G',label:'Right Side 2 (G) — mirrors C',placeholder:'e.g. 60',required:true},
           {id:'D',label:'Left Side 3 (D) — mirrors F',placeholder:'e.g. 60',required:true},
-          {id:'F',label:'Right Side 3 (F)',placeholder:'e.g. 60',required:true},
-          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
-          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'F',label:'Right Side 3 (F) — mirrors D',placeholder:'e.g. 60',required:true},
+          {id:'W1',label:'Top Width (W1) *',placeholder:'e.g. 160',required:true},
+          {id:'W2',label:'Bottom Width (W2) *',placeholder:'e.g. 160',required:true},
+          {id:'L1',label:'Length 1 (L1) — Head to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'L2',label:'Length 2 (L2) — Bottom corner to C line (90°) *',placeholder:'e.g. 60',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '08': [
@@ -903,17 +906,23 @@
             perimeter = A+B+C+D+E+F;
             return topArea + (perimeter * (T + 10));
 
-          case '06': /* Island 7-Sides: polygon/grid method — bounding rectangle W×L */
-            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');W=getVal('W');L=getVal('L');T=getVal('T');
-            if(!W||!L||!T) return 0;
-            topArea = W * L;
+          case '06': /* Island 7-Sides: split geometry with derived L = C + L1 + L2 */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');W=getVal('W');T=getVal('T');
+            var L1=getVal('L1'); var L2=getVal('L2');
+            L = C + L1 + L2;
+            if(!A||!W||!C||!L1||!L2||!T) return 0;
+            topArea = ((W + A) / 2) * L1 + (W * C) + (W * L2 / 2);
+            if(topArea < 0) topArea = 0;
             perimeter = A+B+C+D+E+F+G;
             return topArea + (perimeter * (T + 10));
 
-          case '07': /* Island 8-Sides: polygon/grid method — bounding rectangle W×L */
-            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');W=getVal('W');L=getVal('L');T=getVal('T');
-            if(!W||!L||!T) return 0;
-            topArea = W * L;
+          case '07': /* Island 8-Sides: split geometry with derived L = C + L1 + L2 */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');T=getVal('T');
+            var W1=getVal('W1'); var W2=getVal('W2'); var L1=getVal('L1'); var L2=getVal('L2');
+            L = C + L1 + L2;
+            if(!A||!E||!C||!W1||!W2||!L1||!L2||!T) return 0;
+            topArea = ((W1 + A) / 2) * L1 + ((W1 + W2) / 2) * C + ((W2 + E) / 2) * L2;
+            if(topArea < 0) topArea = 0;
             perimeter = A+B+C+D+E+F+G+H;
             return topArea + (perimeter * (T + 10));
 
@@ -986,7 +995,9 @@
           case '02': return ((getVal('A')+getVal('D'))/2) * getVal('L');
           case '03': return ((getVal('A')+getVal('C'))/2) * getVal('L');
           case '04': return ((getVal('C')+getVal('E')+getVal('A'))/2) * getVal('D');
-          case '05': case '06': case '07': return getVal('W') * getVal('L');
+          case '05': return getVal('W') * getVal('L');
+          case '06': var a06=getVal('A'),w06=getVal('W'),c06=getVal('C'),l106=getVal('L1'),l206=getVal('L2'); return Math.max(0, ((w06+a06)/2)*l106 + (w06*c06) + (w06*l206/2));
+          case '07': var a07=getVal('A'),e07=getVal('E'),c07=getVal('C'),w107=getVal('W1'),w207=getVal('W2'),l107=getVal('L1'),l207=getVal('L2'); return Math.max(0, ((w107+a07)/2)*l107 + ((w107+w207)/2)*c07 + ((w207+e07)/2)*l207);
           case '13': var a13=getVal('A'),c13=getVal('C'),d13=getVal('D'),f13=getVal('F'),w13=getVal('W'),l13=getVal('L'); return Math.max(0, w13*l13 - ((l13-c13)*(w13-a13))/2 - ((l13-f13)*(w13-d13))/2);
           case '09': var a09=getVal('A'),c09=getVal('C'),d09=getVal('D'),e09=getVal('E'); return Math.max(0, c09*d09 + ((d09+a09)/2)*(e09-c09));
           case '10': var a10=getVal('A'),d10=getVal('D'),l10=getVal('L'),c10=getVal('C'); return d10*l10 - (l10-c10)*(d10-a10);
@@ -1317,6 +1328,70 @@
             if(!isNaN(bf) && bf > 0){
               bEl.value = bf;
               fEl.value = bf;
+            }
+          }
+        } else if(code === '06'){
+          /* Shape 06: auto-fill B=G and D=E from A/W/L1/L2, while keeping fields editable */
+          if(sourceId === 'dim-B' || sourceId === 'dim-G' || sourceId === 'dim-D' || sourceId === 'dim-E') return;
+          var a06El = document.getElementById('dim-A');
+          var w06El = document.getElementById('dim-W');
+          var l106El = document.getElementById('dim-L1');
+          var l206El = document.getElementById('dim-L2');
+          var b06El = document.getElementById('dim-B');
+          var g06El = document.getElementById('dim-G');
+          var d06El = document.getElementById('dim-D');
+          var e06El = document.getElementById('dim-E');
+          if(!a06El || !w06El || !l106El || !l206El || !b06El || !g06El || !d06El || !e06El) return;
+          var a06Val = parseFloat(a06El.value) || 0;
+          var w06Val = parseFloat(w06El.value) || 0;
+          var l106Val = parseFloat(l106El.value) || 0;
+          var l206Val = parseFloat(l206El.value) || 0;
+          if(a06Val > 0 && w06Val > 0 && l106Val > 0){
+            var bg06 = Math.round(Math.sqrt(Math.pow((a06Val - w06Val) / 2, 2) + Math.pow(l106Val, 2)));
+            if(!isNaN(bg06) && bg06 > 0){
+              b06El.value = bg06;
+              g06El.value = bg06;
+            }
+          }
+          if(w06Val > 0 && l206Val > 0){
+            var de06 = Math.round(Math.sqrt(Math.pow(l206Val, 2) + Math.pow(w06Val / 2, 2)));
+            if(!isNaN(de06) && de06 > 0){
+              d06El.value = de06;
+              e06El.value = de06;
+            }
+          }
+        } else if(code === '07'){
+          /* Shape 07: auto-fill B=H and D=F from A/E/W1/W2/L1/L2, while keeping fields editable */
+          if(sourceId === 'dim-B' || sourceId === 'dim-H' || sourceId === 'dim-D' || sourceId === 'dim-F') return;
+          var a07El = document.getElementById('dim-A');
+          var e07El = document.getElementById('dim-E');
+          var w107El = document.getElementById('dim-W1');
+          var w207El = document.getElementById('dim-W2');
+          var l107El = document.getElementById('dim-L1');
+          var l207El = document.getElementById('dim-L2');
+          var b07El = document.getElementById('dim-B');
+          var h07El = document.getElementById('dim-H');
+          var d07El = document.getElementById('dim-D');
+          var f07El = document.getElementById('dim-F');
+          if(!a07El || !e07El || !w107El || !w207El || !l107El || !l207El || !b07El || !h07El || !d07El || !f07El) return;
+          var a07Val = parseFloat(a07El.value) || 0;
+          var e07Val = parseFloat(e07El.value) || 0;
+          var w107Val = parseFloat(w107El.value) || 0;
+          var w207Val = parseFloat(w207El.value) || 0;
+          var l107Val = parseFloat(l107El.value) || 0;
+          var l207Val = parseFloat(l207El.value) || 0;
+          if(a07Val > 0 && w107Val > 0 && l107Val > 0){
+            var bh07 = Math.round(Math.sqrt(Math.pow(l107Val, 2) + Math.pow((w107Val - a07Val) / 2, 2)));
+            if(!isNaN(bh07) && bh07 > 0){
+              b07El.value = bh07;
+              h07El.value = bh07;
+            }
+          }
+          if(e07Val > 0 && w207Val > 0 && l207Val > 0){
+            var df07 = Math.round(Math.sqrt(Math.pow(l207Val, 2) + Math.pow((w207Val - e07Val) / 2, 2)));
+            if(!isNaN(df07) && df07 > 0){
+              d07El.value = df07;
+              f07El.value = df07;
             }
           }
         } else if(code === '09'){
