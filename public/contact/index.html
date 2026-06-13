@@ -584,6 +584,52 @@
       const feedback = document.getElementById('form-feedback');
       if (!form || !submitBtn || !feedback) return;
 
+      /* — Marine Quote pre-fill — */
+      (function(){
+        var qs = new URLSearchParams(window.location.search);
+        if(qs.get('quote') === 'marine'){
+          var shape = qs.get('shape') || '';
+          var dimsStr = qs.get('dims') || '{}';
+          var area = qs.get('area') || '';
+          var price = qs.get('price') || '';
+          var color = qs.get('color') || 'Mint';
+          var dims = {};
+          try { dims = JSON.parse(dimsStr); } catch(e){}
+          var dimLines = [];
+          for(var k in dims){ if(dims.hasOwnProperty(k)) dimLines.push(k+': '+dims[k]); }
+          var msg = 'Marine Fitted Sheet Quote\n';
+          msg += 'Shape: ' + shape + '\n';
+          msg += 'Color: ' + color + '\n';
+          msg += 'Dimensions:\n' + dimLines.join('\n') + '\n';
+          msg += 'Area: ' + area + ' cm²\n';
+          msg += 'Price: ' + price + '\n';
+          var msgEl = document.getElementById('message');
+          if(msgEl) msgEl.value = msg;
+          var inquiryEl = document.getElementById('inquiry-type');
+          if(inquiryEl) inquiryEl.value = 'custom-quote';
+          // Add color to form for API
+          var colorInput = document.getElementById('quote-color');
+          if(!colorInput){
+            colorInput = document.createElement('input');
+            colorInput.type = 'hidden';
+            colorInput.id = 'quote-color';
+            colorInput.name = 'color';
+            colorInput.value = color;
+            form.appendChild(colorInput);
+          }
+          // Add product slug
+          var slugInput = document.getElementById('quote-slug');
+          if(!slugInput){
+            slugInput = document.createElement('input');
+            slugInput.type = 'hidden';
+            slugInput.id = 'quote-slug';
+            slugInput.name = 'product_slug';
+            slugInput.value = 'marine-fitted-sheet';
+            form.appendChild(slugInput);
+          }
+        }
+      })();
+
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
         submitBtn.disabled = true;
@@ -597,14 +643,57 @@
           inquiry_type: form.inquiry_type.value,
           message: form.message.value.trim(),
         };
+        // If marine quote, remap fields for /api/quote
+        var colorInput = document.getElementById('quote-color');
+        var slugInput = document.getElementById('quote-slug');
+        var isQuote = !!(colorInput && slugInput);
 
         try {
-          const res = await fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
+          if(isQuote){
+            // Build dimensions from pre-filled message format
+            var dims = {};
+            var lines = (form.message.value || '').split('\n');
+            var inDims = false;
+            for(var i=0;i<lines.length;i++){
+              if(lines[i].indexOf('Dimensions:')===0){ inDims = true; continue; }
+              if(inDims && lines[i].indexOf(':')>0){
+                var parts = lines[i].split(':');
+                if(parts.length===2) dims[parts[0].trim()] = parts[1].trim();
+              } else if(inDims && lines[i].trim()===''){ inDims = false; }
+            }
+            var quotePayload = {
+              customer_name: payload.name,
+              email: payload.email,
+              address: '',
+              telephone: '',
+              product_slug: slugInput.value,
+              dimensions: JSON.stringify(dims),
+              fabric: 'CloudSoft',
+              color: colorInput.value,
+              quoted_price_thb: null,
+              quoted_price_usd: null
+            };
+            var res = await fetch('/api/quote', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(quotePayload),
+            });
+            var data = await res.json();
+            if (res.ok && data.success) {
+              feedback.className = 'form-feedback success';
+              feedback.textContent = data.message || 'Quote submitted. We\'ll email you within 24 hours.';
+              form.reset();
+            } else {
+              feedback.className = 'form-feedback error';
+              feedback.textContent = data.error || 'Something went wrong. Please try again.';
+            }
+          } else {
+            var res = await fetch('/api/contact', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            var data = await res.json();
 
           if (res.ok && data.success) {
             feedback.className = 'form-feedback success';
@@ -613,6 +702,7 @@
           } else {
             feedback.className = 'form-feedback error';
             feedback.textContent = data.error || 'Something went wrong. Please try again.';
+          }
           }
         } catch (err) {
           feedback.className = 'form-feedback error';
