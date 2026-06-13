@@ -7,7 +7,8 @@
   <meta name="description" content="Find your perfect fit at MildMate. Standard sizes for 8 regions, custom quotes for any shape. Bedding made to order in Thailand.">
   <title>Find Your Perfect Fit  -  MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/main.min.css">
+  <link rel="preload" href="/css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/css/main.min.css"></noscript>
   <style>
     .product-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
     .product-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
