@@ -6,5 +6,7 @@ Disallow: /api/
 Disallow: /checkout/
 Disallow: /account/
 Disallow: /unsubscribe/
+Disallow: /order-confirmed/
+Disallow: /th/checkout/
 
 Sitemap: https://www.mildmate.com/sitemap.xml
