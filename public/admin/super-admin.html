@@ -1130,10 +1130,14 @@ async function getAdminAuthHeaders(includeJson) {
   try {
     if (typeof window.getClerkToken === 'function') {
       var token = await window.getClerkToken();
+      if (!token && window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') {
+        token = await window.clerk.session.getToken();
+      }
       if (token) headers['Authorization'] = 'Bearer ' + token;
     }
   } catch(e) {}
-  var secret = localStorage.getItem('admin_secret') || '';
+  var secret = localStorage.getItem('admin_secret') || ADMIN_SECRET || '';
+  if (secret) ADMIN_SECRET = secret;
   if (secret) headers['X-Admin-Secret'] = secret;
   return headers;
 }
@@ -1554,7 +1558,11 @@ async function createSalesQuote() {
     });
     var data = await resp.json().catch(function(){ return {}; });
     if (!resp.ok) {
-      toast('Create failed: ' + (data.error || resp.status));
+      if (resp.status === 401 || resp.status === 403) {
+        toast('Create failed: Unauthorized. Sign in as admin or set admin_secret for this preview domain.');
+      } else {
+        toast('Create failed: ' + (data.error || resp.status));
+      }
       return;
     }
     var result = document.getElementById('sq-result');
