@@ -100,14 +100,14 @@ export async function handleAdminUpload(request: Request, env: any): Promise<Res
       httpMetadata: { contentType: file.type },
     });
 
-    // Construct public URL via R2 public bucket domain
-    // Cloudflare R2 public access: https://pub-{hash}.r2.dev/key
-    // For now, return the key — frontend constructs URL
-    const publicUrl = `/r2/${key}`;
+    // Return direct R2 public URL (no proxy needed)
+    const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+    const publicUrl = `${R2_PUBLIC_BASE}/${key}`;
 
     return new Response(JSON.stringify({
       success: true,
       url: publicUrl,
+      cdnUrl: publicUrl,
       key,
       size: file.size,
       type: file.type,
