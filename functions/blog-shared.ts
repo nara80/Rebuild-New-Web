@@ -18,6 +18,20 @@ export function formatDate(dateStr: string): string {
   } catch { return dateStr; }
 }
 
+const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+
+function toPublicR2Url(url: string): string {
+  if (!url) return url;
+  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE}${url.slice(3)}` : url;
+}
+
+function normalizeR2InHtml(html: string): string {
+  if (!html) return html;
+  return html
+    .replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`)
+    .replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
+}
+
 export async function buildBlogListingHTML(env: any, page: number = 1, lang: string = "en"): Promise<Response> {
   const isThai = lang === "th";
   const prefix = isThai ? "/th" : "";
@@ -75,7 +89,7 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
     };
 
     posts.forEach((post: any, i: number) => {
-      const img = post.featured_image ? esc(post.featured_image) : "";
+      const img = post.featured_image ? esc(toPublicR2Url(post.featured_image)) : "";
       const alt = esc(isThai ? (post.featured_image_alt_th || post.title_th || post.title_en || "") : (post.featured_image_alt_en || post.title_en || ""));
       const slug = esc(post.slug);
       const title = esc(isThai ? (post.title_th || post.title_en || "") : (post.title_en || ""));
@@ -156,12 +170,13 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
   const readTime = isThai
     ? escHtml(post.read_time_th || post.read_time_en || "5 min read")
     : escHtml(post.read_time_en || "5 min read");
-  const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
+  const featuredImage = post.featured_image ? escHtml(toPublicR2Url(post.featured_image)) : "";
   let body = isThai
     ? (post.body_th || post.body_en || "<p>บทความนี้กำลังจะมาเร็วๆ นี้</p>")
     : (post.body_en || "<p>This article is coming soon.</p>");
   // Fix double-escaped HTML attributes from translation (e.g. src=""..."" → src="...")
   body = body.replace(/(\w+)=""([^"]*?)""/g, '$1="$2"');
+  body = normalizeR2InHtml(body);
   // If Thai body exists but lacks images and EN body has images, copy them over
   if (isThai && post.body_th && post.body_en && !/<img\b/i.test(post.body_th)) {
     const imgRegex = /<img\b[^>]*>/gi;
@@ -199,7 +214,7 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
       relatedProductsHtml = products.map((p: any) => {
         const pSlug = escHtml(p.slug);
         const pTitle = escHtml(p.title_en || "");
-        const pImg = p.image_url ? escHtml(p.image_url) : "/images/placeholder.svg";
+        const pImg = p.image_url ? escHtml(toPublicR2Url(p.image_url)) : "/images/placeholder.svg";
         const pPrice = p.base_price_usd ? "$" + Math.round(p.base_price_usd) : "";
         const pLink = "/product/" + pSlug + "/";
         return '<div class="related-card">'

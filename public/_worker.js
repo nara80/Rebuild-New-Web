@@ -20,6 +20,17 @@ function formatDate(dateStr) {
   }
 }
 __name(formatDate, "formatDate");
+var R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toPublicR2Url(url) {
+  if (!url) return url;
+  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE}${url.slice(3)}` : url;
+}
+__name(toPublicR2Url, "toPublicR2Url");
+function normalizeR2InHtml(html) {
+  if (!html) return html;
+  return html.replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`).replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
+}
+__name(normalizeR2InHtml, "normalizeR2InHtml");
 async function buildBlogListingHTML(env, page = 1, lang = "en") {
   const isThai = lang === "th";
   const prefix = isThai ? "/th" : "";
@@ -69,7 +80,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       "All": "\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14"
     };
     posts.forEach((post, i) => {
-      const img = post.featured_image ? esc(post.featured_image) : "";
+      const img = post.featured_image ? esc(toPublicR2Url(post.featured_image)) : "";
       const alt = esc(isThai ? post.featured_image_alt_th || post.title_th || post.title_en || "" : post.featured_image_alt_en || post.title_en || "");
       const slug = esc(post.slug);
       const title = esc(isThai ? post.title_th || post.title_en || "" : post.title_en || "");
@@ -127,9 +138,10 @@ async function buildBlogPostHTML(post, env, lang = "en") {
   const category = escHtml(categoryLabel);
   const author = escHtml(post.author || (isThai ? "\u0E17\u0E35\u0E21 MildMate" : "MildMate Team"));
   const readTime = isThai ? escHtml(post.read_time_th || post.read_time_en || "5 min read") : escHtml(post.read_time_en || "5 min read");
-  const featuredImage = post.featured_image ? escHtml(post.featured_image) : "";
+  const featuredImage = post.featured_image ? escHtml(toPublicR2Url(post.featured_image)) : "";
   let body = isThai ? post.body_th || post.body_en || "<p>\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21\u0E19\u0E35\u0E49\u0E01\u0E33\u0E25\u0E31\u0E07\u0E08\u0E30\u0E21\u0E32\u0E40\u0E23\u0E47\u0E27\u0E46 \u0E19\u0E35\u0E49</p>" : post.body_en || "<p>This article is coming soon.</p>";
   body = body.replace(/(\w+)=""([^"]*?)""/g, '$1="$2"');
+  body = normalizeR2InHtml(body);
   if (isThai && post.body_th && post.body_en && !/<img\b/i.test(post.body_th)) {
     const imgRegex = /<img\b[^>]*>/gi;
     const enImages = post.body_en.match(imgRegex);
@@ -162,7 +174,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
       relatedProductsHtml = products.map((p) => {
         const pSlug = escHtml(p.slug);
         const pTitle = escHtml(p.title_en || "");
-        const pImg = p.image_url ? escHtml(p.image_url) : "/images/placeholder.svg";
+        const pImg = p.image_url ? escHtml(toPublicR2Url(p.image_url)) : "/images/placeholder.svg";
         const pPrice = p.base_price_usd ? "$" + Math.round(p.base_price_usd) : "";
         const pLink = "/product/" + pSlug + "/";
         return '<div class="related-card"><a href="' + pLink + '" class="card-image"><img src="' + pImg + '" alt="' + pTitle + '" loading="lazy"></a><div class="card-body"><div class="card-title"><a href="' + pLink + '" style="color:inherit;text-decoration:none">' + pTitle + "</a></div>" + (pPrice ? '<div class="card-price">' + pPrice + "</div>" : "") + '<a href="' + pLink + '" class="btn btn-primary">Shop Now</a></div></div>';
@@ -356,6 +368,25 @@ async function onRequest(context) {
 __name(onRequest, "onRequest");
 
 // ../workers/api/products.ts
+var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url(url) {
+  if (!url) return url;
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE2}${url.slice(3)}`;
+  return url;
+}
+__name(toR2Url, "toR2Url");
+function r2Product(p) {
+  const out = { ...p, image_url: toR2Url(p.image_url) };
+  if (out.images && typeof out.images === "string") {
+    try {
+      const arr = JSON.parse(out.images);
+      out.images = JSON.stringify(arr.map(toR2Url));
+    } catch (_) {
+    }
+  }
+  return out;
+}
+__name(r2Product, "r2Product");
 var PRODUCT_TYPE_DISPLAY = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
@@ -416,7 +447,7 @@ async function handleProducts(request, env) {
     const search = url.searchParams.get("search") || void 0;
     try {
       const products = await listProducts(env, { category, product_type, niche, fabric, search });
-      return new Response(JSON.stringify({ products }), {
+      return new Response(JSON.stringify({ products: products.map(r2Product) }), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -441,7 +472,7 @@ async function handleProducts(request, env) {
           headers: { "Content-Type": "application/json" }
         });
       }
-      return new Response(JSON.stringify({ product }), {
+      return new Response(JSON.stringify({ product: r2Product(product) }), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -2201,6 +2232,25 @@ async function handleAdminExchangeRates(request, env) {
 __name(handleAdminExchangeRates, "handleAdminExchangeRates");
 
 // ../workers/api/admin-products.ts
+var R2_PUBLIC_BASE3 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url2(url) {
+  if (!url) return url;
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE3}${url.slice(3)}`;
+  return url;
+}
+__name(toR2Url2, "toR2Url");
+function r2Product2(p) {
+  const out = { ...p, image_url: toR2Url2(p.image_url) };
+  if (out.images && typeof out.images === "string") {
+    try {
+      const arr = JSON.parse(out.images);
+      out.images = JSON.stringify(arr.map(toR2Url2));
+    } catch (_) {
+    }
+  }
+  return out;
+}
+__name(r2Product2, "r2Product");
 function parseCategoryCsv(csv) {
   const parts = csv.split(",").map((s) => s.trim()).filter(Boolean);
   const product_type = parts[0] || "sheets";
@@ -2247,7 +2297,7 @@ async function handleAdminProducts(request, env) {
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
     ).all();
-    return new Response(JSON.stringify(result.results || []), {
+    return new Response(JSON.stringify((result.results || []).map(r2Product2)), {
       headers: { "Content-Type": "application/json" }
     });
   }
@@ -2300,7 +2350,7 @@ async function handleAdminProducts(request, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(r2Product2(result)), {
       headers: { "Content-Type": "application/json" }
     });
   }
@@ -2463,10 +2513,12 @@ async function handleAdminUpload(request, env) {
     await bucket.put(key, file.stream(), {
       httpMetadata: { contentType: file.type }
     });
-    const publicUrl = `/r2/${key}`;
+    const R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+    const publicUrl = `${R2_PUBLIC_BASE6}/${key}`;
     return new Response(JSON.stringify({
       success: true,
       url: publicUrl,
+      cdnUrl: publicUrl,
       key,
       size: file.size,
       type: file.type,
@@ -5331,6 +5383,12 @@ async function handleAdminBlog(request, env) {
 __name(handleAdminBlog, "handleAdminBlog");
 
 // ../workers/api/blog-posts.ts
+var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toPublicR2Url2(url) {
+  if (!url) return url;
+  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE4}${url.slice(3)}` : url;
+}
+__name(toPublicR2Url2, "toPublicR2Url");
 async function handleBlogPosts(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -5356,7 +5414,8 @@ async function handleBlogPosts(request, env) {
       ).all();
       results = (rows.results || []).map((p) => ({ ...p, categories_json: p.category ? JSON.stringify([p.category]) : "[]" }));
     }
-    return new Response(JSON.stringify({ posts: results }), { headers });
+    const posts = results.map((p) => ({ ...p, featured_image: toPublicR2Url2(p.featured_image) }));
+    return new Response(JSON.stringify({ posts }), { headers });
   } catch (e) {
     return new Response(JSON.stringify({ error: "Failed: " + e.message }), { status: 500, headers });
   }
@@ -6855,7 +6914,7 @@ async function handleCustomers(request, env) {
         });
       }
       return new Response(JSON.stringify({
-        orders: results,
+        orders: results.map((r) => ({ ...r, image_url: r.image_url && r.image_url.startsWith("/r2/") ? `https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev${r.image_url.slice(3)}` : r.image_url })),
         merged: hasGuestBridge
       }), {
         headers: { "Content-Type": "application/json" }
@@ -7276,6 +7335,26 @@ async function handleOrderConfirmed(request, env) {
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
 // api/[[path]].ts
+var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url3(url) {
+  if (!url || typeof url !== "string") return url;
+  if (!url.startsWith("/r2/")) return url;
+  return `${R2_PUBLIC_BASE5}${url.slice(3)}`;
+}
+__name(toR2Url3, "toR2Url");
+function r2Product3(p) {
+  if (!p) return p;
+  const imgKey = p.image_url !== void 0 ? "image_url" : "Image_url";
+  const out = { ...p, [imgKey]: toR2Url3(p[imgKey]) };
+  if (out.images && typeof out.images === "string") {
+    try {
+      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url3));
+    } catch (_) {
+    }
+  }
+  return out;
+}
+__name(r2Product3, "r2Product");
 var onRequest2 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -7286,7 +7365,18 @@ var onRequest2 = /* @__PURE__ */ __name(async (context) => {
     });
   }
   if (path.startsWith("/api/products")) {
-    return handleProducts(request, env);
+    const res = await handleProducts(request, env);
+    const body = await res.text();
+    try {
+      const json10 = JSON.parse(body);
+      if (json10.product) json10.product = r2Product3(json10.product);
+      if (Array.isArray(json10.products)) json10.products = json10.products.map(r2Product3);
+      return new Response(JSON.stringify(json10), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (_) {
+      return new Response(body, { headers: { "Content-Type": "application/json" } });
+    }
   }
   if (path.startsWith("/api/pricing-params") || path.startsWith("/api/diy-prices")) {
     return handlePricingParams(request, env);
@@ -7559,9 +7649,55 @@ async function onRequest4(context) {
   if (!slug) {
     return Response.redirect(new URL("/products/", url.origin).toString(), 301);
   }
-  if (CANONICAL_PRODUCT_SLUGS.has(slug)) return context.next();
-  const target = resolveLegacyProduct(slug);
-  return Response.redirect(new URL(target, url.origin).toString(), 301);
+  if (!CANONICAL_PRODUCT_SLUGS.has(slug)) {
+    const target = resolveLegacyProduct(slug);
+    return Response.redirect(new URL(target, url.origin).toString(), 301);
+  }
+  try {
+    const staticUrl = `${url.origin}/product/${slug}/index.html`;
+    const staticRes = await fetch(staticUrl);
+    if (!staticRes.ok) return context.next();
+    let html = await staticRes.text();
+    const stmt = context.env.DB.prepare(
+      "SELECT image_url, images FROM products WHERE slug = ?"
+    ).bind(slug);
+    const product = await stmt.first();
+    if (product && (product.image_url || product.images)) {
+      const images = product.images ? JSON.parse(product.images) : [];
+      const mainImage = product.image_url || images[0] || "";
+      const THUMB_COUNT = 6;
+      const thumbs = images.slice(0, THUMB_COUNT);
+      if (mainImage) {
+        html = html.replace(
+          /<meta name="product-image" content="[^"]*"/,
+          `<meta name="product-image" content="${mainImage}"`
+        );
+      }
+      if (mainImage) {
+        html = html.replace(
+          /<img([^>]*)id="gallery-main-img"([^>]*)>/,
+          `<img${1}id="gallery-main-img"${2} src="${mainImage}">`
+        );
+      }
+      if (thumbs.length > 0) {
+        const imagesJson = JSON.stringify(thumbs.filter(Boolean));
+        html = html.replace(
+          /<meta name="product-images" content="[^"]*"/,
+          `<meta name="product-images" content='${imagesJson}'>`
+        );
+      }
+    }
+    return new Response(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=60"
+      }
+    });
+  } catch (err) {
+    console.error("Product SSR error:", err);
+    return context.next();
+  }
 }
 __name(onRequest4, "onRequest");
 
@@ -7888,16 +8024,21 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
-  const obj = await env.MILDMATE_ASSETS.get(key);
-  if (obj) {
-    return new Response(obj.body, {
-      headers: {
-        "Content-Type": obj.httpMetadata?.contentType || "image/jpeg",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    });
+  const R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+  const publicUrl = `${R2_PUBLIC_BASE6}/${key}`;
+  try {
+    const obj = await env.MILDMATE_ASSETS.get(key);
+    if (obj) {
+      return new Response(obj.body, {
+        headers: {
+          "Content-Type": obj.httpMetadata?.contentType || "image/jpeg",
+          "Cache-Control": "public, max-age=31536000, immutable"
+        }
+      });
+    }
+  } catch (_) {
   }
-  return new Response("Not Found", { status: 404 });
+  return Response.redirect(publicUrl, 302);
 }, "onRequest");
 
 // account/_middleware.ts
@@ -8380,7 +8521,7 @@ ${header}`);
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-KjSe54/functionsRoutes-0.8819619911426904.mjs
+// ../.wrangler/tmp/pages-oHM9P9/functionsRoutes-0.1513034828863673.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

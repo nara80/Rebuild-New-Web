@@ -1,5 +1,11 @@
 // MildMate Blog Posts API
 // GET /api/blog/posts           — public listing (published posts, for blog index page)
+const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toPublicR2Url(url: string | null | undefined): string | null | undefined {
+  if (!url) return url;
+  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE}${url.slice(3)}` : url;
+}
+
 export async function handleBlogPosts(request: Request, env: any): Promise<Response> {
   const headers = {
     "Content-Type": "application/json",
@@ -28,7 +34,8 @@ export async function handleBlogPosts(request: Request, env: any): Promise<Respo
       ).all();
       results = (rows.results || []).map((p: any) => ({ ...p, categories_json: p.category ? JSON.stringify([p.category]) : "[]" }));
     }
-    return new Response(JSON.stringify({ posts: results }), { headers });
+    const posts = results.map((p: any) => ({ ...p, featured_image: toPublicR2Url(p.featured_image) }));
+    return new Response(JSON.stringify({ posts }), { headers });
   } catch (e: any) {
     return new Response(JSON.stringify({ error: "Failed: " + e.message }), { status: 500, headers });
   }

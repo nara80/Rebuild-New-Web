@@ -129,7 +129,7 @@ export async function handleCustomers(request: Request, env: any): Promise<Respo
       }
 
       return new Response(JSON.stringify({
-        orders: results.map((r: any) => ({ ...r, image_url: r.image_url && (r.image_url as string).startsWith("/r2/") ? `https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev${r.image_url}` : r.image_url })),
+        orders: results.map((r: any) => ({ ...r, image_url: r.image_url && (r.image_url as string).startsWith("/r2/") ? `https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev${(r.image_url as string).slice(3)}` : r.image_url })),
         merged: hasGuestBridge,
       }), {
         headers: { "Content-Type": "application/json" },

@@ -1,5 +1,22 @@
 // MildMate API — Pages Function catch-all for /api/*
 // Converts Service Worker format to Pages Function format
+const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url(url) {
+  if (!url || typeof url !== "string") return url;
+  if (!url.startsWith("/r2/")) return url;
+  return `${R2_PUBLIC_BASE}${url.slice(3)}`;
+}
+function r2Product(p) {
+  if (!p) return p;
+  const imgKey = p.image_url !== undefined ? "image_url" : "Image_url";
+  const out = { ...p, [imgKey]: toR2Url(p[imgKey]) };
+  if (out.images && typeof out.images === "string") {
+    try {
+      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url));
+    } catch (_) {}
+  }
+  return out;
+}
 import { handleProducts } from "../../workers/api/products";
 import { handlePricing } from "../../workers/api/pricing";
 import { handleGeo } from "../../workers/api/geo-currency";
@@ -53,7 +70,18 @@ export const onRequest: PagesFunction<{
 
   // Products API
   if (path.startsWith("/api/products")) {
-    return handleProducts(request, env);
+    const res = await handleProducts(request, env);
+    const body = await res.text();
+    try {
+      const json = JSON.parse(body);
+      if (json.product) json.product = r2Product(json.product);
+      if (Array.isArray(json.products)) json.products = json.products.map(r2Product);
+      return new Response(JSON.stringify(json), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (_) {
+      return new Response(body, { headers: { "Content-Type": "application/json" } });
+    }
   }
 
   // Public pricing params

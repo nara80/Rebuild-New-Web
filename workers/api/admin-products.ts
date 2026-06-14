@@ -8,7 +8,7 @@ const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 
 function toR2Url(url: string | null | undefined): string {
   if (!url) return url as string;
-  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE}${url}`;
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE}${url.slice(3)}`;
   return url;
 }
 
