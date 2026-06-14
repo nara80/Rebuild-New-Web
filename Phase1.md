@@ -1,4 +1,4 @@
-## Phase 1 Completion Summary (2026-05-09)
+﻿## Phase 1 Completion Summary (2026-05-09)
 
 Scaffold built and functional. All folders created, `wrangler.toml` configured with D1 + R2 bindings, `migrations/001_initial.sql` creates 4 tables (products, orders, abandoned_carts, subscribers), `AGENTS.md` project memory created, placeholder HTML files in place.
 
@@ -12,7 +12,7 @@ Scaffold built and functional. All folders created, `wrangler.toml` configured w
 ---
 
 # Phase 1 ΓÇö Foundation
-**Status (2026-06-10): ✅ COMPLETE — All migrations 001–023 + 026_product_type_niches applied. Reviews table (024), blog categories (024_blog_categories_json), and review_date index (025) also applied.**
+**Status (2026-06-14): ✅ COMPLETE — All migrations 001–023 + 026_product_type_niches applied. Phase 2 SEO URLs deployed (2026-06-14). Phase 8 Launch in progress (DNS cutover complete).**
 **Goal:** Set up the complete project scaffold, database schema, and Cloudflare configuration so every future phase has a clean, working base to build on.
 
 **End Result:** A wired-up project folder on your computer, connected to Cloudflare, with an empty but fully structured database ready to receive products and orders.
@@ -158,8 +158,6 @@ Move to **Phase 3 — Design System + Shared Components**.
 
 ## What Happens Next
 
-Phase 1 is **complete**. Phase 2 (SEO URL Preservation) is **intentionally deferred** — it will run pre-launch after Phase 7 is complete.
+Phase 1 is **complete**. Phase 2 (SEO URL Preservation) is **deployed** (2026-06-14). Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
 
-Move directly to **Phase 3 — Design System + Shared Components**.
-
-**Tell Droid:** "Phase 1 is complete. All checklist items are done. Phase 2 is deferred. Please start Phase 3."
+Move to **Phase 8 — Polish + Launch** (Phases 3–7 already complete).

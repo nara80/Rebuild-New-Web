@@ -1,4 +1,4 @@
-# Phase 2 — SEO URL Preservation
+﻿# Phase 2 — SEO URL Preservation
 **Status (2026-05-28): ⏸️ DEFERRED — runs pre-launch after Phase 8 (Launch)**
 **Goal:** Redirect every existing WordPress URL so that when you swap domain names and point `www.mildmate.com` to the new Cloudflare Pages site, every old URL either lands on the correct new page or redirects to the nearest equivalent. Google never sees a 404.
 
@@ -395,8 +395,6 @@ These WordPress system URLs do not need HTML pages — they can go directly to r
 
 ## What Happens Next
 
-Once Phase 2 is complete, move to **Phase 7 — Admin Dashboard** (Phase 3 and 4 are already ✅ Complete, Phase 5 is 🚧 In Progress, Phase 6 is ⏸️ Pending).
+Phase 2 is **deployed** (2026-06-14). Phases 3, 4, 5, 6, and 7 are **complete**. Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
 
-Phase 7 builds the private management interface for your team — the orders table showing custom dimensions for manufacturing, the product editor, the image uploader, and the subscriber CSV export. It is protected by Clerk auth so only your team can access it.
-
-**Tell Droid:** "Phase 2 is complete. All checklist items are done. Please start Phase 7."
+Move to **Phase 8 — Polish + Launch** for final pre-launch tasks (mobile QA, Lighthouse audit, Stripe live mode).
