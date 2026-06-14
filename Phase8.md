@@ -31,8 +31,8 @@
 | Mobile CSS fixes | Any layout issues found during QA review | ⏸ Pending |
 | Lighthouse performance fixes | Image compression, CSS/JS optimization | ⏸ Pending |
 | Stripe live mode keys | Real payment credentials stored as Cloudflare secrets | ⏸ Pending |
-| DNS records | Points `www.mildmate.com` to Cloudflare Pages | ⏸ Pending |
-| Google Search Console verification | Confirms Google can crawl the new site | ⏸ Pending |
+| DNS records | Points `www.mildmate.com` to Cloudflare Pages | ✅ Deployed (DNS cutover complete, 2026-06-14) |
+| Google Search Console verification | Confirms Google can crawl the new site | ✅ Verified (sitemap submitted 2026-06-14) |
 
 ---
 
@@ -626,11 +626,11 @@ When `https://www.mildmate.com` loads your new site with a padlock, Stripe is ac
 - Thai PromptPay + international card payments via Stripe (Option A shipping tracking: carrier + tracking number + auto-generated carrier URL)
 - Clerk multi-provider auth (Google / Facebook / Email) — customer account portal at `/account/`
 - Automatic order confirmation emails and team notifications via Resend
-- Abandoned cart email capture (Phase 5 built) — `workers/cron.ts` recovery email cron ⏸ Pending (Phase 6)
+- Abandoned cart email capture (Phase 5 built) — `workers/cron.ts` recovery email cron ✅ Cron trigger configured via Cloudflare Dashboard
 - A private admin dashboard (`/admin/`) for your manufacturing and marketing teams (Phase 7 — code complete, setup pending)
 - Performance score 90+, security headers grade A at securityheaders.com
 - Favorites wishlist (authenticated users) — built + deployed
-- `public/robots.txt` ✅ built — `sitemap.xml` ⏸ Pending
+- public/robots.txt ✅ built — sitemap.xml ✅ Built + submitted to Search Console (2026-06-14)
 
 **The website will now run automatically.** Orders save to D1. Emails send via Resend. Abandoned carts recover themselves. Your team manages everything from the admin dashboard — no code required.
 
