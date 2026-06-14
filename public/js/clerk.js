@@ -66,7 +66,7 @@
 
     _readyPromise = (async function () {
       var clerkModule = await import(
-        'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.mjs'
+        'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.16.1/dist/clerk.mjs'
       );
       var ClerkCtor = clerkModule && clerkModule.Clerk;
       if (!ClerkCtor) {
@@ -74,7 +74,7 @@
       }
 
       await loadScript(
-        'https://' + clerkDomain + '/npm/@clerk/ui@1.13.1/dist/ui.browser.js'
+        'https://' + clerkDomain + '/npm/@clerk/ui@1.16.1/dist/ui.browser.js'
       );
       if (!window.__internal_ClerkUICtor) {
         throw new Error('Clerk UI bundle failed to load');
