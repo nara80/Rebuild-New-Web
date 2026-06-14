@@ -6379,7 +6379,7 @@ async function handleCheckout(request, env) {
     }
   } catch {
   }
-  const siteUrl = request.url.includes("localhost") || request.url.includes("127.0.0.1") ? "http://localhost:8788" : "https://mildmate-new.pages.dev";
+  const siteUrl = request.url.includes("localhost") || request.url.includes("127.0.0.1") ? "http://localhost:8788" : request.url.includes("mildmate-new.pages.dev") ? "https://mildmate-new.pages.dev" : "https://www.mildmate.com";
   try {
     const params = new URLSearchParams();
     params.append("customer_email", normalizedEmail);
@@ -8140,6 +8140,14 @@ function emailAllowed8(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed8, "emailAllowed");
+function emailBlocked(email) {
+  if (!email) return false;
+  const blocked = [
+    "mildmateshop@gmail.com"
+  ];
+  return blocked.includes(email.toLowerCase());
+}
+__name(emailBlocked, "emailBlocked");
 function getPrimaryClerkEmail(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -8202,6 +8210,16 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
     allowed = allowed || emailAllowed8(email, context.env);
+  }
+  if (emailBlocked(email)) {
+    return new Response(
+      `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Access Denied \u2014 MildMate</title>
+<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#F8FAFC;color:#1E293B;text-align:center;padding:24px}h1{font-size:1.5rem;margin-bottom:8px}p{color:#64748b;font-size:0.9375rem;max-width:400px;margin:0 auto 24px}a{color:#2c96f4;text-decoration:none;font-weight:600}a:hover{text-decoration:underline}</style></head>
+<body><div><h1>Access Denied</h1><p>${escHtml3(email)} does not have super-admin access.</p><a href="/">Go to Homepage</a></div></body></html>`,
+      { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    );
   }
   if (!hasAdmin && !allowed) {
     return new Response(
@@ -8570,7 +8588,7 @@ ${header}`);
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-HMfM6z/functionsRoutes-0.3460046969775714.mjs
+// ../.wrangler/tmp/pages-XdSn5q/functionsRoutes-0.9730919416287602.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
