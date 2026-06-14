@@ -4,6 +4,25 @@
 // GET  /api/admin/products/:slug    — get single product
 // PUT  /api/admin/products/:slug    — update product fields
 
+const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+
+function toR2Url(url: string | null | undefined): string {
+  if (!url) return url as string;
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE}${url}`;
+  return url;
+}
+
+function r2Product(p: any): any {
+  const out = { ...p, image_url: toR2Url(p.image_url) };
+  if (out.images && typeof out.images === "string") {
+    try {
+      const arr: string[] = JSON.parse(out.images);
+      out.images = JSON.stringify(arr.map(toR2Url));
+    } catch (_) { /* ignore */ }
+  }
+  return out;
+}
+
 interface ProductRow {
   id: number;
   slug: string;
@@ -80,7 +99,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
        FROM products ORDER BY sort_order, id`
     ).all();
 
-    return new Response(JSON.stringify(result.results || []), {
+    return new Response(JSON.stringify((result.results || []).map(r2Product)), {
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -142,7 +161,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       });
     }
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(r2Product(result)), {
       headers: { "Content-Type": "application/json" },
     });
   }

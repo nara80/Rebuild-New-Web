@@ -87,8 +87,70 @@ export async function onRequest(context: any): Promise<Response> {
     return Response.redirect(new URL('/products/', url.origin).toString(), 301);
   }
 
-  if (CANONICAL_PRODUCT_SLUGS.has(slug)) return context.next();
+  // Legacy slug → redirect
+  if (!CANONICAL_PRODUCT_SLUGS.has(slug)) {
+    const target = resolveLegacyProduct(slug);
+    return Response.redirect(new URL(target, url.origin).toString(), 301);
+  }
 
-  const target = resolveLegacyProduct(slug);
-  return Response.redirect(new URL(target, url.origin).toString(), 301);
+  // Canonical slug → serve static HTML with D1 image overrides
+  try {
+    // 1. Fetch static HTML from self
+    const staticUrl = `${url.origin}/product/${slug}/index.html`;
+    const staticRes = await fetch(staticUrl);
+    if (!staticRes.ok) return context.next();
+    let html = await staticRes.text();
+
+    // 2. Query D1 for this product's image data
+    const stmt = context.env.DB.prepare(
+      'SELECT image_url, images FROM products WHERE slug = ?'
+    ).bind(slug);
+    const product = await stmt.first();
+
+    if (product && (product.image_url || product.images)) {
+      const images: string[] = product.images ? JSON.parse(product.images as string) : [];
+      const mainImage = (product.image_url as string) || images[0] || '';
+
+      // Build gallery HTML: main image + up to 6 thumbnails
+      const THUMB_COUNT = 6;
+      const thumbs = images.slice(0, THUMB_COUNT);
+
+      // Replace <meta name="product-image" content="...">
+      if (mainImage) {
+        html = html.replace(
+          /<meta name="product-image" content="[^"]*"/,
+          `<meta name="product-image" content="${mainImage}"`
+        );
+      }
+
+      // Replace gallery-main-img <img>
+      if (mainImage) {
+        html = html.replace(
+          /<img([^>]*)id="gallery-main-img"([^>]*)>/,
+          `<img${1}id="gallery-main-img"${2} src="${mainImage}">`
+        );
+      }
+
+      // Replace <meta name="product-images" content="..."> for carousel
+      if (thumbs.length > 0) {
+        const imagesJson = JSON.stringify(thumbs.filter(Boolean));
+        html = html.replace(
+          /<meta name="product-images" content="[^"]*"/,
+          `<meta name="product-images" content='${imagesJson}'>`
+        );
+      }
+    }
+
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=60',
+      },
+    });
+  } catch (err) {
+    console.error('Product SSR error:', err);
+    // Fallback: serve static HTML
+    return context.next();
+  }
 }

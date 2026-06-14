@@ -1,6 +1,26 @@
 // MildMate Products API
 // Serves product catalog + category filtering from Cloudflare D1
 
+const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+
+function toR2Url(url: string | null | undefined): string {
+  if (!url) return url as string;
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE}${url}`;
+  return url;
+}
+
+function r2Product(p: Product): Product {
+  // Handle images JSON array (not typed but returned by D1)
+  const out = { ...p, image_url: toR2Url(p.image_url) } as any;
+  if (out.images && typeof out.images === "string") {
+    try {
+      const arr: string[] = JSON.parse(out.images);
+      out.images = JSON.stringify(arr.map(toR2Url));
+    } catch (_) { /* ignore parse errors */ }
+  }
+  return out;
+}
+
 export interface Product {
   id: number;
   slug: string;
@@ -120,7 +140,7 @@ export async function handleProducts(request: Request, env: any): Promise<Respon
           headers: { "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ product }), {
+      return new Response(JSON.stringify({ product: r2Product(product) }), {
         headers: { "Content-Type": "application/json" },
       });
     } catch (e: any) {
