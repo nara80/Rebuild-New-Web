@@ -8140,6 +8140,39 @@ function emailAllowed8(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed8, "emailAllowed");
+function getPrimaryClerkEmail(user) {
+  if (!user || typeof user !== "object") return "";
+  const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
+  const primaryId = user.primary_email_address_id;
+  const primary = list.find((e) => e && e.id === primaryId);
+  return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
+}
+__name(getPrimaryClerkEmail, "getPrimaryClerkEmail");
+async function enrichAdminFromClerk(sub, env) {
+  const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+  if (!sub || !clerkKey) return { email: "", hasAdmin: false };
+  try {
+    const resp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+      headers: { Authorization: "Bearer " + clerkKey }
+    });
+    if (!resp.ok) return { email: "", hasAdmin: false };
+    const user = await resp.json();
+    const email = getPrimaryClerkEmail(user);
+    const metadataRaw = {
+      role: user?.public_metadata?.role,
+      roles: user?.public_metadata?.roles,
+      org_role: user?.public_metadata?.org_role,
+      orgRole: user?.public_metadata?.orgRole,
+      public_metadata: user?.public_metadata || {},
+      unsafe_metadata: user?.unsafe_metadata || {},
+      metadata: user?.private_metadata || {}
+    };
+    return { email, hasAdmin: hasAdminRole8(metadataRaw) };
+  } catch {
+    return { email: "", hasAdmin: false };
+  }
+}
+__name(enrichAdminFromClerk, "enrichAdminFromClerk");
 var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
@@ -8160,8 +8193,17 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
     return redirectToSignIn2(context.request.url);
   }
   const raw = result.payload.raw || {};
-  const email = result.payload.email || "";
-  if (!hasAdminRole8(raw) && !emailAllowed8(email, context.env)) {
+  let email = String(result.payload.email || "").trim().toLowerCase();
+  let hasAdmin = hasAdminRole8(raw);
+  let allowed = emailAllowed8(email, context.env);
+  if (!hasAdmin && !allowed) {
+    const sub = String(result.payload.sub || "").trim();
+    const enriched = await enrichAdminFromClerk(sub, context.env);
+    if (enriched.email) email = enriched.email;
+    hasAdmin = hasAdmin || enriched.hasAdmin;
+    allowed = allowed || emailAllowed8(email, context.env);
+  }
+  if (!hasAdmin && !allowed) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -8404,7 +8446,7 @@ async function getChrome(db, key) {
   return html.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
 }
 __name(getChrome, "getChrome");
-var SKIP_PREFIXES = ["/admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
+var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
 var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
@@ -8528,7 +8570,7 @@ ${header}`);
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-lq9tFZ/functionsRoutes-0.5584258247288592.mjs
+// ../.wrangler/tmp/pages-HMfM6z/functionsRoutes-0.3460046969775714.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
@@ -8582,6 +8624,13 @@ var routes = [
   {
     routePath: "/admin",
     mountPath: "/admin",
+    method: "",
+    middlewares: [onRequest8],
+    modules: []
+  },
+  {
+    routePath: "/super-admin",
+    mountPath: "/super-admin",
     method: "",
     middlewares: [onRequest8],
     modules: []

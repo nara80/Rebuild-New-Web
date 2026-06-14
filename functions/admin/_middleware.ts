@@ -75,9 +75,43 @@ function emailAllowed(email: string, env: any): boolean {
   return allow.includes(email.toLowerCase());
 }
 
+function getPrimaryClerkEmail(user: any): string {
+  if (!user || typeof user !== "object") return "";
+  const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
+  const primaryId = user.primary_email_address_id;
+  const primary = list.find((e: any) => e && e.id === primaryId);
+  return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
+}
+
+async function enrichAdminFromClerk(sub: string, env: any): Promise<{ email: string; hasAdmin: boolean }> {
+  const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+  if (!sub || !clerkKey) return { email: "", hasAdmin: false };
+  try {
+    const resp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+      headers: { Authorization: "Bearer " + clerkKey },
+    });
+    if (!resp.ok) return { email: "", hasAdmin: false };
+    const user = await resp.json();
+    const email = getPrimaryClerkEmail(user);
+    const metadataRaw = {
+      role: user?.public_metadata?.role,
+      roles: user?.public_metadata?.roles,
+      org_role: user?.public_metadata?.org_role,
+      orgRole: user?.public_metadata?.orgRole,
+      public_metadata: user?.public_metadata || {},
+      unsafe_metadata: user?.unsafe_metadata || {},
+      metadata: user?.private_metadata || {},
+    };
+    return { email, hasAdmin: hasAdminRole(metadataRaw) };
+  } catch {
+    return { email: "", hasAdmin: false };
+  }
+}
+
 export const onRequest: PagesFunction<{
   DB: D1Database;
   CLERK_PUBLISHABLE_KEY?: string;
+  CLERK_SECRET_KEY?: string;
   ADMIN_EMAILS?: string;
   ENVIRONMENT?: string;
 }> = async (context) => {
@@ -110,9 +144,20 @@ export const onRequest: PagesFunction<{
 
   // Check for admin role or allowed email
   const raw = (result.payload as any).raw || {};
-  const email = (result.payload as any).email || "";
+  let email = String((result.payload as any).email || "").trim().toLowerCase();
+  let hasAdmin = hasAdminRole(raw);
+  let allowed = emailAllowed(email, context.env);
 
-  if (!hasAdminRole(raw) && !emailAllowed(email, context.env)) {
+  // Fallback: Clerk JWT sometimes lacks email/metadata claims on production custom domains.
+  if (!hasAdmin && !allowed) {
+    const sub = String((result.payload as any).sub || "").trim();
+    const enriched = await enrichAdminFromClerk(sub, context.env);
+    if (enriched.email) email = enriched.email;
+    hasAdmin = hasAdmin || enriched.hasAdmin;
+    allowed = allowed || emailAllowed(email, context.env);
+  }
+
+  if (!hasAdmin && !allowed) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">

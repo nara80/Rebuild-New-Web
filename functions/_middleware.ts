@@ -225,7 +225,7 @@ async function getChrome(db: any, key: 'header' | 'footer'): Promise<string | nu
     .replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, '');
 }
 
-const SKIP_PREFIXES = ['/admin/', '/api/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
+const SKIP_PREFIXES = ['/admin/', '/super-admin/', '/api/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
 const SKIP_EXTENSIONS = ['.js', '.css', '.png', '.jpg', '.webp', '.svg', '.ico', '.woff2', '.json', '.xml', '.map'];
 const CANONICAL_PRODUCT_SLUGS = new Set([
   'standard-fitted-sheet',
