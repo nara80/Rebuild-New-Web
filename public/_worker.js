@@ -3560,6 +3560,10 @@ async function ensureShippingRatesSchema(env) {
         )`
       ).run();
       await env.DB.prepare(
+        `INSERT OR IGNORE INTO shipping_product_tiers (product_slug, tier, updated_at)
+         VALUES ('sample-fabric', 3, datetime('now'))`
+      ).run();
+      await env.DB.prepare(
         `CREATE TABLE IF NOT EXISTS shipping_add_rates (
           tier INTEGER PRIMARY KEY CHECK(tier IN (1,2,3)),
           add_thb INTEGER NOT NULL DEFAULT 0,
@@ -3643,6 +3647,7 @@ async function calculateShippingQuote(env, input) {
     const row2 = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        first_item_thb, additional_item_thb,
         is_active
        FROM shipping_rates
        WHERE country_code = ?1 AND is_active = 1
@@ -3700,18 +3705,37 @@ async function calculateShippingQuote(env, input) {
   for (const ar of addRows.results || []) {
     globalAddRates[Number(ar.tier)] = toAmount(ar.add_thb);
   }
-  const firstItemThb = toAmount(row["tier" + highestTier + "_first_thb"] || 0);
-  let highestItemDeducted = false;
+  const legacyFirstThb = toAmount(row.first_item_thb || 0);
+  const legacyAddThb = toAmount(row.additional_item_thb || 0);
+  const tier1FirstThb = toAmount(row.tier1_first_thb || 0);
+  const tier2FirstThb = toAmount(row.tier2_first_thb || 0);
+  const tier3FirstThb = toAmount(row.tier3_first_thb || 0);
+  const hasTierFirstRates = tier1FirstThb > 0 || tier2FirstThb > 0 || tier3FirstThb > 0;
+  let firstItemThb = 0;
   let additionalThb = 0;
-  for (const item of effectiveItems) {
-    const t = tierMap.get(item.slug) || 2;
-    const qty = item.qty || 0;
-    const addRate = globalAddRates[t] || 0;
-    if (t === highestTier && !highestItemDeducted) {
-      additionalThb += addRate * Math.max(0, qty - 1);
-      highestItemDeducted = true;
-    } else {
-      additionalThb += addRate * qty;
+  if (!hasTierFirstRates && legacyFirstThb > 0) {
+    highestTier = 0;
+    firstItemThb = legacyFirstThb;
+    additionalThb = legacyAddThb * Math.max(0, totalQty - 1);
+  } else {
+    if (highestTier <= 0) highestTier = 2;
+    const tierFirstLookup = {
+      1: tier1FirstThb,
+      2: tier2FirstThb,
+      3: tier3FirstThb
+    };
+    firstItemThb = toAmount(tierFirstLookup[highestTier] || legacyFirstThb || 0);
+    let highestItemDeducted = false;
+    for (const item of effectiveItems) {
+      const t = tierMap.get(item.slug) || 2;
+      const qty = item.qty || 0;
+      const addRate = toAmount(globalAddRates[t] || legacyAddThb || 0);
+      if (t === highestTier && !highestItemDeducted) {
+        additionalThb += addRate * Math.max(0, qty - 1);
+        highestItemDeducted = true;
+      } else {
+        additionalThb += addRate * qty;
+      }
     }
   }
   const amountThb = toAmount(firstItemThb + additionalThb);
@@ -7455,8 +7479,94 @@ async function onRequest3(context) {
 }
 __name(onRequest3, "onRequest");
 
+// product/[[path]].ts
+var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
+  "standard-fitted-sheet",
+  "deep-pocket-fitted-sheet",
+  "marine-fitted-sheet",
+  "dorm-fitted-sheet",
+  "rv-truck-fitted-sheet",
+  "family-fitted-sheet",
+  "pet-owner-fitted-sheet",
+  "flat-sheet-standard",
+  "flat-sheet-extra-deep-pocket",
+  "3-sided-duvet",
+  "pet-owner-duvet-cover",
+  "duvet-cover-marine",
+  "duvet-cover-rv",
+  "duvet-cover-dorm",
+  "duvet-insert",
+  "pillowcase-envelope",
+  "pillowcase-zipper",
+  "pillowcase-sham",
+  "mattress-protector-standard",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector",
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general",
+  "bedbridge-connector",
+  "mattress-lift-helper"
+]);
+function hasToken(slug, token) {
+  return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
+}
+__name(hasToken, "hasToken");
+function resolveLegacyProduct(slug) {
+  if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
+  if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
+  if (slug.startsWith("product-boat-bedding") || slug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
+  if (slug.includes("boat") && slug.includes("pillow")) return "/product/pillowcase-envelope/";
+  if (slug.includes("dorm")) return slug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
+  if (slug.includes("rv-truck") || hasToken(slug, "rv") || slug.includes("truck")) {
+    if (slug.includes("duvet")) return "/product/duvet-cover-rv/";
+    if (slug.includes("encasement")) return "/product/rv-truck-mattress-encasement/";
+    return "/product/rv-truck-fitted-sheet/";
+  }
+  if (slug.includes("marine") || slug.includes("boat")) return slug.includes("duvet") ? "/product/duvet-cover-marine/" : "/product/marine-fitted-sheet/";
+  if (slug.includes("pet")) {
+    if (slug.includes("duvet") || slug.includes("3-sided")) return "/product/pet-owner-duvet-cover/";
+    if (slug.includes("protector")) return "/product/pet-proof-mattress-protector/";
+    if (slug.includes("pillow")) return "/product/pillowcase-zipper/";
+    return "/product/pet-owner-fitted-sheet/";
+  }
+  if (slug.includes("co-sleeping") || slug.includes("family")) return "/product/family-fitted-sheet/";
+  if (slug.includes("duvet")) return "/product/3-sided-duvet/";
+  if (slug.includes("encasement") || slug.includes("zippered-tpu-mattress-cover")) return "/product/mattress-encasement-general/";
+  if (slug.includes("sheet-protectors") || slug.includes("protector") || slug === "pillow-case") return "/product/mattress-protector-standard/";
+  if (slug.includes("pillow") || slug.includes("pillowcase") || slug.includes("pillow-cover") || slug.includes("pillow-case")) {
+    if (slug.includes("sham") || slug.includes("vent")) return "/product/pillowcase-sham/";
+    if (slug.includes("zip") || slug.includes("hidden-zipper")) return "/product/pillowcase-zipper/";
+    return "/product/pillowcase-envelope/";
+  }
+  if (slug.includes("fitted") || slug.includes("bed-sheet") || slug.includes("bedsheet")) return "/product/standard-fitted-sheet/";
+  if (slug === "tbar") return "/product/bedbridge-connector/";
+  if (slug === "mattress-lift-helper") return "/product/mattress-lift-helper/";
+  if (slug === "baby-blanket" || slug === "animal-bedding") return "/products/";
+  return "/products/";
+}
+__name(resolveLegacyProduct, "resolveLegacyProduct");
+async function onRequest4(context) {
+  const url = new URL(context.request.url);
+  const pathname = url.pathname;
+  if (pathname === "/product" || pathname === "/product/") {
+    return Response.redirect(new URL("/products/", url.origin).toString(), 301);
+  }
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] !== "product") return context.next();
+  const slug = (parts[1] || "").toLowerCase();
+  if (!slug) {
+    return Response.redirect(new URL("/products/", url.origin).toString(), 301);
+  }
+  if (CANONICAL_PRODUCT_SLUGS.has(slug)) return context.next();
+  const target = resolveLegacyProduct(slug);
+  return Response.redirect(new URL(target, url.origin).toString(), 301);
+}
+__name(onRequest4, "onRequest");
+
 // quote/[[path]].ts
-var onRequest4 = /* @__PURE__ */ __name(async (context) => {
+var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -7774,7 +7884,7 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // r2/[[path]].ts
-var onRequest5 = /* @__PURE__ */ __name(async (context) => {
+var onRequest6 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -7801,7 +7911,7 @@ function getClerkSessionToken(request) {
   return null;
 }
 __name(getClerkSessionToken, "getClerkSessionToken");
-var onRequest6 = /* @__PURE__ */ __name(async (context) => {
+var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -7882,7 +7992,7 @@ function emailAllowed8(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed8, "emailAllowed");
-var onRequest7 = /* @__PURE__ */ __name(async (context) => {
+var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -8148,7 +8258,79 @@ async function getChrome(db, key) {
 __name(getChrome, "getChrome");
 var SKIP_PREFIXES = ["/admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
-async function onRequest8(context) {
+var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
+  "standard-fitted-sheet",
+  "deep-pocket-fitted-sheet",
+  "marine-fitted-sheet",
+  "dorm-fitted-sheet",
+  "rv-truck-fitted-sheet",
+  "family-fitted-sheet",
+  "pet-owner-fitted-sheet",
+  "flat-sheet-standard",
+  "flat-sheet-extra-deep-pocket",
+  "3-sided-duvet",
+  "pet-owner-duvet-cover",
+  "duvet-cover-marine",
+  "duvet-cover-rv",
+  "duvet-cover-dorm",
+  "duvet-insert",
+  "pillowcase-envelope",
+  "pillowcase-zipper",
+  "pillowcase-sham",
+  "mattress-protector-standard",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector",
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general",
+  "bedbridge-connector",
+  "mattress-lift-helper"
+]);
+function hasToken2(slug, token) {
+  return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
+}
+__name(hasToken2, "hasToken");
+function resolveLegacyProductPath(pathname) {
+  if (pathname === "/product/" || pathname === "/product") return "/products/";
+  if (!pathname.startsWith("/product/")) return null;
+  const rawSlug = pathname.slice("/product/".length).replace(/\/+$/, "").toLowerCase();
+  if (!rawSlug) return "/products/";
+  if (CANONICAL_PRODUCT_SLUGS2.has(rawSlug)) return null;
+  if (rawSlug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
+  if (rawSlug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
+  if (rawSlug.startsWith("product-boat-bedding") || rawSlug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
+  if (rawSlug.includes("boat") && rawSlug.includes("pillow")) return "/product/pillowcase-envelope/";
+  if (rawSlug.includes("dorm")) return rawSlug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
+  if (rawSlug.includes("rv-truck") || hasToken2(rawSlug, "rv") || rawSlug.includes("truck")) {
+    if (rawSlug.includes("duvet")) return "/product/duvet-cover-rv/";
+    if (rawSlug.includes("encasement")) return "/product/rv-truck-mattress-encasement/";
+    return "/product/rv-truck-fitted-sheet/";
+  }
+  if (rawSlug.includes("marine") || rawSlug.includes("boat")) return rawSlug.includes("duvet") ? "/product/duvet-cover-marine/" : "/product/marine-fitted-sheet/";
+  if (rawSlug.includes("pet")) {
+    if (rawSlug.includes("duvet") || rawSlug.includes("3-sided")) return "/product/pet-owner-duvet-cover/";
+    if (rawSlug.includes("protector")) return "/product/pet-proof-mattress-protector/";
+    if (rawSlug.includes("pillow")) return "/product/pillowcase-zipper/";
+    return "/product/pet-owner-fitted-sheet/";
+  }
+  if (rawSlug.includes("co-sleeping") || rawSlug.includes("family")) return "/product/family-fitted-sheet/";
+  if (rawSlug.includes("duvet")) return "/product/3-sided-duvet/";
+  if (rawSlug.includes("encasement") || rawSlug.includes("zippered-tpu-mattress-cover")) return "/product/mattress-encasement-general/";
+  if (rawSlug.includes("sheet-protectors") || rawSlug.includes("protector") || rawSlug === "pillow-case") return "/product/mattress-protector-standard/";
+  if (rawSlug.includes("pillow") || rawSlug.includes("pillowcase") || rawSlug.includes("pillow-cover") || rawSlug.includes("pillow-case")) {
+    if (rawSlug.includes("sham") || rawSlug.includes("vent")) return "/product/pillowcase-sham/";
+    if (rawSlug.includes("zip") || rawSlug.includes("hidden-zipper")) return "/product/pillowcase-zipper/";
+    return "/product/pillowcase-envelope/";
+  }
+  if (rawSlug.includes("fitted") || rawSlug.includes("bed-sheet") || rawSlug.includes("bedsheet")) return "/product/standard-fitted-sheet/";
+  if (rawSlug === "tbar") return "/product/bedbridge-connector/";
+  if (rawSlug === "mattress-lift-helper") return "/product/mattress-lift-helper/";
+  if (rawSlug === "baby-blanket" || rawSlug === "animal-bedding") return "/products/";
+  return "/products/";
+}
+__name(resolveLegacyProductPath, "resolveLegacyProductPath");
+async function onRequest9(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
   for (const prefix of SKIP_PREFIXES) {
@@ -8156,6 +8338,10 @@ async function onRequest8(context) {
   }
   for (const ext of SKIP_EXTENSIONS) {
     if (path.endsWith(ext)) return context.next();
+  }
+  const legacyProductRedirect = resolveLegacyProductPath(path);
+  if (legacyProductRedirect) {
+    return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
   const response = await context.next();
   const contentType = response.headers.get("Content-Type") || "";
@@ -8192,9 +8378,9 @@ ${header}`);
   }
   return new Response(html, { status: response.status, headers: response.headers });
 }
-__name(onRequest8, "onRequest");
+__name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-qA7s8Q/functionsRoutes-0.6545269103888517.mjs
+// ../.wrangler/tmp/pages-KjSe54/functionsRoutes-0.8819619911426904.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
@@ -8218,38 +8404,45 @@ var routes = [
     modules: [onRequest3]
   },
   {
+    routePath: "/product/:path*",
+    mountPath: "/product",
+    method: "",
+    middlewares: [],
+    modules: [onRequest4]
+  },
+  {
     routePath: "/quote/:path*",
     mountPath: "/quote",
     method: "",
     middlewares: [],
-    modules: [onRequest4]
+    modules: [onRequest5]
   },
   {
     routePath: "/r2/:path*",
     mountPath: "/r2",
     method: "",
     middlewares: [],
-    modules: [onRequest5]
+    modules: [onRequest6]
   },
   {
     routePath: "/account",
     mountPath: "/account",
     method: "",
-    middlewares: [onRequest6],
+    middlewares: [onRequest7],
     modules: []
   },
   {
     routePath: "/admin",
     mountPath: "/admin",
     method: "",
-    middlewares: [onRequest7],
+    middlewares: [onRequest8],
     modules: []
   },
   {
     routePath: "/",
     mountPath: "/",
     method: "",
-    middlewares: [onRequest8],
+    middlewares: [onRequest9],
     modules: []
   }
 ];

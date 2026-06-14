@@ -227,6 +227,85 @@ async function getChrome(db: any, key: 'header' | 'footer'): Promise<string | nu
 
 const SKIP_PREFIXES = ['/admin/', '/api/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
 const SKIP_EXTENSIONS = ['.js', '.css', '.png', '.jpg', '.webp', '.svg', '.ico', '.woff2', '.json', '.xml', '.map'];
+const CANONICAL_PRODUCT_SLUGS = new Set([
+  'standard-fitted-sheet',
+  'deep-pocket-fitted-sheet',
+  'marine-fitted-sheet',
+  'dorm-fitted-sheet',
+  'rv-truck-fitted-sheet',
+  'family-fitted-sheet',
+  'pet-owner-fitted-sheet',
+  'flat-sheet-standard',
+  'flat-sheet-extra-deep-pocket',
+  '3-sided-duvet',
+  'pet-owner-duvet-cover',
+  'duvet-cover-marine',
+  'duvet-cover-rv',
+  'duvet-cover-dorm',
+  'duvet-insert',
+  'pillowcase-envelope',
+  'pillowcase-zipper',
+  'pillowcase-sham',
+  'mattress-protector-standard',
+  'mattress-protector-family',
+  'mattress-protector-deep-pocket',
+  'pet-proof-mattress-protector',
+  'mattress-encasement-general',
+  'rv-truck-mattress-encasement',
+  'pillow-protector-general',
+  'bedbridge-connector',
+  'mattress-lift-helper'
+]);
+
+function hasToken(slug: string, token: string): boolean {
+  return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
+}
+
+function resolveLegacyProductPath(pathname: string): string | null {
+  if (pathname === '/product/' || pathname === '/product') return '/products/';
+  if (!pathname.startsWith('/product/')) return null;
+  const rawSlug = pathname.slice('/product/'.length).replace(/\/+$/, '').toLowerCase();
+  if (!rawSlug) return '/products/';
+  if (CANONICAL_PRODUCT_SLUGS.has(rawSlug)) return null;
+
+  if (rawSlug === '%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1') return '/product/duvet-insert/';
+  if (rawSlug.startsWith('%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9')) return '/product/family-fitted-sheet/';
+  if (rawSlug.startsWith('product-boat-bedding') || rawSlug.startsWith('product-boat-top-sheet')) return '/product/marine-fitted-sheet/';
+  if (rawSlug.includes('boat') && rawSlug.includes('pillow')) return '/product/pillowcase-envelope/';
+
+  if (rawSlug.includes('dorm')) return rawSlug.includes('duvet') ? '/product/duvet-cover-dorm/' : '/product/dorm-fitted-sheet/';
+  if (rawSlug.includes('rv-truck') || hasToken(rawSlug, 'rv') || rawSlug.includes('truck')) {
+    if (rawSlug.includes('duvet')) return '/product/duvet-cover-rv/';
+    if (rawSlug.includes('encasement')) return '/product/rv-truck-mattress-encasement/';
+    return '/product/rv-truck-fitted-sheet/';
+  }
+  if (rawSlug.includes('marine') || rawSlug.includes('boat')) return rawSlug.includes('duvet') ? '/product/duvet-cover-marine/' : '/product/marine-fitted-sheet/';
+
+  if (rawSlug.includes('pet')) {
+    if (rawSlug.includes('duvet') || rawSlug.includes('3-sided')) return '/product/pet-owner-duvet-cover/';
+    if (rawSlug.includes('protector')) return '/product/pet-proof-mattress-protector/';
+    if (rawSlug.includes('pillow')) return '/product/pillowcase-zipper/';
+    return '/product/pet-owner-fitted-sheet/';
+  }
+
+  if (rawSlug.includes('co-sleeping') || rawSlug.includes('family')) return '/product/family-fitted-sheet/';
+  if (rawSlug.includes('duvet')) return '/product/3-sided-duvet/';
+  if (rawSlug.includes('encasement') || rawSlug.includes('zippered-tpu-mattress-cover')) return '/product/mattress-encasement-general/';
+  if (rawSlug.includes('sheet-protectors') || rawSlug.includes('protector') || rawSlug === 'pillow-case') return '/product/mattress-protector-standard/';
+
+  if (rawSlug.includes('pillow') || rawSlug.includes('pillowcase') || rawSlug.includes('pillow-cover') || rawSlug.includes('pillow-case')) {
+    if (rawSlug.includes('sham') || rawSlug.includes('vent')) return '/product/pillowcase-sham/';
+    if (rawSlug.includes('zip') || rawSlug.includes('hidden-zipper')) return '/product/pillowcase-zipper/';
+    return '/product/pillowcase-envelope/';
+  }
+
+  if (rawSlug.includes('fitted') || rawSlug.includes('bed-sheet') || rawSlug.includes('bedsheet')) return '/product/standard-fitted-sheet/';
+  if (rawSlug === 'tbar') return '/product/bedbridge-connector/';
+  if (rawSlug === 'mattress-lift-helper') return '/product/mattress-lift-helper/';
+  if (rawSlug === 'baby-blanket' || rawSlug === 'animal-bedding') return '/products/';
+
+  return '/products/';
+}
 
 export async function onRequest(context: any): Promise<Response> {
   const url = new URL(context.request.url);
@@ -237,6 +316,11 @@ export async function onRequest(context: any): Promise<Response> {
   }
   for (const ext of SKIP_EXTENSIONS) {
     if (path.endsWith(ext)) return context.next();
+  }
+
+  const legacyProductRedirect = resolveLegacyProductPath(path);
+  if (legacyProductRedirect) {
+    return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
 
   const response = await context.next();
