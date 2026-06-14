@@ -1,5 +1,5 @@
 # Phase 8 — Polish + Launch
-**Status (2026-06-10): ⏸️ PENDING — Phase 7 Admin Complete, Phase 8 Part A Not Yet Started. D1-backed reviews, product_type+niches columns, homepage niche card update, and orphaned file cleanup completed in subsequent sessions.**
+**Status (2026-06-14): 🟡 IN PROGRESS — DNS cutover complete, robots.txt/sitemap.xml/OG tags/GTM+GA4 verified live at www.mildmate.com. Mobile QA + Lighthouse audit remaining.**
 **Goal:** Make everything production-ready — fix all mobile issues, hit 90+/100 performance, DNS cutover.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
@@ -25,9 +25,9 @@
 |---|---|---|
 | `public/_headers` | Security headers: CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy | ✅ Built |
 | `public/robots.txt` | Tells Google which pages to index — blocks `/admin/*`, `/api/*`, `/checkout/*`, `/account/*`, `/unsubscribe/` | ✅ Built |
-| `sitemap.xml` | List of all URLs — submitted to Google Search Console | ⏸ Pending |
-| Open Graph meta tags | Facebook/LINE share preview image + title on all pages | ⏸ Pending |
-| GTM / Analytics | Google Tag Manager (`GTM-KLJZZM9`) + GA4 tracking on all pages | ⏸ Pending |
+| `sitemap.xml` | List of all URLs — submitted to Google Search Console | ✅ Built + submitted (2026-06-14) |
+| Open Graph meta tags | Facebook/LINE share preview image + title on all pages | ✅ Built + verified (homepage + product pages, 2026-06-14) |
+| GTM / Analytics | Google Tag Manager (`GTM-KLJZZM9`) + GA4 tracking on all pages | ✅ Built + verified (GTM-KLJZZM9 + G-R2DDCBXXXX, homepage + product pages, 2026-06-14) |
 | Mobile CSS fixes | Any layout issues found during QA review | ⏸ Pending |
 | Lighthouse performance fixes | Image compression, CSS/JS optimization | ⏸ Pending |
 | Stripe live mode keys | Real payment credentials stored as Cloudflare secrets | ⏸ Pending |
