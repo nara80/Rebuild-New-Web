@@ -154,10 +154,14 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   // Detect currency: prefer frontend preference, fallback to IP country
-  const origin = request.headers.get("CF-IPCountry") || "";
+  const origin = String(request.headers.get("CF-IPCountry") || "").toUpperCase();
+  const shippingCountry = String(shippingCountryInput || "").toUpperCase();
   const thCountries = ["TH", "LA", "MM", "KH"];
   let currency = "usd";
-  if (bodyCurrency === "THB" || bodyCurrency === "thb") {
+  if (shippingCountry === "TH") {
+    // PromptPay requires THB — force THB for Thailand shipping.
+    currency = "thb";
+  } else if (bodyCurrency === "THB" || bodyCurrency === "thb") {
     currency = "thb";
   } else if (bodyCurrency === "USD" || bodyCurrency === "usd") {
     currency = "usd";
@@ -296,9 +300,15 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       metadataItemsStr = JSON.stringify(compactItems);
     }
     params.append("metadata[items]", metadataItemsStr);
-    if (origin === "TH") {
+    const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();
+    const shouldOfferPromptPay =
+      currency === "thb" && (origin === "TH" || shippingCountry === "TH" || appliedShippingCountry === "TH");
+
+    if (shouldOfferPromptPay) {
       params.append("payment_method_types[0]", "card");
       params.append("payment_method_types[1]", "promptpay");
+    } else {
+      params.append("payment_method_types[0]", "card");
     }
 
     // Encode each line item as Stripe expects: line_items[0][price_data][currency]=usd ...

@@ -6301,10 +6301,13 @@ async function handleCheckout(request, env) {
       }
     }
   }
-  const origin = request.headers.get("CF-IPCountry") || "";
+  const origin = String(request.headers.get("CF-IPCountry") || "").toUpperCase();
+  const shippingCountry = String(shippingCountryInput || "").toUpperCase();
   const thCountries = ["TH", "LA", "MM", "KH"];
   let currency = "usd";
-  if (bodyCurrency === "THB" || bodyCurrency === "thb") {
+  if (shippingCountry === "TH") {
+    currency = "thb";
+  } else if (bodyCurrency === "THB" || bodyCurrency === "thb") {
     currency = "thb";
   } else if (bodyCurrency === "USD" || bodyCurrency === "usd") {
     currency = "usd";
@@ -6423,9 +6426,13 @@ async function handleCheckout(request, env) {
       metadataItemsStr = JSON.stringify(compactItems);
     }
     params.append("metadata[items]", metadataItemsStr);
-    if (origin === "TH") {
+    const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();
+    const shouldOfferPromptPay = currency === "thb" && (origin === "TH" || shippingCountry === "TH" || appliedShippingCountry === "TH");
+    if (shouldOfferPromptPay) {
       params.append("payment_method_types[0]", "card");
       params.append("payment_method_types[1]", "promptpay");
+    } else {
+      params.append("payment_method_types[0]", "card");
     }
     lineItems.forEach((li, idx) => {
       const pd = li.price_data;
@@ -8521,7 +8528,7 @@ ${header}`);
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-oHM9P9/functionsRoutes-0.1513034828863673.mjs
+// ../.wrangler/tmp/pages-lq9tFZ/functionsRoutes-0.5584258247288592.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
