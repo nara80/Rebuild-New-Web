@@ -1,5 +1,5 @@
 # Phase 8 — Polish + Launch
-**Status (2026-06-14): 🟡 IN PROGRESS — DNS cutover complete, robots.txt/sitemap.xml/OG tags/GTM+GA4 verified live at www.mildmate.com. Mobile QA + Lighthouse audit remaining.**
+**Status (2026-06-14): 🟡 IN PROGRESS — DNS cutover complete, https://www.mildmate.com/sitemap.xml + robots.txt + OG tags + GTM+GA4 all verified live at www.mildmate.com. Mobile QA + Lighthouse audit remaining.**
 **Goal:** Make everything production-ready — fix all mobile issues, hit 90+/100 performance, DNS cutover.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
@@ -350,7 +350,7 @@ Before moving to Part B (Launch Day), confirm all of these:
 - [ ] Security headers grade A or A+
 - [ ] Open Graph preview correct on LINE and Facebook
 - [ ] GTM/Analytics tracking tag added to all pages
-- [ ] `public/sitemap.xml` exists and lists all important URLs
+- [x] https://www.mildmate.com/sitemap.xml exists and lists all important URLs
 - [ ] `public/robots.txt` exists and excludes `/admin/*`, `/checkout/*`, `/api/*`
 - [ ] Final full test purchase passed all 13 steps
 - [ ] Real product data entered for top 10 products minimum
