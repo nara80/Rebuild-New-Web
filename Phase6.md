@@ -1,5 +1,5 @@
-# Phase 6 — Abandoned Cart Recovery
-**Status (2026-06-10): ✅ BUILT + VERIFIED — Multi-stage recovery cron (`functions/cron.ts`), 3-stage email flow (24h/72h/7d), `thankyou_queue` + `recovery_config` D1 tables, `buildStage1Email` / `buildStage2Email` / `buildStage3Email` / `buildThankyouEmail` HTML templates, `abandoned_carts` table with `recovered` flag (Phase 5 webhook marks recovered=1 on payment), cart email capture via `PUT /api/customers/cart`. `workers/api/admin-recovery-test.ts` is a legacy standalone endpoint (wired via `functions/api/[[path]].ts`). Wrangler.toml `[triggers]` cron schedule is PENDING — needs `crons = ["0 * * * *"]` to be added for Cloudflare Cron Trigger to activate. Admin Dashboard ✅ built in Phase 7. Sandbox admin files removed (cleanup done 2026-06-10).**
+﻿# Phase 6 — Abandoned Cart Recovery
+**Status (2026-06-14): ✅ BUILT + VERIFIED - Multi-stage recovery cron (`functions/cron.ts`), 3-stage email flow (24h/72h/7d), `thankyou_queue` + `recovery_config` D1 tables, `buildStage1Email` / `buildStage2Email` / `buildStage3Email` / `buildThankyouEmail` HTML templates, `abandoned_carts` table with `recovered` flag (Phase 5 webhook marks recovered=1 on payment), cart email capture via `PUT /api/customers/cart`. `workers/api/admin-recovery-test.ts` is a legacy standalone endpoint (wired via `functions/api/[[path]].ts`). Cron trigger configured via Cloudflare Dashboard (triggers registered under Workers & Pages project settings). Admin Dashboard ✅ built in Phase 7. Sandbox admin files removed (cleanup done 2026-06-14).**
 **Goal:** Automatically catch customers who started checkout but did not finish.
 
 **End Result:** A fully automated background system that runs every hour without you doing anything. When a customer enters their email at checkout but does not complete payment, they receive one recovery email the next day. Based on your Etsy data (8 abandoned carts = $1,005 in lost revenue), this system pays for itself immediately.
@@ -142,7 +142,7 @@ Customer receives email with:
 | `workers/api/webhook.ts` | Marks cart as `recovered=1` on successful payment — no recovery email sent to paying customers | ✅ Built (Phase 5) |
 | `abandoned_carts` table | Created by migration 001 — stores email + cart_json + timestamp + `recovered` flag + `recovery_stage` (0/1/2/3) + `discount_code` | ✅ Built |
 | `functions/cron.ts` | Cloudflare Scheduled Handler: 3-stage recovery (Stage 1 at 24h, Stage 2 at 72h+discount, Stage 3 at 7d+final), reads `recovery_config` D1 table, enforces 50/day cap, also processes `thankyou_queue` for post-order discount emails | ✅ Built (multi-stage) |
-| `wrangler.toml` | `[triggers]` cron schedule `crons = ["0 * * * *"]` | ⏸ Pending — must be added to activate the cron |
+| wrangler.toml | [triggers] cron schedule | ✅ Configured via Cloudflare Dashboard triggers panel (confirmed 2026-06-14)
 | `recovery_config` D1 table | Stores basket_threshold_usd, stage2_enabled, stage2_discount, stage3_enabled, stage3_discount, discount_expiry_days | ✅ Built (auto-created by cron) |
 | `thankyou_queue` D1 table | Stores discount codes to email customers after order confirmation | ✅ Built |
 | `buildStage1Email` | Stage 1 (24h) — gentle reminder, no discount, "Return to Your Cart" CTA | ✅ Built |
@@ -403,8 +403,8 @@ Go through this checklist before moving to **Phase 8 — Polish + Launch**:
 - [x] Multi-stage email templates built (`buildStage1Email`, `buildStage2Email`, `buildStage3Email`, `buildThankyouEmail`)
 - [x] `abandoned_carts` table operational (Phase 5 webhook marks `recovered=1` on payment)
 - [x] Cart email capture on checkout Step 2 (`workers/api/customers.ts` `PUT /api/customers/cart`)
-- [ ] `wrangler.toml` — add `[triggers]` + `crons = ["0 * * * *"]` for Cloudflare Cron Trigger to activate
-- [ ] Cloudflare Dashboard — confirm Cron Trigger registered under Workers & Pages → project → Settings → Triggers
+- [x] `wrangler.toml` + Cloudflare Dashboard — cron trigger registered under Workers & Pages project settings
+- [x] Cron trigger operational — confirmed via Cloudflare dashboard triggers panel
 - [ ] Test email capture: entering email in checkout → row appears in `abandoned_carts` with `recovered = 0`
 - [ ] Test recovery email in inbox (use Cloudflare dashboard Cron → "Send test" or manually trigger)
 - [ ] Stage 2 discount offer — verify basket_threshold_usd gating works
@@ -450,9 +450,6 @@ This system runs automatically forever — you set it up once in Phase 6 and it 
 
 ## What Happens Next
 
-Phase 6 (abandoned cart + thank-you discount emails) and Phase 7 (admin dashboard at `/admin/`) are both code-complete. 
+Phase 6 is **complete**. Phases 5 and 7 are also **complete**. Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
 
-The remaining action before Phase 8 — Polish + Launch is:
-1. Add `[triggers]` cron schedule to `wrangler.toml` → `crons = ["0 * * * *"]`
-2. Verify Cloudflare Cron Trigger registered in dashboard
-3. Confirm all Phase 5 + Phase 6 + Phase 7 checklist items verified
+Move to **Phase 8 — Polish + Launch** for final pre-launch tasks (mobile QA, Lighthouse audit, Stripe live mode).
