@@ -49,48 +49,56 @@
 - Some Best Practices/console/CSP diagnostics were caused by browser extensions during test runs.
 - Use clean test profile before treating those as app regressions.
 
-## 3) Super-admin sidebar Unauthorized (Blog + Reviews)
-
-### Symptom
-- On `https://www.mildmate.com/super-admin/`, sidebar modules showed:
-  - `Failed to load posts: Unauthorized`
-  - `Failed to load reviews: Unauthorized`
-
-### Root cause
-- Sidebar modules call admin APIs using auth headers from Clerk token.
-- Clerk init logic treated only `/account`, `/admin`, `/quote` as auth-critical, so `/super-admin/` could fetch before token was ready.
-
-### Fix applied
-- Updated `public/js/clerk.js` auth-critical path detection to include:
-  - `/super-admin`
-- Hardened `window.getClerkToken()` to initialize/wait for Clerk on auth-critical paths before requesting session token.
-- This covers both Blog and Reviews sidebar modules because both use the same authenticated header flow.
-
-## 4) Reviews data + rendering fixes (post go-live)
+## 3) Reviews data + rendering fixes (post go-live)
 
 ### Symptoms
 - Production had empty reviews while preview still had historical reviews.
 - Review images were broken on product pages/homepage.
+- Super-admin **Blog** sidebar thumbnails were broken for the 13-post list.
 - Some EN review text showed mojibake (for example `IΓÇÖm`, `160├ù50`).
 - A deployment looked successful but still served old API behavior.
 
 ### Root causes
 - Reviews existed in old/preview D1 but not production D1.
 - Image paths stored as `/r2/...` were blocked/challenged on production host paths.
+- Admin blog API returned `featured_image` as `/r2/...` paths, so super-admin list thumbnails failed on production host.
 - Legacy imported text contained encoding artifacts.
 - Pages Functions build output was generated to `public/index.js`, while deploy relied on `public/_worker.js` (stale bundle risk).
 
 ### Fix applied
 - Migrated all reviews from preview D1 to production D1 (45 rows).
 - Updated review API responses to convert `/r2/...` image paths to public `https://*.r2.dev/...` URLs.
+- Updated admin blog API responses (`/api/admin/blog`) to normalize `featured_image` to public `https://*.r2.dev/...` URLs (list + single post).
 - Added server-side mojibake normalization for review text/name/country in review endpoints.
 - Ensured worker artifact sync before deploy:
   - `npx wrangler pages functions build --outdir public`
   - copy `public/index.js` -> `public/_worker.js` before `wrangler pages deploy public`
 
+### How to recover "Blog" and "Reviews" quickly (runbook)
+1. **Confirm data source first**
+   - Check review count in production and preview D1:
+     - `npx wrangler d1 execute mildmate-db-prod --remote --command "SELECT COUNT(*) AS cnt FROM reviews;"`
+     - `npx wrangler d1 execute mildmate-db-prod --remote --preview --command "SELECT COUNT(*) AS cnt FROM reviews;"`
+2. **If production reviews are empty**
+   - Migrate rows from preview D1 to production D1 (reviews table).
+3. **If images/thumbnails are broken**
+   - Verify APIs return `https://*.r2.dev/...` (not `/r2/...`) for:
+     - `/api/reviews`
+     - `/api/products/{slug}/reviews`
+     - `/api/admin/blog`
+4. **Always rebuild + sync worker artifact before deploy**
+   - `npx wrangler pages functions build --outdir public`
+   - `Copy-Item public/index.js public/_worker.js -Force`
+   - `npx wrangler pages deploy public --commit-dirty`
+5. **Smoke test after deploy**
+   - `/super-admin/` => Blog + Reviews sidebars load
+   - `/` and `/th/` => review cards text renders correctly
+   - `/product/{slug}/` => review photos load correctly
+
 ### Verification
 - Production and preview review counts aligned at 45 rows after migration.
 - Product review cards can load images again after URL normalization.
+- Super-admin blog list thumbnails load after `featured_image` URL normalization.
 - Corrupted text patterns are normalized in API output.
 
 ## Repeatable troubleshooting checklist
