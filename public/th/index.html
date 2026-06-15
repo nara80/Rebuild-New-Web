@@ -526,6 +526,56 @@
       .home-page .footer-bottom-links {
         margin-bottom: 4px !important;
       }
+      
+      /* Subscription responsive layouts */
+      .home-page .email-signup {
+        padding: 48px 24px !important;
+      }
+      .home-page .email-signup h2 {
+        font-size: 30px !important;
+        line-height: 1.2 !important;
+        margin-bottom: 16px !important;
+      }
+      .home-page .email-signup p {
+        font-size: 15px !important;
+        line-height: 1.5 !important;
+        margin-bottom: 24px !important;
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+      .home-page .email-form {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 12px !important;
+        width: 100% !important;
+      }
+      .home-page .email-form input {
+        width: 88% !important;
+        max-width: 300px !important;
+        height: 52px !important;
+        padding: 0 16px !important;
+        font-size: 15px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-sizing: border-box !important;
+      }
+      .home-page .email-form button {
+        width: 88% !important;
+        max-width: 300px !important;
+        height: 50px !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        border-radius: 12px !important;
+        background: #02264A !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(2, 38, 74, 0.15) !important;
+        transition: background 0.25s ease !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .home-page .email-form button:hover {
+        background: #011830 !important;
+      }
     }
   </style>
   <style>
@@ -972,8 +1022,12 @@
     <!-- 8. EMAIL SIGNUP -->
     <section class="email-signup">
       <div class="container">
-        <h2>รับส่วนลด 15% สำหรับคำสั่งซื้อแรก</h2>
-        <p>สมัครรับจดหมายข่าวของเราเพื่อรับข้อเสนอพิเศษ การแจ้งเตือนสินค้าใหม่ และเคล็ดลับเครื่องนอน</p>
+        <h2 class="desktop-only-block">รับส่วนลด 15% สำหรับคำสั่งซื้อแรก</h2>
+        <h2 class="mobile-only-block">รับส่วนลด 15%<br>เมื่อสั่งซื้อครั้งแรก</h2>
+        
+        <p class="desktop-only-block">สมัครรับจดหมายข่าวของเราเพื่อรับข้อเสนอพิเศษ การแจ้งเตือนสินค้าใหม่ และเคล็ดลับเครื่องนอน</p>
+        <p class="mobile-only-block">สมัครเพื่อรับโค้ดส่วนลดและข่าวสารจาก MildMate</p>
+        
         <form class="email-form" id="email-signup-form" action="/api/subscribe" method="post">
           <input type="email" name="email" placeholder="ใส่อีเมลของคุณ" required aria-label="ที่อยู่อีเมล" id="email-signup-input">
           <!-- honeypot -->
@@ -983,6 +1037,11 @@
           <button type="submit" id="email-signup-btn">สมัครรับข่าวสาร</button>
         </form>
         <p class="email-form-msg" id="email-signup-msg" aria-live="polite"></p>
+        
+        <div class="mobile-only-block" style="margin-top: 12px; font-size: 13px; opacity: 0.85;">
+          <div>ไม่มีสแปม ยกเลิกได้ทุกเมื่อ</div>
+          <div style="margin-top: 4px; font-size: 11px; opacity: 0.75;">สำหรับลูกค้าใหม่และสินค้าที่ร่วมรายการ</div>
+        </div>
       </div>
     </section>
 
@@ -1007,10 +1066,17 @@
       const msg = document.getElementById('email-signup-msg');
       if (!form || !input || !btn || !msg) return;
 
+      // Adjust placeholder and CTA text for mobile view
+      if (window.innerWidth <= 768) {
+        input.placeholder = 'อีเมลของคุณ';
+        btn.textContent = 'รับส่วนลด 15%';
+      }
+
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
+        const originalBtnText = btn.textContent;
         btn.disabled = true;
-        btn.textContent = 'Subscribing…';
+        btn.textContent = 'กำลังสมัคร...';
         msg.textContent = '';
         msg.style.color = '';
 
@@ -1038,7 +1104,7 @@
           msg.style.color = '#ef4444';
         } finally {
           btn.disabled = false;
-          btn.textContent = 'Subscribe';
+          btn.textContent = originalBtnText;
         }
       });
     })();
