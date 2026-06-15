@@ -57,6 +57,8 @@
   // Pages with both EN and TH versions (TH pages served via SSR or static files)
   // IMPORTANT: only add paths here when TH pages actually exist
   const BILINGUAL_PAGES = [
+    // Products page
+    '/products/', '/products',
     // Blog (SSR — all blog posts have TH now)
     '/blogs/', '/blogs',
     // Static TH pages
@@ -113,6 +115,8 @@
     if (!isThPage) return;
 
     const thaiRouteMap = {
+      '/products': '/th/products/',
+      '/products/': '/th/products/',
       '/about': '/th/about/',
       '/about/': '/th/about/',
       '/contact': '/th/contact/',

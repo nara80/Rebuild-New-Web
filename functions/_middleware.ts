@@ -438,6 +438,7 @@ export async function onRequest(context: any): Promise<Response> {
       // Search placeholder
       .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."')
       // Rewrite hrefs to /th/ for pages that have Thai versions
+      .replace(/href="\/products\/?"/g, 'href="/th/products/"')
       .replace(/href="\/about\/?"/g, 'href="/th/about/"')
       .replace(/href="\/contact\/?"/g, 'href="/th/contact/"')
       .replace(/href="\/faq\/?"/g, 'href="/th/faq/"')
