@@ -428,9 +428,19 @@
       .materials-grid { grid-template-columns: 1fr; }
       .global-cities-grid { grid-template-columns: 1fr; gap: 24px; }
       .cert-logos img { height: 34px; }
-      .timeline-container { padding-left: 32px; }
-      .timeline-container::before { left: 7px; }
-      .timeline-dot { left: -41px; width: 14px; height: 14px; }
+      /* Timeline card conversion on mobile */
+      .timeline-container { padding-left: 0 !important; }
+      .timeline-container::before { display: none !important; }
+      .timeline-item {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px !important;
+        box-shadow: var(--shadow);
+      }
+      .timeline-dot { display: none !important; }
+      .timeline-content p { font-size: 14px !important; }
       .iframe-wrapper {
         max-width: 280px;
         border-width: 6px;

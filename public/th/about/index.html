@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
     .about-page { background: #f9f9f9; }
+    .mobile-only { display: none !important; }
 
     /* ── Hero ─────────────────────────────── */
     .about-hero {
@@ -413,6 +414,13 @@
 
     /* ── Mobile ──────────────────────────────── */
     @media (max-width: 768px) {
+      .desktop-only { display: none !important; }
+      .mobile-only { display: block !important; }
+      .genesis-inner.mobile-only { display: flex !important; flex-direction: column; gap: 32px; }
+      
+      body { font-size: 15px !important; line-height: 1.6 !important; }
+      p, .genesis-desc, .video-sub { font-size: 15px !important; line-height: 1.6 !important; }
+
       .about-hero { padding: 48px 20px 36px; }
       .about-hero-inner h1 { font-size: 1.875rem; }
       .genesis-section,
@@ -428,14 +436,30 @@
       .materials-grid { grid-template-columns: 1fr; }
       .global-cities-grid { grid-template-columns: 1fr; gap: 24px; }
       .cert-logos img { height: 34px; }
-      .timeline-container { padding-left: 32px; }
-      .timeline-container::before { left: 7px; }
-      .timeline-dot { left: -41px; width: 14px; height: 14px; }
+      
+      /* Timeline card conversion on mobile */
+      .timeline-container { padding-left: 0 !important; }
+      .timeline-container::before { display: none !important; }
+      .timeline-item {
+        background: #ffffff;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px !important;
+        box-shadow: var(--shadow);
+      }
+      .timeline-dot { display: none !important; }
+      .timeline-content p { font-size: 14px !important; }
+      
       .iframe-wrapper {
         max-width: 280px;
         border-width: 6px;
         border-radius: 16px;
       }
+
+      /* Accordion styling */
+      .accordion-trigger:focus { outline: none; }
+      .accordion-trigger .chevron { transition: transform 0.25s ease; }
     }
   </style>
 
@@ -517,9 +541,16 @@
 
     <!-- ===== HERO ===== -->
     <section class="about-hero">
-      <div class="about-hero-inner">
+      <div class="about-hero-inner desktop-only">
         <h1>เครื่องนอนสั่งตัด สำหรับทุกไซส์ ทุกรูปทรง</h1>
         <p class="hero-sub">จากปัญหาผ้าปูที่นอนที่ไม่พอดี สู่แบรนด์เครื่องนอนสั่งตัดที่ออกแบบให้พอดีกับที่นอนของคุณ ไม่ว่าจะเป็นเตียงบ้าน เตียงครอบครัว เรือ รถบ้าน หรือที่นอนรูปทรงพิเศษ</p>
+      </div>
+      <div class="about-hero-inner mobile-only" style="display: none;">
+        <h1>เราเชื่อว่าเครื่องนอนควรพอดีกับคุณ<br>ไม่ใช่ให้คุณปรับตัวเข้าหาเครื่องนอน</h1>
+        <p class="hero-sub">MildMate ออกแบบและผลิตเครื่องนอนสั่งตัดสำหรับทุกขนาด ทุกรูปทรง และทุกพื้นที่</p>
+        <div class="about-hero-cta" style="margin-top: 24px;">
+          <a href="/th/products/" class="btn btn-primary" style="background: #fff; color: var(--color-primary); font-weight: 700; padding: 12px 32px; border-radius: 8px; display: inline-block; text-decoration: none;">เลือกเครื่องนอนสั่งตัด</a>
+        </div>
       </div>
     </section>
 
@@ -527,7 +558,7 @@
     <!-- 2. THE ENGINEERING GENESIS (The 2019 Problem)  -->
     <!-- ============================================== -->
     <section class="genesis-section">
-      <div class="genesis-inner">
+      <div class="genesis-inner desktop-only">
         <div class="genesis-text">
           <div class="genesis-kicker">เริ่มจากปัญหาจริงของลูกค้า</div>
           <h2>จากปัญหาผ้าปูไม่พอดี สู่เครื่องนอนสั่งตัดของ MildMate</h2>
@@ -538,6 +569,33 @@
         </div>
         <div class="genesis-image">
           <img src="/images/about/about-genesis.jpg" alt="ความขัดแย้งช่องว่างที่นอน  -  ที่นอนต่อกันทำให้เกิดรอยต่อไม่เรียบ" width="500" height="380" loading="lazy">
+        </div>
+      </div>
+      <div class="genesis-inner mobile-only" style="display: none;">
+        <div class="genesis-text">
+          <div class="genesis-kicker">เริ่มจากปัญหาจริงของลูกค้า</div>
+          <h2>จากปัญหาที่นอนไม่พอดี<br>สู่เครื่องนอนที่ออกแบบมาเพื่อคุณ</h2>
+          <p class="genesis-desc" style="font-size: 15px; color: var(--color-muted); margin-bottom: 20px; line-height: 1.6;">MildMate เริ่มต้นจากปัญหาง่าย ๆ: เครื่องนอนสำเร็จรูปไม่พอดีกับที่นอนจริง โดยเฉพาะเตียงสั่งทำ เตียงครอบครัว รถบ้าน และเรือยอชต์</p>
+          <ul style="list-style: none; padding: 0; margin: 0 0 24px 0; display: flex; flex-direction: column; gap: 10px;">
+            <li style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--color-text);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              สั่งตัดได้ทุกขนาด
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--color-text);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              รองรับที่นอนรูปทรงพิเศษ
+            </li>
+            <li style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--color-text);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              ผลิตตามออเดอร์ในประเทศไทย
+            </li>
+          </ul>
+          <div style="margin-bottom: 24px;">
+            <a href="/th/products/" class="btn btn-primary" style="width: 100%; text-align: center;">เลือกเครื่องนอนสั่งตัด</a>
+          </div>
+        </div>
+        <div class="genesis-image">
+          <img src="/images/about/about-genesis.jpg" alt="ความขัดแย้งช่องว่างที่นอน  -  ที่นอนต่อกันทำให้เกิดรอยต่อไม่เรียบ" width="500" height="380" loading="lazy" style="width: 100%; height: auto;">
         </div>
       </div>
     </section>
@@ -609,7 +667,14 @@
             <div class="kicker">ผ้าที่ 01  -  ชั้นสุขอนามัย</div>
             <h3>PremaCotton</h3>
             <div class="spec-tag">Spec: ปลอดภัยต่อมนุษย์ 100% | OEKO-TEX® Std 100</div>
-            <p>คอตตอนเนื้อนุ่ม ระบายอากาศดี เหมาะกับผิวบอบบาง</p>
+            <p class="desktop-only">คอตตอนเนื้อนุ่ม ระบายอากาศดี เหมาะกับผิวบอบบาง</p>
+            <div class="mobile-only" style="display: none;">
+              <p style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 14px;">สัมผัสธรรมชาติ นุ่ม ระบายอากาศดี</p>
+              <ul style="list-style: disc; padding-left: 18px; margin: 0; font-size: 13px; color: var(--color-muted); display: flex; flex-direction: column; gap: 4px;">
+                <li>คอตตอน 100% เส้นใยยาวพิเศษ</li>
+                <li>เหมาะกับผิวบอบบางและผู้ที่ชอบผ้าฝ้ายแท้</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -619,7 +684,14 @@
             <div class="kicker">ผ้าที่ 02  -  ชั้นระบายความร้อน</div>
             <h3>BreezePlus</h3>
             <div class="spec-tag">Spec: 50/50 เส้นยาว | ควบคุมอุณหภูมิ 3 - 5°C</div>
-            <p>เย็นสบาย เหมาะกับคนขี้ร้อนและบ้านที่มีสัตว์เลี้ยง</p>
+            <p class="desktop-only">เย็นสบาย เหมาะกับคนขี้ร้อนและบ้านที่มีสัตว์เลี้ยง</p>
+            <div class="mobile-only" style="display: none;">
+              <p style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 14px;">ช่วยลดการสะสมของไรฝุ่น ดูแลง่าย</p>
+              <ul style="list-style: disc; padding-left: 18px; margin: 0; font-size: 13px; color: var(--color-muted); display: flex; flex-direction: column; gap: 4px;">
+                <li>ผ้าผสมคอตตอนและไมโครไฟเบอร์เพื่อความทนทาน</li>
+                <li>เหมาะสำหรับบ้านที่มีเด็กและสัตว์เลี้ยง</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -629,7 +701,14 @@
             <div class="kicker">ผ้าที่ 03  -  ชั้นความสบาย</div>
             <h3>CloudSoft</h3>
             <div class="spec-tag">Spec: 120 GSM | ไมโครไฟเบอร์แปรงสองด้าน</div>
-            <p>ไมโครไฟเบอร์นุ่มลื่น แห้งไว ใช้งานง่าย ดูแลสะดวก</p>
+            <p class="desktop-only">ไมโครไฟเบอร์นุ่มลื่น แห้งไว ใช้งานง่าย ดูแลสะดวก</p>
+            <div class="mobile-only" style="display: none;">
+              <p style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 14px;">นุ่ม เบา แห้งไว</p>
+              <ul style="list-style: disc; padding-left: 18px; margin: 0; font-size: 13px; color: var(--color-muted); display: flex; flex-direction: column; gap: 4px;">
+                <li>ยับยาก ไม่ต้องรีด ดูแลรักษาง่าย</li>
+                <li>ทนทานต่อไอเกลือทะเลและความชื้น</li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -639,14 +718,22 @@
             <div class="kicker">ผ้าที่ 04  -  ชั้นยั่งยืน</div>
             <h3>EcoLuxe</h3>
             <div class="spec-tag">Spec: เส้นใยไม่ฟอกขาวธรรมชาติ | ย่อยสลายได้</div>
-            <p>ผ้าคาลิโกธรรมชาติ สำหรับคนที่ชอบสัมผัสเรียบง่ายและใส่ใจสิ่งแวดล้อม</p>
+            <p class="desktop-only">ผ้าคาลิโกธรรมชาติ สำหรับคนที่ชอบสัมผัสเรียบง่ายและใส่ใจสิ่งแวดล้อม</p>
+            <div class="mobile-only" style="display: none;">
+              <p style="font-weight: 700; color: var(--color-primary); margin-bottom: 8px; font-size: 14px;">สัมผัสเรียบง่ายเป็นธรรมชาติ</p>
+              <ul style="list-style: disc; padding-left: 18px; margin: 0; font-size: 13px; color: var(--color-muted); display: flex; flex-direction: column; gap: 4px;">
+                <li>ผ้าคาลิโกธรรมชาติไม่ฟอกสีและย่อยสลายได้</li>
+                <li>เป็นมิตรกับสิ่งแวดล้อมและเหมาะกับผู้รักธรรมชาติ</li>
+              </ul>
+            </div>
           </div>
         </div>
 
       </div>
 
       <div class="materials-cta">
-        <a href="/th/fabric/" class="btn btn-primary">ดูคอลเลกชันเนื้อผ้าทั้งหมด</a>
+        <a href="/th/fabric/" class="btn btn-primary desktop-only">ดูคอลเลกชันเนื้อผ้าทั้งหมด</a>
+        <a href="/th/fabric/" class="btn btn-primary mobile-only" style="display: none;">เลือกเนื้อผ้าที่เหมาะกับคุณ</a>
       </div>
     </section>
 
@@ -654,8 +741,10 @@
     <!-- 5. THE VIDEO (The Result)                       -->
     <!-- ============================================== -->
     <section class="video-demo-section">
-      <h2>ความใส่ใจในทุกขนาด ทุกตะเข็บ และทุกการนอน</h2>
-      <p class="video-sub">เบื้องหลัง MildMate คือความตั้งใจที่จะทำให้เครื่องนอนพิเศษกลายเป็นเรื่องง่าย ตั้งแต่การวัดขนาด การเลือกผ้า ไปจนถึงการตัดเย็บที่พอดีกับที่นอนของคุณ</p>
+      <h2 class="desktop-only">ความใส่ใจในทุกขนาด ทุกตะเข็บ และทุกการนอน</h2>
+      <p class="video-sub desktop-only">เบื้องหลัง MildMate คือความตั้งใจที่จะทำให้เครื่องนอนพิเศษกลายเป็นเรื่องง่าย ตั้งแต่การวัดขนาด การเลือกผ้า ไปจนถึงการตัดเย็บที่พอดีกับที่นอนของคุณ</p>
+      <h2 class="mobile-only" style="display: none;">ทำไม MildMate จึงเริ่มต้นขึ้น</h2>
+      <p class="video-sub mobile-only" style="display: none; font-size: 15px;">ดูเรื่องราวของเราใน 60 วินาที ตั้งแต่ปัญหาที่นอนไม่พอดี สู่การผลิตเครื่องนอนสั่งตัด</p>
       <div class="iframe-wrapper">
         <iframe
           src="https://www.youtube.com/embed/Ooqvv3SVll8?si=ODaYtzXlYuDhXjyC&rel=0"
@@ -675,7 +764,9 @@
       <div class="global-reach-inner">
         <h2>สั่งตัดจากไทย ส่งถึงลูกค้าทั่วโลก</h2>
         <p>MildMate ผลิตเครื่องนอนตามขนาดที่คุณต้องการ และจัดส่งให้ลูกค้าทั้งในไทยและต่างประเทศ ผ่านระบบขนส่งที่ติดตามสถานะได้</p>
-        <div class="global-cities-grid">
+        
+        <!-- Desktop view -->
+        <div class="global-cities-grid desktop-only">
           <div class="city-col">
             <h4>อเมริกาเหนือ</h4>
             <ul>
@@ -707,6 +798,66 @@
             </ul>
           </div>
         </div>
+
+        <!-- Mobile view: Accordion -->
+        <div class="mobile-only-accordion mobile-only" style="display: none; max-width: 600px; margin: 0 auto;">
+          <div class="accordion-item" style="border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 12px; background: #fff; text-align: left;">
+            <button class="accordion-trigger" style="width: 100%; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: var(--color-primary); text-align: left; background: none; border: none; cursor: pointer;">
+              <span>อเมริกาเหนือ</span>
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-content" style="display: none; padding: 0 20px 16px; border-top: 1px solid var(--color-border); background: #fafafa;">
+              <ul style="list-style: none; padding: 12px 0 0 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; color: var(--color-text);">
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">อลาสก้า</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">ฟลอริดา</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">แอริโซนา</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">อัลเบอร์ตา</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">แวนคูเวอร์</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="accordion-item" style="border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 12px; background: #fff; text-align: left;">
+            <button class="accordion-trigger" style="width: 100%; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: var(--color-primary); text-align: left; background: none; border: none; cursor: pointer;">
+              <span>ยุโรป</span>
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-content" style="display: none; padding: 0 20px 16px; border-top: 1px solid var(--color-border); background: #fafafa;">
+              <ul style="list-style: none; padding: 12px 0 0 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; color: var(--color-text);">
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">ลอนดอน</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">ไฮแลนด์เคาน์ซิล</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">เบอร์ลิน</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">ดูไบ</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">อัมสเตอร์ดัม</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="accordion-item" style="border: 1px solid var(--color-border); border-radius: 8px; margin-bottom: 12px; background: #fff; text-align: left;">
+            <button class="accordion-trigger" style="width: 100%; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: var(--color-primary); text-align: left; background: none; border: none; cursor: pointer;">
+              <span>เอเชียและแปซิฟิก</span>
+              <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="accordion-content" style="display: none; padding: 0 20px 16px; border-top: 1px solid var(--color-border); background: #fafafa;">
+              <ul style="list-style: none; padding: 12px 0 0 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; color: var(--color-text);">
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">สิงคโปร์</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">โตเกียว</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">โซล</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">ซิดนีย์</li>
+                <li style="padding: 4px 0; border-bottom: 1px solid #eee;">กรุงเทพฯ</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA (Mobile only) -->
+    <section class="about-final-cta mobile-only" style="display: none; background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%); color: #fff; text-align: center; padding: 56px 20px;">
+      <div class="container">
+        <h2 style="font-size: 20px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; color: #fff;">มีที่นอนขนาดพิเศษใช่ไหม?</h2>
+        <p style="font-size: 14px; opacity: 0.95; margin-bottom: 24px; color: #fff; line-height: 1.5;">ส่งขนาดให้เรา แล้วเราจะช่วยแนะนำแบบที่เหมาะสม</p>
+        <a href="/th/products/" class="btn" style="background: #fff; color: var(--color-primary); font-weight: 700; padding: 12px 32px; border-radius: 8px; display: inline-block; text-decoration: none;">เริ่มสั่งตัด</a>
       </div>
     </section>
 
@@ -719,6 +870,31 @@
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/cookie-consent.js"></script>
+  <script>
+    (function() {
+      document.querySelectorAll('.accordion-trigger').forEach(function(trigger) {
+        trigger.addEventListener('click', function() {
+          const content = trigger.nextElementSibling;
+          const chevron = trigger.querySelector('.chevron');
+          const isOpen = content.style.display === 'block';
+          
+          // Collapse all others
+          document.querySelectorAll('.accordion-content').forEach(function(c) {
+            c.style.display = 'none';
+          });
+          document.querySelectorAll('.accordion-trigger .chevron').forEach(function(ch) {
+            ch.style.transform = '';
+          });
+
+          // Toggle current
+          if (!isOpen) {
+            content.style.display = 'block';
+            chevron.style.transform = 'rotate(180deg)';
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
 
