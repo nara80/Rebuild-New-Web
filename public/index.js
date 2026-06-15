@@ -8957,7 +8957,7 @@ ${header}`);
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-DFY341/functionsRoutes-0.10415199073191705.mjs
+// ../.wrangler/tmp/pages-s928Mz/functionsRoutes-0.6821055412987928.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

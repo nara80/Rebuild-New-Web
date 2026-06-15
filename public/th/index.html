@@ -184,6 +184,11 @@
     .home-page .mobile-break {
       display: none;
     }
+    .home-page .mobile-hero-title,
+    .home-page .mobile-hero-sub,
+    .home-page .mobile-hero-cta {
+      display: none !important;
+    }
     /* Chat buttons styling (base/desktop) */
     .home-page .footer-chat-buttons {
       display: flex;
@@ -235,15 +240,20 @@
       .home-page .mobile-break {
         display: block;
       }
+      .home-page .desktop-hero-title,
+      .home-page .desktop-hero-sub,
+      .home-page .desktop-hero-cta {
+        display: none !important;
+      }
       .home-page .hero {
         position: relative;
-        min-height: 420px;
+        min-height: 560px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 40px 20px;
+        padding: 40px 20px 48px;
       }
       .home-page .hero-bg {
         position: absolute;
@@ -251,13 +261,14 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center 30%;
         z-index: 0;
         aspect-ratio: auto;
       }
       .home-page .hero-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.45) 50%, rgba(0, 0, 0, 0.7) 100%) !important;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.75) 100%) !important;
         z-index: 1;
       }
       .home-page .hero-content {
@@ -270,22 +281,23 @@
         flex-direction: column;
         align-items: center;
       }
-      .home-page .hero h1 {
-        font-size: 28px;
+      .home-page .mobile-hero-title {
+        display: block !important;
+        font-size: 36px;
         font-weight: 700;
-        line-height: 1.25;
-        margin-bottom: 10px;
+        line-height: 1.2;
+        margin-bottom: 14px;
         color: #ffffff;
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
       }
-      .home-page .hero .hero-sub {
+      .home-page .mobile-hero-sub {
         display: block !important;
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 500;
         line-height: 1.4;
         color: rgba(255, 255, 255, 0.95);
-        margin-bottom: 20px;
-        max-width: 280px;
+        margin-bottom: 24px;
+        max-width: 290px;
         margin-left: auto;
         margin-right: auto;
         text-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -294,19 +306,19 @@
         display: flex;
         justify-content: center;
         width: 100%;
-        margin-top: 0;
+        margin-top: 0 !important;
       }
-      .home-page .hero .hero-actions .btn-primary {
-        display: inline-flex;
+      .home-page .mobile-hero-cta {
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
         width: 78%;
         max-width: 280px;
         height: 50px;
         padding: 0 24px;
-        font-size: 0.9375rem;
-        font-weight: 700;
-        border-radius: 8px;
+        font-size: 17px;
+        font-weight: 600;
+        border-radius: 12px;
         box-shadow: 0 4px 12px rgba(44, 150, 244, 0.3);
       }
       .home-page .trust-grid {
@@ -536,10 +548,15 @@
       <picture><source srcset="/images/Hero01.webp" type="image/webp"><img src="/images/Hero01.jpg" alt="ชุดเครื่องนอนสั่งตัด เรื่องง่ายสำหรับคุณ" class="hero-bg" fetchpriority="high" decoding="async" width="1500" height="930"></picture>
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <h1>ชุดเครื่องนอนสั่งตัด<br class="mobile-break">เรื่องง่ายสำหรับคุณ</h1>
-        <p class="hero-sub">ทุกขนาด ทุกรูปทรง ตัดเย็บได้พอดี</p>
+        <h1 class="desktop-hero-title">ชุดเครื่องนอนสั่งตัด<br class="mobile-break">เรื่องง่ายสำหรับคุณ</h1>
+        <p class="hero-sub desktop-hero-sub">ทุกขนาด ทุกรูปทรง ตัดเย็บได้พอดี</p>
+        
+        <h1 class="mobile-hero-title">เครื่องนอนสั่งตัด<br>ง่ายกว่าที่คิด</h1>
+        <p class="hero-sub mobile-hero-sub">ทุกขนาด ทุกรูปทรง พอดีกับทุกเตียง</p>
+        
         <div class="hero-actions" style="margin-top:5px;">
-          <a href="/products/" class="btn btn-primary">เลือกซื้อเครื่องนอนสั่งตัด</a>
+          <a href="/products/" class="btn btn-primary desktop-hero-cta">เลือกซื้อเครื่องนอนสั่งตัด</a>
+          <a href="/products/" class="btn btn-primary mobile-hero-cta">เลือกซื้อเครื่องนอน</a>
         </div>
       </div>
     </section>

@@ -8681,6 +8681,7 @@ var FALLBACK_FOOTER = `<footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
 
+        <!-- Column 1: Quick Links -->
         <div class="footer-col">
           <h3>Quick Links</h3>
           <ul>
@@ -8690,6 +8691,7 @@ var FALLBACK_FOOTER = `<footer class="site-footer">
           </ul>
         </div>
 
+        <!-- Column 2: Customer Service -->
         <div class="footer-col">
           <h3>Customer Service</h3>
           <ul>
@@ -8699,24 +8701,38 @@ var FALLBACK_FOOTER = `<footer class="site-footer">
           </ul>
         </div>
 
+        <!-- Column 3: Shop on Marketplaces -->
         <div class="footer-col">
-          <h3>Shop With Us</h3>
+          <h3>Shop on Marketplaces</h3>
           <div class="footer-icons-grid">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
-              <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
-              <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
-              <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
-              <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
-            </a>
+            <div class="marketplace-col">
+              <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
+                <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Etsy</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
+                <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">eBay</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
+                <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Shopee</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
+                <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Lazada</span>
+            </div>
           </div>
         </div>
 
+        <!-- Column 4: Contact -->
         <div class="footer-col">
           <h3>Contact</h3>
           <ul>
@@ -8729,16 +8745,18 @@ var FALLBACK_FOOTER = `<footer class="site-footer">
             <li>
               <a href="tel:+66872362364">
                 <svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                +66 (0)87 236 2364
+                +66 87 236 2364
               </a>
             </li>
           </ul>
-          <div class="footer-icons-grid contact-icons">
-            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle">
+          <div class="footer-chat-buttons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-chat-btn whatsapp-btn">
               <img src="/images/Logo/WhatsAPP.png" alt="" width="100" height="100" decoding="async">
+              <span>WhatsApp</span>
             </a>
-            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle">
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-chat-btn line-btn">
               <img src="/images/Logo/LineOA.png" alt="" width="100" height="100" decoding="async">
+              <span>LINE</span>
             </a>
           </div>
         </div>
@@ -8763,11 +8781,11 @@ var FALLBACK_FOOTER = `<footer class="site-footer">
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">
           <a href="/policy/">Privacy Policy</a>
           <a href="/shipping/">Returns &amp; Delivery</a>
         </div>
+        <p>&copy; MildMate 2026</p>
       </div>
     </div>
   </footer>`;
@@ -8933,13 +8951,13 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop With Us</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   return new Response(html, { status: response.status, headers: response.headers });
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-mtQVjC/functionsRoutes-0.8314598584725784.mjs
+// ../.wrangler/tmp/pages-s928Mz/functionsRoutes-0.6821055412987928.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
