@@ -132,22 +132,34 @@ INSERT OR REPLACE INTO site_templates (template_key, template_html, description)
           </ul>
         </div>
 
-        <!-- Column 3: Shop With Us (icon only) -->
+        <!-- Column 3: Shop on Marketplaces -->
         <div class="footer-col">
-          <h3>Shop With Us</h3>
+          <h3>Shop on Marketplaces</h3>
           <div class="footer-icons-grid">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
-              <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
-              <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
-              <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
-              <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
-            </a>
+            <div class="marketplace-col">
+              <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
+                <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Etsy</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
+                <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">eBay</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
+                <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Shopee</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
+                <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Lazada</span>
+            </div>
           </div>
         </div>
 
@@ -164,22 +176,23 @@ INSERT OR REPLACE INTO site_templates (template_key, template_html, description)
             <li>
               <a href="tel:+66872362364">
                 <svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                +66 (0)87 236 2364
+                +66 87 236 2364
               </a>
             </li>
           </ul>
-          <div class="footer-icons-grid contact-icons">
-            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle">
+          <div class="footer-chat-buttons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-chat-btn whatsapp-btn">
               <img src="/images/Logo/WhatsAPP.png" alt="" width="100" height="100" decoding="async">
+              <span>WhatsApp</span>
             </a>
-            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle">
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-chat-btn line-btn">
               <img src="/images/Logo/LineOA.png" alt="" width="100" height="100" decoding="async">
+              <span>LINE</span>
             </a>
           </div>
         </div>
       </div>
 
-      <!-- Social Media Center Row -->
       <div class="footer-social-center">
         <a href="https://www.facebook.com/mildmate.bedsheets" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="footer-social-icon">
           <img src="/images/Logo/Facebook.png" alt="" width="100" height="100" decoding="async">
@@ -198,13 +211,12 @@ INSERT OR REPLACE INTO site_templates (template_key, template_html, description)
         </a>
       </div>
 
-      <!-- Footer Bottom Bar -->
       <div class="footer-bottom">
-        <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">
           <a href="/policy/">Privacy Policy</a>
           <a href="/shipping/">Returns &amp; Delivery</a>
         </div>
+        <p>&copy; MildMate 2026</p>
       </div>
     </div>
   </footer>', 'Standard 4-column footer with marketplace icons, social links');

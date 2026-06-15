@@ -1,6 +1,10 @@
 // workers/api/reviews.ts
 // Public GET /api/reviews and Admin CRUD /api/admin/reviews
 
+import { verifyClerkJwt } from "./clerk-verify";
+
+const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+
 const ALLOWED_PRODUCT_TYPES = [
   'Sheets', 'Pillowcases', 'Protections', 'Duvet Covers', 'Accessories',
   'Marine & Yacht', 'Family & Co-Sleep', 'Deep Pocket', 'Boarding Dorm', 'Pet Owner', 'RV & Truck Cab'
@@ -14,6 +18,28 @@ const ALLOWED_PLATFORMS = [
 function sanitize(str: string | null | undefined): string {
   if (!str) return '';
   return str.trim();
+}
+
+function normalizeMojibake(str: string | null | undefined): string {
+  const s = sanitize(str);
+  if (!s) return '';
+  return s
+    .replace(/ΓÇÖ/g, "’")
+    .replace(/ΓÇ£/g, "“")
+    .replace(/ΓÇ¥/g, "”")
+    .replace(/ΓÇö/g, "—")
+    .replace(/ΓÇô/g, "–")
+    .replace(/ΓÇª/g, "…")
+    .replace(/ΓÇ¢/g, "•")
+    .replace(/├ù/g, "×")
+    .replace(/≡ƒñì/g, "")
+    .replace(/�/g, "");
+}
+
+function toR2Url(url: string | null | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('/r2/')) return `${R2_PUBLIC_BASE}${url.slice(3)}`;
+  return url;
 }
 
 function sanitizeReviewText(html: string): string {
@@ -45,15 +71,118 @@ function isProductionHost(hostname: string): boolean {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 
-function authorizeAdminSecret(request: Request, env: any): boolean {
+function collectRoles(raw: any): string[] {
+  if (!raw || typeof raw !== "object") return [];
+  const values: any[] = [];
+  const add = (v: any) => { if (v !== undefined && v !== null) values.push(v); };
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out: string[] = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+
+function hasAdminRole(raw: any): boolean {
+  const roles = collectRoles(raw);
+  return roles.some((r) =>
+    r === "admin" ||
+    r === "super-admin" ||
+    r === "super_admin" ||
+    r === "superadmin" ||
+    r.endsWith(":admin") ||
+    r.endsWith("/admin")
+  );
+}
+
+function emailAllowed(email: string, env: any): boolean {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s: string) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+
+function getClerkSessionTokenFromCookie(request: Request): string {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const match =
+    cookieHeader.match(/__session=([^;]+)/) ||
+    cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
+  return match ? String(match[1] || "").trim() : "";
+}
+
+async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const authHeader = request.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie(request);
+  const bearerToken = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : "";
+  const token = bearerToken || cookieToken;
+
+  if (token) {
+    const verifyRequest = bearerToken
+      ? request
+      : new Request(request.url, {
+          method: request.method,
+          headers: new Headers({
+            ...Object.fromEntries(request.headers.entries()),
+            Authorization: "Bearer " + token
+          })
+        });
+    const verified = await verifyClerkJwt(verifyRequest, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) {
+        return { ok: true };
+      }
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e: any) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed(email, env)) return { ok: true };
+            if (hasAdminRole(metadata)) return { ok: true };
+          }
+        } catch (e: any) {
+          console.error("Clerk API lookup failed:", e?.message || e);
+        }
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role required" };
+    }
+  }
+
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost(hostname);
-  if (!prodHost) return true;
-  if (!configured) return false;
-  if (!provided) return false;
-  return provided === configured;
+  if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
+
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+
+  if (!configured) return { ok: true };
+  if (provided === configured) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
 }
 
 // ── Public GET /api/reviews ────────────────────────────────────────────────
@@ -134,7 +263,15 @@ export async function handleReviews(request: Request, env: any): Promise<Respons
     const countRow = await countStmt.first();
     const total = countRow ? (countRow as any).total : 0;
 
-    return new Response(JSON.stringify({ reviews: results || [], total, limit, offset }), {
+    const normalized = (results || []).map((rv: any) => ({
+      ...rv,
+      customer_name: normalizeMojibake(rv.customer_name || ''),
+      customer_country: normalizeMojibake(rv.customer_country || ''),
+      review_text: normalizeMojibake(rv.review_text || ''),
+      image_url: toR2Url(rv.image_url || '')
+    }));
+
+    return new Response(JSON.stringify({ reviews: normalized, total, limit, offset }), {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300' }
     });
   } catch (e: any) {
@@ -152,9 +289,10 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
   const headers = { 'Content-Type': 'application/json' };
 
   // Verify admin auth
-  if (!authorizeAdminSecret(request, env)) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
       headers
     });
   }
@@ -192,7 +330,11 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
           });
         }
         const review = post as any;
+        review.customer_name = normalizeMojibake(review.customer_name || '');
+        review.customer_country = normalizeMojibake(review.customer_country || '');
+        review.review_text = normalizeMojibake(review.review_text || '');
         review.review_date = normalizeReviewDate(review.review_date || review.created_at);
+        review.image_url = toR2Url(review.image_url || '');
         return new Response(JSON.stringify({ review }), { headers });
       }
 
@@ -211,7 +353,14 @@ export async function handleAdminReviews(request: Request, env: any): Promise<Re
         const out = await stmt.all();
         results = out.results || [];
       }
-      results = results.map((rv: any) => ({ ...rv, review_date: normalizeReviewDate(rv.review_date || rv.created_at) }));
+      results = results.map((rv: any) => ({
+        ...rv,
+        customer_name: normalizeMojibake(rv.customer_name || ''),
+        customer_country: normalizeMojibake(rv.customer_country || ''),
+        review_text: normalizeMojibake(rv.review_text || ''),
+        review_date: normalizeReviewDate(rv.review_date || rv.created_at),
+        image_url: toR2Url(rv.image_url || '')
+      }));
       return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
 

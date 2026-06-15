@@ -81,8 +81,8 @@
            // Blog posts always have TH versions
            enPath.startsWith('/blogs/');
   };
-  const langToggle = document.querySelector('.lang-toggle');
-  if (langToggle) {
+  const langToggles = document.querySelectorAll('.lang-toggle, .mobile-drawer-lang');
+  langToggles.forEach(function (langToggle) {
     langToggle.addEventListener('click', function (e) {
       if (e.target.tagName !== 'SPAN') return;
       const targetLang = e.target.dataset.lang;
@@ -104,7 +104,7 @@
       }
       // else: Already on target language, do nothing
     });
-  }
+  });
 
   /* ── 3b. Thai nav href safeguard ─────────── */
   (function normalizeThaiNavLinks() {

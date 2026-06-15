@@ -611,7 +611,7 @@
       var discountCode = '';
       var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
       var shippingState = {
-        serviceLevel: 'express',
+        serviceLevel: 'standard',
         currency: 'USD',
         requestedCountry: '',
         appliedCountry: '',
@@ -627,6 +627,7 @@
         lastError: ''
       };
       var shippingMethodQuotes = { standard: null, express: null };
+      var standardShippingQuote = null;
       var shippingRequestSeq = 0;
       var lastShippingQuoteKey = '';
       var externalScriptPromises = {};
@@ -787,17 +788,19 @@
         var discountedSubtotal = discountApplied ? rawSubtotal * (100 - discountPercent) / 100 : rawSubtotal;
         var discountAmt = discountApplied ? rawSubtotal - discountedSubtotal : 0;
         var shipping = Number(shippingState.amount || 0);
+        var standardAmount = standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping;
         var total = (discountApplied ? discountedSubtotal : rawSubtotal) + shipping;
         var shippingText = formatMoney(shipping, currency);
+        var standardShippingText = formatMoney(standardAmount, currency);
         var subtotalDisplay = rawSubtotal;
 
         setText('subtotal', formatMoney(subtotalDisplay, currency));
-        setText('shipping-step1', shippingText);
-        setText('grand-total', formatMoney(total, currency));
+        setText('shipping-step1', standardShippingText);
+        setText('grand-total', formatMoney((discountApplied ? discountedSubtotal : rawSubtotal) + standardAmount, currency));
 
         setText('step2-subtotal', formatMoney(subtotalDisplay, currency));
-        setText('step2-shipping', shippingText);
-        setText('step2-total', formatMoney(total, currency));
+        setText('step2-shipping', standardShippingText);
+        setText('step2-total', formatMoney((discountApplied ? discountedSubtotal : rawSubtotal) + standardAmount, currency));
 
         setText('pay-subtotal-sidebar', formatMoney(subtotalDisplay, currency));
         setText('pay-shipping-sidebar', shippingText);
@@ -850,6 +853,7 @@
             lastError: ''
           };
           shippingMethodQuotes = { standard: null, express: null };
+          standardShippingQuote = null;
           renderShippingMethodOptions();
           applyTotalsFromState();
           return;
@@ -931,6 +935,7 @@
         var expressQuote = await fetchQuote('express');
         if (requestId !== shippingRequestSeq) return;
         shippingMethodQuotes = { standard: standardQuote, express: expressQuote };
+        standardShippingQuote = standardQuote;
 
         var preferredLevel = shippingState.serviceLevel || 'express';
         var chosenQuote = shippingMethodQuotes[preferredLevel];
@@ -1478,6 +1483,7 @@
           shippingState.totalQty = 0;
           shippingState.lastError = '';
           shippingMethodQuotes = { standard: null, express: null };
+          standardShippingQuote = null;
           renderShippingMethodOptions();
           applyTotalsFromState();
           return;

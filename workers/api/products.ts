@@ -9,6 +9,22 @@ function toR2Url(url: string | null | undefined): string {
   return url;
 }
 
+function normalizeMojibake(str: string | null | undefined): string {
+  const s = String(str || "").trim();
+  if (!s) return "";
+  return s
+    .replace(/ΓÇÖ/g, "’")
+    .replace(/ΓÇ£/g, "“")
+    .replace(/ΓÇ¥/g, "”")
+    .replace(/ΓÇö/g, "—")
+    .replace(/ΓÇô/g, "–")
+    .replace(/ΓÇª/g, "…")
+    .replace(/ΓÇ¢/g, "•")
+    .replace(/├ù/g, "×")
+    .replace(/≡ƒñì/g, "")
+    .replace(/�/g, "");
+}
+
 function r2Product(p: Product): Product {
   // Handle images JSON array (not typed but returned by D1)
   const out = { ...p, image_url: toR2Url(p.image_url) } as any;
@@ -214,6 +230,10 @@ async function handleProductReviews(env: any, slug: string): Promise<Response> {
     const result = await db.prepare(sql).bind(...bindings).all();
     const reviews = (result.results || []).map((rv: any) => ({
       ...rv,
+      customer_name: normalizeMojibake(rv.customer_name || ""),
+      customer_country: normalizeMojibake(rv.customer_country || ""),
+      review_text: normalizeMojibake(rv.review_text || ""),
+      image_url: toR2Url(rv.image_url || ''),
       review_date: String(rv.review_date || rv.created_at || '').slice(0, 10),
     }));
 

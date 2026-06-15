@@ -91,6 +91,26 @@
       .replace(/"/g, '&quot;');
   }
 
+  function isThaiPage() {
+    var path = (window.location && window.location.pathname ? window.location.pathname : '/').toLowerCase();
+    return path === '/th/' || path === '/th/index.html' || path.indexOf('/th/') === 0;
+  }
+
+  function verifiedBuyerLabel() {
+    return isThaiPage() ? 'ยืนยันผู้ซื้อ' : 'Verified Buyer';
+  }
+
+  function waitForIdleOrTimeout(timeoutMs) {
+    return new Promise(function (resolve) {
+      var delay = typeof timeoutMs === 'number' ? timeoutMs : 900;
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(function () { resolve(); }, { timeout: delay });
+      } else {
+        setTimeout(resolve, delay);
+      }
+    });
+  }
+
   function getPlatformMap() {
     return {
       etsy: { label: 'Etsy', logo: '/images/Logo/Etsy.png', type: 'marketplace', href: 'https://www.etsy.com/shop/mildmate' },
@@ -277,7 +297,7 @@
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platform = renderPlatformBadge(rv.platform);
-        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Buyer</span>' : '';
+        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + verifiedBuyerLabel() + '</span>' : '';
         var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
         var body = escHtml(rv.review_text || '');
         var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
@@ -332,7 +352,7 @@
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platformHtml = renderPlatformBadge(rv.platform);
-        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verified Buyer</span>' : '';
+        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + verifiedBuyerLabel() + '</span>' : '';
         var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
         var body = escHtml(rv.review_text || '');
         var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
@@ -402,8 +422,17 @@
     }
     if (!wrapper) return;
 
-    var isHomepageReviews = wrapper.classList.contains('reviews-carousel-wrapper') && (path === '/' || path === '/index.html');
-    if (isHomepageReviews) await loadHomepageLatestReviews(wrapper);
+    var isHomepageReviews = wrapper.classList.contains('reviews-carousel-wrapper') && (
+      path === '/' ||
+      path === '/index.html' ||
+      path === '/th/' ||
+      path === '/th/index.html'
+    );
+    if (isHomepageReviews) {
+      // Keep initial render fast on homepage; fetch and hydrate reviews after idle.
+      await waitForIdleOrTimeout(1200);
+      await loadHomepageLatestReviews(wrapper);
+    }
 
     // Prevent double initialization
     if (wrapper.hasAttribute('data-carousel-initialized')) return;

@@ -99,6 +99,7 @@ const FALLBACK_FOOTER = `<footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
 
+        <!-- Column 1: Quick Links -->
         <div class="footer-col">
           <h3>Quick Links</h3>
           <ul>
@@ -108,6 +109,7 @@ const FALLBACK_FOOTER = `<footer class="site-footer">
           </ul>
         </div>
 
+        <!-- Column 2: Customer Service -->
         <div class="footer-col">
           <h3>Customer Service</h3>
           <ul>
@@ -117,24 +119,38 @@ const FALLBACK_FOOTER = `<footer class="site-footer">
           </ul>
         </div>
 
+        <!-- Column 3: Shop on Marketplaces -->
         <div class="footer-col">
-          <h3>Shop With Us</h3>
+          <h3>Shop on Marketplaces</h3>
           <div class="footer-icons-grid">
-            <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
-              <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
-              <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
-              <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
-            </a>
-            <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
-              <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
-            </a>
+            <div class="marketplace-col">
+              <a href="https://www.etsy.com/shop/mildmate" target="_blank" rel="noopener noreferrer" aria-label="Etsy" class="footer-icon-circle">
+                <img src="/images/Logo/Etsy.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Etsy</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://www.ebay.com/str/mildmate" target="_blank" rel="noopener noreferrer" aria-label="eBay" class="footer-icon-circle">
+                <img src="/images/Logo/eBay.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">eBay</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://shopee.co.th/neededshop_bt.2n.1y" target="_blank" rel="noopener noreferrer" aria-label="Shopee" class="footer-icon-circle">
+                <img src="/images/Logo/Shopee.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Shopee</span>
+            </div>
+            <div class="marketplace-col">
+              <a href="https://www.lazada.co.th/shop/needed-shop" target="_blank" rel="noopener noreferrer" aria-label="Lazada" class="footer-icon-circle">
+                <img src="/images/Logo/Lazada.png" alt="" width="100" height="100" decoding="async">
+              </a>
+              <span class="marketplace-label">Lazada</span>
+            </div>
           </div>
         </div>
 
+        <!-- Column 4: Contact -->
         <div class="footer-col">
           <h3>Contact</h3>
           <ul>
@@ -147,16 +163,18 @@ const FALLBACK_FOOTER = `<footer class="site-footer">
             <li>
               <a href="tel:+66872362364">
                 <svg class="footer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                +66 (0)87 236 2364
+                +66 87 236 2364
               </a>
             </li>
           </ul>
-          <div class="footer-icons-grid contact-icons">
-            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-icon-circle">
+          <div class="footer-chat-buttons">
+            <a href="https://wa.me/66811515995" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="footer-chat-btn whatsapp-btn">
               <img src="/images/Logo/WhatsAPP.png" alt="" width="100" height="100" decoding="async">
+              <span>WhatsApp</span>
             </a>
-            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-icon-circle">
+            <a href="https://page.line.me/507abyoy" target="_blank" rel="noopener noreferrer" aria-label="LINE" class="footer-chat-btn line-btn">
               <img src="/images/Logo/LineOA.png" alt="" width="100" height="100" decoding="async">
+              <span>LINE</span>
             </a>
           </div>
         </div>
@@ -181,11 +199,11 @@ const FALLBACK_FOOTER = `<footer class="site-footer">
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; MildMate 2026</p>
         <div class="footer-bottom-links">
           <a href="/policy/">Privacy Policy</a>
           <a href="/shipping/">Returns &amp; Delivery</a>
         </div>
+        <p>&copy; MildMate 2026</p>
       </div>
     </div>
   </footer>`;
@@ -355,19 +373,36 @@ export async function onRequest(context: any): Promise<Response> {
     html = html.replace(/<\/body>/i, `${footer}\n</body>`);
   }
 
-  // 3) Flip language toggle + rewrite links for Thai pages.
+  // 3) Process language toggles dynamically for both EN and TH pages.
+  const isThPage = html.includes('<html lang="th"');
+  const enPath = isThPage ? path.replace(/^\/th/, '') || '/' : path;
+  const thPath = isThPage ? path : ('/th' + (path === '/' ? '/' : path));
+
+  // Replace desktop lang-toggle
+  html = html.replace(
+    /<div class="lang-toggle"[\s\S]*?<\/div>/,
+    `<div class="lang-toggle" role="group" aria-label="Language switch">
+      <span data-lang="en" ${isThPage ? `style="color:var(--color-muted);cursor:pointer" onclick="window.location.href='${enPath}'"` : `class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px"`}>EN</span>
+      <span style="color:var(--color-border)">/</span>
+      <span data-lang="th" ${isThPage ? `class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px"` : `style="color:var(--color-muted);cursor:pointer" onclick="window.location.href='${thPath}'"`}>TH</span>
+    </div>`
+  );
+
+  // Replace mobile-drawer-lang
+  html = html.replace(
+    /<div class="mobile-drawer-lang"[\s\S]*?<\/div>/,
+    `<div class="mobile-drawer-lang" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--color-border);display:flex;align-items:center;gap:8px">
+      <span style="font-size:0.8125rem;font-weight:600;color:var(--color-muted)">${isThPage ? 'ภาษา:' : 'Language:'}</span>
+      <span data-lang="en" ${isThPage ? `style="color:var(--color-muted);font-weight:600;font-size:0.9375rem;cursor:pointer" onclick="window.location.href='${enPath}'"` : `class="active" style="color:var(--color-primary);font-weight:700;font-size:0.9375rem;cursor:pointer"`}>EN</span>
+      <span style="color:var(--color-border)">/</span>
+      <span data-lang="th" ${isThPage ? `class="active" style="color:var(--color-primary);font-weight:700;font-size:0.9375rem;cursor:pointer"` : `style="color:var(--color-muted);font-weight:600;font-size:0.9375rem;cursor:pointer" onclick="window.location.href='${thPath}'"`}>TH</span>
+    </div>`
+  );
+
+  // 4) Rewrite links and text for Thai pages.
   // Run AFTER chrome injection so injected header/footer links are localized too.
-  if (html.includes('<html lang="th"')) {
+  if (isThPage) {
     html = html
-      // Toggle appearance
-      .replace(
-        /<span data-lang="en"[^>]*class="active"[^>]*>EN<\/span>/,
-        '<span data-lang="en" style="color:var(--color-muted)">EN</span>'
-      )
-      .replace(
-        /<span data-lang="th"[^>]*>TH<\/span>/,
-        '<span data-lang="th" class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px">TH</span>'
-      )
       // Desktop nav links
       .replace(/"nav-link">Shop<\/a>/g, '"nav-link">สินค้า</a>')
       .replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">เนื้อผ้า</a>')
@@ -383,8 +418,9 @@ export async function onRequest(context: any): Promise<Response> {
       // Footer section headings
       .replace(/>Customer Service</g, '>บริการลูกค้า<')
       .replace(/>FAQ</g, '>คำถามที่พบบ่อย<')
-      .replace(/>Shop With Us</g, '>ช่องทางสั่งซื้อ<')
+      .replace(/>Shop on Marketplaces</g, '>ช่องทางสั่งซื้อ<')
       .replace(/>Contact</g, '>ติดต่อเรา<')
+      .replace(/\+66 87 236 2364/g, '087 236 2364')
       // Footer bottom links
       .replace(/>Privacy Policy</g, '>นโยบายความเป็นส่วนตัว<')
       .replace(/>Returns &amp; Delivery</g, '>การคืนสินค้าและการจัดส่ง<')

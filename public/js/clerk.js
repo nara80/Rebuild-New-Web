@@ -217,8 +217,15 @@
 
   /** Get a short-lived Clerk session JWT for API calls */
   window.getClerkToken = async function () {
-    if (!clerkInstance || !clerkInstance.session) return null;
     try {
+      if (!clerkInstance) {
+        if (_readyPromise) {
+          await _readyPromise;
+        } else if (isAuthCriticalPath()) {
+          await initClerk();
+        }
+      }
+      if (!clerkInstance || !clerkInstance.session) return null;
       return await clerkInstance.session.getToken();
     } catch (e) {
       return null;
@@ -252,12 +259,9 @@
     return (
       path.indexOf('/account') === 0 ||
       path.indexOf('/admin') === 0 ||
+      path.indexOf('/super-admin') === 0 ||
       path.indexOf('/quote') === 0
     );
-  }
-
-  function isMobileViewport() {
-    return !!(window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
   }
 
   function scheduleClerkInit() {
@@ -272,31 +276,36 @@
       startInit();
       return;
     }
-    if (isMobileViewport()) {
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        startInit();
-      };
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
-      } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+    var started = false;
+    var startOnce = function () {
+      if (started) return;
+      started = true;
+      window.removeEventListener('pointerdown', startOnce, true);
+      window.removeEventListener('keydown', startOnce, true);
+      window.removeEventListener('touchstart', startOnce, true);
+      document.removeEventListener('focusin', startOnAuthIntent, true);
+      document.removeEventListener('click', startOnAuthIntent, true);
+      startInit();
+    };
+    var startOnAuthIntent = function (ev) {
+      var t = ev && ev.target;
+      if (!t || !t.closest) return;
+      if (
+        t.closest('.account-btn') ||
+        t.closest('.sign-in-pill') ||
+        t.closest('.sign-in-drawer-link') ||
+        t.closest('.btn-google') ||
+        t.closest('[data-clerk-signin]') ||
+        t.closest('#clerk-user-button')
+      ) {
+        startOnce();
       }
-      return;
-    }
-    if (typeof window.requestIdleCallback === 'function') {
-      window.requestIdleCallback(startInit, { timeout: 3500 });
-    } else {
-      setTimeout(startInit, 1200);
-    }
+    };
+    window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+    window.addEventListener('keydown', startOnce, { once: true, capture: true });
+    window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+    document.addEventListener('focusin', startOnAuthIntent, true);
+    document.addEventListener('click', startOnAuthIntent, true);
   }
 
   addConnectionHints();

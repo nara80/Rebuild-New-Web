@@ -114,7 +114,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       }
       paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + (prevPage > 1 ? "?page=" + prevPage : "")) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + nextPage) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
     }
-    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:280px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:20px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.drawer-search-form input{flex:1;padding:8px 10px;border:none;outline:none;font-size:0.8125rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:8px 10px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:10px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1.35rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
+    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
     return new Response(html, {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" }
     });
@@ -375,6 +375,12 @@ function toR2Url(url) {
   return url;
 }
 __name(toR2Url, "toR2Url");
+function normalizeMojibake(str) {
+  const s = String(str || "").trim();
+  if (!s) return "";
+  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒñì/g, "").replace(/�/g, "");
+}
+__name(normalizeMojibake, "normalizeMojibake");
 function r2Product(p) {
   const out = { ...p, image_url: toR2Url(p.image_url) };
   if (out.images && typeof out.images === "string") {
@@ -530,6 +536,10 @@ async function handleProductReviews(env, slug) {
     const result = await db.prepare(sql).bind(...bindings).all();
     const reviews = (result.results || []).map((rv) => ({
       ...rv,
+      customer_name: normalizeMojibake(rv.customer_name || ""),
+      customer_country: normalizeMojibake(rv.customer_country || ""),
+      review_text: normalizeMojibake(rv.review_text || ""),
+      image_url: toR2Url(rv.image_url || ""),
       review_date: String(rv.review_date || rv.created_at || "").slice(0, 10)
     }));
     return new Response(JSON.stringify({ reviews, product_type: ptDisplay, niches: nicheDisplayNames }), {
@@ -2513,8 +2523,8 @@ async function handleAdminUpload(request, env) {
     await bucket.put(key, file.stream(), {
       httpMetadata: { contentType: file.type }
     });
-    const R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-    const publicUrl = `${R2_PUBLIC_BASE6}/${key}`;
+    const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+    const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
     return new Response(JSON.stringify({
       success: true,
       url: publicUrl,
@@ -3582,6 +3592,11 @@ function normalizeShippingCurrency(raw) {
   return c;
 }
 __name(normalizeShippingCurrency, "normalizeShippingCurrency");
+function normalizeServiceLevel(raw) {
+  const s = String(raw || "").trim().toLowerCase();
+  return s === "standard" ? "standard" : "express";
+}
+__name(normalizeServiceLevel, "normalizeServiceLevel");
 async function ensureShippingRatesSchema(env) {
   if (shippingSchemaReady) return;
   if (!shippingSchemaPromise) {
@@ -3602,6 +3617,22 @@ async function ensureShippingRatesSchema(env) {
           tier3_add_thb INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1,
           updated_at DATETIME DEFAULT (datetime('now'))
+        )`
+      ).run();
+      await env.DB.prepare(
+        `CREATE TABLE IF NOT EXISTS shipping_service_rates (
+          country_code TEXT NOT NULL,
+          service_level TEXT NOT NULL CHECK(service_level IN ('standard','express')),
+          country_name TEXT NOT NULL,
+          tier1_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier2_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier3_first_thb INTEGER NOT NULL DEFAULT 0,
+          eta_min_days INTEGER NOT NULL DEFAULT 3,
+          eta_max_days INTEGER NOT NULL DEFAULT 7,
+          eta_note TEXT DEFAULT '',
+          is_active INTEGER NOT NULL DEFAULT 1,
+          updated_at DATETIME DEFAULT (datetime('now')),
+          PRIMARY KEY (country_code, service_level)
         )`
       ).run();
       await env.DB.prepare(
@@ -3629,6 +3660,40 @@ async function ensureShippingRatesSchema(env) {
         SELECT 'OTHER', 'Other Countries', 25, 10, 850, 300, 1, datetime('now')
         WHERE NOT EXISTS (SELECT 1 FROM shipping_rates WHERE country_code = 'OTHER')`
       ).run();
+      await env.DB.prepare(
+        `INSERT INTO shipping_service_rates (
+          country_code, service_level, country_name,
+          tier1_first_thb, tier2_first_thb, tier3_first_thb,
+          eta_min_days, eta_max_days, eta_note, is_active, updated_at
+        )
+        SELECT
+          country_code, 'express', country_name,
+          COALESCE(tier1_first_thb, 0), COALESCE(tier2_first_thb, 0), COALESCE(tier3_first_thb, 0),
+          3, 7, 'Express delivery', COALESCE(is_active, 1), datetime('now')
+        FROM shipping_rates sr
+        WHERE NOT EXISTS (
+          SELECT 1 FROM shipping_service_rates ssr
+          WHERE ssr.country_code = sr.country_code AND ssr.service_level = 'express'
+        )`
+      ).run();
+      await env.DB.prepare(
+        `INSERT INTO shipping_service_rates (
+          country_code, service_level, country_name,
+          tier1_first_thb, tier2_first_thb, tier3_first_thb,
+          eta_min_days, eta_max_days, eta_note, is_active, updated_at
+        )
+        SELECT
+          country_code, 'standard', country_name,
+          CAST(ROUND(COALESCE(tier1_first_thb, 0) * 0.75) AS INTEGER),
+          CAST(ROUND(COALESCE(tier2_first_thb, 0) * 0.75) AS INTEGER),
+          CAST(ROUND(COALESCE(tier3_first_thb, 0) * 0.75) AS INTEGER),
+          7, 14, 'Standard delivery', COALESCE(is_active, 1), datetime('now')
+        FROM shipping_rates sr
+        WHERE NOT EXISTS (
+          SELECT 1 FROM shipping_service_rates ssr
+          WHERE ssr.country_code = sr.country_code AND ssr.service_level = 'standard'
+        )`
+      ).run();
       shippingSchemaReady = true;
     })().finally(() => {
       if (!shippingSchemaReady) shippingSchemaPromise = null;
@@ -3652,6 +3717,7 @@ __name(getRatePerThb, "getRatePerThb");
 async function calculateShippingQuote(env, input) {
   await ensureShippingRatesSchema(env);
   const currency = normalizeShippingCurrency(input.currency);
+  const serviceLevel = normalizeServiceLevel(input.serviceLevel);
   const requestedCountry = normalizeCountryCode(input.countryCode) || normalizeCountryCode(input.fallbackCountryCode) || "OTHER";
   const items = input.items || [];
   const totalQty = items.reduce((sum, it) => sum + (it.qty || 0), 0) || toQty(input.totalQty || 0);
@@ -3660,6 +3726,7 @@ async function calculateShippingQuote(env, input) {
     const hasThOnly = items.some((it) => thOnlySlugs.has(it.slug));
     if (hasThOnly) {
       return {
+        service_level: serviceLevel,
         requested_country: requestedCountry,
         applied_country: "",
         country_name: "",
@@ -3672,6 +3739,9 @@ async function calculateShippingQuote(env, input) {
         first_item_thb: 0,
         additional_item_thb: 0,
         amount_thb: 0,
+        eta_min_days: 0,
+        eta_max_days: 0,
+        eta_note: "",
         is_fallback: false,
         blocked_th_only: true
       };
@@ -3679,6 +3749,7 @@ async function calculateShippingQuote(env, input) {
   }
   if (requestedCountry === "TH") {
     return {
+      service_level: serviceLevel,
       requested_country: "TH",
       applied_country: "TH",
       country_name: "Thailand",
@@ -3691,6 +3762,9 @@ async function calculateShippingQuote(env, input) {
       first_item_thb: 0,
       additional_item_thb: 0,
       amount_thb: 0,
+      eta_min_days: serviceLevel === "standard" ? 2 : 1,
+      eta_max_days: serviceLevel === "standard" ? 5 : 3,
+      eta_note: serviceLevel === "standard" ? "Standard delivery" : "Express delivery",
       is_fallback: false,
       blocked_th_only: false
     };
@@ -3699,12 +3773,12 @@ async function calculateShippingQuote(env, input) {
     const row2 = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
-        first_item_thb, additional_item_thb,
+        eta_min_days, eta_max_days, eta_note,
         is_active
-       FROM shipping_rates
-       WHERE country_code = ?1 AND is_active = 1
+       FROM shipping_service_rates
+       WHERE country_code = ?1 AND service_level = ?2 AND is_active = 1
        LIMIT 1`
-    ).bind(countryCode).first();
+    ).bind(countryCode, serviceLevel).first();
     return row2 || null;
   }, "fetchRate");
   let appliedCountry = requestedCountry;
@@ -3719,6 +3793,7 @@ async function calculateShippingQuote(env, input) {
   }
   if (!row) {
     return {
+      service_level: serviceLevel,
       requested_country: requestedCountry,
       applied_country: appliedCountry,
       country_name: appliedCountry === "OTHER" ? "Other Countries" : appliedCountry,
@@ -3731,6 +3806,9 @@ async function calculateShippingQuote(env, input) {
       first_item_thb: 0,
       additional_item_thb: 0,
       amount_thb: 0,
+      eta_min_days: serviceLevel === "standard" ? 7 : 3,
+      eta_max_days: serviceLevel === "standard" ? 14 : 7,
+      eta_note: serviceLevel === "standard" ? "Standard delivery" : "Express delivery",
       is_fallback: isFallback,
       blocked_th_only: false
     };
@@ -3757,8 +3835,8 @@ async function calculateShippingQuote(env, input) {
   for (const ar of addRows.results || []) {
     globalAddRates[Number(ar.tier)] = toAmount(ar.add_thb);
   }
-  const legacyFirstThb = toAmount(row.first_item_thb || 0);
-  const legacyAddThb = toAmount(row.additional_item_thb || 0);
+  const legacyFirstThb = 0;
+  const legacyAddThb = 0;
   const tier1FirstThb = toAmount(row.tier1_first_thb || 0);
   const tier2FirstThb = toAmount(row.tier2_first_thb || 0);
   const tier3FirstThb = toAmount(row.tier3_first_thb || 0);
@@ -3796,6 +3874,7 @@ async function calculateShippingQuote(env, input) {
   const additionalItem = currency === "THB" ? additionalThb : toAmount(additionalThb * ratePerThb);
   const amount = currency === "THB" ? amountThb : toAmount(amountThb * ratePerThb);
   return {
+    service_level: serviceLevel,
     requested_country: requestedCountry,
     applied_country: appliedCountry,
     country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
@@ -3808,6 +3887,9 @@ async function calculateShippingQuote(env, input) {
     first_item_thb: firstItemThb,
     additional_item_thb: additionalThb,
     amount_thb: amountThb,
+    eta_min_days: Math.max(0, Number(row?.eta_min_days || 0)),
+    eta_max_days: Math.max(0, Number(row?.eta_max_days || 0)),
+    eta_note: String(row?.eta_note || (serviceLevel === "standard" ? "Standard delivery" : "Express delivery")),
     is_fallback: isFallback,
     blocked_th_only: false
   };
@@ -3830,6 +3912,7 @@ async function handleShippingCalculate(request, env) {
     let country = "";
     let qty = 0;
     let currency = "USD";
+    let serviceLevel = "express";
     let items;
     const fallbackCountry = request.headers.get("CF-IPCountry") || "";
     if (request.method === "GET") {
@@ -3837,11 +3920,13 @@ async function handleShippingCalculate(request, env) {
       country = url.searchParams.get("country") || "";
       qty = toQty(url.searchParams.get("qty") || 0);
       currency = url.searchParams.get("currency") || "USD";
+      serviceLevel = url.searchParams.get("service_level") || "express";
     } else {
       const body = await request.json().catch(() => ({}));
       country = body.country || body.country_code || "";
       qty = toQty(body.qty || body.total_qty || 0);
       currency = body.currency || "USD";
+      serviceLevel = body.service_level || "express";
       if (Array.isArray(body.items)) {
         items = body.items.map((it) => ({
           slug: String(it.slug || it.product_slug || ""),
@@ -3853,6 +3938,7 @@ async function handleShippingCalculate(request, env) {
       countryCode: country,
       fallbackCountryCode: fallbackCountry,
       currency,
+      serviceLevel,
       totalQty: qty,
       items
     });
@@ -4007,24 +4093,31 @@ async function handleAdminShippingRates(request, env) {
   }
   await ensureShippingRatesSchema(env);
   if (request.method === "GET") {
+    const serviceLevel = normalizeServiceLevel(new URL(request.url).searchParams.get("service_level") || "express");
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        eta_min_days, eta_max_days, eta_note,
         is_active, updated_at
-       FROM shipping_rates
+       FROM shipping_service_rates
+       WHERE service_level = ?1
        ORDER BY CASE WHEN country_code = 'OTHER' THEN 1 ELSE 0 END, country_code`
-    ).all();
+    ).bind(serviceLevel).all();
     const rates = (rows.results || []).map((r) => {
       const t1f = toAmount2(r.tier1_first_thb || 0);
       const t2f = toAmount2(r.tier2_first_thb || 0);
       const t3f = toAmount2(r.tier3_first_thb || 0);
       return {
+        service_level: serviceLevel,
         country_code: String(r.country_code || "").toUpperCase(),
         country_name: String(r.country_name || ""),
         tier1_first_thb: t1f,
         tier2_first_thb: t2f,
         tier3_first_thb: t3f,
+        eta_min_days: Number(r.eta_min_days || 0),
+        eta_max_days: Number(r.eta_max_days || 0),
+        eta_note: String(r.eta_note || ""),
         tier1_first_usd: toAmount2(t1f * usdRate),
         tier2_first_usd: toAmount2(t2f * usdRate),
         tier3_first_usd: toAmount2(t3f * usdRate),
@@ -4032,7 +4125,7 @@ async function handleAdminShippingRates(request, env) {
         updated_at: r.updated_at
       };
     });
-    return json6({ rates, usd_rate_per_thb: usdRate });
+    return json6({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "POST" || request.method === "PUT") {
     let body;
@@ -4042,6 +4135,7 @@ async function handleAdminShippingRates(request, env) {
       return json6({ error: "Invalid JSON body" }, 400);
     }
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
+    const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
       return json6({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
@@ -4049,29 +4143,40 @@ async function handleAdminShippingRates(request, env) {
     const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
     const t2f = toAmount2(body.tier2_first_thb || body.tier2_first || 0);
     const t3f = toAmount2(body.tier3_first_thb || body.tier3_first || 0);
+    const etaMinDays = Math.max(0, Number(body.eta_min_days || 0));
+    const etaMaxDays = Math.max(0, Number(body.eta_max_days || 0));
+    const etaNote = String(body.eta_note || "").trim();
     const isActive = body.is_active === void 0 ? 1 : Number(body.is_active) ? 1 : 0;
     await env.DB.prepare(
-      `INSERT INTO shipping_rates (
-        country_code, country_name,
+      `INSERT INTO shipping_service_rates (
+        country_code, service_level, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        eta_min_days, eta_max_days, eta_note,
         is_active, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
-      ON CONFLICT(country_code) DO UPDATE SET
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'))
+      ON CONFLICT(country_code, service_level) DO UPDATE SET
         country_name = excluded.country_name,
         tier1_first_thb = excluded.tier1_first_thb,
         tier2_first_thb = excluded.tier2_first_thb,
         tier3_first_thb = excluded.tier3_first_thb,
+        eta_min_days = excluded.eta_min_days,
+        eta_max_days = excluded.eta_max_days,
+        eta_note = excluded.eta_note,
         is_active = excluded.is_active,
         updated_at = datetime('now')`
-    ).bind(countryCode, countryName, t1f, t2f, t3f, isActive).run();
+    ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
     return json6({
       success: true,
       rate: {
+        service_level: serviceLevel,
         country_code: countryCode,
         country_name: countryName,
         tier1_first_thb: t1f,
         tier2_first_thb: t2f,
         tier3_first_thb: t3f,
+        eta_min_days: etaMinDays,
+        eta_max_days: etaMaxDays,
+        eta_note: etaNote,
         is_active: isActive
       }
     });
@@ -4079,10 +4184,11 @@ async function handleAdminShippingRates(request, env) {
   if (request.method === "DELETE") {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
+    const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
     if (!countryCode) return json6({ error: "country query param is required" }, 400);
     if (countryCode === "OTHER") return json6({ error: "OTHER cannot be deleted" }, 400);
-    await env.DB.prepare("DELETE FROM shipping_rates WHERE country_code = ?1").bind(countryCode).run();
-    return json6({ success: true, country_code: countryCode });
+    await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
+    return json6({ success: true, country_code: countryCode, service_level: serviceLevel });
   }
   return json6({ error: "Method not allowed" }, 405);
 }
@@ -5110,6 +5216,7 @@ async function handleAdminPromo(request, env) {
 __name(handleAdminPromo, "handleAdminPromo");
 
 // ../workers/api/admin-blog.ts
+var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var BLOG_CATEGORY_OPTIONS = [
   "Marine & Yacht",
   "Family & Co-Sleep",
@@ -5130,35 +5237,129 @@ function isProductionHost9(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost9, "isProductionHost");
-function authorizeAdminSecret(request, env) {
+function collectRoles7(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles7, "collectRoles");
+function hasAdminRole7(raw) {
+  const roles = collectRoles7(raw);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole7, "hasAdminRole");
+function emailAllowed7(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed7, "emailAllowed");
+function getClerkSessionTokenFromCookie(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
+  return match2 ? String(match2[1] || "").trim() : "";
+}
+__name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
+async function authorizeAdmin8(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie(request);
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const token = bearerToken || cookieToken;
+  if (token) {
+    const verifyRequest = bearerToken ? request : new Request(request.url, {
+      method: request.method,
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: "Bearer " + token
+      })
+    });
+    const verified = await verifyClerkJwt(verifyRequest, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+        return { ok: true };
+      }
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed7(email, env)) return { ok: true };
+            if (hasAdminRole7(metadata)) return { ok: true };
+          }
+        } catch (e) {
+          console.error("Clerk API lookup failed:", e?.message || e);
+        }
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role required" };
+    }
+  }
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost9(hostname);
-  if (!prodHost) return true;
-  if (!configured) return false;
-  if (!provided) return false;
-  return provided === configured;
+  if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost9(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configured) return { ok: true };
+  if (provided === configured) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdminSecret, "authorizeAdminSecret");
+__name(authorizeAdmin8, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
   const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
   return cleaned.filter((x) => BLOG_CATEGORY_OPTIONS.includes(x));
 }
 __name(normalizeCategories, "normalizeCategories");
+function toR2Url3(url) {
+  if (!url) return "";
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE4}${url.slice(3)}`;
+  return url;
+}
+__name(toR2Url3, "toR2Url");
 async function handleAdminBlog(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret"
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  if (!authorizeAdminSecret(request, env)) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
+  const auth = await authorizeAdmin8(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
   const db = env.DB;
   const url = new URL(request.url);
@@ -5177,12 +5378,23 @@ async function handleAdminBlog(request, env) {
         categories = JSON.parse(post.categories_json || "[]");
       } catch {
       }
-      return new Response(JSON.stringify({ post: { ...post, related_products: relatedProducts, categories_json: categories } }), { headers });
+      return new Response(JSON.stringify({
+        post: {
+          ...post,
+          featured_image: toR2Url3(post.featured_image || ""),
+          related_products: relatedProducts,
+          categories_json: categories
+        }
+      }), { headers });
     }
     const { results } = await db.prepare(
       "SELECT id, slug, title_en, title_th, featured_image, category, categories_json, status, is_featured, author, created_at, updated_at FROM blog_posts ORDER BY updated_at DESC"
     ).all();
-    return new Response(JSON.stringify({ posts: results || [] }), { headers });
+    const normalized = (results || []).map((p) => ({
+      ...p,
+      featured_image: toR2Url3(p.featured_image || "")
+    }));
+    return new Response(JSON.stringify({ posts: normalized }), { headers });
   }
   if (request.method === "POST") {
     let body;
@@ -5383,10 +5595,10 @@ async function handleAdminBlog(request, env) {
 __name(handleAdminBlog, "handleAdminBlog");
 
 // ../workers/api/blog-posts.ts
-var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toPublicR2Url2(url) {
   if (!url) return url;
-  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE4}${url.slice(3)}` : url;
+  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE5}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url2, "toPublicR2Url");
 async function handleBlogPosts(request, env) {
@@ -5423,6 +5635,7 @@ async function handleBlogPosts(request, env) {
 __name(handleBlogPosts, "handleBlogPosts");
 
 // ../workers/api/reviews.ts
+var R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var ALLOWED_PRODUCT_TYPES = [
   "Sheets",
   "Pillowcases",
@@ -5455,6 +5668,18 @@ function sanitize(str) {
   return str.trim();
 }
 __name(sanitize, "sanitize");
+function normalizeMojibake2(str) {
+  const s = sanitize(str);
+  if (!s) return "";
+  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒñì/g, "").replace(/�/g, "");
+}
+__name(normalizeMojibake2, "normalizeMojibake");
+function toR2Url4(url) {
+  if (!url) return "";
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE6}${url.slice(3)}`;
+  return url;
+}
+__name(toR2Url4, "toR2Url");
 function sanitizeReviewText(html) {
   if (!html) return "";
   return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/\s+on\w+="[^"]*"/gi, "").replace(/\s+on\w+='[^']*'/gi, "").trim();
@@ -5479,17 +5704,104 @@ function isProductionHost10(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost10, "isProductionHost");
-function authorizeAdminSecret2(request, env) {
+function collectRoles8(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles8, "collectRoles");
+function hasAdminRole8(raw) {
+  const roles = collectRoles8(raw);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole8, "hasAdminRole");
+function emailAllowed8(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed8, "emailAllowed");
+function getClerkSessionTokenFromCookie2(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
+  return match2 ? String(match2[1] || "").trim() : "";
+}
+__name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
+async function authorizeAdmin9(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie2(request);
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const token = bearerToken || cookieToken;
+  if (token) {
+    const verifyRequest = bearerToken ? request : new Request(request.url, {
+      method: request.method,
+      headers: new Headers({
+        ...Object.fromEntries(request.headers.entries()),
+        Authorization: "Bearer " + token
+      })
+    });
+    const verified = await verifyClerkJwt(verifyRequest, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
+        return { ok: true };
+      }
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed8(email, env)) return { ok: true };
+            if (hasAdminRole8(metadata)) return { ok: true };
+          }
+        } catch (e) {
+          console.error("Clerk API lookup failed:", e?.message || e);
+        }
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role required" };
+    }
+  }
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost10(hostname);
-  if (!prodHost) return true;
-  if (!configured) return false;
-  if (!provided) return false;
-  return provided === configured;
+  if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost10(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configured) return { ok: true };
+  if (provided === configured) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdminSecret2, "authorizeAdminSecret");
+__name(authorizeAdmin9, "authorizeAdmin");
 async function handleReviews(request, env) {
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
@@ -5557,7 +5869,14 @@ async function handleReviews(request, env) {
     const countStmt = env.DB.prepare(countSql).bind(...countBindings);
     const countRow = await countStmt.first();
     const total = countRow ? countRow.total : 0;
-    return new Response(JSON.stringify({ reviews: results || [], total, limit, offset }), {
+    const normalized = (results || []).map((rv) => ({
+      ...rv,
+      customer_name: normalizeMojibake2(rv.customer_name || ""),
+      customer_country: normalizeMojibake2(rv.customer_country || ""),
+      review_text: normalizeMojibake2(rv.review_text || ""),
+      image_url: toR2Url4(rv.image_url || "")
+    }));
+    return new Response(JSON.stringify({ reviews: normalized, total, limit, offset }), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" }
     });
   } catch (e) {
@@ -5572,9 +5891,10 @@ __name(handleReviews, "handleReviews");
 async function handleAdminReviews(request, env) {
   const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
-  if (!authorizeAdminSecret2(request, env)) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
+  const auth = await authorizeAdmin9(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
       headers
     });
   }
@@ -5608,7 +5928,11 @@ async function handleAdminReviews(request, env) {
           });
         }
         const review = post;
+        review.customer_name = normalizeMojibake2(review.customer_name || "");
+        review.customer_country = normalizeMojibake2(review.customer_country || "");
+        review.review_text = normalizeMojibake2(review.review_text || "");
         review.review_date = normalizeReviewDate(review.review_date || review.created_at);
+        review.image_url = toR2Url4(review.image_url || "");
         return new Response(JSON.stringify({ review }), { headers });
       }
       let results = [];
@@ -5626,7 +5950,14 @@ async function handleAdminReviews(request, env) {
         const out = await stmt.all();
         results = out.results || [];
       }
-      results = results.map((rv) => ({ ...rv, review_date: normalizeReviewDate(rv.review_date || rv.created_at) }));
+      results = results.map((rv) => ({
+        ...rv,
+        customer_name: normalizeMojibake2(rv.customer_name || ""),
+        customer_country: normalizeMojibake2(rv.customer_country || ""),
+        review_text: normalizeMojibake2(rv.review_text || ""),
+        review_date: normalizeReviewDate(rv.review_date || rv.created_at),
+        image_url: toR2Url4(rv.image_url || "")
+      }));
       return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
     if (method === "POST") {
@@ -5907,7 +6238,7 @@ function isProductionHost11(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost11, "isProductionHost");
-function collectRoles7(raw) {
+function collectRoles9(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5932,28 +6263,28 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles");
-function hasAdminRole7(rawClaims) {
-  const roles = collectRoles7(rawClaims);
+__name(collectRoles9, "collectRoles");
+function hasAdminRole9(rawClaims) {
+  const roles = collectRoles9(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole");
-function emailAllowed7(email, env) {
+__name(hasAdminRole9, "hasAdminRole");
+function emailAllowed9(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed");
-async function authorizeAdmin8(request, env) {
+__name(emailAllowed9, "emailAllowed");
+async function authorizeAdmin10(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -5967,8 +6298,8 @@ async function authorizeAdmin8(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed7(email, env)) return { ok: true };
-            if (hasAdminRole7(metadata)) return { ok: true };
+            if (emailAllowed9(email, env)) return { ok: true };
+            if (hasAdminRole9(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -5990,7 +6321,7 @@ async function authorizeAdmin8(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin8, "authorizeAdmin");
+__name(authorizeAdmin10, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -6027,7 +6358,7 @@ async function handleFavorites(request, env) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
       return json9({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin8(request, env);
+    const auth = await authorizeAdmin10(request, env);
     if (!auth.ok) return json9({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
@@ -6197,6 +6528,7 @@ async function handleCheckout(request, env) {
   }
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
   const shippingCountryInput = body.shipping_country || body.country_code || "";
+  const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const discountCode = (body.discount_code || "").trim().toUpperCase();
   let discountApplied = false;
@@ -6321,6 +6653,7 @@ async function handleCheckout(request, env) {
       countryCode: shippingCountryInput,
       fallbackCountryCode: origin || "",
       currency: currency.toUpperCase(),
+      serviceLevel: shippingServiceLevel,
       totalQty
     });
   } catch (e) {
@@ -6357,7 +6690,7 @@ async function handleCheckout(request, env) {
         currency,
         product_data: {
           name: `Shipping (${shippingQuote.country_name || shippingQuote.applied_country || "Other"})`,
-          description: `First item ${shippingQuote.first_item} + each additional ${shippingQuote.additional_item}`
+          description: `${String(shippingQuote?.service_level || "express").toUpperCase()} \u2022 First item ${shippingQuote.first_item} + each additional ${shippingQuote.additional_item}`
         },
         unit_amount: shippingMinor
       },
@@ -6393,6 +6726,10 @@ async function handleCheckout(request, env) {
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));
+    params.append("metadata[shipping_service_level]", String(shippingQuote?.service_level || "express"));
+    params.append("metadata[shipping_eta_min_days]", String(Number(shippingQuote?.eta_min_days || 0)));
+    params.append("metadata[shipping_eta_max_days]", String(Number(shippingQuote?.eta_max_days || 0)));
+    params.append("metadata[shipping_eta_note]", String(shippingQuote?.eta_note || ""));
     params.append("metadata[shipping_amount]", String(Number(shippingQuote?.amount || 0)));
     params.append("metadata[shipping_amount_thb]", String(Number(shippingQuote?.amount_thb || 0)));
     params.append("metadata[shipping_currency]", currency.toUpperCase());
@@ -7342,20 +7679,20 @@ async function handleOrderConfirmed(request, env) {
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
 // api/[[path]].ts
-var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-function toR2Url3(url) {
+var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url5(url) {
   if (!url || typeof url !== "string") return url;
   if (!url.startsWith("/r2/")) return url;
-  return `${R2_PUBLIC_BASE5}${url.slice(3)}`;
+  return `${R2_PUBLIC_BASE7}${url.slice(3)}`;
 }
-__name(toR2Url3, "toR2Url");
+__name(toR2Url5, "toR2Url");
 function r2Product3(p) {
   if (!p) return p;
   const imgKey = p.image_url !== void 0 ? "image_url" : "Image_url";
-  const out = { ...p, [imgKey]: toR2Url3(p[imgKey]) };
+  const out = { ...p, [imgKey]: toR2Url5(p[imgKey]) };
   if (out.images && typeof out.images === "string") {
     try {
-      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url3));
+      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url5));
     } catch (_) {
     }
   }
@@ -8031,8 +8368,8 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
-  const R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-  const publicUrl = `${R2_PUBLIC_BASE6}/${key}`;
+  const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+  const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
   try {
     const obj = await env.MILDMATE_ASSETS.get(key);
     if (obj) {
@@ -8102,7 +8439,7 @@ function getClerkSessionToken2(request) {
   return null;
 }
 __name(getClerkSessionToken2, "getClerkSessionToken");
-function collectRoles8(raw) {
+function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -8126,20 +8463,20 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(rawClaims) {
-  const roles = collectRoles8(rawClaims);
+__name(collectRoles10, "collectRoles");
+function hasAdminRole10(rawClaims) {
+  const roles = collectRoles10(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
+__name(hasAdminRole10, "hasAdminRole");
+function emailAllowed10(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
+__name(emailAllowed10, "emailAllowed");
 function emailBlocked(email) {
   if (!email) return false;
   const blocked = [
@@ -8175,7 +8512,7 @@ async function enrichAdminFromClerk(sub, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return { email, hasAdmin: hasAdminRole8(metadataRaw) };
+    return { email, hasAdmin: hasAdminRole10(metadataRaw) };
   } catch {
     return { email: "", hasAdmin: false };
   }
@@ -8202,14 +8539,14 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   }
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
-  let hasAdmin = hasAdminRole8(raw);
-  let allowed = emailAllowed8(email, context.env);
+  let hasAdmin = hasAdminRole10(raw);
+  let allowed = emailAllowed10(email, context.env);
   if (!hasAdmin && !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
-    allowed = allowed || emailAllowed8(email, context.env);
+    allowed = allowed || emailAllowed10(email, context.env);
   }
   if (emailBlocked(email)) {
     return new Response(
@@ -8575,20 +8912,34 @@ ${header}`);
     html = html.replace(/<\/body>/i, `${footer}
 </body>`);
   }
-  if (html.includes('<html lang="th"')) {
-    html = html.replace(
-      /<span data-lang="en"[^>]*class="active"[^>]*>EN<\/span>/,
-      '<span data-lang="en" style="color:var(--color-muted)">EN</span>'
-    ).replace(
-      /<span data-lang="th"[^>]*>TH<\/span>/,
-      '<span data-lang="th" class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px">TH</span>'
-    ).replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop With Us</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+  const isThPage = html.includes('<html lang="th"');
+  const enPath = isThPage ? path.replace(/^\/th/, "") || "/" : path;
+  const thPath = isThPage ? path : "/th" + (path === "/" ? "/" : path);
+  html = html.replace(
+    /<div class="lang-toggle"[\s\S]*?<\/div>/,
+    `<div class="lang-toggle" role="group" aria-label="Language switch">
+      <span data-lang="en" ${isThPage ? `style="color:var(--color-muted);cursor:pointer" onclick="window.location.href='${enPath}'"` : `class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px"`}>EN</span>
+      <span style="color:var(--color-border)">/</span>
+      <span data-lang="th" ${isThPage ? `class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px"` : `style="color:var(--color-muted);cursor:pointer" onclick="window.location.href='${thPath}'"`}>TH</span>
+    </div>`
+  );
+  html = html.replace(
+    /<div class="mobile-drawer-lang"[\s\S]*?<\/div>/,
+    `<div class="mobile-drawer-lang" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--color-border);display:flex;align-items:center;gap:8px">
+      <span style="font-size:0.8125rem;font-weight:600;color:var(--color-muted)">${isThPage ? "\u0E20\u0E32\u0E29\u0E32:" : "Language:"}</span>
+      <span data-lang="en" ${isThPage ? `style="color:var(--color-muted);font-weight:600;font-size:0.9375rem;cursor:pointer" onclick="window.location.href='${enPath}'"` : `class="active" style="color:var(--color-primary);font-weight:700;font-size:0.9375rem;cursor:pointer"`}>EN</span>
+      <span style="color:var(--color-border)">/</span>
+      <span data-lang="th" ${isThPage ? `class="active" style="color:var(--color-primary);font-weight:700;font-size:0.9375rem;cursor:pointer"` : `style="color:var(--color-muted);font-weight:600;font-size:0.9375rem;cursor:pointer" onclick="window.location.href='${thPath}'"`}>TH</span>
+    </div>`
+  );
+  if (isThPage) {
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop With Us</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   return new Response(html, { status: response.status, headers: response.headers });
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-XdSn5q/functionsRoutes-0.9730919416287602.mjs
+// ../.wrangler/tmp/pages-mtQVjC/functionsRoutes-0.8314598584725784.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
