@@ -2,6 +2,7 @@
 // GET/POST /api/shipping/calculate
 
 export interface ShippingQuote {
+  service_level: "standard" | "express";
   requested_country: string;
   applied_country: string;
   country_name: string;
@@ -14,6 +15,9 @@ export interface ShippingQuote {
   first_item_thb: number;
   additional_item_thb: number;
   amount_thb: number;
+  eta_min_days: number;
+  eta_max_days: number;
+  eta_note: string;
   is_fallback: boolean;
 }
 
@@ -61,6 +65,11 @@ export function normalizeShippingCurrency(raw: any): string {
   return c;
 }
 
+export function normalizeServiceLevel(raw: any): "standard" | "express" {
+  const s = String(raw || "").trim().toLowerCase();
+  return s === "standard" ? "standard" : "express";
+}
+
 export async function ensureShippingRatesSchema(env: any): Promise<void> {
   if (shippingSchemaReady) return;
   if (!shippingSchemaPromise) {
@@ -81,6 +90,23 @@ export async function ensureShippingRatesSchema(env: any): Promise<void> {
           tier3_add_thb INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1,
           updated_at DATETIME DEFAULT (datetime('now'))
+        )`
+      ).run();
+
+      await env.DB.prepare(
+        `CREATE TABLE IF NOT EXISTS shipping_service_rates (
+          country_code TEXT NOT NULL,
+          service_level TEXT NOT NULL CHECK(service_level IN ('standard','express')),
+          country_name TEXT NOT NULL,
+          tier1_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier2_first_thb INTEGER NOT NULL DEFAULT 0,
+          tier3_first_thb INTEGER NOT NULL DEFAULT 0,
+          eta_min_days INTEGER NOT NULL DEFAULT 3,
+          eta_max_days INTEGER NOT NULL DEFAULT 7,
+          eta_note TEXT DEFAULT '',
+          is_active INTEGER NOT NULL DEFAULT 1,
+          updated_at DATETIME DEFAULT (datetime('now')),
+          PRIMARY KEY (country_code, service_level)
         )`
       ).run();
 
@@ -114,6 +140,43 @@ export async function ensureShippingRatesSchema(env: any): Promise<void> {
         WHERE NOT EXISTS (SELECT 1 FROM shipping_rates WHERE country_code = 'OTHER')`
       ).run();
 
+      // Seed express from legacy country rates, then derive standard as cheaper/slower.
+      await env.DB.prepare(
+        `INSERT INTO shipping_service_rates (
+          country_code, service_level, country_name,
+          tier1_first_thb, tier2_first_thb, tier3_first_thb,
+          eta_min_days, eta_max_days, eta_note, is_active, updated_at
+        )
+        SELECT
+          country_code, 'express', country_name,
+          COALESCE(tier1_first_thb, 0), COALESCE(tier2_first_thb, 0), COALESCE(tier3_first_thb, 0),
+          3, 7, 'Express delivery', COALESCE(is_active, 1), datetime('now')
+        FROM shipping_rates sr
+        WHERE NOT EXISTS (
+          SELECT 1 FROM shipping_service_rates ssr
+          WHERE ssr.country_code = sr.country_code AND ssr.service_level = 'express'
+        )`
+      ).run();
+
+      await env.DB.prepare(
+        `INSERT INTO shipping_service_rates (
+          country_code, service_level, country_name,
+          tier1_first_thb, tier2_first_thb, tier3_first_thb,
+          eta_min_days, eta_max_days, eta_note, is_active, updated_at
+        )
+        SELECT
+          country_code, 'standard', country_name,
+          CAST(ROUND(COALESCE(tier1_first_thb, 0) * 0.75) AS INTEGER),
+          CAST(ROUND(COALESCE(tier2_first_thb, 0) * 0.75) AS INTEGER),
+          CAST(ROUND(COALESCE(tier3_first_thb, 0) * 0.75) AS INTEGER),
+          7, 14, 'Standard delivery', COALESCE(is_active, 1), datetime('now')
+        FROM shipping_rates sr
+        WHERE NOT EXISTS (
+          SELECT 1 FROM shipping_service_rates ssr
+          WHERE ssr.country_code = sr.country_code AND ssr.service_level = 'standard'
+        )`
+      ).run();
+
       shippingSchemaReady = true;
     })().finally(() => {
       if (!shippingSchemaReady) shippingSchemaPromise = null;
@@ -144,11 +207,12 @@ async function getRatePerThb(env: any, targetCurrency: string): Promise<number> 
 
 export async function calculateShippingQuote(
   env: any,
-  input: { countryCode?: any; fallbackCountryCode?: any; currency?: any; items?: CartShippingItem[]; totalQty?: any }
+  input: { countryCode?: any; fallbackCountryCode?: any; currency?: any; serviceLevel?: any; items?: CartShippingItem[]; totalQty?: any }
 ): Promise<ShippingQuote & { blocked_th_only?: boolean }> {
   await ensureShippingRatesSchema(env);
 
   const currency = normalizeShippingCurrency(input.currency);
+  const serviceLevel = normalizeServiceLevel(input.serviceLevel);
   const requestedCountry = normalizeCountryCode(input.countryCode) || normalizeCountryCode(input.fallbackCountryCode) || "OTHER";
   const items: CartShippingItem[] = input.items || [];
   const totalQty = items.reduce((sum, it) => sum + (it.qty || 0), 0) || toQty(input.totalQty || 0);
@@ -159,6 +223,7 @@ export async function calculateShippingQuote(
     const hasThOnly = items.some((it) => thOnlySlugs.has(it.slug));
     if (hasThOnly) {
       return {
+        service_level: serviceLevel,
         requested_country: requestedCountry,
         applied_country: "",
         country_name: "",
@@ -167,6 +232,9 @@ export async function calculateShippingQuote(
         highest_tier: 0,
         first_item: 0, additional_item: 0, amount: 0,
         first_item_thb: 0, additional_item_thb: 0, amount_thb: 0,
+        eta_min_days: 0,
+        eta_max_days: 0,
+        eta_note: "",
         is_fallback: false,
         blocked_th_only: true,
       };
@@ -176,6 +244,7 @@ export async function calculateShippingQuote(
   // Domestic Thailand = free shipping
   if (requestedCountry === "TH") {
     return {
+      service_level: serviceLevel,
       requested_country: "TH",
       applied_country: "TH",
       country_name: "Thailand",
@@ -184,6 +253,9 @@ export async function calculateShippingQuote(
       highest_tier: 0,
       first_item: 0, additional_item: 0, amount: 0,
       first_item_thb: 0, additional_item_thb: 0, amount_thb: 0,
+      eta_min_days: serviceLevel === "standard" ? 2 : 1,
+      eta_max_days: serviceLevel === "standard" ? 5 : 3,
+      eta_note: serviceLevel === "standard" ? "Standard delivery" : "Express delivery",
       is_fallback: false,
       blocked_th_only: false,
     };
@@ -194,12 +266,12 @@ export async function calculateShippingQuote(
     const row = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
-        first_item_thb, additional_item_thb,
+        eta_min_days, eta_max_days, eta_note,
         is_active
-       FROM shipping_rates
-       WHERE country_code = ?1 AND is_active = 1
+       FROM shipping_service_rates
+       WHERE country_code = ?1 AND service_level = ?2 AND is_active = 1
        LIMIT 1`
-    ).bind(countryCode).first();
+    ).bind(countryCode, serviceLevel).first();
     return (row as any) || null;
   };
 
@@ -218,6 +290,7 @@ export async function calculateShippingQuote(
   if (!row) {
     // No rates configured at all — return 0
     return {
+      service_level: serviceLevel,
       requested_country: requestedCountry,
       applied_country: appliedCountry,
       country_name: appliedCountry === "OTHER" ? "Other Countries" : appliedCountry,
@@ -226,6 +299,9 @@ export async function calculateShippingQuote(
       highest_tier: 0,
       first_item: 0, additional_item: 0, amount: 0,
       first_item_thb: 0, additional_item_thb: 0, amount_thb: 0,
+      eta_min_days: serviceLevel === "standard" ? 7 : 3,
+      eta_max_days: serviceLevel === "standard" ? 14 : 7,
+      eta_note: serviceLevel === "standard" ? "Standard delivery" : "Express delivery",
       is_fallback: isFallback,
       blocked_th_only: false,
     };
@@ -262,8 +338,8 @@ export async function calculateShippingQuote(
     globalAddRates[Number(ar.tier)] = toAmount(ar.add_thb);
   }
 
-  const legacyFirstThb = toAmount((row as any).first_item_thb || 0);
-  const legacyAddThb = toAmount((row as any).additional_item_thb || 0);
+  const legacyFirstThb = 0;
+  const legacyAddThb = 0;
   const tier1FirstThb = toAmount((row as any).tier1_first_thb || 0);
   const tier2FirstThb = toAmount((row as any).tier2_first_thb || 0);
   const tier3FirstThb = toAmount((row as any).tier3_first_thb || 0);
@@ -310,6 +386,7 @@ export async function calculateShippingQuote(
   const amount = currency === "THB" ? amountThb : toAmount(amountThb * ratePerThb);
 
   return {
+    service_level: serviceLevel,
     requested_country: requestedCountry,
     applied_country: appliedCountry,
     country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
@@ -322,6 +399,9 @@ export async function calculateShippingQuote(
     first_item_thb: firstItemThb,
     additional_item_thb: additionalThb,
     amount_thb: amountThb,
+    eta_min_days: Math.max(0, Number((row as any)?.eta_min_days || 0)),
+    eta_max_days: Math.max(0, Number((row as any)?.eta_max_days || 0)),
+    eta_note: String((row as any)?.eta_note || (serviceLevel === "standard" ? "Standard delivery" : "Express delivery")),
     is_fallback: isFallback,
     blocked_th_only: false,
   };
@@ -346,6 +426,7 @@ export async function handleShippingCalculate(request: Request, env: any): Promi
     let country = "";
     let qty = 0;
     let currency = "USD";
+    let serviceLevel: any = "express";
     let items: CartShippingItem[] | undefined;
     const fallbackCountry = request.headers.get("CF-IPCountry") || "";
 
@@ -354,11 +435,13 @@ export async function handleShippingCalculate(request: Request, env: any): Promi
       country = url.searchParams.get("country") || "";
       qty = toQty(url.searchParams.get("qty") || 0);
       currency = url.searchParams.get("currency") || "USD";
+      serviceLevel = url.searchParams.get("service_level") || "express";
     } else {
       const body: any = await request.json().catch(() => ({}));
       country = body.country || body.country_code || "";
       qty = toQty(body.qty || body.total_qty || 0);
       currency = body.currency || "USD";
+      serviceLevel = body.service_level || "express";
       if (Array.isArray(body.items)) {
         items = body.items.map((it: any) => ({
           slug: String(it.slug || it.product_slug || ""),
@@ -371,6 +454,7 @@ export async function handleShippingCalculate(request: Request, env: any): Promi
       countryCode: country,
       fallbackCountryCode: fallbackCountry,
       currency,
+      serviceLevel,
       totalQty: qty,
       items,
     });

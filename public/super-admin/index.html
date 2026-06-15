@@ -905,6 +905,7 @@ var SHIPPING_COUNTRY_FALLBACK = [
   { code: 'OTHER', name: 'Other Countries', is_fallback: true }
 ];
 var shippingCountryOptionsCache = null;
+window._shippingServiceLevel = window._shippingServiceLevel || 'express';
 
 async function loadShippingCountryOptions() {
   if (shippingCountryOptionsCache) return shippingCountryOptionsCache;
@@ -936,7 +937,8 @@ function getShippingCountryName(code) {
 
 async function renderShippingRates() {
   try {
-    var resp = await fetch('/api/admin/shipping-rates', { headers: await getAdminAuthHeaders(false) });
+    var serviceLevel = String(window._shippingServiceLevel || 'express').toLowerCase() === 'standard' ? 'standard' : 'express';
+    var resp = await fetch('/api/admin/shipping-rates?service_level=' + encodeURIComponent(serviceLevel), { headers: await getAdminAuthHeaders(false) });
     if (!resp.ok) {
       var err = await resp.json().catch(function(){ return {}; });
       return '<div class="card"><div class="card-header">Shipping Rates</div><div class="card-body"><p style="color:var(--c-red)">Failed to load shipping rates: ' + escHtml(err.error || ('HTTP ' + resp.status)) + '</p></div></div>';
@@ -946,9 +948,19 @@ async function renderShippingRates() {
     var usdRate = Number(data.usd_rate_per_thb || 0);
     window._shippingRates = rates;
 
+    var levelLabel = serviceLevel === 'standard' ? 'Standard' : 'Express';
+    var levelDesc = serviceLevel === 'standard' ? 'Cheaper shipping with longer delivery time.' : 'Faster shipping with higher price.';
+    var html = '<div class="card"><div class="card-header">Shipping Service</div><div class="card-body">' +
+      '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+        '<button class="btn ' + (serviceLevel === 'express' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="setShippingServiceLevel(\'express\')">Express</button>' +
+        '<button class="btn ' + (serviceLevel === 'standard' ? 'btn-primary' : 'btn-outline') + ' btn-sm" onclick="setShippingServiceLevel(\'standard\')">Standard</button>' +
+      '</div>' +
+      '<p style="color:var(--c-muted);font-size:0.8125rem;margin:0">Editing <strong>' + levelLabel + '</strong> rates. ' + escHtml(levelDesc) + '</p>' +
+    '</div></div>';
+
     // 1. Product Tiers section
-    var html = '<div class="card"><div class="card-header">Shipping Product Tiers</div><div class="card-body">' +
-      '<p style="color:var(--c-muted);font-size:0.8125rem;margin-bottom:14px">Products are assigned to weight/volume tiers. The highest tier in the cart determines the base shipping cost. <strong>Duvet Insert ships Thailand only.</strong></p>';
+    html += '<div class="card"><div class="card-header">Shipping Product Tiers (Shared)</div><div class="card-body">' +
+      '<p style="color:var(--c-muted);font-size:0.8125rem;margin-bottom:14px">Products are assigned to weight/volume tiers. The highest tier in the cart determines base shipping cost. <strong>This tier mapping is shared for both Standard and Express.</strong> <strong>Duvet Insert ships Thailand only.</strong></p>';
 
     try {
       var tierResp = await fetch('/api/admin/shipping-product-tiers', { headers: await getAdminAuthHeaders(false) });
@@ -994,7 +1006,7 @@ async function renderShippingRates() {
       }
     } catch(e) {}
 
-    html += '<div class="card"><div class="card-header">Global Addition Rates (same for all countries)</div><div class="card-body">' +
+    html += '<div class="card"><div class="card-header">Global Addition Rates (Shared)</div><div class="card-body">' +
       '<p style="color:var(--c-muted);font-size:0.75rem;margin-bottom:10px">USD converted using D1 Exchange Rates: <strong>' + liveUsdRate.toFixed(4) + '</strong> THB/USD</p>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">';
     [1,2,3].forEach(function(tn) {
@@ -1010,29 +1022,34 @@ async function renderShippingRates() {
     });
     html += '</div></div>';
 
-    html += '<div class="card"><div class="card-header">Country Shipping Rates</div><div class="card-body">' +
+    html += '<div class="card"><div class="card-header">Country Shipping Rates — ' + levelLabel + '</div><div class="card-body">' +
       '<p style="color:var(--c-muted);font-size:0.8125rem;margin-bottom:8px">Country-specific initial costs in THB. USD preview uses D1 Exchange Rates (<strong>' + liveUsdRate.toFixed(4) + '</strong> THB/USD). <strong>TH = free domestic.</strong> Missing/inactive countries fall back to OTHER.</p>' +
       '<div style="overflow-x:auto"><table><thead><tr>' +
         '<th>Country</th>' +
         '<th style="text-align:center;background:#fef2f2">Tier 1<br>Initial</th>' +
         '<th style="text-align:center;background:#fffbeb">Tier 2<br>Initial</th>' +
         '<th style="text-align:center;background:#f0fdf4">Tier 3<br>Initial</th>' +
+        '<th style="text-align:center">ETA (days)</th>' +
+        '<th style="text-align:center">ETA Note</th>' +
         '<th>Active</th><th></th>' +
       '</tr></thead><tbody>';
 
     if (!rates.length) {
-      html += '<tr><td colspan="6" style="text-align:center;color:var(--c-muted);padding:24px">No rates configured yet.</td></tr>';
+      html += '<tr><td colspan="8" style="text-align:center;color:var(--c-muted);padding:24px">No rates configured yet for ' + levelLabel + '.</td></tr>';
     } else {
       rates.forEach(function(r) {
         var code = String(r.country_code || '').toUpperCase();
+        var etaMin = Number(r.eta_min_days || 0);
+        var etaMax = Number(r.eta_max_days || 0);
         html += '<tr id="ship-row-' + code + '">' +
           '<td><strong>' + escHtml(code) + '</strong><div style="font-size:0.6875rem;color:var(--c-muted)">' + escHtml(r.country_name || code) + '</div></td>' +
           '<td><input id="ship-t1f-' + code + '" type="number" min="0" value="' + (r.tier1_first_thb||0) + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><div style="font-size:0.625rem;color:var(--c-muted);text-align:right">$' + ((r.tier1_first_usd||0).toFixed(0)) + '</div></td>' +
           '<td><input id="ship-t2f-' + code + '" type="number" min="0" value="' + (r.tier2_first_thb||0) + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><div style="font-size:0.625rem;color:var(--c-muted);text-align:right">$' + ((r.tier2_first_usd||0).toFixed(0)) + '</div></td>' +
           '<td><input id="ship-t3f-' + code + '" type="number" min="0" value="' + (r.tier3_first_thb||0) + '" style="width:80px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><div style="font-size:0.625rem;color:var(--c-muted);text-align:right">$' + ((r.tier3_first_usd||0).toFixed(0)) + '</div></td>' +
+          '<td><div style="display:flex;align-items:center;gap:4px"><input id="ship-eta-min-' + code + '" type="number" min="0" value="' + etaMin + '" style="width:60px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"><span style="font-size:0.6875rem;color:var(--c-muted)">to</span><input id="ship-eta-max-' + code + '" type="number" min="0" value="' + etaMax + '" style="width:60px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;text-align:right"></div></td>' +
+          '<td><input id="ship-eta-note-' + code + '" type="text" value="' + escHtml(r.eta_note || '') + '" placeholder="e.g. customs may vary" style="width:190px;padding:4px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem"></td>' +
           '<td><input id="ship-active-' + code + '" type="checkbox" ' + (Number(r.is_active) ? 'checked' : '') + '></td>' +
           '<td style="white-space:nowrap">' +
-            '<button class="btn btn-primary btn-sm" onclick="saveShippingRate(\'' + code + '\')">Save</button> ' +
             (code === 'OTHER'
               ? '<span style="font-size:0.6875rem;color:var(--c-muted)">fallback</span>'
               : '<button class="btn btn-outline btn-sm" style="color:var(--c-red);border-color:#fecaca" onclick="deleteShippingRate(\'' + code + '\')">Del</button>') +
@@ -1040,7 +1057,11 @@ async function renderShippingRates() {
         '</tr>';
       });
     }
-    html += '</tbody></table></div></div></div>';
+    html += '</tbody></table></div>' +
+      '<div style="display:flex;justify-content:flex-end;margin-top:10px">' +
+        '<button class="btn btn-primary btn-sm" onclick="saveAllShippingRates()">Save All Changes</button>' +
+      '</div>' +
+      '</div></div>';
 
     // 3. Add Country form (first costs only)
     var shippingCountryOptions = await loadShippingCountryOptions();
@@ -1049,12 +1070,14 @@ async function renderShippingRates() {
       return '<option value="' + c.code + '"' + (c.code === 'TH' ? ' selected' : '') + '>' + escHtml(label) + ' (' + c.code + ')</option>';
     }).join('');
 
-    html += '<div class="card"><div class="card-header">Add Country</div><div class="card-body">' +
-      '<div style="display:grid;grid-template-columns:1.5fr repeat(3, 1fr);gap:8px;align-items:end;margin-bottom:8px">' +
+    html += '<div class="card"><div class="card-header">Add Country — ' + levelLabel + '</div><div class="card-body">' +
+      '<div style="display:grid;grid-template-columns:1.5fr repeat(3, 1fr) 1fr 1.4fr;gap:8px;align-items:end;margin-bottom:8px">' +
         '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">Country</label><select id="ship-new-code" class="form-input" style="padding:6px 8px;font-size:0.75rem">' + countryOptions + '</select></div>' +
         '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">T1 Initial</label><input id="ship-new-t1f" type="number" min="0" value="0" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
         '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">T2 Initial</label><input id="ship-new-t2f" type="number" min="0" value="0" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
         '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">T3 Initial</label><input id="ship-new-t3f" type="number" min="0" value="0" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
+        '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">ETA</label><div style="display:flex;align-items:center;gap:4px"><input id="ship-new-eta-min" type="number" min="0" value="' + (serviceLevel === 'standard' ? 7 : 3) + '" style="padding:6px 8px;font-size:0.75rem;width:56px"><span style="font-size:0.6875rem;color:var(--c-muted)">to</span><input id="ship-new-eta-max" type="number" min="0" value="' + (serviceLevel === 'standard' ? 14 : 7) + '" style="padding:6px 8px;font-size:0.75rem;width:56px"></div></div>' +
+        '<div class="form-group" style="margin:0"><label style="font-size:0.6875rem">ETA Note</label><input id="ship-new-eta-note" type="text" value="' + (serviceLevel === 'standard' ? 'Standard delivery' : 'Express delivery') + '" style="padding:6px 8px;font-size:0.75rem;width:100%"></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;align-items:center">' +
         '<label style="font-size:0.75rem;color:var(--c-muted);display:flex;gap:6px;align-items:center"><input id="ship-new-active" type="checkbox" checked> Active</label>' +
@@ -1070,16 +1093,21 @@ async function renderShippingRates() {
 
 async function saveShippingRate(countryCode) {
   var code = normalizeShippingCode(countryCode);
+  var serviceLevel = String(window._shippingServiceLevel || 'express').toLowerCase() === 'standard' ? 'standard' : 'express';
   if (!code) { toast('Invalid country code'); return; }
   var existing = (window._shippingRates || []).find(function(r) { return String(r.country_code || '').toUpperCase() === code; }) || {};
   try {
     var headers = await getAdminAuthHeaders(true);
     var payload = {
+      service_level: serviceLevel,
       country_code: code,
       country_name: String(existing.country_name || (code === 'OTHER' ? 'Other Countries' : code)),
       tier1_first_thb: Number((document.getElementById('ship-t1f-' + code) || {}).value || 0),
       tier2_first_thb: Number((document.getElementById('ship-t2f-' + code) || {}).value || 0),
       tier3_first_thb: Number((document.getElementById('ship-t3f-' + code) || {}).value || 0),
+      eta_min_days: Number((document.getElementById('ship-eta-min-' + code) || {}).value || 0),
+      eta_max_days: Number((document.getElementById('ship-eta-max-' + code) || {}).value || 0),
+      eta_note: String((document.getElementById('ship-eta-note-' + code) || {}).value || '').trim(),
       is_active: (document.getElementById('ship-active-' + code) || {}).checked ? 1 : 0
     };
     var resp = await fetch('/api/admin/shipping-rates', { method: 'POST', headers: headers, body: JSON.stringify(payload) });
@@ -1095,18 +1123,60 @@ async function saveShippingRate(countryCode) {
   }
 }
 
+window.saveAllShippingRates = async function() {
+  var serviceLevel = String(window._shippingServiceLevel || 'express').toLowerCase() === 'standard' ? 'standard' : 'express';
+  var rates = (window._shippingRates || []).slice();
+  if (!rates.length) { toast('No country rates to save'); return; }
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var failed = [];
+    for (var i = 0; i < rates.length; i++) {
+      var r = rates[i];
+      var code = normalizeShippingCode(r.country_code || '');
+      if (!code) continue;
+      var payload = {
+        service_level: serviceLevel,
+        country_code: code,
+        country_name: String(r.country_name || (code === 'OTHER' ? 'Other Countries' : code)),
+        tier1_first_thb: Number((document.getElementById('ship-t1f-' + code) || {}).value || 0),
+        tier2_first_thb: Number((document.getElementById('ship-t2f-' + code) || {}).value || 0),
+        tier3_first_thb: Number((document.getElementById('ship-t3f-' + code) || {}).value || 0),
+        eta_min_days: Number((document.getElementById('ship-eta-min-' + code) || {}).value || 0),
+        eta_max_days: Number((document.getElementById('ship-eta-max-' + code) || {}).value || 0),
+        eta_note: String((document.getElementById('ship-eta-note-' + code) || {}).value || '').trim(),
+        is_active: (document.getElementById('ship-active-' + code) || {}).checked ? 1 : 0
+      };
+      var resp = await fetch('/api/admin/shipping-rates', { method: 'POST', headers: headers, body: JSON.stringify(payload) });
+      if (!resp.ok) failed.push(code);
+    }
+    if (failed.length) {
+      toast('Saved with errors: ' + failed.join(', '));
+      return;
+    }
+    toast('Saved all ' + (serviceLevel === 'standard' ? 'Standard' : 'Express') + ' country rates');
+    showPage('shipping');
+  } catch (e) {
+    toast('Network error while saving rates');
+  }
+};
+
 async function createShippingRate() {
   var code = normalizeShippingCode((document.getElementById('ship-new-code') || {}).value);
+  var serviceLevel = String(window._shippingServiceLevel || 'express').toLowerCase() === 'standard' ? 'standard' : 'express';
   var name = getShippingCountryName(code);
   if (!code) { toast('Please select a country from dropdown'); return; }
   try {
     var headers = await getAdminAuthHeaders(true);
     var payload = {
+      service_level: serviceLevel,
       country_code: code,
       country_name: name,
       tier1_first_thb: Number((document.getElementById('ship-new-t1f') || {}).value || 0),
       tier2_first_thb: Number((document.getElementById('ship-new-t2f') || {}).value || 0),
       tier3_first_thb: Number((document.getElementById('ship-new-t3f') || {}).value || 0),
+      eta_min_days: Number((document.getElementById('ship-new-eta-min') || {}).value || 0),
+      eta_max_days: Number((document.getElementById('ship-new-eta-max') || {}).value || 0),
+      eta_note: String((document.getElementById('ship-new-eta-note') || {}).value || '').trim(),
       is_active: (document.getElementById('ship-new-active') || {}).checked ? 1 : 0
     };
     var resp = await fetch('/api/admin/shipping-rates', { method: 'POST', headers: headers, body: JSON.stringify(payload) });
@@ -1124,11 +1194,12 @@ async function createShippingRate() {
 
 async function deleteShippingRate(countryCode) {
   var code = normalizeShippingCode(countryCode);
+  var serviceLevel = String(window._shippingServiceLevel || 'express').toLowerCase() === 'standard' ? 'standard' : 'express';
   if (!code || code === 'OTHER') { toast('OTHER fallback cannot be deleted'); return; }
   if (!confirm('Delete shipping rate for ' + code + '?')) return;
   try {
     var headers = await getAdminAuthHeaders(false);
-    var resp = await fetch('/api/admin/shipping-rates?country=' + encodeURIComponent(code), { method: 'DELETE', headers: headers });
+    var resp = await fetch('/api/admin/shipping-rates?country=' + encodeURIComponent(code) + '&service_level=' + encodeURIComponent(serviceLevel), { method: 'DELETE', headers: headers });
     if (!resp.ok) {
       var err = await resp.json().catch(function(){ return {}; });
       toast('Delete failed: ' + (err.error || resp.status));
@@ -1140,6 +1211,11 @@ async function deleteShippingRate(countryCode) {
     toast('Network error while deleting shipping rate');
   }
 }
+
+window.setShippingServiceLevel = function(level) {
+  window._shippingServiceLevel = String(level || '').toLowerCase() === 'standard' ? 'standard' : 'express';
+  showPage('shipping');
+};
 
 async function updateProductTier(slug, tier) {
   try {

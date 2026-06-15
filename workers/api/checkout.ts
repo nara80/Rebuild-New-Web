@@ -48,6 +48,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
 
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
   const shippingCountryInput = body.shipping_country || body.country_code || "";
+  const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const discountCode = (body.discount_code || "").trim().toUpperCase();
   let discountApplied = false;
@@ -176,6 +177,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       countryCode: shippingCountryInput,
       fallbackCountryCode: origin || "",
       currency: currency.toUpperCase(),
+      serviceLevel: shippingServiceLevel,
       totalQty,
     });
   } catch (e: any) {
@@ -221,7 +223,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         currency,
         product_data: {
           name: `Shipping (${shippingQuote.country_name || shippingQuote.applied_country || "Other"})`,
-          description: `First item ${shippingQuote.first_item} + each additional ${shippingQuote.additional_item}`,
+          description: `${String(shippingQuote?.service_level || "express").toUpperCase()} • First item ${shippingQuote.first_item} + each additional ${shippingQuote.additional_item}`,
         },
         unit_amount: shippingMinor,
       },
@@ -251,7 +253,9 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   // Create Stripe Checkout Session
   const siteUrl = request.url.includes("localhost") || request.url.includes("127.0.0.1")
     ? "http://localhost:8788"
-    : "https://mildmate-new.pages.dev";
+    : request.url.includes("mildmate-new.pages.dev")
+    ? "https://mildmate-new.pages.dev"
+    : "https://www.mildmate.com";
 
   try {
     // Build URLSearchParams manually — Stripe requires array-style encoding for line_items
@@ -267,6 +271,10 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));
+    params.append("metadata[shipping_service_level]", String(shippingQuote?.service_level || "express"));
+    params.append("metadata[shipping_eta_min_days]", String(Number(shippingQuote?.eta_min_days || 0)));
+    params.append("metadata[shipping_eta_max_days]", String(Number(shippingQuote?.eta_max_days || 0)));
+    params.append("metadata[shipping_eta_note]", String(shippingQuote?.eta_note || ""));
     params.append("metadata[shipping_amount]", String(Number(shippingQuote?.amount || 0)));
     params.append("metadata[shipping_amount_thb]", String(Number(shippingQuote?.amount_thb || 0)));
     params.append("metadata[shipping_currency]", currency.toUpperCase());

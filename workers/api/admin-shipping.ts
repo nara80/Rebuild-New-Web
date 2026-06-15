@@ -7,7 +7,7 @@
 // PUT    /api/admin/shipping-product-tiers
 
 import { verifyClerkJwt } from "./clerk-verify";
-import { ensureShippingRatesSchema, normalizeCountryCode, toAmount as _toAmount } from "./shipping";
+import { ensureShippingRatesSchema, normalizeCountryCode, normalizeServiceLevel, toAmount as _toAmount } from "./shipping";
 
 function json(body: any, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -166,28 +166,35 @@ export async function handleAdminShippingRates(request: Request, env: any): Prom
   await ensureShippingRatesSchema(env);
 
   if (request.method === "GET") {
+    const serviceLevel = normalizeServiceLevel(new URL(request.url).searchParams.get("service_level") || "express");
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        eta_min_days, eta_max_days, eta_note,
         is_active, updated_at
-       FROM shipping_rates
+       FROM shipping_service_rates
+       WHERE service_level = ?1
        ORDER BY CASE WHEN country_code = 'OTHER' THEN 1 ELSE 0 END, country_code`
-    ).all();
+    ).bind(serviceLevel).all();
     const rates = (rows.results || []).map((r: any) => {
       const t1f = toAmount(r.tier1_first_thb || 0);
       const t2f = toAmount(r.tier2_first_thb || 0);
       const t3f = toAmount(r.tier3_first_thb || 0);
       return {
+        service_level: serviceLevel,
         country_code: String(r.country_code || "").toUpperCase(),
         country_name: String(r.country_name || ""),
         tier1_first_thb: t1f, tier2_first_thb: t2f, tier3_first_thb: t3f,
+        eta_min_days: Number(r.eta_min_days || 0),
+        eta_max_days: Number(r.eta_max_days || 0),
+        eta_note: String(r.eta_note || ""),
         tier1_first_usd: toAmount(t1f * usdRate), tier2_first_usd: toAmount(t2f * usdRate), tier3_first_usd: toAmount(t3f * usdRate),
         is_active: Number(r.is_active || 0),
         updated_at: r.updated_at,
       };
     });
-    return json({ rates, usd_rate_per_thb: usdRate });
+    return json({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
 
   if (request.method === "POST" || request.method === "PUT") {
@@ -199,6 +206,7 @@ export async function handleAdminShippingRates(request: Request, env: any): Prom
     }
 
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
+    const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
       return json({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
@@ -207,31 +215,42 @@ export async function handleAdminShippingRates(request: Request, env: any): Prom
     const t1f = toAmount(body.tier1_first_thb || body.tier1_first || 0);
     const t2f = toAmount(body.tier2_first_thb || body.tier2_first || 0);
     const t3f = toAmount(body.tier3_first_thb || body.tier3_first || 0);
+    const etaMinDays = Math.max(0, Number(body.eta_min_days || 0));
+    const etaMaxDays = Math.max(0, Number(body.eta_max_days || 0));
+    const etaNote = String(body.eta_note || "").trim();
     const isActive = body.is_active === undefined ? 1 : (Number(body.is_active) ? 1 : 0);
 
     await env.DB.prepare(
-      `INSERT INTO shipping_rates (
-        country_code, country_name,
+      `INSERT INTO shipping_service_rates (
+        country_code, service_level, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
+        eta_min_days, eta_max_days, eta_note,
         is_active, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
-      ON CONFLICT(country_code) DO UPDATE SET
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'))
+      ON CONFLICT(country_code, service_level) DO UPDATE SET
         country_name = excluded.country_name,
         tier1_first_thb = excluded.tier1_first_thb,
         tier2_first_thb = excluded.tier2_first_thb,
         tier3_first_thb = excluded.tier3_first_thb,
+        eta_min_days = excluded.eta_min_days,
+        eta_max_days = excluded.eta_max_days,
+        eta_note = excluded.eta_note,
         is_active = excluded.is_active,
         updated_at = datetime('now')`
-    ).bind(countryCode, countryName, t1f, t2f, t3f, isActive).run();
+    ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
 
     return json({
       success: true,
       rate: {
+        service_level: serviceLevel,
         country_code: countryCode,
         country_name: countryName,
         tier1_first_thb: t1f,
         tier2_first_thb: t2f,
         tier3_first_thb: t3f,
+        eta_min_days: etaMinDays,
+        eta_max_days: etaMaxDays,
+        eta_note: etaNote,
         is_active: isActive,
       }
     });
@@ -240,11 +259,12 @@ export async function handleAdminShippingRates(request: Request, env: any): Prom
   if (request.method === "DELETE") {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
+    const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
     if (!countryCode) return json({ error: "country query param is required" }, 400);
     if (countryCode === "OTHER") return json({ error: "OTHER cannot be deleted" }, 400);
 
-    await env.DB.prepare("DELETE FROM shipping_rates WHERE country_code = ?1").bind(countryCode).run();
-    return json({ success: true, country_code: countryCode });
+    await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
+    return json({ success: true, country_code: countryCode, service_level: serviceLevel });
   }
 
   return json({ error: "Method not allowed" }, 405);

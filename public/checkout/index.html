@@ -549,6 +549,13 @@
               <p id="discount-msg" style="font-size:0.75rem;margin-top:6px;display:none"></p>
             </div>
 
+            <div class="card surface-well">
+              <label style="font-weight:600;display:block;margin-bottom:8px">Shipping Method</label>
+              <div id="shipping-method-options">
+                <p class="price-note">Loading shipping methods…</p>
+              </div>
+            </div>
+
             <div style="display:flex;gap:12px">
               <button class="btn btn-outline" onclick="goToStep(2)" style="flex:1">Edit Details</button>
             </div>
@@ -604,6 +611,7 @@
       var discountCode = '';
       var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
       var shippingState = {
+        serviceLevel: 'express',
         currency: 'USD',
         requestedCountry: '',
         appliedCountry: '',
@@ -611,10 +619,14 @@
         amount: 0,
         firstItem: 0,
         additionalItem: 0,
+        etaMinDays: 0,
+        etaMaxDays: 0,
+        etaNote: '',
         isFallback: false,
         totalQty: 0,
         lastError: ''
       };
+      var shippingMethodQuotes = { standard: null, express: null };
       var shippingRequestSeq = 0;
       var lastShippingQuoteKey = '';
       var externalScriptPromises = {};
@@ -717,6 +729,51 @@
         return 'tariff_tax';
       }
 
+      function serviceLabel(level) {
+        return String(level || '').toLowerCase() === 'standard' ? 'Standard' : 'Express';
+      }
+
+      function etaText(quote) {
+        if (!quote) return '';
+        var minD = Number(quote.etaMinDays || quote.eta_min_days || 0);
+        var maxD = Number(quote.etaMaxDays || quote.eta_max_days || 0);
+        if (minD > 0 && maxD > 0 && maxD >= minD) return minD + '–' + maxD + ' days';
+        if (maxD > 0) return 'Up to ' + maxD + ' days';
+        return '';
+      }
+
+      function renderShippingMethodOptions() {
+        var wrap = document.getElementById('shipping-method-options');
+        if (!wrap) return;
+        var currency = shippingState.currency || getActiveCurrency();
+        var levels = ['standard', 'express'];
+        var html = '';
+        levels.forEach(function(level) {
+          var q = shippingMethodQuotes[level];
+          var checked = shippingState.serviceLevel === level ? ' checked' : '';
+          var disabled = (!q || q.lastError) ? ' disabled' : '';
+          var price = q && !q.lastError ? formatMoney(Number(q.amount || 0), currency) : 'Unavailable';
+          var eta = q && !q.lastError ? etaText(q) : '';
+          var isStandard = level === 'standard';
+          var serviceDesc = isStandard
+            ? ('Standard delivery' + (eta ? (' (ETA in ' + escHtml(eta) + ')') : ''))
+            : ('Express — DHL / UPS / FedEx express' + (eta ? (' (ETA in ' + escHtml(eta) + ')') : ''));
+          html += '<label style="display:block;border:1px solid var(--color-border);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;background:#fff' + (checked ? ';border-color:var(--color-primary)' : '') + '">' +
+            '<div style="display:flex;align-items:start;gap:10px">' +
+              '<input type="radio" name="shipping-method" value="' + level + '"' + checked + disabled + ' onchange="selectShippingMethod(this.value)" style="margin-top:3px">' +
+              '<div style="flex:1">' +
+                '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center">' +
+                  '<strong>' + serviceLabel(level) + '</strong>' +
+                  '<strong>' + price + '</strong>' +
+                '</div>' +
+                '<div style="font-size:0.75rem;color:var(--color-muted);margin-top:2px">' + serviceDesc + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</label>';
+        });
+        wrap.innerHTML = html || '<p class="price-note">Shipping methods unavailable.</p>';
+      }
+
       function updateShippingNotes() {
         // Shipping note removed — kept as no-op for compatibility
       }
@@ -770,11 +827,14 @@
             }
           }
         });
-      }async function refreshShippingQuote(forceCountryCode) {
+      }
+
+      async function refreshShippingQuote(forceCountryCode) {
         var qty = getTotalQty();
         var currency = getActiveCurrency();
         if (qty <= 0) {
           shippingState = {
+            serviceLevel: shippingState.serviceLevel || 'express',
             currency: currency,
             requestedCountry: '',
             appliedCountry: '',
@@ -782,10 +842,15 @@
             amount: 0,
             firstItem: 0,
             additionalItem: 0,
+            etaMinDays: 0,
+            etaMaxDays: 0,
+            etaNote: '',
             isFallback: false,
             totalQty: 0,
             lastError: ''
           };
+          shippingMethodQuotes = { standard: null, express: null };
+          renderShippingMethodOptions();
           applyTotalsFromState();
           return;
         }
@@ -797,6 +862,7 @@
         }).filter(function(it) { return it.slug && it.qty > 0; });
         var shippingKey = [country, currency, qty, items.map(function(it){ return it.slug + ':' + it.qty; }).join('|')].join('::');
         if (shippingKey === lastShippingQuoteKey && !shippingState.lastError) {
+          renderShippingMethodOptions();
           applyTotalsFromState();
           return;
         }
@@ -809,39 +875,75 @@
           setText('pay-shipping-sidebar', 'Calculating...');
         }
 
-        try {
+        var fetchQuote = async function(level) {
           var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
           var timeoutId = setTimeout(function() {
             if (controller) controller.abort();
           }, 8000);
-          var resp = await fetch('/api/shipping/calculate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ country: country, currency: currency, qty: qty, items: items }),
-            signal: controller ? controller.signal : undefined
-          });
-          clearTimeout(timeoutId);
-          var data = await resp.json().catch(function() { return {}; });
-          if (requestId !== shippingRequestSeq) return;
-          if (!resp.ok || !data.ok) throw new Error(data.error || 'Shipping quote failed');
+          try {
+            var resp = await fetch('/api/shipping/calculate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ country: country, currency: currency, qty: qty, items: items, service_level: level }),
+              signal: controller ? controller.signal : undefined
+            });
+            clearTimeout(timeoutId);
+            var data = await resp.json().catch(function() { return {}; });
+            if (!resp.ok || !data.ok) throw new Error(data.error || 'Shipping quote failed');
+            return {
+              serviceLevel: level,
+              currency: data.currency || currency,
+              requestedCountry: data.requested_country || country,
+              appliedCountry: data.applied_country || country,
+              countryName: data.country_name || '',
+              amount: Number(data.amount || 0),
+              firstItem: Number(data.first_item || 0),
+              additionalItem: Number(data.additional_item || 0),
+              etaMinDays: Number(data.eta_min_days || 0),
+              etaMaxDays: Number(data.eta_max_days || 0),
+              etaNote: String(data.eta_note || ''),
+              isFallback: !!data.is_fallback,
+              totalQty: Number(data.total_qty || qty),
+              lastError: ''
+            };
+          } catch (e) {
+            clearTimeout(timeoutId);
+            return {
+              serviceLevel: level,
+              currency: currency,
+              requestedCountry: country,
+              appliedCountry: country,
+              countryName: '',
+              amount: 0,
+              firstItem: 0,
+              additionalItem: 0,
+              etaMinDays: 0,
+              etaMaxDays: 0,
+              etaNote: '',
+              isFallback: false,
+              totalQty: qty,
+              lastError: e && e.message ? e.message : 'shipping-unavailable'
+            };
+          }
+        };
 
-          shippingState = {
-            currency: data.currency || currency,
-            requestedCountry: data.requested_country || country,
-            appliedCountry: data.applied_country || country,
-            countryName: data.country_name || '',
-            amount: Number(data.amount || 0),
-            firstItem: Number(data.first_item || 0),
-            additionalItem: Number(data.additional_item || 0),
-            isFallback: !!data.is_fallback,
-            totalQty: Number(data.total_qty || qty),
-            lastError: ''
-          };
+        var standardQuote = await fetchQuote('standard');
+        var expressQuote = await fetchQuote('express');
+        if (requestId !== shippingRequestSeq) return;
+        shippingMethodQuotes = { standard: standardQuote, express: expressQuote };
+
+        var preferredLevel = shippingState.serviceLevel || 'express';
+        var chosenQuote = shippingMethodQuotes[preferredLevel];
+        if (!chosenQuote || chosenQuote.lastError) {
+          chosenQuote = !shippingMethodQuotes.express.lastError ? shippingMethodQuotes.express :
+            (!shippingMethodQuotes.standard.lastError ? shippingMethodQuotes.standard : null);
+        }
+        if (chosenQuote) {
+          shippingState = chosenQuote;
           lastShippingQuoteKey = shippingKey;
-        } catch (e) {
-          if (typeof timeoutId !== 'undefined') clearTimeout(timeoutId);
-          if (requestId !== shippingRequestSeq) return;
+        } else {
           shippingState = {
+            serviceLevel: preferredLevel,
             currency: currency,
             requestedCountry: country,
             appliedCountry: country,
@@ -849,14 +951,31 @@
             amount: 0,
             firstItem: 0,
             additionalItem: 0,
+            etaMinDays: 0,
+            etaMaxDays: 0,
+            etaNote: '',
             isFallback: false,
             totalQty: qty,
-            lastError: e && e.message ? e.message : 'shipping-unavailable'
+            lastError: 'shipping-unavailable'
           };
           lastShippingQuoteKey = '';
         }
+        renderShippingMethodOptions();
         applyTotalsFromState();
       }
+
+      window.selectShippingMethod = function(level) {
+        var next = String(level || '').toLowerCase() === 'standard' ? 'standard' : 'express';
+        var q = shippingMethodQuotes[next];
+        if (!q || q.lastError) {
+          showError(serviceLabel(next) + ' shipping is unavailable for this destination.');
+          return;
+        }
+        shippingState = q;
+        hideError();
+        renderShippingMethodOptions();
+        applyTotalsFromState();
+      };
 
       // Cart badge (no badge on checkout header, no-op safe)
       function updateBadge() {
@@ -1351,8 +1470,15 @@
           var mbar = document.getElementById('mobile-bar');
           if (mbar) mbar.classList.remove('visible');
           shippingState.amount = 0;
+          shippingState.firstItem = 0;
+          shippingState.additionalItem = 0;
+          shippingState.etaMinDays = 0;
+          shippingState.etaMaxDays = 0;
+          shippingState.etaNote = '';
           shippingState.totalQty = 0;
           shippingState.lastError = '';
+          shippingMethodQuotes = { standard: null, express: null };
+          renderShippingMethodOptions();
           applyTotalsFromState();
           return;
         }
@@ -1548,6 +1674,7 @@
         });
         var sidebarItems = document.getElementById('order-summary-sidebar');
         if (sidebarItems) sidebarItems.innerHTML = html;
+        renderShippingMethodOptions();
         applyTotalsFromState();
         refreshShippingQuote();
       }
@@ -1640,6 +1767,7 @@
               address: buildAddress(),
               currency: currencyPref,
               shipping_country: shippingCountryCode,
+              shipping_service_level: shippingState.serviceLevel || 'express',
               discount_code: discountApplied ? discountCode : undefined
             })
           });
