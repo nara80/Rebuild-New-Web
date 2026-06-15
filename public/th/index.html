@@ -21,6 +21,18 @@
   <link rel="preload" href="/css/main.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/css/main.min.css"></noscript>
   <style>
+    .home-page .desktop-only-block {
+      display: block;
+    }
+    .home-page .mobile-only-block {
+      display: none !important;
+    }
+    .home-page .desktop-only-inline {
+      display: inline;
+    }
+    .home-page .mobile-only-inline {
+      display: none !important;
+    }
     .home-page .btn-primary {
       background: var(--color-primary);
       border: 2px solid var(--color-primary);
@@ -328,16 +340,38 @@
       .home-page .trust-item span {
         font-size: 0.75rem;
       }
-      .home-page .niche-grid-compact .category-image {
-        aspect-ratio: 1 / 1;
+      .home-page .shop-product-grid .category-card,
+      .home-page .niche-grid-compact .category-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        border-radius: 12px;
       }
+      .home-page .niche-grid-compact .category-image {
+        aspect-ratio: 4 / 3;
+      }
+      .home-page .shop-product-grid .category-label,
       .home-page .niche-grid-compact .category-label {
         padding: 12px 10px 4px;
-        font-size: 0.875rem;
+        font-size: 16px;
+        font-weight: 600;
       }
       .home-page .niche-grid-compact .category-copy {
-        padding: 0 10px 12px;
-        font-size: 0.75rem;
+        padding: 0 10px 14px;
+        font-size: 14px;
+        line-height: 1.4;
+        flex-grow: 1;
+        display: block;
+      }
+      .home-page .desktop-only-block,
+      .home-page .desktop-only-inline {
+        display: none !important;
+      }
+      .home-page .mobile-only-block {
+        display: block !important;
+      }
+      .home-page .mobile-only-inline {
+        display: inline !important;
       }
       .home-page .fabric-compare-grid,
       .home-page .fabric-cards {
@@ -590,38 +624,49 @@
       <div class="container">
         <div class="section-header">
           <h2>เลือกตามประเภทสินค้า</h2>
-          <p>เครื่องนอนสั่งตัดสำหรับทุกขนาด ทุกไลฟ์สไตล์ ตั้งแต่เตียงบ้าน เตียงครอบครัว ไปจนถึงห้องโดยสารเรือ</p>
+          <p class="desktop-only-block">เครื่องนอนสั่งตัดสำหรับทุกขนาด ทุกไลฟ์สไตล์ ตั้งแต่เตียงบ้าน เตียงครอบครัว ไปจนถึงห้องโดยสารเรือ</p>
+          <p class="mobile-only-block">เครื่องนอนสั่งตัดสำหรับทุกขนาดและทุกพื้นที่</p>
         </div>
         <div class="category-grid shop-product-grid">
           <a href="/sheets/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-sheets.webp" type="image/webp"><img src="/images/Categories/category-sheets.jpg" alt="ผ้าปูที่นอน  -  แบบมีและไม่มีขอบยาง" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">ผ้าปูที่นอน</div>
+            <div class="category-label">ผ้าปูที่นอน<span class="mobile-only-inline"> →</span></div>
           </a>
           <a href="/duvet-covers/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-duvet-covers.webp" type="image/webp"><img src="/images/Categories/category-duvet-covers.jpg" alt="ปลอกผ้านวม" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">ปลอกผ้านวม</div>
+            <div class="category-label">ปลอกผ้านวม<span class="mobile-only-inline"> →</span></div>
           </a>
           <a href="/pillowcases/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-pillowcases.webp" type="image/webp"><img src="/images/Categories/category-pillowcases.jpg" alt="ปลอกหมอน" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">ปลอกหมอน</div>
+            <div class="category-label">ปลอกหมอน<span class="mobile-only-inline"> →</span></div>
           </a>
           <a href="/protection/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-protection.webp" type="image/webp"><img src="/images/Categories/category-protection.jpg" alt="อุปกรณ์ป้องกัน  -  ที่ป้องกันที่นอนและหมอน" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">ผ้ารองกันเปื้อนที่นอน</div>
+            <div class="category-label">
+              <span class="desktop-only-inline">ผ้ารองกันเปื้อนที่นอน</span>
+              <span class="mobile-only-inline">ผ้ารองกันเปื้อน</span>
+              <span class="mobile-only-inline"> →</span>
+            </div>
           </a>
           <a href="/accessories/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-accessories.webp" type="image/webp"><img src="/images/Categories/category-accessories.jpg" alt="อุปกรณ์เสริม  -  ตัวเชื่อมเตียงและอื่นๆ" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">อุปกรณ์เสริม</div>
+            <div class="category-label">อุปกรณ์เสริม<span class="mobile-only-inline"> →</span></div>
+          </a>
+          <a href="/products/" class="category-card mobile-only-block">
+            <div class="category-image">
+              <picture><source srcset="/images/Categories/category-all.webp" type="image/webp"><img src="/images/Categories/category-all.jpg" alt="ดูสินค้าทั้งหมด" width="800" height="600" loading="lazy" decoding="async"></picture>
+            </div>
+            <div class="category-label">ดูสินค้าทั้งหมด<span class="mobile-only-inline"> →</span></div>
           </a>
         </div>
       </div>
@@ -632,36 +677,45 @@
       <div class="container">
         <div class="section-header">
           <h2>เลือกตามการใช้งาน</h2>
-          <p>เลือกตามการใช้งาน ออกแบบให้เหมาะกับเตียงและไลฟ์สไตล์ของคุณ ไม่ว่าจะเป็นบ้าน เรือ รถบ้าน หรือที่นอนพิเศษ</p>
+          <p class="desktop-only-block">เลือกตามการใช้งาน ออกแบบให้เหมาะกับเตียงและไลฟ์สไตล์ของคุณ ไม่ว่าจะเป็นบ้าน เรือ รถบ้าน หรือที่นอนพิเศษ</p>
+          <p class="mobile-only-block">ออกแบบให้เหมาะกับทุกเตียง ทุกพื้นที่ และทุกการใช้งาน</p>
         </div>
         <div class="category-grid niche-grid-compact">
           <a href="/marine/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-marine.webp" type="image/webp"><img src="/images/Categories/category-marine.jpg" alt="เครื่องนอนเรือและยอชต์" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">เรือยอชต์</div>
-            <span class="category-copy">ผ้าปู V-berth และผ้าป้องกันความชื้น สำหรับห้องโดยสารเรือยอชต์</span>
+            <div class="category-label">เรือยอชต์<span class="mobile-only-inline"> →</span></div>
+            <span class="category-copy desktop-only-block">ผ้าปู V-berth และผ้าป้องกันความชื้น สำหรับห้องโดยสารเรือยอชต์</span>
+            <span class="category-copy mobile-only-block">ผ้าปูและผ้าป้องกันสำหรับ V-berth และที่นอนทรงพิเศษ</span>
           </a>
           <a href="/family/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-family.webp" type="image/webp"><img src="/images/Categories/category-family.jpg" alt="เครื่องนอนครอบครัวนอนร่วม" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">เตียงครอบครัว / นอนร่วมกัน</div>
-            <span class="category-copy">พื้นผิวการนอนไร้รอยต่อสำหรับเตียงยักษ์และความสบายในการนอนร่วม</span>
+            <div class="category-label">
+              <span class="desktop-only-inline">เตียงครอบครัว / นอนร่วมกัน</span>
+              <span class="mobile-only-inline">เตียงครอบครัว</span>
+              <span class="mobile-only-inline"> →</span>
+            </div>
+            <span class="category-copy desktop-only-block">พื้นผิวการนอนไร้รอยต่อสำหรับเตียงยักษ์และความสบายในการนอนร่วม</span>
+            <span class="category-copy mobile-only-block">ผืนเดียวไร้รอยต่อ สำหรับเตียงใหญ่และการนอนร่วมกัน</span>
           </a>
           <a href="/deep-pocket/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-deep-pocket.webp" type="image/webp"><img src="/images/Categories/category-deep-pocket.jpg" alt="เครื่องนอนขอบลึก" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">ที่นอนหนาพิเศษ</div>
-            <span class="category-copy">ผ้าปูและที่ป้องกันสำหรับที่นอนหนาสูงสุด 56 ซม.</span>
+            <div class="category-label">ที่นอนหนาพิเศษ<span class="mobile-only-inline"> →</span></div>
+            <span class="category-copy desktop-only-block">ผ้าปูและที่ป้องกันสำหรับที่นอนหนาสูงสุด 56 ซม.</span>
+            <span class="category-copy mobile-only-block">ผ้าปูและผ้าป้องกันสำหรับที่นอนหนาสูงสุด 56 ซม.</span>
           </a>
           <a href="/pets/" class="category-card">
             <div class="category-image">
               <picture><source srcset="/images/Categories/category-pets.webp" type="image/webp"><img src="/images/Categories/category-pets.jpg" alt="เครื่องนอนสำหรับคนเลี้ยงสัตว์" width="800" height="600" loading="lazy" decoding="async"></picture>
             </div>
-            <div class="category-label">บ้านที่มีสัตว์เลี้ยง</div>
-            <span class="category-copy">เครื่องนอนไม่ติดขนสัตว์ ด้วยผ้า BreezePlus</span>
+            <div class="category-label">บ้านที่มีสัตว์เลี้ยง<span class="mobile-only-inline"> →</span></div>
+            <span class="category-copy desktop-only-block">เครื่องนอนไม่ติดขนสัตว์ ด้วยผ้า BreezePlus</span>
+            <span class="category-copy mobile-only-block">เครื่องนอนดูแลง่าย พร้อมผ้า BreezePlus</span>
           </a>
         </div>
       </div>
