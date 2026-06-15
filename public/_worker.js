@@ -375,12 +375,6 @@ function toR2Url(url) {
   return url;
 }
 __name(toR2Url, "toR2Url");
-function normalizeMojibake(str) {
-  const s = String(str || "").trim();
-  if (!s) return "";
-  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒñì/g, "").replace(/�/g, "");
-}
-__name(normalizeMojibake, "normalizeMojibake");
 function r2Product(p) {
   const out = { ...p, image_url: toR2Url(p.image_url) };
   if (out.images && typeof out.images === "string") {
@@ -536,10 +530,6 @@ async function handleProductReviews(env, slug) {
     const result = await db.prepare(sql).bind(...bindings).all();
     const reviews = (result.results || []).map((rv) => ({
       ...rv,
-      customer_name: normalizeMojibake(rv.customer_name || ""),
-      customer_country: normalizeMojibake(rv.customer_country || ""),
-      review_text: normalizeMojibake(rv.review_text || ""),
-      image_url: toR2Url(rv.image_url || ""),
       review_date: String(rv.review_date || rv.created_at || "").slice(0, 10)
     }));
     return new Response(JSON.stringify({ reviews, product_type: ptDisplay, niches: nicheDisplayNames }), {
@@ -2523,8 +2513,8 @@ async function handleAdminUpload(request, env) {
     await bucket.put(key, file.stream(), {
       httpMetadata: { contentType: file.type }
     });
-    const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-    const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
+    const R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+    const publicUrl = `${R2_PUBLIC_BASE6}/${key}`;
     return new Response(JSON.stringify({
       success: true,
       url: publicUrl,
@@ -3592,11 +3582,6 @@ function normalizeShippingCurrency(raw) {
   return c;
 }
 __name(normalizeShippingCurrency, "normalizeShippingCurrency");
-function normalizeServiceLevel(raw) {
-  const s = String(raw || "").trim().toLowerCase();
-  return s === "standard" ? "standard" : "express";
-}
-__name(normalizeServiceLevel, "normalizeServiceLevel");
 async function ensureShippingRatesSchema(env) {
   if (shippingSchemaReady) return;
   if (!shippingSchemaPromise) {
@@ -3617,22 +3602,6 @@ async function ensureShippingRatesSchema(env) {
           tier3_add_thb INTEGER NOT NULL DEFAULT 0,
           is_active INTEGER NOT NULL DEFAULT 1,
           updated_at DATETIME DEFAULT (datetime('now'))
-        )`
-      ).run();
-      await env.DB.prepare(
-        `CREATE TABLE IF NOT EXISTS shipping_service_rates (
-          country_code TEXT NOT NULL,
-          service_level TEXT NOT NULL CHECK(service_level IN ('standard','express')),
-          country_name TEXT NOT NULL,
-          tier1_first_thb INTEGER NOT NULL DEFAULT 0,
-          tier2_first_thb INTEGER NOT NULL DEFAULT 0,
-          tier3_first_thb INTEGER NOT NULL DEFAULT 0,
-          eta_min_days INTEGER NOT NULL DEFAULT 3,
-          eta_max_days INTEGER NOT NULL DEFAULT 7,
-          eta_note TEXT DEFAULT '',
-          is_active INTEGER NOT NULL DEFAULT 1,
-          updated_at DATETIME DEFAULT (datetime('now')),
-          PRIMARY KEY (country_code, service_level)
         )`
       ).run();
       await env.DB.prepare(
@@ -3660,40 +3629,6 @@ async function ensureShippingRatesSchema(env) {
         SELECT 'OTHER', 'Other Countries', 25, 10, 850, 300, 1, datetime('now')
         WHERE NOT EXISTS (SELECT 1 FROM shipping_rates WHERE country_code = 'OTHER')`
       ).run();
-      await env.DB.prepare(
-        `INSERT INTO shipping_service_rates (
-          country_code, service_level, country_name,
-          tier1_first_thb, tier2_first_thb, tier3_first_thb,
-          eta_min_days, eta_max_days, eta_note, is_active, updated_at
-        )
-        SELECT
-          country_code, 'express', country_name,
-          COALESCE(tier1_first_thb, 0), COALESCE(tier2_first_thb, 0), COALESCE(tier3_first_thb, 0),
-          3, 7, 'Express delivery', COALESCE(is_active, 1), datetime('now')
-        FROM shipping_rates sr
-        WHERE NOT EXISTS (
-          SELECT 1 FROM shipping_service_rates ssr
-          WHERE ssr.country_code = sr.country_code AND ssr.service_level = 'express'
-        )`
-      ).run();
-      await env.DB.prepare(
-        `INSERT INTO shipping_service_rates (
-          country_code, service_level, country_name,
-          tier1_first_thb, tier2_first_thb, tier3_first_thb,
-          eta_min_days, eta_max_days, eta_note, is_active, updated_at
-        )
-        SELECT
-          country_code, 'standard', country_name,
-          CAST(ROUND(COALESCE(tier1_first_thb, 0) * 0.75) AS INTEGER),
-          CAST(ROUND(COALESCE(tier2_first_thb, 0) * 0.75) AS INTEGER),
-          CAST(ROUND(COALESCE(tier3_first_thb, 0) * 0.75) AS INTEGER),
-          7, 14, 'Standard delivery', COALESCE(is_active, 1), datetime('now')
-        FROM shipping_rates sr
-        WHERE NOT EXISTS (
-          SELECT 1 FROM shipping_service_rates ssr
-          WHERE ssr.country_code = sr.country_code AND ssr.service_level = 'standard'
-        )`
-      ).run();
       shippingSchemaReady = true;
     })().finally(() => {
       if (!shippingSchemaReady) shippingSchemaPromise = null;
@@ -3717,7 +3652,6 @@ __name(getRatePerThb, "getRatePerThb");
 async function calculateShippingQuote(env, input) {
   await ensureShippingRatesSchema(env);
   const currency = normalizeShippingCurrency(input.currency);
-  const serviceLevel = normalizeServiceLevel(input.serviceLevel);
   const requestedCountry = normalizeCountryCode(input.countryCode) || normalizeCountryCode(input.fallbackCountryCode) || "OTHER";
   const items = input.items || [];
   const totalQty = items.reduce((sum, it) => sum + (it.qty || 0), 0) || toQty(input.totalQty || 0);
@@ -3726,7 +3660,6 @@ async function calculateShippingQuote(env, input) {
     const hasThOnly = items.some((it) => thOnlySlugs.has(it.slug));
     if (hasThOnly) {
       return {
-        service_level: serviceLevel,
         requested_country: requestedCountry,
         applied_country: "",
         country_name: "",
@@ -3739,9 +3672,6 @@ async function calculateShippingQuote(env, input) {
         first_item_thb: 0,
         additional_item_thb: 0,
         amount_thb: 0,
-        eta_min_days: 0,
-        eta_max_days: 0,
-        eta_note: "",
         is_fallback: false,
         blocked_th_only: true
       };
@@ -3749,7 +3679,6 @@ async function calculateShippingQuote(env, input) {
   }
   if (requestedCountry === "TH") {
     return {
-      service_level: serviceLevel,
       requested_country: "TH",
       applied_country: "TH",
       country_name: "Thailand",
@@ -3762,9 +3691,6 @@ async function calculateShippingQuote(env, input) {
       first_item_thb: 0,
       additional_item_thb: 0,
       amount_thb: 0,
-      eta_min_days: serviceLevel === "standard" ? 2 : 1,
-      eta_max_days: serviceLevel === "standard" ? 5 : 3,
-      eta_note: serviceLevel === "standard" ? "Standard delivery" : "Express delivery",
       is_fallback: false,
       blocked_th_only: false
     };
@@ -3773,12 +3699,12 @@ async function calculateShippingQuote(env, input) {
     const row2 = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
-        eta_min_days, eta_max_days, eta_note,
+        first_item_thb, additional_item_thb,
         is_active
-       FROM shipping_service_rates
-       WHERE country_code = ?1 AND service_level = ?2 AND is_active = 1
+       FROM shipping_rates
+       WHERE country_code = ?1 AND is_active = 1
        LIMIT 1`
-    ).bind(countryCode, serviceLevel).first();
+    ).bind(countryCode).first();
     return row2 || null;
   }, "fetchRate");
   let appliedCountry = requestedCountry;
@@ -3793,7 +3719,6 @@ async function calculateShippingQuote(env, input) {
   }
   if (!row) {
     return {
-      service_level: serviceLevel,
       requested_country: requestedCountry,
       applied_country: appliedCountry,
       country_name: appliedCountry === "OTHER" ? "Other Countries" : appliedCountry,
@@ -3806,9 +3731,6 @@ async function calculateShippingQuote(env, input) {
       first_item_thb: 0,
       additional_item_thb: 0,
       amount_thb: 0,
-      eta_min_days: serviceLevel === "standard" ? 7 : 3,
-      eta_max_days: serviceLevel === "standard" ? 14 : 7,
-      eta_note: serviceLevel === "standard" ? "Standard delivery" : "Express delivery",
       is_fallback: isFallback,
       blocked_th_only: false
     };
@@ -3835,8 +3757,8 @@ async function calculateShippingQuote(env, input) {
   for (const ar of addRows.results || []) {
     globalAddRates[Number(ar.tier)] = toAmount(ar.add_thb);
   }
-  const legacyFirstThb = 0;
-  const legacyAddThb = 0;
+  const legacyFirstThb = toAmount(row.first_item_thb || 0);
+  const legacyAddThb = toAmount(row.additional_item_thb || 0);
   const tier1FirstThb = toAmount(row.tier1_first_thb || 0);
   const tier2FirstThb = toAmount(row.tier2_first_thb || 0);
   const tier3FirstThb = toAmount(row.tier3_first_thb || 0);
@@ -3874,7 +3796,6 @@ async function calculateShippingQuote(env, input) {
   const additionalItem = currency === "THB" ? additionalThb : toAmount(additionalThb * ratePerThb);
   const amount = currency === "THB" ? amountThb : toAmount(amountThb * ratePerThb);
   return {
-    service_level: serviceLevel,
     requested_country: requestedCountry,
     applied_country: appliedCountry,
     country_name: row?.country_name || (appliedCountry === "OTHER" ? "Other Countries" : appliedCountry),
@@ -3887,9 +3808,6 @@ async function calculateShippingQuote(env, input) {
     first_item_thb: firstItemThb,
     additional_item_thb: additionalThb,
     amount_thb: amountThb,
-    eta_min_days: Math.max(0, Number(row?.eta_min_days || 0)),
-    eta_max_days: Math.max(0, Number(row?.eta_max_days || 0)),
-    eta_note: String(row?.eta_note || (serviceLevel === "standard" ? "Standard delivery" : "Express delivery")),
     is_fallback: isFallback,
     blocked_th_only: false
   };
@@ -3912,7 +3830,6 @@ async function handleShippingCalculate(request, env) {
     let country = "";
     let qty = 0;
     let currency = "USD";
-    let serviceLevel = "express";
     let items;
     const fallbackCountry = request.headers.get("CF-IPCountry") || "";
     if (request.method === "GET") {
@@ -3920,13 +3837,11 @@ async function handleShippingCalculate(request, env) {
       country = url.searchParams.get("country") || "";
       qty = toQty(url.searchParams.get("qty") || 0);
       currency = url.searchParams.get("currency") || "USD";
-      serviceLevel = url.searchParams.get("service_level") || "express";
     } else {
       const body = await request.json().catch(() => ({}));
       country = body.country || body.country_code || "";
       qty = toQty(body.qty || body.total_qty || 0);
       currency = body.currency || "USD";
-      serviceLevel = body.service_level || "express";
       if (Array.isArray(body.items)) {
         items = body.items.map((it) => ({
           slug: String(it.slug || it.product_slug || ""),
@@ -3938,7 +3853,6 @@ async function handleShippingCalculate(request, env) {
       countryCode: country,
       fallbackCountryCode: fallbackCountry,
       currency,
-      serviceLevel,
       totalQty: qty,
       items
     });
@@ -4093,31 +4007,24 @@ async function handleAdminShippingRates(request, env) {
   }
   await ensureShippingRatesSchema(env);
   if (request.method === "GET") {
-    const serviceLevel = normalizeServiceLevel(new URL(request.url).searchParams.get("service_level") || "express");
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
-        eta_min_days, eta_max_days, eta_note,
         is_active, updated_at
-       FROM shipping_service_rates
-       WHERE service_level = ?1
+       FROM shipping_rates
        ORDER BY CASE WHEN country_code = 'OTHER' THEN 1 ELSE 0 END, country_code`
-    ).bind(serviceLevel).all();
+    ).all();
     const rates = (rows.results || []).map((r) => {
       const t1f = toAmount2(r.tier1_first_thb || 0);
       const t2f = toAmount2(r.tier2_first_thb || 0);
       const t3f = toAmount2(r.tier3_first_thb || 0);
       return {
-        service_level: serviceLevel,
         country_code: String(r.country_code || "").toUpperCase(),
         country_name: String(r.country_name || ""),
         tier1_first_thb: t1f,
         tier2_first_thb: t2f,
         tier3_first_thb: t3f,
-        eta_min_days: Number(r.eta_min_days || 0),
-        eta_max_days: Number(r.eta_max_days || 0),
-        eta_note: String(r.eta_note || ""),
         tier1_first_usd: toAmount2(t1f * usdRate),
         tier2_first_usd: toAmount2(t2f * usdRate),
         tier3_first_usd: toAmount2(t3f * usdRate),
@@ -4125,7 +4032,7 @@ async function handleAdminShippingRates(request, env) {
         updated_at: r.updated_at
       };
     });
-    return json6({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
+    return json6({ rates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "POST" || request.method === "PUT") {
     let body;
@@ -4135,7 +4042,6 @@ async function handleAdminShippingRates(request, env) {
       return json6({ error: "Invalid JSON body" }, 400);
     }
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
-    const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
       return json6({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
@@ -4143,40 +4049,29 @@ async function handleAdminShippingRates(request, env) {
     const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
     const t2f = toAmount2(body.tier2_first_thb || body.tier2_first || 0);
     const t3f = toAmount2(body.tier3_first_thb || body.tier3_first || 0);
-    const etaMinDays = Math.max(0, Number(body.eta_min_days || 0));
-    const etaMaxDays = Math.max(0, Number(body.eta_max_days || 0));
-    const etaNote = String(body.eta_note || "").trim();
     const isActive = body.is_active === void 0 ? 1 : Number(body.is_active) ? 1 : 0;
     await env.DB.prepare(
-      `INSERT INTO shipping_service_rates (
-        country_code, service_level, country_name,
+      `INSERT INTO shipping_rates (
+        country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
-        eta_min_days, eta_max_days, eta_note,
         is_active, updated_at
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, datetime('now'))
-      ON CONFLICT(country_code, service_level) DO UPDATE SET
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
+      ON CONFLICT(country_code) DO UPDATE SET
         country_name = excluded.country_name,
         tier1_first_thb = excluded.tier1_first_thb,
         tier2_first_thb = excluded.tier2_first_thb,
         tier3_first_thb = excluded.tier3_first_thb,
-        eta_min_days = excluded.eta_min_days,
-        eta_max_days = excluded.eta_max_days,
-        eta_note = excluded.eta_note,
         is_active = excluded.is_active,
         updated_at = datetime('now')`
-    ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
+    ).bind(countryCode, countryName, t1f, t2f, t3f, isActive).run();
     return json6({
       success: true,
       rate: {
-        service_level: serviceLevel,
         country_code: countryCode,
         country_name: countryName,
         tier1_first_thb: t1f,
         tier2_first_thb: t2f,
         tier3_first_thb: t3f,
-        eta_min_days: etaMinDays,
-        eta_max_days: etaMaxDays,
-        eta_note: etaNote,
         is_active: isActive
       }
     });
@@ -4184,11 +4079,10 @@ async function handleAdminShippingRates(request, env) {
   if (request.method === "DELETE") {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
-    const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
     if (!countryCode) return json6({ error: "country query param is required" }, 400);
     if (countryCode === "OTHER") return json6({ error: "OTHER cannot be deleted" }, 400);
-    await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
-    return json6({ success: true, country_code: countryCode, service_level: serviceLevel });
+    await env.DB.prepare("DELETE FROM shipping_rates WHERE country_code = ?1").bind(countryCode).run();
+    return json6({ success: true, country_code: countryCode });
   }
   return json6({ error: "Method not allowed" }, 405);
 }
@@ -5216,7 +5110,6 @@ async function handleAdminPromo(request, env) {
 __name(handleAdminPromo, "handleAdminPromo");
 
 // ../workers/api/admin-blog.ts
-var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var BLOG_CATEGORY_OPTIONS = [
   "Marine & Yacht",
   "Family & Co-Sleep",
@@ -5237,129 +5130,35 @@ function isProductionHost9(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost9, "isProductionHost");
-function collectRoles7(raw) {
-  if (!raw || typeof raw !== "object") return [];
-  const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
-    if (v !== void 0 && v !== null) values.push(v);
-  }, "add");
-  add(raw.role);
-  add(raw.roles);
-  add(raw.org_role);
-  add(raw.orgRole);
-  add(raw.public_metadata?.role);
-  add(raw.public_metadata?.roles);
-  add(raw.unsafe_metadata?.roles);
-  add(raw.metadata?.role);
-  add(raw.metadata?.roles);
-  add(raw["https://mildmate.com/role"]);
-  add(raw["https://mildmate.com/roles"]);
-  const out = [];
-  values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
-    else out.push(String(v).toLowerCase().trim());
-  });
-  return out.filter(Boolean);
-}
-__name(collectRoles7, "collectRoles");
-function hasAdminRole7(raw) {
-  const roles = collectRoles7(raw);
-  return roles.some(
-    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
-  );
-}
-__name(hasAdminRole7, "hasAdminRole");
-function emailAllowed7(email, env) {
-  if (!email) return false;
-  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
-__name(emailAllowed7, "emailAllowed");
-function getClerkSessionTokenFromCookie(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  return match2 ? String(match2[1] || "").trim() : "";
-}
-__name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin8(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
-  const cookieToken = getClerkSessionTokenFromCookie(request);
-  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-  const token = bearerToken || cookieToken;
-  if (token) {
-    const verifyRequest = bearerToken ? request : new Request(request.url, {
-      method: request.method,
-      headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
-        Authorization: "Bearer " + token
-      })
-    });
-    const verified = await verifyClerkJwt(verifyRequest, env);
-    if (verified.valid) {
-      const raw = verified.payload.raw || {};
-      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
-        return { ok: true };
-      }
-      const sub = verified.payload.sub;
-      const clerkKey = env.CLERK_SECRET_KEY;
-      if (sub && clerkKey) {
-        try {
-          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
-            headers: { Authorization: "Bearer " + clerkKey }
-          });
-          if (clerkResp.ok) {
-            const user = await clerkResp.json();
-            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
-            const metadata = user.public_metadata || {};
-            if (emailAllowed7(email, env)) return { ok: true };
-            if (hasAdminRole7(metadata)) return { ok: true };
-          }
-        } catch (e) {
-          console.error("Clerk API lookup failed:", e?.message || e);
-        }
-      }
-      return { ok: false, status: 403, error: "Forbidden: admin role required" };
-    }
-  }
+function authorizeAdminSecret(request, env) {
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost9(host);
-  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
-  if (prodHost && !allowSecretInProd) {
-    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
-  }
-  if (!configured) return { ok: true };
-  if (provided === configured) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
+  const hostname = request.headers.get("Host") || "";
+  const prodHost = isProductionHost9(hostname);
+  if (!prodHost) return true;
+  if (!configured) return false;
+  if (!provided) return false;
+  return provided === configured;
 }
-__name(authorizeAdmin8, "authorizeAdmin");
+__name(authorizeAdminSecret, "authorizeAdminSecret");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
   const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
   return cleaned.filter((x) => BLOG_CATEGORY_OPTIONS.includes(x));
 }
 __name(normalizeCategories, "normalizeCategories");
-function toR2Url3(url) {
-  if (!url) return "";
-  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE4}${url.slice(3)}`;
-  return url;
-}
-__name(toR2Url3, "toR2Url");
 async function handleAdminBlog(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret"
   };
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin8(request, env);
-  if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  if (!authorizeAdminSecret(request, env)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
   }
   const db = env.DB;
   const url = new URL(request.url);
@@ -5378,23 +5177,12 @@ async function handleAdminBlog(request, env) {
         categories = JSON.parse(post.categories_json || "[]");
       } catch {
       }
-      return new Response(JSON.stringify({
-        post: {
-          ...post,
-          featured_image: toR2Url3(post.featured_image || ""),
-          related_products: relatedProducts,
-          categories_json: categories
-        }
-      }), { headers });
+      return new Response(JSON.stringify({ post: { ...post, related_products: relatedProducts, categories_json: categories } }), { headers });
     }
     const { results } = await db.prepare(
       "SELECT id, slug, title_en, title_th, featured_image, category, categories_json, status, is_featured, author, created_at, updated_at FROM blog_posts ORDER BY updated_at DESC"
     ).all();
-    const normalized = (results || []).map((p) => ({
-      ...p,
-      featured_image: toR2Url3(p.featured_image || "")
-    }));
-    return new Response(JSON.stringify({ posts: normalized }), { headers });
+    return new Response(JSON.stringify({ posts: results || [] }), { headers });
   }
   if (request.method === "POST") {
     let body;
@@ -5595,10 +5383,10 @@ async function handleAdminBlog(request, env) {
 __name(handleAdminBlog, "handleAdminBlog");
 
 // ../workers/api/blog-posts.ts
-var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toPublicR2Url2(url) {
   if (!url) return url;
-  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE5}${url.slice(3)}` : url;
+  return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE4}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url2, "toPublicR2Url");
 async function handleBlogPosts(request, env) {
@@ -5635,7 +5423,6 @@ async function handleBlogPosts(request, env) {
 __name(handleBlogPosts, "handleBlogPosts");
 
 // ../workers/api/reviews.ts
-var R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var ALLOWED_PRODUCT_TYPES = [
   "Sheets",
   "Pillowcases",
@@ -5668,18 +5455,6 @@ function sanitize(str) {
   return str.trim();
 }
 __name(sanitize, "sanitize");
-function normalizeMojibake2(str) {
-  const s = sanitize(str);
-  if (!s) return "";
-  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒñì/g, "").replace(/�/g, "");
-}
-__name(normalizeMojibake2, "normalizeMojibake");
-function toR2Url4(url) {
-  if (!url) return "";
-  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE6}${url.slice(3)}`;
-  return url;
-}
-__name(toR2Url4, "toR2Url");
 function sanitizeReviewText(html) {
   if (!html) return "";
   return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/\s+on\w+="[^"]*"/gi, "").replace(/\s+on\w+='[^']*'/gi, "").trim();
@@ -5704,104 +5479,17 @@ function isProductionHost10(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost10, "isProductionHost");
-function collectRoles8(raw) {
-  if (!raw || typeof raw !== "object") return [];
-  const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
-    if (v !== void 0 && v !== null) values.push(v);
-  }, "add");
-  add(raw.role);
-  add(raw.roles);
-  add(raw.org_role);
-  add(raw.orgRole);
-  add(raw.public_metadata?.role);
-  add(raw.public_metadata?.roles);
-  add(raw.unsafe_metadata?.roles);
-  add(raw.metadata?.role);
-  add(raw.metadata?.roles);
-  add(raw["https://mildmate.com/role"]);
-  add(raw["https://mildmate.com/roles"]);
-  const out = [];
-  values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
-    else out.push(String(v).toLowerCase().trim());
-  });
-  return out.filter(Boolean);
-}
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(raw) {
-  const roles = collectRoles8(raw);
-  return roles.some(
-    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
-  );
-}
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
-  if (!email) return false;
-  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
-__name(emailAllowed8, "emailAllowed");
-function getClerkSessionTokenFromCookie2(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  return match2 ? String(match2[1] || "").trim() : "";
-}
-__name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin9(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
-  const cookieToken = getClerkSessionTokenFromCookie2(request);
-  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-  const token = bearerToken || cookieToken;
-  if (token) {
-    const verifyRequest = bearerToken ? request : new Request(request.url, {
-      method: request.method,
-      headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
-        Authorization: "Bearer " + token
-      })
-    });
-    const verified = await verifyClerkJwt(verifyRequest, env);
-    if (verified.valid) {
-      const raw = verified.payload.raw || {};
-      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
-        return { ok: true };
-      }
-      const sub = verified.payload.sub;
-      const clerkKey = env.CLERK_SECRET_KEY;
-      if (sub && clerkKey) {
-        try {
-          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
-            headers: { Authorization: "Bearer " + clerkKey }
-          });
-          if (clerkResp.ok) {
-            const user = await clerkResp.json();
-            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
-            const metadata = user.public_metadata || {};
-            if (emailAllowed8(email, env)) return { ok: true };
-            if (hasAdminRole8(metadata)) return { ok: true };
-          }
-        } catch (e) {
-          console.error("Clerk API lookup failed:", e?.message || e);
-        }
-      }
-      return { ok: false, status: 403, error: "Forbidden: admin role required" };
-    }
-  }
+function authorizeAdminSecret2(request, env) {
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost10(host);
-  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
-  if (prodHost && !allowSecretInProd) {
-    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
-  }
-  if (!configured) return { ok: true };
-  if (provided === configured) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
+  const hostname = request.headers.get("Host") || "";
+  const prodHost = isProductionHost10(hostname);
+  if (!prodHost) return true;
+  if (!configured) return false;
+  if (!provided) return false;
+  return provided === configured;
 }
-__name(authorizeAdmin9, "authorizeAdmin");
+__name(authorizeAdminSecret2, "authorizeAdminSecret");
 async function handleReviews(request, env) {
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
@@ -5869,14 +5557,7 @@ async function handleReviews(request, env) {
     const countStmt = env.DB.prepare(countSql).bind(...countBindings);
     const countRow = await countStmt.first();
     const total = countRow ? countRow.total : 0;
-    const normalized = (results || []).map((rv) => ({
-      ...rv,
-      customer_name: normalizeMojibake2(rv.customer_name || ""),
-      customer_country: normalizeMojibake2(rv.customer_country || ""),
-      review_text: normalizeMojibake2(rv.review_text || ""),
-      image_url: toR2Url4(rv.image_url || "")
-    }));
-    return new Response(JSON.stringify({ reviews: normalized, total, limit, offset }), {
+    return new Response(JSON.stringify({ reviews: results || [], total, limit, offset }), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" }
     });
   } catch (e) {
@@ -5891,10 +5572,9 @@ __name(handleReviews, "handleReviews");
 async function handleAdminReviews(request, env) {
   const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
-  const auth = await authorizeAdmin9(request, env);
-  if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error }), {
-      status: auth.status,
+  if (!authorizeAdminSecret2(request, env)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
       headers
     });
   }
@@ -5928,11 +5608,7 @@ async function handleAdminReviews(request, env) {
           });
         }
         const review = post;
-        review.customer_name = normalizeMojibake2(review.customer_name || "");
-        review.customer_country = normalizeMojibake2(review.customer_country || "");
-        review.review_text = normalizeMojibake2(review.review_text || "");
         review.review_date = normalizeReviewDate(review.review_date || review.created_at);
-        review.image_url = toR2Url4(review.image_url || "");
         return new Response(JSON.stringify({ review }), { headers });
       }
       let results = [];
@@ -5950,14 +5626,7 @@ async function handleAdminReviews(request, env) {
         const out = await stmt.all();
         results = out.results || [];
       }
-      results = results.map((rv) => ({
-        ...rv,
-        customer_name: normalizeMojibake2(rv.customer_name || ""),
-        customer_country: normalizeMojibake2(rv.customer_country || ""),
-        review_text: normalizeMojibake2(rv.review_text || ""),
-        review_date: normalizeReviewDate(rv.review_date || rv.created_at),
-        image_url: toR2Url4(rv.image_url || "")
-      }));
+      results = results.map((rv) => ({ ...rv, review_date: normalizeReviewDate(rv.review_date || rv.created_at) }));
       return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
     if (method === "POST") {
@@ -6238,7 +5907,7 @@ function isProductionHost11(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost11, "isProductionHost");
-function collectRoles9(raw) {
+function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -6263,28 +5932,28 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles");
-function hasAdminRole9(rawClaims) {
-  const roles = collectRoles9(rawClaims);
+__name(collectRoles7, "collectRoles");
+function hasAdminRole7(rawClaims) {
+  const roles = collectRoles7(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole");
-function emailAllowed9(email, env) {
+__name(hasAdminRole7, "hasAdminRole");
+function emailAllowed7(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed");
-async function authorizeAdmin10(request, env) {
+__name(emailAllowed7, "emailAllowed");
+async function authorizeAdmin8(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
+      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -6298,8 +5967,8 @@ async function authorizeAdmin10(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed9(email, env)) return { ok: true };
-            if (hasAdminRole9(metadata)) return { ok: true };
+            if (emailAllowed7(email, env)) return { ok: true };
+            if (hasAdminRole7(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -6321,7 +5990,7 @@ async function authorizeAdmin10(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin10, "authorizeAdmin");
+__name(authorizeAdmin8, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -6358,7 +6027,7 @@ async function handleFavorites(request, env) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
       return json9({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin10(request, env);
+    const auth = await authorizeAdmin8(request, env);
     if (!auth.ok) return json9({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
@@ -6528,7 +6197,6 @@ async function handleCheckout(request, env) {
   }
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
   const shippingCountryInput = body.shipping_country || body.country_code || "";
-  const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const discountCode = (body.discount_code || "").trim().toUpperCase();
   let discountApplied = false;
@@ -6653,7 +6321,6 @@ async function handleCheckout(request, env) {
       countryCode: shippingCountryInput,
       fallbackCountryCode: origin || "",
       currency: currency.toUpperCase(),
-      serviceLevel: shippingServiceLevel,
       totalQty
     });
   } catch (e) {
@@ -6690,7 +6357,7 @@ async function handleCheckout(request, env) {
         currency,
         product_data: {
           name: `Shipping (${shippingQuote.country_name || shippingQuote.applied_country || "Other"})`,
-          description: `${String(shippingQuote?.service_level || "express").toUpperCase()} \u2022 First item ${shippingQuote.first_item} + each additional ${shippingQuote.additional_item}`
+          description: `First item ${shippingQuote.first_item} + each additional ${shippingQuote.additional_item}`
         },
         unit_amount: shippingMinor
       },
@@ -6726,10 +6393,6 @@ async function handleCheckout(request, env) {
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));
-    params.append("metadata[shipping_service_level]", String(shippingQuote?.service_level || "express"));
-    params.append("metadata[shipping_eta_min_days]", String(Number(shippingQuote?.eta_min_days || 0)));
-    params.append("metadata[shipping_eta_max_days]", String(Number(shippingQuote?.eta_max_days || 0)));
-    params.append("metadata[shipping_eta_note]", String(shippingQuote?.eta_note || ""));
     params.append("metadata[shipping_amount]", String(Number(shippingQuote?.amount || 0)));
     params.append("metadata[shipping_amount_thb]", String(Number(shippingQuote?.amount_thb || 0)));
     params.append("metadata[shipping_currency]", currency.toUpperCase());
@@ -7679,20 +7342,20 @@ async function handleOrderConfirmed(request, env) {
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
 // api/[[path]].ts
-var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-function toR2Url5(url) {
+var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url3(url) {
   if (!url || typeof url !== "string") return url;
   if (!url.startsWith("/r2/")) return url;
-  return `${R2_PUBLIC_BASE7}${url.slice(3)}`;
+  return `${R2_PUBLIC_BASE5}${url.slice(3)}`;
 }
-__name(toR2Url5, "toR2Url");
+__name(toR2Url3, "toR2Url");
 function r2Product3(p) {
   if (!p) return p;
   const imgKey = p.image_url !== void 0 ? "image_url" : "Image_url";
-  const out = { ...p, [imgKey]: toR2Url5(p[imgKey]) };
+  const out = { ...p, [imgKey]: toR2Url3(p[imgKey]) };
   if (out.images && typeof out.images === "string") {
     try {
-      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url5));
+      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url3));
     } catch (_) {
     }
   }
@@ -8368,8 +8031,8 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
-  const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-  const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
+  const R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+  const publicUrl = `${R2_PUBLIC_BASE6}/${key}`;
   try {
     const obj = await env.MILDMATE_ASSETS.get(key);
     if (obj) {
@@ -8439,7 +8102,7 @@ function getClerkSessionToken2(request) {
   return null;
 }
 __name(getClerkSessionToken2, "getClerkSessionToken");
-function collectRoles10(raw) {
+function collectRoles8(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -8463,20 +8126,20 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles");
-function hasAdminRole10(rawClaims) {
-  const roles = collectRoles10(rawClaims);
+__name(collectRoles8, "collectRoles");
+function hasAdminRole8(rawClaims) {
+  const roles = collectRoles8(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole10, "hasAdminRole");
-function emailAllowed10(email, env) {
+__name(hasAdminRole8, "hasAdminRole");
+function emailAllowed8(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed");
+__name(emailAllowed8, "emailAllowed");
 function emailBlocked(email) {
   if (!email) return false;
   const blocked = [
@@ -8512,7 +8175,7 @@ async function enrichAdminFromClerk(sub, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return { email, hasAdmin: hasAdminRole10(metadataRaw) };
+    return { email, hasAdmin: hasAdminRole8(metadataRaw) };
   } catch {
     return { email: "", hasAdmin: false };
   }
@@ -8539,14 +8202,14 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   }
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
-  let hasAdmin = hasAdminRole10(raw);
-  let allowed = emailAllowed10(email, context.env);
+  let hasAdmin = hasAdminRole8(raw);
+  let allowed = emailAllowed8(email, context.env);
   if (!hasAdmin && !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
-    allowed = allowed || emailAllowed10(email, context.env);
+    allowed = allowed || emailAllowed8(email, context.env);
   }
   if (emailBlocked(email)) {
     return new Response(
@@ -8925,7 +8588,7 @@ ${header}`);
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-xCuRyf/functionsRoutes-0.22055755701337232.mjs
+// ../.wrangler/tmp/pages-XdSn5q/functionsRoutes-0.9730919416287602.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
