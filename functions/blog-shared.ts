@@ -231,11 +231,33 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
     relatedProductsHtml = "";
   }
 
+  // Article JSON-LD
+  const canonicalUrl = `https://mildmate.com${isThai ? "/th" : ""}/blogs/${post.slug}/`;
+  const articleJsonLd = `<script type="application/ld+json" id="json-ld-article">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "${escHtml(title)}",
+  "description": "${escHtml(metaDesc)}",
+  "image": "${featuredImage}",
+  "author": { "@type": "Person", "name": "${author}" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MildMate",
+    "logo": { "@type": "ImageObject", "url": "https://mildmate.com/images/logo.png" }
+  },
+  "datePublished": "${post.created_at || ""}",
+  "dateModified": "${post.updated_at || post.created_at || ""}",
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "${canonicalUrl}" },
+  "url": "${canonicalUrl}"
+}
+</script>`;
+
   const relatedSectionHtml = relatedProductsHtml
     ? '<section class="related-products-section"><div class="container"><h2>' + (isThai ? "คุณอาจจะชอบ" : "You Might Also Like") + '</h2><div class="related-grid">' + relatedProductsHtml + '</div></div></section>'
     : '';
 
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="${isThai ? "th" : "en"}">
 <head>
   <meta charset="UTF-8">
@@ -373,4 +395,5 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
   <script src="/js/cart.js"></script>
 </body>
 </html>`;
+  return html.replace(/<\/head>/i, `${articleJsonLd}\n</head>`);
 }

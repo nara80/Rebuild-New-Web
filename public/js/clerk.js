@@ -24,6 +24,58 @@
   var _readyPromise = null;
   var _initScheduled = false;
 
+  function hasClerkHandshakeParams() {
+    try {
+      var p = new URLSearchParams(window.location.search || '');
+      return p.has('__clerk_handshake') || p.has('__clerk_db_jwt');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function getCleanUrl(inputUrl) {
+    try {
+      var url = new URL(inputUrl || window.location.href, window.location.origin);
+      var toDelete = [];
+      url.searchParams.forEach(function (_v, key) {
+        if (key.indexOf('__clerk_') === 0) toDelete.push(key);
+      });
+      toDelete.forEach(function (key) { url.searchParams.delete(key); });
+      return url.toString();
+    } catch (e) {
+      return inputUrl || window.location.href;
+    }
+  }
+
+  function cleanupClerkQueryParamsInAddressBar() {
+    try {
+      if (!hasClerkHandshakeParams()) return false;
+      var cleanUrl = getCleanUrl(window.location.href);
+      if (cleanUrl !== window.location.href) {
+        window.history.replaceState({}, '', cleanUrl);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function waitForSessionAndCleanup(maxWaitMs) {
+    var started = Date.now();
+    var waitMs = typeof maxWaitMs === 'number' ? maxWaitMs : 8000;
+    while (Date.now() - started < waitMs) {
+      try {
+        if (clerkInstance && (clerkInstance.user || clerkInstance.session)) {
+          cleanupClerkQueryParamsInAddressBar();
+          return true;
+        }
+      } catch (e) {}
+      await new Promise(function (resolve) { setTimeout(resolve, 250); });
+    }
+    return false;
+  }
+
   function addConnectionHints() {
     var origins = [
       'https://cdn.jsdelivr.net',
@@ -136,7 +188,7 @@
     var btn = document.querySelector('.btn-google');
     var initialText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
-    var redirectUrl = returnTo || window.location.href;
+    var redirectUrl = getCleanUrl(returnTo || window.location.href);
     var fallbackUrl =
       'https://' +
       hostedAccountsDomain +
@@ -175,7 +227,7 @@
     var btn = document.querySelector('.btn-google');
     var initialText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
-    var redirectUrl = returnTo || window.location.href;
+    var redirectUrl = getCleanUrl(returnTo || window.location.href);
     var fallbackUrl =
       'https://' +
       hostedAccountsDomain +
@@ -272,7 +324,7 @@
         console.error('Clerk init failed:', err && err.message);
       });
     };
-    if (isAuthCriticalPath()) {
+    if (isAuthCriticalPath() || hasClerkHandshakeParams()) {
       startInit();
       return;
     }
@@ -310,4 +362,9 @@
 
   addConnectionHints();
   scheduleClerkInit();
+  if (hasClerkHandshakeParams()) {
+    (_readyPromise || initClerk())
+      .then(function () { return waitForSessionAndCleanup(8000); })
+      .catch(function () {});
+  }
 })();

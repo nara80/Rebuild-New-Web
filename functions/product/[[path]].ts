@@ -107,10 +107,11 @@ export async function onRequest(context: any): Promise<Response> {
     ).bind(slug);
     const product = await stmt.first();
 
-    if (product && (product.image_url || product.images)) {
-      const images: string[] = product.images ? JSON.parse(product.images as string) : [];
-      const mainImage = (product.image_url as string) || images[0] || '';
+    // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
+    const images: string[] = product && product.images ? JSON.parse(product.images as string) : [];
+    const mainImage = (product && (product.image_url as string)) || images[0] || '';
 
+    if (product && (product.image_url || product.images)) {
       // Build gallery HTML: main image + up to 6 thumbnails
       const THUMB_COUNT = 6;
       const thumbs = images.slice(0, THUMB_COUNT);
@@ -139,6 +140,38 @@ export async function onRequest(context: any): Promise<Response> {
           `<meta name="product-images" content='${imagesJson}'>`
         );
       }
+    }
+
+    // Product JSON-LD
+    const baseUrl = url.origin;
+    const mainImageUrl = mainImage
+      ? (mainImage.startsWith('http') ? mainImage : `${baseUrl}${mainImage.startsWith('/') ? '' : '/'}${mainImage}`)
+      : '';
+    const productTitle = slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "${productTitle}",
+  "image": "${mainImageUrl}",
+  "description": "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
+  "brand": { "@type": "Brand", "name": "MildMate" },
+  "url": "${baseUrl}/product/${slug}/",
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "seller": { "@type": "Organization", "name": "MildMate" }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5.0",
+    "reviewCount": "1000+"
+  }
+}
+</script>`;
+    if (!html.includes('id="json-ld-product"')) {
+      html = html.replace(/<\/head>/i, `${productJsonLd}\n</head>`);
     }
 
     return new Response(html, {

@@ -331,13 +331,13 @@ Before going live, do one complete end-to-end test purchase using the Stripe tes
 Before launch, use the Admin dashboard to enter your real products.
 
 **Minimum required before launch:**
-- [ ] All 83 products have correct titles (TH and EN)
-- [ ] All 83 products have correct prices (USD and THB)
-- [ ] All 83 products have fabric options set
+- [ ] All 27 products have correct titles (TH and EN)
+- [ ] All 27 products have correct prices (USD and THB)
+- [ ] All 27 products have fabric options set
 - [ ] Top 10 products have real photos uploaded (not placeholders)
 - [ ] All products are marked Active
 
-> **You do not need all 83 photos on day one.** Top 10 is enough for launch. Add the rest in the first week after launch.
+> **You do not need all 27 photos on day one.** Top 10 is enough for launch. Add the rest in the first week after launch.
 
 ---
 

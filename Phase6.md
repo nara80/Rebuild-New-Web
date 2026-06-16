@@ -1,5 +1,5 @@
 ﻿# Phase 6 — Abandoned Cart Recovery
-**Status (2026-06-14): ✅ BUILT + VERIFIED - Multi-stage recovery cron (`functions/cron.ts`), 3-stage email flow (24h/72h/7d), `thankyou_queue` + `recovery_config` D1 tables, `buildStage1Email` / `buildStage2Email` / `buildStage3Email` / `buildThankyouEmail` HTML templates, `abandoned_carts` table with `recovered` flag (Phase 5 webhook marks recovered=1 on payment), cart email capture via `PUT /api/customers/cart`. `workers/api/admin-recovery-test.ts` is a legacy standalone endpoint (wired via `functions/api/[[path]].ts`). Cron trigger configured via Cloudflare Dashboard (triggers registered under Workers & Pages project settings). Admin Dashboard ✅ built in Phase 7. Sandbox admin files removed (cleanup done 2026-06-14).**
+**Status (2026-06-14): ✅ BUILT + VERIFIED - Multi-stage recovery cron (`functions/cron.ts`), 3-stage email flow (24h/72h/7d), `thankyou_queue` + `recovery_config` D1 tables, `buildStage1Email` / `buildStage2Email` / `buildStage3Email` / `buildThankyouEmail` HTML templates, `abandoned_carts` table with `recovered` flag (Phase 5 webhook marks recovered=1 on payment), cart email capture via `PUT /api/customers/cart`. `workers/api/admin-recovery-test.ts` is wired at `/api/admin/recovery-test/` via `functions/api/[[path]].ts`. Cron trigger configured via Cloudflare Dashboard (triggers registered under Workers & Pages project settings). Admin Dashboard ✅ built in Phase 7. Sandbox admin files removed (cleanup done 2026-06-14). Migrations 024–026 applied as part of Phase 7.
 **Goal:** Automatically catch customers who started checkout but did not finish.
 
 **End Result:** A fully automated background system that runs every hour without you doing anything. When a customer enters their email at checkout but does not complete payment, they receive one recovery email the next day. Based on your Etsy data (8 abandoned carts = $1,005 in lost revenue), this system pays for itself immediately.
@@ -149,7 +149,7 @@ Customer receives email with:
 | `buildStage2Email` | Stage 2 (72h) — discount offer (configurable %), basket-threshold gated, discount code + expiry in email | ✅ Built |
 | `buildStage3Email` | Stage 3 (7d) — final urgency email, re-uses stage 2 discount code, expiry countdown | ✅ Built |
 | `buildThankyouEmail` | Post-order automated thank-you email with discount code (1 year validity) sent via cron from `thankyou_queue` | ✅ Built |
-| `workers/api/admin-recovery-test.ts` | Standalone admin test endpoint for recovery emails (not wired to routing — for manual testing only) | ⚠️ Legacy/standalone |
+| `workers/api/admin-recovery-test.ts` | Admin test endpoint for recovery emails — wired at `/api/admin/recovery-test/` via `functions/api/[[path]].ts` | ✅ Wired |
 
 ---
 

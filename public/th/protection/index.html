@@ -1,199 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
   <meta charset="UTF-8">
   <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}.hero{position:relative;min-height:560px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;color:#fff;padding:80px 24px 100px;overflow:hidden}.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.60) 0%,rgba(0,0,0,0) 100%);z-index:1}.hero-content{position:relative;z-index:2;max-width:720px}.hero h1,.hero h1 span{text-align:center;width:100%;color:#fff}.hero h1{font-size:2.75rem;font-weight:800;margin-bottom:16px;line-height:1.15}.hero-sub{color:#fff}.hero-sub{text-align:center;font-size:1.125rem;font-weight:500;opacity:0.9;margin-bottom:32px;max-width:640px;margin-left:auto;margin-right:auto}.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.hero-actions .btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.hero-actions .btn-primary:hover{background:var(--color-primary-dark);color:#fff;border-color:var(--color-primary-dark)}.hero-actions .btn-outline{background:transparent;border-color:#fff;color:#fff}.hero-actions .btn-outline:hover{background:#fff;color:var(--color-primary)}.hero-actions .btn{padding:14px 32px;font-size:1rem}.trust-bar{background:var(--color-surface);padding:32px 0;border-bottom:1px solid var(--color-border)}.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}.trust-item{display:flex;flex-direction:column;align-items:center;gap:8px}.trust-item svg{width:32px;height:32px;color:var(--color-primary)}.trust-item span{font-size:0.875rem;font-weight:600;color:var(--color-text)}.category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.niche-grid{grid-template-columns:repeat(3,1fr)}.category-card{display:block;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform var(--transition),box-shadow var(--transition);background:var(--color-bg);text-decoration:none}.category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.category-image{width:100%;aspect-ratio:4 / 3;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.category-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.875rem;font-weight:600;color:var(--color-muted);text-transform:uppercase;letter-spacing:1px}.category-image .placeholder.marine{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1e40af}.category-image .placeholder.family{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d}.category-image .placeholder.duvet{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534}.category-image .placeholder.protection{background:linear-gradient(135deg,#f3e8ff,#e9d5ff);color:#6b21a8}.product-image img{width:100%;height:100%;object-fit:cover;display:block}.category-image img{width:100%;height:100%;object-fit:cover;display:block}.category-label{padding:16px;text-align:center;font-weight:600;color:var(--color-text)}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.product-carousel-wrapper{position:relative;display:flex;align-items:center}.carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.85);border:none;color:#333;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:all var(--transition);z-index:3}.carousel-arrow:hover{background:#fff;color:var(--color-primary);box-shadow:0 4px 12px rgba(0,0,0,0.2)}.carousel-arrow svg{width:20px;height:20px;stroke-width:2.5}.carousel-prev{left:12px}.carousel-next{right:12px}.product-grid.scroll-row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;flex:1;padding:4px 0}.product-grid.scroll-row::-webkit-scrollbar{display:none}.product-grid.scroll-row .product-card{min-width:260px;flex-shrink:0;scroll-snap-align:start}.carousel-dots{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px}.carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:var(--color-border);cursor:pointer;padding:0;transition:all var(--transition)}.carousel-dot.active{background:var(--color-primary);width:24px;border-radius:4px}.product-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.product-image{width:100%;aspect-ratio:1 / 1;max-height:350px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.product-image img{width:100%;height:100%;object-fit:cover}.product-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:600;color:var(--color-muted);text-align:center;padding:12px}.product-info{padding:16px;flex:1;display:flex;flex-direction:column}.product-title{font-size:1rem;font-weight:600;color:var(--color-text);margin-bottom:8px;line-height:1.4}.product-price{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin-bottom:12px}.product-card .btn{width:100%;margin-top:auto}.configurator-section{background:var(--color-surface)}.configurator-box{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:32px;max-width:900px;margin:0 auto}.configurator-header{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid var(--color-border);padding-bottom:16px}.configurator-tabs{display:flex;gap:8px}.configurator-tab{padding:10px 20px;border-radius:var(--radius);font-weight:600;font-size:0.9375rem;background:var(--color-surface);color:var(--color-muted);border:1px solid var(--color-border);cursor:pointer;transition:all var(--transition)}.configurator-tab.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.unit-toggle{display:flex;align-items:center;gap:8px;font-size:0.875rem;font-weight:600}.unit-toggle button{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-muted);font-weight:600;font-size:0.8125rem;cursor:pointer}.unit-toggle button.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}.configurator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}.configurator-inputs{display:flex;flex-direction:column;gap:16px}.input-group{display:flex;flex-direction:column;gap:6px}.input-group label{font-size:0.875rem;font-weight:600;color:var(--color-text)}.input-group input{padding:12px 16px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;width:100%;transition:border-color var(--transition)}.input-group input:focus{outline:none;border-color:var(--color-primary)}.configurator-diagram{display:flex;align-items:center;justify-content:center;background:var(--color-surface);border-radius:var(--radius);padding:24px;min-height:220px}.configurator-diagram svg{max-width:100%;height:auto}.fabric-selector{margin-top:24px;padding-top:24px;border-top:1px solid var(--color-border)}.fabric-selector h4{font-size:0.875rem;font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.fabric-options{display:flex;flex-wrap:wrap;gap:10px}.fabric-chip{padding:10px 18px;border-radius:999px;border:2px solid var(--color-border);background:var(--color-bg);font-size:0.875rem;font-weight:600;cursor:pointer;transition:all var(--transition)}.fabric-chip:hover{border-color:var(--color-primary);color:var(--color-primary)}.fabric-chip.active{border-color:var(--color-primary);background:var(--color-primary);color:#fff}.configurator-price{margin-top:24px;padding:20px;background:var(--color-surface);border-radius:var(--radius);text-align:center}.configurator-price .price-label{font-size:0.875rem;color:var(--color-muted);margin-bottom:4px}.configurator-price .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}.configurator-price .price-note{font-size:0.75rem;color:var(--color-muted);margin-top:4px}.configurator-actions{margin-top:16px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.router-section{background:var(--color-surface)}.router-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px}.router-card{display:flex;flex-direction:column;background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;text-decoration:none;transition:transform var(--transition),box-shadow var(--transition)}.router-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}.router-visual{width:100%;aspect-ratio:4 / 3;overflow:hidden;position:relative}.router-visual img{width:100%;height:100%;object-fit:cover;display:block}.router-info{padding:20px;display:flex;flex-direction:column;flex:1}.router-info h3{font-size:1.125rem;font-weight:700;color:var(--color-text);margin-bottom:8px}.router-desc{font-size:0.875rem;color:var(--color-muted);margin-bottom:16px;line-height:1.5;flex:1}.router-info .btn{width:100%;margin-top:auto}.blueprint-block{display:flex;align-items:flex-start;gap:16px;background:var(--color-bg);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:720px;margin:0 auto;border-left:4px solid var(--color-primary)}.blueprint-block svg{width:32px;height:32px;flex-shrink:0;color:var(--color-primary);margin-top:2px}.blueprint-block p{margin:0;font-size:1rem;color:var(--color-text);line-height:1.6}.blueprint-block strong{color:var(--color-primary)}.fabric-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}.fabric-tab{padding:12px 24px;border-radius:0;font-weight:600;font-size:0.9375rem;background:transparent;color:var(--color-muted);border:none;border-bottom:2px solid var(--color-border);cursor:pointer;transition:all var(--transition);white-space:nowrap}.fabric-tab:hover{color:var(--color-primary);border-bottom-color:var(--color-primary)}.fabric-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);background:transparent}.fabric-panel{display:none;animation:fadeIn 0.3s ease}.fabric-panel.active{display:block}.fabric-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.fabric-panel-visual{background:var(--color-surface);border-radius:var(--radius);aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;font-size:0.875rem;color:var(--color-muted);overflow:hidden}.fabric-panel-visual img{width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius)}.fabric-panel-info h3{font-size:1.5rem;margin-bottom:8px}.fabric-panel-info .tagline{font-size:1rem;color:var(--color-primary);font-weight:600;margin-bottom:16px}.fabric-panel-info p{color:var(--color-muted);margin-bottom:16px}.fabric-panel-info ul{list-style:disc;padding-left:20px;margin-bottom:16px}.fabric-panel-info ul li{margin-bottom:6px;color:var(--color-text)}.fabric-colors{display:grid;grid-template-columns:repeat(6,32px);gap:8px;margin-top:12px}.color-swatch{width:32px;height:32px;border-radius:50%;border:2px solid var(--color-border);cursor:pointer;transition:transform var(--transition)}.color-swatch:hover{transform:scale(1.15)}.reviews-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:800px;margin:0 auto}.review-card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border-left:4px solid var(--color-primary)}.review-stars{color:#f59e0b;font-size:1rem;margin-bottom:12px}.review-text{font-size:1rem;color:var(--color-text);margin-bottom:16px;line-height:1.6;font-style:italic}.review-author{font-size:0.875rem;font-weight:600;color:var(--color-muted)}.review-badge{text-align:center;margin-top:48px;clear:both}.review-badge .badge-box{display:inline-flex;align-items:center;gap:12px;background:var(--color-surface);padding:16px 24px;border-radius:var(--radius);border:1px solid var(--color-border)}.review-badge .badge-box svg{width:40px;height:40px;color:#f59e0b}.email-signup{background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-primary-dark) 100%);color:#fff;text-align:center;padding:60px 24px}.email-signup h2{color:#fff;margin-bottom:8px}.email-signup p{opacity:0.9;margin-bottom:24px}.email-form{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:520px;margin:0 auto}.email-form input{flex:1;min-width:240px;padding:14px 20px;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem}.email-form input::placeholder{color:var(--color-muted)}.email-form button{padding:14px 28px;background:#fff;color:var(--color-primary);font-weight:700;border-radius:var(--radius);border:none;font-family:var(--font-main);font-size:1rem;cursor:pointer;transition:background var(--transition)}.email-form button:hover{background:#f0f7ff}.email-form-msg{margin-top:12px;font-size:0.95rem;min-height:1.4em}.section-header{text-align:center;margin-bottom:40px}.section-header h2{margin-bottom:8px}.section-header p{color:var(--color-muted);max-width:560px;margin:0 auto}.page-hero{background:var(--color-surface);padding:60px 0 40px;text-align:center}.page-hero h1{margin-bottom:8px}.page-hero p{color:var(--color-muted);max-width:640px;margin:0 auto}.brand-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:72px 24px 56px;position:relative;overflow:hidden;color:#fff}.brand-hero::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}.brand-hero .container{position:relative;z-index:1;text-align:center}.brand-hero h1{font-size:2.5rem;font-weight:700;line-height:1.15;margin-bottom:16px;color:#fff}.brand-hero .hero-sub{font-size:1.0625rem;color:rgba(255,255,255,0.92);max-width:600px;margin:0 auto;line-height:1.6}.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--color-surface);border-radius:var(--radius)}.filter-bar select,.filter-bar input{padding:10px 14px;border:1px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.875rem;background:var(--color-bg)}.size-table{width:100%;border-collapse:collapse;margin:24px 0;font-size:0.9375rem}.size-table th,.size-table td{padding:12px 16px;border:1px solid var(--color-border);text-align:left}.size-table th{background:var(--color-surface);font-weight:600}.size-table tr:nth-child(even){background:var(--color-surface)}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Custom bedding for overseas dorms, adjustable beds, joined family beds, extra-deep mattresses, boats, RVs, and unique mattress shapes. Get a custom quote.">
-  <title>Custom Bedding for Any Size, Shape, or Space | MildMate</title>
+  <meta name="description" content="ผ้ารองกันเปื้อนที่นอนและผ้าคลุมที่นอนกันน้ำ 100% กันปัสสาวะ กันไรฝุ่น มีให้เลือกแบบคลุม 5 ด้านและคลุมรอบทิศทาง 6 ด้าน เหมาะสำหรับเตียงเด็ก เตียงเรือ และรถบ้าน">
+  <title>ผ้ารองกันเปื้อนที่นอน - กันน้ำ 100% และกันไรฝุ่น | MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
-    .custom-page { background: #f0f7ff; }
-
-    /* ── Hero ─────────────────────────────── */
-    .custom-hero {
-      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
-      padding: 80px 24px 64px;
-      position: relative;
-      overflow: hidden;
-      color: #fff;
-    }
-    .custom-hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.1;
-      background-image:
-        linear-gradient(#fff 1px, transparent 1px),
-        linear-gradient(90deg, #fff 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-    .custom-hero-inner {
-      max-width: var(--container-max);
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-      text-align: center;
-    }
-    .custom-hero h1 {
-      font-size: 2.75rem;
-      font-weight: 700;
-      line-height: 1.1;
-      margin-bottom: 20px;
-      color: #fff;
-    }
-    .custom-hero .hero-sub {
-      font-size: 1.125rem;
-      color: rgba(255,255,255,0.95);
-      max-width: 650px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
-
-    /* ── Main Layout ────────────────────────── */
-    .custom-main {
-      padding: 64px 24px;
-    }
-    .custom-container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .protocol-section {
-      background: #fff;
-      border-radius: var(--radius);
-      padding: 48px;
-      box-shadow: var(--shadow);
-      border: 1px solid #d0e6fa;
-      margin-bottom: 48px;
-    }
-
-    .section-kicker {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--color-primary);
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 20px;
-    }
-
-    /* ── Workflow Steps ───────────────────── */
-    .workflow-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-      margin-top: 40px;
-    }
-    .workflow-step {
-      display: grid;
-      grid-template-columns: 80px 1fr auto;
-      gap: 32px;
-      align-items: center;
-      padding-bottom: 32px;
-      border-bottom: 1px solid #f0f7ff;
-    }
-    .workflow-step:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-    .step-number-box {
-      width: 64px;
-      height: 64px;
-      background: var(--color-primary);
-      color: #fff;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      box-shadow: 0 4px 12px rgba(44,150,244,0.3);
-    }
-    .step-content h3 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin: 0 0 8px;
-    }
-    .step-content p {
-      margin: 0;
-      color: var(--color-muted);
-      line-height: 1.6;
-    }
-    .step-visual-thumb {
-      width: 120px;
-      height: 80px;
-      background: #f8fbff;
-      border: 1px dashed #d0e6fa;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      color: #aaa;
-    }
-
-    /* ── Marketing Visuals ────────────────── */
-    .visual-gallery {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-top: 48px;
-    }
-    .gallery-item {
-      border-radius: var(--radius);
-      overflow: hidden;
-      aspect-ratio: 16/9;
-      background: #eef4fb;
-      border: 1px solid #d0e6fa;
-      position: relative;
-    }
-    .gallery-label {
-      position: absolute;
-      bottom: 16px;
-      left: 16px;
-      background: rgba(255,255,255,0.9);
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--color-primary);
-    }
-
-    /* ── CTA ──────────────────────────────── */
-    .cta-block {
-      background: var(--color-text);
-      color: #fff;
-      border-radius: var(--radius);
-      padding: 56px;
-      text-align: center;
-    }
-    .cta-block h2 { color: #fff; margin-bottom: 16px; font-size: 2rem; }
-    .cta-block p { opacity: 0.85; margin-bottom: 32px; font-size: 1.1rem; }
-
-    @media (max-width: 768px) {
-      .workflow-step { grid-template-columns: 64px 1fr; }
-      .step-visual-thumb { display: none; }
-      .visual-gallery { grid-template-columns: 1fr; }
-      .custom-hero h1 { font-size: 2rem; }
-      .protocol-section { padding: 32px 24px; }
-      .cta-block { padding: 40px 24px; }
-    }
+    .listing-page { background: #f0f7ff; }
+    .brand-hero { background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%); padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff; }
+    .brand-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px; }
+    .brand-hero-inner { max-width: var(--container-max); margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+    .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
+    .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
+    .listing-section { padding: 48px 0; }
+    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
+    .listing-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
+    .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
+    .listing-card:hover .card-image img { transform: scale(1.04); }
+    .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .listing-card .card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; line-height: 1.3; }
+    .listing-card .card-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+    .listing-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
+    .listing-card .card-cta { margin-top: auto; }
+    .listing-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
+    .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
+    .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
+    .listing-desc-section { background: #fff; border-top: 1px solid var(--color-border); padding: 56px 0; }
+    .listing-desc-grid { display: block; max-width: 720px; margin: 0 auto;; gap: 48px; align-items: start; }
+    .listing-desc-grid h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: var(--color-text); }
+    .listing-desc-grid p { color: #555; line-height: 1.7; margin-bottom: 16px; }
+    .listing-desc-grid ul { padding-left: 20px; margin-bottom: 24px; }
+    .listing-desc-grid ul li { margin-bottom: 8px; color: #555; }
+    .listing-desc-grid .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .listing-desc-grid .feature-item { background: var(--color-surface); padding: 16px; border-radius: var(--radius); }
+    .listing-desc-grid .feature-item strong { display: block; color: var(--color-text); margin-bottom: 4px; }
+    .listing-desc-grid .feature-item span { font-size: 0.875rem; color: #666; }
+    .pricing-panel { background: var(--color-surface); border-radius: var(--radius); padding: 32px; border: 1px solid var(--color-border); }
+    .pricing-panel h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 24px; color: var(--color-text); }
+    .custom-shape-cta { margin-top: 20px; padding: 16px; background: #fff; border: 2px dashed var(--color-border); border-radius: var(--radius); text-align: center; }
+    .custom-shape-cta p { font-size: 0.875rem; color: #666; margin-bottom: 10px; }
+    .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+    .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
+    @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .listing-grid { grid-template-columns: 1fr; } }
   </style>
 
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
-  <meta property="og:title" content="Custom Bedding for Any Size, Shape, or Space | MildMate">
-  <meta property="og:description" content="Custom bedding for overseas dorms, adjustable beds, joined family beds, extra-deep mattresses, boats, RVs, and unique mattress shapes. Get a custom quote.">
+  <meta property="og:title" content="ผ้ารองกันเปื้อนที่นอน - กันน้ำ 100% และกันไรฝุ่น | MildMate">
+  <meta property="og:description" content="ผ้ารองกันเปื้อนที่นอนและผ้าคลุมที่นอนกันน้ำ 100% กันปัสสาวะ กันไรฝุ่น มีให้เลือกแบบคลุม 5 ด้านและคลุมรอบทิศทาง 6 ด้าน เหมาะสำหรับเตียงเด็ก เตียงเรือ และรถบ้าน">
   <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
-  <meta property="og:url" content="https://www.mildmate.com/custom-measurement/">
+  <meta property="og:url" content="https://www.mildmate.com/th/protection/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Custom Bedding for Any Size, Shape, or Space | MildMate">
-  <meta name="twitter:description" content="Custom bedding for overseas dorms, adjustable beds, joined family beds, extra-deep mattresses, boats, RVs, and unique mattress shapes. Get a custom quote.">
+  <meta name="twitter:title" content="ผ้ารองกันเปื้อนที่นอน - กันน้ำ 100% และกันไรฝุ่น | MildMate">
+  <meta name="twitter:description" content="ผ้ารองกันเปื้อนที่นอนและผ้าคลุมที่นอนกันน้ำ 100% กันปัสสาวะ กันไรฝุ่น มีให้เลือกแบบคลุม 5 ด้านและคลุมรอบทิศทาง 6 ด้าน เหมาะสำหรับเตียงเด็ก เตียงเรือ และรถบ้าน">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
     <script>
     (function () {
@@ -249,115 +119,141 @@
     })();
   </script>
 </head>
-<body class="custom-page">
+<body class="listing-page">
   <!-- Phase 8: GTM (noscript) -->
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-  <!-- ===== HEADER ===== -->
   <!-- __HEADER__ -->
 
   <main>
-    
-    <!-- ===== HERO ===== -->
-    <section class="custom-hero">
-      <div class="custom-hero-inner">
-        <h1>Custom Bedding for Any Size, Shape, or Space</h1>
-        <p class="hero-sub">Need bedding for an overseas dorm, adjustable bed, joined family bed, boat, RV, truck sleeper, extra-deep mattress, or unique mattress shape? Send us the details, and we’ll help you identify the measurements needed for a custom-made solution.</p>
+    <section class="brand-hero">
+      <div class="brand-hero-inner">
+        <h1>ผ้ารองกันเปื้อนที่นอน</h1>
+        <p class="hero-sub">ผ้ารองกันเปื้อนและผ้าคลุมป้องกันที่นอนกันน้ำ 100% แบบ TPU ป้องกันคราบเหลว ไรฝุ่น และสิ่งสกปรกสำหรับเตียงนอนทุกรูปทรง</p>
       </div>
     </section>
 
-    <div class="custom-main">
-      <div class="custom-container">
+    <section class="listing-section">
+      <div class="container">
+        
 
-        <!-- ===== PROTOCOL ===== -->
-        <div class="protocol-section">
-          <div class="section-kicker">How We Design Your Perfect Fit</div>
-          <h2>Your Custom Design Journey</h2>
-          <p>We ensure your custom bedding fits like a glove, whether it is for an overseas dorm, adjustable bed, joined family bed, extra-deep mattress, boat, RV, or unique mattress shape. Here is how we work together to create your custom masterpiece.</p>
 
-          <div class="workflow-grid">
-            
-            <!-- Step 1 -->
-            <div class="workflow-step">
-              <div class="step-number-box">01</div>
-              <div class="step-content">
-                <h3>Share Your Bed Details</h3>
-                <p>Send the mattress size, bed model, destination requirements, photo, or a simple sketch. For vehicles and boats, include the model and year when available.</p>
-              </div>
-              <img src="/images/Measurement/workflow-step1-sketch.jpg" class="step-visual-thumb" alt="Share your model sketch">
+
+
+
+<div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;">
+          <article class="listing-card" data-categories="protection">
+            <div class="card-image">
+              <img src="/images/products/mattress-protector-standard/main.jpg" alt="Mattress Protector  -  Standard" width="800" height="600" loading="lazy" decoding="async">
             </div>
-
-            <!-- Step 2 -->
-            <div class="workflow-step">
-              <div class="step-number-box">02</div>
-              <div class="step-content">
-                <h3>We Identify the Measurements Needed</h3>
-                <p>Using the information you provide, we prepare a measurement guide or proposed shape drawing showing the dimensions that need to be checked. Previous references may be used as a starting point when available.</p>
-              </div>
-              <img src="/images/Measurement/workflow-step2-cad.jpg" class="step-visual-thumb" alt="Technical blueprint drafting">
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">Mattress Protector  -  Standard</h3>
+              <div class="card-price" data-usd="38" data-thb="1345">เริ่มต้น ฿1,345</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/mattress-protector-standard/" class="btn btn-primary">ดูตัวเลือก</a></div>
             </div>
+          </article>
 
-            <!-- Step 3 -->
-            <div class="workflow-step">
-              <div class="step-number-box">03</div>
-              <div class="step-content">
-                <h3>Measure and Confirm</h3>
-                <p>Use a tape measure to check every marked dimension. This is our preferred method for confirming production measurements.</p>
-                <p style="margin-top: 8px; font-size: 0.875rem; color: var(--color-muted);"><strong>Optional Visual Reference:</strong> If a dimension cannot be measured directly, you may include a photo with a standard-size card placed flat beside the mattress as a visual scale reference. This does not replace the confirmed tape measurements required for production.</p>
-              </div>
-              <img src="/images/Measurement/workflow-step3-verification.jpg" class="step-visual-thumb" alt="Tape measure check">
+          <article class="listing-card" data-categories="protection,family">
+            <div class="card-image">
+              <img src="/images/products/mattress-protector-family/main.jpg" alt="Mattress Protector  -  Family" width="800" height="600" loading="lazy" decoding="async">
             </div>
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">Mattress Protector  -  Family</h3>
+              <div class="card-price" data-usd="55" data-thb="1945">เริ่มต้น ฿1,945</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/mattress-protector-family/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
 
-            <!-- Step 4 -->
-            <div class="workflow-step">
-              <div class="step-number-box">04</div>
-              <div class="step-content">
-                <h3>Confirm the Details and Choose Your Fabric</h3>
-                <p>Once the measurements and shape are confirmed, we provide the final measurement record and help you choose a fabric that suits the intended climate, care routine, comfort preference, and use.</p>
-                <a href="/fabric/" style="display:inline-block; margin-top:12px; color:var(--color-primary); font-weight:700; text-decoration:none;">Explore Our Fabric Collections</a>
-              </div>
-              <img src="/images/Measurement/workflow-step4-fabrics.jpg" class="step-visual-thumb" alt="Fabric selection">
+          <article class="listing-card" data-categories="protection,deep-pocket">
+            <div class="card-image">
+              <img src="/images/products/mattress-protector-deep-pocket/main.jpg" alt="Mattress Protector  -  Deep Pocket" width="800" height="600" loading="lazy" decoding="async">
             </div>
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">Mattress Protector  -  Deep Pocket</h3>
+              <div class="card-price" data-usd="48" data-thb="1695">เริ่มต้น ฿1,695</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/mattress-protector-deep-pocket/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
 
-            <!-- Step 5 -->
-            <div class="workflow-step">
-              <div class="step-number-box">05</div>
-              <div class="step-content">
-                <h3>Review Your Quote and Start Production</h3>
-                <p>We prepare the quotation based on the confirmed dimensions, product type, fabric, and delivery destination. After approval and payment, the order moves into made-to-order production.</p>
-              </div>
-              <img src="/images/Measurement/workflow-step5-quote.jpg" class="step-visual-thumb" alt="Tailored quote approval">
+          <article class="listing-card" data-categories="protection,pets">
+            <div class="card-image">
+              <img src="/images/products/pet-proof-mattress-protector/main.jpg" alt="Pet-Proof Mattress Protector" width="800" height="600" loading="lazy" decoding="async">
             </div>
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">Pet-Proof Mattress Protector</h3>
+              <div class="card-price" data-usd="48" data-thb="1695">เริ่มต้น ฿1,695</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/pet-proof-mattress-protector/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
 
-          </div>
+          <article class="listing-card" data-categories="protection,marine,rv-truck">
+            <div class="card-image">
+              <img src="/images/products/mattress-encasement-general/main.jpg" alt="6-Sided Mattress Encasement" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">6-Sided Mattress Encasement</h3>
+              <div class="card-price" data-usd="55" data-thb="1945">เริ่มต้น ฿1,945</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/mattress-encasement-general/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
 
-          <!-- Marketing Visuals -->
-          <div class="visual-gallery">
-            <div class="gallery-item">
-              <div class="gallery-label">Marine & Yacht</div>
-              <img src="/images/Measurement/marine-vberth-lifestyle.jpg" alt="Marine V-Berth custom bedding">
+          <article class="listing-card" data-categories="protection,rv-truck">
+            <div class="card-image">
+              <img src="/images/products/rv-truck-mattress-encasement/main.jpg" alt="RV & Truck Mattress Encasement" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="gallery-item">
-              <div class="gallery-label">RVs & Trucks</div>
-              <img src="/images/Measurement/truck-cab-lifestyle.jpg" alt="RV and truck cab custom mattress">
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">RV & Truck Mattress Encasement</h3>
+              <div class="card-price" data-usd="58" data-thb="2045">เริ่มต้น ฿2,045</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/rv-truck-mattress-encasement/" class="btn btn-primary">ดูตัวเลือก</a></div>
             </div>
-          </div>
+          </article>
+
+          <article class="listing-card" data-categories="protection,marine,family,pets,deep-pocket,boarding-dorm,rv-truck">
+            <div class="card-image">
+              <img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="card-title">Pillow Protector</h3>
+              <div class="card-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta"><a href="/product/pillow-protector-general/" class="btn btn-primary">ดูตัวเลือก</a></div>
+            </div>
+          </article>
         </div>
-
-        <!-- ===== CTA ===== -->
-        <div class="cta-block">
-          <h2>Can’t Find Bedding That Fits?</h2>
-          <p>Send us your mattress size, bed model, destination requirements, photo, or sketch. Whether it is for an overseas dorm, adjustable bed, family bed, extra-deep mattress, boat, RV, or unique shape, our team will help you identify the next step.</p>
-          <a href="/contact/" class="btn-primary" style="background:var(--color-primary); color:#fff; padding:16px 48px; border-radius:var(--radius); text-decoration:none; font-weight:700; font-size:1.1rem; display:inline-block;">Start Your Custom Quote</a>
-          <p style="margin-top: 12px; font-size: 0.875rem; opacity: 0.85; margin-bottom: 0;">Not sure what to measure? Send what you have—we’ll guide you.</p>
-        </div>
-
+      
+      
+      
+      
+      
+      
       </div>
-    </div>
+        <section class="listing-desc-section">
+          <div class="container">
+            <div class="listing-desc-grid">
+              <div>
+                <h2>ปกป้องที่นอนของคุณอย่างสมบูรณ์แบบรอบด้าน</h2>
+                <p>คราบน้ำหกใส่ ปัสสาวะของลูกน้อย หรือไรฝุ่นสะสม ผ้ารองกันเปื้อนทั่วไปอาจปกป้องได้ไม่ครอบคลุม ผ้ารองกันเปื้อนของ MildMate ช่วยป้องกันของเหลวและฝุ่นละอองซึมเปื้อนที่นอนได้อย่างมั่นใจ</p>
+                <ul>
+                  <li>ชั้นฟิล์มกันน้ำ TPU: กันน้ำซึมเปื้อน 100% มั่นใจในทุกคราบเหลว</li><li>ผิวด้านบนเป็นคอตตอนบุใยนุ่ม: สัมผัสสบาย ระบายอากาศได้ดี ไม่ร้อนอบอ้าว</li><li>สั่งตัดตามขนาดที่นอนจริง: สำหรับที่นอนเรือ รถบ้าน และเตียงที่มีรูปทรงพิเศษ</li><li>ผิวสัมผัส PremaCotton: ผ่านการรับรองมาตรฐานระดับสากล OEKO-TEX</li>
+                </ul>
+                <div class="features-grid">
+                  <div class="feature-item"><strong>กันน้ำ 100%</strong><span>ปกป้องรอบทิศทางครบทั้ง 6 ด้าน (สำหรับรุ่นผ้าคลุมแบบซิปรอบ)</span></div><div class="feature-item"><strong>ระบายอากาศได้ดี</strong><span>ถ่ายเทความร้อนได้ดี ไม่กักเก็บเหงื่อและลมร้อน</span></div><div class="feature-item"><strong>ทนทานสำหรับสัตว์เลี้ยง</strong><span>มีรุ่นทอพิเศษ BreezePlus ขนสัตว์ไม่เกาะ ปัดออกง่าย</span></div><div class="feature-item"><strong>ขนาดสั่งตัดพิเศษ</strong><span>สำหรับเรือ รถบ้าน และที่นอนขนาดพิเศษทุกขนาด</span></div>
+                </div>
+              </div></div></section></main>
 
-  </main>
-
-  <!-- ===== FOOTER ===== -->
   <!-- __FOOTER__ -->
 
   <script src="/js/nav.js"></script>
@@ -366,4 +262,5 @@
   <script src="/js/cookie-consent.js"></script>
 </body>
 </html>
+
 

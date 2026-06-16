@@ -110,3 +110,62 @@
 - [ ] Deploy preview
 - [ ] Re-run Lighthouse in clean Chrome profile (no extensions)
 - [ ] Compare before/after screenshots
+
+## 4) Footer consistency fix (homepage vs other pages, mobile)
+
+### Symptoms
+- Footer looked nicer/shorter on `/` but different on `/faq/`, `/products/`, `/blogs/` in mobile view.
+- Footer HTML block was identical across routes, but visual output differed.
+
+### Root cause
+- Homepage had extra page-scoped footer CSS (`.home-page .site-footer ...`) in `public/index.html`.
+- Other pages used shared footer markup from D1 but did not receive those homepage-only mobile rules.
+- A deploy included static assets but did not include expected Functions behavior changes, causing confusion during verification.
+
+### Fix applied
+- Moved the important mobile footer layout behavior into shared CSS (`public/css/main.min.css`) so all pages inherit the same footer mobile format:
+  - 2-column mobile footer grid with row spans for columns 3/4
+  - tighter mobile spacing/typography to match homepage look
+  - consistent icon sizes/tap targets and social row spacing
+  - aligned footer-bottom spacing/link spacing
+- Redeployed and verified footer markup parity and global CSS presence.
+
+### Verification
+- `/` and `/faq/` both return identical `site-footer` markup length.
+- Deployed CSS includes global mobile footer rules (not only `.home-page` scoped rules).
+- Mobile visual comparison now tracks the same footer structure and spacing across pages.
+
+### Deployment note (important)
+- When troubleshooting Pages behavior differences, verify whether the change is:
+  1. **Static CSS/HTML asset change** (deploying `public/` is sufficient), or
+  2. **Functions/Worker logic change** (requires function build/deploy path consistency).
+- For this footer issue, the decisive fix was shared CSS, not D1 markup replacement.
+
+## 5) Clerk Google sign-in redirect loop / `__clerk_db_jwt` URL residue
+
+### Symptoms (observed timeline)
+1. **Initial issue:** after Google sign-in, homepage URL remained:
+   - `/?__clerk_handshake=...&__clerk_db_jwt=...`
+   - user appeared signed-out.
+2. **After first patch:** profile avatar appeared for 1–2 seconds, then browser redirected again to:
+   - `/?__clerk_db_jwt=...`
+   - effectively causing sign-in loop behavior.
+
+### Root causes (reconciled)
+- `public/js/clerk.js` lazy-initializes Clerk on non-critical routes (including `/`), so handshake query params could arrive before Clerk was fully ready there.
+- URL cleanup happened too early in the first patch. Removing `__clerk_*` params before session stabilization could interrupt dev-mode handshake finalization.
+- Sign-in redirects reused current URL in multiple entry points, which could propagate stale `__clerk_*` params.
+
+### Fixes applied (final)
+- `public/js/clerk.js`
+  - Added handshake param detection (`__clerk_handshake`, `__clerk_db_jwt`).
+  - Forces immediate Clerk init when handshake params are present.
+  - Sanitizes redirect URLs for `signInWithClerk` / `signUpWithClerk` by removing all `__clerk_*` query keys.
+  - Added session-aware cleanup: wait until Clerk session/user is available, then remove `__clerk_*` params with `history.replaceState`.
+- `public/js/nav.js`
+  - Header sign-in action now passes a cleaned URL (without `__clerk_*`) to both Clerk SDK redirect and fallback hosted-page URL.
+
+### Verification (actual completed state)
+- Redirect loop is resolved.
+- Homepage no longer keeps `__clerk_db_jwt` / `__clerk_handshake` in URL after successful sign-in completion.
+- Clerk account state remains signed-in after redirect return.

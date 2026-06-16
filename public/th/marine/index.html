@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="เครื่องนอนเรือยอชต์และเรือสั่งตัดพิเศษตามทรงเบาะที่นอน เช่น V-Berth ทรงสามเหลี่ยม ทรงเฉียง ทำจากเนื้อผ้า BreezePlus และ CloudSoft ที่ทนความชื้นและอากาศเค็มทะเล">
+  <title>เครื่องนอนเรือยอชต์และเรือ - สั่งตัดทรง V-Berth | MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .listing-page { background: #f0f7ff; }
+    .brand-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff;
+    }
+    .brand-hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08;
+      background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .brand-hero-inner { max-width: var(--container-max); margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+    .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
+    .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
+    .listing-section { padding: 48px 0; }
+    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
+    .listing-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+    .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
+    .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
+    .listing-card:hover .card-image img { transform: scale(1.04); }
+    .listing-card .card-video-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6875rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); }
+    .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .listing-card .card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; line-height: 1.3; }
+    .listing-card .card-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
+    .listing-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
+    .listing-card .card-cta { margin-top: auto; }
+    .listing-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
+    .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
+    .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
+    .listing-card .btn-outline { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+    .listing-card .btn-outline:hover { background: #e8f4fd; }
+    .listing-desc-section { background: #fff; border-top: 1px solid var(--color-border); padding: 56px 0; }
+    .listing-desc-grid { display: block; max-width: 720px; margin: 0 auto; gap: 48px; align-items: start; }
+    .listing-desc-grid h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: var(--color-text); }
+    .listing-desc-grid p { color: #555; line-height: 1.7; margin-bottom: 16px; }
+    .listing-desc-grid ul { padding-left: 20px; margin-bottom: 24px; }
+    .listing-desc-grid ul li { margin-bottom: 8px; color: #555; }
+    .listing-desc-grid .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .listing-desc-grid .feature-item { background: var(--color-surface); padding: 16px; border-radius: var(--radius); }
+    .listing-desc-grid .feature-item strong { display: block; color: var(--color-text); margin-bottom: 4px; }
+    .listing-desc-grid .feature-item span { font-size: 0.875rem; color: #666; }
+    @media (max-width: 768px) {
+      .brand-hero-inner h1 { font-size: 1.75rem; }
+      .listing-desc-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .listing-grid { grid-template-columns: 1fr; }
+      .listing-card .card-image img { aspect-ratio: 16/9; }
+    }
+  </style>
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="เครื่องนอนเรือยอชต์และเรือ - สั่งตัดทรง V-Berth | MildMate">
+  <meta property="og:description" content="เครื่องนอนเรือยอชต์และเรือสั่งตัดพิเศษตามทรงเบาะที่นอน เช่น V-Berth ทรงสามเหลี่ยม ทรงเฉียง ทำจากเนื้อผ้า BreezePlus และ CloudSoft ที่ทนความชื้นและอากาศเค็มทะเล">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com/th/marine/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="เครื่องนอนเรือยอชต์และเรือ - สั่งตัดทรง V-Berth | MildMate">
+  <meta name="twitter:description" content="เครื่องนอนเรือยอชต์และเรือสั่งตัดพิเศษตามทรงเบาะที่นอน เช่น V-Berth ทรงสามเหลี่ยม ทรงเฉียง ทำจากเนื้อผ้า BreezePlus และ CloudSoft ที่ทนความชื้นและอากาศเค็มทะเล">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
+  </script>
+</head>
+<body class="listing-page">
+  <!-- Phase 8: GTM (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <!-- __HEADER__ -->
+
+  <main>
+    <section class="brand-hero">
+      <div class="brand-hero-inner">
+        <h1>เครื่องนอนเรือและเรือยอชต์</h1>
+        <p class="hero-sub">ผ้าปูและผ้ารองกันเปื้อนสั่งตัดพิเศษสำหรับเรือยอชต์และเรือทุกประเภท ตัดเย็บเข้ารูปทรงพิเศษ เช่น V-Berth ป้องกันความชื้นและไอเค็มทะเล</p>
+      </div>
+    </section>
+
+    <section class="listing-section">
+      <div class="container">
+        <div class="listing-grid">
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags">
+                <a href="/th/sheets/" class="card-tag" style="text-decoration:none;">ผ้าปูที่นอน</a>
+                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
+              </div>
+              <h3 class="card-title">Marine Fitted Sheet</h3>
+              <div class="card-price" data-usd="52" data-thb="1835">เริ่มต้น ฿1,835</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta">
+                <a href="/product/marine-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/duvet-cover-marine/main.jpg" alt="Duvet Cover - Marine" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags">
+                <a href="/th/duvet-covers/" class="card-tag" style="text-decoration:none;">ปลอกผ้านวม</a>
+                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
+              </div>
+              <h3 class="card-title">Duvet Cover - Marine</h3>
+              <div class="card-price" data-usd="72" data-thb="2535">เริ่มต้น ฿2,535</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta">
+                <a href="/product/duvet-cover-marine/" class="btn btn-primary">ดูตัวเลือก</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags">
+                <a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a>
+                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
+              </div>
+              <h3 class="card-title">Envelope Pillowcase</h3>
+              <div class="card-price" data-usd="16" data-thb="565">เริ่มต้น ฿565</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta">
+                <a href="/product/pillowcase-envelope/" class="btn btn-primary">ดูตัวเลือก</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-zipper/main.jpg" alt="Zipper Pillowcase" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags">
+                <a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a>
+                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
+              </div>
+              <h3 class="card-title">Zipper Pillowcase</h3>
+              <div class="card-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta">
+                <a href="/product/pillowcase-zipper/" class="btn btn-primary">ดูตัวเลือก</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pillowcase-sham/main.jpg" alt="Sham Pillowcase" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags">
+                <a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a>
+                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
+              </div>
+              <h3 class="card-title">Sham Pillowcase</h3>
+              <div class="card-price" data-usd="20" data-thb="705">เริ่มต้น ฿705</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta">
+                <a href="/product/pillowcase-sham/" class="btn btn-primary">ดูตัวเลือก</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="listing-card">
+            <div class="card-image">
+              <img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="card-body">
+              <div class="card-tags">
+                <a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a>
+                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
+              </div>
+              <h3 class="card-title">Pillow Protector</h3>
+              <div class="card-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
+              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <div class="card-cta">
+                <a href="/product/pillow-protector-general/" class="btn btn-primary">ดูตัวเลือก</a>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="listing-desc-section">
+      <div class="container">
+        <div class="listing-desc-grid">
+          <div>
+            <h2>ที่นอนเรือ V-Berth ของคุณคู่ควรกับความพอดีที่สมบูรณ์แบบ</h2>
+            <p>รูปทรงที่นอนที่ไม่เป็นสี่เหลี่ยม พื้นที่จำกัด และสภาพอากาศเค็มชื้นในทะเล ทำให้ผ้าปูที่นอนมาตรฐานใช้งานไม่ได้บนเรือ MildMate เข้าใจสิ่งนี้เป็นอย่างดี</p>
+            <ul>
+              <li>ตัดเย็บเข้ารูปทรงพิเศษ: V-Berth, ห้องนอนท้ายเรือ, หรือเบาะนอนทุกรูปแบบ</li>
+              <li>ผ้า BreezePlus ช่วยถ่ายเทอากาศและทนทานต่อไอเค็มและความชื้นในทะเล</li>
+              <li>ผ้า CloudSoft แห้งไวเป็นพิเศษ: เหมาะสำหรับเรือที่มีพื้นที่ตากและเก็บของจำกัด</li>
+              <li>ความทนทานเกรดมารีน: ผ่านการทดสอบจริงในสภาพอากาศอ่าวไทย</li>
+              <li>รองรับทุกทรงพิเศษ: ทรงตัว L, ทรงเฉียงตัดมุม, ทรงสอบเรียว</li>
+            </ul>
+            <div class="features-grid">
+              <div class="feature-item"><strong>ผู้เชี่ยวชาญทรง V-Berth</strong><span>ตัดเย็บเข้ารูปตามองศาและรูปทรงของหัวเรือได้อย่างไร้ที่ติ</span></div>
+              <div class="feature-item"><strong>ทุกรูปทรงพิเศษ</strong><span>ห้องนอนท้ายเรือ, เบาะนอนทุกพื้นที่บนเรือ</span></div>
+              <div class="feature-item"><strong>ทนต่อความชื้น</strong><span>ผ้า BreezePlus ระบายอากาศได้ดี ลดการอับชื้นและกลิ่นทะเล</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

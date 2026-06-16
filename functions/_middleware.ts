@@ -196,6 +196,183 @@ const FALLBACK_FOOTER = `<footer class="site-footer">
     </div>
   </footer>`;
 
+// ─── JSON-LD: Organization (all pages) ───────────────────────────────────
+const JSON_LD_ORG = `<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "MildMate",
+  "url": "https://www.mildmate.com",
+  "logo": "https://www.mildmate.com/images/logo.png",
+  "description": "Custom made-to-measure bedding for marine, yacht, RV, family co-sleep, and standard mattresses. Ships worldwide from Thailand.",
+  "foundingDate": "2019",
+  "foundingLocation": "Thailand",
+  "areaServed": "Worldwide",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+66-87-236-2364",
+    "contactType": "customer service",
+    "availableLanguage": ["English", "Thai"]
+  },
+  "sameAs": [
+    "https://www.etsy.com/shop/mildmate",
+    "https://www.ebay.com/str/mildmate",
+    "https://shopee.co.th/neededshop_bt.2n.1y",
+    "https://www.lazada.co.th/shop/needed-shop",
+    "https://www.facebook.com/mildmate.bedsheets",
+    "https://www.instagram.com/mild_mate/",
+    "https://www.tiktok.com/@bt.mildmate",
+    "https://www.pinterest.com/mildmateshop/"
+  ]
+}
+</script>`;
+
+// ─── JSON-LD: WebSite + SearchAction (all pages) ─────────────────────────
+const JSON_LD_WEBSITE = `<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MildMate",
+  "url": "https://www.mildmate.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.mildmate.com/products/?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>`;
+
+// ─── JSON-LD: FAQPage (/faq/ only) ────────────────────────────────────
+const JSON_LD_FAQ = `<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "I have a specific boat model (e.g., Beneteau Antares 11, Apreamare Cabinato 11, or SS7 Bayliner). Do you have templates or fitments for these?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We specialize in bespoke fitments for these specific hull designs. While we maintain a library of common shapes, we treat every cabin bed as a unique project to ensure a Built-In appearance. Before production, we generate a digital blueprint of your hull's geometry for your approval to confirm orientation (head vs. foot) and taper. Sheets are custom-tailored to the exact taper of the hull, featuring a heavy-duty 360-degree elastic perimeter to stay anchored during heavy seas or when lifting mattresses for storage access."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can you create a single fitted sheet and protector for combined beds (e.g., 290 cm total width)?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. We manufacture Unified Surface conversions for any combined footprint, including massive setups up to 290 cm x 183 cm. We use a single, 100% seamless piece of fabric to eliminate the uncomfortable center ridge found in standard joined sheets. We offer a 20% discount for customers ordering two or more custom family sheets."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can you make custom waterproof protectors for pets (e.g., 132 x 80 inches)?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. We build Asset-Shield protectors to any dimensions to preserve luxury mattress foam from pet accidents. We tailor the pocket depth (customizable up to 24 inches plus) to ensure sidewalls stay locked during the lateral force of pets jumping on the bed. Our 6-sided encasements feature top-perimeter zippers so they can be installed without fully lifting heavy mattresses."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do you recommend a 2-layer system instead of a single-layer sewn TPU unit for body pillows?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Frequent washing can cause TPU membranes to delaminate if sewn directly to outer fabric. Our system lets you wash the outer cover (PremaCotton or BreezePlus) while the TPU liner remains protected. Sewing TPU directly creates needle holes that can leak. A separate inner liner provides 100% spill-proof protection. Separate layers also ensure the pillow stays soft and quiet."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What makes the 3-sided zipper better for heavy duvets?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Suitcase-Style load allows the top layer to flip back completely. You simply lay the heavy insert flat and zip it closed, cutting bed-making time by approximately 90% and eliminating heavy lifting."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the lead time and do you ship to Australia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most custom orders are prepared for shipping within 48 hours to a few days depending on complexity. We ship globally, including to Australia and the UK. Arrival times vary based on regional courier performance."
+      }
+    }
+  ]
+}
+</script>`;
+
+const SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
+@media (max-width: 768px) {
+  .site-footer {
+    padding: 40px 0 28px !important;
+  }
+  .site-footer .footer-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 32px 20px !important;
+    margin-bottom: 28px !important;
+  }
+  .site-footer .footer-col:nth-child(1),
+  .site-footer .footer-col:nth-child(2) {
+    grid-column: span 1 !important;
+  }
+  .site-footer .footer-col:nth-child(3),
+  .site-footer .footer-col:nth-child(4) {
+    grid-column: span 2 !important;
+  }
+  .site-footer .footer-col h3 {
+    font-size: 15px !important;
+    margin-bottom: 16px !important;
+    letter-spacing: 0.5px !important;
+  }
+  .site-footer .footer-col ul li {
+    margin-bottom: 12px !important;
+  }
+  .site-footer .footer-col ul li a {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+  .site-footer .footer-col ul li a:hover {
+    color: var(--color-primary) !important;
+  }
+  .footer-icon-circle,
+  .footer-social-icon {
+    width: 36px !important;
+    height: 36px !important;
+    position: relative !important;
+  }
+  .footer-icon-circle::after,
+  .footer-social-icon::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -4px !important;
+    bottom: -4px !important;
+    left: -4px !important;
+    right: -4px !important;
+  }
+  .footer-icon-circle img,
+  .footer-social-icon img {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .footer-social-center {
+    margin: 24px 0 20px !important;
+    gap: 12px !important;
+    justify-content: center !important;
+  }
+  .footer-bottom {
+    margin-top: 20px !important;
+    gap: 10px !important;
+  }
+  .footer-bottom-links {
+    margin-bottom: 4px !important;
+  }
+}
+</style>`;
+
 async function ensureCache(db: any): Promise<void> {
   const now = Date.now();
   if (_cache.header && _cache.footer && (now - _cache.fetchedAt) < CACHE_TTL) return;
@@ -439,8 +616,32 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"')
       .replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"')
       .replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"')
+      .replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"')
+      .replace(/href="\/pets\/?"/g, 'href="/th/pets/"')
+      .replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"')
+      .replace(/href="\/family\/?"/g, 'href="/th/family/"')
+      .replace(/href="\/marine\/?"/g, 'href="/th/marine/"')
+      .replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"')
+      .replace(/href="\/protection\/?"/g, 'href="/th/protection/"')
+      .replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"')
+      .replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"')
       // Homepage logo — land on TH homepage
       .replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+  }
+
+  if (!html.includes('id="shared-footer-mobile-style"')) {
+    html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}\n</head>`);
+  }
+
+  // ── JSON-LD injection ──────────────────────────────────────────────
+  // Organization + WebSite: every page
+  if (!html.includes('id="json-ld-org"')) {
+    html = html.replace(/<\/head>/i, `${JSON_LD_ORG}\n${JSON_LD_WEBSITE}\n</head>`);
+  }
+  // FAQPage: FAQ route only
+  const isFaq = path === '/faq/' || path === '/faq';
+  if (isFaq && !html.includes('id="json-ld-faq"')) {
+    html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}\n</head>`);
   }
 
   return new Response(html, { status: response.status, headers: response.headers });

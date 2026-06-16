@@ -1,5 +1,5 @@
 # Phase 7 — Admin Dashboard
-**Status (2026-06-10): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `super-admin.html` + `admin.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Option B (Cloudflare Access) is optional for launch — defense-in-depth only. **Old sandbox files (`/admin/sandbox/`) removed 2026-06-10 — 301 redirect remains in `_redirects`.**
+**Status (2026-06-10): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `public/super-admin/index.html` + `public/admin/index.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Global `functions/_middleware.ts` (D1 header/footer SSR + Thai link rewriting), `functions/blog-shared.ts` (blog SSR renderer), `functions/product/[[path]].ts` (product SSR + image overrides), `functions/th/blogs/[[path]].ts` (Thai blog SSR), `functions/super-admin/_middleware.ts` (re-exports admin middleware) all built. Migrations 017–026 applied (recovery_stages, recovery_config, discount_pct, thankyou_queue, promo_codes, promo_redemptions, blog_posts, blog_categories_json, reviews, site_templates, reviews_review_date, product_type_niches). Option B (Cloudflare Access) is optional for launch — defense-in-depth only. **Old sandbox files (`/admin/sandbox/`) removed 2026-06-10 — 301 redirect remains in `_redirects`.**
 **Goal:** Build a private management interface for your team — protected by Clerk admin authentication.
 
 **End Result:** A clean, Clerk-protected dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can update order status live.
@@ -12,7 +12,7 @@
 
 The dashboard has 8–10 sections across two views, accessible from a left sidebar:
 
-### Super Admin (`/admin/super-admin.html`)
+### Super Admin (`/super-admin/`)
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  MildMate Super Admin                                           │
@@ -55,7 +55,7 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 | File | What It Is |
 |---|---|
 | `public/admin/index.html` | Admin hub — role cards linking to super-admin + admin |
-| `public/admin/super-admin.html` | Full super-admin — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown + Option A shipping tracking), R2 drag-drop upload (20 slots), Customers (D1-grouped by email), Subscribers CSV, Pricing Params, DIY Prices, Exchange Rates, **Shipping Rates** (THB-only with USD preview, country dropdown from D1), Marketing (campaigns + offers), Admin Accounts, **Quotes** (sales quote CRUD with dual-currency THB/USD, soft-delete via archived, Resend magic-link email) |
+| `public/super-admin/index.html` | Full super-admin — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown + Option A shipping tracking), R2 drag-drop upload (20 slots), Customers (D1-grouped by email), Subscribers CSV, Pricing Params, DIY Prices, Exchange Rates, **Shipping Rates** (THB-only with USD preview, country dropdown from D1), Marketing (campaigns + offers), Admin Accounts, **Quotes** (sales quote CRUD with dual-currency THB/USD, soft-delete via archived, Resend magic-link email) |
 | `public/admin/admin.html` | Admin dashboard — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown), Customers (D1-grouped), Subscribers CSV, Marketing, **Quotes** (sales quote CRUD) |
 | `public/_redirects` | `/admin/sandbox/*` → `/admin/:splat` (301) |
 | `functions/admin/_middleware.ts` | **Option A auth** — Clerk JWT verification + admin role/email check for all `/admin/*` requests. Non-admins redirected to sign-in. Dev bypass on pages.dev/localhost. |
@@ -78,13 +78,18 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 
 | Migration | What It Is |
 |---|---|
-| `010_discount_expiry.sql` | `expires_at` + `source` on `discount_claims` |
-| `011_orders_discount_code.sql` | `discount_code` on `orders` |
-| `012_contacts.sql` | Unified `contacts` table |
-| `013_favorites.sql` | `favorites` table (authenticated wishlist) |
-| `014_order_shipping_tracking.sql` | `carrier_code`, `tracking_number`, `tracking_url`, `shipping_status`, `shipped_at` on `orders` |
-| `015_shipping_rates.sql` | `shipping_rates` table (THB-only, Option A) |
-| `016_countries_master.sql` | `countries_master` table (95 countries + OTHER) |
+| `017_recovery_stages.sql` | `recovery_stages` table (per-cart stage timestamps) |
+| `018_recovery_config.sql` | `recovery_config` table (Stage 2/3 discount, basket threshold) |
+| `019_discount_pct.sql` | `discount_pct` column on `thankyou_queue` |
+| `020_thankyou_queue.sql` | `thankyou_queue` table (post-purchase discount emails) |
+| `021_promo_codes.sql` | `promo_codes` + `promo_redemptions` tables (admin-created custom promo) |
+| `022_promo_min_usd.sql` | `order_minimum_usd` on `promo_codes` |
+| `023_blog_posts.sql` | `blog_posts` table (bilingual EN/TH CMS) |
+| `024_blog_categories_json.sql` | `categories_json` column on `blog_posts` |
+| `024_reviews.sql` | `reviews` table (D1-backed dynamic reviews) |
+| `024_site_templates.sql` | `site_templates` table (centralized header/footer in D1) |
+| `025_reviews_review_date.sql` | `review_date` column on `reviews` |
+| `026_product_type_niches.sql` | `product_type` + `niches` columns on `products` |
 
 ---
 
@@ -120,7 +125,7 @@ All Phase 7 setup items are complete as of 2026-05-31:
 - Clerk admin roles assigned (`super-admin` for nara19080@gmail.com + sriprasit9@gmail.com; `admin` for mildmateshop@gmail.com) ✅
 - `ADMIN_EMAILS` secret set on Cloudflare ✅
 - `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` set for quote magic-link emails ✅
-- `admin-stats.ts` wiring verified in super-admin.html ✅
+- `admin-stats.ts` wiring verified in super-admin ✅
 - `CLERK_PUBLISHABLE_KEY` env var set ✅
 
 ---
@@ -200,7 +205,7 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 | "D1 unavailable" on Orders page (production) | Clerk session missing or user doesn't have admin role. Check `public_metadata.role` in Clerk Dashboard or add email to `ADMIN_EMAILS`. |
 | /admin/ redirects to Clerk sign-in loop | Clerk dev instance (`kind-joey-29`) may have cookie issues on custom domain. Verify Clerk production instance is configured (Option 3). |
 | "Not Found" on /api/admin/orders | Worker hasn't been deployed yet. Run `npx wrangler pages deploy public`. |
-| Product list won't select | Missing `_pendingUploads`/`_pendingCount` declarations — fixed in super-admin.html. |
+| Product list won't select | Missing `_pendingUploads`/`_pendingCount` declarations — fixed in super-admin. |
 | Image upload fails | Check R2 bucket binding `MILDMATE_ASSETS` in `wrangler.toml`. |
 | CSV export empty | No subscribers in D1. Test footer signup flow first. |
 

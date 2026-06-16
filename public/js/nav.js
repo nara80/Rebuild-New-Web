@@ -72,6 +72,15 @@
     '/about/', '/about',
     '/contact/', '/contact',
     '/reviews/', '/reviews',
+    '/pillowcases/', '/pillowcases',
+    '/pets/', '/pets',
+    '/deep-pocket/', '/deep-pocket',
+    '/family/', '/family',
+    '/marine/', '/marine',
+    '/accessories/', '/accessories',
+    '/protection/', '/protection',
+    '/duvet-covers/', '/duvet-covers',
+    '/sheets/', '/sheets',
     // Homepage — TH homepage now live at /th/
     '/'
   ];
@@ -227,13 +236,26 @@
     }
 
     signInText.addEventListener('click', function () {
+      var cleanCurrentUrl = (function () {
+        try {
+          var u = new URL(window.location.href);
+          var remove = [];
+          u.searchParams.forEach(function (_v, key) {
+            if (key.indexOf('__clerk_') === 0) remove.push(key);
+          });
+          remove.forEach(function (key) { u.searchParams.delete(key); });
+          return u.toString();
+        } catch (_) {
+          return window.location.href;
+        }
+      })();
       if (typeof window.signInWithClerk === 'function') {
-        window.signInWithClerk(window.location.href);
+        window.signInWithClerk(cleanCurrentUrl);
       } else {
         // Fallback — direct URL to Clerk hosted sign-in page
         window.location.href =
           'https://kind-joey-29.accounts.dev/sign-in?redirect_url=' +
-          encodeURIComponent(window.location.href);
+          encodeURIComponent(cleanCurrentUrl);
       }
     });
 
