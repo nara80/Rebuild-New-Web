@@ -652,8 +652,7 @@ mildmate-web/
 â”œâ”€â”€ Framework.md
 â”œâ”€â”€ wrangler.toml
 â”œâ”€â”€ package.json
-â”œâ”€â”€ blog-mockup.html           â† Not in project root (kept in design assets if needed)
-â”œâ”€â”€ mockup.html                â† Not in project root (design reference only)
+â”œâ”€â”€ mockup.html                â† Design reference (exists in project root)
 â”‚
 â”œâ”€â”€ functions/                        â† Pages Functions (local dev bridge)
 â”‚   â”œâ”€â”€ api/
@@ -832,11 +831,6 @@ mildmate-web/
 
 ## SEO URL Strategy
 
-
----
-
-## SEO URL Strategy
-
 Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** — no HTML placeholder pages are created for old WordPress URLs. Everything goes through `public/_redirects`.
 
 | Type | Count | Action |
@@ -851,7 +845,7 @@ Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** — no
 
 ## D1 Database Schema
 
-**Actual schema (migrations 001–020 + 023 + 026 via direct ALTER TABLE). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
+**Actual schema (migrations 001–030). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
 
 ```sql
 -- Products (migration 001 + 006)
@@ -1019,7 +1013,7 @@ CREATE TABLE blog_posts (
 - **Post:** /blogs/{slug}/ — Pages Function (unctions/blogs/[[path]].ts) SSR from D1
 
 
- 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 026_product_type_niches (applied directly via ALTER TABLE)
+ 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers
 
 ---
 
@@ -1691,5 +1685,5 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
-### Database Migrations (001-020)
-All 20 migrations applied. Tables include abandoned_carts (with recovery_stage, discount_code columns), recovery_stages (migration 017), recovery_config (migration 018), thankyou_queue (migration 020).
+### Database Migrations (001-030)
+All 30 migrations applied (001-023, 024-030 via separate numbered files). Tables include abandoned_carts, recovery_stages (migration 017), recovery_config (migration 018), thankyou_queue (migration 020), promo_codes (migration 021), blog_posts (migration 023), reviews (migration 024), site_templates (migration 024), shipping_product_tiers (migration 027), shipping_add_rates (migration 028/029/030).

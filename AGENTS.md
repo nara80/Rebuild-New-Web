@@ -144,6 +144,7 @@ This file is read by Droid at the start of every session. It contains all critic
 - Keep guest checkout default, but centralize bearer-token auth for `/api/auth/me` and `/api/customers/*` on all frontend calls
 - Keep explicit sign-out CTA visible on checkout/account flows (do not rely on hidden user menu only)
 - Add `functions/account/_middleware.ts` for server-side `/account/*` protection (verify Clerk `__session` cookie, redirect unauthenticated users to sign-in — replaces current client-side-only gate)
+- **Production domain configured:** `functions/account/_middleware.ts` and `functions/admin/_middleware.ts` both reference `accounts.mildmate.com` as the production Clerk domain (used when host is NOT pages.dev/localhost). Dev mode uses `kind-joey-29.accounts.dev`.
 
 
 | Search | Overlay triggered by magnifying glass icon |
@@ -418,7 +419,7 @@ D:\00_MildMate\Re-Build_Web\
 │   │   └── templates.html             ← Template manager
 │   ├── super-admin/
 │   │   └── index.html                 ← Super Admin dashboard
-│   ├── css/main.css                   ← All public styles (bilingual)
+│   ├── css/main.min.css               ← All public styles (bilingual, minified)
 │   ├── js/
 │   │   ├── nav.js                    ← Header/nav/mobile drawer + auth-aware account btn
 │   │   ├── cart.js                   ← localStorage cart
@@ -440,20 +441,27 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── quote/                         ← Magic link: /quote/QT-XXXXX/ (functions/quote/[[path]].ts)
 │   └── products/index.html            ← Full catalog listing
 ├── functions/                          ← Pages Functions (local dev bridge → Workers)
+│   ├── _middleware.ts                 ← Global header/footer SSR injection + Thai link rewriting
 │   ├── account/
 │   │   └── _middleware.ts            ← Clerk auth gate for /account/*
 │   ├── admin/
 │   │   └── _middleware.ts            ← Clerk admin-role gate for /admin/*
 │   ├── super-admin/
-│   │   └── _middleware.ts            ← Clerk admin-role gate for /super-admin/* (inherits from admin)
+│   │   └── _middleware.ts            ← Clerk admin-role gate for /super-admin/* (re-exports admin)
 │   ├── api/
 │   │   └── [[path]].ts               ← Pages Function: routes /api/* → Workers handlers
 │   ├── blogs/
 │   │   └── [[path]].ts               ← Blog: /blogs/ SSR listing + /blogs/{slug}/ SSR post (D1)
+│   ├── th/
+│   │   └── blogs/
+│   │       └── [[path]].ts          ← Thai blog SSR: /th/blogs/ listing + /th/blogs/{slug}/ post
+│   ├── product/
+│   │   └── [[path]].ts              ← Product SSR with D1 image overrides + legacy slug redirects
 │   ├── quote/
 │   │   └── [[path]].ts               ← Magic quote link: /quote/QT-XXXXX/
 │   ├── r2/
 │   │   └── [[path]].ts               ← R2 file serving (CDN URLs)
+│   ├── blog-shared.ts               ← Shared blog SSR renderer (used by blogs/ + th/blogs/)
 │   └── cron.ts                        ← Abandoned cart + thankyou_queue cron job
 ├── workers/api/
 │   ├── index.ts                       ← Main Worker entry (routes all /api/*)
@@ -473,9 +481,11 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── shipping.ts                  ← Centralized shipping-quote engine (THB rates, geo-country, OTHER fallback)
 │   ├── countries.ts                 ← Centralized country master list (D1 countries_master, 95 countries + OTHER)
 │   ├── order-confirmed.ts           ← Lookup order by stripe_session_id
-│   ├── clerk-verify.ts              ← Clerk JWT verification
+│   ├── clerk-verify.ts              ← Clerk JWT verification (used by account/admin middleware)
 │   ├── favorites.ts                 ← Authenticated wishlist (user+email matching, duplicate guard, schema auto-heal)
+│   ├── discount.ts                 ← Discount code validation and claim tracking
 │   ├── blog-posts.ts               ← Public blog: list published posts (all fields + youtube_url)
+│   ├── reviews.ts                  ← Public reviews API + Admin reviews CRUD
 │   ├── admin-blog.ts               ← Admin blog CRUD (GET/POST/PUT/DELETE, youtube_url)
 │   ├── admin-promo.ts               ← Admin: promo codes CRUD (promo_codes, promo_redemptions)
 │   ├── admin-recovery-test.ts        ← Admin: test abandoned cart recovery email sequences
@@ -489,10 +499,12 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── admin-diy.ts                  ← Admin: GET/PUT DIY prices
 │   ├── admin-exchange.ts             ← Admin: GET/PUT exchange rates
 │   ├── admin-quotes.ts              ← Admin: custom quotes management (status, price, expiry)
-│   └── admin-contacts.ts             ← Admin: contacts management
+│   ├── admin-contacts.ts             ← Admin: contacts management
+│   └── admin-templates.ts           ← Admin: header/footer template management (D1 site_templates)
 ├── templates/
 │   ├── product-customizable.html   ← Template for 24 configurable products
 │   ├── product-fixed.html           ← Template for 3 non-configurable (BedBridge/BedLifter/DuvetInsert)
+│   ├── product-marine.html          ← Dedicated V-Berth Marine Fitted Sheet template (hybrid shape selector + custom dims)
 │   └── blog-post.html               ← Template for blog posts (has global header + footer)
 ├── scripts/
 │   ├── build-products.js            ← Generates all 27 product pages from templates
@@ -556,6 +568,10 @@ D:\00_MildMate\Re-Build_Web\
 - All customer-facing pages go in `public/`
 - **Phase 2 (SEO URLs) is intentionally deferred** — it will run pre-launch after Phase 8 is complete. Do not start Phase 2 early.
 - **Global auth scripts:** Every page with the header (`.site-header`) must load both `<script src="/js/nav.js"></script>` and `<script src="/js/clerk.js"></script>`. nav.js injects the auth-aware account button (Sign In text vs person icon). The three templates (`templates/blog-post.html`, `templates/product-customizable.html`, `templates/product-fixed.html`) are the canonical sources — always add clerk.js to templates, not individual generated pages.
+- **Global Middleware (`functions/_middleware.ts`):** Injects centralized header/footer from D1 `site_templates` table (falls back to embedded chrome). Dynamically rewrites nav links and footer for Thai pages (`<html lang="th">`). Rewrites `lang-toggle` EN/TH links for both desktop and mobile drawer. Legacy product slug redirects (Phase 2). Skips `/admin/`, `/super-admin/`, `/api/`, `/r2/`, static assets.
+- **Thai Blog SSR (`functions/th/blogs/[[path]].ts`):** SSR listing and post pages for `/th/blogs/` via D1 — not static HTML files. Uses same `buildBlogListingHTML` / `buildBlogPostHTML` from `functions/blog-shared.ts` with `"th"` language flag.
+- **Product SSR (`functions/product/[[path]].ts`):** Fetches static HTML and applies D1 image overrides (main image + up to 6 thumbnails from `image_url` + `images` JSON column). Also handles legacy product slug redirects.
 - **D1-backed Product Reviews:** GET `/api/products/:slug/reviews` returns up to 10 reviews sorted by: Tier 0 (niche match w/photo), Tier 1 (product match w/photo), Tier 2 (marketplace), Tier 3 (other) — newest first within each tier. Both product templates (`templates/product-customizable.html`, `templates/product-fixed.html`) include a dynamic reviews carousel container (`#product-reviews-track` + arrows + dots). `public/js/reviews-carousel.js` contains `loadProductPageReviews(slug)` which auto-detects `/product/{slug}/` from URL, fetches reviews, renders cards with conditional photo (1:1 square) and "Show more" toggle (only shown if text > 280 chars), updates summary text ("1,000+ verified buyers"), and initializes carousel. Rebuild all 27 product pages via `node scripts/build-products.js` after template changes.
 - **product_type + niches columns:** Added to the `products` D1 table. `product_type` is a single value (sheets, duvet-covers, pillowcases, protection, accessories). `niches` is a comma-separated list of niche slugs (marine, family, pets, deep-pocket, boarding-dorm, rv-truck). Auto-populated from existing `category` CSV column (first value = product_type, rest = niches). The API lists products at `/api/products` now supports `?product_type=` and `?niche=` query params alongside the legacy `?category=` filter.
 - **Homepage "Choose Your Application":** Updated to 4 niche cards: Marine & Yacht, Family & Co-Sleep, Deep Pocket (images/Categories/category-deep-pocket.webp), Pet Owner (images/Categories/category-pets.webp). Replaced old Specialized Protection and Duvet Covers cards.
+- **CSS variable note:** `public/css/main.min.css` is the minified stylesheet (not `main.css`). TH static pages (`th/about/`, `th/contact/`, `th/fabric/`, `th/sizeguide/`, `th/policy/`, `th/shipping/`, `th/reviews/`, `th/faq/`, `th/custom-measurement/`, `th/how-to-measure-mattress-size/`) use inline `<style>` blocks — some with older CSS variable values (e.g., `--color-text: #333333` vs current `#1E293B`). TH homepage (`th/index.html`) uses the updated brand tokens.

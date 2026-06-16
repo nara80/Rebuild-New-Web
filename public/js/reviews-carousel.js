@@ -16,7 +16,7 @@
     '.rc-wrapper, .reviews-carousel-wrapper { position: relative; margin-bottom: 32px; padding: 0 44px; }',
     '.rc-track, .reviews-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
     '.rc-track::-webkit-scrollbar, .reviews-track::-webkit-scrollbar { display: none; }',
-    '.rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 calc(33.333% - 14px); min-width: 280px; scroll-snap-align: start; background: #fff; border-radius: var(--radius, 8px); padding: 24px; box-shadow: var(--shadow, 0 2px 12px rgba(0,0,0,0.08)); position: relative; display: flex; flex-direction: column; }',
+    '.rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 calc(33.333% - 14px); min-width: 280px; scroll-snap-align: start; background: #fff; border-radius: var(--radius, 8px); padding: 24px 24px 28px 24px; box-shadow: var(--shadow, 0 2px 12px rgba(0,0,0,0.08)); position: relative; display: flex; flex-direction: column; height: auto; }',
     '.rc-track .review-card, .reviews-track .review-card { margin-bottom: 0; }',
     '.rc-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 3; transition: background 0.15s; }',
     '.rc-arrow:hover { background: #fff; }',
@@ -28,14 +28,19 @@
     '.rc-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }',
     '.rc-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #e5e7eb; cursor: pointer; padding: 0; transition: all 0.2s; }',
     '.rc-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }',
-    '.review-stars { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #f59e0b; font-size: 1rem; margin-bottom: 6px; }',
-    '.rc-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }',
+    '.review-stars { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: #f59e0b; font-size: 1rem; margin-bottom: 8px; }',
+    '.rc-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; margin-top: 0; }',
     '.rc-platform { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; border: 1px solid #bfdbfe; }',
     '.rc-platform img { width: 14px; height: 14px; border-radius: 3px; object-fit: contain; }',
     '.rc-platform-link { text-decoration: none; display: inline-flex; }',
     '.rc-platform-link:hover .rc-platform { background: #dbeafe; }',
     '.rc-verified-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px; border-radius: 999px; background: #ecfdf5; color: #065f46; font-size: 10.5px; font-weight: 600; border: 1px solid #a7f3d0; white-space: nowrap; }',
     '.rc-product-tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 10.5px; font-weight: 600; border: 1px solid #fde68a; white-space: nowrap; }',
+    '.review-text-wrap { max-height: 150px; overflow: hidden; position: relative; transition: max-height 0.25s ease; }',
+    '.review-text-wrap.expanded { max-height: none; }',
+    '.review-show-more { display: inline-block; background: none; border: none; color: #2c96f4; font-weight: 600; font-size: 13.5px; padding: 0; margin: 4px 0 16px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2.5px; text-align: left; }',
+    '.review-show-more:hover { color: #1a7fd4; }',
+    '.rc-track .review-text, .reviews-track .review-text { font-size: 16px; line-height: 1.6; color: var(--color-text, #1E293B); font-style: normal; margin-bottom: 0; }',
     '/* Related Carousel */',
     '.rel-carousel { position: relative; padding: 0 44px; }',
     '.rel-track { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; padding: 4px 0; }',
@@ -59,6 +64,7 @@
     '.rel-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }',
     '/* Responsive */',
     '@media (max-width: 900px) {',
+    '  .rc-track, .reviews-track { align-items: flex-start; }',
     '  .rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 calc(50% - 10px); min-width: 0; max-width: calc(50% - 10px); }',
     '  .rel-card { flex: 0 0 calc(33.333% - 14px); }',
     '  .rc-prev { left: 0; } .rc-next { right: 0; }',
@@ -66,6 +72,7 @@
     '}',
     '@media (max-width: 640px) {',
     '  .rc-wrapper, .reviews-carousel-wrapper { padding: 0 36px; }',
+    '  .rc-track, .reviews-track { align-items: flex-start; }',
     '  .rel-carousel { padding: 0 36px; }',
     '  .rc-card, .rc-track .review-card, .reviews-track .review-card { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }',
     '  .rel-card { flex: 0 0 calc(50% - 10px); min-width: 160px; }',
@@ -96,8 +103,39 @@
     return path === '/th/' || path === '/th/index.html' || path.indexOf('/th/') === 0;
   }
 
+  function verifiedPurchaseLabel() {
+    return isThaiPage() ? 'ยืนยันการสั่งซื้อ' : 'Verified Purchase';
+  }
+
   function verifiedBuyerLabel() {
-    return isThaiPage() ? 'ยืนยันผู้ซื้อ' : 'Verified Buyer';
+    return verifiedPurchaseLabel();
+  }
+
+  function cleanProductTag(tag) {
+    if (!tag) return '';
+    var t = tag.trim();
+    if (t === 'Family & Co-Sleep') return 'Family Bed';
+    if (t === 'Protections' || t === 'Mattress Protection') return 'Mattress Protection';
+    return t;
+  }
+
+  function formatReviewDate(dateStr) {
+    if (!dateStr) return '';
+    var parts = dateStr.slice(0, 10).split('-');
+    if (parts.length !== 3) return dateStr;
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10) - 1;
+    var d = parseInt(parts[2], 10);
+    var date = new Date(y, m, d);
+    if (isNaN(date.getTime())) return dateStr;
+
+    if (isThaiPage()) {
+      var thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+      return d + ' ' + thMonths[m] + ' ' + y;
+    } else {
+      var enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return enMonths[m] + ' ' + d + ', ' + y;
+    }
   }
 
   function waitForIdleOrTimeout(timeoutMs) {
@@ -297,20 +335,23 @@
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platform = renderPlatformBadge(rv.platform);
-        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + verifiedBuyerLabel() + '</span>' : '';
-        var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
+        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + verifiedPurchaseLabel() + '</span>' : '';
+        var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(cleanProductTag(rv.product_type)) + '</span>' : '';
         var body = escHtml(rv.review_text || '');
-        var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
+        var formattedDate = formatReviewDate(rv.review_date || rv.created_at);
         var author = escHtml(rv.customer_name || 'Customer');
         var country = escHtml(rv.customer_country || '');
         var cardId = 'rc-' + (rv.id || Math.random().toString(36).slice(2, 8));
         var isLong = body.length > 280;
+        var readMoreText = isThaiPage() ? 'อ่านรีวิวฉบับเต็ม' : 'Read full review';
+        var showLessText = isThaiPage() ? 'แสดงน้อยลง' : 'Show less';
+        var authorMeta = author + (country ? ' (' + country + ')' : '') + (formattedDate ? ' \u00b7 ' + formattedDate : '');
         return '<div class="review-card">' +
           '<div class="review-stars">' + stars + ' ' + platform + '</div>' +
           '<div class="rc-meta">' + verifiedHtml + productTag + '</div>' +
           (isLong ? '<div class="review-text-wrap" id="' + cardId + '-wrap"><p class="review-text">"' + body + '"</p></div>' : '<p class="review-text">"' + body + '"</p>') +
-          (isLong ? '<button class="review-show-more" onclick="(function(b){var w=document.getElementById(\'' + cardId + '-wrap\');w.classList.toggle(\'expanded\');b.style.display=w.classList.contains(\'expanded\')?\'none\':\'\';})(this)">Show more</button>' : '') +
-          '<div class="review-author">\u2014 ' + author + (country ? ', ' + country : '') + (dt ? ' \u2022 ' + escHtml(dt) : '') + '</div>' +
+          (isLong ? '<button class="review-show-more" onclick="(function(btn){var w=document.getElementById(\'' + cardId + '-wrap\');w.classList.toggle(\'expanded\');btn.innerText=w.classList.contains(\'expanded\')?\'' + escHtml(showLessText) + '\':\'' + escHtml(readMoreText) + '\';})(this)">' + readMoreText + '</button>' : '') +
+          '<div class="review-author">' + authorMeta + '</div>' +
         '</div>';
       }).join('');
 
@@ -318,8 +359,12 @@
       var avg = rows.reduce(function (acc, rv) { return acc + (Number(rv.rating) || 0); }, 0) / rows.length;
       var badgeStrong = wrapper.querySelector('.review-badge strong');
       var badgeSmall = wrapper.querySelector('.review-badge .small');
-      if (badgeStrong && isFinite(avg)) badgeStrong.textContent = avg.toFixed(1) + ' out of 5 stars';
-      if (badgeSmall) badgeSmall.textContent = 'Based on 1,000+ verified customer reviews';
+      if (badgeStrong && isFinite(avg)) {
+        badgeStrong.textContent = isThaiPage() ? avg.toFixed(1) + ' จาก 5 ดาว' : avg.toFixed(1) + ' out of 5 stars';
+      }
+      if (badgeSmall) {
+        badgeSmall.textContent = isThaiPage() ? 'อ้างอิงจากรีวิวลูกค้าจริง 1,000+ รายการ' : 'Based on 1,000+ verified customer reviews';
+      }
     } catch (e) {
       // keep existing static cards as fallback
     }
@@ -344,7 +389,7 @@
 
       if (!rows.length) {
         track.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--color-muted);font-size:0.9375rem;"><p>No reviews yet for this product.</p></div>';
-        if (countEl) countEl.textContent = 'No reviews yet';
+        if (countEl) countEl.textContent = isThaiPage() ? 'ยังไม่มีรีวิว' : 'No reviews yet';
         return;
       }
 
@@ -352,22 +397,25 @@
         var rating = Math.max(1, Math.min(5, Number(rv.rating) || 5));
         var stars = '★★★★★'.slice(0, rating);
         var platformHtml = renderPlatformBadge(rv.platform);
-        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + verifiedBuyerLabel() + '</span>' : '';
-        var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(rv.product_type) + '</span>' : '';
+        var verifiedHtml = (rv.is_verified) ? ' <span class="rc-verified-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> ' + verifiedPurchaseLabel() + '</span>' : '';
+        var productTag = rv.product_type ? ' <span class="rc-product-tag">' + escHtml(cleanProductTag(rv.product_type)) + '</span>' : '';
         var body = escHtml(rv.review_text || '');
-        var dt = String(rv.review_date || rv.created_at || '').slice(0, 10);
+        var formattedDate = formatReviewDate(rv.review_date || rv.created_at);
         var author = escHtml(rv.customer_name || 'Customer');
         var country = escHtml(rv.customer_country || '');
         var photoHtml = rv.image_url ? '<div class="review-photo"><img src="' + escHtml(rv.image_url) + '" alt="Customer photo" loading="lazy" width="200" height="200"></div>' : '';
         var cardId = 'rc-' + (rv.id || Math.random().toString(36).slice(2, 8));
         var isLong = body.length > 280;
+        var readMoreText = isThaiPage() ? 'อ่านรีวิวฉบับเต็ม' : 'Read full review';
+        var showLessText = isThaiPage() ? 'แสดงน้อยลง' : 'Show less';
+        var authorMeta = author + (country ? ' (' + country + ')' : '') + (formattedDate ? ' \u00b7 ' + formattedDate : '');
         return '<div class="review-card">' +
           photoHtml +
           '<div class="review-stars">' + stars + ' ' + platformHtml + '</div>' +
           '<div class="rc-meta">' + verifiedHtml + productTag + '</div>' +
           (isLong ? '<div class="review-text-wrap" id="' + cardId + '-wrap"><p class="review-text">"' + body + '"</p></div>' : '<p class="review-text">"' + body + '"</p>') +
-          (isLong ? '<button class="review-show-more" onclick="(function(b){var w=document.getElementById(\'' + cardId + '-wrap\');w.classList.toggle(\'expanded\');b.style.display=w.classList.contains(\'expanded\')?\'none\':\'\';})(this)">Show more</button>' : '') +
-          '<div class="review-author">— ' + author + (country ? ', ' + country : '') + (dt ? ' \u2022 ' + dt : '') + '</div>' +
+          (isLong ? '<button class="review-show-more" onclick="(function(btn){var w=document.getElementById(\'' + cardId + '-wrap\');w.classList.toggle(\'expanded\');btn.innerText=w.classList.contains(\'expanded\')?\'' + escHtml(showLessText) + '\':\'' + escHtml(readMoreText) + '\';})(this)">' + readMoreText + '</button>' : '') +
+          '<div class="review-author">' + authorMeta + '</div>' +
         '</div>';
       }).join('');
 
@@ -379,7 +427,7 @@
         var fullStars = Math.round(avg);
         starsEl.textContent = '★★★★★'.slice(0, fullStars) + '☆☆☆☆☆'.slice(fullStars);
       }
-      if (countEl) countEl.textContent = '1,000+ verified buyers';
+      if (countEl) countEl.textContent = isThaiPage() ? 'ผู้ซื้อที่ผ่านการยืนยันแล้วกว่า 1,000+ ราย' : '1,000+ verified buyers';
 
       // Init carousel on product reviews wrapper
       var wrapper = document.getElementById('product-reviews-wrapper');

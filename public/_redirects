@@ -1,6 +1,8 @@
 # MildMate Redirects
 # Phase 2 URL preservation (generated 2026-06-14)
 
+
+# ── STATIC REDIRECTS ────────────────────────────────
 /admin/admin   /admin/   301
 /admin/admin.html   /admin/   301
 /admin/super-admin   /super-admin/   301
@@ -41,7 +43,6 @@
 /bed-sheets-for-sensitive-skin/   /blogs/   301
 /bed-sheets-for-the-family-laid-out-side-by-side/   /family/   301
 /bed-sheets-size/   /sizeguide/   301
-/bed-sheets-size/*   /sizeguide/   301
 /bedbridge-mildmate/   /product/bedbridge-connector/   301
 /bedding-essentials-for-thai-students-abroad/   /boarding-dorm/   301
 /bedding-set/   /blogs/   301
@@ -72,7 +73,6 @@
 /duvet-cover-with-3-sided-zipper/   /product/3-sided-duvet/   301
 /duvet-cover/   /duvet-covers/   301
 /duvet-vs-blanket/   /duvet-covers/   301
-/duvet/*   /duvet-covers/   301
 /easy-change-duvet-cover/   /product/3-sided-duvet/   301
 /ecoluxe-3/   /fabric/   301
 /fabric-2/   /fabric/   301
@@ -85,8 +85,6 @@
 /family-co-sleeping-bedding-solutions-for-a-harmonious-sleep/   /family/   301
 /family-co-sleeping-solutions-2/   /family/   301
 /family-co-sleeping-solutions/   /family/   301
-/fitted-sheets/*   /sheets/   301
-/flat-sheets/*   /sheets/   301
 /good_bed_sheet/   /blogs/   301
 /guide-to-choosing-mattress-sizes/   /sizeguide/   301
 /hotel-resort-hospital-bedding-manufacturer/   /about/   301
@@ -104,11 +102,8 @@
 /mattress-cover/   /protection/   301
 /mattress-protector/   /protection/   301
 /mattress-protectors/   /protection/   301
-/mattress-protectors/*   /protection/   301
 /mattress-size-th/   /th/sizeguide/   301
-/mattress-size-th/*   /th/sizeguide/   301
 /mattress-size/   /sizeguide/   301
-/mattress-size/*   /sizeguide/   301
 /microfiber-bed-sheet/   /blogs/   301
 /mildmate-fabric/   /fabric/   301
 /my-account/   /account/   301
@@ -256,15 +251,10 @@
 /th/adjustable-bed-sheets/   /th/custom-measurement/   301
 /th/checkout/   /checkout/   301
 /th/contact-us-mildmate-customer-support/   /th/contact/   301
-/th/duvet/*   /duvet-covers/   301
 /th/easy-change-duvet-cover-with-3-side-zipper-mildmate/   /product/3-sided-duvet/   301
-/th/fitted-sheets/*   /sheets/   301
-/th/flat-sheets/*   /sheets/   301
 /th/home-th/   /th/   301
 /th/how-to-measure-your-mattress-for-a-perfect-fit/   /th/how-to-measure-mattress-size/   301
 /th/mattress-protectors/   /protection/   301
-/th/mattress-protectors/*   /protection/   301
-/th/mattress-size-th/*   /th/sizeguide/   301
 /th/mildmate-%E0%B8%AA%E0%B8%B1%E0%B9%88%E0%B8%87%E0%B8%95%E0%B8%B1%E0%B8%94%E0%B8%9C%E0%B9%89%E0%B8%B2%E0%B8%9B%E0%B8%B9%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B8%99%E0%B8%AD%E0%B8%99%E0%B9%81%E0%B8%A5%E0%B8%B0/   /th/custom-measurement/   301
 /th/mildmate-fabric-collections-premium-fabrics-online/   /th/fabric/   301
 /th/personalised-pillows-custom-embroidered-mildmate/   /th/custom-measurement/   301
@@ -277,3 +267,18 @@
 /twin-size-bed-sheet/   /sizeguide/   301
 /waterproof-zippered-tpu-mattress-cover/   /product/mattress-encasement-general/   301
 /winter-bedding-tips/   /blogs/   301
+
+
+# ── DYNAMIC REDIRECTS (placed at bottom for performance and Cloudflare limits) ──
+/bed-sheets-size/*   /sizeguide/   301
+/duvet/*   /duvet-covers/   301
+/fitted-sheets/*   /sheets/   301
+/flat-sheets/*   /sheets/   301
+/mattress-protectors/*   /protection/   301
+/mattress-size-th/*   /th/sizeguide/   301
+/mattress-size/*   /sizeguide/   301
+/th/duvet/*   /duvet-covers/   301
+/th/fitted-sheets/*   /sheets/   301
+/th/flat-sheets/*   /sheets/   301
+/th/mattress-protectors/*   /protection/   301
+/th/mattress-size-th/*   /th/sizeguide/   301
