@@ -28,7 +28,7 @@ UPDATE products SET description_en = '<h3>Split Mattresses? Sleep on a Seamless 
 
 UPDATE products SET 
   title_en = 'Easy Bed Maker & Mattress Lifter',
-  title_th = 'ตัวช่วยยกที่นอนและปูเตียง Ergonomic',
+  title_th = 'ตัวช่วยยกที่นอน',
   description_en = '<h3>Make Your Bed Without the Heavy Lifting</h3>
 <p>Lifting a heavy mattress to tuck in sheets is a daily chore that strains your back, shoulders, and wrists. The MildMate Easy Bed Maker & Mattress Lifter is the ultimate ergonomic tool designed to take the weight off your hands. It slides between the mattress and box spring, keeping the mattress raised so both hands are free to make the bed.</p>
 
