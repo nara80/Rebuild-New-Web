@@ -537,18 +537,95 @@ function buildFixedContentHTML(slug, p) {
     let html = '';
     html += '<div class="container" style="max-width:1280px; padding:0 24px;">';
     html += '<div style="padding:32px 0;">';
-    // How it works
-    html += '<div style="background:var(--color-surface); border-radius:var(--radius); padding:24px; margin-bottom:24px;"><h3 style="margin-bottom:12px;">How It Works</h3><ol style="padding-left:20px;"><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Place the T-shaped wedge</strong> between two mattresses â€” the crossbar of the T goes under both mattresses, the stem fills the gap.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Push mattresses together</strong> â€” the high-density microfiber compresses slightly to create a firm bridge.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Cover with a fitted sheet</strong> â€” a family-size fitted sheet covers both mattresses and the BedBridge as one seamless surface.</li></ol></div>';
-    // Features
-    html += '<h3 style="margin-bottom:12px;">Features</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">';
-    const features = ['Fills gaps up to 2.5 cm wide','High-density microfiber â€” durable and washable','No straps needed â€” friction-based design','Creates one seamless sleeping surface','Works with Twin XL to King setups','Machine washable'];
-    features.forEach(f => { html += '<div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">âœ“</span>' + f + '</div>'; });
+    
+    // Overview
+    html += '<div style="margin-bottom:40px;">';
+    html += '<h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Split Mattresses? Sleep on a Seamless New Bed.</h2>';
+    html += '<p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">The MildMate BedBridge Connector is the ultimate solution for bridging the uncomfortable gap between two split mattresses (such as two Twin XL or Double beds). It instantly transforms separate beds into one large, seamless sleeping surface. Perfect for couples with different mattress preferences, families who co-sleep, or guest room conversions.</p>';
     html += '</div>';
-    // Care
-    html += '<h3 style="margin-bottom:12px;">Care</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">';
-    const careItems = ['Machine wash cold â€” gentle cycle','Do not bleach','Tumble dry low','No ironing needed'];
-    careItems.forEach(c => { html += '<div style="background:var(--color-surface); padding:12px; border-radius:6px; display:flex; gap:10px; align-items:center;"><span style="color:var(--color-primary);">â—</span><span style="font-size:0.875rem; color:#555;">' + c + '</span></div>'; });
-    html += '</div></div></div>';
+
+    // How it works
+    html += '<div style="background:var(--color-surface); border-radius:var(--radius); padding:32px; margin-bottom:40px; border:1px solid var(--color-border);">';
+    html += '<h3 style="margin-bottom:20px; font-size:1.4rem; color:var(--color-heading);">How It Works</h3>';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">';
+    
+    html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
+    html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">1</span>';
+    html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Position the Wedge</h4>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Place the T-shaped wedge between the two mattresses. The center stem slides deep into the crevice, while the wide top panel lays flat on the bed surfaces.</p>';
+    html += '</div>';
+
+    html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
+    html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">2</span>';
+    html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Push Beds Together</h4>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push the mattresses flush. The high-density fiber compresses slightly to seal the gap and stay locked in place through natural friction—no straps needed.</p>';
+    html += '</div>';
+
+    html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
+    html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">3</span>';
+    html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Cover with a Sheet</h4>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Cover both mattresses with a single fitted sheet. We recommend a MildMate elastic deep-pocket fitted sheet to pull everything together for a secure, zero-slip fit.</p>';
+    html += '</div>';
+
+    html += '</div>';
+    html += '</div>';
+
+    // Key Benefits / Solutions
+    html += '<div style="margin-bottom:40px;">';
+    html += '<h3 style="margin-bottom:24px; font-size:1.4rem; color:var(--color-heading);">Why It Works Better</h3>';
+    html += '<div style="display:grid; grid-template-columns:1fr; gap:20px;">';
+
+    const benefits = [
+      {
+        title: 'Seamless Sleep for Couples (Split-to-Seamless Conversion)',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> When partners use two different mattresses for individual comfort, a deep "valley" or gap forms in the middle, preventing closeness.<br><strong style="color:var(--color-heading);">The Solution:</strong> Our T-shaped wedge slides deep into the center crevice while the wide top panel rests flush against both mattresses, bridging the divide to create one continuous, level sleeping plane.'
+      },
+      {
+        title: 'Strap-Free, Tool-Free Setup (No-Strap Friction System)',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Traditional bed connectors rely on annoying nylon straps wrapped around the entire mattress perimeter, which are difficult to hide and prone to loosening.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge stays locked in place through compression alone. The density and shape of the T-profile are naturally "sandwiched" by mattress pressure and the tension of your fitted sheet.'
+      },
+      {
+        title: 'Twin XL-to-King Versatility (Standard-to-King Bridge)',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Buying a dedicated King mattress for a guest room limits flexibility if you later need separate beds for individual guests.<br><strong style="color:var(--color-heading);">The Solution:</strong> At 190cm (75") long, this bridge provides full-length coverage for standard mattresses. It lets you create an "on-demand" King configuration that can be disassembled and stored in minutes.'
+      },
+      {
+        title: 'Zero Humps or Ridges (True-Flush Surface Leveling)',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Bulky, poorly designed bridges are too thick on top, creating a raised ridge in the center of the bed that is felt through the sheets.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge features a thin, tapered edge design on the top flange. This ensures the transition from mattress to bridge is nearly imperceptible under your sheets.'
+      },
+      {
+        title: 'Designed for Deep-Pocket Bedding (Systemic Anchoring)',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Even the best bed bridge can shift or wiggle if the top sheet is loose or shallow.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge is optimized for use with 360-degree elasticated deep-pocket sheets. The deep pockets pull the mattresses inward, while the elastic provides the downward force to keep the bridge firmly seated.'
+      }
+    ];
+
+    benefits.forEach(b => {
+      html += '<div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);">';
+      html += '<span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">✓</span>';
+      html += '<div>';
+      html += '<h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">' + b.title + '</h4>';
+      html += '<p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;">' + b.desc + '</p>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '</div>';
+    html += '</div>';
+
+    // Care Instructions
+    html += '<div>';
+    html += '<h3 style="margin-bottom:16px; font-size:1.4rem; color:var(--color-heading);">Care Instructions</h3>';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">';
+    const careItems = ['Machine wash cold — gentle cycle', 'Do not bleach', 'Tumble dry low', 'No ironing needed'];
+    careItems.forEach(c => {
+      html += '<div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);">';
+      html += '<span style="color:var(--color-primary); font-size:1rem;">●</span>';
+      html += '<span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">' + c + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div></div>';
     return html;
   }
 

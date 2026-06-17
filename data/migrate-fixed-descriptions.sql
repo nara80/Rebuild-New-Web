@@ -1,22 +1,24 @@
 -- Migrate descriptions for the 3 fixed-price products
-UPDATE products SET description_en = '<h3>T-Shaped Wedge — Bridging Two Mattresses Into One</h3>
-<p>The BedBridge Connector fills the gap between two mattresses, creating one seamless sleeping surface. The T-shaped high-density microfiber wedge slides between mattresses and uses tension — not straps — to stay in place. No more falling into the crack or losing pillows between beds.</p>
-<ul>
-<li>Fills gaps up to 2.5 cm wide between mattresses</li>
-<li>High-density microfiber — durable and washable</li>
-<li>No straps needed — friction-based tension design</li>
-<li>Creates one seamless sleeping surface</li>
-<li>Works with Twin XL to King setups</li>
-<li>Machine washable — easy care</li>
-</ul>
+UPDATE products SET description_en = '<h3>Split Mattresses? Sleep on a Seamless New Bed</h3>
+<p>The MildMate BedBridge Connector is the ultimate solution for bridging the uncomfortable gap between two split mattresses (such as two Twin XL or Double beds). It instantly transforms separate beds into one large, seamless sleeping surface. Perfect for couples with different mattress preferences, families who co-sleep, or guest room conversions.</p>
+
 <h3>How It Works</h3>
-<p>Place the T-shaped wedge between two mattresses — the crossbar goes under both, the stem fills the gap. Push mattresses together and cover with a family-size fitted sheet for one continuous sleep surface.</p>
 <ul>
-<li>Place the T-bar under both mattresses</li>
-<li>Push mattresses together — wedge compresses for firm fit</li>
-<li>Cover with fitted sheet for seamless surface</li>
+<li><strong>1. Position the Wedge:</strong> Place the T-shaped wedge between the two mattresses. The center stem slides deep into the crevice, while the wide top panel lays flat on the bed surfaces.</li>
+<li><strong>2. Push Beds Together:</strong> Push the mattresses flush. The high-density fiber compresses slightly to seal the gap and stay locked in place through natural friction—no straps needed.</li>
+<li><strong>3. Cover with a Sheet:</strong> Cover both mattresses with a single fitted sheet. We recommend a MildMate elastic deep-pocket fitted sheet to pull everything together for a secure, zero-slip fit.</li>
 </ul>
-<h3>Care</h3>
+
+<h3>Why It Works Better</h3>
+<ul>
+<li><strong>Seamless Sleep for Couples (Split-to-Seamless Conversion):</strong> <br><em>The Problem:</em> When partners use two different mattresses for individual comfort, a deep "valley" or gap forms in the middle, preventing closeness. <br><em>The Solution:</em> Our T-shaped wedge slides deep into the center crevice while the wide top panel rests flush against both mattresses, bridging the divide to create one continuous, level sleeping plane.</li>
+<li><strong>Strap-Free, Tool-Free Setup (No-Strap Friction System):</strong> <br><em>The Problem:</em> Traditional bed connectors rely on annoying nylon straps wrapped around the entire mattress perimeter, which are difficult to hide and prone to loosening. <br><em>The Solution:</em> The bridge stays locked in place through compression alone. The density and shape of the T-profile are naturally "sandwiched" by mattress pressure and the tension of your fitted sheet.</li>
+<li><strong>Twin XL-to-King Versatility (Standard-to-King Bridge):</strong> <br><em>The Problem:</em> Buying a dedicated King mattress for a guest room limits flexibility if you later need separate beds for individual guests. <br><em>The Solution:</em> At 190cm (75") long, this bridge provides full-length coverage for standard mattresses. It lets you create an "on-demand" King configuration that can be disassembled and stored in minutes.</li>
+<li><strong>Zero Humps or Ridges (True-Flush Surface Leveling):</strong> <br><em>The Problem:</em> Bulky, poorly designed bridges are too thick on top, creating a raised ridge in the center of the bed that is felt through the sheets. <br><em>The Solution:</em> The bridge features a thin, tapered edge design on the top flange. This ensures the transition from mattress to bridge is nearly imperceptible under your sheets.</li>
+<li><strong>Designed for Deep-Pocket Bedding (Systemic Anchoring):</strong> <br><em>The Problem:</em> Even the best bed bridge can shift or wiggle if the top sheet is loose or shallow. <br><em>The Solution:</em> The bridge is optimized for use with 360-degree elasticated deep-pocket sheets. The deep pockets pull the mattresses inward, while the elastic provides the downward force to keep the bridge firmly seated.</li>
+</ul>
+
+<h3>Care Instructions</h3>
 <ul>
 <li>Machine wash cold — gentle cycle</li>
 <li>Do not bleach</li>
