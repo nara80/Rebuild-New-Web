@@ -26,21 +26,58 @@ UPDATE products SET description_en = '<h3>Split Mattresses? Sleep on a Seamless 
 <li>No ironing needed</li>
 </ul>' WHERE slug = 'bedbridge-connector';
 
-UPDATE products SET description_en = '<h3>Effortless Mattress Lifting — No More Back Pain</h3>
-<p>The Bed Lifter (38 cm) makes changing fitted sheets effortless. Simply slide it under the mattress corner, lift, and tuck — no more struggling with heavy mattresses. Ideal for elderly, seniors, caregivers, and anyone wanting easier bed changes.</p>
+UPDATE products SET 
+  title_en = 'Easy Bed Maker & Mattress Lifter',
+  title_th = 'ตัวช่วยยกที่นอนและปูเตียง Ergonomic',
+  description_en = '<h3>Make Your Bed Without the Heavy Lifting</h3>
+<p>Lifting a heavy mattress to tuck in sheets is a daily chore that strains your back, shoulders, and wrists. The MildMate Easy Bed Maker & Mattress Lifter is the ultimate ergonomic tool designed to take the weight off your hands. It slides between the mattress and box spring, keeping the mattress raised so both hands are free to make the bed.</p>
+
+<h3>How It Works</h3>
 <ul>
-<li>38 cm height — lifts mattress easily for tucking sheets</li>
-<li>Ergonomic ABS design — no back strain or bending</li>
-<li>Ideal for elderly, seniors, and caregivers</li>
-<li>High-quality ABS plastic — lightweight and strong</li>
-<li>Simple one-handed operation</li>
+<li><strong>1. Slide Under:</strong> Insert the smooth, wedge-shaped lifter between your mattress and base. It slides in easily without catching.</li>
+<li><strong>2. Lift & Hold:</strong> Push down gently on the handle to lift the mattress. The wedge locks in place like a kickstand, keeping the mattress raised.</li>
+<li><strong>3. Easy Tucking:</strong> Use both hands to quickly tuck sheets. Use the flat edge of the lifter to tuck the sheet under for a clean, tight fit without scraping knuckles.</li>
 </ul>
-<h3>Usage</h3>
-<p>Slide the Bed Lifter under any mattress corner, push down gently on the handle, and the mattress lifts effortlessly. Tuck your fitted sheet in place, release, and repeat for each corner. Works with any mattress size and thickness.</p>
+
+<h3>Why It Works Better</h3>
 <ul>
-<li>Slide under mattress corner</li>
-<li>Push down to lift — effortless leverage</li>
-<li>Tuck fitted sheet and release</li>
+<li><strong>Ergonomic Back-Saving Design:</strong> <br><em>The Problem:</em> Lifting heavy mattresses repeatedly causes back fatigue, neck strain, and sore wrists, especially for seniors, caregivers, or hotel housekeepers. <br><em>The Solution:</em> Our angled leverage design does the heavy lifting for you. Simply slide it in and press down to raise the bed, saving your back from strain.</li>
+<li><strong>Stable "Kickstand" Support:</strong> <br><em>The Problem:</em> Trying to hold a heavy mattress up with one hand while tucking sheets with the other is clumsy and exhausting. <br><em>The Solution:</em> The wedge-shaped body slides deep under the mattress and acts as a stable kickstand, keeping the mattress raised so both hands are completely free.</li>
+<li><strong>Protective Sheet Tucker Edge:</strong> <br><em>The Problem:</em> Tucking sheets under tight bed frames leads to scraped knuckles, friction burns, and ruined manicures. <br><em>The Solution:</em> The smooth, flat front edge of the lifter doubles as an ergonomic sheet tucker. Slide sheets under cleanly and quickly without ever putting your hands near rough surfaces.</li>
+<li><strong>Heavy-Duty Reinforced ABS:</strong> <br><em>The Problem:</em> Flimsy lifters bend, warp, or snap under the immense pressure of thick latex, hybrid, or memory foam mattresses. <br><em>The Solution:</em> Constructed from thick, high-density reinforced ABS plastic, this tool is built to withstand high pressure and easily lifts the heaviest King-size mattresses.</li>
+</ul>
+
+<h3>Care & Storage</h3>
+<ul>
+<li>Wipe clean with a damp cloth</li>
+<li>Store flat or hang by the handle slot</li>
+<li>Keep away from high heat</li>
+<li>Avoid chemical cleaning agents</li>
+</ul>',
+  description_th = '<h3>ปูเตียงง่าย ๆ โดยไม่ต้องยกที่นอนหนักอีกต่อไป</h3>
+<p>การยกที่นอนหนัก ๆ เพื่อสอดผ้าปูเตียงเป็นประจำส่งผลเสียต่อหลัง บ่า และข้อมือของคุณ MildMate Easy Bed Maker & Mattress Lifter คืออุปกรณ์ช่วยยกที่นอนตามหลักสรีรศาสตร์ (Ergonomic) ที่ออกแบบมาเพื่อช่วยผ่อนแรงและเซฟร่างกายของคุณ ตัวอุปกรณ์จะสไลด์เข้าระหว่างที่นอนและฐานเตียง ช่วยยึดที่นอนให้อยู่ในระดับที่สูงขึ้น ทำให้คุณใช้ทั้งสองมือในการจัดและปูเตียงได้อย่างสะดวกและอิสระ</p>
+
+<h3>วิธีใช้งาน</h3>
+<ul>
+<li><strong>1. สอดเข้าใต้ที่นอน:</strong> สอดอุปกรณ์ที่มีรูปทรงลิ่มผิวเรียบลื่นเข้าระหว่างที่นอนและฐานเตียง ตัวลิ่มจะสไลด์เข้าไปได้อย่างง่ายดายโดยไม่ติดขัด</li>
+<li><strong>2. ยกและค้ำที่นอน:</strong> กดด้ามจับลงเบา ๆ เพื่อยกที่นอนขึ้น ตัวลิ่มจะทำหน้าที่ค้ำที่นอนไว้ให้อยู่ในตำแหน่งที่สูงขึ้นเหมือนขาตั้งค้ำ</li>
+<li><strong>3. สอดผ้าปูง่ายขึ้น:</strong> ใช้ทั้งสองมือสอดผ้าปูเตียงได้อย่างรวดเร็ว และใช้ส่วนปลายแบนของอุปกรณ์ช่วยดันสอดผ้าปูเข้าไปใต้ที่นอน เพื่อความตึงเรียบร้อย โดยไม่ต้องกลัวขูดกับขอบเตียงหรือเจ็บนิ้วมือ</li>
+</ul>
+
+<h3>ทำไมถึงดีกว่า?</h3>
+<ul>
+<li><strong>การออกแบบตามหลักสรีรศาสตร์เพื่อสุขภาพหลังที่ดี:</strong> <br><em>ปัญหา:</em> การต้องยกที่นอนหนัก ๆ บ่อยครั้งทำให้เกิดการล้าสะสมที่หลัง บ่า ข้อมือ โดยเฉพาะอย่างยิ่งสำหรับผู้สูงอายุ ผู้ดูแล หรือแม่บ้านโรงแรม <br><em>วิธีแก้:</em> การดีไซน์ตามหลักกลศาสตร์ช่วยผ่อนแรงในการยกที่นอนให้กับคุณ เพียงแค่สอดอุปกรณ์เข้าไปแล้วกดลง ก็สามารถยกที่นอนขึ้นได้ทันที ช่วยป้องกันอาการปวดหลังและข้อมืออักเสบได้อย่างดีเยี่ยม</li>
+<li><strong>ขาตั้งค้ำยึดที่นอนที่มั่นคง:</strong> <br><em>ปัญหา:</em> การพยายามยกที่นอนหนัก ๆ ค้างไว้ด้วยมือข้างหนึ่งในขณะที่สอดผ้าปูด้วยมืออีกข้างเป็นเรื่องยากและทำให้อ่อนล้า <br><em>วิธีแก้:</em> อุปกรณ์รูปทรงลิ่มจะสอดลึกเข้าใต้ที่นอน ทำหน้าที่เป็นขาตั้งค้ำยึดที่นอนไว้ให้อยู่กับที่อย่างปลอดภัย ช่วยให้คุณใช้มือทั้งสองข้างในการจัดแต่งผ้าปูได้อย่างสะดวก</li>
+<li><strong>ส่วนปลายแบนช่วยสอดและเซฟนิ้วมือ:</strong> <br><em>ปัญหา:</em> การเอามือสอดผ้าปูเข้าใต้ที่นอนที่ขนาบข้างด้วยเฟอร์นิเจอร์หรือขอบเตียงที่แคบ มักทำให้นิ้วและหลังมือขูดเจ็บ เล็บหัก หรือข้อมืออักเสบ <br><em>วิธีแก้:</em> ขอบด้านหน้าของอุปกรณ์ที่เป็นระนาบแบนเรียบและลื่น ช่วยทำหน้าที่แทนมือของคุณในการดันและสอดผ้าปูเข้าไปได้อย่างแนบเนียน รวดเร็ว ปลอดภัยต่อมือและเล็บของคุณ 100%</li>
+<li><strong>วัสดุ ABS เกรดพรีเมียม แข็งแรงทนทานสูง:</strong> <br><em>ปัญหา:</em> อุปกรณ์ช่วยยกที่นอนเกรดทั่วไปมักจะหัก งอ หรือบิดเสียรูปได้ง่ายเมื่อเจอแรงกดของที่นอนขนาดใหญ่ ยางพาราหนา ๆ หรือที่นอนสปริงแบบไฮบริด <br><em>วิธีแก้:</em> ตัวอุปกรณ์ผลิตจากพลาสติก ABS คุณภาพสูงที่มีการเสริมความหนาพิเศษ แข็งแรงทนทาน น้ำหนักเบา สามารถรองรับน้ำหนักและยกที่นอนขนาดใหญ่พิเศษ (King Size) หรือที่นอนยางพาราหนัก ๆ ได้อย่างไร้กังวล</li>
+</ul>
+
+<h3>การดูแลรักษาและการเก็บรักษา</h3>
+<ul>
+<li>เช็ดทำความสะอาดด้วยผ้าชุบน้ำบิดหมาด</li>
+<li>จัดเก็บโดยวางราบหรือแขวนด้วยช่องตรงด้ามจับ</li>
+<li>หลีกเลี่ยงการโดนความร้อนสูง</li>
+<li>หลีกเลี่ยงการใช้สารเคมีรุนแรงในการทำความสะอาด</li>
 </ul>' WHERE slug = 'mattress-lift-helper';
 
 UPDATE products SET description_en = '<h3>Microfiber 200g/m² Filling — Light, Warm, Made for Thailand</h3>

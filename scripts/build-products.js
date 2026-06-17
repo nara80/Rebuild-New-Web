@@ -633,11 +633,90 @@ function buildFixedContentHTML(slug, p) {
     let html = '';
     html += '<div class="container" style="max-width:1280px; padding:0 24px;">';
     html += '<div style="padding:32px 0;">';
-    html += '<h3 style="margin-bottom:12px;">Features</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">';
-    const features = ['38cm height â€” lifts mattress easily','Ergonomic ABS design â€” no back strain','Ideal for elderly, seniors, and caregivers','High-quality ABS plastic â€” lightweight and strong','Simple one-handed operation'];
-    features.forEach(f => { html += '<div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">âœ“</span>' + f + '</div>'; });
+    
+    // Overview
+    html += '<div style="margin-bottom:40px;">';
+    html += '<h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Make Your Bed Without the Heavy Lifting</h2>';
+    html += '<p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">Lifting a heavy mattress to tuck in sheets is a daily chore that strains your back, shoulders, and wrists. The MildMate Easy Bed Maker & Mattress Lifter is the ultimate ergonomic tool designed to take the weight off your hands. It slides between the mattress and base (or box spring), keeping the mattress raised so both hands are free to make the bed.</p>';
     html += '</div>';
-    html += '<p style="color:#555; line-height:1.7;">The Bed Lifter makes changing fitted sheets effortless. Simply slide it under the mattress corner, lift, and tuck â€” no more struggling with heavy mattresses. Perfect for elderly users, caregivers, and anyone who wants to make bed changes easier.</p>';
+
+    // How it works
+    html += '<div style="background:var(--color-surface); border-radius:var(--radius); padding:32px; margin-bottom:40px; border:1px solid var(--color-border);">';
+    html += '<h3 style="margin-bottom:20px; font-size:1.4rem; color:var(--color-heading);">How It Works</h3>';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px;">';
+    
+    html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
+    html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">1</span>';
+    html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Slide Under</h4>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Insert the smooth, wedge-shaped lifter between your mattress and base. It slides in easily without catching.</p>';
+    html += '</div>';
+
+    html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
+    html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">2</span>';
+    html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Lift & Hold</h4>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push down gently on the handle to lift the mattress. The wedge locks in place like a kickstand, keeping the mattress raised.</p>';
+    html += '</div>';
+
+    html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
+    html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">3</span>';
+    html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Easy Tucking</h4>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Use both hands to quickly tuck sheets. Use the flat edge of the lifter to tuck the sheet under for a clean, tight fit without scraping knuckles.</p>';
+    html += '</div>';
+
+    html += '</div>';
+    html += '</div>';
+
+    // Key Benefits
+    html += '<div style="margin-bottom:40px;">';
+    html += '<h3 style="margin-bottom:24px; font-size:1.4rem; color:var(--color-heading);">Why It Works Better</h3>';
+    html += '<div style="display:grid; grid-template-columns:1fr; gap:20px;">';
+
+    const benefits = [
+      {
+        title: 'Ergonomic Back-Saving Design',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Lifting heavy mattresses repeatedly causes back fatigue, neck strain, and sore wrists, especially for seniors, caregivers, or hotel housekeepers.<br><strong style="color:var(--color-heading);">The Solution:</strong> Our angled leverage design does the heavy lifting for you. Simply slide it in and press down to raise the bed, saving your back from strain.'
+      },
+      {
+        title: 'Stable "Kickstand" Support',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Trying to hold a heavy mattress up with one hand while tucking sheets with the other is clumsy and exhausting.<br><strong style="color:var(--color-heading);">The Solution:</strong> The wedge-shaped body slides deep under the mattress and acts as a stable kickstand, keeping the mattress raised so both hands are completely free.'
+      },
+      {
+        title: 'Protective Sheet Tucker Edge',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Tucking sheets under tight bed frames leads to scraped knuckles, friction burns, and ruined manicures.<br><strong style="color:var(--color-heading);">The Solution:</strong> The smooth, flat front edge of the lifter doubles as an ergonomic sheet tucker. Slide sheets under cleanly and quickly without ever putting your hands near rough surfaces.'
+      },
+      {
+        title: 'Heavy-Duty Reinforced ABS',
+        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Flimsy lifters bend, warp, or snap under the immense pressure of thick latex, hybrid, or memory foam mattresses.<br><strong style="color:var(--color-heading);">The Solution:</strong> Constructed from thick, high-density reinforced ABS plastic, this tool is built to withstand high pressure and easily lifts the heaviest King-size mattresses.'
+      }
+    ];
+
+    benefits.forEach(b => {
+      html += '<div style="display:flex; gap:16px; align-items:flex-start; padding-bottom:16px; border-bottom:1px solid var(--color-border);">';
+      html += '<span style="color:var(--color-primary); font-size:1.25rem; font-weight:bold; line-height:1.2;">✓</span>';
+      html += '<div>';
+      html += '<h4 style="margin:0 0 6px 0; color:var(--color-heading); font-size:1.1rem; font-weight:600;">' + b.title + '</h4>';
+      html += '<p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.5;">' + b.desc + '</p>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    html += '</div>';
+    html += '</div>';
+
+    // Care Instructions
+    html += '<div>';
+    html += '<h3 style="margin-bottom:16px; font-size:1.4rem; color:var(--color-heading);">Care & Storage</h3>';
+    html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">';
+    const careItems = ['Wipe clean with a damp cloth', 'Store flat or hang by the handle slot', 'Keep away from high heat', 'Avoid chemical cleaning agents'];
+    careItems.forEach(c => {
+      html += '<div style="background:var(--color-surface); padding:16px; border-radius:6px; display:flex; gap:12px; align-items:center; border:1px solid var(--color-border);">';
+      html += '<span style="color:var(--color-primary); font-size:1rem;">●</span>';
+      html += '<span style="font-size:0.875rem; color:var(--color-text); font-weight:500;">' + c + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div>';
+
     html += '</div></div>';
     return html;
   }

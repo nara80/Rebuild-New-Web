@@ -86,7 +86,7 @@
 | Duvet Covers | `/duvet-covers/` | 3-Sided Zipper Duvet Cover, Pet Owner Duvet Cover, Duvet Cover — Marine, Duvet Cover — RV, Duvet Cover — Dorm, Duvet Insert | 6 |
 | Pillowcases | `/pillowcases/` | Envelope Pillowcase, Zipper Pillowcase, Sham Pillowcase | 3 |
 | Protection | `/protection/` | Mattress Protector — Standard, Mattress Protector — Family, Mattress Protector — Deep Pocket, Pet-Proof Mattress Protector, 6-Sided Mattress Encasement, RV & Truck Mattress Encasement, Pillow Protector | 7 |
-| Accessories | `/accessories/` | BedBridge Connector, Bed Lifter (38 cm) | 2 |
+| Accessories | `/accessories/` | BedBridge Connector, Easy Bed Maker & Mattress Lifter | 2 |
 
 **Shop by Niche — 6 categories (use-case landing pages, high-conversion)**
 | Niche | URL | Products Covered |
