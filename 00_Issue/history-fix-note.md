@@ -426,3 +426,23 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - If still failing in browser after deploy, do hard refresh + re-login and inspect request headers for:
   - `Authorization: Bearer ...` (preferred), or
   - valid `X-Admin-Secret`.
+
+## 13) Product description dynamic override mismatch (BedBridge Connector)
+
+### Symptoms
+- The BedBridge Connector product page (`/product/bedbridge-connector/`) displayed the old WordPress-era description ("T-Shaped Wedge — Bridging Two Mattresses Into One...") instead of the new simplified 5-pillar description, even though the built static HTML in the codebase was correct.
+
+### Root cause
+- The product page templates (e.g. `templates/product-fixed.html`) contain client-side JavaScript that queries the database API `/api/products/{slug}` dynamically. 
+- If a description is returned in `description_en` or `description_th` from the database, the script dynamically overwrites `#fixed-content-wrapper` with the database content.
+- Since the remote D1 databases (staging `mildmate-db` and production `mildmate-db-prod`) had not yet been updated with the SQL migration (`data/migrate-fixed-descriptions.sql`), they returned the old description, causing the client-side script to overwrite the correct static HTML with the outdated version.
+
+### Fix applied
+- Ran the SQL migration script `data/migrate-fixed-descriptions.sql` on the remote staging database `mildmate-db` and the remote production database `mildmate-db-prod` (`npx wrangler d1 execute ... --remote`).
+- Committed the local description update fixes and pushed them to GitHub (`origin/master`).
+- Manually deployed the local workspace to Cloudflare Pages to guarantee all assets and workers are fully refreshed.
+
+### Verification
+- Queried both remote databases directly using Wrangler and confirmed they now return the correct updated descriptions.
+- Visited the new preview URL `https://96ad074a.mildmate-new.pages.dev/product/bedbridge-connector/` in the browser and verified the new description renders correctly.
+
