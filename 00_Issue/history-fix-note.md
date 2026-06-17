@@ -220,3 +220,37 @@
   - `/product/mattress-lift-helper/` returns `200 OK` with title `<title>Bed Lifter (38 cm) — MildMate</title>` (fully verified product details page rendering).
   - `/product/bedbridge-connector/` returns `200 OK` with title `<title>BedBridge Connector — MildMate</title>`.
   - `/product/standard-fitted-sheet/` resolves cleanly with `200 OK` in 20-30ms, completely resolving the infinite redirect loop.
+
+## 8) Product main image not displaying on product details pages
+
+### Symptoms
+- When visiting a product detail page (e.g. `/product/mattress-lift-helper/`), the main product image was completely missing/invisible in the browser.
+
+### Root causes
+- **Template Literal Capture Group Bug**: Inside [functions/product/[[path]].ts](file:///D:/00_mildmate/Re-Build_web/functions/product/[[path]].ts), the image tag replacement used:
+  ```typescript
+  html.replace(
+    /<img([^>]*)id="gallery-main-img"([^>]*)>/,
+    `<img${1}id="gallery-main-img"${2} src="${mainImage}">`
+  )
+  ```
+  Because the replacement was in a TypeScript template literal backtick string, `${1}` and `${2}` were evaluated by JavaScript at compile time as the literal numbers `1` and `2`, instead of being passed as regex capture groups `$1` and `$2`.
+  This corrupted the HTML tag to `<img1id="gallery-main-img"2 src="...">`, which is invalid HTML and prevented the browser from rendering the image.
+- **Duplicate src Attribute**: Furthermore, because `$1` contained the original `src="..."` attribute (since `src` is defined before `id="gallery-main-img"` in the templates), even if `$1` and `$2` were used correctly, appending `src="${mainImage}"` at the end resulted in duplicate `src` attributes, which would cause the browser to ignore the newly injected database image path in favor of the original placeholder.
+
+### Fixes applied
+- **Targeted src attribute replacement**: Modified [functions/product/[[path]].ts](file:///D:/00_mildmate/Re-Build_web/functions/product/[[path]].ts) to run two targeted regex replacements for the `src` attribute itself, depending on whether `id="gallery-main-img"` is defined before or after the `src` attribute:
+  ```typescript
+  html = html.replace(/(<img\b[^>]*?\bid="gallery-main-img"[^>]*?\bsrc=")[^"]*/i, `$1${mainImage}`);
+  html = html.replace(/(<img\b[^>]*?\bsrc=")[^"]*("[^>]*?\bid="gallery-main-img")/i, `$1${mainImage}$2`);
+  ```
+  This cleanly updates the existing `src="..."` attribute value in place, avoiding tag corruption and duplicate attributes.
+- **Rebuilt & Synced Bundle**: Recompiled the functions and synced the build to the production entrypoint:
+  - `npx wrangler pages functions build --outdir public`
+  - `Copy-Item public/index.js public/_worker.js -Force`
+
+### Verification
+- Tested locally on `http://127.0.0.1:8788`:
+  - Visited `/product/pet-owner-fitted-sheet/` (which exists in the local database and has `image_url` set).
+  - Inspected the returned HTML and verified that the `<img>` tag is correctly output as a single valid tag with the updated database image URL:
+    `<img src="/images/products/pet-owner-fitted-sheet.jpg" alt="Pet Owner Fitted Sheet" id="gallery-main-img" width="800" height="800" loading="eager">`
