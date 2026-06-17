@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บัญชีของฉัน — MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <style>
+    :root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-heading:#0F172A;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--color-success:#16a34a;--color-warning:#d97706;--color-error:#ef4444;--font-main:'Quicksand',sans-serif;--radius:8px;--radius-lg:12px;--shadow:0 1px 3px rgba(0,0,0,0.06);--shadow-md:0 4px 12px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.08);--header-height:64px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:16px}
+    body{font-family:var(--font-main);color:var(--color-text);background:var(--color-surface);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height);min-height:100vh}
+    a{color:var(--color-primary);text-decoration:none}
+    button{font-family:inherit;cursor:pointer;border:none;background:none}
+    h1{font-size:1.75rem;font-weight:700;color:var(--color-heading)}
+    h2{font-size:1.125rem;font-weight:700;color:var(--color-heading)}
+    img{max-width:100%;height:auto;display:block}
+
+    /* Isolation: prevent global nav bleed into dashboard */
+    #account-root .main-nav,
+    #account-root .hamburger,
+    #account-root .mobile-drawer,
+    #account-root .mobile-overlay,
+    #account-root .search-overlay,
+    #account-root .mobile-drawer-search{display:none!important}
+
+    /* Account header — minimal */
+    .acct-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--color-border);height:var(--header-height)}
+    .acct-header.inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1200px;margin:0 auto;padding:0 24px}
+    .acct-header-logo img{max-height:38px;width:auto}
+    .acct-header-actions{display:flex;align-items:center;gap:16px}
+    .acct-sign-out{font-size:0.8125rem;font-weight:600;padding:6px 14px;border:2px solid var(--color-border);color:var(--color-text);border-radius:6px;cursor:pointer}
+    .acct-sign-out:hover{border-color:var(--color-error);color:var(--color-error)}
+
+    /* Portal — sticky sidebar + scrollable content */
+    .portal{display:flex;min-height:calc(100vh - var(--header-height))}
+
+    /* Sidebar */
+    .portal-sidebar{width:280px;min-width:280px;background:var(--color-bg);border-right:1px solid var(--color-border);display:flex;flex-direction:column;flex-shrink:0;padding:0}
+    .sidebar-profile{padding:24px 20px 16px;border-bottom:1px solid var(--color-border);text-align:center}
+    .sidebar-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,var(--color-primary),#6366f1);margin:0 auto 10px}
+    .sidebar-avatar-fallback{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),#6366f1);color:#fff;display:none;align-items:center;justify-content:center;font-size:1.75rem;font-weight:700;margin:0 auto 10px}
+    .sidebar-name{font-weight:700;font-size:0.9375rem;color:var(--color-heading);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sidebar-email{font-size:0.75rem;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+    .sidebar-tab{display:flex;align-items:center;gap:10px;width:100%;padding:11px 20px;font-family:var(--font-main);font-size:0.9rem;font-weight:600;color:var(--color-text);cursor:pointer;transition:all 0.15s;text-align:left;border-radius:0 20px 20px 0;margin:2px 12px 2px 0}
+    .sidebar-tab:hover{background:rgba(44,150,244,0.06);color:var(--color-primary)}
+    .sidebar-tab.active{background:var(--color-primary);color:#fff}
+    .sidebar-tab-icon{width:20px;height:20px;flex-shrink:0;opacity:0.6}
+    .sidebar-tab.active .sidebar-tab-icon{opacity:1}
+
+    /* Content */
+    .portal-content{flex:1;padding:32px 40px;overflow-y:auto;min-width:0}
+    .portal-panel{display:none}
+    .portal-panel.active{display:block}
+
+    .dash-welcome{margin-bottom:24px}
+    .dash-welcome h1{font-size:1.5rem;margin-bottom:4px}
+    .dash-welcome p{color:var(--color-muted);font-size:0.875rem}
+
+    /* Brand stat cards */
+    .dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{position:relative;background:linear-gradient(135deg,#f0f7ff 0%,#ffffff 100%);border:1px solid var(--color-border);border-left:3px solid var(--color-primary);border-radius:var(--radius-lg);padding:20px;transition:transform 0.2s ease,box-shadow 0.2s ease}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+    .stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+    .stat-icon.blue{background:rgba(44,150,244,0.12);color:var(--color-primary)}
+    .stat-icon.green{background:rgba(22,163,74,0.12);color:var(--color-success)}
+    .stat-icon.amber{background:rgba(217,119,6,0.12);color:var(--color-warning)}
+    .stat-number{font-size:1.75rem;font-weight:700;color:var(--color-primary);line-height:1.1}
+    .stat-label{font-size:0.75rem;color:var(--color-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px}
+
+    .card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;border:1px solid var(--color-border)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:var(--radius);font-weight:700;font-size:0.875rem;transition:all 0.15s}
+    .btn-primary{background:var(--color-primary);color:#fff}
+    .btn-primary:hover{background:var(--color-primary-dark);color:#fff}
+    .btn-outline{background:transparent;border:2px solid var(--color-border);color:var(--color-text)}
+    .btn-outline:hover{border-color:var(--color-primary);color:var(--color-primary)}
+    .btn-danger{color:var(--color-error);font-size:0.8125rem}
+    .btn-danger:hover{text-decoration:underline}
+    .btn-sm{padding:6px 14px;font-size:0.8125rem}
+
+    /* Orders */
+    .order-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+    .order-row{display:flex;align-items:center;gap:14px}
+    .order-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--color-bg);flex-shrink:0}
+    .order-info{flex:1;min-width:0}
+    .order-id-line{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+    .order-id{font-size:0.8125rem;font-weight:700;color:var(--color-text)}
+    .order-date{font-size:0.75rem;color:var(--color-muted)}
+    .order-summary{font-size:0.875rem;margin-bottom:2px}
+    .order-specs{font-size:0.75rem;color:var(--color-muted)}
+    .order-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+    .order-status{font-size:0.6875rem;font-weight:700;padding:3px 10px;border-radius:4px;text-transform:uppercase;flex-shrink:0}
+    .status-confirmed{background:#dcfce7;color:#166534}
+    .status-processing{background:#fef3c7;color:#92400e}
+    .status-shipped{background:#dbeafe;color:#1e40af}
+    .status-delivered{background:#dcfce7;color:#166534}
+    .status-cancelled{background:#fef2f2;color:#991b1b}
+    .order-price{font-weight:700;font-size:0.9375rem}
+    .order-detail{display:none;padding:12px 0 0 0;font-size:0.875rem;margin-top:12px;border-top:1px solid var(--color-border)}
+    .order-detail.open{display:block}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+    .detail-grid .lbl{color:var(--color-muted);font-size:0.75rem}
+    .detail-grid .val{font-weight:600;font-size:0.875rem}
+
+    /* Favorites */
+    .favorites-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .favorite-card{display:flex;gap:12px;align-items:center;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius);padding:12px}
+    .favorite-thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;background:var(--color-surface);flex-shrink:0}
+    .favorite-meta{flex:1;min-width:0}
+    .favorite-name{font-weight:700;font-size:0.9375rem;color:var(--color-heading);margin-bottom:2px}
+    .favorite-sub{font-size:0.75rem;color:var(--color-muted)}
+    .favorite-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+    /* Addresses */
+    .addresses-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .addr-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:12px;position:relative}
+    .addr-card.default{border-color:var(--color-primary);box-shadow:0 0 0 1px var(--color-primary)}
+    .addr-badge{display:inline-block;font-size:0.6875rem;font-weight:700;background:var(--color-primary);color:#fff;padding:2px 8px;border-radius:4px;margin-bottom:8px;text-transform:uppercase}
+    .addr-name{font-weight:700;margin-bottom:2px}
+    .addr-line{font-size:0.875rem;color:var(--color-muted)}
+    .addr-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+    /* Address form */
+    .addr-form{display:none;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius);padding:24px;margin-bottom:12px}
+    .addr-form.open{display:block}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:0.8125rem;font-weight:700;color:var(--color-text);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.03em}
+    .form-input{width:100%;padding:12px 14px;border:2px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);background:var(--color-surface);transition:border-color 0.2s}
+    .form-input:focus{outline:none;border-color:var(--color-primary);background:var(--color-bg)}
+    .form-input::placeholder{color:var(--color-text);opacity:0.45}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    /* Floating labels */
+    .float-group{position:relative}
+    .float-group .form-input,
+    .float-group select.form-input{min-height:48px;padding:18px 14px 6px 14px;font-size:0.9375rem}
+    .float-group .form-label{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:0.9375rem;font-weight:400;color:var(--color-text);opacity:0.55;text-transform:none;letter-spacing:0;margin:0;pointer-events:none;transition:all 0.2s ease;white-space:nowrap}
+    .float-group:focus-within > .form-label,
+    .float-group .form-input:focus + .form-label{top:7px;transform:translateY(0);font-size:0.6875rem;font-weight:600;color:var(--color-primary);opacity:1}
+    .float-group .form-input:not(:placeholder-shown) + .form-label,
+    .float-group:has(.form-input:not(:placeholder-shown)) > .form-label{top:7px;transform:translateY(0);font-size:0.6875rem;font-weight:600}
+    .float-group .form-input:not(:focus):not(:placeholder-shown) + .form-label,
+    .float-group:not(:focus-within):has(.form-input:not(:placeholder-shown)) > .form-label{color:var(--color-text);opacity:0.7}
+    .float-group select.form-input:valid + .form-label{top:7px;transform:translateY(0);font-size:0.6875rem;font-weight:600;color:var(--color-text);opacity:0.7}
+    .float-group select.form-input:focus:valid + .form-label{color:var(--color-primary);opacity:1}
+
+    /* Phone group */
+    .phone-group{display:flex;gap:8px}
+    .phone-group select{width:100px;flex-shrink:0;min-height:48px;padding:14px}
+    .phone-group input{flex:1;min-width:0;min-height:48px;padding:14px 14px 14px 14px}
+
+    /* Toggle */
+    .toggle-group{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--color-border);border-radius:24px;transition:0.2s}
+    .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.2s}
+    .toggle-switch input:checked+.toggle-slider{background:var(--color-primary)}
+    .toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+    /* Empty / Loading / Toast */
+    .empty-state{text-align:center;padding:48px 24px;color:var(--color-muted)}
+    .empty-state h2{margin-bottom:8px;color:var(--color-heading)}
+    .empty-state p{margin-bottom:20px}
+    .loading{text-align:center;padding:60px 24px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--color-border);border-top-color:var(--color-primary);border-radius:50%;animation:spin 0.8s linear infinite}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 24px;border-radius:var(--radius);font-size:0.875rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity 0.3s;z-index:200}
+    .toast.show{opacity:1}
+    .footer-simple{text-align:center;padding:32px 24px;font-size:0.75rem;color:var(--color-muted)}
+
+    /* Mobile pill-tab bar (hidden on desktop) */
+    
+    /* Dashboard profile image (above Welcome) */
+    .dash-profile-img{width:72px;height:72px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,var(--color-primary),#6366f1);margin-bottom:12px}
+    .dash-profile-fallback{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),#6366f1);color:#fff;display:none;align-items:center;justify-content:center;font-size:2rem;font-weight:700;margin-bottom:12px}
+.mobile-tab-bar{display:none;padding:12px 16px 8px;background:var(--color-bg);border-bottom:1px solid var(--color-border);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:8px}
+    .mobile-tab-bar::-webkit-scrollbar{display:none}
+    .mobile-tab-pill{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;font-size:0.8125rem;font-weight:600;color:var(--color-muted);background:var(--color-surface);border:1px solid var(--color-border);white-space:nowrap;flex-shrink:0;cursor:pointer;transition:all 0.15s}
+    .mobile-tab-pill.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+    .mobile-tab-pill svg{width:16px;height:16px;flex-shrink:0}
+
+    @media(max-width:768px){
+      .portal{flex-direction:column}
+      .portal-sidebar{display:none!important}
+      .mobile-tab-bar{display:flex}
+      .portal-content{padding:20px 16px}
+      .dash-stats{grid-template-columns:1fr 1fr;gap:12px}
+      .dash-welcome h1{font-size:1.25rem}
+      .addresses-grid{grid-template-columns:1fr}
+      .favorites-grid{grid-template-columns:1fr}
+      .form-row{grid-template-columns:1fr}
+      .phone-group{flex-direction:column}
+      .phone-group select{width:100%}
+      .order-card{padding:12px;margin-bottom:10px}
+      .order-row{flex-wrap:wrap;gap:10px}
+      .order-thumb{width:40px;height:40px}
+      .order-actions{flex-direction:row;align-items:center;width:100%;justify-content:flex-start;gap:8px}
+      .order-summary{font-size:0.8125rem}
+      .order-price{font-size:0.8125rem}
+      .order-detail.open{padding:8px 0 0 0;margin-top:8px}
+      .detail-grid{grid-template-columns:1fr 1fr;gap:2px 8px}
+      .detail-grid .lbl{font-size:0.6875rem}
+      .detail-grid .val{font-size:0.8125rem}
+      .stat-card{padding:16px}
+      .stat-number{font-size:1.5rem}
+    }
+
+  </style>
+
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="My Account — MildMate">
+  <meta property="og:description" content="Custom bedding made in Thailand. Perfect fit for every mattress.">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com/account/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="My Account — MildMate">
+  <meta name="twitter:description" content="Custom bedding made in Thailand. Perfect fit for every mattress.">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- Phase 8: GTM (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<div id="account-root">
+
+  <!-- Minimal account header -->
+  <header class="acct-header">
+    <div class="acct-header inner">
+      <a href="/" class="acct-header-logo" aria-label="MildMate Home">
+        <picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="140" height="38"></picture>
+      </a>
+      <div class="acct-header-actions">
+        <a href="/checkout/" style="position:relative;color:var(--color-text);padding:6px" aria-label="Shopping cart">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-count" id="cart-count" style="position:absolute;top:-2px;right:-6px;background:var(--color-primary);color:#fff;font-size:0.625rem;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center">0</span>
+        </a>
+        <div class="lang-toggle" style="font-size:0.8125rem;font-weight:600;color:var(--color-muted);padding:4px 8px;border:1px solid var(--color-border);border-radius:var(--radius)">
+          <span data-lang="en" class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px">EN</span>
+          <span style="color:var(--color-border)">/</span>
+          <span data-lang="th" style="color:var(--color-muted)">TH</span>
+        </div>
+        <div id="clerk-user-button"></div>
+        <button class="acct-sign-out" onclick="signOutClerk()">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="loading" id="loading-state">
+      <div class="spinner"></div>
+      <p style="color:var(--color-muted);margin-top:12px">Loading your account...</p>
+    </div>
+
+    <div id="auth-state" style="display:none">
+      <!-- Mobile scrollable pill-tab bar -->
+      <div class="mobile-tab-bar" id="mobile-tab-bar">
+        <button class="mobile-tab-pill active" onclick="showTab('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Dashboard
+        </button>
+        <button class="mobile-tab-pill" onclick="showTab('orders')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Orders
+        </button>
+        <button class="mobile-tab-pill" onclick="showTab('favorites')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Favorites
+        </button>
+        <button class="mobile-tab-pill" onclick="showTab('addresses')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Addresses
+        </button>
+        <button class="mobile-tab-pill" onclick="showTab('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+      </div>
+
+      <div class="portal">
+        <!-- Desktop sidebar -->
+        <nav class="portal-sidebar" id="portal-sidebar">
+          <!-- Profile card -->
+          <div class="sidebar-profile">
+            <img class="sidebar-avatar" id="dash-avatar-img" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('dash-avatar-fb').style.display='flex'">
+            <div class="sidebar-avatar-fallback" id="dash-avatar-fb" style="display:none">?</div>
+            <div class="sidebar-name" id="dash-greeting-text">Welcome</div>
+            <div class="sidebar-email" id="dash-email"></div>
+          </div>
+          <!-- Nav tabs -->
+          <div class="sidebar-nav">
+            <button class="sidebar-tab active" onclick="showTab('dashboard')">
+              <svg class="sidebar-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Dashboard
+            </button>
+            <button class="sidebar-tab" onclick="showTab('orders')">
+              <svg class="sidebar-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Orders
+            </button>
+            <button class="sidebar-tab" onclick="showTab('favorites')">
+              <svg class="sidebar-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Favorites
+            </button>
+            <button class="sidebar-tab" onclick="showTab('addresses')">
+              <svg class="sidebar-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Addresses
+            </button>
+            <button class="sidebar-tab" onclick="showTab('settings')">
+              <svg class="sidebar-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Settings
+            </button>
+          </div>
+        </nav>
+
+        <!-- Content area -->
+        <div class="portal-content">
+
+          <!-- Dashboard -->
+          <div class="portal-panel active" id="tab-dashboard">
+            <div class="dash-welcome">
+              <img class="dash-profile-img" id="dash-profile-img" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('dash-profile-fb').style.display='flex'">
+              <div class="dash-profile-fallback" id="dash-profile-fb" style="display:none">?</div>
+              <h1>Welcome back!</h1>
+              <p>Here's your account at a glance.</p>
+            </div>
+            <div class="dash-stats" id="dash-stats">
+              <div class="stat-card">
+                <div class="stat-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                <div class="stat-number" id="stat-total">0</div>
+                <div class="stat-label">Total Orders</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon amber"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                <div class="stat-number" id="stat-active">0</div>
+                <div class="stat-label">Active Orders</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+                <div class="stat-number" id="stat-favorites">0</div>
+                <div class="stat-label">Favorites</div>
+              </div>
+            </div>
+            <div class="card" id="dash-recent-card" style="display:none">
+              <h3 style="margin-bottom:12px">Recent Order</h3>
+              <div id="dash-recent-order"></div>
+              <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="showTab('orders')">View All Orders</button>
+            </div>
+            <div class="empty-state" id="dash-empty">
+              <h2>Welcome to MildMate!</h2>
+              <p>You haven't placed any orders yet.</p>
+              <a href="/products/" class="btn btn-primary" style="display:inline-flex">Start Shopping</a>
+            </div>
+          </div>
+
+          <!-- Orders -->
+          <div class="portal-panel" id="tab-orders">
+            <div id="orders-list"></div>
+            <div class="empty-state" id="orders-empty" style="display:none">
+              <h2>No orders yet</h2>
+              <p>Your completed orders will appear here.</p>
+              <a href="/products/" class="btn btn-primary" style="display:inline-flex">Start Shopping</a>
+            </div>
+          </div>
+
+          <!-- Favorites -->
+          <div class="portal-panel" id="tab-favorites">
+            <div id="favorites-list" class="favorites-grid"></div>
+            <div class="empty-state" id="favorites-empty" style="display:none">
+              <h2>No favorites yet</h2>
+              <p>Save products with the heart button to view them here.</p>
+              <a href="/products/" class="btn btn-primary" style="display:inline-flex">Browse Products</a>
+            </div>
+          </div>
+
+          <!-- Addresses -->
+          <div class="portal-panel" id="tab-addresses">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h2 style="margin:0">Saved Addresses</h2>
+              <button class="btn btn-primary btn-sm" onclick="toggleAddressForm()" id="add-addr-btn">+ Add New</button>
+            </div>
+            <div class="addr-form" id="addr-form">
+              <input type="hidden" id="addr-edit-id">
+              <div class="form-group">
+                <label class="form-label" for="addr-label">Label</label>
+                <select class="form-input" id="addr-label">
+                  <option value="Home">Home</option>
+                  <option value="Office">Office</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group float-group">
+                  <input class="form-input" id="addr-fname" placeholder=" " required autocomplete="given-name">
+                  <label class="form-label" for="addr-fname">First Name *</label>
+                </div>
+                <div class="form-group float-group">
+                  <input class="form-input" id="addr-lname" placeholder=" " required autocomplete="family-name">
+                  <label class="form-label" for="addr-lname">Last Name *</label>
+                </div>
+              </div>
+              <div class="form-group float-group">
+                <div class="phone-group">
+                  <select class="form-input" id="addr-phone-code" autocomplete="tel-country-code"></select>
+                  <input class="form-input" id="addr-phone" type="tel" placeholder=" " required autocomplete="tel-national">
+                </div>
+                <label class="form-label" for="addr-phone">Phone *</label>
+              </div>
+              <div class="form-group float-group">
+                <input class="form-input" id="addr-street" placeholder=" " required autocomplete="street-address">
+                <label class="form-label" for="addr-street">Street Address *</label>
+              </div>
+              <div class="form-row">
+                <div class="form-group float-group">
+                  <input class="form-input" id="addr-apt" placeholder=" " autocomplete="address-line2">
+                  <label class="form-label" for="addr-apt">Apt / Suite</label>
+                </div>
+                <div class="form-group float-group">
+                  <select class="form-input" id="addr-country" required autocomplete="country"></select>
+                  <label class="form-label" for="addr-country">Country *</label>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group float-group">
+                  <input class="form-input" id="addr-city" placeholder=" " required autocomplete="address-level2">
+                  <label class="form-label" for="addr-city">City *</label>
+                </div>
+                <div class="form-group float-group">
+                  <input class="form-input" id="addr-postal" placeholder=" " required autocomplete="postal-code">
+                  <label class="form-label" for="addr-postal">Postal Code *</label>
+                </div>
+              </div>
+              <div class="form-group float-group">
+                <input class="form-input" id="addr-state" placeholder=" " required autocomplete="address-level1">
+                <label class="form-label" for="addr-state">Province / State *</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div class="toggle-group" style="margin-bottom:0">
+                  <label class="toggle-switch"><input type="checkbox" id="addr-default"><span class="toggle-slider"></span></label>
+                </div>
+                <span style="font-size:0.875rem;font-weight:600">Set as default</span>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:8px">
+                <button class="btn btn-primary" onclick="saveAddress()">Save Address</button>
+                <button class="btn btn-outline" onclick="toggleAddressForm()">Cancel</button>
+              </div>
+            </div>
+            <div id="addresses-list" class="addresses-grid"></div>
+            <div class="empty-state" id="addresses-empty" style="display:none">
+              <h2>No saved addresses</h2>
+              <p>Add an address for faster checkout.</p>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="portal-panel" id="tab-settings">
+            <div class="card">
+              <h3 style="margin-bottom:12px">Profile</h3>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+                <img id="settings-avatar" src="" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;display:none" onerror="this.style.display='none'">
+                <div>
+                  <div style="font-weight:700" id="settings-name">—</div>
+                  <div style="font-size:0.8125rem;color:var(--color-muted)" id="settings-email">—</div>
+                </div>
+              </div>
+              <p style="font-size:0.8125rem;color:var(--color-muted)">Profile managed via Google. Change your name or photo in your Google account settings.</p>
+            </div>
+            <div class="card">
+              <h3 style="margin-bottom:12px">Preferences</h3>
+              <div class="form-group">
+                <label class="form-label" for="pref-lang">Language</label>
+                <select class="form-input" id="pref-lang" onchange="savePref('lang',this.value)">
+                  <option value="en">English</option>
+                  <option value="th">ไทย (Thai)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label" for="pref-currency">Currency</label>
+                <select class="form-input" id="pref-currency" onchange="savePref('currency',this.value)">
+                  <option value="auto">Auto-detect</option>
+                  <option value="THB">Thai Baht (฿)</option>
+                  <option value="USD">US Dollar ($)</option>
+                </select>
+              </div>
+            </div>
+            <div class="card">
+              <h3 style="margin-bottom:12px">Need Help?</h3>
+              <p style="font-size:0.9375rem;margin-bottom:12px">For order changes, returns, or questions:</p>
+              <a href="/contact/" class="btn btn-outline" style="display:inline-flex">Contact Support</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer-simple">
+    <p>© MildMate 2026 · <a href="/policy/">Privacy</a> · <a href="/shipping/">Shipping</a></p>
+  </footer>
+  <div class="toast" id="toast"></div>
+</div>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script>
+
+    (function() {
+      var user = null, orders = [], favorites = [], addresses = [];
+      var accountCountries = [{ code: 'TH', name: 'Thailand', phone: '+66' }];
+      var accountCountriesReady = null;
+
+      function findAccountCountryByName(name) {
+        var n = String(name || '').trim().toLowerCase();
+        if (!n) return null;
+        return accountCountries.find(function(c) { return String(c.name || '').trim().toLowerCase() === n; }) || null;
+      }
+
+      function defaultAddressCountryName() {
+        var th = accountCountries.find(function(c) { return c.code === 'TH' || String(c.name || '').toLowerCase() === 'thailand'; });
+        return (th && th.name) || (accountCountries[0] && accountCountries[0].name) || 'Thailand';
+      }
+
+      function defaultAddressPhoneCode(countryName) {
+        var c = findAccountCountryByName(countryName);
+        return (c && c.phone) || '+66';
+      }
+
+      // ── Init ── (middleware ensures authenticated user reaches this page)
+      waitForClerk();
+
+      async function waitForClerk() {
+        await new Promise(function(resolve) {
+          if (window.clerk && window.clerk.user) { resolve(); return; }
+          window.addEventListener('clerk:ready', resolve, { once: true });
+          setTimeout(resolve, 10000);
+        });
+        checkAuth();
+      }
+
+      // ── Auth ──
+      async function checkAuth() {
+        // Always trust Clerk client as primary auth source
+        var clerkUser = window.clerk && window.clerk.user;
+        if (!clerkUser) {
+          // Not signed in — let Clerk SDK handle the redirect
+          document.getElementById('loading-state').style.display = 'none';
+          document.getElementById('auth-state').style.display = 'block';
+          document.getElementById('dash-greeting-text').textContent = 'Redirecting to sign in\u2026';
+          if (typeof signInWithClerk === 'function') {
+            signInWithClerk(window.location.href);
+          }
+          return;
+        }
+
+        // Build user profile from Clerk client (always available)
+        var clerkProfile = {
+          name: clerkUser.fullName || '',
+          firstName: clerkUser.firstName || '',
+          email: (clerkUser.primaryEmailAddress && clerkUser.primaryEmailAddress.emailAddress) || '',
+          imageUrl: clerkUser.imageUrl || '',
+        };
+
+        // Try server verification (defense-in-depth, non-blocking)
+        var serverUser = null;
+        try {
+          var authHeaders = {};
+          if (typeof window.getClerkToken === 'function') {
+            for (var i = 0; i < 30; i++) {
+              try {
+                var token = await window.getClerkToken();
+                if (token) {
+                  authHeaders.Authorization = 'Bearer ' + token;
+                  break;
+                }
+              } catch (e) {}
+              await new Promise(function(r) { setTimeout(r, 200); });
+            }
+          }
+
+          if (authHeaders.Authorization) {
+            var resp = await fetch('/api/auth/me', { headers: authHeaders });
+            var data = await resp.json();
+            if (data.authenticated) {
+              serverUser = data;
+            }
+          }
+        } catch(e) {}
+
+        // Merge: prefer server profile, fall back to Clerk client
+        user = {
+          email: (serverUser && serverUser.email) || clerkProfile.email,
+          name: (serverUser && serverUser.name) || clerkProfile.name || clerkProfile.firstName,
+        };
+
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('auth-state').style.display = 'block';
+        document.getElementById('portal-sidebar').style.display = '';
+
+        var displayName = user.name || (user.email || '').split('@')[0];
+        document.getElementById('dash-greeting-text').textContent = 'Hi, ' + escHtml(displayName);
+        document.getElementById('dash-email').textContent = user.email || '';
+        document.getElementById('settings-name').textContent = user.name || '\u2014';
+        document.getElementById('settings-email').textContent = user.email || '\u2014';
+        document.getElementById('dash-avatar-fb').textContent = (displayName[0] || '?').toUpperCase();
+        document.getElementById('dash-profile-fb').textContent = (displayName[0] || '?').toUpperCase();
+
+        // Avatar from Clerk user
+        if (clerkProfile.imageUrl) {
+          document.getElementById('dash-avatar-img').src = clerkProfile.imageUrl;
+          document.getElementById('dash-avatar-img').style.display = '';
+          document.getElementById('dash-profile-img').src = clerkProfile.imageUrl;
+          document.getElementById('dash-profile-img').style.display = '';
+          document.getElementById('dash-avatar-fb').style.display = 'none';
+          document.getElementById('dash-profile-fb').style.display = 'none';
+          document.getElementById('settings-avatar').src = clerkProfile.imageUrl;
+          document.getElementById('settings-avatar').style.display = '';
+        } else {
+          document.getElementById('dash-avatar-fb').style.display = 'flex';
+          document.getElementById('dash-profile-fb').style.display = 'flex';
+        }
+
+        // Load prefs
+        document.getElementById('pref-lang').value = localStorage.getItem('mildmate_lang') || 'en';
+        document.getElementById('pref-currency').value = localStorage.getItem('mildmate_currency') || 'auto';
+
+        // Load data
+        loadOrders();
+        loadFavorites();
+        loadAddresses();
+        await populateCountryDropdown();
+      }
+
+      // ── Orders ──
+      async function loadOrders() {
+        try {
+          var token = await window.getClerkToken();
+          var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+          if (user && user.email) { headers['X-User-Email'] = user.email; }
+          // Bridge guest orders placed with a different email before sign-in
+          var guestEmail = localStorage.getItem('mildmate_order_email');
+          if (guestEmail && (!user || user.email !== guestEmail)) {
+            headers['X-Order-Email'] = guestEmail;
+          }
+          console.log('loadOrders: email=' + (user && user.email) + ' guestEmail=' + (guestEmail || 'none') + ' token=' + !!token);
+          var resp = await fetch('/api/customers/orders', { headers: headers });
+          console.log('loadOrders: status=' + resp.status);
+          if (!resp.ok) {
+            var errData = await resp.json().catch(function(){ return {}; });
+            console.error('loadOrders failed:', resp.status, errData.error || '');
+            showToast('Failed to load orders — please refresh');
+            return;
+          }
+          var data = await resp.json();
+          console.log('loadOrders: got ' + (data.orders ? data.orders.length : 0) + ' orders');
+          orders = data.orders || [];
+          // Clear guest email bridge after successful merge (one-time)
+          if (data.merged) { localStorage.removeItem('mildmate_order_email'); }
+          renderOrders();
+          renderDashboard();
+        } catch(e) { console.error('loadOrders:', e); showToast('Failed to load orders'); }
+      }
+
+      function renderOrders() {
+        var listEl = document.getElementById('orders-list');
+        var emptyEl = document.getElementById('orders-empty');
+
+        if (orders.length === 0) {
+          emptyEl.style.display = 'block';
+          listEl.innerHTML = '';
+          return;
+        }
+        emptyEl.style.display = 'none';
+
+        var trackingTplByCarrier = {
+          thaipost: 'https://track.thailandpost.co.th',
+          flash: 'https://www.flashexpress.co.th/fle/tracking',
+          dhl: 'https://www.dhl.com/us-en/home.html',
+          ups: 'https://www.ups.com/track?TypeOfInquiryNumber=T&InquiryNumber1={TRACKING}',
+          fedex: 'https://www.fedex.com/en-us/tracking.html',
+          usps: 'https://tools.usps.com/tracking/{TRACKING}'
+        };
+        var carrierLabelMap = {
+          thaipost: 'Thailand Post',
+          flash: 'Flash Express',
+          dhl: 'DHL',
+          ups: 'UPS',
+          fedex: 'FedEx',
+          usps: 'USPS'
+        };
+
+        var html = '';
+        orders.forEach(function(o, idx) {
+          var dims = [o.width_cm, o.length_cm, o.depth_cm].filter(Boolean).join('\u00D7');
+          if (dims) dims += ' cm';
+          if (o.width_in && o.length_in) {
+            var dimsIn = [o.width_in, o.length_in, o.depth_in].filter(Boolean).join('\u00D7');
+            if (dimsIn) dims += ' (' + dimsIn + ' in)';
+          }
+          var dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}) : '';
+          var status = (o.status || 'confirmed').toLowerCase();
+          var statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+          var carrierCode = String(o.carrier_code || '').toLowerCase();
+          var carrierLabel = carrierLabelMap[carrierCode] || (carrierCode ? carrierCode.toUpperCase() : '');
+          var resolvedTrackingUrl = o.tracking_url || '';
+          if (!resolvedTrackingUrl && carrierCode && o.tracking_number && trackingTplByCarrier[carrierCode]) {
+            resolvedTrackingUrl = trackingTplByCarrier[carrierCode].replace('{TRACKING}', encodeURIComponent(o.tracking_number));
+          }
+          var trackBtn = '';
+          if (o.tracking_number && resolvedTrackingUrl) {
+            trackBtn = '<a class="btn btn-primary btn-sm" href="' + escHtml(resolvedTrackingUrl) + '" target="_blank" rel="noopener" style="width:auto">Track Package</a>';
+          }
+          var trackingLabel = '';
+          if (o.tracking_number) {
+            trackingLabel = (carrierLabel ? carrierLabel + ': ' : '') + o.tracking_number;
+          }
+          var thumbUrl = o.image_url || '';
+          var specs = [o.fabric, o.color, dims].filter(Boolean).join(' \u00B7 ');
+
+          html += '<div class="order-card">' +
+            '<div class="order-row">' +
+              (thumbUrl ? '<img class="order-thumb" src="' + escHtml(thumbUrl) + '" alt="" loading="lazy">' : '<div class="order-thumb" style="background:var(--color-border)"></div>') +
+              '<div class="order-info">' +
+                '<div class="order-id-line">' +
+                  '<span class="order-id">#' + escHtml(o.stripe_session_id ? o.stripe_session_id.slice(-12) : (o.id || '—')) + '</span>' +
+                  '<span class="order-date">&middot; ' + dateStr + '</span>' +
+                '</div>' +
+                '<div class="order-summary">' + escHtml(o.product_title_en || 'Custom Order') + ' &times; ' + (o.quantity || 1) + '</div>' +
+                (specs ? '<div class="order-specs">' + escHtml(specs) + '</div>' : '') +
+              '</div>' +
+              '<div class="order-actions">' +
+                '<span class="order-status status-' + status + '">' + statusLabel + '</span>' +
+                (trackBtn || '') +
+                (trackingLabel ? '<span style="font-size:0.6875rem;color:var(--color-muted)">' + escHtml(trackingLabel) + '</span>' : '') +
+                '<div class="order-price">' + formatPrice(o.price_thb, o.price_usd) + '</div>' +
+                '<button class="btn btn-sm" style="padding:2px 0;color:var(--color-primary);font-size:0.75rem" onclick="toggleDetail(' + idx + ')">' +
+                  '<span id="detail-link-' + idx + '">Details \u25BC</span>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="order-detail" id="order-detail-' + idx + '">' +
+              '<div class="detail-grid">' +
+                '<div class="lbl">Fabric</div><div class="val">' + escHtml(o.fabric || '—') + '</div>' +
+                '<div class="lbl">Color</div><div class="val">' + escHtml(o.color || '—') + '</div>' +
+                '<div class="lbl">Dimensions</div><div class="val">' + (dims || '—') + '</div>' +
+                '<div class="lbl">Status</div><div class="val" style="text-transform:capitalize">' + statusLabel + '</div>' +
+                '<div class="lbl">Qty</div><div class="val">' + (o.quantity || 1) + '</div>' +
+                (o.tracking_number ? '<div class="lbl">Tracking</div><div class="val">' + (resolvedTrackingUrl ? '<a href="' + escHtml(resolvedTrackingUrl) + '" target="_blank" rel="noopener">' : '') + (carrierLabel ? escHtml(carrierLabel) + ': ' : '') + escHtml(o.tracking_number) + (resolvedTrackingUrl ? '</a>' : '') + '</div>' : '') +
+                (o.shipping_status ? '<div class="lbl">Shipping</div><div class="val" style="text-transform:capitalize">' + escHtml(String(o.shipping_status).replace('_', ' ')) + '</div>' : '') +
+                (o.shipping_address ? '<div class="lbl">Address</div><div class="val">' + escHtml(o.shipping_address) + '</div>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        });
+
+        listEl.innerHTML = html;
+      }
+
+      async function getAuthHeadersWithRetry(retries) {
+        var max = typeof retries === 'number' ? retries : 20;
+        for (var i = 0; i <= max; i++) {
+          try {
+            var token = await window.getClerkToken();
+            if (token) {
+              var headers = { 'Authorization': 'Bearer ' + token };
+              if (user && user.email) { headers['X-User-Email'] = user.email; }
+              return headers;
+            }
+          } catch (e) {}
+          if (i < max) await new Promise(function(r) { setTimeout(r, 200); });
+        }
+        return null;
+      }
+
+      // ── Favorites ──
+      async function loadFavorites() {
+        try {
+          var headers = await getAuthHeadersWithRetry(25);
+          if (!headers || !headers.Authorization) {
+            favorites = [];
+            renderFavorites();
+            showToast('Sign-in session not ready. Please refresh and try again.');
+            return;
+          }
+          var resp = await fetch('/api/favorites', { headers: headers });
+          if (!resp.ok) {
+            if (resp.status === 401 || resp.status === 403) {
+              showToast('Session expired. Please sign in again.');
+            } else {
+              showToast('Failed to load favorites.');
+            }
+            favorites = [];
+            renderFavorites();
+            return;
+          }
+          var data = await resp.json();
+          favorites = data.favorites || [];
+          renderFavorites();
+          renderDashboard();
+        } catch(e) {
+          favorites = [];
+          renderFavorites();
+        }
+      }
+
+      function renderFavorites() {
+        var listEl = document.getElementById('favorites-list');
+        var emptyEl = document.getElementById('favorites-empty');
+        if (!listEl || !emptyEl) return;
+
+        if (!favorites.length) {
+          listEl.innerHTML = '';
+          emptyEl.style.display = 'block';
+          return;
+        }
+
+        emptyEl.style.display = 'none';
+        var html = '';
+        favorites.forEach(function(f) {
+          var dateStr = f.created_at ? new Date(f.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : '';
+          var img = f.image_url || '/images/logo.png';
+          html += '<div class="favorite-card">' +
+            '<img class="favorite-thumb" src="' + escHtml(img) + '" alt="' + escHtml(f.title_en || f.slug || 'Product') + '" loading="lazy">' +
+            '<div class="favorite-meta">' +
+              '<div class="favorite-name">' + escHtml(f.title_en || f.slug || 'Product') + '</div>' +
+              '<div class="favorite-sub">' + (dateStr ? ('Saved on ' + dateStr) : '') + '</div>' +
+              '<div class="favorite-actions">' +
+                '<a class="btn btn-outline btn-sm" style="width:auto" href="/product/' + encodeURIComponent(f.slug || '') + '/">View Product</a>' +
+                '<button class="btn-danger" onclick="removeFavorite(\'' + escHtml(f.slug || '') + '\')">Remove</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        });
+        listEl.innerHTML = html;
+      }
+
+      window.removeFavorite = async function(slug) {
+        if (!slug) return;
+        try {
+          var token = await window.getClerkToken();
+          if (!token) { showToast('Session expired — please refresh'); return; }
+          var headers = { 'Authorization': 'Bearer ' + token };
+          if (user && user.email) { headers['X-User-Email'] = user.email; }
+          var resp = await fetch('/api/favorites?productSlug=' + encodeURIComponent(slug), {
+            method: 'DELETE',
+            headers: headers
+          });
+          if (!resp.ok) {
+            showToast('Failed to remove favorite');
+            return;
+          }
+          await loadFavorites();
+          showToast('Favorite removed');
+        } catch(e) {
+          showToast('Failed to remove favorite');
+        }
+      };
+
+      function renderDashboard() {
+        var total = orders.length;
+        var active = orders.filter(function(o) { return o.status !== 'delivered' && o.status !== 'cancelled'; }).length;
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-active').textContent = active;
+        document.getElementById('stat-favorites').textContent = favorites.length;
+
+        if (orders.length > 0) {
+          document.getElementById('dash-recent-card').style.display = '';
+          document.getElementById('dash-empty').style.display = 'none';
+          var o = orders[0];
+          var dims = [o.width_cm, o.length_cm, o.depth_cm].filter(Boolean).join('\u00D7') + (o.width_cm ? ' cm' : '');
+          document.getElementById('dash-recent-order').innerHTML =
+            '<div class="order-top">' +
+              '<div><span class="order-id">#' + escHtml(o.stripe_session_id ? o.stripe_session_id.slice(-12) : (o.id || '—')) + '</span></div>' +
+              '<span class="order-status status-' + (o.status || 'confirmed').toLowerCase() + '">' + (o.status || 'confirmed').toUpperCase() + '</span>' +
+            '</div>' +
+            '<div class="order-summary">' + escHtml(o.product_title_en || 'Custom Order') + '</div>' +
+            '<div class="order-summary" style="color:var(--color-muted);font-size:0.8125rem">' + [o.fabric, o.color, dims].filter(Boolean).join(' &middot; ') + '</div>' +
+            '<div class="order-price">' + formatPrice(o.price_thb, o.price_usd) + '</div>';
+        } else {
+          document.getElementById('dash-recent-card').style.display = 'none';
+          document.getElementById('dash-empty').style.display = '';
+        }
+      }
+
+      function formatPrice(thb, usd) {
+        var parts = [];
+        if (thb) parts.push('\u0E3F' + Number(thb).toLocaleString());
+        if (usd) parts.push('$' + Number(usd));
+        return parts.join(' / ') || '\u2014';
+      }
+
+      // ── Addresses ──
+      async function loadAddresses() {
+        try {
+          var token = await window.getClerkToken();
+          var headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+          if (user && user.email) { headers['X-User-Email'] = user.email; }
+          var resp = await fetch('/api/customers/addresses', { headers: headers });
+          var data = await resp.json();
+          addresses = data.addresses || [];
+          renderAddresses();
+        } catch(e) { console.error('loadAddresses:', e); }
+      }
+
+      function renderAddresses() {
+        var listEl = document.getElementById('addresses-list');
+        var emptyEl = document.getElementById('addresses-empty');
+        var addBtn = document.getElementById('add-addr-btn');
+
+        if (addresses.length === 0) {
+          emptyEl.style.display = 'block';
+          listEl.innerHTML = '';
+          return;
+        }
+        emptyEl.style.display = 'none';
+
+        var html = '';
+        addresses.forEach(function(a) {
+          var isDefault = a.is_default == 1;
+          var line2 = [a.city, a.state, a.postal_code].filter(Boolean).join(', ');
+          var line3 = a.country || '';
+          html += '<div class="addr-card' + (isDefault ? ' default' : '') + '">' +
+            (isDefault ? '<span class="addr-badge">Default</span>' : '') +
+            '<div class="addr-name">' + escHtml(a.first_name + ' ' + a.last_name) + (a.label && a.label !== 'Home' ? ' (' + a.label + ')' : '') + '</div>' +
+            '<div class="addr-line">' + escHtml(a.address) + '</div>' +
+            '<div class="addr-line">' + escHtml(line2) + '</div>' +
+            (line3 ? '<div class="addr-line">' + escHtml(line3) + '</div>' : '') +
+            '<div class="addr-line" style="color:var(--color-muted);font-size:0.8125rem;margin-top:4px">' + escHtml(a.phone) + '</div>' +
+            '<div class="addr-actions">' +
+              (!isDefault ? '<button class="btn btn-outline btn-sm" style="width:auto" onclick="setDefaultAddress(' + a.id + ')">Set as Default</button>' : '') +
+              '<button class="btn btn-outline btn-sm" style="width:auto" onclick="editAddress(' + a.id + ')">Edit</button>' +
+              '<button class="btn-danger" onclick="deleteAddress(' + a.id + ')">Delete</button>' +
+            '</div>' +
+          '</div>';
+        });
+        listEl.innerHTML = html;
+      }
+
+      function toggleAddressForm() {
+        var form = document.getElementById('addr-form');
+        var isOpen = form.classList.contains('open');
+        form.classList.toggle('open');
+        if (!isOpen) {
+          resetAddressForm();
+          document.getElementById('add-addr-btn').textContent = 'Cancel';
+        } else {
+          document.getElementById('add-addr-btn').textContent = '+ Add New';
+        }
+      }
+      window.toggleAddressForm = toggleAddressForm;
+
+      function resetAddressForm() {
+        document.getElementById('addr-edit-id').value = '';
+        document.getElementById('addr-label').value = 'Home';
+        document.getElementById('addr-fname').value = '';
+        document.getElementById('addr-lname').value = '';
+        var defaultCountry = defaultAddressCountryName();
+        document.getElementById('addr-phone-code').value = defaultAddressPhoneCode(defaultCountry);
+        document.getElementById('addr-phone').value = '';
+        document.getElementById('addr-country').value = defaultCountry;
+        document.getElementById('addr-street').value = '';
+        document.getElementById('addr-apt').value = '';
+        document.getElementById('addr-city').value = '';
+        document.getElementById('addr-state').value = '';
+        document.getElementById('addr-postal').value = '';
+        document.getElementById('addr-default').checked = false;
+      }
+
+      window.editAddress = function(id) {
+        var a = addresses.find(function(x) { return x.id == id; });
+        if (!a) return;
+        document.getElementById('addr-edit-id').value = a.id;
+        document.getElementById('addr-label').value = a.label || 'Home';
+        document.getElementById('addr-fname').value = a.first_name || '';
+        document.getElementById('addr-lname').value = a.last_name || '';
+        var selectedCountry = findAccountCountryByName(a.country) ? a.country : defaultAddressCountryName();
+        var rawPhone = String(a.phone || '').trim();
+        var phoneMatch = rawPhone.match(/^(\+\d{1,4})(.*)$/);
+        document.getElementById('addr-phone-code').value = phoneMatch ? phoneMatch[1] : defaultAddressPhoneCode(selectedCountry);
+        document.getElementById('addr-phone').value = phoneMatch ? phoneMatch[2].trim() : rawPhone;
+        document.getElementById('addr-country').value = selectedCountry;
+        document.getElementById('addr-street').value = a.address || '';
+        document.getElementById('addr-apt').value = '';
+        document.getElementById('addr-city').value = a.city || '';
+        document.getElementById('addr-state').value = a.state || '';
+        document.getElementById('addr-postal').value = a.postal_code || '';
+        document.getElementById('addr-default').checked = a.is_default == 1;
+        var form = document.getElementById('addr-form');
+        form.classList.add('open');
+        document.getElementById('add-addr-btn').textContent = 'Cancel';
+        form.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      window.saveAddress = async function() {
+        var editId = document.getElementById('addr-edit-id').value;
+        var phoneCode = document.getElementById('addr-phone-code').value || '+66';
+        var phoneNum = document.getElementById('addr-phone').value.trim();
+        var street = document.getElementById('addr-street').value.trim();
+        var apt = document.getElementById('addr-apt').value.trim();
+        var fullAddress = street + (apt ? ', Apt/Suite ' + apt : '');
+
+        var body = {
+          label: document.getElementById('addr-label').value,
+          first_name: document.getElementById('addr-fname').value.trim(),
+          last_name: document.getElementById('addr-lname').value.trim(),
+          phone: phoneCode + phoneNum,
+          country: document.getElementById('addr-country').value,
+          address: fullAddress,
+          city: document.getElementById('addr-city').value.trim(),
+          state: document.getElementById('addr-state').value.trim(),
+          postal_code: document.getElementById('addr-postal').value.trim(),
+          is_default: document.getElementById('addr-default').checked
+        };
+
+        if (!body.first_name || !body.last_name || !phoneNum || !body.country || !street || !body.city) {
+          showToast('Please fill all required fields');
+          return;
+        }
+
+        try {
+          var token = await window.getClerkToken();
+          if (!token) {
+            showToast('Session expired — please refresh');
+            return;
+          }
+          var url = '/api/customers/addresses';
+          var method = 'POST';
+          if (editId) { url += '?id=' + editId; method = 'PUT'; }
+
+          // Send email explicitly — Clerk session JWT may not include it
+          var headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          };
+          if (user && user.email) {
+            headers['X-User-Email'] = user.email;
+          }
+
+          var resp = await fetch(url, {
+            method: method,
+            headers: headers,
+            body: JSON.stringify(body)
+          });
+
+          if (!resp.ok) {
+            var err = await resp.json();
+            showToast(err.error || 'Failed to save');
+            return;
+          }
+
+          toggleAddressForm();
+          await loadAddresses();
+          showToast(editId ? 'Address updated' : 'Address added');
+        } catch(e) {
+          showToast('Network error — try again');
+        }
+      };
+
+      window.deleteAddress = async function(id) {
+        if (!confirm('Delete this address?')) return;
+        try {
+          var token = await window.getClerkToken();
+          if (!token) { showToast('Session expired — please refresh'); return; }
+          var headers = { 'Authorization': 'Bearer ' + token };
+          if (user && user.email) { headers['X-User-Email'] = user.email; }
+          await fetch('/api/customers/addresses?id=' + id, {
+            method: 'DELETE',
+            headers: headers
+          });
+          await loadAddresses();
+          showToast('Address deleted');
+        } catch(e) {
+          showToast('Failed to delete');
+        }
+      };
+
+      window.setDefaultAddress = async function(id) {
+        try {
+          var token = await window.getClerkToken();
+          if (!token) { showToast('Session expired — please refresh'); return; }
+          var headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          };
+          if (user && user.email) { headers['X-User-Email'] = user.email; }
+          // Send full address — API overwrites all fields on PUT
+          var addr = addresses.find(function(a) { return a.id == id; });
+          var body = addr ? {
+            label: addr.label || 'Home',
+            first_name: addr.first_name || '',
+            last_name: addr.last_name || '',
+            phone: addr.phone || '',
+            country: addr.country || '',
+            address: addr.address || '',
+            city: addr.city || '',
+            state: addr.state || '',
+            postal_code: addr.postal_code || '',
+            is_default: true
+          } : { is_default: true };
+          await fetch('/api/customers/addresses?id=' + id, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify(body)
+          });
+          await loadAddresses();
+          showToast('Default address updated');
+        } catch(e) {
+          showToast('Failed to update');
+        }
+      };
+
+      // ── Tab switching (portal nav) ──
+      window.showTab = function(tab) {
+        document.querySelectorAll('.sidebar-tab').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.portal-panel').forEach(function(p) { p.classList.remove('active'); });
+
+        var btns = document.querySelectorAll('.sidebar-tab');
+        for (var i = 0; i < btns.length; i++) {
+          if (btns[i].textContent.trim().toLowerCase().indexOf(tab) === 0 ||
+              (btns[i].getAttribute('onclick') || '').indexOf("'" + tab + "'") > -1) {
+            btns[i].classList.add('active');
+            break;
+          }
+        }
+        document.getElementById('tab-' + tab).classList.add('active');
+        var mobilePills = document.querySelectorAll('.mobile-tab-pill');
+        for (var j2 = 0; j2 < mobilePills.length; j2++) {
+          mobilePills[j2].classList.toggle('active', mobilePills[j2].textContent.trim().toLowerCase().indexOf(tab) === 0);
+        }
+      };
+
+      // ── Preferences ──
+      window.savePref = function(key, val) {
+        localStorage.setItem('mildmate_' + key, val);
+        showToast('Preference saved');
+      };
+
+      // ── Country + phone code dropdown ──
+      async function populateCountryDropdown() {
+        if (accountCountriesReady) return accountCountriesReady;
+        accountCountriesReady = (async function() {
+          var fallbackCountries = [
+            "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia","Austria","Azerbaijan",
+            "Bahrain","Bangladesh","Belarus","Belgium","Bhutan","Bolivia","Bosnia","Brazil","Brunei","Bulgaria",
+            "Cambodia","Cameroon","Canada","Chile","China","Colombia","Costa Rica","Croatia","Cyprus","Czech Republic",
+            "Denmark","Ecuador","Egypt","Estonia","Ethiopia","Finland","France","Georgia","Germany","Greece",
+            "Hong Kong","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy",
+            "Japan","Jordan","Kazakhstan","Kenya","Kuwait","Laos","Latvia","Lebanon","Lithuania","Luxembourg",
+            "Malaysia","Maldives","Malta","Mexico","Monaco","Mongolia","Morocco","Myanmar","Nepal","Netherlands",
+            "New Zealand","Nigeria","Norway","Oman","Pakistan","Panama","Peru","Philippines","Poland","Portugal",
+            "Qatar","Romania","Russia","Saudi Arabia","Serbia","Singapore","Slovakia","Slovenia","South Africa","South Korea",
+            "Spain","Sri Lanka","Sweden","Switzerland","Taiwan","Tanzania","Thailand","Turkey","UAE","Uganda",
+            "Ukraine","United Kingdom","United States","Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zimbabwe"
+          ];
+          var fallbackPhones = {
+            "Thailand":"+66","United States":"+1","United Kingdom":"+44","Australia":"+61","Canada":"+1",
+            "Germany":"+49","France":"+33","Japan":"+81","South Korea":"+82","Singapore":"+65",
+            "Malaysia":"+60","Vietnam":"+84","Indonesia":"+62","Philippines":"+63","India":"+91",
+            "China":"+86","Hong Kong":"+852","Taiwan":"+886","New Zealand":"+64","UAE":"+971",
+            "Saudi Arabia":"+966","Qatar":"+974","Kuwait":"+965","Bahrain":"+973","Oman":"+968"
+          };
+
+          try {
+            var resp = await fetch('/api/countries');
+            var data = await resp.json().catch(function(){ return {}; });
+            if (resp.ok && data && Array.isArray(data.countries) && data.countries.length > 0) {
+              accountCountries = data.countries.map(function(c) {
+                return {
+                  code: String(c.code || '').toUpperCase(),
+                  name: String(c.name || '').trim(),
+                  phone: String(c.phone || '').trim()
+                };
+              }).filter(function(c) { return c.name; });
+            } else {
+              accountCountries = fallbackCountries.map(function(name) {
+                return { code: '', name: name, phone: fallbackPhones[name] || '' };
+              });
+            }
+          } catch (e) {
+            accountCountries = fallbackCountries.map(function(name) {
+              return { code: '', name: name, phone: fallbackPhones[name] || '' };
+            });
+          }
+
+          var countrySel = document.getElementById('addr-country');
+          var codeSel = document.getElementById('addr-phone-code');
+          if (!countrySel || !codeSel) return;
+
+          var currentCountry = String(countrySel.value || '').trim();
+          var currentPhone = String(codeSel.value || '').trim();
+          countrySel.innerHTML = '';
+          accountCountries.forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.name;
+            opt.textContent = c.name;
+            countrySel.appendChild(opt);
+          });
+
+          codeSel.innerHTML = '';
+          var added = {};
+          accountCountries.forEach(function(c) {
+            var code = c.phone || '';
+            if (code && !added[code]) {
+              added[code] = true;
+              var opt = document.createElement('option');
+              opt.value = code;
+              opt.textContent = code;
+              codeSel.appendChild(opt);
+            }
+          });
+          if (!added['+66']) {
+            var thOpt = document.createElement('option');
+            thOpt.value = '+66';
+            thOpt.textContent = '+66';
+            codeSel.appendChild(thOpt);
+          }
+
+          var useCountry = findAccountCountryByName(currentCountry) ? currentCountry : defaultAddressCountryName();
+          countrySel.value = useCountry;
+          codeSel.value = currentPhone || defaultAddressPhoneCode(useCountry);
+
+          if (!countrySel.dataset.boundPhoneSync) {
+            countrySel.addEventListener('change', function() {
+              var code = defaultAddressPhoneCode(countrySel.value);
+              if (codeSel) codeSel.value = code;
+            });
+            countrySel.dataset.boundPhoneSync = '1';
+          }
+        })();
+        return accountCountriesReady;
+      }
+
+      // ── Order detail toggle ──
+      window.toggleDetail = function(idx) {
+        var detail = document.getElementById('order-detail-' + idx);
+        var link = document.getElementById('detail-link-' + idx);
+        if (!detail || !link) return;
+        var isOpen = detail.classList.toggle('open');
+        link.textContent = isOpen ? 'Hide \u25B2' : 'Details \u25BC';
+      };
+
+      // ── Toast ──
+      function showToast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._timeout);
+        t._timeout = setTimeout(function() { t.classList.remove('show'); }, 2500);
+      }
+
+      function escHtml(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+    })();
+    </script>
+</body>
+</html>
+

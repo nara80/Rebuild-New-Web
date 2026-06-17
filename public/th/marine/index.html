@@ -22,21 +22,21 @@
     .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
     .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
     .listing-section { padding: 48px 0; }
-    .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
-    .listing-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; }
-    .listing-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
-    .listing-card .card-image { position: relative; overflow: hidden; background: var(--color-surface); }
+    
+    
+    
+    
     .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
-    .listing-card:hover .card-image img { transform: scale(1.04); }
-    .listing-card .card-video-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.6875rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); }
-    .listing-card .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-    .listing-card .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .listing-card .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
-    .listing-card .card-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 10px; line-height: 1.3; }
-    .listing-card .card-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 6px; }
-    .listing-card .card-price-note { font-size: 0.75rem; color: #999; margin-bottom: 16px; }
-    .listing-card .card-cta { margin-top: auto; }
-    .listing-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
     .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
     .listing-card .btn-outline { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
@@ -56,10 +56,27 @@
       .listing-desc-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 480px) {
-      .listing-grid { grid-template-columns: 1fr; }
-      .listing-card .card-image img { aspect-ratio: 16/9; }
+      
+      
     }
-  </style>
+  
+    /* Standardized Product Grid & Cards */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+    .product-card { background: var(--color-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform var(--transition), box-shadow var(--transition); display: flex; flex-direction: column; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .product-image { width: 100%; aspect-ratio: 4/3; background: var(--color-surface); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
+    .product-card:hover .product-image img { transform: scale(1.03); }
+    .product-info { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .product-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .card-tag { font-size: 0.6875rem; font-weight: 600; color: var(--color-primary); background: #e8f4fd; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .product-title { font-size: 1rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px !important; line-height: 1.35; min-height: auto !important; }
+    .product-price { font-size: 1.125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 4px !important; }
+    .product-price-note { font-size: 0.7188rem; color: var(--color-muted); margin-bottom: 8px !important; line-height: 1.2; }
+    .product-benefit { font-size: 0.8125rem; color: var(--color-text); margin-bottom: 8px; line-height: 1.4; flex-grow: 1; }
+    .product-fabrics-info { font-size: 0.75rem; color: var(--color-muted); font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .product-card .btn { display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: var(--radius); font-weight: 600; font-size: 0.9375rem; transition: background 0.2s; }
+    </style>
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
@@ -143,112 +160,94 @@
 
     <section class="listing-section">
       <div class="container">
-        <div class="listing-grid">
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
+        <div class="product-grid">
+          <article class="product-card" data-categories="sheets,marine,custom-shape" data-title="ผ้าปูที่นอนสำหรับเรือและยอชต์ (marine)" data-price="1835">
+            <div class="product-image">
+              <img src="/images/products/boat-fitted-sheet/main.jpg" alt="ผ้าปูที่นอนสำหรับเรือและยอชต์ (Marine)" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="card-body">
-              <div class="card-tags">
-                <a href="/th/sheets/" class="card-tag" style="text-decoration:none;">ผ้าปูที่นอน</a>
-                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
-              </div>
-              <h3 class="card-title">Marine Fitted Sheet</h3>
-              <div class="card-price" data-usd="52" data-thb="1835">เริ่มต้น ฿1,835</div>
-              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
-              <div class="card-cta">
-                <a href="/product/marine-fitted-sheet/" class="btn btn-primary">ดูตัวเลือก</a>
-              </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/th/sheets/" class="card-tag" style="text-decoration:none;">ผ้าปูที่นอน</a><a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือและยอชต์</a></div>
+              <h3 class="product-title">ผ้าปูที่นอนสำหรับเรือและยอชต์ (Marine)</h3>
+              <div class="product-price" data-usd="52" data-thb="1835">เริ่มต้น ฿1,835</div>
+              <div class="product-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <p class="product-benefit">สั่งตัดพอดีรูปทรง V-Berth และที่นอนรูปทรงเฉพาะบนเรือ</p>
+              <div class="product-fabrics-info">สั่งตัดพิเศษ · เลือกเนื้อผ้าได้หลากหลาย</div>
+              <a href="/th/product/marine-fitted-sheet/" class="btn btn-primary" style="margin-top:auto;">ออกแบบสั่งตัดพิเศษ</a>
             </div>
           </article>
 
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/duvet-cover-marine/main.jpg" alt="Duvet Cover - Marine" width="800" height="600" loading="lazy" decoding="async">
+          <article class="product-card" data-categories="duvet-covers,marine,custom-shape" data-title="ปลอกผ้านวมสำหรับเรือและยอชต์" data-price="2755">
+            <div class="product-image">
+              <img src="/images/products/duvet-cover-marine/main.jpg" alt="ปลอกผ้านวมสำหรับเรือและยอชต์" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="card-body">
-              <div class="card-tags">
-                <a href="/th/duvet-covers/" class="card-tag" style="text-decoration:none;">ปลอกผ้านวม</a>
-                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
-              </div>
-              <h3 class="card-title">Duvet Cover - Marine</h3>
-              <div class="card-price" data-usd="72" data-thb="2535">เริ่มต้น ฿2,535</div>
-              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
-              <div class="card-cta">
-                <a href="/product/duvet-cover-marine/" class="btn btn-primary">ดูตัวเลือก</a>
-              </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/th/duvet-covers/" class="card-tag" style="text-decoration:none;">ปลอกผ้านวม</a><a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือและยอชต์</a></div>
+              <h3 class="product-title">ปลอกผ้านวมสำหรับเรือและยอชต์</h3>
+              <div class="product-price" data-usd="78" data-thb="2755">เริ่มต้น ฿2,755</div>
+              <div class="product-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <p class="product-benefit">สั่งตัดตามรูปทรงเตียงในห้องนอนเรือขนาดกะทัดรัด</p>
+              <div class="product-fabrics-info">สั่งตัดพิเศษ · เลือกเนื้อผ้าได้หลากหลาย</div>
+              <a href="/th/product/duvet-cover-marine/" class="btn btn-primary" style="margin-top:auto;">ออกแบบสั่งตัดพิเศษ</a>
             </div>
           </article>
 
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="800" height="600" loading="lazy" decoding="async">
+          <article class="product-card" data-categories="pillowcases" data-title="ปลอกหมอนแบบซอง (envelope)" data-price="565">
+            <div class="product-image">
+              <img src="/images/products/pillowcase-envelope/main.jpg" alt="ปลอกหมอนแบบซอง (Envelope)" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="card-body">
-              <div class="card-tags">
-                <a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a>
-                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
-              </div>
-              <h3 class="card-title">Envelope Pillowcase</h3>
-              <div class="card-price" data-usd="16" data-thb="565">เริ่มต้น ฿565</div>
-              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
-              <div class="card-cta">
-                <a href="/product/pillowcase-envelope/" class="btn btn-primary">ดูตัวเลือก</a>
-              </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a></div>
+              <h3 class="product-title">ปลอกหมอนแบบซอง (Envelope)</h3>
+              <div class="product-price" data-usd="16" data-thb="565">เริ่มต้น ฿565</div>
+              <div class="product-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <p class="product-benefit">ดีไซน์สวมซองแบบคลาสสิก ถอดซักและสวมใส่สะดวก</p>
+              <div class="product-fabrics-info">มีให้เลือก 4 เนื้อผ้า · 23 สี</div>
+              <a href="/th/product/pillowcase-envelope/" class="btn btn-primary" style="margin-top:auto;">เลือกขนาดและเนื้อผ้า</a>
             </div>
           </article>
 
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pillowcase-zipper/main.jpg" alt="Zipper Pillowcase" width="800" height="600" loading="lazy" decoding="async">
+          <article class="product-card" data-categories="pillowcases" data-title="ปลอกหมอนแบบมีซิป (zipper)" data-price="635">
+            <div class="product-image">
+              <img src="/images/products/pillowcase-zipper/main.jpg" alt="ปลอกหมอนแบบมีซิป (Zipper)" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="card-body">
-              <div class="card-tags">
-                <a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a>
-                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
-              </div>
-              <h3 class="card-title">Zipper Pillowcase</h3>
-              <div class="card-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
-              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
-              <div class="card-cta">
-                <a href="/product/pillowcase-zipper/" class="btn btn-primary">ดูตัวเลือก</a>
-              </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a></div>
+              <h3 class="product-title">ปลอกหมอนแบบมีซิป (Zipper)</h3>
+              <div class="product-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
+              <div class="product-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <p class="product-benefit">ซิปรูดปิดมิดชิด ป้องกันไรฝุ่นและการสัมผัสโดยตรง</p>
+              <div class="product-fabrics-info">มีให้เลือก 4 เนื้อผ้า · 23 สี</div>
+              <a href="/th/product/pillowcase-zipper/" class="btn btn-primary" style="margin-top:auto;">เลือกขนาดและเนื้อผ้า</a>
             </div>
           </article>
 
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pillowcase-sham/main.jpg" alt="Sham Pillowcase" width="800" height="600" loading="lazy" decoding="async">
+          <article class="product-card" data-categories="pillowcases" data-title="ปลอกหมอนขอบระบายสไตล์โรงแรม (sham)" data-price="705">
+            <div class="product-image">
+              <img src="/images/products/pillowcase-sham/main.jpg" alt="ปลอกหมอนขอบระบายสไตล์โรงแรม (Sham)" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="card-body">
-              <div class="card-tags">
-                <a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a>
-                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
-              </div>
-              <h3 class="card-title">Sham Pillowcase</h3>
-              <div class="card-price" data-usd="20" data-thb="705">เริ่มต้น ฿705</div>
-              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
-              <div class="card-cta">
-                <a href="/product/pillowcase-sham/" class="btn btn-primary">ดูตัวเลือก</a>
-              </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/th/pillowcases/" class="card-tag" style="text-decoration:none;">ปลอกหมอน</a></div>
+              <h3 class="product-title">ปลอกหมอนขอบระบายสไตล์โรงแรม (Sham)</h3>
+              <div class="product-price" data-usd="20" data-thb="705">เริ่มต้น ฿705</div>
+              <div class="product-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <p class="product-benefit">แต่งขอบระบายหรูหราสไตล์โรงแรม ช่วยให้หมอนดูสวยงาม</p>
+              <div class="product-fabrics-info">มีให้เลือก 4 เนื้อผ้า · 23 สี</div>
+              <a href="/th/product/pillowcase-sham/" class="btn btn-primary" style="margin-top:auto;">เลือกขนาดและเนื้อผ้า</a>
             </div>
           </article>
 
-          <article class="listing-card">
-            <div class="card-image">
-              <img src="/images/products/pillow-protector-general/main.jpg" alt="Pillow Protector" width="800" height="600" loading="lazy" decoding="async">
+          <article class="product-card" data-categories="protection" data-title="ปลอกหมอนกันเปื้อนและไรฝุ่น" data-price="635">
+            <div class="product-image">
+              <img src="/images/products/pillow-protector-general/main.jpg" alt="ปลอกหมอนกันเปื้อนและไรฝุ่น" width="800" height="600" loading="lazy" decoding="async">
             </div>
-            <div class="card-body">
-              <div class="card-tags">
-                <a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a>
-                <a href="/th/marine/" class="card-tag" style="text-decoration:none;">เรือยอชต์</a>
-              </div>
-              <h3 class="card-title">Pillow Protector</h3>
-              <div class="card-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
-              <div class="card-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
-              <div class="card-cta">
-                <a href="/product/pillow-protector-general/" class="btn btn-primary">ดูตัวเลือก</a>
-              </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/th/protection/" class="card-tag" style="text-decoration:none;">ผ้ารองกันเปื้อน</a></div>
+              <h3 class="product-title">ปลอกหมอนกันเปื้อนและไรฝุ่น</h3>
+              <div class="product-price" data-usd="18" data-thb="635">เริ่มต้น ฿635</div>
+              <div class="product-price-note">ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร</div>
+              <p class="product-benefit">ป้องกันคราบเหงื่อ ความชื้น และน้ำลาย ช่วยยืดอายุการใช้งานของหมอน</p>
+              <div class="product-fabrics-info">ผ้ากันน้ำ TPU · นุ่มนอนสบาย</div>
+              <a href="/th/product/pillow-protector-general/" class="btn btn-primary" style="margin-top:auto;">เลือกขนาดและเนื้อผ้า</a>
             </div>
           </article>
         </div>

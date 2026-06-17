@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ยืนยันคำสั่งซื้อ — MildMate">
+  <title>ยืนยันคำสั่งซื้อ — MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    :root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-heading:#0F172A;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06);--header-height:80px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:16px}
+    body{font-family:var(--font-main);color:var(--color-text);background:var(--color-surface);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height);min-height:100vh}
+    a{color:var(--color-primary);text-decoration:none}
+    .site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--color-border);height:var(--header-height)}
+    .header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;max-width:1200px;margin:0 auto;padding:0 24px}
+    .header-logo{height:36px;width:auto;display:block;object-fit:contain}
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
+    .success-grid{display:grid;grid-template-columns:1fr;gap:32px;padding:32px 0 48px}
+    @media(min-width:768px){.success-grid{grid-template-columns:7fr 5fr;gap:40px;padding:48px 0 64px}}
+    @media(min-width:1024px){.success-grid{grid-template-columns:3fr 2fr;gap:48px}}
+    .success-left{display:flex;flex-direction:column;align-items:flex-start}
+    .success-right{display:flex;flex-direction:column}
+    h1{font-size:1.75rem;font-weight:700;color:var(--color-heading)}
+    h2{font-size:1.125rem;font-weight:700;color:var(--color-heading)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 28px;border-radius:var(--radius);font-weight:700;font-size:1rem;border:none;cursor:pointer;text-decoration:none;transition:all 0.2s}
+    .btn-primary{background:var(--color-primary);color:#fff}
+    .btn-primary:hover{background:var(--color-primary-dark);color:#fff}
+    .btn-outline{background:transparent;border:2px solid var(--color-border);color:var(--color-text)}
+    .btn-outline:hover{border-color:var(--color-primary);color:var(--color-primary)}
+    .card{background:var(--color-bg);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;border:1px solid var(--color-border);margin-bottom:0}
+    .details-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+    .details-row{padding:10px 0;border-bottom:1px solid var(--color-border)}
+    .details-row:last-child{border-bottom:none;padding-bottom:0}
+    .details-row:first-child{padding-top:0}
+    .details-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-muted);margin-bottom:3px}
+    .details-value{font-size:0.9375rem;color:var(--color-text)}
+    .order-badge{display:inline-flex;align-items:center;gap:6px;color:var(--color-text);padding:6px 14px;border-radius:4px;font-size:0.8125rem;font-weight:700;margin-bottom:20px}
+    .order-item{padding:12px 0;border-bottom:1px solid var(--color-border);font-size:0.9375rem}
+    .order-item:last-child{border-bottom:none}
+    .order-meta{font-size:0.8125rem;color:var(--color-muted)}
+    .order-total{font-weight:700;font-size:1.125rem;margin-top:12px;border-top:1px solid var(--color-border);padding-top:12px;color:var(--color-text)}
+    .loading{text-align:center;padding:60px 24px;color:var(--color-muted)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{display:inline-block;width:36px;height:36px;border:3px solid var(--color-border);border-top-color:var(--color-primary);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px}
+    .check-icon{width:64px;height:64px;background:var(--color-primary);border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .check-icon svg{width:36px;height:36px;color:#fff}
+    .footer-simple{text-align:center;padding:32px 24px;font-size:0.75rem;color:var(--color-muted)}
+  </style>
+
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="Order Confirmed — MildMate">
+  <meta property="og:description" content="Order Confirmed — MildMate">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com/order-confirmed/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Order Confirmed — MildMate">
+  <meta name="twitter:description" content="Order Confirmed — MildMate">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- Phase 8: GTM (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- __HEADER__ -->
+
+  <main>
+    <div class="container">
+      <div class="loading" id="loading-state">
+        <div class="spinner"></div>
+        <p>Confirming your order...</p>
+      </div>
+
+      <div class="success-grid" id="confirmed-state" style="display:none">
+        <div class="success-left">
+          <div class="check-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h1 style="margin-bottom:8px;margin-top:12px">Order Confirmed!</h1>
+          <p style="color:var(--color-muted);margin-bottom:24px">Thank you for your purchase. We will email you with shipping updates.</p>
+
+          <div id="order-number" class="order-badge" style="margin-bottom:20px"></div>
+          <div id="order-details" style="width:100%"></div>
+
+          <div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:12px">
+            <a href="/" class="btn btn-primary" style="display:inline-flex;width:auto">Continue Shopping</a>
+            <a href="/account/" class="btn btn-outline" style="display:inline-flex;width:auto">My Account</a>
+          </div>
+          <p style="margin-top:12px;font-size:0.8125rem;color:var(--color-muted)">
+            Questions? <a href="mailto:contact@mildmate.com">contact@mildmate.com</a>
+          </p>
+        </div>
+
+        <div class="success-right">
+          <div class="card" style="margin-bottom:0">
+            <h2 style="margin-bottom:16px;font-size:1rem">Order Summary</h2>
+            <div id="order-items"></div>
+            <div class="order-total" style="display:flex;justify-content:space-between"><span>Total</span><span id="order-total">$0.00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="pending-state" style="display:none">
+        <h1 style="text-align:center;margin-bottom:16px">Order Processing</h1>
+        <p style="text-align:center;color:var(--color-muted);margin-bottom:24px">Your payment is being processed. It may take a moment for your order to appear.</p>
+        <div style="text-align:center">
+          <a href="/" class="btn btn-primary" style="display:inline-flex;width:auto">Continue Shopping</a>
+        </div>
+        <p id="pending-msg" style="text-align:center;color:var(--color-muted);margin-top:16px;font-size:0.8125rem;display:none"></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer-simple">
+    <p>&copy; MildMate 2026 &middot; <a href="/policy/">Privacy</a> &middot; <a href="/shipping/">Shipping</a></p>
+  </footer>
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var sessionId = params.get('session_id');
+
+      var POLL_INTERVAL_MS = 3000;
+      var POLL_TIMEOUT_MS = 15000;
+      var pollIntervalId = null;
+      var pollingEnded = false;
+      var pollingUntil = 0;
+      var isFetching = false;
+
+      if (!sessionId) {
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('pending-state').style.display = 'block';
+        return;
+      }
+
+      startAutoPolling();
+
+      function startAutoPolling() {
+        stopAutoPolling();
+        pollingEnded = false;
+        pollingUntil = Date.now() + POLL_TIMEOUT_MS;
+        runPollTick();
+        pollIntervalId = setInterval(runPollTick, POLL_INTERVAL_MS);
+      }
+
+      function stopAutoPolling() {
+        if (pollIntervalId) {
+          clearInterval(pollIntervalId);
+          pollIntervalId = null;
+        }
+        pollingEnded = true;
+      }
+
+      function showLongPendingMessage() {
+        var msg = document.getElementById('pending-msg');
+        if (!msg) return;
+        msg.style.display = 'block';
+        msg.textContent = 'Thank you. Your payment is being finalized. Your order details will appear shortly.';
+      }
+
+      async function runPollTick() {
+        if (pollingEnded || isFetching) return;
+        if (Date.now() >= pollingUntil) {
+          stopAutoPolling();
+          showLongPendingMessage();
+          return;
+        }
+        isFetching = true;
+        try {
+          var confirmed = await fetchOrder(sessionId);
+          if (confirmed) {
+            stopAutoPolling();
+            return;
+          }
+          if (Date.now() >= pollingUntil) {
+            stopAutoPolling();
+            showLongPendingMessage();
+          }
+        } finally {
+          isFetching = false;
+        }
+      }
+
+      async function fetchOrder(sid) {
+        try {
+          var resp = await fetch('/api/order-confirmed?session_id=' + encodeURIComponent(sid));
+          var data = await resp.json();
+          document.getElementById('loading-state').style.display = 'none';
+          if (data.pending) {
+            document.getElementById('pending-state').style.display = 'block';
+            return false;
+          }
+          if (data.orders && data.orders.length > 0) {
+            showConfirmed(data);
+            return true;
+          }
+          document.getElementById('pending-state').style.display = 'block';
+          return false;
+        } catch(e) {
+          document.getElementById('loading-state').style.display = 'none';
+          document.getElementById('pending-state').style.display = 'block';
+          return false;
+        }
+      }
+
+      function showConfirmed(data) {
+        stopAutoPolling();
+        localStorage.setItem('mildmate-cart', '{"items":[]}');
+        if (window.MildMateCart && typeof MildMateCart.clear === 'function') {
+          MildMateCart.clear();
+        }
+        // Save order email so /account can bridge guest orders after sign-in
+        if (data.orders && data.orders[0] && data.orders[0].email) {
+          localStorage.setItem('mildmate_order_email', data.orders[0].email);
+        }
+        document.getElementById('pending-state').style.display = 'none';
+        document.getElementById('confirmed-state').style.display = 'grid';
+        var orderStr = data.session_id ? data.session_id.slice(-8) : '';
+        document.getElementById('order-number').innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' +
+          'Order #' + escHtml(orderStr);
+
+        var first = data.orders && data.orders[0];
+        var detailsHtml = '';
+        if (first && (first.shipping_address || first.email)) {
+          detailsHtml += '<div class="details-card">';
+          if (first.shipping_address) {
+            detailsHtml += '<div class="details-row"><div class="details-label">Shipping Address</div><div class="details-value">' + escHtml(first.shipping_address) + '</div></div>';
+          }
+          if (first.email) {
+            detailsHtml += '<div class="details-row"><div class="details-label">Confirmation Sent To</div><div class="details-value">' + escHtml(first.email) + '</div></div>';
+          }
+          detailsHtml += '</div>';
+        }
+        document.getElementById('order-details').innerHTML = detailsHtml;
+
+        var html = '';
+        var total = 0;
+        var currency = data.orders && data.orders[0] && data.orders[0].currency
+          ? String(data.orders[0].currency).toLowerCase() : 'usd';
+        function formatMoney(amount) {
+          if (currency === 'thb') return '\u0E3F' + Math.round(amount || 0).toLocaleString();
+          return '$' + Number(amount || 0).toFixed(2);
+        }
+        data.orders.forEach(function(o) {
+          var dims = [o.width_cm, o.length_cm, o.depth_cm].filter(Boolean).join('\u00D7') + ' cm';
+          var meta = [o.fabric, o.color, dims].filter(Boolean).join(' | ');
+          var unitPrice = currency === 'thb' ? (o.price_thb || o.price_usd || 0) : (o.price_usd || 0);
+          total += unitPrice * (o.quantity || 1);
+          html += '<div class="order-item">' +
+            '<div style="font-weight:700">' + escHtml(o.product_title_en || 'Custom Order') + '</div>' +
+            '<div class="order-meta">' + escHtml(meta) + ' | Qty: ' + (o.quantity || 1) + '</div>' +
+            '<div style="margin-top:4px">' + formatMoney(unitPrice) + '</div>' +
+          '</div>';
+        });
+        document.getElementById('order-items').innerHTML = html;
+        document.getElementById('order-total').textContent = formatMoney(total);
+      }
+
+      function escHtml(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>
+
