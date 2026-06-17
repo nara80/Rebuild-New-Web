@@ -592,10 +592,13 @@ Covers: data collected, usage, cookies, third parties (Stripe, Resend), rights
 - Logging in pre-fills name + email in shipping form
 - Account creation is encouraged *after* purchase, not required before
 
-**Long-term Option 3 (confirmed):**
-- Move to Clerk Production instance + custom auth domain before go-live
-- Enforce centralized bearer-token auth for `/api/auth/me` + `/api/customers/*` across checkout/account pages
-- Keep explicit sign-out CTA on checkout/account (not only profile menu) for account switching and QA reliability
+**Long-term Option 3 (Completed & Hardened):**
+- ✅ Migrated auth from Clerk Development instance to Clerk Production instance before DNS cutover.
+- ✅ Custom Clerk domain (accounts.mildmate.com) and explicit allowlist configured for production redirect URLs.
+- ✅ Centralized bearer-token auth for `/api/auth/me` and `/api/customers/*` enforced on all frontend pages.
+- ✅ Explicit sign-out CTA visible on checkout/account flows.
+- ✅ Added `functions/account/_middleware.ts` for server-side protection.
+- **Production domain configured:** `functions/account/_middleware.ts` and `functions/admin/_middleware.ts` both reference `accounts.mildmate.com` as the production Clerk domain. Dev mode uses `kind-joey-29.accounts.dev`.
 
 ### 14. Admin Dashboard (`/admin/`) — protected by Clerk (Option A)
 
