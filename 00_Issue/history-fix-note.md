@@ -193,3 +193,30 @@
 - Live check before fix showed HTTP `500` on affected blog slug.
 - Local artifact verification confirmed fixed bundle content is now present in `public/_worker.js`.
 - Lint check passed after update workflow (`npm run lint`).
+
+## 7) Product page redirect loops and grid-redirect (including Bed Lifter)
+
+### Symptoms
+- Clicking the [View Details] CTA on the Bed Lifter product (and the BedBridge Connector) linked to the correct URL `/product/mattress-lift-helper/`, but the page served the general products index grid (`/products/`) instead of the product details.
+- Requesting standard product pages (like `/product/standard-fitted-sheet/`) resulted in an infinite HTTP 308/301 redirect loop, causing browser timeouts or memory exhaustion in local dev.
+
+### Root causes
+- **Pretty URLs Redirects**: Cloudflare Pages automatically redirects `/product/slug/index.html` (the internal template fetch path inside `functions/product/[[path]].ts`) to `/product/slug/` with a `308 Permanent Redirect`.
+- **Middleware Interception**: The `resolveLegacyProductPath` helper in [functions/_middleware.ts](file:///D:/00_mildmate/Re-Build_web/functions/_middleware.ts) did not account for canonical product subpaths or templates ending in `/index.html`. 
+  - Because `/product/slug/index.html` failed the exact `CANONICAL_PRODUCT_SLUGS` check, it fell through to legacy redirect checks.
+  - For standard products (e.g., matching `fitted`), it returned a 301 redirect to `/product/standard-fitted-sheet/`, causing the infinite fetch loop.
+  - For accessories/non-fabric products (e.g., `mattress-lift-helper`), it fell back to `/products/`, serving the all-products grid HTML as the static page template.
+
+### Fixes applied
+- **Middleware early return**: Modified `resolveLegacyProductPath` in [functions/_middleware.ts](file:///D:/00_mildmate/Re-Build_web/functions/_middleware.ts) to extract the first path segment (the slug). If it belongs to `CANONICAL_PRODUCT_SLUGS`, it returns `null` immediately, ensuring subpaths (like `index.html`) never get legacy redirects.
+- **Function route bypass**: Added a guard in [functions/product/[[path]].ts](file:///D:/00_mildmate/Re-Build_web/functions/product/[[path]].ts) that calls `context.next()` if the path parts length is greater than 2, passing requests for static templates directly to the asset server.
+- **Direct Asset Fetching**: Updated the template fetch in [functions/product/[[path]].ts](file:///D:/00_mildmate/Re-Build_web/functions/product/[[path]].ts) from the global `fetch()` to `context.env.ASSETS.fetch()`. This accesses the built assets directly, bypassing routing middleware and Cloudflare's automatic Pretty URL redirects.
+- **Rebuilt & Synced Bundle**: Recompiled the functions and synced the build to the production entrypoint:
+  - `npx wrangler pages functions build --outdir public`
+  - `Copy-Item public/index.js public/_worker.js -Force`
+
+### Verification
+- Tested locally on `http://127.0.0.1:8788`:
+  - `/product/mattress-lift-helper/` returns `200 OK` with title `<title>Bed Lifter (38 cm) — MildMate</title>` (fully verified product details page rendering).
+  - `/product/bedbridge-connector/` returns `200 OK` with title `<title>BedBridge Connector — MildMate</title>`.
+  - `/product/standard-fitted-sheet/` resolves cleanly with `200 OK` in 20-30ms, completely resolving the infinite redirect loop.
