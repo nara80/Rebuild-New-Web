@@ -82,6 +82,10 @@ export async function onRequest(context: any): Promise<Response> {
   const parts = pathname.split('/').filter(Boolean);
   if (parts[0] !== 'product') return context.next();
 
+  // If the path contains more than 2 segments (e.g., /product/slug/index.html),
+  // let the static asset server handle it directly by calling context.next()
+  if (parts.length > 2) return context.next();
+
   const slug = (parts[1] || '').toLowerCase();
   if (!slug) {
     return Response.redirect(new URL('/products/', url.origin).toString(), 301);
@@ -95,9 +99,9 @@ export async function onRequest(context: any): Promise<Response> {
 
   // Canonical slug → serve static HTML with D1 image overrides
   try {
-    // 1. Fetch static HTML from self
+    // 1. Fetch static HTML from assets binding directly (bypasses routing/redirects)
     const staticUrl = `${url.origin}/product/${slug}/index.html`;
-    const staticRes = await fetch(staticUrl);
+    const staticRes = await context.env.ASSETS.fetch(new Request(staticUrl));
     if (!staticRes.ok) return context.next();
     let html = await staticRes.text();
 

@@ -447,10 +447,15 @@ function hasToken(slug: string, token: string): boolean {
 function resolveLegacyProductPath(pathname: string): string | null {
   if (pathname === '/product/' || pathname === '/product') return '/products/';
   if (!pathname.startsWith('/product/')) return null;
-  const rawSlug = pathname.slice('/product/'.length).replace(/\/+$/, '').toLowerCase();
-  if (!rawSlug) return '/products/';
-  if (CANONICAL_PRODUCT_SLUGS.has(rawSlug)) return null;
 
+  const subpath = pathname.slice('/product/'.length);
+  const parts = subpath.split('/').filter(Boolean);
+  const slug = (parts[0] || '').toLowerCase();
+  if (!slug) return '/products/';
+
+  if (CANONICAL_PRODUCT_SLUGS.has(slug)) return null;
+
+  const rawSlug = subpath.replace(/\/+$/, '').toLowerCase();
   if (rawSlug === '%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1') return '/product/duvet-insert/';
   if (rawSlug.startsWith('%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9')) return '/product/family-fitted-sheet/';
   if (rawSlug.startsWith('product-boat-bedding') || rawSlug.startsWith('product-boat-top-sheet')) return '/product/marine-fitted-sheet/';
@@ -484,7 +489,6 @@ function resolveLegacyProductPath(pathname: string): string | null {
 
   if (rawSlug.includes('fitted') || rawSlug.includes('bed-sheet') || rawSlug.includes('bedsheet')) return '/product/standard-fitted-sheet/';
   if (rawSlug === 'tbar') return '/product/bedbridge-connector/';
-  if (rawSlug === 'mattress-lift-helper') return '/product/mattress-lift-helper/';
   if (rawSlug === 'baby-blanket' || rawSlug === 'animal-bedding') return '/products/';
 
   return '/products/';
