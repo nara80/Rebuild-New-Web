@@ -9368,7 +9368,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-nSJev8/functionsRoutes-0.6390018249230343.mjs
+// ../.wrangler/tmp/pages-BY6GzJ/functionsRoutes-0.9665677493380544.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
