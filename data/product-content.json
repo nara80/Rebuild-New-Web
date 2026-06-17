@@ -6,8 +6,8 @@
   "products": {
     "standard-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "12-inch / 30cm deep pocket for standard mattresses. OEKO-TEX certified. Custom-fitted so it won't slip.",
-      "metaDescription": "Standard Fitted Sheet by MildMate  -  12-inch / 30cm deep pocket for standard mattresses. OEKO-TEX certified. Custom-fitted so it won't slip. Ships worldwide.",
+      "tagline": "12-inch / 30cm deep pocket for standard mattresses. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip.",
+      "metaDescription": "Standard Fitted Sheet by MildMate  -  12-inch / 30cm deep pocket for standard mattresses. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip. Ships worldwide.",
       "ratingCount": 112,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -38,15 +38,15 @@
         "Custom-made to your exact W × L × D mattress dimensions",
         "12-inch / 30cm deep pocket  -  fits standard mattresses",
         "Full-perimeter elastic for a secure, non-slip fit",
-        "OEKO-TEX certified  -  no toxic chemicals",
+        "PremaCotton option is OEKO-TEX® certified",
         "9 color options",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabFabricTitle": "CloudSoft — Standard Edition",
-      "tabFabricP": "CloudSoft is a 100% long-staple cotton weave with a smooth, breathable construction ideal for everyday use. The 30cm pocket depth accommodates standard mattress thicknesses while the full-perimeter elastic ensures a snug fit. OEKO-TEX certified with no toxic dye or finish.",
+      "tabFabricP": "CloudSoft is a 100% long-staple cotton weave with a smooth, breathable construction ideal for everyday use. The 30cm pocket depth accommodates standard mattress thicknesses while the full-perimeter elastic ensures a snug fit. PremaCotton option is OEKO-TEX® certified with no toxic dye or finish.",
       "tabFabricBullets": [
         "100% long-staple cotton — soft and durable",
-        "OEKO-TEX certified — no toxic chemicals",
+        "PremaCotton option is OEKO-TEX® certified",
         "Wrinkle-resistant — looks neat without ironing",
         "Full-perimeter elastic — no clips needed",
         "Quick-dry — convenient for frequent washing"
@@ -101,7 +101,7 @@
         "Full-perimeter elastic for a secure, non-slip fit on adjustable bases",
         "Split-king and dual-adjustable options available",
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
-        "OEKO-TEX certified — no toxic chemicals"
+        "PremaCotton option is OEKO-TEX® certified"
       ],
       "tabFabricTitle": "Extra-Deep Pocket for Thick Mattresses",
       "tabFabricP": "Designed for thick mattresses, adjustable beds, and pillow-tops. Full-perimeter elastic ensures the sheet stays put even on adjustable bases. Available in 4 premium fabric choices.",
@@ -109,7 +109,7 @@
         "51cm / 20in pocket depth",
         "Full-perimeter elastic",
         "4 fabric choices",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -136,20 +136,90 @@
       "lockedFabric": "cloudsoft",
       "needsDepth": true,
       "marineShapes": [
-        {"code":"01","name":"V-Berth \u2013 4 Sides","schematic":"/images/BoatShapes/001_V-Berth.jpg","formula":"vberth-4sides"},
-        {"code":"02","name":"V-Berth Cut Corner \u2013 6 Sides","schematic":"/images/BoatShapes/002_V-Berth_CutCorner.jpg","formula":"vberth-cut-corner"},
-        {"code":"03","name":"V-Berth Rounded Nose","schematic":"/images/BoatShapes/003_V-Berth_RoundedNose.jpg","formula":"vberth-rounded-nose"},
-        {"code":"04","name":"V-Berth Split \u2013 2 Pieces","schematic":"/images/BoatShapes/004_V-Berth_2Pieces.jpg","formula":"vberth-split"},
-        {"code":"05","name":"Island 6 Sides / Hexagon Bunk","schematic":"/images/BoatShapes/005_HexagonBunk.jpg","formula":"island-6"},
-        {"code":"06","name":"Island 7 Sides","schematic":"/images/BoatShapes/006_Island_7Sides.jpg","formula":"island-7"},
-        {"code":"07","name":"Island 8 Sides / Octagon Bunk","schematic":"/images/BoatShapes/007_Island_8Sides.jpg","formula":"island-8"},
-        {"code":"08","name":"Rectangle","schematic":"/images/BoatShapes/008_Rectangle.jpg","formula":"rectangle"},
-        {"code":"09","name":"Rectangle Cut-Off Corner \u2013 5 Sides","schematic":"/images/BoatShapes/009_Rectangle_CutOff.jpg","formula":"rect-cut-1"},
-        {"code":"10","name":"Rectangle Two Cut-Off Corners \u2013 6 Sides","schematic":"/images/BoatShapes/010_Rectangle_TwoCutOff.jpg","formula":"rect-cut-2"},
-        {"code":"11","name":"Radius Corner Rectangle","schematic":"/images/BoatShapes/011_RadiusCorner.jpg","formula":"radius-rect"},
-        {"code":"12","name":"Quarter Berth / Side Berth Tapered","schematic":"/images/BoatShapes/012_QuarterBerth.jpg","formula":"quarter-berth"},
-        {"code":"13","name":"Aft Cabin Irregular Mattress","schematic":"/images/BoatShapes/013_AftCabin.jpg","formula":"aft-cabin"},
-        {"code":"14","name":"Notched Mattress / Obstruction Cut-Out","schematic":"/images/BoatShapes/014_NotchedMattress.jpg","formula":"notched"}
+        {
+          "code": "01",
+          "name": "V-Berth – 4 Sides",
+          "schematic": "/images/BoatShapes/001_V-Berth.jpg",
+          "formula": "vberth-4sides"
+        },
+        {
+          "code": "02",
+          "name": "V-Berth Cut Corner – 6 Sides",
+          "schematic": "/images/BoatShapes/002_V-Berth_CutCorner.jpg",
+          "formula": "vberth-cut-corner"
+        },
+        {
+          "code": "03",
+          "name": "V-Berth Rounded Nose",
+          "schematic": "/images/BoatShapes/003_V-Berth_RoundedNose.jpg",
+          "formula": "vberth-rounded-nose"
+        },
+        {
+          "code": "04",
+          "name": "V-Berth Split – 2 Pieces",
+          "schematic": "/images/BoatShapes/004_V-Berth_2Pieces.jpg",
+          "formula": "vberth-split"
+        },
+        {
+          "code": "05",
+          "name": "Island 6 Sides / Hexagon Bunk",
+          "schematic": "/images/BoatShapes/005_HexagonBunk.jpg",
+          "formula": "island-6"
+        },
+        {
+          "code": "06",
+          "name": "Island 7 Sides",
+          "schematic": "/images/BoatShapes/006_Island_7Sides.jpg",
+          "formula": "island-7"
+        },
+        {
+          "code": "07",
+          "name": "Island 8 Sides / Octagon Bunk",
+          "schematic": "/images/BoatShapes/007_Island_8Sides.jpg",
+          "formula": "island-8"
+        },
+        {
+          "code": "08",
+          "name": "Rectangle",
+          "schematic": "/images/BoatShapes/008_Rectangle.jpg",
+          "formula": "rectangle"
+        },
+        {
+          "code": "09",
+          "name": "Rectangle Cut-Off Corner – 5 Sides",
+          "schematic": "/images/BoatShapes/009_Rectangle_CutOff.jpg",
+          "formula": "rect-cut-1"
+        },
+        {
+          "code": "10",
+          "name": "Rectangle Two Cut-Off Corners – 6 Sides",
+          "schematic": "/images/BoatShapes/010_Rectangle_TwoCutOff.jpg",
+          "formula": "rect-cut-2"
+        },
+        {
+          "code": "11",
+          "name": "Radius Corner Rectangle",
+          "schematic": "/images/BoatShapes/011_RadiusCorner.jpg",
+          "formula": "radius-rect"
+        },
+        {
+          "code": "12",
+          "name": "Quarter Berth / Side Berth Tapered",
+          "schematic": "/images/BoatShapes/012_QuarterBerth.jpg",
+          "formula": "quarter-berth"
+        },
+        {
+          "code": "13",
+          "name": "Aft Cabin Irregular Mattress",
+          "schematic": "/images/BoatShapes/013_AftCabin.jpg",
+          "formula": "aft-cabin"
+        },
+        {
+          "code": "14",
+          "name": "Notched Mattress / Obstruction Cut-Out",
+          "schematic": "/images/BoatShapes/014_NotchedMattress.jpg",
+          "formula": "notched"
+        }
       ],
       "tags": [
         {
@@ -162,28 +232,29 @@
         }
       ],
       "relatedSlugs": [
+        "marine-mattress-protector",
         "mattress-encasement-general",
         "rv-truck-mattress-encasement",
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "14 Shapes. Instant Price. Zero Hassle.",
-      "tabDescriptionP": "You know the drill with other marine bedding shops: sketch your mattress, email the drawing, wait 2\u20133 days for a reply, go back and forth on dimensions, and finally get a price. We killed that process. Pick from 14 boat-specific shapes with matching diagrams, enter the dimensions from your tape measure, and the price updates live \u2014 right on your screen. CloudSoft handles the marine environment with quick-dry + moisture-wicking properties, and 360\u00B0 heavy-duty elastic keeps the sheet anchored when the seas get rough.",
+      "tabDescriptionP": "You know the drill with other marine bedding shops: sketch your mattress, email the drawing, wait 2–3 days for a reply, go back and forth on dimensions, and finally get a price. We killed that process. Pick from 14 boat-specific shapes with matching diagrams, enter the dimensions from your tape measure, and the price updates live — right on your screen. CloudSoft handles the marine environment with quick-dry + moisture-wicking properties, and 360° heavy-duty elastic keeps the sheet anchored when the seas get rough.",
       "tabDescriptionBullets": [
-        "Instant online quote \u2014 no emailing sketches or waiting for replies",
+        "Instant online quote — no emailing sketches or waiting for replies",
         "14 boat-specific shapes with visual schematics so you know you picked the right one",
-        "Auto-computed geometry \u2014 fill a few required fields, optional ones auto-populate",
-        "Unit toggle cm/inch \u2014 switch on the fly, all fields convert automatically",
-        "Quick-dry CloudSoft fabric in 12 colors \u2014 from classic Navy to Sea Grass Green",
-        "360\u00B0 heavy-duty elastic \u2014 stays secure at any heel angle",
+        "Auto-computed geometry — fill a few required fields, optional ones auto-populate",
+        "Unit toggle cm/inch — switch on the fly, all fields convert automatically",
+        "Quick-dry CloudSoft fabric in 12 colors — from classic Navy to Sea Grass Green",
+        "360° heavy-duty elastic — stays secure at any heel angle",
         "Ships worldwide from our Thailand workshop"
       ],
-      "tabFabricTitle": "CloudSoft \u2014 Built for the Water",
-      "tabFabricP": "CloudSoft microfiber is engineered for the marine environment. Quick-dry fabric handles humidity and sea spray. Moisture-wicking keeps you comfortable in tropical anchorages. 360\u00B0 heavy-duty elastic means the sheet stays put no matter how rough the crossing gets. 12 colors so your cabin looks as good as it sleeps.",
+      "tabFabricTitle": "CloudSoft — Built for the Water",
+      "tabFabricP": "CloudSoft microfiber is engineered for the marine environment. Quick-dry fabric handles humidity and sea spray. Moisture-wicking keeps you comfortable in tropical anchorages. 360° heavy-duty elastic means the sheet stays put no matter how rough the crossing gets. 12 colors so your cabin looks as good as it sleeps.",
       "tabFabricBullets": [
-        "Quick-dry \u2014 ready within hours, not days",
+        "Quick-dry — ready within hours, not days",
         "Moisture-wicking for damp marine environments",
-        "360\u00B0 heavy-duty elastic \u2014 secure at any heel angle",
-        "Wrinkle-resistant \u2014 no ironing needed, even after being packed tight",
+        "360° heavy-duty elastic — secure at any heel angle",
+        "Wrinkle-resistant — no ironing needed, even after being packed tight",
         "12 marine-inspired colors"
       ],
       "tabCareBullets": [
@@ -199,8 +270,8 @@
     },
     "dorm-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "Extra-durable for dorm life. OEKO-TEX certified. Custom-fitted so it won't slip off the dorm mattress.",
-      "metaDescription": "Dorm Fitted Sheet by MildMate  -  Extra-durable for dorm life. OEKO-TEX certified. Custom-fitted so it won't slip off the dorm mattress. Ships worldwide.",
+      "tagline": "Extra-durable for dorm life. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip off the dorm mattress.",
+      "metaDescription": "Dorm Fitted Sheet by MildMate  -  Extra-durable for dorm life. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip off the dorm mattress. Ships worldwide.",
       "ratingCount": 68,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -235,7 +306,7 @@
         "Full-perimeter elastic for a secure, non-slip fit",
         "Quick-dry  -  wash today, wear tomorrow",
         "Extra-durable construction for dorm use",
-        "OEKO-TEX certified  -  no toxic chemicals",
+        "PremaCotton option is OEKO-TEX® certified",
         "5 color options including dorm-friendly Navy and Dark Grey"
       ],
       "tabFabricTitle": "Built for Dorm Life",
@@ -244,7 +315,7 @@
         "Extra-durable for dorm use",
         "Quick-dry — wash today, wear tomorrow",
         "Full-perimeter elastic",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "5 dorm-friendly colors"
       ],
       "tabCareBullets": [
@@ -260,13 +331,16 @@
     },
     "rv-truck-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "Custom-fitted for RV and truck cab mattresses. OEKO-TEX certified. Stays secure on the road.",
-      "metaDescription": "RV &amp; Truck Fitted Sheet by MildMate  -  Custom-fitted for RV and truck cab mattresses. OEKO-TEX certified. Stays secure on the road. Ships worldwide.",
+      "tagline": "Custom-fitted for RV and truck cab mattresses. Stays secure on the road.",
+      "metaDescription": "RV &amp; Truck Fitted Sheet by MildMate - Custom-fitted for RV and truck cab mattresses. Stays secure on the road. Ships worldwide.",
       "ratingCount": 38,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
       "breadcrumbName": "RV & Truck Fitted Sheet",
-      "fabrics": ["cloudsoft"], "lockedFabric": "cloudsoft",
+      "fabrics": [
+        "cloudsoft"
+      ],
+      "lockedFabric": "cloudsoft",
       "needsDepth": true,
       "tags": [
         {
@@ -285,13 +359,13 @@
         "boat-fitted-sheet"
       ],
       "tabDescriptionTitle": "Built for Life on the Road",
-      "tabDescriptionP": "RV and truck cab mattresses are thinner than standard home mattresses  -  typically 15 - 20cm depth. CloudSoft fits perfectly with 20cm max pocket depth, full-perimeter elastic, and stays secure while driving. Quick-dry fabric handles the moisture that comes with life on the road.",
+      "tabDescriptionP": "RV and truck cab mattresses are thinner than standard home mattresses - typically 15 - 20cm depth. CloudSoft fits perfectly with 20cm max pocket depth, full-perimeter elastic, and stays secure while driving. Quick-dry fabric handles the moisture that comes with life on the road.",
       "tabDescriptionBullets": [
         "Custom-made to your exact W × L × D mattress dimensions",
         "Full-perimeter elastic for a secure, non-slip fit while driving",
-        "Quick-dry  -  wash and dry at the next stop",
+        "Quick-dry - wash and dry at the next stop",
         "Moisture-wicking for humid cab environments",
-        "OEKO-TEX certified  -  no toxic dye or finish",
+        ". - no toxic dye or finish",
         "4 road-appropriate color options"
       ],
       "tabFabricTitle": "Built for Life on the Road",
@@ -300,7 +374,6 @@
         "Quick-dry — wash at the next stop",
         "Moisture-wicking for humid cabs",
         "Full-perimeter elastic",
-        "OEKO-TEX certified",
         "4 road-appropriate colors"
       ],
       "tabCareBullets": [
@@ -316,8 +389,8 @@
     },
     "family-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. OEKO-TEX certified.",
-      "metaDescription": "Family Fitted Sheet by MildMate  -  Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. OEKO-TEX certified. Ships worldwide.",
+      "tagline": "Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. PremaCotton option is OEKO-TEX® certified.",
+      "metaDescription": "Family Fitted Sheet by MildMate  -  Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. PremaCotton option is OEKO-TEX® certified. Ships worldwide.",
       "ratingCount": 76,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -352,14 +425,14 @@
         "Custom-made to your exact W  —  L  —  D mattress dimensions",
         "Full-perimeter elastic for a secure, non-slip fit",
         "Quick-dry  -  convenient for family laundry",
-        "OEKO-TEX certified  -  safe for children",
+        "PremaCotton option is OEKO-TEX® certified  -  safe for children",
         "5 soothing color options including Sky and Sea",
         "Floor bed and tatami sizes available"
       ],
       "tabFabricTitle": "Designed for Family Sleep",
-      "tabFabricP": "Custom-made to your exact family mattress dimensions. OEKO-TEX certified and safe for children. Full-perimeter elastic handles the movement of family co-sleeping.",
+      "tabFabricP": "Custom-made to your exact family mattress dimensions. PremaCotton option is OEKO-TEX® certified and safe for children. Full-perimeter elastic handles the movement of family co-sleeping.",
       "tabFabricBullets": [
-        "Safe for children — OEKO-TEX certified",
+        "Safe for children — PremaCotton option is OEKO-TEX® certified",
         "Custom to any mattress size",
         "Full-perimeter elastic",
         "5 soothing colors",
@@ -378,8 +451,8 @@
     },
     "pet-owner-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "BreezePlus fabric resists pet hair, stays cool, and cleans easily. Engineered for real pet owners  -  not just \"pet-friendly.\"",
-      "metaDescription": "Pet Owner Fitted Sheet by MildMate  -  BreezePlus fabric resists pet hair, stays cool, and cleans easily. Custom-made to your exact mattress dimensions. Ships worldwide.",
+      "tagline": "BreezePlus fabric resists pet hair, stays cool, and cleans easily. Engineered for real pet owners - not just \"pet-friendly.\"",
+      "metaDescription": "Pet Owner Fitted Sheet by MildMate - BreezePlus fabric resists pet hair, stays cool, and cleans easily. Custom-made to your exact mattress dimensions. Ships worldwide.",
       "ratingCount": 94,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -418,21 +491,20 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Engineered for Real Pet Owners",
-      "tabDescriptionP": "Not just \"pet-friendly\"  -  actually designed around what happens when dogs and cats sleep on your bed every night. BreezePlus is a 50/50 long-staple cotton and microfiber blend where the microfiber creates a ultra-smooth surface that pet hair literally slides off. No more soaking, brushing, or lint rollers after every nap.",
+      "tabDescriptionP": "Not just \"pet-friendly\" - actually designed around what happens when dogs and cats sleep on your bed every night. BreezePlus is a 50/50 long-staple cotton and microfiber blend where the microfiber creates a ultra-smooth surface that pet hair literally slides off. No more soaking, brushing, or lint rollers after every nap.",
       "tabDescriptionBullets": [
-        "Pet hair resistant  -  hair slides off instead of embedding",
-        "3 - 5°C cooler than standard cotton  -  microfiber dissipates heat",
-        "100% chemical-free  -  OEKO-TEX certified",
-        "Custom-made to your exact W  —  L  —  D mattress dimensions",
+        "Pet hair resistant - hair slides off instead of embedding",
+        "cool-to-the-touch comfort — microfiber dissipates heat",
+        "100% chemical-free -.",
+        "Custom-made to your exact W — L — D mattress dimensions",
         "Extra-deep pocket options for thick mattresses",
         "Quick-dry after washing"
       ],
       "tabFabricTitle": "BreezePlus — Anti-Fur Weave",
-      "tabFabricP": "BreezePlus is a 50/50 long-staple cotton and microfiber blend where the microfiber creates an ultra-smooth surface that pet hair literally slides off. 3-5°C cooler than standard cotton.",
+      "tabFabricP": "BreezePlus is a 50/50 long-staple cotton and microfiber blend where the microfiber creates an ultra-smooth surface that pet hair literally slides off. cool-to-the-touch comfort.",
       "tabFabricBullets": [
         "Pet hair slides off instead of embedding",
-        "3-5°C cooler than cotton",
-        "OEKO-TEX certified",
+        "cool-to-the-touch comfort",
         "Custom-made to your mattress",
         "Quick-dry after washing"
       ],
@@ -486,7 +558,7 @@
         "Double-stitched hem for durability and crisp finish",
         "Custom-sized to any mattress dimension",
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
-        "OEKO-TEX certified — no toxic chemicals"
+        "PremaCotton option is OEKO-TEX® certified"
       ],
       "tabFabricTitle": "Classic Flat Sheet",
       "tabFabricP": "A timeless flat sheet made to your exact dimensions. Generous tuck allowance and double-stitched hem for a crisp hotel finish. Available in 4 premium fabric choices.",
@@ -494,7 +566,7 @@
         "25cm tuck allowance on all sides",
         "Double-stitched hem",
         "4 fabric choices",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -545,7 +617,7 @@
         "Double-stitched hem for durability and crisp finish",
         "Custom-sized to any mattress dimension",
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
-        "OEKO-TEX certified — no toxic chemicals"
+        "PremaCotton option is OEKO-TEX® certified"
       ],
       "tabFabricTitle": "Oversized for Thick Mattresses",
       "tabFabricP": "Designed for mattresses thicker than 35cm. Generous 25cm tuck allowance on all sides keeps it neatly in place on thick pillow-tops and adjustable beds.",
@@ -553,7 +625,7 @@
         "25cm tuck allowance on all sides",
         "Double-stitched hem",
         "4 fabric choices",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -614,11 +686,11 @@
       "tabDescriptionP": "The 3-sided zipper duvet cover opens on three sides  -  you never have to fight the duvet into a corner again. Just lay the cover flat, drop the duvet in, zip it up. Especially useful for pet owners who need to wash the cover frequently, or anyone who shares a bed and wants an easy way to swap the duvet on laundry day.",
       "tabDescriptionBullets": [
         "3-sided zipper  -  change duvet in minutes, not hours",
-        "BreezePlus fabric: pet hair slides off, 3 - 5&deg;C cooler than cotton",
+        "BreezePlus fabric: pet hair slides off, cool-to-the-touch comfort",
         "Custom-sized to your exact duvet dimensions (cm or inches)",
         "Available in all 9 BreezePlus colors",
         "Machine washable, quick dry",
-        "OEKO-TEX certified  -  no harmful chemicals"
+        "PremaCotton option is OEKO-TEX® certified"
       ],
       "tabFabricTitle": "3-Sided Zipper — Easy Laundry",
       "tabFabricP": "The 3-sided zipper opens on three edges so you never fight the duvet into a corner again. Available in all 4 premium fabrics including the pet-hair-resistant BreezePlus.",
@@ -626,7 +698,7 @@
         "3-sided zipper — change duvet in minutes",
         "4 fabric choices",
         "Custom-sized to your duvet",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "Quick-dry"
       ],
       "tabCareBullets": [
@@ -642,8 +714,8 @@
     },
     "pet-owner-duvet-cover": {
       "productType": "duvet",
-      "tagline": "BreezePlus fabric with 3-sided zipper  -  pet hair slides off, laundry takes minutes not hours.",
-      "metaDescription": "Pet Owner Duvet Cover by MildMate  -  BreezePlus fabric with 3-sided zipper. Pet hair slides off, laundry takes minutes not hours. Custom-sized to fit your duvet.",
+      "tagline": "BreezePlus fabric with 3-sided zipper - pet hair slides off, laundry takes minutes not hours.",
+      "metaDescription": "Pet Owner Duvet Cover by MildMate - BreezePlus fabric with 3-sided zipper. Pet hair slides off, laundry takes minutes not hours. Custom-sized to fit your duvet.",
       "ratingCount": 4,
       "breadcrumbCategoryUrl": "/duvet-covers/",
       "breadcrumbCategoryLabel": "Duvet Covers",
@@ -684,10 +756,10 @@
       "tabDescriptionTitle": "Engineered for Life with Pets",
       "tabDescriptionP": "The same BreezePlus fabric as our best-selling Pet Owner Fitted Sheet, in duvet cover form with a 3-sided zipper. Hair slides off, duvet changes in minutes. Built for pet owners who wash bedding frequently.",
       "tabDescriptionBullets": [
-        "3-sided zipper  -  change cover without lifting the duvet",
-        "BreezePlus fabric  -  pet hair slides off instead of embedding",
-        "3 - 5°C cooler than standard cotton",
-        "100% chemical-free  -  OEKO-TEX certified",
+        "3-sided zipper - change cover without lifting the duvet",
+        "BreezePlus fabric - pet hair slides off instead of embedding",
+        "cool-to-the-touch comfort",
+        "100% chemical-free -.",
         "Custom-made to your exact duvet dimensions",
         "Quick-dry after washing"
       ],
@@ -695,9 +767,8 @@
       "tabFabricP": "The same BreezePlus fabric as our best-selling Pet Owner Fitted Sheet, in duvet cover form with a 3-sided zipper. Hair slides off, duvet changes in minutes. Built for pet owners who wash bedding frequently.",
       "tabFabricBullets": [
         "Pet hair slides off",
-        "3-5°C cooler than cotton",
+        "cool-to-the-touch comfort",
         "3-sided zipper",
-        "OEKO-TEX certified",
         "Quick-dry"
       ],
       "tabCareBullets": [
@@ -714,7 +785,7 @@
     "duvet-cover-marine": {
       "productType": "duvet",
       "tagline": "CloudSoft fabric with quick-dry performance for marine environments. 3-sided zipper for easy change on the boat.",
-      "metaDescription": "Duvet Cover  -  Marine & Yacht by MildMate. CloudSoft quick-dry fabric built for marine environments. 3-sided zipper for easy change on the boat. Made to measure worldwide.",
+      "metaDescription": "Duvet Cover - Marine & Yacht by MildMate. CloudSoft quick-dry fabric built for marine environments. 3-sided zipper for easy change on the boat. Made to measure worldwide.",
       "ratingCount": 84,
       "breadcrumbCategoryUrl": "/duvet-covers/",
       "breadcrumbCategoryLabel": "Duvet Covers",
@@ -745,12 +816,12 @@
         "mattress-encasement-general"
       ],
       "tabDescriptionTitle": "Marine Duvet Cover",
-      "tabDescriptionP": "Designed for marine and yacht use with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in tight cabin spaces. Custom-made to your exact duvet dimensions. OEKO-TEX certified. The 3-sided zipper opens on two long edges and one short edge, making duvet cover changes effortless even in confined spaces.",
+      "tabDescriptionP": "Designed for marine and yacht use with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in tight cabin spaces. Custom-made to your exact duvet dimensions. The 3-sided zipper opens on two long edges and one short edge, making duvet cover changes effortless even in confined spaces.",
       "tabDescriptionBullets": [
         "3-sided YKK zipper - easy duvet changes in tight spaces",
         "CloudSoft quick-dry fabric - ideal for marine environments",
         "Custom-made to your exact W x L dimensions",
-        "OEKO-TEX certified - no toxic chemicals",
+        ". - no toxic chemicals",
         "Wrinkle-resistant and quick-dry"
       ],
       "tabFabricTitle": "CloudSoft — Marine Edition",
@@ -759,7 +830,6 @@
         "Quick-dry — ideal for marine",
         "3-sided YKK zipper",
         "Custom-made to your duvet",
-        "OEKO-TEX certified",
         "Wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -776,7 +846,7 @@
     "duvet-cover-rv": {
       "productType": "duvet",
       "tagline": "CloudSoft quick-dry fabric built for mobile living. 3-sided zipper for quick laundry on the road.",
-      "metaDescription": "Duvet Cover  -  RV & Truck Cab by MildMate. CloudSoft quick-dry fabric built for mobile living. 3-sided zipper for quick laundry on the road. Made to measure worldwide.",
+      "metaDescription": "Duvet Cover - RV & Truck Cab by MildMate. CloudSoft quick-dry fabric built for mobile living. 3-sided zipper for quick laundry on the road. Made to measure worldwide.",
       "ratingCount": 72,
       "breadcrumbCategoryUrl": "/duvet-covers/",
       "breadcrumbCategoryLabel": "Duvet Covers",
@@ -807,12 +877,12 @@
         "mattress-encasement-general"
       ],
       "tabDescriptionTitle": "RV & Truck Duvet Cover",
-      "tabDescriptionP": "Designed for RV and truck sleeper cabins with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in compact spaces. Custom-made to your exact duvet dimensions. OEKO-TEX certified.",
+      "tabDescriptionP": "Designed for RV and truck sleeper cabins with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in compact spaces. Custom-made to your exact duvet dimensions.",
       "tabDescriptionBullets": [
         "3-sided YKK zipper - easy duvet changes in compact spaces",
         "CloudSoft quick-dry fabric - ideal for mobile living",
         "Custom-made to your exact W x L dimensions",
-        "OEKO-TEX certified - no toxic chemicals",
+        ". - no toxic chemicals",
         "Wrinkle-resistant and quick-dry"
       ],
       "tabFabricTitle": "CloudSoft — RV Edition",
@@ -821,7 +891,6 @@
         "Quick-dry — ideal for mobile",
         "3-sided YKK zipper",
         "Custom-made to your duvet",
-        "OEKO-TEX certified",
         "Wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -878,7 +947,7 @@
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
         "Available in 9 BreezePlus colors (other fabrics vary)",
         "Machine washable, quick dry",
-        "OEKO-TEX certified - no harmful chemicals"
+        "PremaCotton option is OEKO-TEX® certified"
       ],
       "tabFabricTitle": "Built for Dorm Living",
       "tabFabricP": "Designed for boarding school dorms with 3-sided zipper for easy linen changes in shared laundry facilities. Available in Double and Single sizes.",
@@ -886,7 +955,7 @@
         "3-sided zipper — easy laundry",
         "Double + Single sizes",
         "4 fabric choices",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "Quick-dry"
       ],
       "tabCareBullets": [
@@ -941,12 +1010,12 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Envelope Pillowcase",
-      "tabDescriptionP": "Classic tuck-in envelope closure with no zipper needed. The pillow slips in and stays securely tucked. Custom-made to your exact pillow dimensions with 100% long-staple cotton and OEKO-TEX certification.",
+      "tabDescriptionP": "Classic tuck-in envelope closure with no zipper needed. The pillow slips in and stays securely tucked. Custom-made to your exact pillow dimensions with 100% long-staple cotton and PremaCotton option has OEKO-TEX® certification.",
       "tabDescriptionBullets": [
         "Envelope tuck-in closure — no zipper, no hardware",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
-        "OEKO-TEX certified — no toxic chemicals",
+        "PremaCotton option is OEKO-TEX® certified",
         "Wrinkle-resistant and quick-dry"
       ],
       "tabFabricTitle": "Premium Fabrics",
@@ -1009,12 +1078,12 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Zipper Pillowcase",
-      "tabDescriptionP": "Secure YKK zipper enclosure keeps the pillow perfectly in place. The zipper glides smoothly and stays hidden for a clean look. Custom-made to your exact pillow dimensions with OEKO-TEX certified fabrics.",
+      "tabDescriptionP": "Secure YKK zipper enclosure keeps the pillow perfectly in place. The zipper glides smoothly and stays hidden for a clean look. Custom-made to your exact pillow dimensions with PremaCotton option is OEKO-TEX® certified fabrics.",
       "tabDescriptionBullets": [
         "YKK zipper — smooth, durable, hidden design",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
-        "OEKO-TEX certified — no toxic chemicals",
+        "PremaCotton option is OEKO-TEX® certified",
         "Wrinkle-resistant and quick-dry"
       ],
       "tabFabricTitle": "Premium Fabrics",
@@ -1077,13 +1146,13 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Sham Pillowcase",
-      "tabDescriptionP": "Decorative flange-edge sham with 15% extra fabric for elegant drape and overhang. The hotel-style design elevates any bedroom with its sophisticated border detail. Custom-made to your exact pillow dimensions with OEKO-TEX certified fabrics.",
+      "tabDescriptionP": "Decorative flange-edge sham with 15% extra fabric for elegant drape and overhang. The hotel-style design elevates any bedroom with its sophisticated border detail. Custom-made to your exact pillow dimensions with PremaCotton option is OEKO-TEX® certified fabrics.",
       "tabDescriptionBullets": [
         "Decorative flange-edge — premium hotel style",
         "15% extra fabric for elegant drape and overhang",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
-        "OEKO-TEX certified — no toxic chemicals"
+        "PremaCotton option is OEKO-TEX® certified"
       ],
       "tabFabricTitle": "Premium Fabrics",
       "tabFabricP": "Available in 4 premium fabric options. CloudSoft for everyday luxury, BreezePlus for pet owners, PremaCotton for the premium feel, and EcoLuxe for natural unbleached cotton.",
@@ -1106,8 +1175,8 @@
     },
     "mattress-encasement-general": {
       "productType": "encasement",
-      "tagline": "Full 6-sided encasement  -  complete waterproof protection from all angles. TPU inner layer. OEKO-TEX certified.",
-      "metaDescription": "6-Sided Mattress Encasement by MildMate  -  full waterproof protection from all angles. TPU inner layer. OEKO-TEX certified. Ships worldwide.",
+      "tagline": "Full 6-sided encasement - complete waterproof protection from all angles. TPU inner layer.",
+      "metaDescription": "6-Sided Mattress Encasement by MildMate - full waterproof protection from all angles. TPU inner layer. Ships worldwide.",
       "ratingCount": 2,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1130,13 +1199,13 @@
         "mattress-protector-deep-pocket"
       ],
       "tabDescriptionTitle": "Complete Waterproof Protection from All Angles",
-      "tabDescriptionP": "Unlike standard fitted protectors, the 6-Sided Mattress Encasement wraps your entire mattress  -  top, bottom, and all four sides  -  for complete protection against dust mites, allergens, bed bugs, and liquids from any direction.",
+      "tabDescriptionP": "Unlike standard fitted protectors, the 6-Sided Mattress Encasement wraps your entire mattress - top, bottom, and all four sides - for complete protection against dust mites, allergens, bed bugs, and liquids from any direction.",
       "tabDescriptionBullets": [
-        "Full 6-sided encasement  -  no exposed surfaces",
-        "TPU inner layer  -  100% waterproof from all angles",
-        "12 inch / 30cm depth  -  fits most standard mattresses",
-        "Pure White only  -  clean and minimal",
-        "OEKO-TEX certified for safety",
+        "Full 6-sided encasement - no exposed surfaces",
+        "TPU inner layer - 100% waterproof from all angles",
+        "12 inch / 30cm depth - fits most standard mattresses",
+        "Pure White only - clean and minimal",
+        ". for safety",
         "Ideal for allergy sufferers and asthma sufferers"
       ],
       "tabFabricTitle": "TPU Waterproof Layer",
@@ -1144,7 +1213,7 @@
       "tabFabricBullets": [
         "100% waterproof TPU inner layer",
         "Quiet — no plastic crinkle",
-        "Skin-safe and OEKO-TEX certified",
+        "Skin-safe and.",
         "Complete 6-sided protection",
         "Ideal for allergy sufferers"
       ],
@@ -1161,8 +1230,8 @@
     },
     "rv-truck-mattress-encasement": {
       "productType": "encasement",
-      "tagline": "6-sided waterproof encasement for RV and truck cab mattresses. TPU inner layer. OEKO-TEX certified. Stays secure on the road.",
-      "metaDescription": "RV & Truck Mattress Encasement by MildMate  -  6-sided waterproof encasement for RV and truck cab mattresses. TPU inner layer. OEKO-TEX certified. Ships worldwide.",
+      "tagline": "6-sided waterproof encasement for RV and truck cab mattresses. TPU inner layer. Stays secure on the road.",
+      "metaDescription": "RV & Truck Mattress Encasement by MildMate - 6-sided waterproof encasement for RV and truck cab mattresses. TPU inner layer. Ships worldwide.",
       "ratingCount": 2,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1189,14 +1258,14 @@
         "duvet-cover-rv"
       ],
       "tabDescriptionTitle": "Road-Ready Waterproof Protection",
-      "tabDescriptionP": "RV and truck cab mattresses have unique requirements  -  they're typically thinner (8 inch) and often subject to vibration and movement. The RV & Truck Mattress Encasement provides full 6-sided waterproof protection with a TPU inner layer that stays secure on the road.",
+      "tabDescriptionP": "RV and truck cab mattresses have unique requirements - they're typically thinner (8 inch) and often subject to vibration and movement. The RV & Truck Mattress Encasement provides full 6-sided waterproof protection with a TPU inner layer that stays secure on the road.",
       "tabDescriptionBullets": [
-        "Full 6-sided encasement  -  no exposed surfaces",
-        "TPU inner layer  -  100% waterproof from all angles",
-        "8 inch / 20cm depth  -  designed for RV mattress thickness",
-        "Anti-vibration fit  -  stays secure during travel",
+        "Full 6-sided encasement - no exposed surfaces",
+        "TPU inner layer - 100% waterproof from all angles",
+        "8 inch / 20cm depth - designed for RV mattress thickness",
+        "Anti-vibration fit - stays secure during travel",
         "Available in Pure White and Sand",
-        "OEKO-TEX certified for safety"
+        ". for safety"
       ],
       "tabFabricTitle": "TPU Waterproof — Road Ready",
       "tabFabricP": "TPU inner layer provides full waterproof protection designed for RV and truck cab mattresses. Anti-vibration fit stays secure during travel. Available in Pure White and Sand.",
@@ -1204,7 +1273,6 @@
         "100% waterproof TPU",
         "Anti-vibration fit",
         "8 inch depth for RV mattresses",
-        "OEKO-TEX certified",
         "Pure White and Sand colors"
       ],
       "tabCareBullets": [
@@ -1220,8 +1288,8 @@
     },
     "pillow-protector-general": {
       "productType": "pillow-protector",
-      "tagline": "TPU waterproof liner + your choice of outer fabric. OEKO-TEX certified, 100% fluid barrier that keeps your pillow fresh and dry.",
-      "metaDescription": "Pillow Protector by MildMate  -  TPU waterproof liner + your choice of outer fabric (CloudSoft, BreezePlus, PremaCotton, EcoLuxe). OEKO-TEX certified. Ships worldwide.",
+      "tagline": "TPU waterproof liner + your choice of outer fabric. PremaCotton option is OEKO-TEX® certified, 100% fluid barrier that keeps your pillow fresh and dry.",
+      "metaDescription": "Pillow Protector by MildMate  -  TPU waterproof liner + your choice of outer fabric (CloudSoft, BreezePlus, PremaCotton, EcoLuxe). PremaCotton option is OEKO-TEX® certified. Ships worldwide.",
       "ratingCount": 78,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1271,12 +1339,12 @@
         "3-sided-duvet"
       ],
       "tabDescriptionTitle": "Complete Waterproof Protection for Your Pillow",
-      "tabDescriptionP": "The Pillow Protector combines a TPU (Thermoplastic Polyurethane) waterproof inner layer with your choice of premium outer fabric. Blocks 100% of fluids  -  sweat, drool, pet accidents  -  while keeping your pillow clean and fresh. OEKO-TEX certified for safety.",
+      "tabDescriptionP": "The Pillow Protector combines a TPU (Thermoplastic Polyurethane) waterproof inner layer with your choice of premium outer fabric. Blocks 100% of fluids  -  sweat, drool, pet accidents  -  while keeping your pillow clean and fresh. PremaCotton option is OEKO-TEX® certified for safety.",
       "tabDescriptionBullets": [
         "TPU inner  -  100% waterproof, quiet, skin-safe",
         "4 outer fabric options: CloudSoft, BreezePlus, PremaCotton, EcoLuxe",
         "Envelop-style closure  -  fits all standard pillow sizes",
-        "OEKO-TEX certified  -  no toxic chemicals",
+        "PremaCotton option is OEKO-TEX® certified",
         "Extends pillow lifespan by protecting from moisture and wear",
         "Machine washable, quick dry"
       ],
@@ -1286,7 +1354,7 @@
         "TPU inner — 100% waterproof",
         "4 outer fabric options",
         "Envelope-style closure",
-        "OEKO-TEX certified",
+        "PremaCotton option is OEKO-TEX® certified",
         "Machine washable, quick dry"
       ],
       "tabCareBullets": [
@@ -1300,10 +1368,67 @@
       "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">A</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Andy T.</div>\r\n                <div class=\"review-country\">Thailand</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Hot sleeper and this EcoLuxe version is amazing  -  stays cool all night. Waterproof too, which is a bonus. OEKO-TEX gives peace of mind.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Pillow Protector · King / EcoLuxe</div>",
       "fabricMode": "all"
     },
+    "marine-mattress-protector": {
+      "productType": "marine",
+      "tagline": "14 marine mattress shapes. Waterproof 3-layer protector with instant online pricing. Built for life at sea.",
+      "metaDescription": "Marine Mattress Protector by MildMate — 14 boat mattress shapes with instant online pricing. Waterproof 3-layer protector (Cotton Quilted + Polyester Filling + TPU). Ships worldwide.",
+      "ratingCount": 18,
+      "breadcrumbCategoryUrl": "/protection/",
+      "breadcrumbCategoryLabel": "Protection",
+      "breadcrumbName": "Marine Mattress Protector",
+      "fabrics": [
+        "tpu"
+      ],
+      "lockedFabric": "tpu",
+      "needsDepth": true,
+      "tags": [
+        {
+          "url": "/protection/",
+          "label": "Protection"
+        },
+        {
+          "url": "/marine/",
+          "label": "Marine &amp; Yacht"
+        }
+      ],
+      "relatedSlugs": [
+        "marine-fitted-sheet",
+        "mattress-encasement-general",
+        "pillow-protector-general"
+      ],
+      "tabDescriptionTitle": "Marine-Ready Waterproof Protection",
+      "tabDescriptionP": "Use the same 14-shape marine configurator to match your boat mattress layout, then get an instant protector price with no email back-and-forth. This protector uses a 3-layer waterproof build that guards against humidity, spills, and onboard moisture while staying comfortable for everyday sleep.",
+      "tabDescriptionBullets": [
+        "14 boat-mattress shapes with guided measurement diagrams",
+        "3-layer protector: Cotton Quilted + Polyester Filling + TPU Waterproof backing",
+        "Instant online pricing from shape area + mattress depth",
+        "Custom-made to your exact marine mattress geometry",
+        ". materials — no toxic chemicals"
+      ],
+      "tabFabricTitle": "3-Layer Marine Protector Construction",
+      "tabFabricP": "Built for marine sleeping environments where humidity and spills are common. The TPU waterproof backing blocks liquids, while the quilted top keeps the sleep surface soft and breathable.",
+      "tabFabricBullets": [
+        "Top Layer: Cotton Quilted",
+        "Layer 2: Polyester Filling",
+        "Layer 3: TPU Waterproof backing",
+        "Water-spill and accident protection",
+        "Machine washable and quick-dry care routine"
+      ],
+      "tabCareBullets": [
+        "Machine wash warm (40°C / 104°F) — gentle cycle",
+        "Do not bleach — mild detergent only",
+        "Tumble dry low or hang dry",
+        "Do not iron TPU-backed layer",
+        "Remove promptly after drying to prevent wrinkles"
+      ],
+      "review1Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">J</div><div class=\"review-meta\"><div class=\"review-name\">John P.</div><div class=\"review-country\">United States</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Exactly what we needed for our liveaboard cabin. The shape-based input made pricing easy and the protector fit our V-berth perfectly.\"</div><div class=\"review-product\">Verified purchase: Marine Mattress Protector · Custom Shape 02</div></div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">M</div><div class=\"review-meta\"><div class=\"review-name\">Marie L.</div><div class=\"review-country\">Australia</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"No more condensation worries. The waterproof layer works great and still feels comfortable. Loved getting instant pricing online.\"</div><div class=\"review-product\">Verified purchase: Marine Mattress Protector · Shape 10</div></div>",
+      "fabricMode": "badge"
+    },
     "mattress-protector-standard": {
       "productType": "protector",
-      "tagline": "Waterproof mattress protector with TPU inner layer. Fitted-sheet style for standard mattresses. OEKO-TEX certified.",
-      "metaDescription": "Mattress Protector — Standard by MildMate. Waterproof TPU inner layer in fitted-sheet style. Custom-made to your mattress dimensions. OEKO-TEX certified. Ships worldwide.",
+      "tagline": "Waterproof mattress protector with TPU inner layer. Fitted-sheet style for standard mattresses.",
+      "metaDescription": "Mattress Protector — Standard by MildMate. Waterproof TPU inner layer in fitted-sheet style. Custom-made to your mattress dimensions. Ships worldwide.",
       "ratingCount": 56,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1331,7 +1456,7 @@
         "TPU inner layer — 100% waterproof",
         "Fitted-sheet style — easy to install and remove",
         "Custom-made to your exact mattress dimensions",
-        "OEKO-TEX certified — no toxic chemicals",
+        ". — no toxic chemicals",
         "Quiet and skin-safe — no plastic crinkle"
       ],
       "tabFabricTitle": "TPU Waterproof Protection",
@@ -1340,7 +1465,6 @@
         "100% waterproof TPU",
         "Quiet — no crinkle",
         "Skin-safe",
-        "OEKO-TEX certified",
         "Full-perimeter elastic"
       ],
       "tabCareBullets": [
@@ -1356,8 +1480,8 @@
     },
     "mattress-protector-family": {
       "productType": "protector",
-      "tagline": "Waterproof mattress protector for family-size and co-sleeping setups. TPU inner layer. OEKO-TEX certified. Safe for children.",
-      "metaDescription": "Mattress Protector — Family by MildMate. Waterproof TPU inner layer for family mattresses and co-sleeping setups. Custom-made. OEKO-TEX certified. Ships worldwide.",
+      "tagline": "Waterproof mattress protector for family-size and co-sleeping setups. TPU inner layer. Safe for children.",
+      "metaDescription": "Mattress Protector — Family by MildMate. Waterproof TPU inner layer for family mattresses and co-sleeping setups. Custom-made. Ships worldwide.",
       "ratingCount": 42,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1384,19 +1508,19 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Family-Size Waterproof Protection",
-      "tabDescriptionP": "Designed for family mattresses and co-sleeping setups. The TPU waterproof layer protects against spills and accidents while remaining safe for children with OEKO-TEX certification. Custom-made to your exact family mattress dimensions.",
+      "tabDescriptionP": "Designed for family mattresses and co-sleeping setups. The TPU waterproof layer protects against spills and accidents while remaining safe for children with. Custom-made to your exact family mattress dimensions.",
       "tabDescriptionBullets": [
         "TPU inner layer — 100% waterproof",
         "Custom-made to family mattress dimensions",
-        "OEKO-TEX certified — safe for children",
+        ". — safe for children",
         "Fitted-sheet style — easy to install",
         "Quiet and comfortable — no plastic crinkle"
       ],
       "tabFabricTitle": "TPU — Safe for Children",
-      "tabFabricP": "The TPU inner layer is OEKO-TEX certified and safe for children of all ages. Blocks all liquids while remaining quiet and comfortable. The fitted-sheet design makes it easy to remove for washing.",
+      "tabFabricP": "The TPU inner layer is. and safe for children of all ages. Blocks all liquids while remaining quiet and comfortable. The fitted-sheet design makes it easy to remove for washing.",
       "tabFabricBullets": [
         "100% waterproof TPU",
-        "OEKO-TEX certified — child-safe",
+        ". — child-safe",
         "Quiet — no crinkle",
         "Fitted-sheet style",
         "Family-size dimensions"
@@ -1414,7 +1538,7 @@
     },
     "mattress-protector-deep-pocket": {
       "productType": "protector",
-      "tagline": "Extra-deep waterproof mattress protector for thick mattresses and pillow-tops. TPU inner layer. OEKO-TEX certified.",
+      "tagline": "Extra-deep waterproof mattress protector for thick mattresses and pillow-tops. TPU inner layer.",
       "metaDescription": "Mattress Protector — Deep Pocket by MildMate. Extra-deep fitted protector with waterproof TPU layer for thick mattresses and pillow-tops. Custom-made. Ships worldwide.",
       "ratingCount": 38,
       "breadcrumbCategoryUrl": "/protection/",
@@ -1447,7 +1571,7 @@
         "Extra-deep pocket for thick mattresses",
         "TPU inner layer — 100% waterproof",
         "Custom-made to your exact dimensions",
-        "OEKO-TEX certified — no toxic chemicals",
+        ". — no toxic chemicals",
         "Fits adjustable beds and pillow-tops"
       ],
       "tabFabricTitle": "TPU — Extra Deep Pocket",
@@ -1456,7 +1580,6 @@
         "100% waterproof TPU",
         "Extra-deep pocket",
         "Full-perimeter elastic",
-        "OEKO-TEX certified",
         "Quiet and comfortable"
       ],
       "tabCareBullets": [
@@ -1472,7 +1595,7 @@
     },
     "pet-proof-mattress-protector": {
       "productType": "protector",
-      "tagline": "Pet-proof waterproof mattress protector. TPU inner layer with anti-scratch outer. OEKO-TEX certified. Pet accidents stay on top.",
+      "tagline": "Pet-proof waterproof mattress protector. TPU inner layer with anti-scratch outer. Pet accidents stay on top.",
       "metaDescription": "Pet-Proof Mattress Protector by MildMate. TPU waterproof layer with durable anti-scratch outer. Custom-made. Protects against pet accidents, fur, and scratches. Ships worldwide.",
       "ratingCount": 64,
       "breadcrumbCategoryUrl": "/protection/",
@@ -1500,22 +1623,21 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Built for Life with Pets",
-      "tabDescriptionP": "Pets bring joy — and accidents, fur, and the occasional scratch. The Pet-Proof Mattress Protector combines a TPU waterproof inner layer with BreezePlus outer fabric that resists pet hair and scratches. Fully OEKO-TEX certified for safety.",
+      "tabDescriptionP": "Pets bring joy — and accidents, fur, and the occasional scratch. The Pet-Proof Mattress Protector combines a TPU waterproof inner layer with BreezePlus outer fabric that resists pet hair and scratches. Fully. for safety.",
       "tabDescriptionBullets": [
         "TPU inner layer — 100% waterproof",
         "BreezePlus outer — pet hair slides off",
         "Anti-scratch durable construction",
-        "OEKO-TEX certified — safe for pets",
+        ". — safe for pets",
         "Custom-made to your mattress dimensions"
       ],
       "tabFabricTitle": "BreezePlus + TPU — Double Protection",
-      "tabFabricP": "BreezePlus outer fabric resists pet hair and scratches while the TPU inner layer blocks all liquids. The 50/50 cotton-microfiber blend stays 3-5°C cooler than standard cotton — perfect for pets who run warm.",
+      "tabFabricP": "BreezePlus outer fabric resists pet hair and scratches while the TPU inner layer blocks all liquids. The 50/50 cotton-microfiber blend stays cool-to-the-touch comfort — perfect for pets who run warm.",
       "tabFabricBullets": [
         "Hair slides off — no embedding",
         "TPU waterproof layer",
         "Anti-scratch design",
-        "3-5°C cooler than cotton",
-        "OEKO-TEX certified"
+        "cool-to-the-touch comfort"
       ],
       "tabCareBullets": [
         "Machine wash cold (30°C / 86°F) — gentle cycle",
@@ -1530,8 +1652,8 @@
     },
     "bedbridge-connector": {
       "productType": "fixed",
-      "tagline": "Transform two mattresses into one seamless sleeping surface. High-density microfiber T-wedge fills the gap  -  no straps needed.",
-      "metaDescription": "BedBridge Connector by MildMate  -  T-shaped microfiber wedge fills the gap between two mattresses. No-strap, friction-based system creates one seamless sleeping surface. Twin XL to King, family co-sleep. Ships worldwide.",
+      "tagline": "Transform two mattresses into one seamless sleeping surface. High-density microfiber T-wedge fills the gap - no straps needed.",
+      "metaDescription": "BedBridge Connector by MildMate - T-shaped microfiber wedge fills the gap between two mattresses. No-strap, friction-based system creates one seamless sleeping surface. Twin XL to King, family co-sleep. Ships worldwide.",
       "ratingCount": null,
       "breadcrumbCategoryUrl": "/accessories/",
       "breadcrumbCategoryLabel": "Accessories",
@@ -1593,8 +1715,8 @@
     },
     "mattress-lift-helper": {
       "productType": "fixed",
-      "tagline": "Lift heavy mattresses effortlessly. No more back pain  -  ergonomic ABS design for elderly, seniors, and caregivers.",
-      "metaDescription": "Large Mattress Lifter  -  38cm height, ergonomic ABS design. Lift heavy mattresses effortlessly  -  no more back pain. Ideal for elderly, seniors, and caregivers. Ships worldwide.",
+      "tagline": "Lift heavy mattresses effortlessly. No more back pain - ergonomic ABS design for elderly, seniors, and caregivers.",
+      "metaDescription": "Large Mattress Lifter - 38cm height, ergonomic ABS design. Lift heavy mattresses effortlessly - no more back pain. Ideal for elderly, seniors, and caregivers. Ships worldwide.",
       "ratingCount": null,
       "breadcrumbCategoryUrl": "/accessories/",
       "breadcrumbCategoryLabel": "Accessories",

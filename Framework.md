@@ -1,4 +1,4 @@
-﻿# MildMate Web Rebuild — Full Framework Plan
+# MildMate Web Rebuild — Full Framework Plan
 
 ## Stack Confirmed
 - **Frontend:** Vanilla HTML + CSS + minimal JS
@@ -448,7 +448,7 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 
 [OUR STORY]  Founding, mission, handcraft in Thailand
 
-[CERTIFICATIONS]  OEKO-TEX + Siriraj certified badges with descriptions
+[CERTIFICATIONS]  PremaCotton OEKO-TEX® + Siriraj certified badges with descriptions
 
 [THE TEAM]  Brief team introduction
 
@@ -483,7 +483,7 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
     Extended description
     Feature list (5â€“6 items)
     Color options grid
-    Certifications (OEKO-TEX, Siriraj where applicable)
+    Certifications (OEKO-TEX for PremaCotton, Siriraj where applicable)
     CTA → Shop [Fabric Name] products
 
 **BreezePlus Color Palette (9 swatches):**
@@ -1583,7 +1583,7 @@ padding: 72px 24px 56px;
 
 | Product | Fabric Options |
 |---|---|
-| Pet Owner (Fitted/Duvet) | BreezePlus only (specs grid: Pet Hair Resistant, 3-5Â°C Cooler, 50/50 Blend) |
+| Pet Owner (Fitted/Duvet) | BreezePlus only (specs grid: Pet Hair Resistant, Cool-to-the-Touch, 50/50 Blend) |
 | Marine & Yacht (Fitted/Duvet) | CloudSoft only (specs grid: Quick-Dry, Moisture-Wicking, 100% Cotton) |
 | RV & Truck (Fitted/Duvet) | CloudSoft only (specs grid) |
 | Fitted Sheets (other) | All 4: fabric dropdown + per-fabric color selector |

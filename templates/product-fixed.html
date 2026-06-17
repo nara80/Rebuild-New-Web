@@ -13,14 +13,35 @@
     .product-page { background: #F8FAFC; }
     .product-layout { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: start; overflow: hidden; }
     .product-gallery { position: sticky; top: 90px; min-width: 0; }
-    .gallery-main { border-radius: var(--radius); overflow: hidden; background: var(--color-surface); margin-bottom: 12px; position: relative; border: 1px solid var(--color-border); }
-    .gallery-main img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
-    #youtube-video-container { }
-    .yt-video-wrap { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--color-border); background: #000; cursor: pointer; }
-    .yt-video-wrap .yt-thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
-    .yt-video-wrap .yt-play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-    .yt-video-wrap .yt-play-circle { width: 68px; height: 48px; border-radius: 12px; background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-    .yt-video-wrap:hover .yt-play-circle { background: #ff0000; }
+    /* --- 4:3 swipeable carousel --- */
+    .carousel-wrap { position: relative; overflow: hidden; background: #F8FAFC; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+    .carousel-track { display: flex; transition: transform 0.35s ease; will-change: transform; }
+    .carousel-track.no-transition { transition: none; }
+    .carousel-slide { flex: 0 0 100%; width: 100%; aspect-ratio: 4/3; }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; }
+    .carousel-slide-video { position: relative; background: #000; cursor: pointer; }
+    .carousel-slide-video .yt-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .carousel-slide-video .yt-play-btn { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .carousel-slide-video .yt-play-circle { width: 68px; height: 48px; border-radius: 12px; background: rgba(0,0,0,0.72); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .carousel-slide-video:hover .yt-play-circle { background: #ff0000; }
+    .carousel-slide-video .yt-play-circle svg { width: 24px; height: 24px; fill: #fff; }
+    .carousel-slide-video iframe { width: 100%; height: 100%; border: none; display: block; }
+    .carousel-thumb.thumb-video { position: relative; }
+    .carousel-thumb.thumb-video::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
+    .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: background 0.15s; }
+    .carousel-prev:hover, .carousel-next:hover { background: #fff; }
+    .carousel-prev { left: 10px; }
+    .carousel-next { right: 10px; }
+    .carousel-prev svg, .carousel-next svg { stroke: #1E293B; }
+    .carousel-dots-wrap { position: absolute; left: 0; right: 0; bottom: 10px; z-index: 6; display: flex; justify-content: center; align-items: center; gap: 6px; pointer-events: none; }
+    .carousel-dot { width: 8px; height: 8px; border-radius: 50%; border: none; background: #cbd5e1; cursor: pointer; transition: all 0.2s; padding: 0; }
+    .carousel-dot.active { background: #2c96f4; width: 24px; border-radius: 4px; }
+    .carousel-dot { pointer-events: auto; }
+    .carousel-thumbs { display: flex; gap: 12px; overflow-x: auto; padding: 10px 2px 2px; }
+    .carousel-thumbs::-webkit-scrollbar { display: none; }
+    .carousel-thumb { width: 64px; height: 64px; border-radius: 8px; border: 2px solid #dbe3ee; background: #fff; padding: 0; overflow: hidden; cursor: pointer; flex: 0 0 auto; transition: border-color var(--transition); }
+    .carousel-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .carousel-thumb.active { border-color: #2c96f4; box-shadow: 0 0 0 2px rgba(44,150,244,0.2); }
     .product-info { min-width: 0; }
     .product-breadcrumb { font-size: 0.8125rem; color: #64748b; margin-bottom: 16px; }
     .product-breadcrumb a { color: var(--color-primary); text-decoration: none; }
@@ -273,10 +294,21 @@
     </div>
     <div class="product-layout">
       <div class="product-gallery">
-        <div class="gallery-main">
-          <img src="{{IMAGE_PATH}}" alt="{{PRODUCT_NAME}}" id="gallery-main-img" width="800" height="600" loading="eager">
+        <div class="carousel-wrap" id="carousel-wrap">
+          <div class="carousel-track" id="carousel-track">
+            <div class="carousel-slide">
+              <img src="{{IMAGE_PATH}}" alt="{{PRODUCT_NAME}}" id="gallery-main-img" width="800" height="600" loading="eager">
+            </div>
+          </div>
+          <button class="carousel-prev" id="carousel-prev" aria-label="Previous image">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="carousel-next" id="carousel-next" aria-label="Next image">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="carousel-dots-wrap" id="carousel-dots-wrap"></div>
         </div>
-        <div id="youtube-video-container"></div>
+        <div class="carousel-thumbs" id="carousel-thumbs"></div>
       </div>
       <div class="product-info">
         <div class="product-title-row">
@@ -286,10 +318,10 @@
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">{{TAGLINE}}</p>
         <div class="trust-signals trust-signals-mobile">
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>OEKO-TEX</div>
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7 9 18l-5-5"/></svg>Custom Fit</div>
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Human Safe</div>
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1 1 3 1 3-1 5-1 3 1 5 1 3-1 3-1"/><path d="M3 19h18"/><path d="M4 11c2-2 3-4 8-4s6 2 8 4"/></svg>Pet Resist</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>Top Rated</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Ships from TH</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Secure Pay</div>
         </div>
         <div id="sale-info"></div>
         {{FIXED_PRICING_HTML}}
@@ -527,35 +559,171 @@
         }
       };
 
-      // ── YouTube Video + Description Override ──
+      // ── YouTube Video + Carousel Builder ──
       (function() {
         var slug = location.pathname.split('/').filter(Boolean).pop();
+        var currentSlide = 0;
+        var gallery = [];
+
+        function extractYouTubeId(url) {
+          if (!url) return '';
+          var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+          return m ? m[1] : '';
+        }
+
+        function buildCarousel() {
+          var wrap = document.getElementById('carousel-wrap');
+          var track = document.getElementById('carousel-track');
+          var dotsWrap = document.getElementById('carousel-dots-wrap');
+          var thumbsWrap = document.getElementById('carousel-thumbs');
+          if (!wrap || !track || !gallery.length) return;
+
+          // Hide arrows/dots on single image
+          var prevBtn = document.getElementById('carousel-prev');
+          var nextBtn = document.getElementById('carousel-next');
+          if (gallery.length === 1) {
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (dotsWrap) dotsWrap.style.display = 'none';
+            if (thumbsWrap) thumbsWrap.style.display = 'none';
+          }
+
+          // Build slides
+          track.innerHTML = gallery.map(function(item) {
+            if (typeof item === 'object' && item.videoId) {
+              var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/hqdefault.jpg';
+              return '<div class="carousel-slide carousel-slide-video" data-video-id="' + item.videoId + '">' +
+                '<img class="yt-thumb" src="' + thumb + '" alt="Product video" width="480" height="360" loading="lazy">' +
+                '<div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
+            }
+            return '<div class="carousel-slide"><img src="' + item + '" alt="Product image" width="800" height="600" loading="eager"></div>';
+          }).join('');
+
+          // Build dots
+          if (dotsWrap) {
+            dotsWrap.innerHTML = gallery.map(function(item, i) {
+              return '<button class="carousel-dot' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="' + (typeof item === 'object' && item.videoId ? 'Video' : 'Image ' + (i+1)) + '"></button>';
+            }).join('');
+          }
+
+          // Build thumbnails
+          if (thumbsWrap) {
+            thumbsWrap.innerHTML = gallery.map(function(item, i) {
+              if (typeof item === 'object' && item.videoId) {
+                var thumb = 'https://img.youtube.com/vi/' + item.videoId + '/default.jpg';
+                return '<button class="carousel-thumb thumb-video' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Video thumbnail"><img src="' + thumb + '" alt="Video thumb" loading="lazy"></button>';
+              }
+              return '<button class="carousel-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '" aria-label="Thumbnail ' + (i+1) + '"><img src="' + item + '" alt="Product thumbnail ' + (i+1) + '" loading="lazy"></button>';
+            }).join('');
+          }
+
+          // Click handler on video slides: swap thumbnail for iframe
+          track.addEventListener('click', function(e) {
+            var slide = e.target.closest('.carousel-slide-video');
+            if (!slide) return;
+            var videoId = slide.getAttribute('data-video-id');
+            if (!videoId || slide.querySelector('iframe')) return;
+            slide.innerHTML = '<iframe src="https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+          });
+
+          // Dot click
+          if (dotsWrap) {
+            dotsWrap.querySelectorAll('.carousel-dot').forEach(function(dot) {
+              dot.addEventListener('click', function() {
+                goToSlide(parseInt(dot.getAttribute('data-idx'), 10));
+              });
+            });
+          }
+
+          // Thumb click
+          if (thumbsWrap) {
+            thumbsWrap.querySelectorAll('.carousel-thumb').forEach(function(thumb) {
+              thumb.addEventListener('click', function() {
+                goToSlide(parseInt(thumb.getAttribute('data-idx'), 10));
+              });
+            });
+          }
+
+          // Arrow click
+          if (prevBtn) prevBtn.addEventListener('click', function() { goToSlide(currentSlide - 1); });
+          if (nextBtn) nextBtn.addEventListener('click', function() { goToSlide(currentSlide + 1); });
+
+          // Touch swipe
+          var touchStartX = 0;
+          wrap.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; }, {passive:true});
+          wrap.addEventListener('touchend', function(e) {
+            var dx = e.changedTouches[0].screenX - touchStartX;
+            if (Math.abs(dx) > 50) {
+              if (dx < 0) goToSlide(currentSlide + 1);
+              else goToSlide(currentSlide - 1);
+            }
+          }, {passive:true});
+
+          goToSlide(0);
+        }
+
+        function goToSlide(idx) {
+          if (!gallery.length) return;
+          if (idx < 0) idx = gallery.length - 1;
+          if (idx >= gallery.length) idx = 0;
+          currentSlide = idx;
+          var track = document.getElementById('carousel-track');
+          if (track) {
+            track.classList.remove('no-transition');
+            track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+          }
+          document.querySelectorAll('.carousel-dot').forEach(function(d) { d.classList.remove('active'); });
+          var dots = document.querySelectorAll('.carousel-dot');
+          if (dots[idx]) dots[idx].classList.add('active');
+          var thumbs = document.querySelectorAll('.carousel-thumb');
+          thumbs.forEach(function(t) { t.classList.remove('active'); });
+          if (thumbs[idx]) {
+            thumbs[idx].classList.add('active');
+            if (typeof thumbs[idx].scrollIntoView === 'function') {
+              thumbs[idx].scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+            }
+          }
+        }
+
         fetch('/api/products/' + slug)
           .then(function(r) { return r.json(); })
           .then(function(payload) {
             var p = payload && (payload.product || payload);
             if (!p) return;
 
-            // YouTube video
-            if (p.youtube_url) {
-              var m = p.youtube_url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-              if (m) {
-                var videoId = m[1];
-                var container = document.getElementById('youtube-video-container');
-                if (container) {
-                  container.innerHTML = '<div class="yt-video-wrap">' +
-                    '<img class="yt-thumb" src="https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg" alt="Product video" width="480" height="360">' +
-                    '<div class="yt-play-overlay" onclick="var iframe=document.createElement(\'iframe\');iframe.src=\'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0\';iframe.allow=\'autoplay;encrypted-media\';iframe.allowFullscreen=true;iframe.style=\'width:100%;height:100%;border:none;display:block\';this.parentNode.innerHTML=\'\';this.parentNode.appendChild(iframe)">' +
-                    '<div class="yt-play-circle"><svg viewBox="0 0 24 24" width="28" height="28"><polygon points="5,3 19,12 5,21" fill="#fff"/></svg></div></div></div>';
-                }
+            var imgs = [];
+            try {
+              imgs = JSON.parse(p.images || "[]");
+            } catch(e) {
+              try {
+                imgs = JSON.parse((p.images || "[]").replace(/\\"/g, '"'));
+              } catch(err) {
+                imgs = [];
               }
             }
+            var galleryImgs = imgs.filter(Boolean);
+            var fallback = p.image_url || "{{IMAGE_PATH}}";
+            var heroImg = galleryImgs[0] || fallback;
+            if (heroImg) gallery.push(heroImg);
+
+            // Push YouTube video as second slide if exists
+            var ytId = extractYouTubeId(p.youtube_url || '');
+            if (ytId) gallery.push({ videoId: ytId });
+
+            for (var i = 1; i < galleryImgs.length; i++) {
+              if (galleryImgs[i]) gallery.push(galleryImgs[i]);
+            }
+            if (!gallery.length && fallback) gallery.push(fallback);
+
+            buildCarousel();
 
             // Option C: Replace static content with D1 description if present
-            if (p.description_en) {
+            var lang = document.documentElement.lang || 'en';
+            var desc = (lang === 'th' && p.description_th) ? p.description_th : p.description_en;
+            if (desc) {
               var wrapper = document.getElementById('fixed-content-wrapper');
               if (wrapper) {
-                wrapper.innerHTML = '<div class="container" style="max-width:1280px; padding:24px 24px 0;"><div style="background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);padding:24px">' + p.description_en + '</div></div>';
+                wrapper.innerHTML = '<div class="container" style="max-width:1280px; padding:24px 24px 0;"><div style="background:#fff;border:1px solid var(--color-border);border-radius:var(--radius);padding:24px">' + desc + '</div></div>';
               }
             }
           })

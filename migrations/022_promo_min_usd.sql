@@ -3,4 +3,3 @@
 -- Admin inputs USD minimum; workers validate against cart_total_usd
 
 ALTER TABLE promo_codes RENAME COLUMN order_minimum_thb TO order_minimum_usd;
-ALTER TABLE promo_codes ALTER COLUMN order_minimum_usd SET DEFAULT 0;

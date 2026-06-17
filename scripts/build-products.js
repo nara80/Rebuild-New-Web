@@ -1,4 +1,4 @@
-// build-products.js — Centralized product page builder
+// build-products.js â€” Centralized product page builder
 // Reads product-content.json + products.json, applies templates, writes product pages
 const fs = require('fs');
 const path = require('path');
@@ -8,9 +8,17 @@ const DATA_DIR = path.join(ROOT, 'data');
 const TEMPLATES_DIR = path.join(ROOT, 'templates');
 const PUBLIC_DIR = path.join(ROOT, 'public', 'product');
 
-// Load data
-const products = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'products.json'), 'utf8'));
-const content = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'product-content.json'), 'utf8'));
+// Load data helper with BOM stripping
+function readJsonFile(filePath) {
+  let str = fs.readFileSync(filePath, 'utf8');
+  if (str.charCodeAt(0) === 0xFEFF) {
+    str = str.slice(1);
+  }
+  return JSON.parse(str);
+}
+
+const products = readJsonFile(path.join(DATA_DIR, 'products.json'));
+const content = readJsonFile(path.join(DATA_DIR, 'product-content.json'));
 
 // Load templates
 const customizableTemplate = fs.readFileSync(path.join(TEMPLATES_DIR, 'product-customizable.html'), 'utf8');
@@ -27,7 +35,7 @@ const fabricNames = {
   bamboo: 'Bamboo',
   tpu: 'TPU Waterproof',
   polyester: 'Polyester Hollow Fiber',
-  microfiber: 'Microfiber 200g/m²',
+  microfiber: 'Microfiber 200g/mÂ²',
   abs: 'ABS Plastic'
 };
 
@@ -80,7 +88,7 @@ function getContent(slug) {
 
 // Generate fabric HTML
 function buildFabricHTML(p) {
-  // Mattress protectors — 3-layer construction specs (checked before breezeplus/cloudsoft
+  // Mattress protectors â€” 3-layer construction specs (checked before breezeplus/cloudsoft
   // so pet-proof shows 3-Layer not BreezePlus)
   if (p.productType === 'protector') {
     const specs = [
@@ -96,12 +104,12 @@ function buildFabricHTML(p) {
     grid += '</div>';
     return grid;
   }
-  // BreezePlus-exclusive products — show fabric feature specs
+  // BreezePlus-exclusive products â€” show fabric feature specs
   if (p.lockedFabric === 'breezeplus') {
     const specs = [
       { label: 'Fabric', value: 'BreezePlus' },
       { label: 'Surface', value: 'Pet Hair Resistant' },
-      { label: 'Cooling', value: '3-5°C Cooler Than Cotton' },
+      { label: 'Cooling', value: 'Cool-to-the-Touch' },
       { label: 'Blend', value: '50/50 Cotton-Microfiber' }
     ];
     let grid = '<div class="panel-label">Fabric</div><div class="specs-grid">';
@@ -111,7 +119,7 @@ function buildFabricHTML(p) {
     grid += '</div>';
     return grid;
   }
-  // CloudSoft-exclusive products — marine/RV fabric specs
+  // CloudSoft-exclusive products â€” marine/RV fabric specs
   if (p.lockedFabric === 'cloudsoft') {
     const specs = [
       { label: 'Fabric', value: 'CloudSoft' },
@@ -126,7 +134,7 @@ function buildFabricHTML(p) {
     grid += '</div>';
     return grid;
   }
-  // TPU encasement / pillow protector — single-layer TPU specs
+  // TPU encasement / pillow protector â€” single-layer TPU specs
   if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
     const tpuSpecs = [
       { label: 'Material', value: 'TPU Waterproof Membrane' },
@@ -206,7 +214,7 @@ function buildColorsHTML(p) {
   for (const [fab, colors] of Object.entries(fabricColors)) {
     const display = fab === defaultFabric ? '' : ' style="display:none"';
     html += '<div class="panel-section fabric-color-group" data-fabric="' + fab + '"' + display + '>';
-    html += '<div class="panel-label">Color — ' + fabricNames[fab] + '</div>';
+    html += '<div class="panel-label">Color â€” ' + fabricNames[fab] + '</div>';
     html += '<div class="color-selector">';
     colors.forEach((c, i) => {
       const selected = (i === 0 ? ' selected' : '');
@@ -255,11 +263,11 @@ function buildCustomizable(slug, p, prod) {
   // Simple replacements
   const replacements = {
     '{{META_DESCRIPTION}}': p.metaDescription || '',
-    '{{TITLE}}': p.breadcrumbName + ' — MildMate',
+    '{{TITLE}}': p.breadcrumbName + ' â€” MildMate',
     '{{BREADCRUMB_CATEGORY_URL}}': p.breadcrumbCategoryUrl || '/',
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
-    '{{IMAGE_PATH}}': prod.image || '/images/placeholder.jpg',
+    '{{IMAGE_PATH}}': prod.image || '/images/products/mattress-protector-standard/main.jpg',
     '{{PRODUCT_SLUG}}': slug,
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE}}': shortTitle ? '  -  ' + shortTitle : '',
@@ -287,6 +295,10 @@ function buildCustomizable(slug, p, prod) {
     '{{RELATED_PRODUCTS}}': buildRelatedHTML(p.relatedSlugs),
     '{{TAGS_HTML}}': buildTagsHTML(p.tags)
   };
+
+  const hasPremaCotton = p.fabrics && p.fabrics.includes('premacotton');
+  replacements['{{TRUST_MOBILE_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX' : 'Premium Quality';
+  replacements['{{TRUST_DESKTOP_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX Certified' : 'Premium Quality';
 
   // Build dynamic HTML parts
   replacements['{{FABRIC_HTML}}'] = buildFabricHTML(p);
@@ -334,11 +346,11 @@ function buildFixed(slug, p, prod) {
 
   const replacements = {
     '{{META_DESCRIPTION}}': p.metaDescription || '',
-    '{{TITLE}}': p.breadcrumbName + ' — MildMate',
+    '{{TITLE}}': p.breadcrumbName + ' â€” MildMate',
     '{{BREADCRUMB_CATEGORY_URL}}': p.breadcrumbCategoryUrl || '/',
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
-    '{{IMAGE_PATH}}': prod.image || '/images/placeholder.jpg',
+    '{{IMAGE_PATH}}': prod.image || '/images/products/mattress-protector-standard/main.jpg',
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE_SUFFIX}}': '',
     '{{TAGLINE}}': p.tagline || '',
@@ -368,9 +380,11 @@ function buildMarine(slug, p, prod) {
   let html = marineTemplate;
   const pt = p.productType;
   const shortTitle = '';
+  const isMarineProtector = slug === 'marine-mattress-protector';
 
   // Inline shapes JSON for JS
-  const shapesJs = JSON.stringify(p.marineShapes || []);
+  const defaultMarineShapes = ((content.products || {})['marine-fitted-sheet'] || {}).marineShapes || [];
+  const shapesJs = JSON.stringify((p.marineShapes && p.marineShapes.length > 0) ? p.marineShapes : defaultMarineShapes);
 
   // Build FAQ items from care bullets
   let faqHtml = '';
@@ -378,17 +392,17 @@ function buildMarine(slug, p, prod) {
     let careItems = p.tabCareBullets.map(b => '<li>' + b + '</li>').join('');
     faqHtml += '<details class="faq-item" open><summary>What fabric and care details should I know?</summary><ul>' + careItems + '</ul></details>';
   }
-  faqHtml += '<details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for a secure fitted-sheet fit.</p></details>';
-  faqHtml += '<details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each sheet is custom-made to your exact shape and dimensions. Production takes 5–7 business days. Shipping times vary by destination — you\'ll receive a tracking number once dispatched.</p></details>';
-  faqHtml += '<details class="faq-item"><summary>What if my shape isn\'t listed?</summary><p>Choose the closest shape and add notes in the quote form — we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for an accurate custom fit.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each ' + (isMarineProtector ? 'protector' : 'sheet') + ' is custom-made to your exact shape and dimensions. Production takes 5â€“7 business days. Shipping times vary by destination â€” you\'ll receive a tracking number once dispatched.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>What if my shape isn\'t listed?</summary><p>Choose the closest shape and add notes in the quote form â€” we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>';
 
   const replacements = {
     '{{META_DESCRIPTION}}': p.metaDescription || '',
-    '{{TITLE}}': p.breadcrumbName + ' — MildMate',
+    '{{TITLE}}': p.breadcrumbName + ' â€” MildMate',
     '{{BREADCRUMB_CATEGORY_URL}}': p.breadcrumbCategoryUrl || '/',
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
-    '{{IMAGE_PATH}}': prod.image || '/images/placeholder.jpg',
+    '{{IMAGE_PATH}}': prod.image || '/images/products/mattress-protector-standard/main.jpg',
     '{{PRODUCT_NAME}}': p.breadcrumbName || '',
     '{{SHORT_TITLE}}': shortTitle,
     '{{TAGLINE}}': p.tagline || '',
@@ -406,6 +420,11 @@ function buildMarine(slug, p, prod) {
     '{{PRODUCT_SLUG}}': slug,
     '{{MARINE_SHAPES_JS}}': shapesJs,
   };
+
+  const hasPremaCotton = p.fabrics && p.fabrics.includes('premacotton');
+  replacements['{{TRUST_MOBILE_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX' : 'Premium Quality';
+  replacements['{{TRUST_DESKTOP_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX Certified' : 'Premium Quality';
+
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);
   }
@@ -418,14 +437,14 @@ function buildShapeSelectorHTML(p) {
   let html = '<div class="panel-section marine-shape-section">';
   html += '<div class="panel-label">Choose Your Berth Shape</div>';
 
-  // Shape guide image — 005-Measure-04.png
+  // Shape guide image â€” 005-Measure-04.png
   html += '<div class="shape-guide" style="margin-bottom:16px; border:1px solid var(--color-border); border-radius:var(--radius); overflow:hidden;">';
-  html += '<img src="/images/products/marine-fitted-sheet/005-Measure-04.png" alt="Marine Berth Shape Guide — Shapes A through I" style="width:100%; height:auto; display:block;">';
+  html += '<img src="/images/products/marine-fitted-sheet/005-Measure-04.png" alt="Marine Berth Shape Guide â€” Shapes A through I" style="width:100%; height:auto; display:block;">';
   html += '</div>';
 
   // Shape selector dropdown
   html += '<select class="shape-select" id="marine-shape-select" style="width:100%; padding:12px 14px; border:2px solid var(--color-border); border-radius:var(--radius); font-family:var(--font-main); font-size:0.9375rem; color:var(--color-text); background:#fff; cursor:pointer; appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23666\' stroke-width=\'2\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center;">';
-  html += '<option value=""> — Select shape — </option>';
+  html += '<option value=""> â€” Select shape â€” </option>';
   const shapes = p.marineShapes;
   shapes.forEach(s => {
     const priceLabel = s.quoteOnly ? 'Custom Quote' : ('$' + s.priceUsd);
@@ -438,7 +457,7 @@ function buildShapeSelectorHTML(p) {
       + ' data-foot-min="' + (s.footWidthMin || '') + '"'
       + ' data-foot-max="' + (s.footWidthMax || '') + '"'
       + ' data-type="' + (s.type || '') + '"'
-      + '>' + s.code + '  —  ' + s.name + ' (' + priceLabel + ')</option>';
+      + '>' + s.code + '  â€”  ' + s.name + ' (' + priceLabel + ')</option>';
   });
 
   html += '</select>';
@@ -453,11 +472,11 @@ function buildFixedPricingHTML(slug, p, prod) {
 
   if (slug === 'duvet-insert') {
     // Duvet insert: Thai-only standard sizes, Microfiber 200g/sq.m fixed fill
-    html += '<div class="fabric-badge">Microfiber 200g/m²</div>';
-    html += '<div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> — Choose size — </option><option value="3ft" data-thb="990">3FT, 3.5FT — 178×229cm</option><option value="5ft" data-thb="1480">5FT, 6FT — 229×254cm</option><option value="7ft" data-thb="1690">7FT — 279×254cm</option><option value="9ft" data-thb="1790">9FT, 9.5FT — 318×254cm</option></select></div>';
-    html += '<div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From ฿990</span></div><div class="price-sub">Thailand only · Excludes shipping</div></div>';
+    html += '<div class="fabric-badge">Microfiber 200g/mÂ²</div>';
+    html += '<div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> â€” Choose size â€” </option><option value="3ft" data-thb="990">3FT, 3.5FT â€” 178Ã—229cm</option><option value="5ft" data-thb="1480">5FT, 6FT â€” 229Ã—254cm</option><option value="7ft" data-thb="1690">7FT â€” 279Ã—254cm</option><option value="9ft" data-thb="1790">9FT, 9.5FT â€” 318Ã—254cm</option></select></div>';
+    html += '<div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From à¸¿990</span></div><div class="price-sub">Thailand only Â· Excludes shipping</div></div>';
     html += '<button class="add-to-cart-btn" id="add-to-cart">Add to Cart</button>';
-    html += '<script>(function(){var s=document.getElementById("duvet-size"),p=document.getElementById("price-display");s.addEventListener("change",function(){var o=s.selectedOptions[0];if(o&&o.value){var t=parseFloat(o.dataset.thb||"0");p.textContent="฿"+Math.round(t).toLocaleString()}else{p.textContent="From ฿990"}})})();</script>';
+    html += '<script>(function(){var s=document.getElementById("duvet-size"),p=document.getElementById("price-display");s.addEventListener("change",function(){var o=s.selectedOptions[0];if(o&&o.value){var t=parseFloat(o.dataset.thb||"0");p.textContent="à¸¿"+Math.round(t).toLocaleString()}else{p.textContent="From à¸¿990"}})})();</script>';
   } else {
     // BedBridge or Bed Lifter: simple price display
     html += '<div class="one-size-badge">One Size</div>';
@@ -481,11 +500,11 @@ function buildFixedPricingHTML(slug, p, prod) {
 }
 
 function buildTrustSignalsHTML() {
-  return '<div class="trust-signals"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div></div>';
+  return '<div class="trust-signals"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Premium Quality</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div></div>';
 }
 
 function buildTrustSignalsWrapperHTML() {
-  return '<div class="container trust-signals-desktop-wrap" style="max-width:1280px; padding:0 24px 28px;"><div class="trust-signals trust-signals-desktop"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</div></div></div>';
+  return '<div class="container trust-signals-desktop-wrap" style="max-width:1280px; padding:0 24px 28px;"><div class="trust-signals trust-signals-desktop"><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Premium Quality</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div><div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+66 (0)87 236 2364</div></div></div>';
 }
 
 
@@ -498,16 +517,16 @@ function buildFixedContentHTML(slug, p) {
       + '<button class="tab-btn" role="tab" data-tab="care">Care</button>'
       + '</div>'
       + '<div class="tab-content open" id="tab-description" role="tabpanel">'
-      + '<h3>Microfiber 200g/m² Filling</h3>'
-      + '<p>Premium microfiber fill at 200 grams per square metre — the ideal weight for Thailand\'s climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p>'
+      + '<h3>Microfiber 200g/mÂ² Filling</h3>'
+      + '<p>Premium microfiber fill at 200 grams per square metre â€” the ideal weight for Thailand\'s climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p>'
       + '<p>Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p>'
       + '</div>'
       + '<div class="tab-content" id="tab-care" role="tabpanel">'
       + '<h3>Care Instructions</h3>'
       + '<ul>'
-      + '<li>Machine wash warm (40°C / 104°F) — gentle cycle</li>'
-      + '<li>Do not bleach — mild detergent only</li>'
-      + '<li>Tumble dry low or hang dry — microfiber dries quickly</li>'
+      + '<li>Machine wash warm (40Â°C / 104Â°F) â€” gentle cycle</li>'
+      + '<li>Do not bleach â€” mild detergent only</li>'
+      + '<li>Tumble dry low or hang dry â€” microfiber dries quickly</li>'
       + '<li>Fluff after drying to restore loft</li>'
       + '</ul>'
       + '</div>'
@@ -519,16 +538,16 @@ function buildFixedContentHTML(slug, p) {
     html += '<div class="container" style="max-width:1280px; padding:0 24px;">';
     html += '<div style="padding:32px 0;">';
     // How it works
-    html += '<div style="background:var(--color-surface); border-radius:var(--radius); padding:24px; margin-bottom:24px;"><h3 style="margin-bottom:12px;">How It Works</h3><ol style="padding-left:20px;"><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Place the T-shaped wedge</strong> between two mattresses — the crossbar of the T goes under both mattresses, the stem fills the gap.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Push mattresses together</strong> — the high-density microfiber compresses slightly to create a firm bridge.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Cover with a fitted sheet</strong> — a family-size fitted sheet covers both mattresses and the BedBridge as one seamless surface.</li></ol></div>';
+    html += '<div style="background:var(--color-surface); border-radius:var(--radius); padding:24px; margin-bottom:24px;"><h3 style="margin-bottom:12px;">How It Works</h3><ol style="padding-left:20px;"><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Place the T-shaped wedge</strong> between two mattresses â€” the crossbar of the T goes under both mattresses, the stem fills the gap.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Push mattresses together</strong> â€” the high-density microfiber compresses slightly to create a firm bridge.</li><li style="margin-bottom:8px; color:#555;"><strong style="color:var(--color-text);">Cover with a fitted sheet</strong> â€” a family-size fitted sheet covers both mattresses and the BedBridge as one seamless surface.</li></ol></div>';
     // Features
     html += '<h3 style="margin-bottom:12px;">Features</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">';
-    const features = ['Fills gaps up to 2.5 cm wide','High-density microfiber — durable and washable','No straps needed — friction-based design','Creates one seamless sleeping surface','Works with Twin XL to King setups','Machine washable'];
-    features.forEach(f => { html += '<div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>' + f + '</div>'; });
+    const features = ['Fills gaps up to 2.5 cm wide','High-density microfiber â€” durable and washable','No straps needed â€” friction-based design','Creates one seamless sleeping surface','Works with Twin XL to King setups','Machine washable'];
+    features.forEach(f => { html += '<div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">âœ“</span>' + f + '</div>'; });
     html += '</div>';
     // Care
     html += '<h3 style="margin-bottom:12px;">Care</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">';
-    const careItems = ['Machine wash cold — gentle cycle','Do not bleach','Tumble dry low','No ironing needed'];
-    careItems.forEach(c => { html += '<div style="background:var(--color-surface); padding:12px; border-radius:6px; display:flex; gap:10px; align-items:center;"><span style="color:var(--color-primary);">●</span><span style="font-size:0.875rem; color:#555;">' + c + '</span></div>'; });
+    const careItems = ['Machine wash cold â€” gentle cycle','Do not bleach','Tumble dry low','No ironing needed'];
+    careItems.forEach(c => { html += '<div style="background:var(--color-surface); padding:12px; border-radius:6px; display:flex; gap:10px; align-items:center;"><span style="color:var(--color-primary);">â—</span><span style="font-size:0.875rem; color:#555;">' + c + '</span></div>'; });
     html += '</div></div></div>';
     return html;
   }
@@ -538,10 +557,10 @@ function buildFixedContentHTML(slug, p) {
     html += '<div class="container" style="max-width:1280px; padding:0 24px;">';
     html += '<div style="padding:32px 0;">';
     html += '<h3 style="margin-bottom:12px;">Features</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">';
-    const features = ['38cm height — lifts mattress easily','Ergonomic ABS design — no back strain','Ideal for elderly, seniors, and caregivers','High-quality ABS plastic — lightweight and strong','Simple one-handed operation'];
-    features.forEach(f => { html += '<div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">✓</span>' + f + '</div>'; });
+    const features = ['38cm height â€” lifts mattress easily','Ergonomic ABS design â€” no back strain','Ideal for elderly, seniors, and caregivers','High-quality ABS plastic â€” lightweight and strong','Simple one-handed operation'];
+    features.forEach(f => { html += '<div style="display:flex; align-items:flex-start; gap:8px; font-size:0.9375rem; color:#555;"><span style="color:var(--color-primary);">âœ“</span>' + f + '</div>'; });
     html += '</div>';
-    html += '<p style="color:#555; line-height:1.7;">The Bed Lifter makes changing fitted sheets effortless. Simply slide it under the mattress corner, lift, and tuck — no more struggling with heavy mattresses. Perfect for elderly users, caregivers, and anyone who wants to make bed changes easier.</p>';
+    html += '<p style="color:#555; line-height:1.7;">The Bed Lifter makes changing fitted sheets effortless. Simply slide it under the mattress corner, lift, and tuck â€” no more struggling with heavy mattresses. Perfect for elderly users, caregivers, and anyone who wants to make bed changes easier.</p>';
     html += '</div></div>';
     return html;
   }
@@ -581,7 +600,7 @@ products.products.forEach(prod => {
   }
   const outPath = path.join(outDir, 'index.html');
   fs.writeFileSync(outPath, outHtml, 'utf8');
-  console.log('  BUILT: ' + slug + ' → ' + outPath);
+  console.log('  BUILT: ' + slug + ' â†’ ' + outPath);
   builtCount++;
 });
 

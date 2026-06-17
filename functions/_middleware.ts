@@ -373,6 +373,9 @@ const SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 }
 </style>`;
 
+const SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
+<link rel="apple-touch-icon" href="/images/logo.png">`;
+
 async function ensureCache(db: any): Promise<void> {
   const now = Date.now();
   if (_cache.header && _cache.footer && (now - _cache.fetchedAt) < CACHE_TTL) return;
@@ -430,6 +433,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'pillowcase-zipper',
   'pillowcase-sham',
   'mattress-protector-standard',
+  'marine-mattress-protector',
   'mattress-protector-family',
   'mattress-protector-deep-pocket',
   'pet-proof-mattress-protector',
@@ -637,6 +641,12 @@ export async function onRequest(context: any): Promise<Response> {
 
   if (!html.includes('id="shared-footer-mobile-style"')) {
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}\n</head>`);
+  }
+
+  const hasIconLink = /rel=["'](?:shortcut\s+)?icon["']/i.test(html);
+  const hasAppleTouchIcon = /rel=["']apple-touch-icon["']/i.test(html);
+  if (!hasIconLink || !hasAppleTouchIcon) {
+    html = html.replace(/<\/head>/i, `${SHARED_FAVICON_LINKS}\n</head>`);
   }
 
   // ── JSON-LD injection ──────────────────────────────────────────────

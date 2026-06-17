@@ -290,7 +290,7 @@
           <span class="price-sub" id="price-top-sub">Enter your mattress dimensions below</span>
         </div>
         <div class="trust-signals trust-signals-mobile">
-          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>OEKO-TEX</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>{{TRUST_MOBILE_OEKO}}</div>
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top-Rated</div>
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7L9 18l-5-5"/></svg>Custom Fit</div>
           <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Worldwide</div>
@@ -298,7 +298,7 @@
         <div class="pricing-panel" id="marine-configurator">
           <!-- Shape Selector -->
           <div class="panel-section">
-            <label class="panel-label" for="marine-shape-select">Choose Your Boat Mattress Shape</label>
+            <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
             <select class="shape-select" id="marine-shape-select">
               <option value=""> — Select a shape — </option>
             </select>
@@ -317,8 +317,8 @@
             <span>This shape's measurement form is coming soon. In the meantime, please contact us directly for a custom quote.</span>
           </div>
           <!-- CloudSoft Fabric Badge -->
-          <div class="fabric-badge">CloudSoft — Marine Edition</div>
-          <div class="specs-grid">
+          <div class="fabric-badge" id="material-badge">CloudSoft — Marine Edition</div>
+          <div class="specs-grid" id="material-specs">
             <div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value">CloudSoft</div></div>
             <div class="spec-item"><div class="spec-label">Drying</div><div class="spec-value">Quick-Dry</div></div>
             <div class="spec-item"><div class="spec-label">Climate</div><div class="spec-value">Moisture-Wicking</div></div>
@@ -369,7 +369,7 @@
     </div>
     <div class="container trust-signals-desktop-wrap" style="max-width:1280px;padding:0 24px 28px;">
       <div class="trust-signals trust-signals-desktop">
-        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> OEKO-TEX Certified</div>
+        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> {{TRUST_DESKTOP_OEKO}}</div>
         <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div>
         <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div>
         <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div>
@@ -608,9 +608,17 @@
         .then(function(payload){
           var p=payload&&(payload.product||payload);
           if(!p)return;
-          var imgs=[];
-          try{imgs=JSON.parse(p.images||"[]")}catch(e){imgs=[]}
-          while(imgs.length<20)imgs.push("");
+          var imgs = [];
+          try {
+            imgs = JSON.parse(p.images || "[]");
+          } catch(e) {
+            try {
+              imgs = JSON.parse((p.images || "[]").replace(/\\"/g, '"'));
+            } catch(err) {
+              imgs = [];
+            }
+          }
+          while (imgs.length < 20) imgs.push("");
           var fallback=p.image_url||"";
           var heroImg=imgs[0]||fallback;
           if(heroImg)gallery.push(heroImg);
@@ -1008,6 +1016,24 @@
         }
       }
 
+      var isMarineProtector = productSlug === 'marine-mattress-protector';
+      var quoteFabricKey = isMarineProtector ? 'tpu' : 'cloudsoft';
+      var quoteFabricLabel = isMarineProtector ? '3-Layer Waterproof Protector' : 'CloudSoft';
+      var shapeSelectLabelEl = document.getElementById('shape-select-label');
+      var materialBadgeEl = document.getElementById('material-badge');
+      var materialSpecsEl = document.getElementById('material-specs');
+      if(isMarineProtector){
+        if(shapeSelectLabelEl) shapeSelectLabelEl.textContent = 'Choose Your Marine Mattress Shape';
+        if(materialBadgeEl) materialBadgeEl.textContent = 'Marine Mattress Protector — 3-Layer Waterproof';
+        if(materialSpecsEl){
+          materialSpecsEl.innerHTML =
+            '<div class="spec-item"><div class="spec-label">Top Layer</div><div class="spec-value">Cotton Quilted</div></div>' +
+            '<div class="spec-item"><div class="spec-label">Layer 2 (Core)</div><div class="spec-value">Polyester Filling</div></div>' +
+            '<div class="spec-item"><div class="spec-label">Layer 3 (Backing)</div><div class="spec-value">TPU Waterproof</div></div>' +
+            '<div class="spec-item"><div class="spec-label">Protection</div><div class="spec-value">Water Spills &amp; Accidents</div></div>';
+        }
+      }
+
       /* ── Marine fitted-sheet pricing (same formula as server, marine margin) ── */
       var SQCM_PER_YARD = 23774.4;       // 91.44 × 260
       var CLOUDSOFT_RATE = 100;          // THB/yard
@@ -1018,17 +1044,48 @@
       var OP_RATE = 0.15;                // operating
       var MKT_RATE = 0.20;               // marketing
       var MARINE_MARGIN_RATE = 6.80;     // marine-specific margin (680%)
+      var MARINE_PROTECTOR_MARGIN_RATE = 0.15; // marine protector margin (15% default)
       var THB_PER_USD = 30;              // approximate
       var SEWING_TIERS = [               // tiered by fabric area (cm²)
         {max:24000,cost:120},{max:33600,cost:180},{max:38400,cost:240},
         {max:48000,cost:300},{max:60000,cost:360},{max:84000,cost:420},
         {max:91200,cost:500},{max:120000,cost:650},{max:Infinity,cost:800}
       ];
+      var PROTECTOR_FABRIC_TIERS = [
+        { max: 3200, cost: 550 },
+        { max: 6620, cost: 670 },
+        { max: 8000, cost: 920 },
+        { max: 9000, cost: 980 },
+        { max: 10300, cost: 1100 },
+        { max: 11300, cost: 1200 },
+        { max: Infinity, cost: 1300 }
+      ];
+      var PROTECTOR_DEPTH_TIERS = [
+        { min: 0, cost: 0 },
+        { min: 30, cost: 200 },
+        { min: 52, cost: 400 },
+        { min: 57, cost: 600 }
+      ];
+      var PROTECTOR_PACKING = 200;
+      var PROTECTOR_DELIVERY = 80;
+      var SQCM_PER_SQINCH = 6.4516;
       function getMarineSewingCost(area){
         for(var i=0;i<SEWING_TIERS.length;i++){
           if(area<=SEWING_TIERS[i].max) return SEWING_TIERS[i].cost;
         }
         return 800;
+      }
+      function getProtectorFabricCost(areaSqInch){
+        for(var i=0;i<PROTECTOR_FABRIC_TIERS.length;i++){
+          if(areaSqInch <= PROTECTOR_FABRIC_TIERS[i].max) return PROTECTOR_FABRIC_TIERS[i].cost;
+        }
+        return PROTECTOR_FABRIC_TIERS[PROTECTOR_FABRIC_TIERS.length - 1].cost;
+      }
+      function getProtectorDepthCost(dCm){
+        for(var i=PROTECTOR_DEPTH_TIERS.length - 1;i>=0;i--){
+          if(dCm >= PROTECTOR_DEPTH_TIERS[i].min) return PROTECTOR_DEPTH_TIERS[i].cost;
+        }
+        return 0;
       }
       function calcMarinePriceBreakdown(fabricAreaSqCm){
         var fabricCost = (fabricAreaSqCm * CLOUDSOFT_RATE / SQCM_PER_YARD) * FABRIC_WASTE;
@@ -1053,6 +1110,30 @@
           roundedThb: Math.ceil(total / 100) * 100
         };
       }
+      function calcMarineProtectorBreakdown(topAreaSqCm, depthCm){
+        var areaSqInch = topAreaSqCm / SQCM_PER_SQINCH;
+        var fabricCost = getProtectorFabricCost(areaSqInch);
+        var depthCost = getProtectorDepthCost(depthCm);
+        var subtotal = fabricCost + depthCost + PROTECTOR_PACKING + PROTECTOR_DELIVERY;
+        var operating = subtotal * OP_RATE;
+        var marketing = subtotal * MKT_RATE;
+        var margin = subtotal * MARINE_PROTECTOR_MARGIN_RATE;
+        var total = subtotal + operating + marketing + margin;
+        return {
+          areaSqCm: topAreaSqCm,
+          areaSqInch: areaSqInch,
+          fabricCost: fabricCost,
+          depthCost: depthCost,
+          packing: PROTECTOR_PACKING,
+          delivery: PROTECTOR_DELIVERY,
+          subtotal: subtotal,
+          operating: operating,
+          marketing: marketing,
+          margin: margin,
+          total: total,
+          roundedThb: Math.ceil(total / 100) * 100
+        };
+      }
       function formatTHB(n){
         return '฿' + Math.round(n).toLocaleString();
       }
@@ -1060,6 +1141,23 @@
         if(!priceBreakdown) return;
         if(!bd){
           priceBreakdown.innerHTML = '';
+          return;
+        }
+        if(isMarineProtector){
+          priceBreakdown.innerHTML =
+            '<details><summary>Cost breakdown (THB)</summary><ul>' +
+            '<li>Top Area: ' + Math.round(bd.areaSqCm).toLocaleString() + ' cm² (' + Math.round(bd.areaSqInch).toLocaleString() + ' in²)</li>' +
+            '<li>Fabric Tier Cost: ' + formatTHB(bd.fabricCost) + '</li>' +
+            '<li>Depth Surcharge: ' + formatTHB(bd.depthCost) + '</li>' +
+            '<li>Packing: ' + formatTHB(bd.packing) + '</li>' +
+            '<li>Delivery: ' + formatTHB(bd.delivery) + '</li>' +
+            '<li>Subtotal: ' + formatTHB(bd.subtotal) + '</li>' +
+            '<li>Operating (' + Math.round(OP_RATE * 100) + '%): ' + formatTHB(bd.operating) + '</li>' +
+            '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
+            '<li>Margin (' + Math.round(MARINE_PROTECTOR_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
+            '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
+            '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+            '</ul></details>';
           return;
         }
         var area = Math.round((bd.fabricCost / (CLOUDSOFT_RATE / SQCM_PER_YARD) / FABRIC_WASTE) || 0);
@@ -1093,6 +1191,31 @@
         if(typeof fixed.ops_rate === 'number' && fixed.ops_rate >= 0) OP_RATE = fixed.ops_rate / 100;
         if(typeof fixed.mkt_rate === 'number' && fixed.mkt_rate >= 0) MKT_RATE = fixed.mkt_rate / 100;
         if(typeof margins.marine === 'number' && margins.marine >= 0) MARINE_MARGIN_RATE = margins.marine / 100;
+        if(typeof margins.protector_marine === 'number' && margins.protector_marine >= 0) MARINE_PROTECTOR_MARGIN_RATE = margins.protector_marine / 100;
+        if(typeof fixed.protector_packing === 'number' && fixed.protector_packing >= 0) PROTECTOR_PACKING = fixed.protector_packing;
+        if(typeof fixed.protector_delivery === 'number' && fixed.protector_delivery >= 0) PROTECTOR_DELIVERY = fixed.protector_delivery;
+        if(Array.isArray(payload.protector_fabric_tiers) && payload.protector_fabric_tiers.length){
+          var nextFabricTiers = [];
+          for(var f=0;f<payload.protector_fabric_tiers.length;f++){
+            var ft = payload.protector_fabric_tiers[f];
+            if(ft && typeof ft.max === 'number' && typeof ft.cost === 'number') nextFabricTiers.push({ max: ft.max, cost: ft.cost });
+          }
+          if(nextFabricTiers.length){
+            nextFabricTiers.sort(function(a,b){ return a.max - b.max; });
+            PROTECTOR_FABRIC_TIERS = nextFabricTiers;
+          }
+        }
+        if(Array.isArray(payload.protector_depth_tiers) && payload.protector_depth_tiers.length){
+          var nextDepthTiers = [];
+          for(var d=0;d<payload.protector_depth_tiers.length;d++){
+            var dt = payload.protector_depth_tiers[d];
+            if(dt && typeof dt.min === 'number' && typeof dt.cost === 'number') nextDepthTiers.push({ min: dt.min, cost: dt.cost });
+          }
+          if(nextDepthTiers.length){
+            nextDepthTiers.sort(function(a,b){ return a.min - b.min; });
+            PROTECTOR_DEPTH_TIERS = nextDepthTiers;
+          }
+        }
         if(Array.isArray(payload.sewing_tiers) && payload.sewing_tiers.length){
           var nextTiers = [];
           for(var i=0;i<payload.sewing_tiers.length;i++){
@@ -1203,8 +1326,8 @@
           }
         }
         if(warningEl) warningEl.style.display = 'none';
-        var fabricArea = calcArea(code);
-        if(fabricArea <= 0){
+        var pricingArea = isMarineProtector ? getTopArea(code) : calcArea(code);
+        if(pricingArea <= 0){
           customPrice.textContent = ' — ';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
@@ -1212,7 +1335,21 @@
           addToCartBtn.disabled = true;
           return;
         }
-        var breakdown = calcMarinePriceBreakdown(fabricArea);
+        var breakdown;
+        if(isMarineProtector){
+          var depthCm = getVal('T');
+          if(depthCm <= 0){
+            customPrice.textContent = ' — ';
+            currentQuotePriceThb = 0;
+            currentQuotePriceUsd = 0;
+            renderPriceBreakdown(null);
+            addToCartBtn.disabled = true;
+            return;
+          }
+          breakdown = calcMarineProtectorBreakdown(pricingArea, depthCm);
+        } else {
+          breakdown = calcMarinePriceBreakdown(pricingArea);
+        }
         var priceThb = breakdown.roundedThb;
         var priceStr = formatPrice(priceThb);
         customPrice.textContent = priceStr;
@@ -1781,7 +1918,7 @@
               email: email,
               address: (document.getElementById('qf-address') || {}).value || undefined,
               telephone: (document.getElementById('qf-phone') || {}).value || undefined,
-              product_slug: 'marine-fitted-sheet',
+              product_slug: productSlug,
               dimensions: {
                 unit: 'cm',
                 shape_code: quoteData.shapeCode,
@@ -1789,7 +1926,7 @@
                 area_cm2: quoteData.areaCm2,
                 values: quoteData.values
               },
-              fabric: 'cloudsoft',
+              fabric: quoteFabricKey,
               color: selectedColor || undefined,
               quoted_price_thb: currentQuotePriceThb || undefined,
               quoted_price_usd: currentQuotePriceUsd || undefined,
@@ -1815,7 +1952,7 @@
                 '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
                 '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
                 '<strong>Area:</strong> ' + quoteData.areaCm2.toLocaleString() + ' cm²<br>' +
-                '<strong>Fabric:</strong> CloudSoft<br>' +
+                '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
                 '<strong>Color:</strong> ' + escHtml(selectedColor || '—') + '<br>' +
                 (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
                 '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || '—');

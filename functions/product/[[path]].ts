@@ -18,6 +18,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'pillowcase-zipper',
   'pillowcase-sham',
   'mattress-protector-standard',
+  'marine-mattress-protector',
   'mattress-protector-family',
   'mattress-protector-deep-pocket',
   'pet-proof-mattress-protector',
@@ -78,23 +79,30 @@ export async function onRequest(context: any): Promise<Response> {
   if (pathname === '/product' || pathname === '/product/') {
     return Response.redirect(new URL('/products/', url.origin).toString(), 301);
   }
+  if (pathname === '/th/product' || pathname === '/th/product/') {
+    return Response.redirect(new URL('/th/products/', url.origin).toString(), 301);
+  }
 
   const parts = pathname.split('/').filter(Boolean);
-  if (parts[0] !== 'product') return context.next();
+  const isTh = parts[0] === 'th';
+  const startIdx = isTh ? 1 : 0;
 
-  // If the path contains more than 2 segments (e.g., /product/slug/index.html),
+  if (parts[startIdx] !== 'product') return context.next();
+
+  // If the path contains more segments (e.g., /product/slug/index.html),
   // let the static asset server handle it directly by calling context.next()
-  if (parts.length > 2) return context.next();
+  if (parts.length > startIdx + 2) return context.next();
 
-  const slug = (parts[1] || '').toLowerCase();
+  const slug = (parts[startIdx + 1] || '').toLowerCase();
   if (!slug) {
-    return Response.redirect(new URL('/products/', url.origin).toString(), 301);
+    return Response.redirect(new URL(isTh ? '/th/products/' : '/products/', url.origin).toString(), 301);
   }
 
   // Legacy slug → redirect
   if (!CANONICAL_PRODUCT_SLUGS.has(slug)) {
     const target = resolveLegacyProduct(slug);
-    return Response.redirect(new URL(target, url.origin).toString(), 301);
+    const redirectTarget = isTh ? `/th${target}` : target;
+    return Response.redirect(new URL(redirectTarget, url.origin).toString(), 301);
   }
 
   // Canonical slug → serve static HTML with D1 image overrides
@@ -105,15 +113,51 @@ export async function onRequest(context: any): Promise<Response> {
     if (!staticRes.ok) return context.next();
     let html = await staticRes.text();
 
-    // 2. Query D1 for this product's image data
+    if (isTh) {
+      html = html.replace('<html lang="en">', '<html lang="th">');
+    }
+
+    // 2. Query D1 for this product's image, title, and name data
     const stmt = context.env.DB.prepare(
-      'SELECT image_url, images FROM products WHERE slug = ?'
+      'SELECT image_url, images, title_en, title_th FROM products WHERE slug = ?'
     ).bind(slug);
     const product = await stmt.first();
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
-    const images: string[] = product && product.images ? JSON.parse(product.images as string) : [];
+    let images: string[] = [];
+    if (product && product.images) {
+      try {
+        images = JSON.parse(product.images as string);
+      } catch (e) {
+        try {
+          images = JSON.parse((product.images as string).replace(/\\"/g, '"'));
+        } catch (err) {
+          console.error('Failed to parse product.images:', err);
+        }
+      }
+    }
     const mainImage = (product && (product.image_url as string)) || images[0] || '';
+
+    // Handle localized title translation for Thai pages
+    const title = isTh && product && product.title_th ? product.title_th : (product && product.title_en);
+    if (title) {
+      // Replace browser title
+      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} — MildMate<\/title>`);
+      html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} — MildMate"`);
+      html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} — MildMate"`);
+
+      // Replace H1 and breadcrumb name
+      if (product && product.title_en) {
+        html = html.replace(
+          new RegExp(`<h1 class="product-title">\\s*${product.title_en.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*(.*?)\\s*</h1>`, 'i'),
+          `<h1 class="product-title">${title}$1</h1>`
+        );
+        html = html.replace(
+          new RegExp(`<span>\\s*${product.title_en.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\s*</span>`, 'i'),
+          `<span>${title}</span>`
+        );
+      }
+    }
 
     if (product && (product.image_url || product.images)) {
       // Build gallery HTML: main image + up to 6 thumbnails
@@ -128,11 +172,15 @@ export async function onRequest(context: any): Promise<Response> {
         );
       }
 
-      // Replace gallery-main-img <img>
+      // Replace gallery-main-img src (supports id before or after src)
       if (mainImage) {
         html = html.replace(
-          /<img([^>]*)id="gallery-main-img"([^>]*)>/,
-          `<img${1}id="gallery-main-img"${2} src="${mainImage}">`
+          /(<img\b[^>]*?\bid="gallery-main-img"[^>]*?\bsrc=")[^"]*/i,
+          `$1${mainImage}`
+        );
+        html = html.replace(
+          /(<img\b[^>]*?\bsrc=")[^"]*("[^>]*?\bid="gallery-main-img")/i,
+          `$1${mainImage}$2`
         );
       }
 

@@ -12,7 +12,13 @@ function r2Product(p) {
   const out = { ...p, [imgKey]: toR2Url(p[imgKey]) };
   if (out.images && typeof out.images === "string") {
     try {
-      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url));
+      let arr = [];
+      try {
+        arr = JSON.parse(out.images);
+      } catch (e) {
+        arr = JSON.parse(out.images.replace(/\\"/g, '"'));
+      }
+      out.images = JSON.stringify(arr.map(toR2Url));
     } catch (_) {}
   }
   return out;

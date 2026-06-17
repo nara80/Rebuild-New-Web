@@ -30,7 +30,12 @@ function r2Product(p: Product): Product {
   const out = { ...p, image_url: toR2Url(p.image_url) } as any;
   if (out.images && typeof out.images === "string") {
     try {
-      const arr: string[] = JSON.parse(out.images);
+      let arr: string[] = [];
+      try {
+        arr = JSON.parse(out.images);
+      } catch (e) {
+        arr = JSON.parse(out.images.replace(/\\"/g, '"'));
+      }
       out.images = JSON.stringify(arr.map(toR2Url));
     } catch (_) { /* ignore parse errors */ }
   }

@@ -2207,7 +2207,8 @@ function _clearPending() {
 async function getProducts() {
   if (_productsCache) return _productsCache;
   try {
-    var resp = await fetch("/api/admin/products", { headers: { "X-Admin-Secret": ADMIN_SECRET } });
+    var adminHeaders = await getAdminAuthHeaders(false);
+    var resp = await fetch("/api/admin/products", { headers: adminHeaders });
     if (resp.ok) {
       var list = await resp.json();
       // Normalize D1 fields for editor compatibility
@@ -2425,9 +2426,10 @@ async function saveProduct() {
         if (optimized.size > 5 * 1024 * 1024) { toast("Slot " + (slot + 1) + " too large after optimization. Aborting save."); return; }
         var form = new FormData();
         form.append("file", optimized);
+        var upHeaders = await getAdminAuthHeaders(false);
         var upResp = await fetch("/api/admin/upload", {
           method: "POST",
-          headers: { "X-Admin-Secret": ADMIN_SECRET },
+          headers: upHeaders,
           body: form
         });
         var upData = await upResp.json();
@@ -2448,9 +2450,10 @@ async function saveProduct() {
       var dKey = _r2KeyFromUrl(_pendingDeletes[d]);
       if (!dKey) continue;
       try {
+        var delHeaders = await getAdminAuthHeaders(false);
         await fetch("/api/admin/upload?key=" + encodeURIComponent(dKey), {
           method: "DELETE",
-          headers: { "X-Admin-Secret": ADMIN_SECRET }
+          headers: delHeaders
         });
       } catch (e) {}
     }
@@ -2485,12 +2488,10 @@ async function saveProduct() {
   }
 
   try {
+    var saveHeaders = await getAdminAuthHeaders(true);
     var resp = await fetch(apiPath, {
       method: method,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Admin-Secret": ADMIN_SECRET
-      },
+      headers: saveHeaders,
       body: JSON.stringify({
         slug: isNew ? slug : undefined,
         title_en: titleEN,

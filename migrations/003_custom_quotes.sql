@@ -3,19 +3,20 @@
 
 CREATE TABLE IF NOT EXISTS custom_quotes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  quote_id TEXT UNIQUE NOT NULL,
-  customer_email TEXT NOT NULL,
-  product_type TEXT,
-  dimensions TEXT,
+  quote_id TEXT NOT NULL UNIQUE,
+  customer_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  address TEXT,
+  telephone TEXT,
+  product_slug TEXT NOT NULL,
+  dimensions TEXT NOT NULL,
   fabric TEXT,
   color TEXT,
-  extras TEXT,
   status TEXT DEFAULT 'pending',
   quoted_price INTEGER,
-  expires_at TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  expires_at DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_quotes_email ON custom_quotes(email);
 CREATE INDEX IF NOT EXISTS idx_quotes_status ON custom_quotes(status);
-CREATE INDEX IF NOT EXISTS idx_quotes_email ON custom_quotes(customer_email);
-CREATE INDEX IF NOT EXISTS idx_quotes_id ON custom_quotes(quote_id);

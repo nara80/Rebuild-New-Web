@@ -389,6 +389,209 @@ async function onRequest(context) {
 }
 __name(onRequest, "onRequest");
 
+// product/[[path]].ts
+var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
+  "standard-fitted-sheet",
+  "deep-pocket-fitted-sheet",
+  "marine-fitted-sheet",
+  "dorm-fitted-sheet",
+  "rv-truck-fitted-sheet",
+  "family-fitted-sheet",
+  "pet-owner-fitted-sheet",
+  "flat-sheet-standard",
+  "flat-sheet-extra-deep-pocket",
+  "3-sided-duvet",
+  "pet-owner-duvet-cover",
+  "duvet-cover-marine",
+  "duvet-cover-rv",
+  "duvet-cover-dorm",
+  "duvet-insert",
+  "pillowcase-envelope",
+  "pillowcase-zipper",
+  "pillowcase-sham",
+  "mattress-protector-standard",
+  "marine-mattress-protector",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector",
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general",
+  "bedbridge-connector",
+  "mattress-lift-helper"
+]);
+function hasToken(slug, token) {
+  return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
+}
+__name(hasToken, "hasToken");
+function resolveLegacyProduct(slug) {
+  if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
+  if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
+  if (slug.startsWith("product-boat-bedding") || slug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
+  if (slug.includes("boat") && slug.includes("pillow")) return "/product/pillowcase-envelope/";
+  if (slug.includes("dorm")) return slug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
+  if (slug.includes("rv-truck") || hasToken(slug, "rv") || slug.includes("truck")) {
+    if (slug.includes("duvet")) return "/product/duvet-cover-rv/";
+    if (slug.includes("encasement")) return "/product/rv-truck-mattress-encasement/";
+    return "/product/rv-truck-fitted-sheet/";
+  }
+  if (slug.includes("marine") || slug.includes("boat")) return slug.includes("duvet") ? "/product/duvet-cover-marine/" : "/product/marine-fitted-sheet/";
+  if (slug.includes("pet")) {
+    if (slug.includes("duvet") || slug.includes("3-sided")) return "/product/pet-owner-duvet-cover/";
+    if (slug.includes("protector")) return "/product/pet-proof-mattress-protector/";
+    if (slug.includes("pillow")) return "/product/pillowcase-zipper/";
+    return "/product/pet-owner-fitted-sheet/";
+  }
+  if (slug.includes("co-sleeping") || slug.includes("family")) return "/product/family-fitted-sheet/";
+  if (slug.includes("duvet")) return "/product/3-sided-duvet/";
+  if (slug.includes("encasement") || slug.includes("zippered-tpu-mattress-cover")) return "/product/mattress-encasement-general/";
+  if (slug.includes("sheet-protectors") || slug.includes("protector") || slug === "pillow-case") return "/product/mattress-protector-standard/";
+  if (slug.includes("pillow") || slug.includes("pillowcase") || slug.includes("pillow-cover") || slug.includes("pillow-case")) {
+    if (slug.includes("sham") || slug.includes("vent")) return "/product/pillowcase-sham/";
+    if (slug.includes("zip") || slug.includes("hidden-zipper")) return "/product/pillowcase-zipper/";
+    return "/product/pillowcase-envelope/";
+  }
+  if (slug.includes("fitted") || slug.includes("bed-sheet") || slug.includes("bedsheet")) return "/product/standard-fitted-sheet/";
+  if (slug === "tbar") return "/product/bedbridge-connector/";
+  if (slug === "mattress-lift-helper") return "/product/mattress-lift-helper/";
+  if (slug === "baby-blanket" || slug === "animal-bedding") return "/products/";
+  return "/products/";
+}
+__name(resolveLegacyProduct, "resolveLegacyProduct");
+async function onRequest2(context) {
+  const url = new URL(context.request.url);
+  const pathname = url.pathname;
+  if (pathname === "/product" || pathname === "/product/") {
+    return Response.redirect(new URL("/products/", url.origin).toString(), 301);
+  }
+  if (pathname === "/th/product" || pathname === "/th/product/") {
+    return Response.redirect(new URL("/th/products/", url.origin).toString(), 301);
+  }
+  const parts = pathname.split("/").filter(Boolean);
+  const isTh = parts[0] === "th";
+  const startIdx = isTh ? 1 : 0;
+  if (parts[startIdx] !== "product") return context.next();
+  if (parts.length > startIdx + 2) return context.next();
+  const slug = (parts[startIdx + 1] || "").toLowerCase();
+  if (!slug) {
+    return Response.redirect(new URL(isTh ? "/th/products/" : "/products/", url.origin).toString(), 301);
+  }
+  if (!CANONICAL_PRODUCT_SLUGS.has(slug)) {
+    const target = resolveLegacyProduct(slug);
+    const redirectTarget = isTh ? `/th${target}` : target;
+    return Response.redirect(new URL(redirectTarget, url.origin).toString(), 301);
+  }
+  try {
+    const staticUrl = `${url.origin}/product/${slug}/index.html`;
+    const staticRes = await context.env.ASSETS.fetch(new Request(staticUrl));
+    if (!staticRes.ok) return context.next();
+    let html = await staticRes.text();
+    if (isTh) {
+      html = html.replace('<html lang="en">', '<html lang="th">');
+    }
+    const stmt = context.env.DB.prepare(
+      "SELECT image_url, images, title_en, title_th FROM products WHERE slug = ?"
+    ).bind(slug);
+    const product = await stmt.first();
+    let images = [];
+    if (product && product.images) {
+      try {
+        images = JSON.parse(product.images);
+      } catch (e) {
+        try {
+          images = JSON.parse(product.images.replace(/\\"/g, '"'));
+        } catch (err) {
+          console.error("Failed to parse product.images:", err);
+        }
+      }
+    }
+    const mainImage = product && product.image_url || images[0] || "";
+    const title = isTh && product && product.title_th ? product.title_th : product && product.title_en;
+    if (title) {
+      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} \u2014 MildMate</title>`);
+      html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} \u2014 MildMate"`);
+      html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} \u2014 MildMate"`);
+      if (product && product.title_en) {
+        html = html.replace(
+          new RegExp(`<h1 class="product-title">\\s*${product.title_en.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*(.*?)\\s*</h1>`, "i"),
+          `<h1 class="product-title">${title}$1</h1>`
+        );
+        html = html.replace(
+          new RegExp(`<span>\\s*${product.title_en.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*</span>`, "i"),
+          `<span>${title}</span>`
+        );
+      }
+    }
+    if (product && (product.image_url || product.images)) {
+      const THUMB_COUNT = 6;
+      const thumbs = images.slice(0, THUMB_COUNT);
+      if (mainImage) {
+        html = html.replace(
+          /<meta name="product-image" content="[^"]*"/,
+          `<meta name="product-image" content="${mainImage}"`
+        );
+      }
+      if (mainImage) {
+        html = html.replace(
+          /(<img\b[^>]*?\bid="gallery-main-img"[^>]*?\bsrc=")[^"]*/i,
+          `$1${mainImage}`
+        );
+        html = html.replace(
+          /(<img\b[^>]*?\bsrc=")[^"]*("[^>]*?\bid="gallery-main-img")/i,
+          `$1${mainImage}$2`
+        );
+      }
+      if (thumbs.length > 0) {
+        const imagesJson = JSON.stringify(thumbs.filter(Boolean));
+        html = html.replace(
+          /<meta name="product-images" content="[^"]*"/,
+          `<meta name="product-images" content='${imagesJson}'>`
+        );
+      }
+    }
+    const baseUrl = url.origin;
+    const mainImageUrl = mainImage ? mainImage.startsWith("http") ? mainImage : `${baseUrl}${mainImage.startsWith("/") ? "" : "/"}${mainImage}` : "";
+    const productTitle = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "${productTitle}",
+  "image": "${mainImageUrl}",
+  "description": "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
+  "brand": { "@type": "Brand", "name": "MildMate" },
+  "url": "${baseUrl}/product/${slug}/",
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "seller": { "@type": "Organization", "name": "MildMate" }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5.0",
+    "reviewCount": "1000+"
+  }
+}
+<\/script>`;
+    if (!html.includes('id="json-ld-product"')) {
+      html = html.replace(/<\/head>/i, `${productJsonLd}
+</head>`);
+    }
+    return new Response(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=60"
+      }
+    });
+  } catch (err) {
+    console.error("Product SSR error:", err);
+    return context.next();
+  }
+}
+__name(onRequest2, "onRequest");
+
 // ../workers/api/products.ts
 var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url(url) {
@@ -407,7 +610,12 @@ function r2Product(p) {
   const out = { ...p, image_url: toR2Url(p.image_url) };
   if (out.images && typeof out.images === "string") {
     try {
-      const arr = JSON.parse(out.images);
+      let arr = [];
+      try {
+        arr = JSON.parse(out.images);
+      } catch (e) {
+        arr = JSON.parse(out.images.replace(/\\"/g, '"'));
+      }
       out.images = JSON.stringify(arr.map(toR2Url));
     } catch (_) {
     }
@@ -2263,310 +2471,6 @@ async function handleAdminExchangeRates(request, env) {
 }
 __name(handleAdminExchangeRates, "handleAdminExchangeRates");
 
-// ../workers/api/admin-products.ts
-var R2_PUBLIC_BASE3 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-function toR2Url2(url) {
-  if (!url) return url;
-  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE3}${url.slice(3)}`;
-  return url;
-}
-__name(toR2Url2, "toR2Url");
-function r2Product2(p) {
-  const out = { ...p, image_url: toR2Url2(p.image_url) };
-  if (out.images && typeof out.images === "string") {
-    try {
-      const arr = JSON.parse(out.images);
-      out.images = JSON.stringify(arr.map(toR2Url2));
-    } catch (_) {
-    }
-  }
-  return out;
-}
-__name(r2Product2, "r2Product");
-function parseCategoryCsv(csv) {
-  const parts = csv.split(",").map((s) => s.trim()).filter(Boolean);
-  const product_type = parts[0] || "sheets";
-  const niches = parts.slice(1).join(", ");
-  return { product_type, niches };
-}
-__name(parseCategoryCsv, "parseCategoryCsv");
-function isProductionHost2(hostname) {
-  if (!hostname) return false;
-  const host = hostname.toLowerCase().split(":")[0];
-  if (host === "localhost" || host === "127.0.0.1") return false;
-  if (host.endsWith(".pages.dev")) return false;
-  if (host.endsWith(".local")) return false;
-  return host === "www.mildmate.com" || host === "mildmate.com";
-}
-__name(isProductionHost2, "isProductionHost");
-var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
-function authCheck(request, env) {
-  const hostname = request.headers.get("Host") || "";
-  const prodHost = isProductionHost2(hostname);
-  if (!prodHost) return true;
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!provided) return false;
-  if (!configured) return false;
-  return provided === configured;
-}
-__name(authCheck, "authCheck");
-async function handleAdminProducts(request, env) {
-  if (!authCheck(request, env)) {
-    return new Response(ADMIN_SECRET_ERROR, {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  const url = new URL(request.url);
-  const path = url.pathname.replace(/\/$/, "");
-  const method = request.method;
-  if (method === "GET" && path === "/api/admin/products") {
-    const db = env.DB;
-    const result = await db.prepare(
-      `SELECT id, slug, title_en, title_th, description_en, description_th,
-              category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
-              is_custom, image_url, tags, youtube_url, images, sort_order, is_active
-       FROM products ORDER BY sort_order, id`
-    ).all();
-    return new Response(JSON.stringify((result.results || []).map(r2Product2)), {
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  if (method === "POST" && path === "/api/admin/products") {
-    const db = env.DB;
-    try {
-      const body = await request.json();
-      const slug = body.slug;
-      if (!slug) {
-        return new Response(JSON.stringify({ error: "Slug is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
-      }
-      const dup = await db.prepare("SELECT id FROM products WHERE slug = ?").bind(slug).first();
-      if (dup) {
-        return new Response(JSON.stringify({ error: "Slug already exists" }), { status: 409, headers: { "Content-Type": "application/json" } });
-      }
-      const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
-      await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
-      ).bind(
-        slug,
-        body.title_en || body.titleEN || slug,
-        body.title_th || body.titleTH || null,
-        body.description_en || body.descEN || null,
-        body.description_th || body.descTH || null,
-        body.category || "sheets",
-        body.product_type || product_type,
-        body.niches || niches,
-        body.fabric_options || null,
-        body.image_url || null,
-        body.youtube_url || body.video || null,
-        body.images || "[]",
-        body.tags || null
-      ).run();
-      return new Response(JSON.stringify({ success: true, slug }), { headers: { "Content-Type": "application/json" } });
-    } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: { "Content-Type": "application/json" } });
-    }
-  }
-  const slugMatch = path.match(/^\/api\/admin\/products\/(.+)$/);
-  if (slugMatch && method === "GET") {
-    const slug = slugMatch[1];
-    const db = env.DB;
-    const result = await db.prepare(
-      `SELECT * FROM products WHERE slug = ?`
-    ).bind(slug).first();
-    if (!result) {
-      return new Response(JSON.stringify({ error: "Product not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    return new Response(JSON.stringify(r2Product2(result)), {
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  if (slugMatch && method === "PUT") {
-    const slug = slugMatch[1];
-    const db = env.DB;
-    const existing = await db.prepare(
-      `SELECT id FROM products WHERE slug = ?`
-    ).bind(slug).first();
-    if (!existing) {
-      return new Response(JSON.stringify({ error: "Product not found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    try {
-      const body = await request.json();
-      const allowed = [
-        "title_en",
-        "title_th",
-        "description_en",
-        "description_th",
-        "tags",
-        "youtube_url",
-        "images",
-        "image_url",
-        "fabric_options",
-        "category",
-        "product_type",
-        "niches"
-      ];
-      const sets = [];
-      const values = [];
-      for (const field of allowed) {
-        if (body[field] !== void 0) {
-          sets.push(`${field} = ?`);
-          values.push(body[field]);
-        }
-      }
-      if (body.category !== void 0 && body.product_type === void 0 && body.niches === void 0) {
-        const parsed = parseCategoryCsv(body.category);
-        sets.push("product_type = ?");
-        values.push(parsed.product_type);
-        sets.push("niches = ?");
-        values.push(parsed.niches);
-      }
-      if (sets.length === 0) {
-        return new Response(JSON.stringify({ error: "No valid fields to update" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        });
-      }
-      sets.push("updated_at = datetime('now')");
-      values.push(slug);
-      await db.prepare(
-        `UPDATE products SET ${sets.join(", ")} WHERE slug = ?`
-      ).bind(...values).run();
-      return new Response(JSON.stringify({
-        success: true,
-        slug,
-        message: "Product updated"
-      }), {
-        headers: { "Content-Type": "application/json" }
-      });
-    } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-  }
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-    headers: { "Content-Type": "application/json" }
-  });
-}
-__name(handleAdminProducts, "handleAdminProducts");
-
-// ../workers/api/admin-upload.ts
-function authCheck2(request, env) {
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
-  const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
-  if (!isProdHost) return true;
-  if (!provided) return false;
-  if (!configured) return false;
-  return provided === configured;
-}
-__name(authCheck2, "authCheck");
-async function handleAdminUpload(request, env) {
-  if (!authCheck2(request, env)) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  if (request.method === "DELETE") {
-    const url = new URL(request.url);
-    const key = url.searchParams.get("key");
-    if (!key) {
-      return new Response(JSON.stringify({ error: "Missing key parameter" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    if (!key.startsWith("products/")) {
-      return new Response(JSON.stringify({ error: "Invalid key prefix" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    try {
-      const bucket = env.MILDMATE_ASSETS;
-      await bucket.delete(key);
-      return new Response(JSON.stringify({ success: true, key, message: "Deleted from R2" }), {
-        headers: { "Content-Type": "application/json" }
-      });
-    } catch (e) {
-      return new Response(JSON.stringify({ error: e.message }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-  }
-  if (request.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-  try {
-    const formData = await request.formData();
-    const file = formData.get("file");
-    if (!file || !(file instanceof File)) {
-      return new Response(JSON.stringify({ error: "No file provided" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" }
-      });
-    }
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowedTypes.includes(file.type)) {
-      return new Response(
-        JSON.stringify({ error: `Invalid file type: ${file.type}. Allowed: JPEG, PNG, WebP, GIF` }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    const MAX_SIZE = 5 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      return new Response(
-        JSON.stringify({ error: `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max: 5MB` }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    const ext = file.type === "image/webp" ? "webp" : file.type === "image/png" ? "png" : file.type === "image/gif" ? "gif" : "jpg";
-    const key = `products/uploads/${timestamp}-${random}.${ext}`;
-    const bucket = env.MILDMATE_ASSETS;
-    await bucket.put(key, file.stream(), {
-      httpMetadata: { contentType: file.type }
-    });
-    const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
-    const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
-    return new Response(JSON.stringify({
-      success: true,
-      url: publicUrl,
-      cdnUrl: publicUrl,
-      key,
-      size: file.size,
-      type: file.type,
-      message: "File uploaded to R2"
-    }), {
-      headers: { "Content-Type": "application/json" }
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-}
-__name(handleAdminUpload, "handleAdminUpload");
-
 // ../workers/api/clerk-verify.ts
 var jwksCache = null;
 var CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
@@ -2728,6 +2632,434 @@ async function verifyClerkJwt(request, env) {
 }
 __name(verifyClerkJwt, "verifyClerkJwt");
 
+// ../workers/api/admin-products.ts
+var R2_PUBLIC_BASE3 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+function toR2Url2(url) {
+  if (!url) return url;
+  if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE3}${url.slice(3)}`;
+  return url;
+}
+__name(toR2Url2, "toR2Url");
+function r2Product2(p) {
+  const out = { ...p, image_url: toR2Url2(p.image_url) };
+  if (out.images && typeof out.images === "string") {
+    try {
+      const arr = JSON.parse(out.images);
+      out.images = JSON.stringify(arr.map(toR2Url2));
+    } catch (_) {
+    }
+  }
+  return out;
+}
+__name(r2Product2, "r2Product");
+function parseCategoryCsv(csv) {
+  const parts = csv.split(",").map((s) => s.trim()).filter(Boolean);
+  const product_type = parts[0] || "sheets";
+  const niches = parts.slice(1).join(", ");
+  return { product_type, niches };
+}
+__name(parseCategoryCsv, "parseCategoryCsv");
+function isProductionHost2(hostname) {
+  if (!hostname) return false;
+  const host = hostname.toLowerCase().split(":")[0];
+  if (host === "localhost" || host === "127.0.0.1") return false;
+  if (host.endsWith(".pages.dev")) return false;
+  if (host.endsWith(".local")) return false;
+  return host === "www.mildmate.com" || host === "mildmate.com";
+}
+__name(isProductionHost2, "isProductionHost");
+var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
+function collectRoles(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
+  if (raw.public_metadata && typeof raw.public_metadata === "object") {
+    values.push(
+      raw.public_metadata.role,
+      raw.public_metadata.roles,
+      raw.public_metadata.org_role,
+      raw.public_metadata.org_roles,
+      raw.public_metadata.permission,
+      raw.public_metadata.permissions
+    );
+  }
+  if (raw.metadata && typeof raw.metadata === "object") {
+    values.push(raw.metadata.role, raw.metadata.roles, raw.metadata.permission, raw.metadata.permissions);
+  }
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles, "collectRoles");
+function hasAdminRole(rawClaims) {
+  const roles = collectRoles(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole, "hasAdminRole");
+function emailAllowed(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed, "emailAllowed");
+async function authCheck(request, env) {
+  const hostname = request.headers.get("Host") || "";
+  const prodHost = isProductionHost2(hostname);
+  if (!prodHost) return true;
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) return true;
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed(email, env) || hasAdminRole(metadata)) return true;
+          }
+        } catch {
+        }
+      }
+    }
+  }
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!provided) return false;
+  if (!configured) return false;
+  return provided === configured;
+}
+__name(authCheck, "authCheck");
+async function handleAdminProducts(request, env) {
+  if (!await authCheck(request, env)) {
+    return new Response(ADMIN_SECRET_ERROR, {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/$/, "");
+  const method = request.method;
+  if (method === "GET" && path === "/api/admin/products") {
+    const db = env.DB;
+    const result = await db.prepare(
+      `SELECT id, slug, title_en, title_th, description_en, description_th,
+              category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
+              is_custom, image_url, tags, youtube_url, images, sort_order, is_active
+       FROM products ORDER BY sort_order, id`
+    ).all();
+    return new Response(JSON.stringify((result.results || []).map(r2Product2)), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (method === "POST" && path === "/api/admin/products") {
+    const db = env.DB;
+    try {
+      const body = await request.json();
+      const slug = body.slug;
+      if (!slug) {
+        return new Response(JSON.stringify({ error: "Slug is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
+      }
+      const dup = await db.prepare("SELECT id FROM products WHERE slug = ?").bind(slug).first();
+      if (dup) {
+        return new Response(JSON.stringify({ error: "Slug already exists" }), { status: 409, headers: { "Content-Type": "application/json" } });
+      }
+      const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
+      const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
+      await db.prepare(
+        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+      ).bind(
+        slug,
+        body.title_en || body.titleEN || slug,
+        body.title_th || body.titleTH || null,
+        body.description_en || body.descEN || null,
+        body.description_th || body.descTH || null,
+        body.category || "sheets",
+        body.product_type || product_type,
+        body.niches || niches,
+        body.fabric_options || null,
+        body.image_url || placeholderImage,
+        body.youtube_url || body.video || null,
+        body.images || "[]",
+        body.tags || null
+      ).run();
+      return new Response(JSON.stringify({ success: true, slug }), { headers: { "Content-Type": "application/json" } });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+  }
+  const slugMatch = path.match(/^\/api\/admin\/products\/(.+)$/);
+  if (slugMatch && method === "GET") {
+    const slug = slugMatch[1];
+    const db = env.DB;
+    const result = await db.prepare(
+      `SELECT * FROM products WHERE slug = ?`
+    ).bind(slug).first();
+    if (!result) {
+      return new Response(JSON.stringify({ error: "Product not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    return new Response(JSON.stringify(r2Product2(result)), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (slugMatch && method === "PUT") {
+    const slug = slugMatch[1];
+    const db = env.DB;
+    const existing = await db.prepare(
+      `SELECT id FROM products WHERE slug = ?`
+    ).bind(slug).first();
+    if (!existing) {
+      return new Response(JSON.stringify({ error: "Product not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    try {
+      const body = await request.json();
+      const allowed = [
+        "title_en",
+        "title_th",
+        "description_en",
+        "description_th",
+        "tags",
+        "youtube_url",
+        "images",
+        "image_url",
+        "fabric_options",
+        "category",
+        "product_type",
+        "niches"
+      ];
+      const sets = [];
+      const values = [];
+      for (const field of allowed) {
+        if (body[field] !== void 0) {
+          sets.push(`${field} = ?`);
+          values.push(body[field]);
+        }
+      }
+      if (body.category !== void 0 && body.product_type === void 0 && body.niches === void 0) {
+        const parsed = parseCategoryCsv(body.category);
+        sets.push("product_type = ?");
+        values.push(parsed.product_type);
+        sets.push("niches = ?");
+        values.push(parsed.niches);
+      }
+      if (sets.length === 0) {
+        return new Response(JSON.stringify({ error: "No valid fields to update" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      sets.push("updated_at = datetime('now')");
+      values.push(slug);
+      await db.prepare(
+        `UPDATE products SET ${sets.join(", ")} WHERE slug = ?`
+      ).bind(...values).run();
+      return new Response(JSON.stringify({
+        success: true,
+        slug,
+        message: "Product updated"
+      }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), {
+    status: 405,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+__name(handleAdminProducts, "handleAdminProducts");
+
+// ../workers/api/admin-upload.ts
+function collectRoles2(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
+  if (raw.public_metadata && typeof raw.public_metadata === "object") {
+    values.push(
+      raw.public_metadata.role,
+      raw.public_metadata.roles,
+      raw.public_metadata.org_role,
+      raw.public_metadata.org_roles,
+      raw.public_metadata.permission,
+      raw.public_metadata.permissions
+    );
+  }
+  if (raw.metadata && typeof raw.metadata === "object") {
+    values.push(raw.metadata.role, raw.metadata.roles, raw.metadata.permission, raw.metadata.permissions);
+  }
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles2, "collectRoles");
+function hasAdminRole2(rawClaims) {
+  const roles = collectRoles2(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole2, "hasAdminRole");
+function emailAllowed2(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed2, "emailAllowed");
+async function authCheck2(request, env) {
+  const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
+  const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
+  if (!isProdHost) return true;
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole2(raw) || emailAllowed2(verified.payload.email || "", env)) return true;
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed2(email, env) || hasAdminRole2(metadata)) return true;
+          }
+        } catch {
+        }
+      }
+    }
+  }
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!provided || !configured) return false;
+  return provided === configured;
+}
+__name(authCheck2, "authCheck");
+async function handleAdminUpload(request, env) {
+  if (!await authCheck2(request, env)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
+    const key = url.searchParams.get("key");
+    if (!key) {
+      return new Response(JSON.stringify({ error: "Missing key parameter" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    if (!key.startsWith("products/")) {
+      return new Response(JSON.stringify({ error: "Invalid key prefix" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    try {
+      const bucket = env.MILDMATE_ASSETS;
+      await bucket.delete(key);
+      return new Response(JSON.stringify({ success: true, key, message: "Deleted from R2" }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+  }
+  if (request.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file");
+    if (!file || !(file instanceof File)) {
+      return new Response(JSON.stringify({ error: "No file provided" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      return new Response(
+        JSON.stringify({ error: `Invalid file type: ${file.type}. Allowed: JPEG, PNG, WebP, GIF` }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return new Response(
+        JSON.stringify({ error: `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max: 5MB` }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    const ext = file.type === "image/webp" ? "webp" : file.type === "image/png" ? "png" : file.type === "image/gif" ? "gif" : "jpg";
+    const key = `products/uploads/${timestamp}-${random}.${ext}`;
+    const bucket = env.MILDMATE_ASSETS;
+    await bucket.put(key, file.stream(), {
+      httpMetadata: { contentType: file.type }
+    });
+    const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
+    const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
+    return new Response(JSON.stringify({
+      success: true,
+      url: publicUrl,
+      cdnUrl: publicUrl,
+      key,
+      size: file.size,
+      type: file.type,
+      message: "File uploaded to R2"
+    }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+__name(handleAdminUpload, "handleAdminUpload");
+
 // ../workers/api/admin-orders.ts
 var orderShippingSchemaReady = false;
 var orderShippingSchemaPromise = null;
@@ -2822,7 +3154,7 @@ function isProductionHost3(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost3, "isProductionHost");
-function collectRoles(raw) {
+function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -2847,20 +3179,20 @@ function collectRoles(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles, "collectRoles");
-function hasAdminRole(rawClaims) {
-  const roles = collectRoles(rawClaims);
+__name(collectRoles3, "collectRoles");
+function hasAdminRole3(rawClaims) {
+  const roles = collectRoles3(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole, "hasAdminRole");
-function emailAllowed(email, env) {
+__name(hasAdminRole3, "hasAdminRole");
+function emailAllowed3(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed, "emailAllowed");
+__name(emailAllowed3, "emailAllowed");
 async function authorizeAdmin2(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -2869,7 +3201,7 @@ async function authorizeAdmin2(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) {
+      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -2885,8 +3217,8 @@ async function authorizeAdmin2(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed(email, env)) return { ok: true };
-            if (hasAdminRole(metadata)) return { ok: true };
+            if (emailAllowed3(email, env)) return { ok: true };
+            if (hasAdminRole3(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -3074,7 +3406,7 @@ function isProductionHost4(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost4, "isProductionHost");
-function collectRoles2(raw) {
+function collectRoles4(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -3098,20 +3430,20 @@ function collectRoles2(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles2, "collectRoles");
-function hasAdminRole2(rawClaims) {
-  const roles = collectRoles2(rawClaims);
+__name(collectRoles4, "collectRoles");
+function hasAdminRole4(rawClaims) {
+  const roles = collectRoles4(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole2, "hasAdminRole");
-function emailAllowed2(email, env) {
+__name(hasAdminRole4, "hasAdminRole");
+function emailAllowed4(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed2, "emailAllowed");
+__name(emailAllowed4, "emailAllowed");
 async function authorizeAdmin3(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3119,7 +3451,7 @@ async function authorizeAdmin3(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole2(raw) || emailAllowed2(verified.payload.email || "", env)) {
+      if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -3135,8 +3467,8 @@ async function authorizeAdmin3(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed2(email, env)) return { ok: true };
-            if (hasAdminRole2(metadata)) return { ok: true };
+            if (emailAllowed4(email, env)) return { ok: true };
+            if (hasAdminRole4(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -3257,7 +3589,7 @@ function isProductionHost5(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost5, "isProductionHost");
-function collectRoles3(raw) {
+function collectRoles5(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -3282,20 +3614,20 @@ function collectRoles3(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles3, "collectRoles");
-function hasAdminRole3(rawClaims) {
-  const roles = collectRoles3(rawClaims);
+__name(collectRoles5, "collectRoles");
+function hasAdminRole5(rawClaims) {
+  const roles = collectRoles5(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole3, "hasAdminRole");
-function emailAllowed3(email, env) {
+__name(hasAdminRole5, "hasAdminRole");
+function emailAllowed5(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed3, "emailAllowed");
+__name(emailAllowed5, "emailAllowed");
 async function authorizeAdmin4(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3304,7 +3636,7 @@ async function authorizeAdmin4(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) {
+      if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -3320,8 +3652,8 @@ async function authorizeAdmin4(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed3(email, env)) return { ok: true };
-            if (hasAdminRole3(metadata)) return { ok: true };
+            if (emailAllowed5(email, env)) return { ok: true };
+            if (hasAdminRole5(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -3993,7 +4325,7 @@ function isProductionHost6(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost6, "isProductionHost");
-function collectRoles4(raw) {
+function collectRoles6(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -4018,20 +4350,20 @@ function collectRoles4(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles4, "collectRoles");
-function hasAdminRole4(rawClaims) {
-  const roles = collectRoles4(rawClaims);
+__name(collectRoles6, "collectRoles");
+function hasAdminRole6(rawClaims) {
+  const roles = collectRoles6(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole4, "hasAdminRole");
-function emailAllowed4(email, env) {
+__name(hasAdminRole6, "hasAdminRole");
+function emailAllowed6(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed4, "emailAllowed");
+__name(emailAllowed6, "emailAllowed");
 async function authorizeAdmin5(request, env) {
   const host = new URL(request.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
@@ -4044,7 +4376,7 @@ async function authorizeAdmin5(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) {
+      if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -4060,8 +4392,8 @@ async function authorizeAdmin5(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed4(email, env)) return { ok: true };
-            if (hasAdminRole4(metadata)) return { ok: true };
+            if (emailAllowed6(email, env)) return { ok: true };
+            if (hasAdminRole6(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -4347,7 +4679,7 @@ function isPreviewHashHost(hostname) {
   return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
 }
 __name(isPreviewHashHost, "isPreviewHashHost");
-function collectRoles5(raw) {
+function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -4372,20 +4704,20 @@ function collectRoles5(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles5, "collectRoles");
-function hasAdminRole5(raw) {
-  const roles = collectRoles5(raw);
+__name(collectRoles7, "collectRoles");
+function hasAdminRole7(raw) {
+  const roles = collectRoles7(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole5, "hasAdminRole");
-function emailAllowed5(email, env) {
+__name(hasAdminRole7, "hasAdminRole");
+function emailAllowed7(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed5, "emailAllowed");
+__name(emailAllowed7, "emailAllowed");
 async function authorizeAdmin6(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -4394,7 +4726,7 @@ async function authorizeAdmin6(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -4406,8 +4738,8 @@ async function authorizeAdmin6(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed5(email, env)) return { ok: true };
-            if (hasAdminRole5(metadata)) return { ok: true };
+            if (emailAllowed7(email, env)) return { ok: true };
+            if (hasAdminRole7(metadata)) return { ok: true };
           }
         } catch {
         }
@@ -4996,7 +5328,7 @@ function json8(body, status = 200) {
   });
 }
 __name(json8, "json");
-function collectRoles6(raw) {
+function collectRoles8(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5021,20 +5353,20 @@ function collectRoles6(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles6, "collectRoles");
-function hasAdminRole6(raw) {
-  const roles = collectRoles6(raw);
+__name(collectRoles8, "collectRoles");
+function hasAdminRole8(raw) {
+  const roles = collectRoles8(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole6, "hasAdminRole");
-function emailAllowed6(email, env) {
+__name(hasAdminRole8, "hasAdminRole");
+function emailAllowed8(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed6, "emailAllowed");
+__name(emailAllowed8, "emailAllowed");
 function isProductionHost8(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -5049,7 +5381,7 @@ async function authorizeAdmin7(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -5061,8 +5393,8 @@ async function authorizeAdmin7(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed6(email, env)) return { ok: true };
-            if (hasAdminRole6(metadata)) return { ok: true };
+            if (emailAllowed8(email, env)) return { ok: true };
+            if (hasAdminRole8(metadata)) return { ok: true };
           }
         } catch (e) {
         }
@@ -5259,7 +5591,7 @@ function isProductionHost9(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost9, "isProductionHost");
-function collectRoles7(raw) {
+function collectRoles9(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5283,20 +5615,20 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles");
-function hasAdminRole7(raw) {
-  const roles = collectRoles7(raw);
+__name(collectRoles9, "collectRoles");
+function hasAdminRole9(raw) {
+  const roles = collectRoles9(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole");
-function emailAllowed7(email, env) {
+__name(hasAdminRole9, "hasAdminRole");
+function emailAllowed9(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed");
+__name(emailAllowed9, "emailAllowed");
 function getClerkSessionTokenFromCookie(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -5319,7 +5651,7 @@ async function authorizeAdmin8(request, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -5333,8 +5665,8 @@ async function authorizeAdmin8(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed7(email, env)) return { ok: true };
-            if (hasAdminRole7(metadata)) return { ok: true };
+            if (emailAllowed9(email, env)) return { ok: true };
+            if (hasAdminRole9(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -5726,7 +6058,7 @@ function isProductionHost10(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost10, "isProductionHost");
-function collectRoles8(raw) {
+function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5750,20 +6082,20 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(raw) {
-  const roles = collectRoles8(raw);
+__name(collectRoles10, "collectRoles");
+function hasAdminRole10(raw) {
+  const roles = collectRoles10(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
+__name(hasAdminRole10, "hasAdminRole");
+function emailAllowed10(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
+__name(emailAllowed10, "emailAllowed");
 function getClerkSessionTokenFromCookie2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -5786,7 +6118,7 @@ async function authorizeAdmin9(request, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
+      if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -5800,8 +6132,8 @@ async function authorizeAdmin9(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed8(email, env)) return { ok: true };
-            if (hasAdminRole8(metadata)) return { ok: true };
+            if (emailAllowed10(email, env)) return { ok: true };
+            if (hasAdminRole10(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -6260,7 +6592,7 @@ function isProductionHost11(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost11, "isProductionHost");
-function collectRoles9(raw) {
+function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -6285,20 +6617,20 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles");
-function hasAdminRole9(rawClaims) {
-  const roles = collectRoles9(rawClaims);
+__name(collectRoles11, "collectRoles");
+function hasAdminRole11(rawClaims) {
+  const roles = collectRoles11(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole");
-function emailAllowed9(email, env) {
+__name(hasAdminRole11, "hasAdminRole");
+function emailAllowed11(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed");
+__name(emailAllowed11, "emailAllowed");
 async function authorizeAdmin10(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -6306,7 +6638,7 @@ async function authorizeAdmin10(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
+      if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -6320,8 +6652,8 @@ async function authorizeAdmin10(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed9(email, env)) return { ok: true };
-            if (hasAdminRole9(metadata)) return { ok: true };
+            if (emailAllowed11(email, env)) return { ok: true };
+            if (hasAdminRole11(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -7714,14 +8046,20 @@ function r2Product3(p) {
   const out = { ...p, [imgKey]: toR2Url5(p[imgKey]) };
   if (out.images && typeof out.images === "string") {
     try {
-      out.images = JSON.stringify(JSON.parse(out.images).map(toR2Url5));
+      let arr = [];
+      try {
+        arr = JSON.parse(out.images);
+      } catch (e) {
+        arr = JSON.parse(out.images.replace(/\\"/g, '"'));
+      }
+      out.images = JSON.stringify(arr.map(toR2Url5));
     } catch (_) {
     }
   }
   return out;
 }
 __name(r2Product3, "r2Product");
-var onRequest2 = /* @__PURE__ */ __name(async (context) => {
+var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -7895,7 +8233,7 @@ var onRequest2 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // blogs/[[path]].ts
-async function onRequest3(context) {
+async function onRequest4(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -7931,168 +8269,6 @@ async function onRequest3(context) {
   } catch (err) {
     console.error("Blog post error:", err);
     return new Response("Server error", { status: 500 });
-  }
-}
-__name(onRequest3, "onRequest");
-
-// product/[[path]].ts
-var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
-  "standard-fitted-sheet",
-  "deep-pocket-fitted-sheet",
-  "marine-fitted-sheet",
-  "dorm-fitted-sheet",
-  "rv-truck-fitted-sheet",
-  "family-fitted-sheet",
-  "pet-owner-fitted-sheet",
-  "flat-sheet-standard",
-  "flat-sheet-extra-deep-pocket",
-  "3-sided-duvet",
-  "pet-owner-duvet-cover",
-  "duvet-cover-marine",
-  "duvet-cover-rv",
-  "duvet-cover-dorm",
-  "duvet-insert",
-  "pillowcase-envelope",
-  "pillowcase-zipper",
-  "pillowcase-sham",
-  "mattress-protector-standard",
-  "mattress-protector-family",
-  "mattress-protector-deep-pocket",
-  "pet-proof-mattress-protector",
-  "mattress-encasement-general",
-  "rv-truck-mattress-encasement",
-  "pillow-protector-general",
-  "bedbridge-connector",
-  "mattress-lift-helper"
-]);
-function hasToken(slug, token) {
-  return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
-}
-__name(hasToken, "hasToken");
-function resolveLegacyProduct(slug) {
-  if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
-  if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
-  if (slug.startsWith("product-boat-bedding") || slug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
-  if (slug.includes("boat") && slug.includes("pillow")) return "/product/pillowcase-envelope/";
-  if (slug.includes("dorm")) return slug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
-  if (slug.includes("rv-truck") || hasToken(slug, "rv") || slug.includes("truck")) {
-    if (slug.includes("duvet")) return "/product/duvet-cover-rv/";
-    if (slug.includes("encasement")) return "/product/rv-truck-mattress-encasement/";
-    return "/product/rv-truck-fitted-sheet/";
-  }
-  if (slug.includes("marine") || slug.includes("boat")) return slug.includes("duvet") ? "/product/duvet-cover-marine/" : "/product/marine-fitted-sheet/";
-  if (slug.includes("pet")) {
-    if (slug.includes("duvet") || slug.includes("3-sided")) return "/product/pet-owner-duvet-cover/";
-    if (slug.includes("protector")) return "/product/pet-proof-mattress-protector/";
-    if (slug.includes("pillow")) return "/product/pillowcase-zipper/";
-    return "/product/pet-owner-fitted-sheet/";
-  }
-  if (slug.includes("co-sleeping") || slug.includes("family")) return "/product/family-fitted-sheet/";
-  if (slug.includes("duvet")) return "/product/3-sided-duvet/";
-  if (slug.includes("encasement") || slug.includes("zippered-tpu-mattress-cover")) return "/product/mattress-encasement-general/";
-  if (slug.includes("sheet-protectors") || slug.includes("protector") || slug === "pillow-case") return "/product/mattress-protector-standard/";
-  if (slug.includes("pillow") || slug.includes("pillowcase") || slug.includes("pillow-cover") || slug.includes("pillow-case")) {
-    if (slug.includes("sham") || slug.includes("vent")) return "/product/pillowcase-sham/";
-    if (slug.includes("zip") || slug.includes("hidden-zipper")) return "/product/pillowcase-zipper/";
-    return "/product/pillowcase-envelope/";
-  }
-  if (slug.includes("fitted") || slug.includes("bed-sheet") || slug.includes("bedsheet")) return "/product/standard-fitted-sheet/";
-  if (slug === "tbar") return "/product/bedbridge-connector/";
-  if (slug === "mattress-lift-helper") return "/product/mattress-lift-helper/";
-  if (slug === "baby-blanket" || slug === "animal-bedding") return "/products/";
-  return "/products/";
-}
-__name(resolveLegacyProduct, "resolveLegacyProduct");
-async function onRequest4(context) {
-  const url = new URL(context.request.url);
-  const pathname = url.pathname;
-  if (pathname === "/product" || pathname === "/product/") {
-    return Response.redirect(new URL("/products/", url.origin).toString(), 301);
-  }
-  const parts = pathname.split("/").filter(Boolean);
-  if (parts[0] !== "product") return context.next();
-  if (parts.length > 2) return context.next();
-  const slug = (parts[1] || "").toLowerCase();
-  if (!slug) {
-    return Response.redirect(new URL("/products/", url.origin).toString(), 301);
-  }
-  if (!CANONICAL_PRODUCT_SLUGS.has(slug)) {
-    const target = resolveLegacyProduct(slug);
-    return Response.redirect(new URL(target, url.origin).toString(), 301);
-  }
-  try {
-    const staticUrl = `${url.origin}/product/${slug}/index.html`;
-    const staticRes = await context.env.ASSETS.fetch(new Request(staticUrl));
-    if (!staticRes.ok) return context.next();
-    let html = await staticRes.text();
-    const stmt = context.env.DB.prepare(
-      "SELECT image_url, images FROM products WHERE slug = ?"
-    ).bind(slug);
-    const product = await stmt.first();
-    const images = product && product.images ? JSON.parse(product.images) : [];
-    const mainImage = product && product.image_url || images[0] || "";
-    if (product && (product.image_url || product.images)) {
-      const THUMB_COUNT = 6;
-      const thumbs = images.slice(0, THUMB_COUNT);
-      if (mainImage) {
-        html = html.replace(
-          /<meta name="product-image" content="[^"]*"/,
-          `<meta name="product-image" content="${mainImage}"`
-        );
-      }
-      if (mainImage) {
-        html = html.replace(
-          /<img([^>]*)id="gallery-main-img"([^>]*)>/,
-          `<img${1}id="gallery-main-img"${2} src="${mainImage}">`
-        );
-      }
-      if (thumbs.length > 0) {
-        const imagesJson = JSON.stringify(thumbs.filter(Boolean));
-        html = html.replace(
-          /<meta name="product-images" content="[^"]*"/,
-          `<meta name="product-images" content='${imagesJson}'>`
-        );
-      }
-    }
-    const baseUrl = url.origin;
-    const mainImageUrl = mainImage ? mainImage.startsWith("http") ? mainImage : `${baseUrl}${mainImage.startsWith("/") ? "" : "/"}${mainImage}` : "";
-    const productTitle = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "${productTitle}",
-  "image": "${mainImageUrl}",
-  "description": "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
-  "brand": { "@type": "Brand", "name": "MildMate" },
-  "url": "${baseUrl}/product/${slug}/",
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "seller": { "@type": "Organization", "name": "MildMate" }
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "1000+"
-  }
-}
-<\/script>`;
-    if (!html.includes('id="json-ld-product"')) {
-      html = html.replace(/<\/head>/i, `${productJsonLd}
-</head>`);
-    }
-    return new Response(html, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=60"
-      }
-    });
-  } catch (err) {
-    console.error("Product SSR error:", err);
-    return context.next();
   }
 }
 __name(onRequest4, "onRequest");
@@ -8491,7 +8667,7 @@ function getClerkSessionToken2(request) {
   return null;
 }
 __name(getClerkSessionToken2, "getClerkSessionToken");
-function collectRoles10(raw) {
+function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -8515,20 +8691,20 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles");
-function hasAdminRole10(rawClaims) {
-  const roles = collectRoles10(rawClaims);
+__name(collectRoles12, "collectRoles");
+function hasAdminRole12(rawClaims) {
+  const roles = collectRoles12(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole10, "hasAdminRole");
-function emailAllowed10(email, env) {
+__name(hasAdminRole12, "hasAdminRole");
+function emailAllowed12(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed");
+__name(emailAllowed12, "emailAllowed");
 function emailBlocked(email) {
   if (!email) return false;
   const blocked = [
@@ -8564,7 +8740,7 @@ async function enrichAdminFromClerk(sub, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return { email, hasAdmin: hasAdminRole10(metadataRaw) };
+    return { email, hasAdmin: hasAdminRole12(metadataRaw) };
   } catch {
     return { email: "", hasAdmin: false };
   }
@@ -8591,14 +8767,14 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   }
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
-  let hasAdmin = hasAdminRole10(raw);
-  let allowed = emailAllowed10(email, context.env);
+  let hasAdmin = hasAdminRole12(raw);
+  let allowed = emailAllowed12(email, context.env);
   if (!hasAdmin && !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
-    allowed = allowed || emailAllowed10(email, context.env);
+    allowed = allowed || emailAllowed12(email, context.env);
   }
   if (emailBlocked(email)) {
     return new Response(
@@ -8999,6 +9175,8 @@ var SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
   }
 }
 </style>`;
+var SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
+<link rel="apple-touch-icon" href="/images/logo.png">`;
 async function ensureCache(db) {
   const now = Date.now();
   if (_cache.header && _cache.footer && now - _cache.fetchedAt < CACHE_TTL) return;
@@ -9051,6 +9229,7 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "pillowcase-zipper",
   "pillowcase-sham",
   "mattress-protector-standard",
+  "marine-mattress-protector",
   "mattress-protector-family",
   "mattress-protector-deep-pocket",
   "pet-proof-mattress-protector",
@@ -9169,6 +9348,12 @@ ${header}`);
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
 </head>`);
   }
+  const hasIconLink = /rel=["'](?:shortcut\s+)?icon["']/i.test(html);
+  const hasAppleTouchIcon = /rel=["']apple-touch-icon["']/i.test(html);
+  if (!hasIconLink || !hasAppleTouchIcon) {
+    html = html.replace(/<\/head>/i, `${SHARED_FAVICON_LINKS}
+</head>`);
+  }
   if (!html.includes('id="json-ld-org"')) {
     html = html.replace(/<\/head>/i, `${JSON_LD_ORG}
 ${JSON_LD_WEBSITE}
@@ -9183,7 +9368,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-k0JXDY/functionsRoutes-0.5151840610434927.mjs
+// ../.wrangler/tmp/pages-vNHYA4/functionsRoutes-0.2298442814444358.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
@@ -9193,25 +9378,32 @@ var routes = [
     modules: [onRequest]
   },
   {
+    routePath: "/th/product/:path*",
+    mountPath: "/th/product",
+    method: "",
+    middlewares: [],
+    modules: [onRequest2]
+  },
+  {
     routePath: "/api/:path*",
     mountPath: "/api",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest3]
   },
   {
     routePath: "/blogs/:path*",
     mountPath: "/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest3]
+    modules: [onRequest4]
   },
   {
     routePath: "/product/:path*",
     mountPath: "/product",
     method: "",
     middlewares: [],
-    modules: [onRequest4]
+    modules: [onRequest2]
   },
   {
     routePath: "/quote/:path*",

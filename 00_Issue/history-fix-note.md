@@ -251,6 +251,178 @@
 
 ### Verification
 - Tested locally on `http://127.0.0.1:8788`:
-  - Visited `/product/pet-owner-fitted-sheet/` (which exists in the local database and has `image_url` set).
   - Inspected the returned HTML and verified that the `<img>` tag is correctly output as a single valid tag with the updated database image URL:
     `<img src="/images/products/pet-owner-fitted-sheet.jpg" alt="Pet Owner Fitted Sheet" id="gallery-main-img" width="800" height="800" loading="eager">`
+
+## 9) Accessory/fixed product pages image gallery fixes (thumbnails recovery + swipeable carousel navigation parity)
+
+### Symptoms
+- Visiting fixed-size or accessory product pages (such as the BedBridge Connector `/product/bedbridge-connector/` or Bed Lifter `/product/mattress-lift-helper/`) had two main gallery issues:
+  1. **Missing thumbnails**: Only the main product image was shown; the gallery thumbnails underneath were completely hidden. Specifically, for the BedBridge Connector, although D1 keeps **10 images** (1 main + 9 gallery images), **only 1 image** was visible.
+  2. **No carousel navigator**: Unlike customizable pages (e.g. `/product/mattress-protector-family/`), there were no left/right navigation arrows, bottom slide dots, or swipe interactions on the main image.
+
+### Root causes
+- **Escaped DB images**: The `images` column stored in D1 contained double-escaped backslash-quotes (e.g. `"[\\\"\\\",\\\"/r2/products/uploads/1781347014151-m6poy3.jpg\\\",...]"`). This caused both the server-side API parser (`r2Product`) and browser's `JSON.parse` to crash, triggering the client-side fallback to hide the gallery thumbnails.
+- **Static HTML template**: The template `product-fixed.html` was historically designed with a static `<img>` container (`.gallery-main`) instead of the swipeable `.carousel-wrap` track component used in other product templates.
+
+### Fixes applied
+- **Robust server-side parsing**: Updated `r2Product` in `workers/api/products.ts` and `functions/api/[[path]].ts` to clean double-escaped quotes before parsing.
+- **Robust client-side parsing**: Added defensive fallback parsing to all three templates (`templates/product-fixed.html`, `templates/product-customizable.html`, and `templates/product-marine.html`).
+- **Carousel Navigation Parity**: Upgraded the HTML markup, CSS styling (using a 4:3 aspect ratio), and JavaScript logic in `templates/product-fixed.html` to implement the unified swipeable gallery carousel with arrows, dots, and touch swipe gestures.
+- **Removed Unverified OEKO-TEX Claims for Accessories**: Removed the "OEKO-TEX Certified" trust badge from the desktop and mobile layouts for all fixed/accessory products (which do not use fabric collections) in `build-products.js` and `templates/product-fixed.html`, replacing it with a general "Premium Quality" badge.
+- **Rebuilt static pages**: Ran `node scripts/build-products.js` to update all 27 static product files.
+- **Rebuilt Pages Functions**: Recompiled the functions and synced the deployment entrypoint:
+  - `npx wrangler pages functions build --outdir public`
+  - `Copy-Item public/index.js public/_worker.js -Force`
+
+### Verification
+- Tested locally on `http://127.0.0.1:8788`:
+  - Fetching `/api/products/bedbridge-connector` now successfully returns mapped absolute public R2 URLs.
+  - Verified that `/product/bedbridge-connector/` shows all 10 thumbnails (1 main + 9 gallery images), displays left/right navigation arrows + dots, supports swipe navigation, and swaps slides correctly.
+  - Verified that `/product/mattress-lift-helper/` shows all 3 thumbnails (1 main + 2 gallery images) and operates with the same navigation features.
+  - Verified that neither the BedBridge Connector nor the Bed Lifter product page contains the unverified "OEKO-TEX Certified" or "Custom Fit" trust badges on desktop or mobile.
+
+## 10) New product rollout gap: exists in DB/static page but missing in product-type & niche listings (Marine Mattress Protector) + listing text/image normalization
+
+### Incident scope (reconciled)
+When `marine-mattress-protector` was introduced, rollout was partially complete:
+- Product row/state issue (Super Admin visibility) was resolved via DB migration.
+- But listing parity was incomplete: product did not appear on:
+  - product-type page: `/protection/`
+  - niche page: `/marine/`
+
+### Root causes
+- New-product rollout was treated as a single-page addition, but this project requires **multi-surface registration**.
+- Super Admin list is DB-backed (`/api/admin/products`) while `/protection/` and `/marine/` are static listing pages, so they must be updated separately.
+- Route behavior also depends on canonical slug allow-list in `functions/product/[[path]].ts`.
+
+### What was completed
+- Added `marine-mattress-protector` product/content/template path and static product artifact.
+- Added migration `031_marine_mattress_protector.sql` to seed:
+  - `margin_rate_protector_marine`
+  - product row (`marine-mattress-protector`)
+  - shipping tier mapping (`shipping_product_tiers` tier `1`)
+- Added canonical slug entry in `functions/product/[[path]].ts`.
+- Added listing cards for `marine-mattress-protector` to:
+  - `public/marine/index.html`
+  - `public/protection/index.html`
+- Updated fallback/seed image path for Marine Mattress Protector to an existing product image:
+  - `/images/products/mattress-protector-standard/main.jpg`
+  - applied in data/migration/build output and listing cards (replacing temporary logo fallback).
+- Normalized mojibake-prone listing separators:
+  - replaced `Â·` with `&middot;` on `/marine/` and `/protection/`.
+  - replaced one corrupted dash sequence with `&mdash;` on `/protection/`.
+
+### Verification status (systematic reconciliation)
+- **Local/source verified:** ✅
+  - `public/product/marine-mattress-protector/index.html` exists.
+  - `functions/product/[[path]].ts` contains `marine-mattress-protector` in canonical slugs.
+  - `/marine/` source contains `/product/marine-mattress-protector/`.
+  - `/protection/` source contains `/product/marine-mattress-protector/`.
+- **DB verified:** ✅
+  - D1 remote query (2026-06-17): `products` count = **28**, `marine-mattress-protector` exists (`marine_cnt = 1`, `is_active = 1`).
+- **Deployed listing parity (live):** ✅
+  - `https://www.mildmate.com/marine/` shows `marine-mattress-protector` card with current R2 feature image URL.
+  - `https://www.mildmate.com/protection/` shows `marine-mattress-protector` card with current R2 feature image URL.
+  - Listing copy separators render with `&middot;` (no `Â·` mojibake artifact on these pages).
+- **Live route behavior:** ⏳
+  - `https://www.mildmate.com/product/marine-mattress-protector/` still returned `301` to `/product/marine-fitted-sheet/` at last check (functions deployment alignment pending).
+
+### Next-time rollout checklist (for any new product)
+1. Add product data/content/template path and generate `/public/product/{slug}/index.html`.
+2. Seed DB row (migration) so product appears in Super Admin DB-backed list.
+3. Add slug to canonical routing allow-list in `functions/product/[[path]].ts`.
+4. Add product card to required listing pages:
+   - product-type page(s) (e.g., `/protection/`, `/sheets/`)
+   - niche page(s) (e.g., `/marine/`, `/family/`, `/pets/`)
+5. Ensure fallback image path exists in `public/images` (or use a verified existing product image path).
+6. Validate locally:
+   - `npm run lint`
+   - grep/inspect listing sources for `/product/{slug}/`
+7. Deploy and smoke test:
+   - `/product/{slug}/`
+   - each expected product-type and niche listing page
+   - Super Admin product list visibility
+   - no mojibake text artifacts (e.g., `Â·`) on listing pages
+
+## 11) Favicon head consistency (`/` vs listing/category pages)
+
+### Symptoms
+- Browser tab icon appeared on `/` but not consistently on routes like `/accessories/`.
+- Source inspection showed missing explicit favicon tags in route HTML heads.
+
+### Root cause
+- Pages did not consistently include explicit `<link rel="icon">` and `<link rel="apple-touch-icon">` tags.
+
+### Fix applied (code)
+- Added sitewide head injection in `functions/_middleware.ts`:
+  - `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">`
+  - `<link rel="apple-touch-icon" href="/images/logo.png">`
+- Injection runs only when missing to avoid duplicates.
+
+### Verification (reconciled)
+- **Built/compiled:** ✅
+  - `npm run lint` passed.
+  - `npx wrangler pages functions build --outdir public` passed.
+  - Compiled bundle contains `SHARED_FAVICON_LINKS` injection logic.
+- **Preview/live confirmation at check time:** ⏳ pending latest deploy propagation
+  - Checked `https://26786b50.mildmate-new.pages.dev/` and `/accessories/`: explicit favicon link tags were still absent in returned HTML.
+  - Conclusion: checked preview did not yet include the latest favicon middleware patch at that time.
+
+## 12) Super Admin product image upload failed (`/api/admin/upload` 403 + HTML challenge)
+
+### Symptoms
+- In `https://www.mildmate.com/super-admin/`, saving product edits with image upload failed with:
+  - `Upload slot 1 error: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+- Network request:
+  - `POST https://www.mildmate.com/api/admin/upload`
+  - `403 Forbidden`
+  - response body was HTML (Cloudflare challenge page), not JSON.
+
+### Root cause
+- Production WAF/Bot challenge was intercepting `/api/admin/upload` requests before they reached Worker code.
+- Super Admin frontend expects JSON from `/api/admin/upload`; HTML challenge caused JSON parse failure.
+
+### Fix applied
+- Added Cloudflare WAF custom skip/bypass rule for production admin upload endpoint so authenticated admin upload calls are not challenged.
+- Scope used: host `www.mildmate.com`, path `/api/admin/upload*`, methods `POST`/`DELETE`, with `x-admin-secret` header present.
+
+### Verification
+- Post-fix probe:
+  - `curl.exe -i -X POST "https://www.mildmate.com/api/admin/upload" -H "X-Admin-Secret: test"`
+- Result:
+  - returns Worker JSON `401 Unauthorized` (expected with wrong secret),
+  - no Cloudflare HTML challenge page,
+  - confirms request now reaches application layer.
+
+### Runbook note (next time)
+- If Admin upload shows `Unexpected token '<'` and network response is HTML on `/api/admin/upload`, check for `Cf-Mitigated: challenge` header.
+- If present, treat as edge/WAF issue first, not app JSON parsing bug.
+
+### Follow-up issue after WAF fix: `401 Unauthorized` on upload
+
+#### Symptoms
+- After challenge bypass was added, upload no longer returned HTML challenge.
+- Super Admin still showed:
+  - `Upload slot 1 failed: Unauthorized`
+- Network response became Worker JSON:
+  - `POST /api/admin/upload` → `401 {"error":"Unauthorized"}`
+
+#### Root cause
+- Request reached Worker correctly, but auth was missing/misaligned for upload/save flow.
+- Super Admin product upload/save paths were still effectively depending on `X-Admin-Secret` state in some runtime paths, while production admin flow is Clerk-based.
+
+#### Fix applied
+- Updated Worker auth handling to accept Clerk admin bearer auth (same admin role/email strategy used by other admin APIs):
+  - `workers/api/admin-upload.ts`
+  - `workers/api/admin-products.ts`
+- Updated Super Admin frontend to use unified auth headers for product/upload operations:
+  - `public/super-admin/index.html`
+  - upload POST/DELETE, products GET, and product save now use `getAdminAuthHeaders(...)`.
+
+#### Verification (post-fix expectations)
+- `curl` with fake secret still returns JSON `401 Unauthorized` (expected negative test).
+- Successful browser upload requires valid admin session/token (or valid admin secret fallback).
+- If still failing in browser after deploy, do hard refresh + re-login and inspect request headers for:
+  - `Authorization: Bearer ...` (preferred), or
+  - valid `X-Admin-Secret`.

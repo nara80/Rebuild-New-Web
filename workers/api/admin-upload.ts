@@ -1,19 +1,91 @@
 // MildMate Admin API — Image upload to R2
 // POST /api/admin/upload — multipart form, compresses to WebP, stores in R2
+import { verifyClerkJwt } from "./clerk-verify";
 
-function authCheck(request: Request, env: any): boolean {
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+function collectRoles(raw: any): string[] {
+  if (!raw || typeof raw !== "object") return [];
+  const values: any[] = [];
+  values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
+  if (raw.public_metadata && typeof raw.public_metadata === "object") {
+    values.push(
+      raw.public_metadata.role,
+      raw.public_metadata.roles,
+      raw.public_metadata.org_role,
+      raw.public_metadata.org_roles,
+      raw.public_metadata.permission,
+      raw.public_metadata.permissions
+    );
+  }
+  if (raw.metadata && typeof raw.metadata === "object") {
+    values.push(raw.metadata.role, raw.metadata.roles, raw.metadata.permission, raw.metadata.permissions);
+  }
+  const out: string[] = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+
+function hasAdminRole(rawClaims: any): boolean {
+  const roles = collectRoles(rawClaims);
+  return roles.some((r) =>
+    r === "admin" ||
+    r === "super-admin" ||
+    r === "super_admin" ||
+    r === "superadmin" ||
+    r.endsWith(":admin") ||
+    r.endsWith("/admin")
+  );
+}
+
+function emailAllowed(email: string, env: any): boolean {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s: string) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+
+async function authCheck(request: Request, env: any): Promise<boolean> {
   const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
   if (!isProdHost) return true;
-  if (!provided) return false;
-  if (!configured) return false;
+
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) return true;
+
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e: any) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed(email, env) || hasAdminRole(metadata)) return true;
+          }
+        } catch {}
+      }
+    }
+  }
+
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!provided || !configured) return false;
   return provided === configured;
 }
 
 export async function handleAdminUpload(request: Request, env: any): Promise<Response> {
-  if (!authCheck(request, env)) {
+  if (!(await authCheck(request, env))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

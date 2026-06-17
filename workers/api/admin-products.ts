@@ -1,8 +1,9 @@
-// MildMate Admin API — Product editing
-// GET  /api/admin/products          — list all products
-// POST /api/admin/products          — create new product
-// GET  /api/admin/products/:slug    — get single product
-// PUT  /api/admin/products/:slug    — update product fields
+﻿// MildMate Admin API â€” Product editing
+// GET  /api/admin/products          â€” list all products
+// POST /api/admin/products          â€” create new product
+// GET  /api/admin/products/:slug    â€” get single product
+// PUT  /api/admin/products/:slug    â€” update product fields
+import { verifyClerkJwt } from "./clerk-verify";
 
 const R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 
@@ -66,10 +67,82 @@ function isProductionHost(hostname: string): boolean {
 }
 const ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
 
-function authCheck(request: Request, env: any): boolean {
+function collectRoles(raw: any): string[] {
+  if (!raw || typeof raw !== "object") return [];
+  const values: any[] = [];
+  values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
+  if (raw.public_metadata && typeof raw.public_metadata === "object") {
+    values.push(
+      raw.public_metadata.role,
+      raw.public_metadata.roles,
+      raw.public_metadata.org_role,
+      raw.public_metadata.org_roles,
+      raw.public_metadata.permission,
+      raw.public_metadata.permissions
+    );
+  }
+  if (raw.metadata && typeof raw.metadata === "object") {
+    values.push(raw.metadata.role, raw.metadata.roles, raw.metadata.permission, raw.metadata.permissions);
+  }
+  const out: string[] = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+
+function hasAdminRole(rawClaims: any): boolean {
+  const roles = collectRoles(rawClaims);
+  return roles.some((r) =>
+    r === "admin" ||
+    r === "super-admin" ||
+    r === "super_admin" ||
+    r === "superadmin" ||
+    r.endsWith(":admin") ||
+    r.endsWith("/admin")
+  );
+}
+
+function emailAllowed(email: string, env: any): boolean {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s: string) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+
+async function authCheck(request: Request, env: any): Promise<boolean> {
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost(hostname);
   if (!prodHost) return true;
+
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) return true;
+
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find((e: any) => e.id === user.primary_email_address_id)?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed(email, env) || hasAdminRole(metadata)) return true;
+          }
+        } catch {}
+      }
+    }
+  }
+
   const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return false;
@@ -78,7 +151,7 @@ function authCheck(request: Request, env: any): boolean {
 }
 
 export async function handleAdminProducts(request: Request, env: any): Promise<Response> {
-  if (!authCheck(request, env)) {
+  if (!(await authCheck(request, env))) {
     return new Response(ADMIN_SECRET_ERROR, {
       status: 401,
       headers: { "Content-Type": "application/json" },
@@ -89,7 +162,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
   const path = url.pathname.replace(/\/$/, ""); // strip trailing slash
   const method = request.method;
 
-  // GET /api/admin/products — list all
+  // GET /api/admin/products â€” list all
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB as D1Database;
     const result = await db.prepare(
@@ -104,7 +177,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
     });
   }
 
-  // POST /api/admin/products — create new product
+  // POST /api/admin/products â€” create new product
   if (method === "POST" && path === "/api/admin/products") {
     const db = env.DB as D1Database;
     try {
@@ -121,6 +194,8 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       // Parse product_type + niches from category CSV
       const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
 
+      const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
+
       await db.prepare(
         `INSERT INTO products (slug, title_en, title_th, description_en, description_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
@@ -134,7 +209,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
         body.product_type || product_type,
         body.niches || niches,
         body.fabric_options || null,
-        body.image_url || null,
+        body.image_url || placeholderImage,
         body.youtube_url || body.video || null,
         body.images || "[]",
         body.tags || null
@@ -166,7 +241,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
     });
   }
 
-  // PUT /api/admin/products/:slug — update product
+  // PUT /api/admin/products/:slug â€” update product
   if (slugMatch && method === "PUT") {
     const slug = slugMatch[1];
     const db = env.DB as D1Database;
