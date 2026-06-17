@@ -77,6 +77,8 @@
     '/deep-pocket/', '/deep-pocket',
     '/family/', '/family',
     '/marine/', '/marine',
+    '/boarding-dorm/', '/boarding-dorm',
+    '/rv-truck/', '/rv-truck',
     '/accessories/', '/accessories',
     '/protection/', '/protection',
     '/duvet-covers/', '/duvet-covers',
@@ -147,7 +149,11 @@
       '/how-to-measure-mattress-size': '/th/how-to-measure-mattress-size/',
       '/how-to-measure-mattress-size/': '/th/how-to-measure-mattress-size/',
       '/custom-measurement': '/th/custom-measurement/',
-      '/custom-measurement/': '/th/custom-measurement/'
+      '/custom-measurement/': '/th/custom-measurement/',
+      '/boarding-dorm': '/th/boarding-dorm/',
+      '/boarding-dorm/': '/th/boarding-dorm/',
+      '/rv-truck': '/th/rv-truck/',
+      '/rv-truck/': '/th/rv-truck/'
     };
 
     document.querySelectorAll('a[href]').forEach(function (link) {

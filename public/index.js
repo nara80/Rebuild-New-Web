@@ -9180,7 +9180,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-upfyBo/functionsRoutes-0.77925969298171.mjs
+// ../.wrangler/tmp/pages-DbGTtA/functionsRoutes-0.2858765995897554.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

@@ -625,6 +625,8 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/href="\/protection\/?"/g, 'href="/th/protection/"')
       .replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"')
       .replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"')
+      .replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"')
+      .replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"')
       // Homepage logo — land on TH homepage
       .replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }

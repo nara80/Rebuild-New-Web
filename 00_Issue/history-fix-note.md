@@ -169,3 +169,27 @@
 - Redirect loop is resolved.
 - Homepage no longer keeps `__clerk_db_jwt` / `__clerk_handshake` in URL after successful sign-in completion.
 - Clerk account state remains signed-in after redirect return.
+
+## 6) Blog post SSR 500 (`/blogs/{slug}/`) — stale worker bundle
+
+### Symptoms
+- Opening `https://www.mildmate.com/blogs/dirty-truth-luxury-pillow-midnight-drool/` returned:
+  - `Server error`
+  - HTTP `500` in browser console/network.
+
+### Root cause
+- Source code in `functions/blog-shared.ts` had already been fixed, but deployed worker artifact was stale.
+- `public/_worker.js` still contained old blog rendering flow from a previous bundle, so production executed outdated code.
+
+### Fix applied
+- Rebuilt Pages Functions bundle:
+  - `npx wrangler pages functions build --outdir public`
+- Synced build artifact to deploy worker entry:
+  - `Copy-Item public/index.js public/_worker.js -Force`
+- Confirmed new `_worker.js` includes fixed blog return path:
+  - `return html.replace(/<\/head>/i, ... )`
+
+### Verification
+- Live check before fix showed HTTP `500` on affected blog slug.
+- Local artifact verification confirmed fixed bundle content is now present in `public/_worker.js`.
+- Lint check passed after update workflow (`npm run lint`).

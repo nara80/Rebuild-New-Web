@@ -26,9 +26,9 @@ function toPublicR2Url(url) {
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url, "toPublicR2Url");
-function normalizeR2InHtml(html2) {
-  if (!html2) return html2;
-  return html2.replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`).replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
+function normalizeR2InHtml(html) {
+  if (!html) return html;
+  return html.replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`).replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
 }
 __name(normalizeR2InHtml, "normalizeR2InHtml");
 async function buildBlogListingHTML(env, page = 1, lang = "en") {
@@ -114,8 +114,8 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       }
       paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + (prevPage > 1 ? "?page=" + prevPage : "")) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + nextPage) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
     }
-    const html2 = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
-    return new Response(html2, {
+    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
+    return new Response(html, {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" }
     });
   } catch (e) {
@@ -204,10 +204,8 @@ async function buildBlogPostHTML(post, env, lang = "en") {
   "url": "${canonicalUrl}"
 }
 <\/script>`;
-  const htmlWithLd = html.replace(/<\/head>/i, `${articleJsonLd}
-</head>`);
   const relatedSectionHtml = relatedProductsHtml ? '<section class="related-products-section"><div class="container"><h2>' + (isThai ? "\u0E04\u0E38\u0E13\u0E2D\u0E32\u0E08\u0E08\u0E30\u0E0A\u0E2D\u0E1A" : "You Might Also Like") + '</h2><div class="related-grid">' + relatedProductsHtml + "</div></div></section>" : "";
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="${isThai ? "th" : "en"}">
 <head>
   <meta charset="UTF-8">
@@ -345,7 +343,8 @@ async function buildBlogPostHTML(post, env, lang = "en") {
   <script src="/js/cart.js"><\/script>
 </body>
 </html>`;
-  return htmlWithLd;
+  return html.replace(/<\/head>/i, `${articleJsonLd}
+</head>`);
 }
 __name(buildBlogPostHTML, "buildBlogPostHTML");
 
@@ -374,8 +373,8 @@ async function onRequest(context) {
         headers: { "Content-Type": "text/html; charset=utf-8" }
       });
     }
-    const html2 = await buildBlogPostHTML(post, env, "th");
-    return new Response(html2, {
+    const html = await buildBlogPostHTML(post, env, "th");
+    return new Response(html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
@@ -5703,9 +5702,9 @@ function toR2Url4(url) {
   return url;
 }
 __name(toR2Url4, "toR2Url");
-function sanitizeReviewText(html2) {
-  if (!html2) return "";
-  return html2.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/\s+on\w+="[^"]*"/gi, "").replace(/\s+on\w+='[^']*'/gi, "").trim();
+function sanitizeReviewText(html) {
+  if (!html) return "";
+  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/\s+on\w+="[^"]*"/gi, "").replace(/\s+on\w+='[^']*'/gi, "").trim();
 }
 __name(sanitizeReviewText, "sanitizeReviewText");
 function normalizeReviewDate(raw) {
@@ -6118,7 +6117,7 @@ async function handleAdminReviews(request, env) {
 __name(handleAdminReviews, "handleAdminReviews");
 
 // ../workers/api/admin-recovery-test.ts
-async function sendRecoveryEmail(env, to, subject, html2) {
+async function sendRecoveryEmail(env, to, subject, html) {
   try {
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -6130,7 +6129,7 @@ async function sendRecoveryEmail(env, to, subject, html2) {
         from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
         to: [to],
         subject,
-        html: html2
+        html
       })
     });
     return resp.ok;
@@ -6199,8 +6198,8 @@ async function handleAdminRecoveryTest(request, env) {
         rows += `<tr><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0"><div style="font-weight:700;color:#0F172A;font-size:15px">${escHtml2(item.product_name || "Custom Order")}</div>${specs ? `<div style="font-size:13px;color:#64748b;margin-top:2px">${escHtml2(specs)}</div>` : ""}</td><td style="padding:12px 16px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:700;font-size:15px">${formatPrice(item.price_thb, item.price_usd)}</td></tr>`;
       });
       const subject = "You left something behind \u2014 your MildMate cart";
-      const html2 = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">You left something behind</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Your MildMate cart is waiting for you</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Hi there, we noticed you added custom bedding to your cart but didn&rsquo;t complete your order.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s)</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="https://mildmate-new.pages.dev/checkout/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Return to Your Cart</a></td></tr></table></td></tr></table></body></html>`;
-      const ok = await sendRecoveryEmail(env, cart.email, subject, html2);
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:linear-gradient(135deg,#2c96f4,#1a7fd4);padding:32px 24px;text-align:center"><h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px">You left something behind</h1><p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0">Your MildMate cart is waiting for you</p></td></tr><tr><td style="padding:24px"><p style="color:#1E293B;font-size:15px;line-height:1.6;margin:0 0 24px">Hi there, we noticed you added custom bedding to your cart but didn&rsquo;t complete your order.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px"><tr><td colspan="2" style="padding:14px 16px;border-bottom:1px solid #e2e8f0;font-weight:700;font-size:13px">${items.length} item(s)</td></tr>${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="https://mildmate-new.pages.dev/checkout/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Return to Your Cart</a></td></tr></table></td></tr></table></body></html>`;
+      const ok = await sendRecoveryEmail(env, cart.email, subject, html);
       if (ok) {
         await db.prepare("UPDATE abandoned_carts SET recovery_sent_at = datetime('now') WHERE id = ?").bind(cart.id).run();
         sent++;
@@ -7920,8 +7919,8 @@ async function onRequest3(context) {
         headers: { "Content-Type": "text/html; charset=utf-8" }
       });
     }
-    const html2 = await buildBlogPostHTML(post, env, "en");
-    return new Response(html2, {
+    const html = await buildBlogPostHTML(post, env, "en");
+    return new Response(html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
@@ -8024,7 +8023,7 @@ async function onRequest4(context) {
     const staticUrl = `${url.origin}/product/${slug}/index.html`;
     const staticRes = await fetch(staticUrl);
     if (!staticRes.ok) return context.next();
-    let html2 = await staticRes.text();
+    let html = await staticRes.text();
     const stmt = context.env.DB.prepare(
       "SELECT image_url, images FROM products WHERE slug = ?"
     ).bind(slug);
@@ -8035,20 +8034,20 @@ async function onRequest4(context) {
       const THUMB_COUNT = 6;
       const thumbs = images.slice(0, THUMB_COUNT);
       if (mainImage) {
-        html2 = html2.replace(
+        html = html.replace(
           /<meta name="product-image" content="[^"]*"/,
           `<meta name="product-image" content="${mainImage}"`
         );
       }
       if (mainImage) {
-        html2 = html2.replace(
+        html = html.replace(
           /<img([^>]*)id="gallery-main-img"([^>]*)>/,
           `<img${1}id="gallery-main-img"${2} src="${mainImage}">`
         );
       }
       if (thumbs.length > 0) {
         const imagesJson = JSON.stringify(thumbs.filter(Boolean));
-        html2 = html2.replace(
+        html = html.replace(
           /<meta name="product-images" content="[^"]*"/,
           `<meta name="product-images" content='${imagesJson}'>`
         );
@@ -8079,11 +8078,11 @@ async function onRequest4(context) {
   }
 }
 <\/script>`;
-    if (!html2.includes('id="json-ld-product"')) {
-      html2 = html2.replace(/<\/head>/i, `${productJsonLd}
+    if (!html.includes('id="json-ld-product"')) {
+      html = html.replace(/<\/head>/i, `${productJsonLd}
 </head>`);
     }
-    return new Response(html2, {
+    return new Response(html, {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
@@ -8172,7 +8171,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     price_usd: priceUsd
   } : null;
   const cartItemJson = JSON.stringify(cartItem || null).replace(/</g, "\\u003c");
-  const html2 = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8407,7 +8406,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   <\/script>
 </body>
 </html>`;
-  return new Response(html2, {
+  return new Response(html, {
     headers: {
       "Content-Type": "text/html;charset=utf-8",
       "Cache-Control": "no-cache"
@@ -9024,9 +9023,9 @@ __name(ensureCache, "ensureCache");
 async function getChrome(db, key) {
   const fallback = key === "header" ? FALLBACK_HEADER : FALLBACK_FOOTER;
   await ensureCache(db);
-  const html2 = _cache[key] || fallback;
-  if (key !== "header") return html2;
-  return html2.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
+  const html = _cache[key] || fallback;
+  if (key !== "header") return html;
+  return html.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
 }
 __name(getChrome, "getChrome");
 var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
@@ -9119,31 +9118,31 @@ async function onRequest9(context) {
   const response = await context.next();
   const contentType = response.headers.get("Content-Type") || "";
   if (!contentType.includes("text/html")) return response;
-  let html2 = await response.text();
+  let html = await response.text();
   const header = await getChrome(context.env.DB, "header");
   const footer = await getChrome(context.env.DB, "footer");
-  if (html2.includes("<!-- __HEADER__ -->")) {
-    html2 = html2.replace("<!-- __HEADER__ -->", header);
+  if (html.includes("<!-- __HEADER__ -->")) {
+    html = html.replace("<!-- __HEADER__ -->", header);
   }
-  if (html2.includes("<!-- __FOOTER__ -->")) {
-    html2 = html2.replace("<!-- __FOOTER__ -->", footer);
+  if (html.includes("<!-- __FOOTER__ -->")) {
+    html = html.replace("<!-- __FOOTER__ -->", footer);
   }
-  const hasStandardHeader = html2.includes('<header class="site-header"');
-  const hasAnyHeader = /<header\b/i.test(html2);
+  const hasStandardHeader = html.includes('<header class="site-header"');
+  const hasAnyHeader = /<header\b/i.test(html);
   if (!hasStandardHeader && !hasAnyHeader) {
-    html2 = html2.replace(/<body([^>]*)>/i, `<body$1>
+    html = html.replace(/<body([^>]*)>/i, `<body$1>
 ${header}`);
   }
-  const hasStandardFooter = html2.includes('<footer class="site-footer"');
-  const hasAnyFooter = /<footer\b/i.test(html2);
+  const hasStandardFooter = html.includes('<footer class="site-footer"');
+  const hasAnyFooter = /<footer\b/i.test(html);
   if (!hasStandardFooter && !hasAnyFooter) {
-    html2 = html2.replace(/<\/body>/i, `${footer}
+    html = html.replace(/<\/body>/i, `${footer}
 </body>`);
   }
-  const isThPage = html2.includes('<html lang="th"');
+  const isThPage = html.includes('<html lang="th"');
   const enPath = isThPage ? path.replace(/^\/th/, "") || "/" : path;
   const thPath = isThPage ? path : "/th" + (path === "/" ? "/" : path);
-  html2 = html2.replace(
+  html = html.replace(
     /<div class="lang-toggle"[\s\S]*?<\/div>/,
     `<div class="lang-toggle" role="group" aria-label="Language switch">
       <span data-lang="en" ${isThPage ? `style="color:var(--color-muted);cursor:pointer" onclick="window.location.href='${enPath}'"` : `class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px"`}>EN</span>
@@ -9151,7 +9150,7 @@ ${header}`);
       <span data-lang="th" ${isThPage ? `class="active" style="color:var(--color-primary);border-bottom:2px solid var(--color-primary);padding-bottom:1px"` : `style="color:var(--color-muted);cursor:pointer" onclick="window.location.href='${thPath}'"`}>TH</span>
     </div>`
   );
-  html2 = html2.replace(
+  html = html.replace(
     /<div class="mobile-drawer-lang"[\s\S]*?<\/div>/,
     `<div class="mobile-drawer-lang" style="margin-top:24px;padding-top:16px;border-top:1px solid var(--color-border);display:flex;align-items:center;gap:8px">
       <span style="font-size:0.8125rem;font-weight:600;color:var(--color-muted)">${isThPage ? "\u0E20\u0E32\u0E29\u0E32:" : "Language:"}</span>
@@ -9161,27 +9160,27 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html2 = html2.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
-  if (!html2.includes('id="shared-footer-mobile-style"')) {
-    html2 = html2.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
+  if (!html.includes('id="shared-footer-mobile-style"')) {
+    html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
 </head>`);
   }
-  if (!html2.includes('id="json-ld-org"')) {
-    html2 = html2.replace(/<\/head>/i, `${JSON_LD_ORG}
+  if (!html.includes('id="json-ld-org"')) {
+    html = html.replace(/<\/head>/i, `${JSON_LD_ORG}
 ${JSON_LD_WEBSITE}
 </head>`);
   }
   const isFaq = path === "/faq/" || path === "/faq";
-  if (isFaq && !html2.includes('id="json-ld-faq"')) {
-    html2 = html2.replace(/<\/head>/i, `${JSON_LD_FAQ}
+  if (isFaq && !html.includes('id="json-ld-faq"')) {
+    html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html2, { status: response.status, headers: response.headers });
+  return new Response(html, { status: response.status, headers: response.headers });
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-Dp42mB/functionsRoutes-0.3278063972430155.mjs
+// ../.wrangler/tmp/pages-DbGTtA/functionsRoutes-0.2858765995897554.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
