@@ -327,7 +327,7 @@ USD prices displayed as whole dollars (no decimals).
 
 **Fitted sheet formula:** W_fabric=W+2D+14, L_fabric=L+2D+14; tiered sewing (120–500 THB); accessories = fabric×0.10. Fabric cost: (area×rate/23,744)×1.20.
 
-**V-Berth fitted sheet formula:** width=max(HW,FW)+2D+14, length=L+2D+14; fabric/accessories/packing/delivery same as fitted sheet; CloudSoft fabric only; VERTH_MARKUP=8.15 (1+0.15+0.20+6.80). Shape selector shows discounted fixed prices (A-H), custom dimensions use live formula. 4-field layout: HW, FW, Centerline L (tooltip), D. Mobile responsive 4→2→1.
+**V-Berth fitted sheet formula:** width=max(HW,FW)+2D+14, length=L+2D+14; fabric/accessories/packing/delivery same as fitted sheet; CloudSoft fabric only; VERTH_MARKUP=8.15 (1+0.15+0.20+6.80). Marine shape selector now supports 14 shapes (01–14) with per-shape geometry inputs and formula-based pricing. Mobile responsive 4→2→1.
 
 **Flat sheet formula:** W_fabric=W+2D+50, L_fabric=L+2D+50; flat sewing 250 THB (no elastic, no accessories). Fabric cost same as fitted.
 
@@ -352,10 +352,10 @@ USD prices displayed as whole dollars (no decimals).
 ### Marine Fitted Sheet — V-Berth Configurator (Live)
 
 Marine Fitted Sheet uses a **V-Berth-specific configurator** with hybrid pricing:
-- **Choose Your Berth Shape** dropdown (8 shapes A-H + custom quote I) with discounted fixed prices
-- **4-field custom dimension layout**: Head Width (HW), Foot Width (FW), Centerline Length (L) with tooltip, Mattress Depth (D)
+- **Choose Your Boat Mattress Shape** dropdown with **14 shapes (01–14)** and dedicated measurement diagrams/fields
+- **V-Berth formula family** (`calcVBerthFitted()` core pricing model): CloudSoft fabric, same sewing tiers as fitted sheet, **680% margin** (VERTH_MARKUP = 8.15)
 - **V-Berth formula** (`calcVBerthFitted()`): `width = max(HW,FW) + 2D + 14`, `length = L + 2D + 14`, CloudSoft fabric, same sewing tiers as fitted sheet, **680% margin** (VERTH_MARKUP = 8.15)
-- "Select Mattress Size" dropdown hidden — replaced by shape selector
+- Shape handling is geometry-driven per selected shape and dimensions (not limited to legacy A–H fixed-price list)
 - Shape prices discounted 30% from original: A=$94, B=$111, C=$125, D=$125, E=$138, F=$110, G=$108, H=$132
 - Responsive: desktop 4-col, tablet 2×2, mobile 1-col stack
 

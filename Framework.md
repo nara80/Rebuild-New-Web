@@ -1214,7 +1214,7 @@ To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`
 
 **All 27 products now have live pricing formulas or don't require configurators.**
 
-**V-Berth formula (Marine Fitted Sheet):** `calcVBerthFitted()` — width = max(HW,FW)+2D+14, length = L+2D+14. CloudSoft fabric. Same sewing tiers as fitted sheet. Shape selector (8 shapes A-H with discounted prices). VERTH_MARKUP = 8.15 (680% margin). 4-field custom layout: HW, FW, Centerline L (tooltip), D. "Select Mattress Size" hidden — replaced by shape selector.
+**V-Berth formula (Marine Fitted Sheet):** `calcVBerthFitted()` — width = max(HW,FW)+2D+14, length = L+2D+14. CloudSoft fabric. Same sewing tiers as fitted sheet. Shape selector supports **14 shapes (01–14)** with per-shape measurement fields/diagrams and geometry-driven pricing. VERTH_MARKUP = 8.15 (680% margin). "Select Mattress Size" hidden — replaced by shape selector.
 
 **Implementation files:**
 - `workers/api/pricing.ts` — server-side formulas
