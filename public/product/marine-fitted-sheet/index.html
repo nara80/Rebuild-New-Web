@@ -1045,6 +1045,8 @@
       var MKT_RATE = 0.20;               // marketing
       var MARINE_MARGIN_RATE = 6.80;     // marine-specific margin (680%)
       var MARINE_PROTECTOR_MARGIN_RATE = 0.15; // marine protector margin (15% default)
+      var MARINE_PROTECTOR_WASTE = 1.50; // marine protector waste factor (50% default)
+      var MARINE_SEWING_COST = 500;      // marine protector sewing cost (THB)
       var THB_PER_USD = 30;              // approximate
       var SEWING_TIERS = [               // tiered by fabric area (cm²)
         {max:24000,cost:120},{max:33600,cost:180},{max:38400,cost:240},
@@ -1112,9 +1114,11 @@
       }
       function calcMarineProtectorBreakdown(topAreaSqCm, depthCm){
         var areaSqInch = topAreaSqCm / SQCM_PER_SQINCH;
-        var fabricCost = getProtectorFabricCost(areaSqInch);
-        var depthCost = getProtectorDepthCost(depthCm);
-        var subtotal = fabricCost + depthCost + PROTECTOR_PACKING + PROTECTOR_DELIVERY;
+        var baseFabricCost = getProtectorFabricCost(areaSqInch);
+        var baseDepthCost = getProtectorDepthCost(depthCm);
+        var fabricCost = baseFabricCost * MARINE_PROTECTOR_WASTE;
+        var depthCost = baseDepthCost * MARINE_PROTECTOR_WASTE;
+        var subtotal = fabricCost + depthCost + MARINE_SEWING_COST + PROTECTOR_PACKING + PROTECTOR_DELIVERY;
         var operating = subtotal * OP_RATE;
         var marketing = subtotal * MKT_RATE;
         var margin = subtotal * MARINE_PROTECTOR_MARGIN_RATE;
@@ -1122,8 +1126,12 @@
         return {
           areaSqCm: topAreaSqCm,
           areaSqInch: areaSqInch,
+          baseFabricCost: baseFabricCost,
+          baseDepthCost: baseDepthCost,
+          wasteFactor: MARINE_PROTECTOR_WASTE,
           fabricCost: fabricCost,
           depthCost: depthCost,
+          marineSewing: MARINE_SEWING_COST,
           packing: PROTECTOR_PACKING,
           delivery: PROTECTOR_DELIVERY,
           subtotal: subtotal,
@@ -1147,8 +1155,9 @@
           priceBreakdown.innerHTML =
             '<details><summary>Cost breakdown (THB)</summary><ul>' +
             '<li>Top Area: ' + Math.round(bd.areaSqCm).toLocaleString() + ' cm² (' + Math.round(bd.areaSqInch).toLocaleString() + ' in²)</li>' +
-            '<li>Fabric Tier Cost: ' + formatTHB(bd.fabricCost) + '</li>' +
-            '<li>Depth Surcharge: ' + formatTHB(bd.depthCost) + '</li>' +
+            '<li>Fabric Tier Cost: ' + formatTHB(bd.baseFabricCost) + ' × ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.fabricCost) + '</li>' +
+            '<li>Depth Surcharge: ' + formatTHB(bd.baseDepthCost) + ' × ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.depthCost) + '</li>' +
+            '<li>Marine Sewing Cost: ' + formatTHB(bd.marineSewing) + '</li>' +
             '<li>Packing: ' + formatTHB(bd.packing) + '</li>' +
             '<li>Delivery: ' + formatTHB(bd.delivery) + '</li>' +
             '<li>Subtotal: ' + formatTHB(bd.subtotal) + '</li>' +
@@ -1192,6 +1201,8 @@
         if(typeof fixed.mkt_rate === 'number' && fixed.mkt_rate >= 0) MKT_RATE = fixed.mkt_rate / 100;
         if(typeof margins.marine === 'number' && margins.marine >= 0) MARINE_MARGIN_RATE = margins.marine / 100;
         if(typeof margins.protector_marine === 'number' && margins.protector_marine >= 0) MARINE_PROTECTOR_MARGIN_RATE = margins.protector_marine / 100;
+        if(typeof fixed.waste_factor_marine_mattress === 'number' && fixed.waste_factor_marine_mattress >= 0) MARINE_PROTECTOR_WASTE = 1 + (fixed.waste_factor_marine_mattress / 100);
+        if(typeof fixed.marine_sewing_cost === 'number' && fixed.marine_sewing_cost >= 0) MARINE_SEWING_COST = fixed.marine_sewing_cost;
         if(typeof fixed.protector_packing === 'number' && fixed.protector_packing >= 0) PROTECTOR_PACKING = fixed.protector_packing;
         if(typeof fixed.protector_delivery === 'number' && fixed.protector_delivery >= 0) PROTECTOR_DELIVERY = fixed.protector_delivery;
         if(Array.isArray(payload.protector_fabric_tiers) && payload.protector_fabric_tiers.length){
