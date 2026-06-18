@@ -727,3 +727,7 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
   - `public/deep-pocket/index.html` and `public/th/deep-pocket/index.html` updated with cleaned Thai copy.
 - **Live deploy verification:** ✅
   - Verified on live URLs that changes are reflected and false claims are removed.
+
+## 2026-06-18: Marketing Audit - Family & Co-Sleep (/family/)
+- **Compliance (OEKO-TEX):** Removed the generic "OEKO-TEX certified, 100% chemical-free" bullet point from the bottom description (both EN and TH) and replaced it with a durability/washing benefit, maintaining consistency with previous category updates.
+- **Compliance (Unverified Claims):** Removed "Hypoallergenic" text from the BedBridge Connector product card on the English page and replaced it with "Premium high-density foam" (Thai text was already compliant).
