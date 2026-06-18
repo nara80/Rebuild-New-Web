@@ -663,3 +663,69 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Live deploy verification:** ⏳ pending deploy
   - Production confirmation requires deploying the updated worker bundle, then re-validating affected URLs in Search Console.
 
+## 19) Super Admin Products: "Card Short Benefit (EN)" field appeared empty
+
+### Incident scope (what was observed)
+- On `/super-admin/` → Products editor, the input `Card Short Benefit (EN)` rendered but appeared empty.
+- This conflicted with listing behavior where `/products/` cards were already showing card-benefit text.
+
+### Root cause (reconciled)
+- D1 data was present, but deployed admin payload was stale/mismatched:
+  - `/api/admin/products` on the affected deploy was not returning `card_benefit_en` / `card_benefit_th`.
+- Super Admin form initializes values from `/api/admin/products`; missing keys were normalized to empty string in UI.
+
+### Fixes actually completed
+1. Ensured admin API + UI wiring were included in deploy artifacts:
+   - `workers/api/admin-products.ts` includes `card_benefit_en` / `card_benefit_th` in admin products GET payload.
+   - `public/super-admin/index.html` maps and renders `ed-benefit-en` / `ed-benefit-th`.
+2. Rebuilt and synchronized deployment artifacts:
+   - `npm run lint`
+   - `npx wrangler pages functions build --outdir public`
+   - `Copy-Item public/index.js public/_worker.js -Force`
+3. Deployed updated build:
+   - `npx wrangler pages deploy public --commit-dirty`
+   - Preview: `https://89f784d4.mildmate-new.pages.dev`
+
+### Verification status (systematic reconciliation)
+- **Data-layer verification:** ✅
+  - D1 row check confirmed `standard-fitted-sheet.card_benefit_en` populated.
+- **Pre-fix issue verification:** ✅
+  - Affected deploy showed empty field in Super Admin while `/products/` still showed card copy.
+- **Post-deploy API verification:** ✅
+  - `https://89f784d4.mildmate-new.pages.dev/api/admin/products` now includes:
+    - `card_benefit_en`
+    - `card_benefit_th`
+  - Sample verified:
+    - `standard-fitted-sheet.card_benefit_en = "Made to fit standard mattresses with a smooth, secure finish."`
+- **UI verification:** ✅
+  - User confirmed issue fixed after deploy.
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+
+
+## 20) Category Page Fixes (OEKO-TEX, Tags, Anti-Fur, Thai copy)
+
+### Incident scope (what was observed)
+- **False OEKO-TEX Claims:** Category pages (`/boarding-dorm/`, `/duvet-covers/`, etc.) contained bullet points implying all fabrics were OEKO-TEX certified, when in fact only the PremaCotton fabric holds the certification.
+- **Thai Copy Gaps:** The `/th/deep-pocket/` page contained an accidental un-translated English paragraph.
+- **Feature Over-generalization:** The `/duvet-covers/` feature grid stated "Anti-Fur" as a category-wide feature, whereas only the BreezePlus fabric provides anti-fur protection.
+- **Missing Cross-sells & Tagging:** The `Easy Bed Maker & Mattress Lifter` was missing from the `/deep-pocket/` category grid.
+
+### Root cause (reconciled)
+- Boilerplate marketing copy was duplicated across category pages without tailoring the feature lists to specific product or fabric constraints (e.g. OEKO-TEX, Anti-Fur).
+- Missing translation block during the static page generation or manual copy/paste.
+
+### Fixes actually completed
+1. **OEKO-TEX Compliance Sweep:** Removed blanket OEKO-TEX claims from category pages (e.g., `/boarding-dorm/`, `/duvet-covers/`) and replaced them with alternative value propositions (e.g., "Durable construction designed to withstand frequent machine washing").
+2. **Thai Copy Cleanup:** Removed the stray English paragraph from `public/th/deep-pocket/index.html` and updated hero hooks.
+3. **Feature Specificity Fix:** Updated the `/duvet-covers/` and `/th/duvet-covers/` feature grids to specify "Anti-Fur Options (BreezePlus fabric)" rather than implying all duvet covers repel pet hair.
+4. **Merchandising Cross-Sell:** Injected the Mattress Lifter tool into the `deep-pocket` product grids (EN/TH) and added `deep-pocket` to the product's `data-categories` to ensure it appears in relevant filters.
+5. **Shipping Constraint Added:** Added a highly visible "*Available for Thailand domestic delivery only*" disclaimer to the Duvet Insert product cards on both EN and TH `/duvet-covers/` pages.
+
+### Verification status (systematic reconciliation)
+- **Code/source verified:** ✅
+  - `public/duvet-covers/index.html` and `public/th/duvet-covers/index.html` updated for anti-fur and OEKO-TEX.
+  - `public/deep-pocket/index.html` and `public/th/deep-pocket/index.html` updated with the Mattress Lifter cross-sell and cleaned Thai copy.
+- **Live deploy verification:** ✅
+  - Verified on live URLs that changes are reflected and false claims are removed.
