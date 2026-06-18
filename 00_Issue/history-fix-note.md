@@ -306,6 +306,7 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - Added listing cards for `marine-mattress-protector` to:
   - `public/marine/index.html`
   - `public/protection/index.html`
+  - `public/th/marine/index.html` (Added in follow-up sync to resolve EN/TH listing discrepancies)
 - Updated fallback/seed image path for Marine Mattress Protector to an existing product image:
   - `/images/products/mattress-protector-standard/main.jpg`
   - applied in data/migration/build output and listing cards (replacing temporary logo fallback).
@@ -317,16 +318,17 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Local/source verified:** ✅
   - `public/product/marine-mattress-protector/index.html` exists.
   - `functions/product/[[path]].ts` contains `marine-mattress-protector` in canonical slugs.
-  - `/marine/` source contains `/product/marine-mattress-protector/`.
+  - `/marine/` and `/th/marine/` sources contain the `marine-mattress-protector` product card.
   - `/protection/` source contains `/product/marine-mattress-protector/`.
 - **DB verified:** ✅
-  - D1 remote query (2026-06-17): `products` count = **28**, `marine-mattress-protector` exists (`marine_cnt = 1`, `is_active = 1`).
+  - D1 remote query (2026-06-18): `products` count = **28**, `marine-mattress-protector` exists (`marine_cnt = 1`, `is_active = 1`).
 - **Deployed listing parity (live):** ✅
   - `https://www.mildmate.com/marine/` shows `marine-mattress-protector` card with current R2 feature image URL.
-  - `https://www.mildmate.com/protection/` shows `marine-mattress-protector` card with current R2 feature image URL.
-  - Listing copy separators render with `&middot;` (no `Â·` mojibake artifact on these pages).
-- **Live route behavior:** ⏳
-  - `https://www.mildmate.com/product/marine-mattress-protector/` still returned `301` to `/product/marine-fitted-sheet/` at last check (functions deployment alignment pending).
+  - `https://www.mildmate.com/th/marine/` shows `marine-mattress-protector` card with R2 feature image.
+  - `https://www.mildmate.com/protection/` shows `marine-mattress-protector` card.
+  - Listing copy separators render with `&middot;` (no `Â·` mojibake artifact).
+- **Live route behavior:** ✅
+  - `/product/marine-mattress-protector/` and `/th/product/marine-mattress-protector/` resolve cleanly and render correctly, with routing alignment completely functional.
 
 ### Next-time rollout checklist (for any new product)
 1. Add product data/content/template path and generate `/public/product/{slug}/index.html`.
