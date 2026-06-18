@@ -799,3 +799,11 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 ## 2026-06-18: Marketing Audit - Protection (/protection/)
 - **Compliance (Unverified Claims):** Removed a misleading OEKO-TEX Standard 100 claim that was specifically tied to PremaCotton, as none of the mattress protectors use PremaCotton. Replaced it with a practical "Machine washable for easy cleaning" benefit.
 - **Compliance (Overclaim):** Softened the "Pet-Proof" feature from claiming "BreezePlus fur-resistant options" (and Thai equivalent of "slides off") to "BreezePlus tight-weave options to reduce hair clinging" to align with our established guidelines for the BreezePlus fabric.
+
+## /sheets/ Category
+**Date:** 2026-06-18
+**Action:** Marketing Audit & Compliance Fixes
+**Changes Made:**
+1. **OEKO-TEX Claim:** Corrected the blanket "OEKO-TEX certified, 100% chemical-free" bullet point on the category page to explicitly state that only the PremaCotton fabric option is OEKO-TEX Standard 100 certified.
+2. **Pet Hair Claim:** Softened the "easy to brush off pet hair" claim on the Pet-Friendly product card to "helps reduce pet hair clinging" in both English and Thai.
+3. **Translation Fix:** Fixed an untranslated English string ("To your exact total W x L dimensions") on the Thai category page.
