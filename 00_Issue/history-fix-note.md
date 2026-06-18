@@ -731,3 +731,63 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 ## 2026-06-18: Marketing Audit - Family & Co-Sleep (/family/)
 - **Compliance (OEKO-TEX):** Removed the generic "OEKO-TEX certified, 100% chemical-free" bullet point from the bottom description (both EN and TH) and replaced it with a durability/washing benefit, maintaining consistency with previous category updates.
 - **Compliance (Unverified Claims):** Removed "Hypoallergenic" text from the BedBridge Connector product card on the English page and replaced it with "Premium high-density foam" (Thai text was already compliant).
+
+## 21) Pricing Parms reconciliation: Marine Protector Option A + admin auth alignment
+
+### Incident scope (what was observed)
+- In **Pricing Parms**, `marine_sewing_cost` appeared under **Fixed Costs & Constants** instead of **Other Sewing Costs**.
+- Editing `margin_rate_protector_marine` on production returned:
+  - `POST /api/admin/pricing-params` → `401 Unauthorized`
+  - toast: `Set Admin Secret to save (401)`
+- This created auth inconsistency: user was already Clerk-authenticated as admin (`nara19080@gmail.com`) but pricing save still required `X-Admin-Secret`.
+
+### Root cause (reconciled)
+1. `marine_sewing_cost` was seeded with category `fixed`, so UI grouped it into Fixed Costs.
+2. `workers/api/admin-pricing.ts` used only `X-Admin-Secret` on production and did not accept Clerk admin auth, unlike other admin endpoints.
+
+### Fixes actually completed
+1. **Category/grouping correction**
+   - Updated seed/defaults in:
+     - `public/admin/index.html`
+     - `public/super-admin/index.html`
+   - Changed `marine_sewing_cost` category from `fixed` → `flat_sewing` so it renders in **Other Sewing Costs**.
+   - Updated migration source:
+     - `migrations/033_marine_protector_pricing_params.sql` (`marine_sewing_cost` category now `flat_sewing`).
+2. **Existing DB data reconciliation**
+   - Applied data correction on both remote DB bindings:
+     - `mildmate-db`
+     - `mildmate-db-prod`
+   - SQL used:
+     - `UPDATE pricing_params SET category='flat_sewing' WHERE key='marine_sewing_cost';`
+3. **Admin auth parity for pricing params**
+   - Updated `workers/api/admin-pricing.ts` to accept Clerk admin session (Bearer or Clerk cookie token path) using the same role/email strategy:
+     - admin role metadata check
+     - `ADMIN_EMAILS` allowlist fallback
+     - Clerk user lookup fallback via `CLERK_SECRET_KEY`
+   - Kept `X-Admin-Secret` as fallback path when Clerk auth is not available.
+
+### Verification status (systematic reconciliation)
+- **Code/source verified:** ✅
+  - `public/admin/index.html` + `public/super-admin/index.html` include `marine_sewing_cost` in `flat_sewing`.
+  - `migrations/033_marine_protector_pricing_params.sql` updated to `flat_sewing`.
+  - `workers/api/admin-pricing.ts` now includes Clerk admin auth path plus secret fallback.
+- **DB verified:** ✅
+  - Remote D1 query confirmed:
+    - `key='marine_sewing_cost'`
+    - `category='flat_sewing'`
+    - `value=500`
+- **401 behavior verification:** ✅
+  - Unauthenticated production probe to `/api/admin/pricing-params` still returns `401` (expected security behavior).
+  - This is now expected only when caller has neither valid Clerk admin auth nor valid secret fallback.
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+- **Live deploy verification:** ⏳ pending deploy
+  - Final production UX confirmation requires deploy, then test as logged-in admin with `localStorage.admin_secret` cleared:
+    - edit `margin_rate_protector_marine`
+    - expect successful save without 401 toast.
+
+## 2026-06-18: Marketing Audit - Pet Owner Bedding (/pets/)
+- **Compliance (Overclaims):** Softened "slides off" to "reduces hair clinging" and "scratch-resistant without pilling" to "resists daily wear and tear" to ensure we are setting realistic expectations for pet owners without making unbreakable guarantees.
+- **Compliance (Unverified Claims):** Replaced an unverified "Odor resistant" claim in the bottom description with a "Wrinkle-resistant" durability claim.
+- **Localization:** Fixed broken translation where half of the bottom description on `/th/pets/index.html` was still in English. Fully translated all updated claims.
