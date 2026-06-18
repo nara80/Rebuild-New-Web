@@ -21,6 +21,7 @@ function normalizeMojibake(str: string | null | undefined): string {
     .replace(/ΓÇª/g, "…")
     .replace(/ΓÇ¢/g, "•")
     .replace(/├ù/g, "×")
+    .replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "")
     .replace(/≡ƒñì/g, "")
     .replace(/�/g, "");
 }
@@ -55,6 +56,8 @@ export interface Product {
   price_thb: number | null;
   description_en: string | null;
   description_th: string | null;
+  card_benefit_en?: string | null;
+  card_benefit_th?: string | null;
   image_url: string | null;
   is_custom: boolean;
   base_price_usd: number | null;

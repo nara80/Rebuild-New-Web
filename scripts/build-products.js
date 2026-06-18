@@ -60,6 +60,17 @@ const sizePlaceholders = {
   'pillow-protector': 'Choose pillow size'
 };
 
+function normalizeMojibake(s) {
+  return String(s || '')
+    .replace(/Ã¢â‚¬â€/g, '—')
+    .replace(/â€”/g, '—')
+    .replace(/â€“/g, '–')
+    .replace(/Â²/g, '²')
+    .replace(/Â°/g, '°')
+    .replace(/Ã—/g, '×')
+    .replace(/Â·/g, '·');
+}
+
 const dimLabels = {
   'fitted-sheet': 'mattress',
   'flat-sheet': 'mattress',
@@ -393,12 +404,12 @@ function buildMarine(slug, p, prod) {
     faqHtml += '<details class="faq-item" open><summary>What fabric and care details should I know?</summary><ul>' + careItems + '</ul></details>';
   }
   faqHtml += '<details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for an accurate custom fit.</p></details>';
-  faqHtml += '<details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each ' + (isMarineProtector ? 'protector' : 'sheet') + ' is custom-made to your exact shape and dimensions. Production takes 5â€“7 business days. Shipping times vary by destination â€” you\'ll receive a tracking number once dispatched.</p></details>';
-  faqHtml += '<details class="faq-item"><summary>What if my shape isn\'t listed?</summary><p>Choose the closest shape and add notes in the quote form â€” we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each ' + (isMarineProtector ? 'protector' : 'sheet') + ' is custom-made to your exact shape and dimensions. Production takes 5–7 business days. Shipping times vary by destination — you\'ll receive a tracking number once dispatched.</p></details>';
+  faqHtml += '<details class="faq-item"><summary>What if my shape isn\'t listed?</summary><p>Choose the closest shape and add notes in the quote form — we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>';
 
   const replacements = {
     '{{META_DESCRIPTION}}': p.metaDescription || '',
-    '{{TITLE}}': p.breadcrumbName + ' â€” MildMate',
+    '{{TITLE}}': p.breadcrumbName + ' — MildMate',
     '{{BREADCRUMB_CATEGORY_URL}}': p.breadcrumbCategoryUrl || '/',
     '{{BREADCRUMB_CATEGORY_LABEL}}': p.breadcrumbCategoryLabel || 'Products',
     '{{BREADCRUMB_NAME}}': p.breadcrumbName || '',
@@ -428,7 +439,7 @@ function buildMarine(slug, p, prod) {
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);
   }
-  return html;
+  return normalizeMojibake(html);
 }
 
 function buildShapeSelectorHTML(p) {

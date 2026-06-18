@@ -311,12 +311,17 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 [TRUST BAR]  â† 4 icons on #F8FAFC background
   Precision Fit | Global Delivery | Top-Rated | Sensitive Skin Friendly
 
-[SHOP BY PRODUCT]  â† 5 cards, 4-col grid
-  Sheets | Duvet Covers | Pillowcases | Protection | Accessories
+[SHOP BY PRODUCT]  â† 6 cards, responsive grid
+  Sheets | Duvet Covers | Pillowcases | Protection | Accessories | All Products
 
-[SHOP BY NICHE]  â† 4 cards (updated 2026-06-10): Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner
+[SHOP BY NICHE]  â† 6 cards: Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner / Boarding Dorm / RV & Truck
   Mobile: horizontal swipe strip, 220px min-width cards
-  (Note: 6-card grid was planned; actual build uses 4 cards. Boarding Dorm / RV & Truck Cab are accessible via SHOP BY PRODUCT category links instead.)
+  EN+TH homepage parity complete.
+
+[READABILITY + COLOR HIERARCHY]  â† Option A / Alternative 2 (EN+TH)
+  Primary text: dark charcoal; supporting text: medium grey; blue reserved for actions/highlights
+  Mobile readability pass: improved tap-targets, spacing, and text legibility
+  Homepage color hierarchy pass: applied consistently across hero, cards, pricing, and supporting copy blocks on EN+TH
 
 [FABRIC INTELLIGENCE]  â† lateral comparison grid (2026-05-21)
   4-column comparison: Feature | BreezePlus | CloudSoft | PremaCotton | EcoLuxe
@@ -1027,7 +1032,7 @@ CREATE TABLE blog_posts (
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
 | **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → 27 product pages, ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on all 27 product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage "Choose Your Application"** updated to Deep Pocket + Pet Owner (replaced Specialized Protection + Duvet Covers). | ✅ Complete |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on all 27 product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. | ✅ Complete |
 | **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; cron trigger configured via Cloudflare Dashboard) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts â‰¥$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. Cron trigger in Cloudflare Dashboard (configured via Cloudflare Dashboard triggers panel). | ✅ Built |
 | **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing** (abandoned cart config, thankyou config, recovery stages management, admin accounts). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |

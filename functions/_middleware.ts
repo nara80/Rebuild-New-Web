@@ -375,6 +375,7 @@ const SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 
 const SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
+const LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"></script>`;
 
 async function ensureCache(db: any): Promise<void> {
   const now = Date.now();
@@ -498,6 +499,204 @@ function resolveLegacyProductPath(pathname: string): string | null {
   return '/products/';
 }
 
+type ListingRouteConfig = { lang: 'en' | 'th'; mode: 'all' | 'product_type' | 'niche'; value?: string };
+
+const LISTING_ROUTES: Record<string, ListingRouteConfig> = {
+  '/products/': { lang: 'en', mode: 'all' },
+  '/sheets/': { lang: 'en', mode: 'product_type', value: 'sheets' },
+  '/duvet-covers/': { lang: 'en', mode: 'product_type', value: 'duvet-covers' },
+  '/pillowcases/': { lang: 'en', mode: 'product_type', value: 'pillowcases' },
+  '/protection/': { lang: 'en', mode: 'product_type', value: 'protection' },
+  '/accessories/': { lang: 'en', mode: 'product_type', value: 'accessories' },
+  '/marine/': { lang: 'en', mode: 'niche', value: 'marine' },
+  '/family/': { lang: 'en', mode: 'niche', value: 'family' },
+  '/pets/': { lang: 'en', mode: 'niche', value: 'pets' },
+  '/deep-pocket/': { lang: 'en', mode: 'niche', value: 'deep-pocket' },
+  '/boarding-dorm/': { lang: 'en', mode: 'niche', value: 'boarding-dorm' },
+  '/rv-truck/': { lang: 'en', mode: 'niche', value: 'rv-truck' },
+  '/th/products/': { lang: 'th', mode: 'all' },
+  '/th/sheets/': { lang: 'th', mode: 'product_type', value: 'sheets' },
+  '/th/duvet-covers/': { lang: 'th', mode: 'product_type', value: 'duvet-covers' },
+  '/th/pillowcases/': { lang: 'th', mode: 'product_type', value: 'pillowcases' },
+  '/th/protection/': { lang: 'th', mode: 'product_type', value: 'protection' },
+  '/th/accessories/': { lang: 'th', mode: 'product_type', value: 'accessories' },
+  '/th/marine/': { lang: 'th', mode: 'niche', value: 'marine' },
+  '/th/family/': { lang: 'th', mode: 'niche', value: 'family' },
+  '/th/pets/': { lang: 'th', mode: 'niche', value: 'pets' },
+  '/th/deep-pocket/': { lang: 'th', mode: 'niche', value: 'deep-pocket' },
+  '/th/boarding-dorm/': { lang: 'th', mode: 'niche', value: 'boarding-dorm' },
+  '/th/rv-truck/': { lang: 'th', mode: 'niche', value: 'rv-truck' }
+};
+
+const PRODUCT_TYPE_LABELS_EN: Record<string, string> = {
+  sheets: 'SHEETS',
+  'duvet-covers': 'DUVET COVERS',
+  pillowcases: 'PILLOWCASES',
+  protection: 'PROTECTION',
+  accessories: 'ACCESSORIES'
+};
+const PRODUCT_TYPE_LABELS_TH: Record<string, string> = {
+  sheets: 'ผ้าปูที่นอน',
+  'duvet-covers': 'ปลอกผ้านวม',
+  pillowcases: 'ปลอกหมอน',
+  protection: 'อุปกรณ์ปกป้อง',
+  accessories: 'อุปกรณ์เสริม'
+};
+const NICHE_LABELS_EN: Record<string, string> = {
+  marine: 'MARINE & YACHT',
+  family: 'FAMILY & CO-SLEEP',
+  pets: 'PET OWNER',
+  'deep-pocket': 'DEEP POCKET',
+  'boarding-dorm': 'BOARDING DORM',
+  'rv-truck': 'RV & TRUCK'
+};
+const NICHE_LABELS_TH: Record<string, string> = {
+  marine: 'เรือและยอชต์',
+  family: 'ครอบครัว',
+  pets: 'บ้านมีสัตว์เลี้ยง',
+  'deep-pocket': 'ที่นอนหนาพิเศษ',
+  'boarding-dorm': 'หอพัก',
+  'rv-truck': 'รถบ้านและรถบรรทุก'
+};
+
+function normalizeRoutePath(pathname: string): string {
+  if (pathname === '/') return '/';
+  return pathname.endsWith('/') ? pathname : `${pathname}/`;
+}
+
+function escapeHtml(value: unknown): string {
+  const str = String(value ?? '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function parseCsv(raw: unknown): string[] {
+  return String(raw || '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+}
+
+function pickPrimaryImage(imagesRaw: unknown, imageUrl: unknown): string {
+  try {
+    const arr = typeof imagesRaw === 'string' ? JSON.parse(imagesRaw) : imagesRaw;
+    if (Array.isArray(arr)) {
+      const first = String(arr[0] || '').trim();
+      if (first) return first;
+    }
+  } catch {}
+  return String(imageUrl || '').trim();
+}
+
+function getTagHref(slug: string, lang: 'en' | 'th'): string {
+  const prefix = lang === 'th' ? '/th' : '';
+  const valid = ['sheets', 'duvet-covers', 'pillowcases', 'protection', 'accessories', 'marine', 'family', 'pets', 'deep-pocket', 'boarding-dorm', 'rv-truck'];
+  return valid.includes(slug) ? `${prefix}/${slug}/` : `${prefix}/products/`;
+}
+
+function buildTagHtml(productType: string, niches: string[], lang: 'en' | 'th'): string {
+  const productTypeLabels = lang === 'th' ? PRODUCT_TYPE_LABELS_TH : PRODUCT_TYPE_LABELS_EN;
+  const nicheLabels = lang === 'th' ? NICHE_LABELS_TH : NICHE_LABELS_EN;
+  const tags: string[] = [];
+
+  if (productTypeLabels[productType]) {
+    tags.push(`<a href="${getTagHref(productType, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml(productTypeLabels[productType])}</a>`);
+  }
+  if (niches.length > 0 && nicheLabels[niches[0]]) {
+    const firstNiche = niches[0];
+    tags.push(`<a href="${getTagHref(firstNiche, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml(nicheLabels[firstNiche])}</a>`);
+  }
+  return tags.join('');
+}
+
+function renderListingCards(rows: any[], lang: 'en' | 'th'): string {
+  const priceNote = lang === 'th' ? 'ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร' : 'Excludes shipping, tax & tariff';
+  const ctaCustom = lang === 'th' ? 'ออกแบบและสั่งตัด' : 'Customize This Product';
+  const ctaStandard = lang === 'th' ? 'เลือกขนาดและเนื้อผ้า' : 'Choose Size & Fabric';
+  const fabricsCustom = lang === 'th' ? 'สั่งตัดพิเศษ · เลือกเนื้อผ้าได้หลากหลาย' : 'Custom size · Multiple fabrics';
+  const fabricsFixed = lang === 'th' ? 'ขนาดพร้อมใช้ · สเปกคงที่' : 'Ready size · Fixed configuration';
+
+  return rows.map((row) => {
+    const title = lang === 'th' ? (row.title_th || row.title_en || row.slug) : (row.title_en || row.slug);
+    const benefit = lang === 'th'
+      ? (row.card_benefit_th || row.card_benefit_en || '')
+      : (row.card_benefit_en || row.card_benefit_th || '');
+    const productType = String(row.product_type || '').toLowerCase();
+    const niches = parseCsv(row.niches);
+    const categories = [productType, ...niches, row.is_custom ? 'custom-shape' : ''].filter(Boolean).join(',');
+    const dataPrice = lang === 'th' ? Number(row.base_price_thb || 0) : Number(row.base_price_usd || 0);
+    const usd = Math.round(Number(row.base_price_usd || 0));
+    const thb = Math.round(Number(row.base_price_thb || 0));
+    const priceLabel = lang === 'th' ? `เริ่มต้น ฿${thb.toLocaleString('en-US')}` : `From US$${usd}`;
+    const image = pickPrimaryImage(row.images, row.image_url) || '/images/placeholder.jpg';
+    const href = lang === 'th' ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
+
+    return `<article class="product-card" data-categories="${escapeHtml(categories)}" data-title="${escapeHtml(String(title).toLowerCase())}" data-price="${escapeHtml(dataPrice)}">
+      <div class="product-image">
+        <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" width="800" height="600" loading="lazy" decoding="async">
+      </div>
+      <div class="product-info">
+        <div class="product-tags" aria-label="Categories">${buildTagHtml(productType, niches, lang)}</div>
+        <h3 class="product-title">${escapeHtml(title)}</h3>
+        <div class="product-price" data-usd="${escapeHtml(usd)}" data-thb="${escapeHtml(thb)}">${escapeHtml(priceLabel)}</div>
+        <div class="product-price-note">${escapeHtml(priceNote)}</div>
+        <p class="product-benefit">${escapeHtml(benefit)}</p>
+        <div class="product-fabrics-info">${escapeHtml(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
+        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(row.is_custom ? ctaCustom : ctaStandard)}</a>
+      </div>
+    </article>`;
+  }).join('\n');
+}
+
+function replaceFirstProductGrid(html: string, cardMarkup: string): string {
+  const start = html.indexOf('<div class="product-grid');
+  if (start < 0) return html;
+  const openEnd = html.indexOf('>', start);
+  if (openEnd < 0) return html;
+
+  const divPattern = /<\/?div\b[^>]*>/gi;
+  divPattern.lastIndex = openEnd + 1;
+  let depth = 1;
+  let closeStart = -1;
+  let closeEnd = -1;
+  let match: RegExpExecArray | null = null;
+  while ((match = divPattern.exec(html)) !== null) {
+    const token = match[0];
+    if (token.startsWith('</div')) depth -= 1;
+    else depth += 1;
+    if (depth === 0) {
+      closeStart = match.index;
+      closeEnd = match.index + token.length;
+      break;
+    }
+  }
+  if (closeStart < 0 || closeEnd < 0) return html;
+  return `${html.slice(0, openEnd + 1)}\n${cardMarkup}\n${html.slice(closeStart, closeEnd)}${html.slice(closeEnd)}`;
+}
+
+async function fetchListingProducts(db: any, config: ListingRouteConfig): Promise<any[]> {
+  const baseQuery = `SELECT slug, title_en, title_th, card_benefit_en, card_benefit_th, product_type, niches, base_price_usd, base_price_thb, image_url, images, is_custom, sort_order, id
+    FROM products
+    WHERE is_active = 1`;
+  if (config.mode === 'all') {
+    const result = await db.prepare(`${baseQuery} ORDER BY sort_order, id`).all();
+    return result?.results || [];
+  }
+  if (!config.value) return [];
+  if (config.mode === 'product_type') {
+    const result = await db.prepare(`${baseQuery} AND LOWER(COALESCE(product_type, '')) = ? ORDER BY sort_order, id`)
+      .bind(config.value.toLowerCase())
+      .all();
+    return result?.results || [];
+  }
+  const niche = config.value.toLowerCase();
+  const result = await db.prepare(`${baseQuery} AND ((',' || LOWER(COALESCE(niches, '')) || ',') LIKE ? OR (',' || LOWER(COALESCE(category, '')) || ',') LIKE ?) ORDER BY sort_order, id`)
+    .bind(`%,${niche},%`, `%,${niche},%`)
+    .all();
+  return result?.results || [];
+}
+
 export async function onRequest(context: any): Promise<Response> {
   const url = new URL(context.request.url);
   const path = url.pathname;
@@ -520,6 +719,23 @@ export async function onRequest(context: any): Promise<Response> {
   if (!contentType.includes('text/html')) return response;
 
   let html = await response.text();
+  const normalizedPath = normalizeRoutePath(path);
+  const listingConfig = LISTING_ROUTES[normalizedPath];
+  if (listingConfig && context.env?.DB) {
+    try {
+      const rows = await fetchListingProducts(context.env.DB, listingConfig);
+      if (rows.length > 0) {
+        html = replaceFirstProductGrid(html, renderListingCards(rows, listingConfig.lang));
+        if (normalizedPath === '/products/') {
+          html = html.replace(/id="results-count">[^<]*</, `id="results-count">${rows.length} products<`);
+        } else if (normalizedPath === '/th/products/') {
+          html = html.replace(/id="results-count">[^<]*</, `id="results-count">สินค้า ${rows.length} รายการ<`);
+        }
+      }
+    } catch (e) {
+      console.error('_middleware: dynamic listing render failed:', e);
+    }
+  }
 
   const header = await getChrome(context.env.DB, 'header');
   const footer = await getChrome(context.env.DB, 'footer');
@@ -647,6 +863,11 @@ export async function onRequest(context: any): Promise<Response> {
   const hasAppleTouchIcon = /rel=["']apple-touch-icon["']/i.test(html);
   if (!hasIconLink || !hasAppleTouchIcon) {
     html = html.replace(/<\/head>/i, `${SHARED_FAVICON_LINKS}\n</head>`);
+  }
+
+  const hasProductCards = html.includes('class="product-card"');
+  if (hasProductCards && !html.includes('/js/listing-images-sync.js')) {
+    html = html.replace(/<\/body>/i, `${LISTING_IMAGE_SYNC_SCRIPT}\n</body>`);
   }
 
   // ── JSON-LD injection ──────────────────────────────────────────────

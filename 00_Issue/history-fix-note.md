@@ -330,6 +330,27 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Live route behavior:** ✅
   - `/product/marine-mattress-protector/` and `/th/product/marine-mattress-protector/` resolve cleanly and render correctly, with routing alignment completely functional.
 
+### Image update reconciliation (Super Admin feature image sync)
+- **Issue observed:** after updating product feature image in Super Admin/D1, listing pages still showed the previous image URL.
+- **Important architecture note:** this is expected with current setup. Super Admin updates D1 first-image data for product detail rendering, but `/marine/`, `/protection/`, `/products/` (and TH equivalents) are static listing pages and do **not** auto-sync image URLs from D1.
+- **What was completed:**
+  - Synced marine-mattress-protector image URL across related listing/detail pages and source data:
+    - `public/marine/index.html`
+    - `public/protection/index.html`
+    - `public/products/index.html`
+    - `public/th/marine/index.html`
+    - `public/th/products/index.html`
+    - `public/product/marine-mattress-protector/index.html`
+    - `public/product/marine-fitted-sheet/index.html` (related products card)
+    - `data/products.json`
+  - Replaced old image URL `1781695116710-692fq8.jpg` with current image URL `1781748617971-bdh8v6.jpg`.
+  - Removed old image object from remote R2 bucket immediately after sync.
+- **Verification:**
+  - Repo search confirms no stale reference to old image URL.
+  - Old image URL returns `404` after remote deletion.
+  - Current image URL returns `200`.
+  - Listing/detail pages use the same current image URL after manual sync.
+
 ### Next-time rollout checklist (for any new product)
 1. Add product data/content/template path and generate `/public/product/{slug}/index.html`.
 2. Seed DB row (migration) so product appears in Super Admin DB-backed list.
@@ -344,6 +365,13 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
    - each expected product-type and niche listing page (both EN and TH)
    - Super Admin product list visibility
    - no mojibake text artifacts (e.g., `Â·`) on listing pages
+8. If product image is updated in Super Admin:
+   - propagate the new image URL to all related static listing sources (EN + TH + related cards),
+   - run grep to ensure old URL is fully removed,
+   - delete old R2 object only after replacement URL is confirmed live/available (`200`).
+9. Do not assume image update is automatic:
+   - treat Super Admin image update as **D1 update only**,
+   - always run static listing sync + deploy for EN/TH listing parity.
 
 ## 11) Favicon head consistency (`/` vs listing/category pages)
 
@@ -444,4 +472,148 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 ### Verification
 - Queried both remote databases directly using Wrangler and confirmed they now return the correct updated descriptions.
 - Visited the new preview URL `https://96ad074a.mildmate-new.pages.dev/product/bedbridge-connector/` in the browser and verified the new description renders correctly.
+
+## 14) Mojibake/font artifact reconciliation on product/listing cards (`Â·`, `â€”`)
+
+### Incident scope (what actually failed)
+- `/product/marine-mattress-protector/` rendered mojibake text in multiple places (for example:
+  - `Marine Mattress Protector â€” 3-Layer Waterproof`
+  - malformed title/meta dash sequences).
+- Listing card subtext also contained mojibake separators on product cards (for example `TPU layer Â· Comfort soft`).
+
+### Root cause (reconciled)
+- Product page generation path still emitted corrupted UTF-8 sequences in some generated marine-page strings.
+- Static listing HTML pages contained literal mojibake separator text (`Â·`) instead of safe entity output.
+
+### Fixes actually completed
+1. **Marine product page generation hardening**
+   - Updated `scripts/build-products.js`:
+     - corrected marine FAQ/title strings to proper Unicode (`—`, `–`),
+     - added `normalizeMojibake(...)` cleanup at the end of `buildMarine(...)` to sanitize common corrupted sequences before write.
+   - Rebuilt product pages:
+     - `node scripts/build-products.js`
+2. **Card separator normalization across listing pages**
+   - Replaced `Â·` with `&middot;` in:
+     - `public/products/index.html`
+     - `public/th/products/index.html`
+     - `public/th/marine/index.html`
+
+### Verification status (systematic)
+- **Local/source verified:** ✅
+  - `public/product/marine-mattress-protector/index.html` now contains clean dash text:
+    - `<title>Marine Mattress Protector — MildMate</title>`
+    - `Marine Mattress Protector — 3-Layer Waterproof`
+  - Card-text re-scan confirms no `Â·` remaining in `product-fabrics-info` lines across listing pages.
+- **Build/validator verified:** ✅
+  - `npm run lint` passed.
+  - `npx wrangler pages functions build --outdir public` passed.
+- **Live deploy verification:** ⏳ pending deploy
+  - This reconciliation reflects completed local/build state; production verification requires deploy + smoke test.
+
+## 15) Homepage "What Customers Say" mojibake in review text (`iamboaty` row)
+
+### Incident scope (what actually failed)
+- Homepage review carousel ("What Customers Say") displayed corrupted tail text for one review:
+  - `...I'll order other colors later.≡ƒÿâ≡ƒÆù≡ƒÖÅ`
+- Affected record identified as:
+  - customer: `iamboaty`
+  - country: `Thailand`
+  - review date: `2026-03-18`
+
+### Root cause (reconciled)
+- This was **not a font/CSS issue**.
+- The corrupted sequence came from review content payload encoding artifacts in API data rendering path.
+- Existing mojibake cleanup covered several legacy patterns, but did not remove this emoji-byte corruption family (`≡ƒ...`).
+
+### Fixes actually completed
+- Updated mojibake normalization in:
+  - `workers/api/reviews.ts` (homepage/public reviews endpoint)
+  - `workers/api/products.ts` (product reviews/data normalization path)
+- Added cleanup pattern to strip corrupted `≡ƒ...` byte clusters in normalized output.
+- Applied targeted production data hotfix on D1 for the affected row:
+  - `id = 15` (`iamboaty`)
+  - removed corrupted suffix `≡ƒÿâ≡ƒÆù≡ƒÖÅ` from `review_text`.
+
+### Verification status (systematic)
+- **Issue verification:** ✅
+  - Confirmed via live API payload (`/api/reviews`) that `iamboaty` review text included corrupted tail sequence before fix.
+- **Code/build verification (hardening):** ✅
+  - `npm run lint` passed after patch.
+  - `npx wrangler pages functions build --outdir public` passed after patch.
+  - Compiled output includes updated normalization logic.
+- **Live production data verification:** ✅
+  - Queried production D1 row and confirmed the affected text was updated.
+  - Re-queried live `/api/reviews` and confirmed `iamboaty` now ends cleanly at:
+    - `...I'll order other colors later.`
+- **Deploy state for code-level guard:** ⏳ pending deploy
+  - Data hotfix is already live.
+  - The normalization-code hardening becomes active in production after next deploy.
+
+## 16) Mobile trust-badge row mismatch between deploy previews (`a4655aa0` vs `b26c456b`)
+
+### Incident scope (what was observed)
+- User reported mobile icon-badge/trust section looked different between:
+  - `https://a4655aa0.mildmate-new.pages.dev/`
+  - `https://b26c456b.mildmate-new.pages.dev/`
+- In screenshots, `a4655aa0` appeared as 2 rows while `b26c456b` appeared as 1 row.
+
+### Root cause (reconciled)
+- Trust-bar CSS itself was not the root cause (rules were effectively the same for trust grid/text in both pages).
+- The deployed page behavior diverged because **viewport meta tag was missing** on homepage sources, causing mobile browsers/devtools to render using scaled desktop viewport behavior.
+- Without `<meta name="viewport" content="width=device-width, initial-scale=1.0">`, visual mobile layout can differ even when section CSS matches.
+
+### Fixes actually completed
+- Added missing viewport meta to:
+  - `public/index.html`
+  - `public/th/index.html`
+- This aligns rendering mode with expected mobile breakpoints and prevents false 2-row trust-badge presentation due to non-mobile viewport scaling.
+
+### Verification status (systematic)
+- **Code/source verified:** ✅
+  - Both homepage files now include:
+    - `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+- **Live deploy verification:** ⏳ pending deploy
+  - Current reconciliation reflects completed local/build state; production/preview confirmation requires deploy of latest changes.
+
+## 17) `/th/products/` Thai rendering reconciliation (font fallback + mojibake cleanup)
+
+### Incident scope (what was observed)
+- User reported Thai rendering problems on:
+  - `https://www.mildmate.com/th/products/`
+- Two overlapping symptoms were present:
+  1. Thai font fallback inconsistency (Sarabun not reliably applied).
+  2. Mojibake/encoding artifacts in Thai content (for example `à¸...` sequences), which visually mimicked a font issue.
+
+### Root cause (reconciled)
+- **Font cascade issue:** route CSS still used `body { font-family: var(--font-main) }` with Quicksand default; `:lang(th)` alone was not sufficient for consistent route-wide Thai glyph rendering.
+- **Content encoding issue:** Thai copy in `public/th/products/index.html` had become encoding-corrupted, resulting in mojibake text across meta + visible content.
+
+### Fixes actually completed
+1. **Thai font enforcement (route-level)**
+   - Updated `public/th/products/index.html` with explicit Thai override:
+     - `html[lang="th"] body, ... { font-family: 'Sarabun', sans-serif !important; }`
+2. **Font cache-bust**
+   - Updated route font include:
+     - `/css/fonts.css` → `/css/fonts.css?v=2`
+3. **Encoding repair**
+   - Repaired `public/th/products/index.html` mojibake content to valid UTF-8 Thai text (meta + page UI copy + card content).
+
+### Verification status (systematic reconciliation)
+- **Pre-fix issue verification:** ✅
+  - Confirmed `/th/products/` had both Thai font inconsistency symptoms and mojibake content artifacts.
+- **Code/source verification (post-fix):** ✅
+  - `public/th/products/index.html` now contains:
+    - `fonts.css?v=2`
+    - Thai Sarabun force-override block
+    - Clean Thai text (no mojibake artifact patterns such as `à¸`, `Â`, `Ã`, `â€”`)
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+- **Deployed-URL verification:** ✅
+  - On deployed preview checks, font-fix markers were present in served HTML/CSS, confirming deployment included the Sarabun override + cache-busted font reference.
+- **Current live/prod confirmation:** ⏳ deploy-dependent
+  - Final production confirmation requires deployment of latest local encoding-repair commit, then recheck `/th/products/`.
 

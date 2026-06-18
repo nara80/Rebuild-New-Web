@@ -2224,6 +2224,8 @@ async function getProducts() {
           titleTH: r.title_th || "",
           descEN: r.description_en || "",
           descTH: r.description_th || "",
+          cardBenefitEN: r.card_benefit_en || "",
+          cardBenefitTH: r.card_benefit_th || "",
           images: r.images || "[]",
           imagesRaw: r.images || "[]",
           video: r.youtube_url || "",
@@ -2234,6 +2236,8 @@ async function getProducts() {
           title_th: r.title_th,
           description_en: r.description_en,
           description_th: r.description_th,
+          card_benefit_en: r.card_benefit_en || "",
+          card_benefit_th: r.card_benefit_th || "",
           image_url: r.image_url || "",
           id: r.id
         };
@@ -2259,6 +2263,8 @@ async function getProducts() {
           titleTH: r.title_th || "",
           descEN: r.description_en || "",
           descTH: r.description_th || "",
+          cardBenefitEN: r.card_benefit_en || "",
+          cardBenefitTH: r.card_benefit_th || "",
           images: r.images || "[]",
           imagesRaw: r.images || "[]",
           video: r.youtube_url || "",
@@ -2269,6 +2275,8 @@ async function getProducts() {
           title_th: r.title_th,
           description_en: r.description_en,
           description_th: r.description_th,
+          card_benefit_en: r.card_benefit_en || "",
+          card_benefit_th: r.card_benefit_th || "",
           image_url: r.image_url || "",
           id: r.id
         };
@@ -2403,9 +2411,13 @@ async function saveProduct() {
   var p = isNew ? _newProductDraft : ps[selectedProductIndex];
   if (!p) return;
 
-  // Read Product Type and Niche
+  // Read Product Type and Niches
   var category = (document.getElementById("ed-category") || {}).value || "sheets";
-  var niche = (document.getElementById("ed-niche") || {}).value || "";
+  var nicheNodes = document.querySelectorAll('.niche-opt:checked');
+  var nicheValues = [];
+  for (var nv = 0; nv < nicheNodes.length; nv++) nicheValues.push((nicheNodes[nv].value || '').trim().toLowerCase());
+  var niches = nicheValues.join(', ');
+  var categoryCsv = [category].concat(nicheValues).join(',');
   var formulaType = (document.getElementById("ed-formula") || {}).value || (p.formulaType || "fitted");
 
   // For new products: read slug
@@ -2464,6 +2476,8 @@ async function saveProduct() {
   var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
   var descEN = (document.getElementById("ed-desc-en") || {}).innerHTML || "";
   var descTH = (document.getElementById("ed-desc-th") || {}).innerHTML || "";
+  var benefitEN = (document.getElementById("ed-benefit-en") || {}).value || "";
+  var benefitTH = (document.getElementById("ed-benefit-th") || {}).value || "";
   var pImgs = []; try { pImgs = JSON.parse(p.images || "[]"); } catch(e) { pImgs = []; } var imageUrl = (pImgs[0] || p.image_url || "");
   var youtube = (document.getElementById("ed-youtube") || {}).value || "";
 
@@ -2471,19 +2485,21 @@ async function saveProduct() {
   var fabricOpts = []; for (var fc = 0; fc < fabricCbs.length; fc++) fabricOpts.push(fabricCbs[fc].value);
   var fabricOptions = fabricOpts.join(',');
 
-  // Build tags from niche + any existing non-niche tags
+  // Build tags from selected niches + any existing non-niche tags
   var nicheKeys = ['marine','family','pets','deep-pocket','boarding-dorm','rv-truck'];
   var existingTags = (Array.isArray(p.tags) ? p.tags : (p.tags||'').split(',')).map(function(t){return (t||'').toString().trim();}).filter(function(t){return t && nicheKeys.indexOf(t)<0;});
-  if (niche) existingTags.push(niche);
-  var tags = existingTags.join(',');
+  var tagMap = {};
+  existingTags.forEach(function(t){ tagMap[t] = true; });
+  nicheValues.forEach(function(n){ tagMap[n] = true; });
+  var tags = Object.keys(tagMap).join(',');
 
   var method = isNew ? "POST" : "PUT";
   var apiPath = isNew ? "/api/admin/products" : "/api/admin/products/" + slug;
 
   if (isNew) {
     // Save to localStorage too
-    ps.push({slug:slug, name:titleEN, active:true, category:category, fabric:fabricOptions, formulaType:formulaType,
-      titleEN:titleEN, titleTH:titleTH, descEN:descEN, descTH:descTH, images:(pImgs.length||1), video:youtube, tags:existingTags});
+    ps.push({slug:slug, name:titleEN, active:true, category:category, product_type:category, niches:niches, fabric:fabricOptions, formulaType:formulaType,
+      titleEN:titleEN, titleTH:titleTH, descEN:descEN, descTH:descTH, images:(pImgs.length||1), video:youtube, tags:Object.keys(tagMap)});
     saveProducts_toLocal(ps);
   }
 
@@ -2498,7 +2514,11 @@ async function saveProduct() {
         title_th: titleTH,
         description_en: descEN,
         description_th: descTH,
-        category: category,
+        card_benefit_en: benefitEN,
+        card_benefit_th: benefitTH,
+        category: categoryCsv,
+        product_type: category,
+        niches: niches,
         fabric_options: fabricOptions,
         image_url: imageUrl,
         youtube_url: youtube,
@@ -2558,6 +2578,15 @@ function buildFabricCheckboxes(p) {
   }).join('');
 }
 
+function buildNicheCheckboxes(selected, nicheMap) {
+  return Object.keys(nicheMap).map(function(k) {
+    var checked = selected.indexOf(k) >= 0;
+    return '<label class="niche-cb" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid '+(checked?'var(--c-blue)':'var(--c-border)')+';border-radius:4px;font-size:0.8125rem;cursor:pointer;background:'+(checked?'#eff6ff':'#fff')+'">'+
+      '<input type="checkbox" class="niche-opt" value="'+k+'"'+(checked?' checked':'')+' style="margin:0" onchange="this.closest(\'.niche-cb\').style.borderColor=this.checked?\'var(--c-blue)\':\'var(--c-border)\';this.closest(\'.niche-cb\').style.background=this.checked?\'#eff6ff\':\'#fff\'">'+
+      nicheMap[k]+'</label>';
+  }).join('');
+}
+
 async function showProductEditor(){
   var panel=document.getElementById('editor-panel');
   if(!panel)return;
@@ -2576,25 +2605,24 @@ async function showProductEditor(){
   var titleTH = p.title_th || p.titleTH || '';
   var descEN = p.description_en || p.descEN || '';
   var descTH = p.description_th || p.descTH || '';
+  var benefitEN = p.card_benefit_en || p.cardBenefitEN || '';
+  var benefitTH = p.card_benefit_th || p.cardBenefitTH || '';
   var slug = p.slug || '';
 
   // Product Type dropdown (category)
   var catOptions = ['sheets','duvet-covers','pillowcases','protection','accessories'];
   var catNames = {sheets:'Sheets','duvet-covers':'Duvet Covers',pillowcases:'Pillowcases',protection:'Protection',accessories:'Accessories'};
-  var curCat = (p.category || 'sheets').toLowerCase();
+  var curCat = (p.product_type || String(p.category || '').split(',')[0] || 'sheets').toLowerCase();
   var catSelect = '<select id="ed-category" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
     catOptions.map(function(c){ return '<option value="'+c+'"'+(curCat===c?' selected':'')+'>'+catNames[c]+'</option>'; }).join('')+'</select>';
 
-  // Niche Type dropdown (from D1 niches column)
+  // Niche Type multi-select (from D1 niches column)
   var nicheMap = {'marine':'Marine & Yacht','family':'Family & Co-Sleep','pets':'Pet Owner','deep-pocket':'Deep Pocket','boarding-dorm':'Boarding Dorm','rv-truck':'RV & Truck Cab'};
-  var curNiche = '';
-  if (p.niches) {
-    var nicheParts = String(p.niches).split(',').map(function(t){return t.trim().toLowerCase();}).filter(Boolean);
-    nicheParts.forEach(function(n){ if (nicheMap[n]) curNiche = n; });
-  }
-  var nicheSelect = '<select id="ed-niche" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
-    '<option value="">— None —</option>'+
-    Object.keys(nicheMap).map(function(k){ return '<option value="'+k+'"'+(curNiche===k?' selected':'')+'>'+nicheMap[k]+'</option>'; }).join('')+'</select>';
+  var curNiches = [];
+  if (p.niches) curNiches = String(p.niches).split(',').map(function(t){ return t.trim().toLowerCase(); }).filter(Boolean);
+  else if (p.category && String(p.category).indexOf(',') >= 0) curNiches = String(p.category).split(',').slice(1).map(function(t){ return t.trim().toLowerCase(); }).filter(Boolean);
+  curNiches = curNiches.filter(function(n){ return !!nicheMap[n]; });
+  var nicheSelect = '<div class="niche-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+buildNicheCheckboxes(curNiches, nicheMap)+'</div>';
   var curFormula = (p.formulaType || 'fitted').toLowerCase();
   var formulaSelect = '<select id="ed-formula" style="width:100%;padding:12px 14px;border:2px solid var(--c-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--c-text);background:#fff">'+
     '<option value="fitted"'+(curFormula==='fitted'?' selected':'')+'>Fitted Sheet</option>'+
@@ -2625,11 +2653,13 @@ async function showProductEditor(){
       '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+titleTH+'"></div></div>'+
       '<div class="form-row"><div class="form-group"><label>Product Type</label>'+catSelect+
         '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Determines which category page this product appears on</p></div>'+
-      '<div class="form-group"><label>Niche Type</label>'+nicheSelect+
-        '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Links this product to a use-case SEO landing page</p></div></div>'+
+      '<div class="form-group"><label>Niche Type(s)</label>'+nicheSelect+
+        '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Select one or more use-case SEO landing pages</p></div></div>'+
       formulaHtml+
       '<div class="form-row"><div class="form-group"><label>Description (EN)</label><div class="rtf-toolbar" data-for="ed-desc-en"><button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button><button type="button" data-cmd="italic" title="Italic"><em>I</em></button><button type="button" data-cmd="bullet" title="Bullet List">•</button></div><div id="ed-desc-en" contenteditable="true" class="rtf-editor">'+descEN+'</div></div>'+ // merged Description EN into form-row
       '<div class="form-group"><label>Description (TH)</label><div class="rtf-toolbar" data-for="ed-desc-th"><button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button><button type="button" data-cmd="italic" title="Italic"><em>I</em></button><button type="button" data-cmd="bullet" title="Bullet List">•</button></div><div id="ed-desc-th" contenteditable="true" class="rtf-editor">'+descTH+'</div></div>'+ // merged Description TH
+      '<div class="form-group"><label>Card Short Benefit (EN)</label><input id="ed-benefit-en" value="'+benefitEN+'" placeholder="Short line under price on listing cards"></div>'+
+      '<div class="form-group"><label>Card Short Benefit (TH)</label><input id="ed-benefit-th" value="'+benefitTH+'" placeholder="บรรทัดสั้นใต้ราคาในการ์ดสินค้า"></div>'+
       '<div class="form-group"><label>Fabric Options</label><div class="fabric-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+buildFabricCheckboxes(p)+'</div></div>'+
       '<div class="form-group"><label>Hero Image</label><div style="display:flex;gap:16px;align-items:flex-start"><div data-slot="0" style="width:140px;height:140px;border-radius:var(--radius);border:2px solid var(--c-border);background:var(--c-surface);background-size:cover;background-position:center;cursor:pointer;position:relative;flex-shrink:0;'+(heroSrc?'background-image:url(\''+heroSrc+'\')':'display:flex;align-items:center;justify-content:center')+'" onclick="uploadImage(0)">'+(heroSrc?'<div style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:var(--c-red);color:#fff;font-size:0.75rem;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="event.stopPropagation();removeImageSlot(0)">✕</div>':'<span style="font-size:2rem;color:var(--c-muted)">+</span>')+'</div><div style="flex:1"><p style="font-size:0.8125rem;color:var(--c-muted);margin:0 0 10px">Main image for product cards, category pages, and hero banner. <strong>Slot 1 of 20.</strong></p><div style="display:flex;gap:8px"><button type="button" class="btn btn-sm btn-primary" onclick="uploadImage(0)">'+(heroSrc?'Change Image':'Upload Image')+'</button>'+(heroSrc?'<button type="button" class="btn btn-sm btn-outline" onclick="removeImageSlot(0)" style="color:var(--c-red);border-color:var(--c-red)">Remove</button>':'')+'</div></div></div></div>'+
       '<div class="form-group"><label>YouTube URL</label><input id="ed-youtube" value="'+hasYoutube+'" placeholder="https://www.youtube.com/watch?v=...">'+
@@ -2645,6 +2675,8 @@ async function showProductEditor(){
     f = document.getElementById('ed-title-th'); if(f) f.value = titleTH;
     f = document.getElementById('ed-desc-en'); if(f) f.innerHTML = descEN;
     f = document.getElementById('ed-desc-th'); if(f) f.innerHTML = descTH;
+    f = document.getElementById('ed-benefit-en'); if(f) f.value = benefitEN;
+    f = document.getElementById('ed-benefit-th'); if(f) f.value = benefitTH;
     f = document.getElementById('ed-youtube'); if(f) f.value = hasYoutube;
     if (isNew) { f = document.getElementById('ed-slug'); if(f) f.value = slug; }
     if (isNew) { f = document.getElementById('ed-formula'); if(f) f.value = curFormula; }

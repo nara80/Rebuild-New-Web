@@ -32,6 +32,7 @@ function normalizeMojibake(str: string | null | undefined): string {
     .replace(/ΓÇª/g, "…")
     .replace(/ΓÇ¢/g, "•")
     .replace(/├ù/g, "×")
+    .replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "")
     .replace(/≡ƒñì/g, "")
     .replace(/�/g, "");
 }

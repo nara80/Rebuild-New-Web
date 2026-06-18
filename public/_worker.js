@@ -9177,6 +9177,7 @@ var SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 </style>`;
 var SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
+var LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"><\/script>`;
 async function ensureCache(db) {
   const now = Date.now();
   if (_cache.header && _cache.footer && now - _cache.fetchedAt < CACHE_TTL) return;
@@ -9354,6 +9355,11 @@ ${header}`);
     html = html.replace(/<\/head>/i, `${SHARED_FAVICON_LINKS}
 </head>`);
   }
+  const hasProductCards = html.includes('class="product-card"');
+  if (hasProductCards && !html.includes("/js/listing-images-sync.js")) {
+    html = html.replace(/<\/body>/i, `${LISTING_IMAGE_SYNC_SCRIPT}
+</body>`);
+  }
   if (!html.includes('id="json-ld-org"')) {
     html = html.replace(/<\/head>/i, `${JSON_LD_ORG}
 ${JSON_LD_WEBSITE}
@@ -9368,7 +9374,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-M7zHNe/functionsRoutes-0.9316108511945479.mjs
+// ../.wrangler/tmp/pages-m1hxuD/functionsRoutes-0.6477472378684959.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
