@@ -617,3 +617,49 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Current live/prod confirmation:** ⏳ deploy-dependent
   - Final production confirmation requires deployment of latest local encoding-repair commit, then recheck `/th/products/`.
 
+## 18) Google Search Console Merchant listings issues (Product JSON-LD: missing `offers.price` + invalid `reviewCount`)
+
+### Incident scope (what was observed)
+- Google Search Console reported Merchant listings structured-data issues on `mildmate.com`:
+  - **Critical:** Missing field `price` (in `offers`)
+  - **Non-critical:** Invalid integer in `aggregateRating.reviewCount`
+
+### Root cause (reconciled)
+- Product JSON-LD in `functions/product/[[path]].ts` was hardcoded with:
+  - `offers` block missing `price`
+  - `aggregateRating.reviewCount` set to `"1000+"` (string/non-integer)
+- This pattern was emitted route-wide for product SSR pages (`/product/{slug}/`), so issue scope was broad.
+
+### Fixes actually completed
+1. **Dynamic `offers.price` from D1**
+   - Extended product query to include `base_price_usd`.
+   - JSON-LD now sets:
+     - `offers.price = base_price_usd.toFixed(2)` (numeric string)
+     - `offers.priceCurrency = "USD"`
+2. **Real aggregate review stats from D1**
+   - Added review aggregation query on `reviews` table:
+     - `COUNT(*) AS review_count`
+     - `AVG(rating) AS rating_value`
+   - Matching uses product taxonomy context (product type + niches mapped to review display labels) to align with existing review logic.
+   - JSON-LD now sets:
+     - `aggregateRating.reviewCount` as integer
+     - `aggregateRating.ratingValue` as computed average (1 decimal)
+3. **Validity guards**
+   - `aggregateRating` is omitted if no reviews exist.
+   - `offers` is emitted only when a valid positive `base_price_usd` exists.
+
+### Verification status (systematic reconciliation)
+- **Pre-fix verification (issue reproducibility):** ✅
+  - Live product pages showed JSON-LD with missing `offers.price` and `reviewCount: "1000+"`.
+- **Code/source verified (post-fix):** ✅
+  - `functions/product/[[path]].ts` now contains:
+    - D1 price wiring into JSON-LD offers
+    - review aggregation query (`COUNT` + `AVG`)
+    - integer `reviewCount` output path
+    - removal of hardcoded `"1000+"`
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+- **Live deploy verification:** ⏳ pending deploy
+  - Production confirmation requires deploying the updated worker bundle, then re-validating affected URLs in Search Console.
+

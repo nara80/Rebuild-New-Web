@@ -29,6 +29,23 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'mattress-lift-helper'
 ]);
 
+const PRODUCT_TYPE_DISPLAY: Record<string, string> = {
+  'sheets': 'Sheets',
+  'duvet-covers': 'Duvet Covers',
+  'pillowcases': 'Pillowcases',
+  'protection': 'Protections',
+  'accessories': 'Accessories'
+};
+
+const NICHE_DISPLAY: Record<string, string> = {
+  'marine': 'Marine & Yacht',
+  'family': 'Family & Co-Sleep',
+  'pets': 'Pet Owner',
+  'deep-pocket': 'Deep Pocket',
+  'boarding-dorm': 'Boarding Dorm',
+  'rv-truck': 'RV & Truck Cab'
+};
+
 function hasToken(slug: string, token: string): boolean {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -117,11 +134,11 @@ export async function onRequest(context: any): Promise<Response> {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
 
-    // 2. Query D1 for this product's image, title, and name data
+    // 2. Query D1 for this product's image, title, pricing, and category data
     const stmt = context.env.DB.prepare(
-      'SELECT image_url, images, title_en, title_th FROM products WHERE slug = ?'
+      'SELECT image_url, images, title_en, title_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
     ).bind(slug);
-    const product = await stmt.first();
+    const product = await stmt.first() as any;
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
     let images: string[] = [];
@@ -199,29 +216,64 @@ export async function onRequest(context: any): Promise<Response> {
     const mainImageUrl = mainImage
       ? (mainImage.startsWith('http') ? mainImage : `${baseUrl}${mainImage.startsWith('/') ? '' : '/'}${mainImage}`)
       : '';
-    const productTitle = slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "${productTitle}",
-  "image": "${mainImageUrl}",
-  "description": "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
-  "brand": { "@type": "Brand", "name": "MildMate" },
-  "url": "${baseUrl}/product/${slug}/",
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "seller": { "@type": "Organization", "name": "MildMate" }
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "1000+"
-  }
-}
-</script>`;
+    const productTitle = (isTh && product?.title_th) || product?.title_en || slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+    const productUrl = `${baseUrl}${isTh ? '/th' : ''}/product/${slug}/`;
+    const rawPrice = Number(product?.base_price_usd);
+    const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
+
+    let aggregateRating: any = undefined;
+    try {
+      const productTypeSlug = String(product?.product_type || '').trim().toLowerCase();
+      const ptDisplay = PRODUCT_TYPE_DISPLAY[productTypeSlug] || productTypeSlug;
+      const nicheDisplayNames: string[] = String(product?.niches || '')
+        .split(',')
+        .map((n: string) => n.trim().toLowerCase())
+        .filter(Boolean)
+        .map((n: string) => NICHE_DISPLAY[n])
+        .filter(Boolean);
+      const matchTypes = [ptDisplay, ...nicheDisplayNames].filter(Boolean);
+
+      if (matchTypes.length > 0) {
+        const placeholders = matchTypes.map(() => '?').join(',');
+        const ratingSql = `SELECT COUNT(*) AS review_count, AVG(rating) AS rating_value FROM reviews WHERE product_type IN (${placeholders})`;
+        const ratingRow = await context.env.DB.prepare(ratingSql).bind(...matchTypes).first() as any;
+        const reviewCount = Number(ratingRow?.review_count || 0);
+        const ratingValueNum = Number(ratingRow?.rating_value || 0);
+        if (reviewCount > 0 && Number.isFinite(ratingValueNum) && ratingValueNum > 0) {
+          aggregateRating = {
+            '@type': 'AggregateRating',
+            ratingValue: ratingValueNum.toFixed(1),
+            reviewCount
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Product JSON-LD rating query failed:', e);
+    }
+
+    const productSchema: any = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: productTitle,
+      image: mainImageUrl || undefined,
+      description: 'Custom made-to-measure bedding. Any size. Any shape. Made to fit.',
+      brand: { '@type': 'Brand', name: 'MildMate' },
+      url: productUrl
+    };
+    if (hasPrice) {
+      productSchema.offers = {
+        '@type': 'Offer',
+        price: rawPrice.toFixed(2),
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+        seller: { '@type': 'Organization', name: 'MildMate' }
+      };
+    }
+    if (aggregateRating) {
+      productSchema.aggregateRating = aggregateRating;
+    }
+
+    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">${JSON.stringify(productSchema)}</script>`;
     if (!html.includes('id="json-ld-product"')) {
       html = html.replace(/<\/head>/i, `${productJsonLd}\n</head>`);
     }

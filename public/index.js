@@ -420,6 +420,21 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "bedbridge-connector",
   "mattress-lift-helper"
 ]);
+var PRODUCT_TYPE_DISPLAY = {
+  "sheets": "Sheets",
+  "duvet-covers": "Duvet Covers",
+  "pillowcases": "Pillowcases",
+  "protection": "Protections",
+  "accessories": "Accessories"
+};
+var NICHE_DISPLAY = {
+  "marine": "Marine & Yacht",
+  "family": "Family & Co-Sleep",
+  "pets": "Pet Owner",
+  "deep-pocket": "Deep Pocket",
+  "boarding-dorm": "Boarding Dorm",
+  "rv-truck": "RV & Truck Cab"
+};
 function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -490,7 +505,7 @@ async function onRequest2(context) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
     const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th FROM products WHERE slug = ?"
+      "SELECT image_url, images, title_en, title_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
     ).bind(slug);
     const product = await stmt.first();
     let images = [];
@@ -551,29 +566,55 @@ async function onRequest2(context) {
     }
     const baseUrl = url.origin;
     const mainImageUrl = mainImage ? mainImage.startsWith("http") ? mainImage : `${baseUrl}${mainImage.startsWith("/") ? "" : "/"}${mainImage}` : "";
-    const productTitle = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "${productTitle}",
-  "image": "${mainImageUrl}",
-  "description": "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
-  "brand": { "@type": "Brand", "name": "MildMate" },
-  "url": "${baseUrl}/product/${slug}/",
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "seller": { "@type": "Organization", "name": "MildMate" }
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "1000+"
-  }
-}
-<\/script>`;
+    const productTitle = isTh && product?.title_th || product?.title_en || slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const productUrl = `${baseUrl}${isTh ? "/th" : ""}/product/${slug}/`;
+    const rawPrice = Number(product?.base_price_usd);
+    const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
+    let aggregateRating = void 0;
+    try {
+      const productTypeSlug = String(product?.product_type || "").trim().toLowerCase();
+      const ptDisplay = PRODUCT_TYPE_DISPLAY[productTypeSlug] || productTypeSlug;
+      const nicheDisplayNames = String(product?.niches || "").split(",").map((n) => n.trim().toLowerCase()).filter(Boolean).map((n) => NICHE_DISPLAY[n]).filter(Boolean);
+      const matchTypes = [ptDisplay, ...nicheDisplayNames].filter(Boolean);
+      if (matchTypes.length > 0) {
+        const placeholders = matchTypes.map(() => "?").join(",");
+        const ratingSql = `SELECT COUNT(*) AS review_count, AVG(rating) AS rating_value FROM reviews WHERE product_type IN (${placeholders})`;
+        const ratingRow = await context.env.DB.prepare(ratingSql).bind(...matchTypes).first();
+        const reviewCount = Number(ratingRow?.review_count || 0);
+        const ratingValueNum = Number(ratingRow?.rating_value || 0);
+        if (reviewCount > 0 && Number.isFinite(ratingValueNum) && ratingValueNum > 0) {
+          aggregateRating = {
+            "@type": "AggregateRating",
+            ratingValue: ratingValueNum.toFixed(1),
+            reviewCount
+          };
+        }
+      }
+    } catch (e) {
+      console.error("Product JSON-LD rating query failed:", e);
+    }
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: productTitle,
+      image: mainImageUrl || void 0,
+      description: "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
+      brand: { "@type": "Brand", name: "MildMate" },
+      url: productUrl
+    };
+    if (hasPrice) {
+      productSchema.offers = {
+        "@type": "Offer",
+        price: rawPrice.toFixed(2),
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        seller: { "@type": "Organization", name: "MildMate" }
+      };
+    }
+    if (aggregateRating) {
+      productSchema.aggregateRating = aggregateRating;
+    }
+    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">${JSON.stringify(productSchema)}<\/script>`;
     if (!html.includes('id="json-ld-product"')) {
       html = html.replace(/<\/head>/i, `${productJsonLd}
 </head>`);
@@ -623,14 +664,14 @@ function r2Product(p) {
   return out;
 }
 __name(r2Product, "r2Product");
-var PRODUCT_TYPE_DISPLAY = {
+var PRODUCT_TYPE_DISPLAY2 = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
   "pillowcases": "Pillowcases",
   "protection": "Protections",
   "accessories": "Accessories"
 };
-var NICHE_DISPLAY = {
+var NICHE_DISPLAY2 = {
   "marine": "Marine & Yacht",
   "family": "Family & Co-Sleep",
   "pets": "Pet Owner",
@@ -733,13 +774,13 @@ async function handleProductReviews(env, slug) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const ptDisplay = PRODUCT_TYPE_DISPLAY[product.product_type] || product.product_type;
+    const ptDisplay = PRODUCT_TYPE_DISPLAY2[product.product_type] || product.product_type;
     const nicheDisplayNames = [];
     if (product.niches) {
       product.niches.split(",").forEach((n) => {
         const trimmed = n.trim();
-        if (trimmed && NICHE_DISPLAY[trimmed]) {
-          nicheDisplayNames.push(NICHE_DISPLAY[trimmed]);
+        if (trimmed && NICHE_DISPLAY2[trimmed]) {
+          nicheDisplayNames.push(NICHE_DISPLAY2[trimmed]);
         }
       });
     }
@@ -9577,7 +9618,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-klS8HW/functionsRoutes-0.7959653776392976.mjs
+// ../.wrangler/tmp/pages-s5ldqX/functionsRoutes-0.9576841866291121.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
