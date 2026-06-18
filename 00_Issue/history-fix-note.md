@@ -791,3 +791,7 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Compliance (Overclaims):** Softened "slides off" to "reduces hair clinging" and "scratch-resistant without pilling" to "resists daily wear and tear" to ensure we are setting realistic expectations for pet owners without making unbreakable guarantees.
 - **Compliance (Unverified Claims):** Replaced an unverified "Odor resistant" claim in the bottom description with a "Wrinkle-resistant" durability claim.
 - **Localization:** Fixed broken translation where half of the bottom description on `/th/pets/index.html` was still in English. Fully translated all updated claims.
+
+## 2026-06-18: Marketing Audit - RV & Truck Cab (/rv-truck/)
+- **Compliance (Unverified Claims):** Dropped the "allergen" claim regarding the mattress encasement.
+- **Marketing Pivot:** Completely rewrote the bottom description (both English and Thai) to specifically target the sleeper cab and RV market segment. The new copy emphasizes the CloudSoft fabric's Quick-Dry and Moisture-Wicking properties, custom-fit grip to prevent sheets from popping off on rough roads, and commercial-grade durability for life on the road.
