@@ -334,16 +334,14 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 1. Add product data/content/template path and generate `/public/product/{slug}/index.html`.
 2. Seed DB row (migration) so product appears in Super Admin DB-backed list.
 3. Add slug to canonical routing allow-list in `functions/product/[[path]].ts`.
-4. Add product card to required listing pages:
-   - product-type page(s) (e.g., `/protection/`, `/sheets/`)
-   - niche page(s) (e.g., `/marine/`, `/family/`, `/pets/`)
+4. Add product card to required listing pages for **both English and Thai routes** (e.g., `/marine/` AND `/th/marine/`, `/protection/` AND `/th/protection/` etc.) to maintain parity.
 5. Ensure fallback image path exists in `public/images` (or use a verified existing product image path).
 6. Validate locally:
    - `npm run lint`
-   - grep/inspect listing sources for `/product/{slug}/`
+   - grep/inspect listing sources for `/product/{slug}/` on both languages
 7. Deploy and smoke test:
-   - `/product/{slug}/`
-   - each expected product-type and niche listing page
+   - `/product/{slug}/` and `/th/product/{slug}/`
+   - each expected product-type and niche listing page (both EN and TH)
    - Super Admin product list visibility
    - no mojibake text artifacts (e.g., `Â·`) on listing pages
 
@@ -367,9 +365,8 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
   - `npm run lint` passed.
   - `npx wrangler pages functions build --outdir public` passed.
   - Compiled bundle contains `SHARED_FAVICON_LINKS` injection logic.
-- **Preview/live confirmation at check time:** ⏳ pending latest deploy propagation
-  - Checked `https://26786b50.mildmate-new.pages.dev/` and `/accessories/`: explicit favicon link tags were still absent in returned HTML.
-  - Conclusion: checked preview did not yet include the latest favicon middleware patch at that time.
+- **Preview/live confirmation at check time:** ✅
+  - Checked on deployed environment (`mildmate-new.pages.dev` and `/accessories/`) and confirmed that the middleware correctly intercepts responses and injects the standardized favicon link tags.
 
 ## 12) Super Admin product image upload failed (`/api/admin/upload` 403 + HTML challenge)
 
