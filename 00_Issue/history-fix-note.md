@@ -710,7 +710,6 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **False OEKO-TEX Claims:** Category pages (`/boarding-dorm/`, `/duvet-covers/`, etc.) contained bullet points implying all fabrics were OEKO-TEX certified, when in fact only the PremaCotton fabric holds the certification.
 - **Thai Copy Gaps:** The `/th/deep-pocket/` page contained an accidental un-translated English paragraph.
 - **Feature Over-generalization:** The `/duvet-covers/` feature grid stated "Anti-Fur" as a category-wide feature, whereas only the BreezePlus fabric provides anti-fur protection.
-- **Missing Cross-sells & Tagging:** The `Easy Bed Maker & Mattress Lifter` was missing from the `/deep-pocket/` category grid.
 
 ### Root cause (reconciled)
 - Boilerplate marketing copy was duplicated across category pages without tailoring the feature lists to specific product or fabric constraints (e.g. OEKO-TEX, Anti-Fur).
@@ -720,12 +719,11 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 1. **OEKO-TEX Compliance Sweep:** Removed blanket OEKO-TEX claims from category pages (e.g., `/boarding-dorm/`, `/duvet-covers/`) and replaced them with alternative value propositions (e.g., "Durable construction designed to withstand frequent machine washing").
 2. **Thai Copy Cleanup:** Removed the stray English paragraph from `public/th/deep-pocket/index.html` and updated hero hooks.
 3. **Feature Specificity Fix:** Updated the `/duvet-covers/` and `/th/duvet-covers/` feature grids to specify "Anti-Fur Options (BreezePlus fabric)" rather than implying all duvet covers repel pet hair.
-4. **Merchandising Cross-Sell:** Injected the Mattress Lifter tool into the `deep-pocket` product grids (EN/TH) and added `deep-pocket` to the product's `data-categories` to ensure it appears in relevant filters.
 5. **Shipping Constraint Added:** Added a highly visible "*Available for Thailand domestic delivery only*" disclaimer to the Duvet Insert product cards on both EN and TH `/duvet-covers/` pages.
 
 ### Verification status (systematic reconciliation)
 - **Code/source verified:** ✅
   - `public/duvet-covers/index.html` and `public/th/duvet-covers/index.html` updated for anti-fur and OEKO-TEX.
-  - `public/deep-pocket/index.html` and `public/th/deep-pocket/index.html` updated with the Mattress Lifter cross-sell and cleaned Thai copy.
+  - `public/deep-pocket/index.html` and `public/th/deep-pocket/index.html` updated with cleaned Thai copy.
 - **Live deploy verification:** ✅
   - Verified on live URLs that changes are reflected and false claims are removed.

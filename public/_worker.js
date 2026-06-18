@@ -420,6 +420,21 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "bedbridge-connector",
   "mattress-lift-helper"
 ]);
+var PRODUCT_TYPE_DISPLAY = {
+  "sheets": "Sheets",
+  "duvet-covers": "Duvet Covers",
+  "pillowcases": "Pillowcases",
+  "protection": "Protections",
+  "accessories": "Accessories"
+};
+var NICHE_DISPLAY = {
+  "marine": "Marine & Yacht",
+  "family": "Family & Co-Sleep",
+  "pets": "Pet Owner",
+  "deep-pocket": "Deep Pocket",
+  "boarding-dorm": "Boarding Dorm",
+  "rv-truck": "RV & Truck Cab"
+};
 function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -490,7 +505,7 @@ async function onRequest2(context) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
     const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th FROM products WHERE slug = ?"
+      "SELECT image_url, images, title_en, title_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
     ).bind(slug);
     const product = await stmt.first();
     let images = [];
@@ -551,29 +566,55 @@ async function onRequest2(context) {
     }
     const baseUrl = url.origin;
     const mainImageUrl = mainImage ? mainImage.startsWith("http") ? mainImage : `${baseUrl}${mainImage.startsWith("/") ? "" : "/"}${mainImage}` : "";
-    const productTitle = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "${productTitle}",
-  "image": "${mainImageUrl}",
-  "description": "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
-  "brand": { "@type": "Brand", "name": "MildMate" },
-  "url": "${baseUrl}/product/${slug}/",
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "seller": { "@type": "Organization", "name": "MildMate" }
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5.0",
-    "reviewCount": "1000+"
-  }
-}
-<\/script>`;
+    const productTitle = isTh && product?.title_th || product?.title_en || slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const productUrl = `${baseUrl}${isTh ? "/th" : ""}/product/${slug}/`;
+    const rawPrice = Number(product?.base_price_usd);
+    const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0;
+    let aggregateRating = void 0;
+    try {
+      const productTypeSlug = String(product?.product_type || "").trim().toLowerCase();
+      const ptDisplay = PRODUCT_TYPE_DISPLAY[productTypeSlug] || productTypeSlug;
+      const nicheDisplayNames = String(product?.niches || "").split(",").map((n) => n.trim().toLowerCase()).filter(Boolean).map((n) => NICHE_DISPLAY[n]).filter(Boolean);
+      const matchTypes = [ptDisplay, ...nicheDisplayNames].filter(Boolean);
+      if (matchTypes.length > 0) {
+        const placeholders = matchTypes.map(() => "?").join(",");
+        const ratingSql = `SELECT COUNT(*) AS review_count, AVG(rating) AS rating_value FROM reviews WHERE product_type IN (${placeholders})`;
+        const ratingRow = await context.env.DB.prepare(ratingSql).bind(...matchTypes).first();
+        const reviewCount = Number(ratingRow?.review_count || 0);
+        const ratingValueNum = Number(ratingRow?.rating_value || 0);
+        if (reviewCount > 0 && Number.isFinite(ratingValueNum) && ratingValueNum > 0) {
+          aggregateRating = {
+            "@type": "AggregateRating",
+            ratingValue: ratingValueNum.toFixed(1),
+            reviewCount
+          };
+        }
+      }
+    } catch (e) {
+      console.error("Product JSON-LD rating query failed:", e);
+    }
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: productTitle,
+      image: mainImageUrl || void 0,
+      description: "Custom made-to-measure bedding. Any size. Any shape. Made to fit.",
+      brand: { "@type": "Brand", name: "MildMate" },
+      url: productUrl
+    };
+    if (hasPrice) {
+      productSchema.offers = {
+        "@type": "Offer",
+        price: rawPrice.toFixed(2),
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        seller: { "@type": "Organization", name: "MildMate" }
+      };
+    }
+    if (aggregateRating) {
+      productSchema.aggregateRating = aggregateRating;
+    }
+    const productJsonLd = `<script type="application/ld+json" id="json-ld-product">${JSON.stringify(productSchema)}<\/script>`;
     if (!html.includes('id="json-ld-product"')) {
       html = html.replace(/<\/head>/i, `${productJsonLd}
 </head>`);
@@ -603,7 +644,7 @@ __name(toR2Url, "toR2Url");
 function normalizeMojibake(str) {
   const s = String(str || "").trim();
   if (!s) return "";
-  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒñì/g, "").replace(/�/g, "");
+  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "").replace(/≡ƒñì/g, "").replace(/�/g, "");
 }
 __name(normalizeMojibake, "normalizeMojibake");
 function r2Product(p) {
@@ -623,14 +664,14 @@ function r2Product(p) {
   return out;
 }
 __name(r2Product, "r2Product");
-var PRODUCT_TYPE_DISPLAY = {
+var PRODUCT_TYPE_DISPLAY2 = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
   "pillowcases": "Pillowcases",
   "protection": "Protections",
   "accessories": "Accessories"
 };
-var NICHE_DISPLAY = {
+var NICHE_DISPLAY2 = {
   "marine": "Marine & Yacht",
   "family": "Family & Co-Sleep",
   "pets": "Pet Owner",
@@ -733,13 +774,13 @@ async function handleProductReviews(env, slug) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const ptDisplay = PRODUCT_TYPE_DISPLAY[product.product_type] || product.product_type;
+    const ptDisplay = PRODUCT_TYPE_DISPLAY2[product.product_type] || product.product_type;
     const nicheDisplayNames = [];
     if (product.niches) {
       product.niches.split(",").forEach((n) => {
         const trimmed = n.trim();
-        if (trimmed && NICHE_DISPLAY[trimmed]) {
-          nicheDisplayNames.push(NICHE_DISPLAY[trimmed]);
+        if (trimmed && NICHE_DISPLAY2[trimmed]) {
+          nicheDisplayNames.push(NICHE_DISPLAY2[trimmed]);
         }
       });
     }
@@ -2755,7 +2796,7 @@ async function handleAdminProducts(request, env) {
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB;
     const result = await db.prepare(
-      `SELECT id, slug, title_en, title_th, description_en, description_th,
+      `SELECT id, slug, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th,
               category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
@@ -2779,14 +2820,16 @@ async function handleAdminProducts(request, env) {
       const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
       const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
       await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
       ).bind(
         slug,
         body.title_en || body.titleEN || slug,
         body.title_th || body.titleTH || null,
         body.description_en || body.descEN || null,
         body.description_th || body.descTH || null,
+        body.card_benefit_en || body.cardBenefitEN || "",
+        body.card_benefit_th || body.cardBenefitTH || "",
         body.category || "sheets",
         body.product_type || product_type,
         body.niches || niches,
@@ -2837,6 +2880,8 @@ async function handleAdminProducts(request, env) {
         "title_th",
         "description_en",
         "description_th",
+        "card_benefit_en",
+        "card_benefit_th",
         "tags",
         "youtube_url",
         "images",
@@ -6025,7 +6070,7 @@ __name(sanitize, "sanitize");
 function normalizeMojibake2(str) {
   const s = sanitize(str);
   if (!s) return "";
-  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒñì/g, "").replace(/�/g, "");
+  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "").replace(/≡ƒñì/g, "").replace(/�/g, "");
 }
 __name(normalizeMojibake2, "normalizeMojibake");
 function toR2Url4(url) {
@@ -9285,6 +9330,188 @@ function resolveLegacyProductPath(pathname) {
   return "/products/";
 }
 __name(resolveLegacyProductPath, "resolveLegacyProductPath");
+var LISTING_ROUTES = {
+  "/products/": { lang: "en", mode: "all" },
+  "/sheets/": { lang: "en", mode: "product_type", value: "sheets" },
+  "/duvet-covers/": { lang: "en", mode: "product_type", value: "duvet-covers" },
+  "/pillowcases/": { lang: "en", mode: "product_type", value: "pillowcases" },
+  "/protection/": { lang: "en", mode: "product_type", value: "protection" },
+  "/accessories/": { lang: "en", mode: "product_type", value: "accessories" },
+  "/marine/": { lang: "en", mode: "niche", value: "marine" },
+  "/family/": { lang: "en", mode: "niche", value: "family" },
+  "/pets/": { lang: "en", mode: "niche", value: "pets" },
+  "/deep-pocket/": { lang: "en", mode: "niche", value: "deep-pocket" },
+  "/boarding-dorm/": { lang: "en", mode: "niche", value: "boarding-dorm" },
+  "/rv-truck/": { lang: "en", mode: "niche", value: "rv-truck" },
+  "/th/products/": { lang: "th", mode: "all" },
+  "/th/sheets/": { lang: "th", mode: "product_type", value: "sheets" },
+  "/th/duvet-covers/": { lang: "th", mode: "product_type", value: "duvet-covers" },
+  "/th/pillowcases/": { lang: "th", mode: "product_type", value: "pillowcases" },
+  "/th/protection/": { lang: "th", mode: "product_type", value: "protection" },
+  "/th/accessories/": { lang: "th", mode: "product_type", value: "accessories" },
+  "/th/marine/": { lang: "th", mode: "niche", value: "marine" },
+  "/th/family/": { lang: "th", mode: "niche", value: "family" },
+  "/th/pets/": { lang: "th", mode: "niche", value: "pets" },
+  "/th/deep-pocket/": { lang: "th", mode: "niche", value: "deep-pocket" },
+  "/th/boarding-dorm/": { lang: "th", mode: "niche", value: "boarding-dorm" },
+  "/th/rv-truck/": { lang: "th", mode: "niche", value: "rv-truck" }
+};
+var PRODUCT_TYPE_LABELS_EN = {
+  sheets: "SHEETS",
+  "duvet-covers": "DUVET COVERS",
+  pillowcases: "PILLOWCASES",
+  protection: "PROTECTION",
+  accessories: "ACCESSORIES"
+};
+var PRODUCT_TYPE_LABELS_TH = {
+  sheets: "\u0E1C\u0E49\u0E32\u0E1B\u0E39\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19",
+  "duvet-covers": "\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E19\u0E27\u0E21",
+  pillowcases: "\u0E1B\u0E25\u0E2D\u0E01\u0E2B\u0E21\u0E2D\u0E19",
+  protection: "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07",
+  accessories: "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
+};
+var NICHE_LABELS_EN = {
+  marine: "MARINE & YACHT",
+  family: "FAMILY & CO-SLEEP",
+  pets: "PET OWNER",
+  "deep-pocket": "DEEP POCKET",
+  "boarding-dorm": "BOARDING DORM",
+  "rv-truck": "RV & TRUCK"
+};
+var NICHE_LABELS_TH = {
+  marine: "\u0E40\u0E23\u0E37\u0E2D\u0E41\u0E25\u0E30\u0E22\u0E2D\u0E0A\u0E15\u0E4C",
+  family: "\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27",
+  pets: "\u0E1A\u0E49\u0E32\u0E19\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07",
+  "deep-pocket": "\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E2B\u0E19\u0E32\u0E1E\u0E34\u0E40\u0E28\u0E29",
+  "boarding-dorm": "\u0E2B\u0E2D\u0E1E\u0E31\u0E01",
+  "rv-truck": "\u0E23\u0E16\u0E1A\u0E49\u0E32\u0E19\u0E41\u0E25\u0E30\u0E23\u0E16\u0E1A\u0E23\u0E23\u0E17\u0E38\u0E01"
+};
+function normalizeRoutePath(pathname) {
+  if (pathname === "/") return "/";
+  return pathname.endsWith("/") ? pathname : `${pathname}/`;
+}
+__name(normalizeRoutePath, "normalizeRoutePath");
+function escapeHtml(value) {
+  const str = String(value ?? "");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+__name(escapeHtml, "escapeHtml");
+function parseCsv(raw) {
+  return String(raw || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
+}
+__name(parseCsv, "parseCsv");
+function pickPrimaryImage(imagesRaw, imageUrl) {
+  try {
+    const arr = typeof imagesRaw === "string" ? JSON.parse(imagesRaw) : imagesRaw;
+    if (Array.isArray(arr)) {
+      const first = String(arr[0] || "").trim();
+      if (first) return first;
+    }
+  } catch {
+  }
+  return String(imageUrl || "").trim();
+}
+__name(pickPrimaryImage, "pickPrimaryImage");
+function getTagHref(slug, lang) {
+  const prefix = lang === "th" ? "/th" : "";
+  const valid = ["sheets", "duvet-covers", "pillowcases", "protection", "accessories", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"];
+  return valid.includes(slug) ? `${prefix}/${slug}/` : `${prefix}/products/`;
+}
+__name(getTagHref, "getTagHref");
+function buildTagHtml(productType, niches, lang) {
+  const productTypeLabels = lang === "th" ? PRODUCT_TYPE_LABELS_TH : PRODUCT_TYPE_LABELS_EN;
+  const nicheLabels = lang === "th" ? NICHE_LABELS_TH : NICHE_LABELS_EN;
+  const tags = [];
+  if (productTypeLabels[productType]) {
+    tags.push(`<a href="${getTagHref(productType, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml(productTypeLabels[productType])}</a>`);
+  }
+  if (niches.length > 0 && nicheLabels[niches[0]]) {
+    const firstNiche = niches[0];
+    tags.push(`<a href="${getTagHref(firstNiche, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml(nicheLabels[firstNiche])}</a>`);
+  }
+  return tags.join("");
+}
+__name(buildTagHtml, "buildTagHtml");
+function renderListingCards(rows, lang) {
+  const priceNote = lang === "th" ? "\u0E44\u0E21\u0E48\u0E23\u0E27\u0E21\u0E04\u0E48\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07 \u0E20\u0E32\u0E29\u0E35 \u0E41\u0E25\u0E30\u0E20\u0E32\u0E29\u0E35\u0E28\u0E38\u0E25\u0E01\u0E32\u0E01\u0E23" : "Excludes shipping, tax & tariff";
+  const ctaCustom = lang === "th" ? "\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E41\u0E25\u0E30\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14" : "Customize This Product";
+  const ctaStandard = lang === "th" ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
+  const fabricsCustom = lang === "th" ? "\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29 \xB7 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E44\u0E14\u0E49\u0E2B\u0E25\u0E32\u0E01\u0E2B\u0E25\u0E32\u0E22" : "Custom size \xB7 Multiple fabrics";
+  const fabricsFixed = lang === "th" ? "\u0E02\u0E19\u0E32\u0E14\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E43\u0E0A\u0E49 \xB7 \u0E2A\u0E40\u0E1B\u0E01\u0E04\u0E07\u0E17\u0E35\u0E48" : "Ready size \xB7 Fixed configuration";
+  return rows.map((row) => {
+    const title = lang === "th" ? row.title_th || row.title_en || row.slug : row.title_en || row.slug;
+    const benefit = lang === "th" ? row.card_benefit_th || row.card_benefit_en || "" : row.card_benefit_en || row.card_benefit_th || "";
+    const productType = String(row.product_type || "").toLowerCase();
+    const niches = parseCsv(row.niches);
+    const categories = [productType, ...niches, row.is_custom ? "custom-shape" : ""].filter(Boolean).join(",");
+    const dataPrice = lang === "th" ? Number(row.base_price_thb || 0) : Number(row.base_price_usd || 0);
+    const usd = Math.round(Number(row.base_price_usd || 0));
+    const thb = Math.round(Number(row.base_price_thb || 0));
+    const priceLabel = lang === "th" ? `\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 \u0E3F${thb.toLocaleString("en-US")}` : `From US$${usd}`;
+    const image = pickPrimaryImage(row.images, row.image_url) || "/images/placeholder.jpg";
+    const href = lang === "th" ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
+    return `<article class="product-card" data-categories="${escapeHtml(categories)}" data-title="${escapeHtml(String(title).toLowerCase())}" data-price="${escapeHtml(dataPrice)}">
+      <div class="product-image">
+        <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" width="800" height="600" loading="lazy" decoding="async">
+      </div>
+      <div class="product-info">
+        <div class="product-tags" aria-label="Categories">${buildTagHtml(productType, niches, lang)}</div>
+        <h3 class="product-title">${escapeHtml(title)}</h3>
+        <div class="product-price" data-usd="${escapeHtml(usd)}" data-thb="${escapeHtml(thb)}">${escapeHtml(priceLabel)}</div>
+        <div class="product-price-note">${escapeHtml(priceNote)}</div>
+        <p class="product-benefit">${escapeHtml(benefit)}</p>
+        <div class="product-fabrics-info">${escapeHtml(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
+        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(row.is_custom ? ctaCustom : ctaStandard)}</a>
+      </div>
+    </article>`;
+  }).join("\n");
+}
+__name(renderListingCards, "renderListingCards");
+function replaceFirstProductGrid(html, cardMarkup) {
+  const start = html.indexOf('<div class="product-grid');
+  if (start < 0) return html;
+  const openEnd = html.indexOf(">", start);
+  if (openEnd < 0) return html;
+  const divPattern = /<\/?div\b[^>]*>/gi;
+  divPattern.lastIndex = openEnd + 1;
+  let depth = 1;
+  let closeStart = -1;
+  let closeEnd = -1;
+  let match2 = null;
+  while ((match2 = divPattern.exec(html)) !== null) {
+    const token = match2[0];
+    if (token.startsWith("</div")) depth -= 1;
+    else depth += 1;
+    if (depth === 0) {
+      closeStart = match2.index;
+      closeEnd = match2.index + token.length;
+      break;
+    }
+  }
+  if (closeStart < 0 || closeEnd < 0) return html;
+  return `${html.slice(0, openEnd + 1)}
+${cardMarkup}
+${html.slice(closeStart, closeEnd)}${html.slice(closeEnd)}`;
+}
+__name(replaceFirstProductGrid, "replaceFirstProductGrid");
+async function fetchListingProducts(db, config) {
+  const baseQuery = `SELECT slug, title_en, title_th, card_benefit_en, card_benefit_th, product_type, niches, base_price_usd, base_price_thb, image_url, images, is_custom, sort_order, id
+    FROM products
+    WHERE is_active = 1`;
+  if (config.mode === "all") {
+    const result2 = await db.prepare(`${baseQuery} ORDER BY sort_order, id`).all();
+    return result2?.results || [];
+  }
+  if (!config.value) return [];
+  if (config.mode === "product_type") {
+    const result2 = await db.prepare(`${baseQuery} AND LOWER(COALESCE(product_type, '')) = ? ORDER BY sort_order, id`).bind(config.value.toLowerCase()).all();
+    return result2?.results || [];
+  }
+  const niche = config.value.toLowerCase();
+  const result = await db.prepare(`${baseQuery} AND ((',' || LOWER(COALESCE(niches, '')) || ',') LIKE ? OR (',' || LOWER(COALESCE(category, '')) || ',') LIKE ?) ORDER BY sort_order, id`).bind(`%,${niche},%`, `%,${niche},%`).all();
+  return result?.results || [];
+}
+__name(fetchListingProducts, "fetchListingProducts");
 async function onRequest9(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
@@ -9302,6 +9529,23 @@ async function onRequest9(context) {
   const contentType = response.headers.get("Content-Type") || "";
   if (!contentType.includes("text/html")) return response;
   let html = await response.text();
+  const normalizedPath = normalizeRoutePath(path);
+  const listingConfig = LISTING_ROUTES[normalizedPath];
+  if (listingConfig && context.env?.DB) {
+    try {
+      const rows = await fetchListingProducts(context.env.DB, listingConfig);
+      if (rows.length > 0) {
+        html = replaceFirstProductGrid(html, renderListingCards(rows, listingConfig.lang));
+        if (normalizedPath === "/products/") {
+          html = html.replace(/id="results-count">[^<]*</, `id="results-count">${rows.length} products<`);
+        } else if (normalizedPath === "/th/products/") {
+          html = html.replace(/id="results-count">[^<]*</, `id="results-count">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32 ${rows.length} \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23<`);
+        }
+      }
+    } catch (e) {
+      console.error("_middleware: dynamic listing render failed:", e);
+    }
+  }
   const header = await getChrome(context.env.DB, "header");
   const footer = await getChrome(context.env.DB, "footer");
   if (html.includes("<!-- __HEADER__ -->")) {
@@ -9374,7 +9618,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-m1hxuD/functionsRoutes-0.6477472378684959.mjs
+// ../.wrangler/tmp/pages-UG8FwV/functionsRoutes-0.8621920113108829.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
