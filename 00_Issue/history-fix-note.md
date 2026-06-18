@@ -795,3 +795,7 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 ## 2026-06-18: Marketing Audit - RV & Truck Cab (/rv-truck/)
 - **Compliance (Unverified Claims):** Dropped the "allergen" claim regarding the mattress encasement.
 - **Marketing Pivot:** Completely rewrote the bottom description (both English and Thai) to specifically target the sleeper cab and RV market segment. The new copy emphasizes the CloudSoft fabric's Quick-Dry and Moisture-Wicking properties, custom-fit grip to prevent sheets from popping off on rough roads, and commercial-grade durability for life on the road.
+
+## 2026-06-18: Marketing Audit - Protection (/protection/)
+- **Compliance (Unverified Claims):** Removed a misleading OEKO-TEX Standard 100 claim that was specifically tied to PremaCotton, as none of the mattress protectors use PremaCotton. Replaced it with a practical "Machine washable for easy cleaning" benefit.
+- **Compliance (Overclaim):** Softened the "Pet-Proof" feature from claiming "BreezePlus fur-resistant options" (and Thai equivalent of "slides off") to "BreezePlus tight-weave options to reduce hair clinging" to align with our established guidelines for the BreezePlus fabric.
