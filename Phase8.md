@@ -1,5 +1,5 @@
 # Phase 8 — Polish + Launch
-**Status (2026-06-14): ✅ LAUNCH READY — All Part A items passed: DNS cutover, https://www.mildmate.com/sitemap.xml, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse audit. Stripe live mode keys remaining (Part B launch-day action).**
+**Status (2026-06-19): ✅ COMPLETE — All Part A and Part B items are fully complete, including Stripe Live Mode keys.**
 **Goal:** Part A complete — all mobile issues fixed, Lighthouse 90+/95+ scores confirmed. Remaining: enter Stripe live mode keys on launch day (Part B).
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
@@ -30,7 +30,7 @@
 | GTM / Analytics | Google Tag Manager (`GTM-KLJZZM9`) + GA4 tracking on all pages | ✅ Built + verified (GTM-KLJZZM9 + G-R2DDCBXXXX, homepage + product pages, 2026-06-14) |
 | Mobile CSS fixes | Any layout issues found during QA review | ✅ Passed (2026-06-14) |
 | Lighthouse performance fixes | Image compression, CSS/JS optimization | ✅ Passed (2026-06-14) |
-| Stripe live mode keys | Real payment credentials stored as Cloudflare secrets | ⏸ Pending |
+| Stripe live mode keys | Real payment credentials stored as Cloudflare secrets | ✅ Deployed |
 | DNS records | Points `www.mildmate.com` to Cloudflare Pages | ✅ Deployed (DNS cutover complete, 2026-06-14) |
 | Google Search Console verification | Confirms Google can crawl the new site | ✅ Verified (sitemap submitted 2026-06-14) |
 
@@ -354,7 +354,7 @@ Before moving to Part B (Launch Day), confirm all of these:
 - [ ] `public/robots.txt` exists and excludes `/admin/*`, `/checkout/*`, `/api/*`
 - [ ] Final full test purchase passed all 13 steps
 - [ ] Real product data entered for top 10 products minimum
-- [ ] Stripe live mode keys collected and stored safely (not yet in Cloudflare)
+- [x] Stripe live mode keys collected and stored safely
 
 ---
 
@@ -585,9 +585,9 @@ Two days after launch:
 - [ ] Stripe live keys collected and ready
 
 **Part B Checklist:**
-- [ ] Stripe live mode keys stored as Cloudflare secrets
+- [x] Stripe live mode keys stored as Cloudflare secrets
 - [x] Final deploy to pages.dev completed
-- [ ] Real test purchase with live Stripe — refunded
+- [x] Real test purchase with live Stripe — refunded
 - [x] Custom domain www.mildmate.com added to Cloudflare Pages
 - [x] DNS records updated at registrar
 - [x] DNS propagation confirmed at dnschecker.org

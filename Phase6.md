@@ -1,4 +1,4 @@
-﻿# Phase 6 — Abandoned Cart Recovery
+# Phase 6 — Abandoned Cart Recovery
 **Status (2026-06-14): ✅ BUILT + VERIFIED - Multi-stage recovery cron (`functions/cron.ts`), 3-stage email flow (24h/72h/7d), `thankyou_queue` + `recovery_config` D1 tables, `buildStage1Email` / `buildStage2Email` / `buildStage3Email` / `buildThankyouEmail` HTML templates, `abandoned_carts` table with `recovered` flag (Phase 5 webhook marks recovered=1 on payment), cart email capture via `PUT /api/customers/cart`. `workers/api/admin-recovery-test.ts` is wired at `/api/admin/recovery-test/` via `functions/api/[[path]].ts`. Cron trigger configured via Cloudflare Dashboard (triggers registered under Workers & Pages project settings). Admin Dashboard ✅ built in Phase 7. Sandbox admin files removed (cleanup done 2026-06-14). Migrations 024–026 applied as part of Phase 7.
 **Goal:** Automatically catch customers who started checkout but did not finish.
 
@@ -450,6 +450,6 @@ This system runs automatically forever — you set it up once in Phase 6 and it 
 
 ## What Happens Next
 
-Phase 6 is **complete**. Phases 5 and 7 are also **complete**. Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
+Phase 6 is **complete**. Phases 5, 7, and 8 (Launch) are also **complete**.
 
-Move to **Phase 8 — Polish + Launch** for final pre-launch tasks (mobile QA, Lighthouse audit, Stripe live mode).
+Move to **Phase 9 — Testing (Vitest)** for adding unit tests.

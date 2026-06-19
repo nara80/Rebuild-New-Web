@@ -213,4 +213,6 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 
 ## What Happens Next
 
-Once Phase 7 admin is fully verified, move to **Phase 8 — Polish + Launch**.
+Phase 7 admin is fully verified. **Phase 8 — Polish + Launch** is also ✅ COMPLETE (Stripe live mode keys are deployed and the site is 100% live).
+
+Move to **Phase 9 — Testing** if unit tests are required.
