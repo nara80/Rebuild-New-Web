@@ -740,6 +740,22 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Live deploy verification:** ✅
   - Verified on live URLs that changes are reflected and false claims are removed.
 
+### Regression follow-up (2026-06-19) — `/duvet-covers/` CTA reverted to `Customize This Product`
+- **What happened:** user still saw CTA text `Customize This Product` on `/duvet-covers/` despite static category source using `Choose Size & Fabric`.
+- **Root cause (reconciled):** listing cards for product-type/niche pages are SSR-replaced in `functions/_middleware.ts`; middleware CTA logic used `row.is_custom` and overrode static page CTA copy for duvet-cover products.
+- **Fix completed (code):**
+  - Updated `functions/_middleware.ts`:
+    - `renderListingCards(...)` now receives route context.
+    - For product-type route `duvet-covers`, force CTA to standard selector CTA:
+      - EN: `Choose Size & Fabric`
+      - TH: `เลือกขนาดและเนื้อผ้า`
+    - Preserved fixed-product handling (`duvet-insert`, `bedbridge-connector`, `mattress-lift-helper`) as `View Details` / `ดูรายละเอียด`.
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+- **Live deploy verification:** ⏳ pending deploy
+  - Requires deploy to reflect middleware change on live `/duvet-covers/` and `/th/duvet-covers/`.
+
 ## 2026-06-18: Marketing Audit - Family & Co-Sleep (/family/)
 - **Compliance (OEKO-TEX):** Removed the generic "OEKO-TEX certified, 100% chemical-free" bullet point from the bottom description (both EN and TH) and replaced it with a durability/washing benefit, maintaining consistency with previous category updates.
 - **Compliance (Unverified Claims):** Removed "Hypoallergenic" text from the BedBridge Connector product card on the English page and replaced it with "Premium high-density foam" (Thai text was already compliant).

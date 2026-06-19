@@ -9531,10 +9531,11 @@ function buildTagHtml(productType, niches, lang) {
 __name(buildTagHtml, "buildTagHtml");
 function renderListingCards(rows, lang) {
   const priceNote = lang === "th" ? "\u0E44\u0E21\u0E48\u0E23\u0E27\u0E21\u0E04\u0E48\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07 \u0E20\u0E32\u0E29\u0E35 \u0E41\u0E25\u0E30\u0E20\u0E32\u0E29\u0E35\u0E28\u0E38\u0E25\u0E01\u0E32\u0E01\u0E23" : "Excludes shipping, tax & tariff";
-  const ctaCustom = lang === "th" ? "\u0E2D\u0E2D\u0E01\u0E41\u0E1A\u0E1A\u0E41\u0E25\u0E30\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14" : "Customize This Product";
   const ctaStandard = lang === "th" ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
+  const ctaView = lang === "th" ? "\u0E14\u0E39\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14" : "View Details";
   const fabricsCustom = lang === "th" ? "\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29 \xB7 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E44\u0E14\u0E49\u0E2B\u0E25\u0E32\u0E01\u0E2B\u0E25\u0E32\u0E22" : "Custom size \xB7 Multiple fabrics";
   const fabricsFixed = lang === "th" ? "\u0E02\u0E19\u0E32\u0E14\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E43\u0E0A\u0E49 \xB7 \u0E2A\u0E40\u0E1B\u0E01\u0E04\u0E07\u0E17\u0E35\u0E48" : "Ready size \xB7 Fixed configuration";
+  const fixedProductSlugs = /* @__PURE__ */ new Set(["duvet-insert", "bedbridge-connector", "mattress-lift-helper"]);
   return rows.map((row) => {
     const title = lang === "th" ? row.title_th || row.title_en || row.slug : row.title_en || row.slug;
     const benefit = lang === "th" ? row.card_benefit_th || row.card_benefit_en || "" : row.card_benefit_en || row.card_benefit_th || "";
@@ -9547,6 +9548,8 @@ function renderListingCards(rows, lang) {
     const priceLabel = lang === "th" ? `\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 \u0E3F${thb.toLocaleString("en-US")}` : `From US$${usd}`;
     const image = pickPrimaryImage(row.images, row.image_url) || "/images/placeholder.jpg";
     const href = lang === "th" ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
+    const isFixed = fixedProductSlugs.has(String(row.slug || "").toLowerCase());
+    const ctaLabel = isFixed ? ctaView : ctaStandard;
     return `<article class="product-card" data-categories="${escapeHtml(categories)}" data-title="${escapeHtml(String(title).toLowerCase())}" data-price="${escapeHtml(dataPrice)}">
       <div class="product-image">
         <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" width="800" height="600" loading="lazy" decoding="async">
@@ -9558,7 +9561,7 @@ function renderListingCards(rows, lang) {
         <div class="product-price-note">${escapeHtml(priceNote)}</div>
         <p class="product-benefit">${escapeHtml(benefit)}</p>
         <div class="product-fabrics-info">${escapeHtml(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
-        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(row.is_custom ? ctaCustom : ctaStandard)}</a>
+        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(ctaLabel)}</a>
       </div>
     </article>`;
   }).join("\n");
@@ -9715,7 +9718,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-SyavFS/functionsRoutes-0.17195630829508635.mjs
+// ../.wrangler/tmp/pages-nAHHDo/functionsRoutes-0.18466729070973964.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

@@ -35,7 +35,7 @@ const fabricNames = {
   bamboo: 'Bamboo',
   tpu: 'TPU Waterproof',
   polyester: 'Polyester Hollow Fiber',
-  microfiber: 'Microfiber 200g/mÂ²',
+  microfiber: 'Microfiber 200g/m²',
   abs: 'ABS Plastic'
 };
 
@@ -62,13 +62,23 @@ const sizePlaceholders = {
 
 function normalizeMojibake(s) {
   return String(s || '')
-    .replace(/Ã¢â‚¬â€/g, '—')
-    .replace(/â€”/g, '—')
-    .replace(/â€“/g, '–')
-    .replace(/Â²/g, '²')
-    .replace(/Â°/g, '°')
-    .replace(/Ã—/g, '×')
-    .replace(/Â·/g, '·');
+    .replace(/\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u009d/g, '—')
+    .replace(/\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u20ac\u201c/g, '–')
+    .replace(/\u00c3\u00a2\u00e2\u201a\u00ac\u00cb\u0153/g, '‘')
+    .replace(/\u00c3\u00a2\u00e2\u201a\u00ac\u00e2\u201e\u00a2/g, '’')
+    .replace(/\u00c3\u00a2\u00e2\u201a\u00ac\u00c5\u201c/g, '“')
+    .replace(/\u00c3\u00a2\u00e2\u201a\u00ac\u00c2\u009d/g, '”')
+    .replace(/\u00e2\u20ac\u201d/g, '—')
+    .replace(/\u00e2\u20ac\u201c/g, '–')
+    .replace(/\u00e2\u20ac\u02dc/g, '‘')
+    .replace(/\u00e2\u20ac\u2122/g, '’')
+    .replace(/\u00e2\u20ac\u0153/g, '“')
+    .replace(/\u00e2\u20ac\ufffd/g, '”')
+    .replace(/\u00c2\u00b2/g, '²')
+    .replace(/\u00c2\u00b0/g, '°')
+    .replace(/\u00c3\u2014/g, '×')
+    .replace(/\u00c2\u00b7/g, '·')
+    .replace(/\ufffd/g, '×');
 }
 
 const dimLabels = {
@@ -234,7 +244,7 @@ function buildColorsHTML(p) {
     });
     html += '</div></div>';
   }
-  return html;
+  return normalizeMojibake(html);
 }
 
 // Generate bullets HTML
@@ -261,7 +271,7 @@ function buildRelatedHTML(relatedSlugs) {
     const note = c && c.lockedFabric ? fabricNames[c.lockedFabric] || '' : (c && c.fabrics && c.fabrics.length > 0 ? fabricNames[c.fabrics[0]] || '' : '');
     html += '<a href="' + prod.url + '" class="related-card"><div class="card-image"><img src="' + prod.image + '" alt="' + prod.name + '" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">' + prod.name + '</div><div class="card-price">' + priceStr + '</div><div class="card-price-note">' + note + '</div></div></a>';
   });
-  return html;
+  return normalizeMojibake(html);
 }
 
 // Build customizable page
@@ -348,7 +358,7 @@ function buildCustomizable(slug, p, prod) {
     html = html.split(key).join(value);
   }
 
-  return html;
+  return normalizeMojibake(html);
 }
 
 // Build fixed product page
@@ -384,7 +394,7 @@ function buildFixed(slug, p, prod) {
     html = html.split(key).join(value);
   }
 
-  return html;
+  return normalizeMojibake(html);
 }
 // Build marine product page
 function buildMarine(slug, p, prod) {
@@ -483,11 +493,11 @@ function buildFixedPricingHTML(slug, p, prod) {
 
   if (slug === 'duvet-insert') {
     // Duvet insert: Thai-only standard sizes, Microfiber 200g/sq.m fixed fill
-    html += '<div class="fabric-badge">Microfiber 200g/mÂ²</div>';
-    html += '<div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> â€” Choose size â€” </option><option value="3ft" data-thb="990">3FT, 3.5FT â€” 178Ã—229cm</option><option value="5ft" data-thb="1480">5FT, 6FT â€” 229Ã—254cm</option><option value="7ft" data-thb="1690">7FT â€” 279Ã—254cm</option><option value="9ft" data-thb="1790">9FT, 9.5FT â€” 318Ã—254cm</option></select></div>';
-    html += '<div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From à¸¿990</span></div><div class="price-sub">Thailand only Â· Excludes shipping</div></div>';
+    html += '<div class="fabric-badge">Microfiber 200g/m²</div>';
+    html += '<div class="panel-section"><div class="panel-label">Select Size</div><select class="size-select" id="duvet-size"><option value=""> — Choose size — </option><option value="3ft" data-thb="990">3FT, 3.5FT — 178×229cm</option><option value="5ft" data-thb="1480">5FT, 6FT — 229×254cm</option><option value="7ft" data-thb="1690">7FT — 279×254cm</option><option value="9ft" data-thb="1790">9FT, 9.5FT — 318×254cm</option></select></div>';
+    html += '<div class="price-block"><div class="price-row"><span class="price-label">Price</span><span class="price-value" id="price-display">From ฿990</span></div><div class="price-sub">Thailand only · Excludes shipping</div></div>';
     html += '<button class="add-to-cart-btn" id="add-to-cart">Add to Cart</button>';
-    html += '<script>(function(){var s=document.getElementById("duvet-size"),p=document.getElementById("price-display");s.addEventListener("change",function(){var o=s.selectedOptions[0];if(o&&o.value){var t=parseFloat(o.dataset.thb||"0");p.textContent="à¸¿"+Math.round(t).toLocaleString()}else{p.textContent="From à¸¿990"}})})();</script>';
+    html += '<script>(function(){var s=document.getElementById("duvet-size"),p=document.getElementById("price-display");s.addEventListener("change",function(){var o=s.selectedOptions[0];if(o&&o.value){var t=parseFloat(o.dataset.thb||"0");p.textContent="฿"+Math.round(t).toLocaleString()}else{p.textContent="From ฿990"}})})();</script>';
   } else {
     // BedBridge or Bed Lifter: simple price display
     html += '<div class="one-size-badge">One Size</div>';
@@ -528,14 +538,14 @@ function buildFixedContentHTML(slug, p) {
       + '<button class="tab-btn" role="tab" data-tab="care">Care</button>'
       + '</div>'
       + '<div class="tab-content open" id="tab-description" role="tabpanel">'
-      + '<h3>Microfiber 200g/mÂ² Filling</h3>'
+      + '<h3>Microfiber 200g/m² Filling</h3>'
       + '<p>Premium microfiber fill at 200 grams per square metre â€” the ideal weight for Thailand\'s climate. Lighter than hollow fiber but just as warm, with a smooth, even drape that stays in place inside your duvet cover. Hypoallergenic, quick-drying, and made in Thailand.</p>'
       + '<p>Available in four standard Thai duvet sizes matching our <a href="/sizeguide/" style="color:#2c96f4;">size guide</a>: 3FT/3.5FT, 5FT/6FT, 7FT, and 9FT/9.5FT.</p>'
       + '</div>'
       + '<div class="tab-content" id="tab-care" role="tabpanel">'
       + '<h3>Care Instructions</h3>'
       + '<ul>'
-      + '<li>Machine wash warm (40Â°C / 104Â°F) â€” gentle cycle</li>'
+      + '<li>Machine wash warm (40°C / 104°F) — gentle cycle</li>'
       + '<li>Do not bleach â€” mild detergent only</li>'
       + '<li>Tumble dry low or hang dry â€” microfiber dries quickly</li>'
       + '<li>Fluff after drying to restore loft</li>'

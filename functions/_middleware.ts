@@ -612,10 +612,11 @@ function buildTagHtml(productType: string, niches: string[], lang: 'en' | 'th'):
 
 function renderListingCards(rows: any[], lang: 'en' | 'th'): string {
   const priceNote = lang === 'th' ? 'ไม่รวมค่าจัดส่ง ภาษี และภาษีศุลกากร' : 'Excludes shipping, tax & tariff';
-  const ctaCustom = lang === 'th' ? 'ออกแบบและสั่งตัด' : 'Customize This Product';
   const ctaStandard = lang === 'th' ? 'เลือกขนาดและเนื้อผ้า' : 'Choose Size & Fabric';
+  const ctaView = lang === 'th' ? 'ดูรายละเอียด' : 'View Details';
   const fabricsCustom = lang === 'th' ? 'สั่งตัดพิเศษ · เลือกเนื้อผ้าได้หลากหลาย' : 'Custom size · Multiple fabrics';
   const fabricsFixed = lang === 'th' ? 'ขนาดพร้อมใช้ · สเปกคงที่' : 'Ready size · Fixed configuration';
+  const fixedProductSlugs = new Set(['duvet-insert', 'bedbridge-connector', 'mattress-lift-helper']);
 
   return rows.map((row) => {
     const title = lang === 'th' ? (row.title_th || row.title_en || row.slug) : (row.title_en || row.slug);
@@ -631,6 +632,8 @@ function renderListingCards(rows: any[], lang: 'en' | 'th'): string {
     const priceLabel = lang === 'th' ? `เริ่มต้น ฿${thb.toLocaleString('en-US')}` : `From US$${usd}`;
     const image = pickPrimaryImage(row.images, row.image_url) || '/images/placeholder.jpg';
     const href = lang === 'th' ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
+    const isFixed = fixedProductSlugs.has(String(row.slug || '').toLowerCase());
+    const ctaLabel = isFixed ? ctaView : ctaStandard;
 
     return `<article class="product-card" data-categories="${escapeHtml(categories)}" data-title="${escapeHtml(String(title).toLowerCase())}" data-price="${escapeHtml(dataPrice)}">
       <div class="product-image">
@@ -643,7 +646,7 @@ function renderListingCards(rows: any[], lang: 'en' | 'th'): string {
         <div class="product-price-note">${escapeHtml(priceNote)}</div>
         <p class="product-benefit">${escapeHtml(benefit)}</p>
         <div class="product-fabrics-info">${escapeHtml(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
-        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(row.is_custom ? ctaCustom : ctaStandard)}</a>
+        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(ctaLabel)}</a>
       </div>
     </article>`;
   }).join('\n');
