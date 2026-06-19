@@ -9715,7 +9715,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-jMSvtT/functionsRoutes-0.15359866092153107.mjs
+// ../.wrangler/tmp/pages-SyavFS/functionsRoutes-0.17195630829508635.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

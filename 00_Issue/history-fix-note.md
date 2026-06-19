@@ -373,6 +373,18 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
    - treat Super Admin image update as **D1 update only**,
    - always run static listing sync + deploy for EN/TH listing parity.
 
+### Regression follow-up (2026-06-19) — `/th/marine/` Thai mojibake served on live
+- **What happened:** `/th/marine/` showed Thai mojibake (`à¸...`) in title/meta/hero text.
+- **Verification:** local source `public/th/marine/index.html` was clean UTF-8 Thai; live `www` response was stale/corrupted.
+- **Resolution (same issue class, no new root-cause category):**
+  - `npm run lint`
+  - `npx wrangler pages functions build --outdir public`
+  - `Copy-Item public/index.js public/_worker.js -Force`
+  - `npx wrangler pages deploy public --commit-dirty`
+  - deployment URL: `https://c1073461.mildmate-new.pages.dev`
+- **Post-deploy verification:** preview + `https://www.mildmate.com/th/marine/` no longer match mojibake patterns (`à¸|à¹`).
+- **Reconciliation note:** this was a deployment artifact freshness mismatch, not a new font-system defect.
+
 ## 11) Favicon head consistency (`/` vs listing/category pages)
 
 ### Symptoms
@@ -850,8 +862,15 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Build/validator verified:** ✅
   - `npm run lint` passed
   - `npx wrangler pages functions build --outdir public` passed
-- **Live deploy verification:** ⏳ pending deploy
-  - Current reconciliation reflects completed local/build state; production confirmation requires deploy and smoke check.
+- **Live deploy verification:** ✅ (deployed), with scoped live confirmation
+  - Deployed bundle after rebuild/sync:
+    - `Copy-Item public/index.js public/_worker.js -Force`
+    - `npx wrangler pages deploy public --commit-dirty`
+    - deployment URL: `https://c1073461.mildmate-new.pages.dev`
+  - Confirmed no mojibake pattern (`à¸|à¹`) on:
+    - preview `/th/marine/`
+    - live `https://www.mildmate.com/th/marine/`
+  - Note: full route-by-route live manual QA for every EN product/product-type URL remains optional follow-up; source/build scope is fully clean.
 
 ## /marine/ Category
 **Date:** 2026-06-19
@@ -860,3 +879,11 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 1. **Value Proposition Injection:** Updated the feature list and grid on both English and Thai pages to explicitly highlight the "14 mattress shapes available in the instant configurator" and "Instant online pricing without waiting for an email quote."
 2. **Encoding Fix:** Regenerated `public/th/marine/index.html` to fix corrupted Thai character encoding, ensuring perfect UTF-8 rendering.
 3. **Compliance Check:** Verified no OEKO-TEX overclaims or allergen claims. CloudSoft is correctly positioned as "moisture-resistant" for the marine environment.
+4. **Regression Reconciliation (live):** Verified a later live regression where `www` served stale mojibake Thai (`à¸...`) despite clean local source; resolved by rebuild + worker sync + deploy (`c1073461`), then re-verified clean live output.
+
+## Sitewide Product Tag Verification
+**Date:** 2026-06-19
+**Action:** Product Tag Normalization & Catalog Update
+**Changes Made:**
+1. **Catalog Update:** Discovered and officially added the 28th product, "Marine Mattress Protector" (`/product/marine-mattress-protector/`), to the `AGENTS.md` master catalog.
+2. **Tag Synchronization:** Fixed inconsistent `data-categories` tags across 18 category files (both English and Thai). Products like the Pillowcases and 6-Sided Mattress Encasements now have identical tag sets regardless of which page they appear on, ensuring accurate filtering and SEO structure.

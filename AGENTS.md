@@ -252,7 +252,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | Pet Owner Bedding | `/pets/` | Pet Owner Fitted Sheet, Pet Owner Duvet Cover, Pet-Proof Mattress Protector, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | RV & Truck Cab | `/rv-truck/` | RV & Truck Fitted Sheet, Duvet Cover — RV, 6-Sided Mattress Encasement, RV & Truck Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 
-### Complete Product Catalog (27 products)
+### Complete Product Catalog (28 products)
 
 | # | Product | URL | Product Type | Niche / Use-Case |
 |---|---|---|---|---|
@@ -283,6 +283,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | 25 | Pillow Protector | `/product/pillow-protector-general/` | Protection | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
 | 26 | BedBridge Connector | `/product/bedbridge-connector/` | Accessories | Family & Co-Sleep |
 | 27 | Easy Bed Maker & Mattress Lifter | `/product/mattress-lift-helper/` | Accessories | — |
+| 28 | Marine Mattress Protector | `/product/marine-mattress-protector/` | Protection | Marine & Yacht |
 
 ---
 
