@@ -807,3 +807,10 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 1. **OEKO-TEX Claim:** Corrected the blanket "OEKO-TEX certified, 100% chemical-free" bullet point on the category page to explicitly state that only the PremaCotton fabric option is OEKO-TEX Standard 100 certified.
 2. **Pet Hair Claim:** Softened the "easy to brush off pet hair" claim on the Pet-Friendly product card to "helps reduce pet hair clinging" in both English and Thai.
 3. **Translation Fix:** Fixed an untranslated English string ("To your exact total W x L dimensions") on the Thai category page.
+
+## /pillowcases/ Category
+**Date:** 2026-06-19
+**Action:** Marketing Audit & Compliance Fixes
+**Changes Made:**
+1. **Compliance Check:** Verified that OEKO-TEX is correctly limited to PremaCotton, and dust mite claims align with approved terminology ("ไรฝุ่น"). No cross-sells or pet-fur overclaims were found.
+2. **Technical Fix:** Fixed a double-escaped ampersand (`&amp;amp;`) in the Open Graph and Twitter meta titles on the English category page.

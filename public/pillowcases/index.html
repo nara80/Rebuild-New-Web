@@ -86,20 +86,87 @@
     .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
     .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
     @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
+    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Custom pillowcases  -  envelope, zipper, and sham styles. All 4 fabric collections. OEKO-TEX certified options. Custom sizes available.">
+  <title>Pillowcases  -  Envelope, Zipper &amp; Sham  -  MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .listing-page { background: #f0f7ff; }
+    .brand-hero { background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%); padding: 72px 24px 56px; position: relative; overflow: hidden; color: #fff; }
+    .brand-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.08; background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 40px 40px; }
+    .brand-hero-inner { max-width: var(--container-max); margin: 0 auto; position: relative; z-index: 1; text-align: center; }
+    .brand-hero-inner h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.15; margin-bottom: 16px; color: #fff; }
+    .brand-hero-inner .hero-sub { font-size: 1.0625rem; color: rgba(255,255,255,0.92); max-width: 600px; margin: 0 auto; }
+    .listing-section { padding: 48px 0; }
+    
+    
+    
+    
+    .listing-card .card-image img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; transition: transform 0.3s; }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    .listing-card .btn-primary { background: var(--color-primary); color: #fff; }
+    .listing-card .btn-primary:hover { background: var(--color-primary-dark); }
+    .listing-card .btn-outline { border: 2px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+    .listing-card .btn-outline:hover { background: #e8f4fd; }
+    .listing-desc-section { background: #fff; border-top: 1px solid var(--color-border); padding: 56px 0; }
+    .listing-desc-grid { display: block; max-width: 720px; margin: 0 auto;; gap: 48px; align-items: start; }
+    .listing-desc-grid h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; color: var(--color-text); }
+    .listing-desc-grid p { color: #555; line-height: 1.7; margin-bottom: 16px; }
+    .listing-desc-grid ul { padding-left: 20px; margin-bottom: 24px; }
+    .listing-desc-grid ul li { margin-bottom: 8px; color: #555; }
+    .listing-desc-grid .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .listing-desc-grid .feature-item { background: var(--color-surface); padding: 16px; border-radius: var(--radius); }
+    .listing-desc-grid .feature-item strong { display: block; color: var(--color-text); margin-bottom: 4px; }
+    .listing-desc-grid .feature-item span { font-size: 0.875rem; color: #666; }
+    .pricing-panel { background: var(--color-surface); border-radius: var(--radius); padding: 32px; border: 1px solid var(--color-border); }
+    .pricing-panel h3 { font-size: 1.125rem; font-weight: 700; margin-bottom: 24px; color: var(--color-text); }
+    .pricing-panel .form-group { margin-bottom: 20px; }
+    .pricing-panel label { display: block; font-weight: 600; font-size: 0.875rem; margin-bottom: 8px; color: var(--color-text); }
+    .pricing-panel select { width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius); font-family: var(--font-main); font-size: 0.9375rem; color: var(--color-text); background: #fff; cursor: pointer; }
+    .pricing-panel select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(44,150,244,0.15); }
+    .size-guide-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-top: 8px; }
+    .size-guide-link:hover { text-decoration: underline; }
+    .fabric-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .fabric-option { padding: 10px; border: 2px solid var(--color-border); border-radius: var(--radius); cursor: pointer; text-align: center; font-size: 0.875rem; font-weight: 600; transition: all 0.15s; background: #fff; }
+    .fabric-option:hover { border-color: var(--color-primary); }
+    .fabric-option.selected { border-color: var(--color-primary); background: #e8f4fd; color: var(--color-primary); }
+    .fabric-note { font-size: 0.75rem; color: #666; margin-bottom: 16px; }
+    .explore-fabrics-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; color: var(--color-primary); text-decoration: none; font-weight: 600; margin-bottom: 20px; }
+    .explore-fabrics-link:hover { text-decoration: underline; }
+    .price-display { border-top: 1px solid var(--color-border); padding-top: 20px; margin-top: 20px; }
+    .price-display .price-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; }
+    .price-display .price-value { font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }
+    .price-display .price-sub { font-size: 0.75rem; color: #999; margin-top: 4px; }
+    .custom-shape-cta { margin-top: 20px; padding: 16px; background: #fff; border: 2px dashed var(--color-border); border-radius: var(--radius); text-align: center; }
+    .custom-shape-cta p { font-size: 0.875rem; color: #666; margin-bottom: 10px; }
+    .custom-shape-cta .btn-outline { display: inline-block; text-decoration: none; padding: 10px 20px; border: 2px solid var(--color-primary); border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.875rem; transition: background 0.2s; }
+    .custom-shape-cta .btn-outline:hover { background: #e8f4fd; }
+    @media (max-width: 768px) { .brand-hero-inner h1 { font-size: 1.75rem; } .listing-desc-grid { grid-template-columns: 1fr; } .pricing-panel { padding: 20px; } }
     @media (max-width: 480px) {   }
   </style>
 
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
-  <meta property="og:title" content="Pillowcases  -  Envelope, Zipper &amp;amp; Sham  -  MildMate">
+  <meta property="og:title" content="Pillowcases  -  Envelope, Zipper & Sham  -  MildMate">
   <meta property="og:description" content="Custom pillowcases  -  envelope, zipper, and sham styles. All 4 fabric collections. OEKO-TEX certified options. Custom sizes available.">
   <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com/pillowcases/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Pillowcases  -  Envelope, Zipper &amp;amp; Sham  -  MildMate">
+  <meta name="twitter:title" content="Pillowcases  -  Envelope, Zipper & Sham  -  MildMate">
   <meta name="twitter:description" content="Custom pillowcases  -  envelope, zipper, and sham styles. All 4 fabric collections. OEKO-TEX certified options. Custom sizes available.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
     <script>

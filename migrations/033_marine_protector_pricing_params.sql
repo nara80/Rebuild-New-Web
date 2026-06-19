@@ -6,5 +6,5 @@
 
 INSERT OR IGNORE INTO pricing_params (key, value, label, category) VALUES
   ('waste_factor_marine_mattress', 50, 'Marine Mattress Waste (%)', 'waste'),
-  ('marine_sewing_cost', 500, 'Marine Sewing Cost (THB)', 'fixed'),
+  ('marine_sewing_cost', 500, 'Marine Sewing Cost (THB)', 'flat_sewing'),
   ('margin_rate_protector_marine', 15, 'Marine Protector Margin', 'margin');
