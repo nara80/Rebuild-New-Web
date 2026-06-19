@@ -814,3 +814,49 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 **Changes Made:**
 1. **Compliance Check:** Verified that OEKO-TEX is correctly limited to PremaCotton, and dust mite claims align with approved terminology ("ไรฝุ่น"). No cross-sells or pet-fur overclaims were found.
 2. **Technical Fix:** Fixed a double-escaped ampersand (`&amp;amp;`) in the Open Graph and Twitter meta titles on the English category page.
+
+## 22) Mojibake reconciliation on `/sheets/` + full EN product-type/product-page sweep
+
+### Incident scope (what was observed)
+- On `/sheets/`, one feature text rendered as:
+  - `To your exact total W � L dimensions`
+- User requested a full verification/fix sweep across:
+  - all EN product-type pages (`/sheets/`, `/duvet-covers/`, `/pillowcases/`, `/protection/`, `/accessories/`)
+  - all EN product pages (`/product/*`)
+
+### Root cause (reconciled)
+- This was encoding/mojibake content corruption (not font loading).
+- Product-page generation still allowed some mojibake sequences to persist in generated HTML because normalization was incomplete and not applied at all final return paths.
+
+### Fixes actually completed
+1. **Direct category-page correction**
+   - Updated `public/sheets/index.html`:
+     - `W � L` → `W × L`
+2. **Generator hardening for product pages**
+   - Updated `scripts/build-products.js`:
+     - expanded `normalizeMojibake(...)` replacements for common corrupted dash/quote/symbol sequences
+     - ensured normalization is applied to final output of both:
+       - `buildCustomizable(...)`
+       - `buildFixed(...)`
+     - corrected remaining mojibake literals in generator strings (duvet insert text block; `×`, `฿`, `°C`, `°F`, `m²`)
+3. **Regenerated all product pages**
+   - Ran:
+     - `node scripts/build-products.js`
+
+### Verification status (systematic reconciliation)
+- **Scope scan verification:** ✅
+  - Re-scanned all target EN product-type directories and all `/public/product/*` pages for mojibake signatures (`�`, `Ã...`, `â...`, `Â...`, `mÂ²`, `à¸¿`, etc.).
+  - No remaining matches in requested scope after fixes/regeneration.
+- **Build/validator verified:** ✅
+  - `npm run lint` passed
+  - `npx wrangler pages functions build --outdir public` passed
+- **Live deploy verification:** ⏳ pending deploy
+  - Current reconciliation reflects completed local/build state; production confirmation requires deploy and smoke check.
+
+## /marine/ Category
+**Date:** 2026-06-19
+**Action:** Marketing Value Proposition Update & Encoding Fix
+**Changes Made:**
+1. **Value Proposition Injection:** Updated the feature list and grid on both English and Thai pages to explicitly highlight the "14 mattress shapes available in the instant configurator" and "Instant online pricing without waiting for an email quote."
+2. **Encoding Fix:** Regenerated `public/th/marine/index.html` to fix corrupted Thai character encoding, ensuring perfect UTF-8 rendering.
+3. **Compliance Check:** Verified no OEKO-TEX overclaims or allergen claims. CloudSoft is correctly positioned as "moisture-resistant" for the marine environment.
