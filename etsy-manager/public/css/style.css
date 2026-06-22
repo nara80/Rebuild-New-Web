@@ -472,3 +472,41 @@ header {
 .toast.error {
   border-left: 4px solid #ef4444;
 }
+
+/* Variation Controls */
+.variation-controls {
+  background-color: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.variation-control-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.variation-control-group strong {
+  min-width: 140px;
+  color: var(--color-heading);
+}
+
+.variation-control-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.variation-control-checkbox input {
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}

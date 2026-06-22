@@ -170,6 +170,9 @@ function renderVariationsTable(inventory) {
   section.style.display = "block";
   bodyTbody.innerHTML = "";
 
+  // Render variation control checkboxes
+  renderVariationControls(inventory);
+
   // A. Determine variation dimensions (e.g. "Size" and/or "Fabric")
   // Fetch property names from first product values
   const firstProd = inventory.products[0];
@@ -198,6 +201,144 @@ function renderVariationsTable(inventory) {
       <td><input type="text" value="${escapeHtml(sku)}" class="var-sku" data-idx="${idx}" maxlength="50"></td>
     `;
     bodyTbody.appendChild(tr);
+  });
+}
+
+// 6a. Render controls to toggle what varies by property (Price, Quantity, SKU)
+function renderVariationControls(inventory) {
+  const controlsEl = document.getElementById("variationControls");
+  if (!controlsEl) return;
+
+  if (!inventory || !inventory.products || inventory.products.length === 0) {
+    controlsEl.style.display = "none";
+    return;
+  }
+
+  // Get distinct dimensions
+  const dimensions = [];
+  inventory.products[0].property_values.forEach(pv => {
+    dimensions.push({ id: pv.property_id, name: pv.property_name });
+  });
+
+  if (dimensions.length <= 1) {
+    // Hide controls if there is only 0 or 1 property (toggles are only useful for multi-dimensional variations)
+    controlsEl.style.display = "none";
+    return;
+  }
+
+  controlsEl.style.display = "flex";
+  controlsEl.innerHTML = "";
+
+  const priceProps = inventory.price_on_property || [];
+  const qtyProps = inventory.quantity_on_property || [];
+  const skuProps = inventory.sku_on_property || [];
+
+  const types = [
+    { key: "price", label: "Price varies by", activeList: priceProps },
+    { key: "quantity", label: "Quantity varies by", activeList: qtyProps },
+    { key: "sku", label: "SKU varies by", activeList: skuProps }
+  ];
+
+  controlsEl.innerHTML = types.map(t => {
+    const checkboxes = dimensions.map(d => {
+      const isChecked = t.activeList.includes(d.id) ? "checked" : "";
+      return `
+        <label class="variation-control-checkbox">
+          <input type="checkbox" class="vary-checkbox" data-type="${t.key}" data-prop-id="${d.id}" ${isChecked} onchange="handleVaryCheckboxChange(this)">
+          ${escapeHtml(d.name)}
+        </label>
+      `;
+    }).join("");
+
+    return `
+      <div class="variation-control-group">
+        <strong>${t.label}:</strong>
+        ${checkboxes}
+      </div>
+    `;
+  }).join("");
+}
+
+// 6b. Handler for toggling vary-by checkboxes
+function handleVaryCheckboxChange(checkbox) {
+  if (!originalInventory) return;
+
+  const type = checkbox.dataset.type;
+  const propId = parseInt(checkbox.dataset.propId);
+
+  let targetArrayName = "";
+  if (type === "price") targetArrayName = "price_on_property";
+  else if (type === "quantity") targetArrayName = "quantity_on_property";
+  else if (type === "sku") targetArrayName = "sku_on_property";
+
+  if (!originalInventory[targetArrayName]) {
+    originalInventory[targetArrayName] = [];
+  }
+
+  const arr = originalInventory[targetArrayName];
+  const idx = arr.indexOf(propId);
+
+  if (checkbox.checked) {
+    if (idx === -1) arr.push(propId);
+  } else {
+    if (idx !== -1) arr.splice(idx, 1);
+  }
+
+  // Sync inputs across grouped properties
+  const syncedValues = new Set();
+  const inputClass = type === "price" ? "var-price" : (type === "quantity" ? "var-qty" : "var-sku");
+  const inputs = document.querySelectorAll(`.${inputClass}`);
+
+  originalInventory.products.forEach((product, idx) => {
+    const groupKey = product.property_values
+      .filter(pv => arr.includes(pv.property_id))
+      .map(pv => `${pv.property_id}:${pv.values[0]}`)
+      .join("|");
+
+    const currentInput = Array.from(inputs).find(input => parseInt(input.dataset.idx) === idx);
+    if (!currentInput) return;
+
+    if (!syncedValues.has(groupKey)) {
+      syncedValues.add(groupKey);
+      syncPropertyInputs(type, idx, currentInput.value);
+    }
+  });
+}
+
+// 6c. Live synchronization helper for variation properties
+function syncPropertyInputs(type, changedIdx, newVal) {
+  if (!originalInventory || !originalInventory.products) return;
+
+  let targetArrayName = "";
+  if (type === "price") targetArrayName = "price_on_property";
+  else if (type === "quantity") targetArrayName = "quantity_on_property";
+  else if (type === "sku") targetArrayName = "sku_on_property";
+
+  const arr = originalInventory[targetArrayName] || [];
+  const changedProduct = originalInventory.products[changedIdx];
+  const inputClass = type === "price" ? "var-price" : (type === "quantity" ? "var-qty" : "var-sku");
+  const inputs = document.querySelectorAll(`.${inputClass}`);
+
+  originalInventory.products.forEach((product, idx) => {
+    if (idx === changedIdx) return;
+
+    let isMatch = true;
+    for (const pv of changedProduct.property_values) {
+      if (arr.includes(pv.property_id)) {
+        const otherPv = product.property_values.find(p => p.property_id === pv.property_id);
+        if (!otherPv || otherPv.values[0] !== pv.values[0]) {
+          isMatch = false;
+          break;
+        }
+      }
+    }
+
+    if (isMatch) {
+      const targetInput = Array.from(inputs).find(input => parseInt(input.dataset.idx) === idx);
+      if (targetInput) {
+        targetInput.value = newVal;
+      }
+    }
   });
 }
 
@@ -271,6 +412,18 @@ function setupEventListeners() {
     e.preventDefault();
     dropzone.classList.remove("dragover");
     uploadFiles(e.dataTransfer.files);
+  });
+
+  // Live variations table cell grouping synchronization as user types
+  const varTbody = document.getElementById("variationsTableBody");
+  varTbody.addEventListener("input", (e) => {
+    if (e.target.classList.contains("var-price")) {
+      syncPropertyInputs("price", parseInt(e.target.dataset.idx), e.target.value);
+    } else if (e.target.classList.contains("var-qty")) {
+      syncPropertyInputs("quantity", parseInt(e.target.dataset.idx), e.target.value);
+    } else if (e.target.classList.contains("var-sku")) {
+      syncPropertyInputs("sku", parseInt(e.target.dataset.idx), e.target.value);
+    }
   });
 }
 
