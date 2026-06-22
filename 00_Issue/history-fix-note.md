@@ -903,3 +903,54 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 **Changes Made:**
 1. **Catalog Update:** Discovered and officially added the 28th product, "Marine Mattress Protector" (`/product/marine-mattress-protector/`), to the `AGENTS.md` master catalog.
 2. **Tag Synchronization:** Fixed inconsistent `data-categories` tags across 18 category files (both English and Thai). Products like the Pillowcases and 6-Sided Mattress Encasements now have identical tag sets regardless of which page they appear on, ensuring accurate filtering and SEO structure.
+
+## 23) `/th/product/3-sided-duvet/` Thai Description reconciliation (D1 + SSR + client override)
+
+### Incident scope (what was observed)
+- User requested Thai description for:
+  - `/th/product/3-sided-duvet/`
+- Multiple preview deploys still showed mixed state:
+  - Thai title/tagline and some labels were Thai
+  - main description panel body remained English
+
+### Root causes (reconciled)
+1. **Data layer gap**
+   - `products.description_th` for `slug='3-sided-duvet'` was empty in both D1 bindings at first.
+2. **SSR replacement fragility**
+   - Initial server-side panel replacement used brittle pattern assumptions and did not consistently replace the full panel on served HTML.
+3. **Client-side overwrite regression (decisive blocker)**
+   - `templates/product-customizable.html` had runtime logic:
+     - `if (p.description_en) descPanel.innerHTML = p.description_en;`
+   - This re-overrode the panel with English after page load, even when SSR had injected Thai content.
+
+### What was completed
+1. **D1 content update (both DBs)**
+   - Updated `description_th` for `3-sided-duvet` on:
+     - `mildmate-db`
+     - `mildmate-db-prod`
+   - Verified `th_len > 0` in both DBs.
+2. **SSR localization hardening**
+   - `functions/product/[[path]].ts` now reads:
+     - `description_en`, `description_th`
+   - Applies localized meta description and panel replacement using robust marker boundaries (`info-panel-description` → `info-panel-faq`).
+3. **Client-side override fix (critical)**
+   - `templates/product-customizable.html` updated to choose description by language:
+     - Thai route uses `p.description_th` if present
+     - otherwise falls back to `p.description_en`
+   - Regenerated product pages:
+     - `node scripts/build-products.js`
+
+### Verification status (systematic reconciliation)
+- **DB verification:** ✅
+  - Both remote DB bindings now contain non-empty Thai description for `3-sided-duvet`.
+- **Code/source verification:** ✅
+  - SSR path + template path both updated for Thai-aware description handling.
+  - Generated `public/product/3-sided-duvet/index.html` includes Thai-aware runtime selection.
+- **Build/validator verification:** ✅
+  - `npm run lint` passed after each patch set.
+  - `npx wrangler pages functions build --outdir public` passed after each patch set.
+- **Deployed preview verification up to `93ce2669`:** ✅ for diagnosis, ❌ for final outcome
+  - Confirmed partial localization persisted on deployed preview prior to client-override fix deployment.
+- **Current live/preview final confirmation:** ⏳ pending latest deploy
+  - Final end-state confirmation requires deploying the latest local bundle that includes the client override fix, then re-checking:
+    - `https://<new-preview>.mildmate-new.pages.dev/th/product/3-sided-duvet/`

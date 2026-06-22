@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MildMate Shop Manager - Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #2c96f4;
+      --color-primary-dark: #1a7fd4;
+      --color-text: #1E293B;
+      --color-heading: #0F172A;
+      --color-bg: #F8FAFC;
+      --color-surface: #ffffff;
+      --color-border: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .login-container {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 40px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+    
+    .logo-block {
+      margin-bottom: 24px;
+    }
+    
+    .logo-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-heading);
+      letter-spacing: -0.5px;
+    }
+    
+    .logo-title span {
+      color: var(--color-primary);
+    }
+    
+    .logo-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--color-heading);
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-family: inherit;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(44, 150, 244, 0.15);
+    }
+    
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    
+    button:hover {
+      background-color: var(--color-primary-dark);
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    .error-msg {
+      color: #ef4444;
+      font-size: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="logo-block">
+      <h1 class="logo-title">Mild<span>Mate</span></h1>
+      <p class="logo-subtitle">MildMate Shop Manager</p>
+    </div>
+    
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="passphrase">Admin Passphrase</label>
+        <input type="password" id="passphrase" required placeholder="••••••••">
+      </div>
+      
+      <button type="submit">Sign In</button>
+      <div class="error-msg" id="errorMsg">Incorrect passphrase. Please try again.</div>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const passphrase = document.getElementById('passphrase').value;
+      
+      // Set the auth cookie
+      document.cookie = "admin_auth=" + encodeURIComponent(passphrase) + "; path=/; max-age=86400; secure; samesite=lax";
+      
+      // Attempt to load index.html to verify authentication success
+      window.location.href = "index.html";
+    });
+    
+    // If we redirected here with an error, show it
+    if (window.location.search.includes('error=unauthorized')) {
+      document.getElementById('errorMsg').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

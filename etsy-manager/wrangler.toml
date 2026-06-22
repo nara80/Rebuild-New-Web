@@ -1,0 +1,17 @@
+name = "mildmate-shop-manger"
+pages_build_output_dir = "./public"
+compatibility_date = "2026-06-20"
+
+
+# Bind a D1 Database to store listings and token data
+[[d1_databases]]
+binding = "DB"
+database_name = "etsy-db"
+database_id = "9215f034-d251-4901-9c88-63295562a425"
+
+# Bind an R2 Bucket to store listing images
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "etsy-assets"
+
+

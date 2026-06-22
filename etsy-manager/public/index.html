@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MildMate Shop Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <h1>Mild<span>Mate</span></h1>
+      <div id="etsyConnection" class="status-badge disconnected">Checking Etsy Connection...</div>
+    </div>
+    <div class="header-actions">
+      <button id="refreshList" class="btn btn-secondary">Sync from Etsy</button>
+      <button id="logoutBtn" class="btn btn-secondary">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <div class="app-container">
+    
+    <!-- Sidebar List -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <input type="text" id="searchListings" class="search-box" placeholder="Search Etsy listings...">
+      </div>
+      <ul id="listingsList" class="sidebar-list">
+        <!-- Listings will be loaded here dynamically -->
+        <li style="padding:20px; text-align:center; color:#64748b;">Loading listings...</li>
+      </ul>
+    </div>
+
+    <!-- Main Editor -->
+    <div class="editor-main">
+      <div id="placeholderView" class="placeholder-view">
+        <h2>No Listing Selected</h2>
+        <p>Choose a listing from the sidebar on the left to start editing its title, description, tags, variations, and images.</p>
+      </div>
+
+      <div id="editorView" class="listing-editor" style="display: none;">
+        <h2 id="editorTitle">Edit Listing</h2>
+        
+        <form id="editForm">
+          <input type="hidden" id="etsyListingId">
+
+          <!-- Row 1: Title -->
+          <div class="form-group">
+            <label for="listingTitle">Listing Title (Max 140 characters recommended for Etsy)</label>
+            <input type="text" id="listingTitle" required placeholder="e.g. 3-Sided Zipper Duvet Cover..." maxlength="255">
+          </div>
+
+          <!-- Row 2: Description -->
+          <div class="form-group">
+            <label for="listingDescription">Listing Description</label>
+            <textarea id="listingDescription" required placeholder="Detailed product details..."></textarea>
+          </div>
+
+          <div class="form-row two-col">
+            <!-- Price -->
+            <div class="form-group">
+              <label for="listingPrice">Base Price (USD)</label>
+              <input type="number" id="listingPrice" required step="0.01" min="0">
+            </div>
+
+            <!-- Tags -->
+            <div class="form-group">
+              <label for="listingTags">Tags (Comma-separated, max 13 tags)</label>
+              <input type="text" id="listingTags" placeholder="e.g. zipper duvet, custom bedding, sheets">
+              <div class="tags-container">Remaining tags: <span id="tagsCount">13</span></div>
+            </div>
+          </div>
+
+          <!-- Images Section -->
+          <div class="images-section">
+            <label>Listing Images (Uploaded to Cloudflare R2)</label>
+            <div id="imageDropzone" class="dropzone">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <strong>Upload new listing images</strong>
+              <p>Drag and drop images here, or click to browse</p>
+              <input type="file" id="fileInput" multiple accept="image/*" style="display:none;">
+            </div>
+            <div id="imageGrid" class="image-grid">
+              <!-- Uploaded images appear here -->
+            </div>
+          </div>
+
+          <!-- Variations Section -->
+          <div id="variationsSection" class="variations-section" style="display: none;">
+            <div class="variations-header">
+              <h3>Etsy Inventory Variations</h3>
+              <p style="font-size:13px; color:#64748b;">Configure pricing and quantity for each size & fabric combination.</p>
+            </div>
+            <table class="variations-table">
+              <thead>
+                <tr id="variationsTableHeader">
+                  <!-- Header columns generated dynamically -->
+                </tr>
+              </thead>
+              <tbody id="variationsTableBody">
+                <!-- Rows generated dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Footer Save Block -->
+          <div class="editor-footer">
+            <label class="checkbox-label">
+              <input type="checkbox" id="syncToEtsy" checked>
+              Sync live updates directly to Etsy shop
+            </label>
+            <button type="submit" id="saveBtn" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Alert -->
+  <div id="toast" class="toast">Successfully saved!</div>
+
+  <!-- App logic scripts -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

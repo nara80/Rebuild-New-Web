@@ -1,0 +1,16 @@
+{
+  "name": "mildmate-shop-manger",
+  "version": "1.0.0",
+  "description": "Standalone Etsy listing and variations manager using Cloudflare Pages, D1, and R2",
+  "main": "server.js",
+  "scripts": {
+    "dev": "wrangler pages dev ./public --d1=DB --r2=BUCKET --binding ETSY_CLIENT_ID=your_etsy_keystring_here",
+    "deploy": "wrangler pages deploy ./public",
+    "db:init": "wrangler d1 execute etsy-db --local --file=./schema.sql",
+    "db:init:prod": "wrangler d1 execute etsy-db --remote --file=./schema.sql"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^4.100.0"
+  }
+}

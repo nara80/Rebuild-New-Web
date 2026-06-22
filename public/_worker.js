@@ -473,6 +473,39 @@ function resolveLegacyProduct(slug) {
   return "/products/";
 }
 __name(resolveLegacyProduct, "resolveLegacyProduct");
+function escapeHtml(value) {
+  return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+__name(escapeHtml, "escapeHtml");
+function applyLocalizedDescriptionFromD1(html, description, isTh, slug) {
+  const text = String(description || "").trim();
+  if (!text) return html;
+  const escaped = escapeHtml(text);
+  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${escaped}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${escaped}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${escaped}">`);
+  if (isTh) {
+    html = html.replace(/data-info-tab="description">[\s\S]*?<\/button>/i, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, '<p class="product-tagline">\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E19\u0E27\u0E21\u0E0B\u0E34\u0E1B 3 \u0E14\u0E49\u0E32\u0E19 \u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E07\u0E48\u0E32\u0E22 \u0E0B\u0E31\u0E01\u0E2A\u0E30\u0E14\u0E27\u0E01 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E14\u0E49 4 \u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</p>');
+  }
+  if (isTh && slug === "3-sided-duvet") {
+    const thaiPanel = `<div class="info-panel active" id="info-panel-description">
+          <h3>\u0E17\u0E33\u0E44\u0E21\u0E15\u0E49\u0E2D\u0E07\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E19\u0E27\u0E21\u0E0B\u0E34\u0E1B 3 \u0E14\u0E49\u0E32\u0E19?</h3>
+          <p>${escaped}</p>
+          <ul>
+            <li>\u0E0B\u0E34\u0E1B 3 \u0E14\u0E49\u0E32\u0E19 \u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E1C\u0E49\u0E32\u0E19\u0E27\u0E21\u0E44\u0E14\u0E49\u0E43\u0E19\u0E44\u0E21\u0E48\u0E01\u0E35\u0E48\u0E19\u0E32\u0E17\u0E35</li><li>\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E0B\u0E31\u0E01\u0E1C\u0E49\u0E32\u0E1A\u0E48\u0E2D\u0E22\u0E41\u0E25\u0E30\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</li><li>\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E19\u0E27\u0E21\u0E08\u0E23\u0E34\u0E07\u0E44\u0E14\u0E49 (\u0E0B\u0E21. \u0E2B\u0E23\u0E37\u0E2D \u0E19\u0E34\u0E49\u0E27)</li><li>\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E44\u0E14\u0E49 4 \u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</li><li>\u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49 \u0E41\u0E2B\u0E49\u0E07\u0E44\u0E27</li><li>\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01 PremaCotton \u0E1C\u0E48\u0E32\u0E19\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19 OEKO-TEX\xAE</li>
+          </ul>
+        </div>`;
+    html = html.replace(
+      /<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<\/div>\s*(?=<div[^>]*id="info-panel-faq"[^>]*>)/i,
+      thaiPanel
+    );
+    return html;
+  }
+  html = html.replace(
+    /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
+    `$1${escaped}$2`
+  );
+  return html;
+}
+__name(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
 async function onRequest2(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -505,9 +538,11 @@ async function onRequest2(context) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
     const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      "SELECT image_url, images, title_en, title_th, description_en, description_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
     ).bind(slug);
     const product = await stmt.first();
+    const localizedDescription = isTh ? String(product?.description_th || "") : String(product?.description_en || "");
+    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, slug);
     let images = [];
     if (product && product.images) {
       try {
@@ -9488,11 +9523,11 @@ function normalizeRoutePath(pathname) {
   return pathname.endsWith("/") ? pathname : `${pathname}/`;
 }
 __name(normalizeRoutePath, "normalizeRoutePath");
-function escapeHtml(value) {
+function escapeHtml2(value) {
   const str = String(value ?? "");
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-__name(escapeHtml, "escapeHtml");
+__name(escapeHtml2, "escapeHtml");
 function parseCsv(raw) {
   return String(raw || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
 }
@@ -9520,11 +9555,11 @@ function buildTagHtml(productType, niches, lang) {
   const nicheLabels = lang === "th" ? NICHE_LABELS_TH : NICHE_LABELS_EN;
   const tags = [];
   if (productTypeLabels[productType]) {
-    tags.push(`<a href="${getTagHref(productType, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml(productTypeLabels[productType])}</a>`);
+    tags.push(`<a href="${getTagHref(productType, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml2(productTypeLabels[productType])}</a>`);
   }
   if (niches.length > 0 && nicheLabels[niches[0]]) {
     const firstNiche = niches[0];
-    tags.push(`<a href="${getTagHref(firstNiche, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml(nicheLabels[firstNiche])}</a>`);
+    tags.push(`<a href="${getTagHref(firstNiche, lang)}" class="card-tag" style="text-decoration:none;">${escapeHtml2(nicheLabels[firstNiche])}</a>`);
   }
   return tags.join("");
 }
@@ -9550,18 +9585,18 @@ function renderListingCards(rows, lang) {
     const href = lang === "th" ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
     const isFixed = fixedProductSlugs.has(String(row.slug || "").toLowerCase());
     const ctaLabel = isFixed ? ctaView : ctaStandard;
-    return `<article class="product-card" data-categories="${escapeHtml(categories)}" data-title="${escapeHtml(String(title).toLowerCase())}" data-price="${escapeHtml(dataPrice)}">
+    return `<article class="product-card" data-categories="${escapeHtml2(categories)}" data-title="${escapeHtml2(String(title).toLowerCase())}" data-price="${escapeHtml2(dataPrice)}">
       <div class="product-image">
-        <img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" width="800" height="600" loading="lazy" decoding="async">
+        <img src="${escapeHtml2(image)}" alt="${escapeHtml2(title)}" width="800" height="600" loading="lazy" decoding="async">
       </div>
       <div class="product-info">
         <div class="product-tags" aria-label="Categories">${buildTagHtml(productType, niches, lang)}</div>
-        <h3 class="product-title">${escapeHtml(title)}</h3>
-        <div class="product-price" data-usd="${escapeHtml(usd)}" data-thb="${escapeHtml(thb)}">${escapeHtml(priceLabel)}</div>
-        <div class="product-price-note">${escapeHtml(priceNote)}</div>
-        <p class="product-benefit">${escapeHtml(benefit)}</p>
-        <div class="product-fabrics-info">${escapeHtml(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
-        <a href="${escapeHtml(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml(ctaLabel)}</a>
+        <h3 class="product-title">${escapeHtml2(title)}</h3>
+        <div class="product-price" data-usd="${escapeHtml2(usd)}" data-thb="${escapeHtml2(thb)}">${escapeHtml2(priceLabel)}</div>
+        <div class="product-price-note">${escapeHtml2(priceNote)}</div>
+        <p class="product-benefit">${escapeHtml2(benefit)}</p>
+        <div class="product-fabrics-info">${escapeHtml2(row.is_custom ? fabricsCustom : fabricsFixed)}</div>
+        <a href="${escapeHtml2(href)}" class="btn btn-primary" style="margin-top:auto;">${escapeHtml2(ctaLabel)}</a>
       </div>
     </article>`;
   }).join("\n");
@@ -9718,7 +9753,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-nAHHDo/functionsRoutes-0.18466729070973964.mjs
+// ../.wrangler/tmp/pages-ckN9Tx/functionsRoutes-0.8595151582422504.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

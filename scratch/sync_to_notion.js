@@ -106,6 +106,58 @@ Available in breathable PremaCotton or cooling BreezePlus fabrics. Dirt-hiding c
   sku: 'rv-truck-fitted-sheet'
 });
 
+// 3. Add the Consolidated Master 3-Sided Zipper Duvet Cover Listing (Standard Home)
+itemsToSync.push({
+  title: '3-Sided Zipper Duvet Cover - Easy Change Bedding | PremaCotton, EcoLuxe Cotton, BreezePlus, CloudSoft | Custom Size RV Bunk Home',
+  description: `👉 Need custom dimensions or sizing assistance? 
+Explore sizing templates and request blueprints on our main website: 
+www.mildmate.com
+
+---------------------------------------------------------
+THE MILDMATE 3-SIDED ZIPPER DUVET COVER
+---------------------------------------------------------
+Tired of wrestling with your duvet cover? MildMate's premium 3-sided L-zipper system allows you to open the cover like a book, lay your duvet inside, and zip it shut in under 60 seconds.
+
+HOW TO ORDER:
+1. Select your desired SIZE from the first dropdown.
+2. Select your preferred FABRIC collection from the second dropdown.
+3. Check our listing photos for the color swatches matching your chosen fabric.
+4. Type your desired color in the "Personalization" text box before checking out.
+
+---------------------------------------------------------
+FABRIC GUIDE & COLOR OPTIONS
+---------------------------------------------------------
+🌿 EcoLuxe Cotton
+100% natural, unbleached, and extremely soft cotton. Pure, gentle, and comfortable.
+• Available Colors: Natural Cream, Soft Ivory
+
+☀️ PremaCotton 100% Cotton
+Crisp, classic, highly breathable long-staple cotton (OEKO-TEX Certified).
+• Available Colors: Snow White, Charcoal Grey, Classic Navy, Soft Pink
+
+❄️ BreezePlus Cotton Blend
+Specially woven cotton-blend that draws heat away from the body. Perfect for hot sleepers.
+• Available Colors: Cooling Gray, Ocean Blue, Ice White
+
+☁️ CloudSoft Microfiber
+Ultra-soft, double-brushed, wrinkle-resistant microfiber. Durable and budget-friendly.
+• Available Colors: Soft White, Slate Gray, Dusty Pink, Lavender
+
+---------------------------------------------------------
+CUSTOM SIZES (RV / Boat / Non-Standard Beds)
+---------------------------------------------------------
+Need a non-standard size (like an RV Queen, Dorm Twin XL, or custom Yacht shape)?
+Select "Custom Size" in the dropdown, and enter your exact dimensions in the personalization box, or message us directly on Etsy for custom sizing templates!
+
+---------------------------------------------------------
+HANDCRAFTED BY MILDMATE (Etsy Handmade Policy Compliant)
+---------------------------------------------------------
+Every duvet cover is handcrafted to order by our skilled team in our dedicated sewing studio in Thailand. We source premium fabrics, custom-cut to your exact dimensions, and sew with reinforced stitching for long-lasting quality. Shipping is handled via express courier from Thailand directly to your door.`,
+  price: '125',
+  tags: ['zipper duvet cover', 'easy change duvet', 'L-shaped zipper', 'custom size bedding', 'RV duvet cover', 'bunk duvet cover', 'handcrafted bedding'],
+  sku: 'home-zipper-duvet-cover'
+});
+
 console.log(`Prepared ${itemsToSync.length} items to sync to Notion.`);
 
 // Helper function to query Notion API
@@ -141,6 +193,10 @@ function buildNotionProperties(item, schemaProperties) {
   // Helper to extract clean product name (Product Type - Fabric)
   const getProductName = (title) => {
     const lowerTitle = title.toLowerCase();
+    
+    if (lowerTitle.includes('easy change bedding') && lowerTitle.includes('premacotton') && lowerTitle.includes('ecoluxe')) {
+      return '3-Sided Zipper Duvet Cover - Home (Consolidated)';
+    }
     
     // 1. Detect Product Type based on exact brand taxonomy
     let type = '';

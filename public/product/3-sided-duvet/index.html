@@ -898,9 +898,11 @@
       if (typeof window.syncDesktopColumnsHeight === 'function') window.syncDesktopColumnsHeight();
 
       // Option C: Override description panel with D1 content if present
-      if (p.description_en) {
+      var lang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang.toLowerCase() : 'en';
+      var desc = (lang === 'th' && p.description_th) ? p.description_th : p.description_en;
+      if (desc) {
         var descPanel = document.getElementById('info-panel-description');
-        if (descPanel) descPanel.innerHTML = p.description_en;
+        if (descPanel) descPanel.innerHTML = desc;
       }
 
       // Option D: Update fabric options based on D1 fabric_options
