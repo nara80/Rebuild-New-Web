@@ -114,7 +114,7 @@ function renderListings(items) {
 }
 
 // 5. Select listing and load into form
-async function selectListing(id) {
+async function selectListing(id, refresh = false) {
   const placeholder = document.getElementById("placeholderView");
   const editor = document.getElementById("editorView");
   
@@ -129,7 +129,8 @@ async function selectListing(id) {
   // Fetch full listing details (including variations) from D1/Etsy
   editor.style.opacity = "0.5";
   try {
-    const res = await fetch(`/api/listings?id=${id}`);
+    const url = refresh ? `/api/listings?id=${id}&refresh=true` : `/api/listings?id=${id}`;
+    const res = await fetch(url);
     const data = await res.json();
     
     selectedListing = data;
@@ -363,9 +364,24 @@ function removeImage(idx) {
 // 8. Event Listeners setup
 function setupEventListeners() {
   // Sync button
-  document.getElementById("refreshList").addEventListener("click", () => {
-    loadListings(true);
-    checkAuthStatus();
+  document.getElementById("refreshList").addEventListener("click", async () => {
+    const syncBtn = document.getElementById("refreshList");
+    const oldText = syncBtn.textContent;
+    syncBtn.disabled = true;
+    syncBtn.textContent = "Syncing...";
+    try {
+      await loadListings(true);
+      if (selectedListing) {
+        await selectListing(selectedListing.etsy_listing_id, true);
+      }
+      showToast("Successfully synced from Etsy!", "success");
+    } catch (err) {
+      showToast("Sync failed: " + err.message, "error");
+    } finally {
+      syncBtn.disabled = false;
+      syncBtn.textContent = oldText;
+      checkAuthStatus();
+    }
   });
 
   // Logout button

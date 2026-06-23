@@ -39,9 +39,11 @@ Etsy limits listings to **2 variation dimensions** (e.g., Size and Fabric) and a
 ### The Strategy:
 We will consolidate your 7 separate duvet cover listings down to **4 strategic listings** to concentrate sales history, boost Etsy search rankings, and reduce buyer choice fatigue:
 
-1.  **Hero Listing 1: The Ultimate 3-Sided Zipper Duvet Cover (Standard Home)**
+1.  **Hero Listing 1: The Ultimate 3-Sided Zipper Duvet Cover (Standard Home) [Listing ID: 1794134334]**
     *   *Consolidates:* PremaCotton (Row 8), CloudSoft (Row 10), EcoLuxe (Row 26), and BreezePlus (Row 30) home listings.
-    *   *Variations:* Variation 1: **Size** (using regional abbreviations under 20 chars like `US Twin (68"x86")`, `US Queen (90"x90")`, `UK King (225x220)`, etc.). Variation 2: **Fabric Type** (PremaCotton, BreezePlus, EcoLuxe, CloudSoft).
+    *   *Status:* **Active.** This is the only active duvet cover listing live on Etsy. The other duvet listings are currently deactivated/drafted.
+    *   *Variations:* Variation 1: **Size** (using regional abbreviations under 20 chars like `US Twin (68"x86")`, `US Queen (90"x90")`, `UK King (225x220)`, etc.). Variation 2: **Fabric Collection** (PremaCotton, BreezePlus, EcoLuxe, CloudSoft).
+    *   *Workflow:* Correct and sync other duvet listings one-by-one in draft status before reactivating.
     *   *Why:* Merges standard home sales history into one high-ranking listing.
 2.  **Hero Listing 2: Custom Boat & Yacht Duvet Cover (Marine)**
     *   *Keep Separate:* Row 16.
@@ -174,8 +176,10 @@ The cheapest customer to acquire is the one who has already bought from you. For
 Follow this step-by-step checklist to clean up your marketplace channels and launch the DTC funnel:
 
 ### Phase 1: Catalog Clean Up & Consolidation
-*   [ ] **Select Master Duvet Cover Listing:** Pick the highest-performing 3-sided zipper duvet cover listing (the one with the most historical sales/reviews, e.g. PremaCotton Row 8) to act as the consolidated "Hero" listing.
-*   [ ] **Merge Fabrics into Master Listing:** Edit the master listing to add the fabric variation (`PremaCotton`, `BreezePlus`, `EcoLuxe`, `CloudSoft`) and update the pricing tiers.
+*   [x] **Select Master Duvet Cover Listing:** Master listing selected as **Listing ID 1794134334** ("3-Sided Zipper Duvet Cover - Easy Change Bedding | PremaCotton, EcoLuxe Cotton, BreezePlus, CloudSoft - Home").
+*   [x] **Deactivate Other Duvet Listings:** Keep only ID `1794134334` active on Etsy while consolidating. Other duvet listings are deactivated/kept as drafts.
+*   [ ] **Correct Duvet Listings One-by-One:** Individually edit, audit, and verify variations, descriptions, and tags for each duvet listing before reactivating.
+*   [ ] **Merge Fabrics into Master Listing:** Edit the master listing `1794134334` to add the fabric variation (`PremaCotton`, `BreezePlus`, `EcoLuxe`, `CloudSoft`) and update the pricing tiers.
 *   [ ] **Setup Redirects on Redundant Listings:** Add a note at the top of descriptions on the other 3 duvet listings redirecting buyers to the master listing.
 *   [ ] **Deactivate Redundant Listings:** Deactivate the redundant individual duvet cover listings once the consolidated listing establishes sales history.
 *   [ ] **Audit Low-Traffic Standard Sheets:** Identify fitted sheet listings with zero sales or views in the last 12 months. Consolidate them or deactivate them to focus budget on high-performing custom shapes.
