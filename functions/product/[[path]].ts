@@ -120,7 +120,12 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
           <h3>ทำไมต้องปลอกผ้านวมซิป 3 ด้าน?</h3>
           <p>${escaped}</p>
           <ul>
-            <li>ซิป 3 ด้าน เปลี่ยนผ้านวมได้ในไม่กี่นาที</li><li>เหมาะสำหรับบ้านที่ซักผ้าบ่อยและบ้านที่มีสัตว์เลี้ยง</li><li>สั่งตัดตามขนาดผ้านวมจริงได้ (ซม. หรือ นิ้ว)</li><li>เลือกได้ 4 เนื้อผ้าพรีเมียม</li><li>ซักเครื่องได้ แห้งไว</li><li>ตัวเลือก PremaCotton ผ่านมาตรฐาน OEKO-TEX®</li>
+            <li>ซิป 3 ด้าน เปลี่ยนผ้านวมได้ในไม่กี่นาที</li><li>เหมาะสำหรับบ้านที่ซักผ้าบ่อยและบ้านที่มีสัตว์เลี้ยง</li><li>สั่งตัดตามขนาดผ้านวมจริงได้ (ซม. หรือ นิ้ว)</li><li>เลือกได้ 4 เนื้อผ้าพรีเมียม</li><li>ซักเครื่องได้ แห้งไว</li>
+          </ul>
+          <h3>ซิป 3 ด้าน — ซักง่าย ใช้งานสะดวก</h3>
+          <p>ซิปเปิดได้ 3 ด้าน ช่วยให้ถอดและใส่ผ้านวมง่ายขึ้น ไม่ต้องยัดมุมให้เสียเวลา มีให้เลือกครบ 4 เนื้อผ้าพรีเมียม และหากเลือกผ้า PremaCotton จะเป็นตัวเลือกที่ผ่านมาตรฐาน OEKO-TEX®</p>
+          <ul>
+            <li>ซิป 3 ด้าน เปลี่ยนปลอกได้รวดเร็ว</li><li>มีให้เลือก 4 เนื้อผ้า</li><li>สั่งตัดตามขนาดผ้านวมของคุณ</li><li>เฉพาะผ้า PremaCotton ที่ผ่านมาตรฐาน OEKO-TEX®</li><li>ดูแลง่าย แห้งไว</li>
           </ul>
         </div>`;
     const thaiFaqPanel = `<div class="info-panel" id="info-panel-faq">
@@ -148,7 +153,8 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
     if (descStart >= 0 && faqStart > descStart) {
       const withThaiDesc = html.slice(0, descStart) + thaiPanel + '\n        ' + html.slice(faqStart);
       const faqStart2 = withThaiDesc.search(/<div[^>]*id="info-panel-faq"[^>]*>/i);
-      const reviewsStart = withThaiDesc.indexOf('<div class="container" id="reviews"', Math.max(0, faqStart2));
+      const reviewsMatch = /<div[^>]*id="reviews"[^>]*>/i.exec(withThaiDesc.slice(Math.max(0, faqStart2)));
+      const reviewsStart = reviewsMatch ? Math.max(0, faqStart2) + reviewsMatch.index : -1;
       if (faqStart2 >= 0 && reviewsStart > faqStart2) {
         return withThaiDesc.slice(0, faqStart2) + thaiFaqPanel + '\n    ' + withThaiDesc.slice(reviewsStart);
       }

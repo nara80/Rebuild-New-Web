@@ -318,8 +318,8 @@ function buildCustomizable(slug, p, prod) {
   };
 
   const hasPremaCotton = p.fabrics && p.fabrics.includes('premacotton');
-  replacements['{{TRUST_MOBILE_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX' : 'Premium Quality';
-  replacements['{{TRUST_DESKTOP_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX Certified' : 'Premium Quality';
+  replacements['{{TRUST_MOBILE_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX*' : 'Premium Quality';
+  replacements['{{TRUST_DESKTOP_OEKO}}'] = hasPremaCotton ? 'PremaCotton OEKO-TEX® Certified' : 'Premium Quality';
 
   // Build dynamic HTML parts
   replacements['{{FABRIC_HTML}}'] = buildFabricHTML(p);
@@ -443,8 +443,8 @@ function buildMarine(slug, p, prod) {
   };
 
   const hasPremaCotton = p.fabrics && p.fabrics.includes('premacotton');
-  replacements['{{TRUST_MOBILE_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX' : 'Premium Quality';
-  replacements['{{TRUST_DESKTOP_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX Certified' : 'Premium Quality';
+  replacements['{{TRUST_MOBILE_OEKO}}'] = hasPremaCotton ? 'OEKO-TEX*' : 'Premium Quality';
+  replacements['{{TRUST_DESKTOP_OEKO}}'] = hasPremaCotton ? 'PremaCotton OEKO-TEX® Certified' : 'Premium Quality';
 
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);

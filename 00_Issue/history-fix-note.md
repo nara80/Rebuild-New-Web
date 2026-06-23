@@ -954,3 +954,45 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Current live/preview final confirmation:** ⏳ pending latest deploy
   - Final end-state confirmation requires deploying the latest local bundle that includes the client override fix, then re-checking:
     - `https://<new-preview>.mildmate-new.pages.dev/th/product/3-sided-duvet/`
+
+### FAQ Thai follow-up (same reconciliation format as Description)
+
+#### Incident scope (what was observed)
+- After description fixes, user requested Thai FAQ on the same page.
+- Preview checks still showed mixed result:
+  - Thai tab labels and Thai tagline/description text appeared
+  - FAQ questions/answers remained English
+
+#### Root causes (reconciled)
+1. **Description and FAQ are controlled by separate surfaces**
+   - Description block is partly D1-driven and also overwritten by product template runtime.
+   - FAQ block remains static template/SSR content unless explicitly replaced.
+2. **SSR/HTML replacement boundary mismatch during earlier passes**
+   - Earlier FAQ replacement logic did not consistently replace the full `info-panel-faq` block on served preview output.
+3. **Client runtime remained the decisive blocker for FAQ**
+   - Even after SSR attempts, the shipped customizable template behavior did not apply a Thai FAQ runtime override for `3-sided-duvet`, so deployed previews kept English FAQ content.
+
+#### What was completed
+1. Added Thai FAQ replacement logic in `functions/product/[[path]].ts` for:
+   - `/th/product/3-sided-duvet/`
+2. Hardened SSR boundary matching to reduce fragile container assumptions (id-based matching paths).
+3. Applied final client-side fix in `templates/product-customizable.html`:
+   - Added explicit Thai FAQ runtime override for `lang='th' && slug==='3-sided-duvet'`.
+4. Regenerated static product pages from template:
+   - `node scripts/build-products.js`
+5. Rebuilt/validated locally after final patch set:
+   - `npm run lint`
+   - `npx wrangler pages functions build --outdir public`
+
+#### Verification status (systematic reconciliation)
+- **Code/source verification:** ✅
+  - Thai FAQ replacement logic exists in `functions/product/[[path]].ts`.
+  - Thai FAQ runtime override now exists in `templates/product-customizable.html`.
+  - Regenerated `public/product/3-sided-duvet/index.html` includes the Thai FAQ runtime override block.
+- **Build/validator verification:** ✅
+  - lint/build passed on latest local state (after template fix + rebuild).
+- **Preview deploy verification history (latest checked before final local fix):** ❌ partial only
+  - Previews `8e37c768`, `ec4c8921`, and `7033842d` still showed English FAQ while Thai description/tagline were present.
+- **Current final state:** ⏳ pending deploy confirmation for the final client-side FAQ patch
+  - Must deploy latest local artifacts and re-verify on:
+    - `https://<new-preview>.mildmate-new.pages.dev/th/product/3-sided-duvet/`
