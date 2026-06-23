@@ -274,6 +274,19 @@ export const onRequest: PagesFunction<Env> = async (context) => {
             .run();
         }
 
+        // Delete listings from D1 that are no longer active on Etsy
+        const activeIds = listData.results.map(item => String(item.listing_id));
+        if (activeIds.length > 0) {
+          const placeholders = activeIds.map(() => "?").join(",");
+          await env.DB.prepare(
+            `DELETE FROM listings WHERE etsy_listing_id NOT IN (${placeholders})`
+          )
+            .bind(...activeIds)
+            .run();
+        } else {
+          await env.DB.prepare("DELETE FROM listings").run();
+        }
+
         // Return newly updated results from D1
         const freshList = await env.DB.prepare("SELECT * FROM listings ORDER BY title ASC").all<ListingRow>();
         return new Response(JSON.stringify(freshList.results), {
