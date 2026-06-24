@@ -63,6 +63,8 @@ async function ensureOrderShippingSchema(env: any): Promise<void> {
       if (!existing.has("tracking_url")) alters.push("ALTER TABLE orders ADD COLUMN tracking_url TEXT");
       if (!existing.has("shipping_status")) alters.push("ALTER TABLE orders ADD COLUMN shipping_status TEXT");
       if (!existing.has("shipped_at")) alters.push("ALTER TABLE orders ADD COLUMN shipped_at DATETIME");
+      if (!existing.has("customer_note_type")) alters.push("ALTER TABLE orders ADD COLUMN customer_note_type TEXT");
+      if (!existing.has("customer_note")) alters.push("ALTER TABLE orders ADD COLUMN customer_note TEXT");
       for (const sql of alters) await env.DB.prepare(sql).run();
       orderShippingSchemaReady = true;
     })().finally(() => {
@@ -239,7 +241,7 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at
@@ -261,7 +263,7 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at

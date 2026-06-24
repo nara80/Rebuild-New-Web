@@ -47,6 +47,11 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
+  const customerNoteTypeRaw = String(body.customer_note_type || "").trim().toLowerCase();
+  const customerNoteRaw = String(body.customer_note || "").trim();
+  const allowedNoteTypes = new Set(["delivery", "measurement", "gift", "other"]);
+  const customerNoteType = allowedNoteTypes.has(customerNoteTypeRaw) ? customerNoteTypeRaw : "";
+  const customerNote = customerNoteRaw.slice(0, 450);
   const shippingCountryInput = body.shipping_country || body.country_code || "";
   const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -268,6 +273,8 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     if (name) params.append("metadata[name]", name);
     if (phone) params.append("metadata[phone]", phone);
     if (address) params.append("metadata[address]", address);
+    if (customerNoteType) params.append("metadata[customer_note_type]", customerNoteType);
+    if (customerNote) params.append("metadata[customer_note]", customerNote);
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));

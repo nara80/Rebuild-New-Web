@@ -516,6 +516,22 @@
                 <label class="form-label" for="cust-country">Country *</label>
               </div>
 
+              <div class="form-group float-group">
+                <select class="form-input" id="order-note-type" autocomplete="off" onchange="this.closest('.float-group').classList.add('filled')">
+                  <option value="">No special request</option>
+                  <option value="delivery">Delivery note</option>
+                  <option value="measurement">Sizing / fit note</option>
+                  <option value="gift">Gift request</option>
+                  <option value="other">Other</option>
+                </select>
+                <label class="form-label" for="order-note-type">Message Type (Optional)</label>
+              </div>
+
+              <div class="form-group float-group">
+                <textarea class="form-input" id="order-note-message" placeholder=" " rows="4" maxlength="450" style="min-height:96px;resize:vertical"></textarea>
+                <label class="form-label" for="order-note-message">Message to MildMate (Optional)</label>
+              </div>
+
               <p class="price-note">Your email is used for order confirmation and shipping updates only.</p>
             </div>
 
@@ -1771,6 +1787,8 @@
               name: document.getElementById('cust-fname').value.trim() + ' ' + document.getElementById('cust-lname').value.trim(),
               phone: buildFullPhone(),
               address: buildAddress(),
+              customer_note_type: document.getElementById('order-note-type') ? document.getElementById('order-note-type').value : '',
+              customer_note: document.getElementById('order-note-message') ? document.getElementById('order-note-message').value.trim() : '',
               currency: currencyPref,
               shipping_country: shippingCountryCode,
               shipping_service_level: shippingState.serviceLevel || 'express',

@@ -18,6 +18,35 @@ function normalizeAddress(raw: any): string {
   return [(addr.street||addr.address||"").trim().toLowerCase(), (addr.city||"").trim().toLowerCase(), (addr.state||addr.province||"").trim().toLowerCase(), (addr.postal_code||addr.zip||addr.postal||"").trim().toLowerCase(), (addr.country||"").trim().toLowerCase()].join("|");
 }
 
+let orderCustomerNoteSchemaReady = false;
+let orderCustomerNoteSchemaPromise: Promise<boolean> | null = null;
+
+async function ensureOrderCustomerNoteSchema(env: any): Promise<boolean> {
+  if (orderCustomerNoteSchemaReady) return true;
+  if (!orderCustomerNoteSchemaPromise) {
+    orderCustomerNoteSchemaPromise = (async () => {
+      try {
+        const tableInfo = await env.DB.prepare("PRAGMA table_info(orders)").all();
+        const existing = new Set(
+          (tableInfo.results || []).map((r: any) => String(r.name || "").toLowerCase())
+        );
+        const alters: string[] = [];
+        if (!existing.has("customer_note_type")) alters.push("ALTER TABLE orders ADD COLUMN customer_note_type TEXT");
+        if (!existing.has("customer_note")) alters.push("ALTER TABLE orders ADD COLUMN customer_note TEXT");
+        for (const sql of alters) await env.DB.prepare(sql).run();
+        orderCustomerNoteSchemaReady = true;
+        return true;
+      } catch (e: any) {
+        console.error("orders note schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!orderCustomerNoteSchemaReady) orderCustomerNoteSchemaPromise = null;
+    });
+  }
+  return await orderCustomerNoteSchemaPromise;
+}
+
 export async function handleStripeWebhook(request: Request, env: any): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -95,6 +124,9 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
 
   const session = event.data.object;
   const metadata = session.metadata || {};
+  const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
+  const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
+  const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
 
   let items: any[] = [];
   try {
@@ -124,35 +156,70 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
     const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
     try {
-      await env.DB.prepare(
-        `INSERT INTO orders (
-          stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
-          shipping_address, product_slug, product_title_en, fabric, color,
-          width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-          custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, 'confirmed')`
-      ).bind(
-        session.id,
-        session.payment_intent || null,
-        (metadata.email || session.customer_email || "").toLowerCase(),
-        metadata.name || null,
-        metadata.phone || null,
-        metadata.address || null,
-        item.slug || "",
-        item.name || "",
-        item.fabric || null,
-        item.color || null,
-        dims.w || null,
-        dims.l || null,
-        dims.d || null,
-        null, null, null,
-        null,
-        sessionCurrency === "usd" ? unitPriceMajor : null,
-        sessionCurrency === "thb" ? unitPriceMajor : null,
-        sessionCurrency,
-        item.qty || 1,
-        metadata.discount_code || null
-      ).run();
+      if (hasOrderCustomerNoteColumns) {
+        await env.DB.prepare(
+          `INSERT INTO orders (
+            stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
+            shipping_address, product_slug, product_title_en, fabric, color,
+            width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
+            custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+            customer_note_type, customer_note, status
+          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
+        ).bind(
+          session.id,
+          session.payment_intent || null,
+          (metadata.email || session.customer_email || "").toLowerCase(),
+          metadata.name || null,
+          metadata.phone || null,
+          metadata.address || null,
+          item.slug || "",
+          item.name || "",
+          item.fabric || null,
+          item.color || null,
+          dims.w || null,
+          dims.l || null,
+          dims.d || null,
+          null, null, null,
+          null,
+          sessionCurrency === "usd" ? unitPriceMajor : null,
+          sessionCurrency === "thb" ? unitPriceMajor : null,
+          sessionCurrency,
+          item.qty || 1,
+          metadata.discount_code || null,
+          customerNoteType,
+          customerNote
+        ).run();
+      } else {
+        await env.DB.prepare(
+          `INSERT INTO orders (
+            stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
+            shipping_address, product_slug, product_title_en, fabric, color,
+            width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
+            custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
+          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+        ).bind(
+          session.id,
+          session.payment_intent || null,
+          (metadata.email || session.customer_email || "").toLowerCase(),
+          metadata.name || null,
+          metadata.phone || null,
+          metadata.address || null,
+          item.slug || "",
+          item.name || "",
+          item.fabric || null,
+          item.color || null,
+          dims.w || null,
+          dims.l || null,
+          dims.d || null,
+          null, null, null,
+          null,
+          sessionCurrency === "usd" ? unitPriceMajor : null,
+          sessionCurrency === "thb" ? unitPriceMajor : null,
+          sessionCurrency,
+          item.qty || 1,
+          metadata.discount_code || null
+        ).run();
+      }
 
       // Mark discount code as used
       if (metadata.discount_code) {
@@ -250,10 +317,13 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     // Team notification
     const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
     try {
+      const customerNoteText = customerNote
+        ? `\nMessage Type: ${customerNoteType || "other"}\nCustomer Message: ${customerNote}`
+        : "";
       const teamMail = await sendEmail(env, {
         to: teamEmail,
         subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}\n\nItems:\n${itemList}\n\nTotal: ${total}`,
+        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}`,
       });
       if (!teamMail.success) {
         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
