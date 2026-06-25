@@ -256,11 +256,11 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   // Create Stripe Checkout Session
-  const siteUrl = request.url.includes("localhost") || request.url.includes("127.0.0.1")
-    ? "http://localhost:8788"
-    : request.url.includes("mildmate-new.pages.dev")
-    ? "https://mildmate-new.pages.dev"
-    : "https://www.mildmate.com";
+  const reqUrl = new URL(request.url);
+  const siteUrl =
+    reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1"
+      ? "http://localhost:8788"
+      : reqUrl.origin;
 
   try {
     // Build URLSearchParams manually — Stripe requires array-style encoding for line_items

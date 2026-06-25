@@ -996,3 +996,55 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
 - **Current final state:** ⏳ pending deploy confirmation for the final client-side FAQ patch
   - Must deploy latest local artifacts and re-verify on:
     - `https://<new-preview>.mildmate-new.pages.dev/th/product/3-sided-duvet/`
+
+## 24) Checkout note test-flow reconciliation (preview redirect mismatch + runtime bundle drift)
+
+### Incident scope (what was observed)
+- Stripe test checkout completed, but redirect landed on production host:
+  - `https://mildmate-new.pages.dev/order-confirmed/?session_id=cs_test_...`
+- Order-confirmed page stayed in **Order Processing**, and new test session rows were not visible in expected verification queries.
+- Stripe webhook events showed `Delivered (200)` but payload still contained:
+  - `success_url: https://mildmate-new.pages.dev/order-confirmed/...`
+  - missing `customer_note_type` / `customer_note` in `metadata`.
+
+### Root causes (reconciled)
+1. **Source/runtime mismatch**
+   - `workers/api/checkout.ts` had been patched locally first, but deployed runtime used `public/_worker.js` (stale behavior).
+2. **Hardcoded host logic in runtime**
+   - Checkout session URL generation used host checks that collapsed preview hosts to `mildmate-new.pages.dev`.
+3. **Runtime missing latest note metadata handling**
+   - Runtime checkout path did not append `metadata[customer_note_type]` and `metadata[customer_note]`.
+   - Runtime webhook insert/email path did not include customer note fields.
+
+### What was completed
+1. Updated source checkout origin handling (`workers/api/checkout.ts`):
+   - `siteUrl` now derives from `new URL(request.url).origin` (localhost exception kept).
+2. Patched deployed runtime artifacts directly to match current expected behavior:
+   - `public/_worker.js`
+   - `public/index.js`
+3. Applied runtime parity fixes:
+   - checkout metadata now includes:
+     - `customer_note_type`
+     - `customer_note`
+   - webhook order insert now stores:
+     - `customer_note_type`
+     - `customer_note`
+   - team notification email now includes customer note block.
+4. Confirmed D1 schema readiness:
+   - `orders` table contains both columns:
+     - `customer_note_type`
+     - `customer_note`
+5. Redeployed preview branch and re-tested on preview alias flow.
+
+### Verification status (systematic reconciliation)
+- **Code/runtime verification:** ✅
+  - `public/_worker.js` and `public/index.js` now contain origin-based success/cancel URL logic and customer-note metadata/webhook paths.
+- **Build/validator verification:** ✅
+  - `npm run lint` passed after patch set.
+  - `npx wrangler pages functions build --outdir .wrangler/functions-bundle` passed.
+- **Preview checkout redirect verification:** ✅
+  - Confirmed successful post-payment redirect on preview alias:
+    - `https://note-test-preview.mildmate-new.pages.dev/order-confirmed/?session_id=cs_test_a18Z3uOJWknx50mepRYBh8p1ocKo0Xefvh5bUvDNgcWMgK5tZbvAPZx2at`
+  - This verifies checkout now keeps preview host context instead of forcing production host.
+- **Stripe payload reconciliation:** ✅
+  - Earlier payloads with `success_url=https://mildmate-new.pages.dev/...` were identified as stale-runtime evidence and superseded by the patched runtime + preview verification above.

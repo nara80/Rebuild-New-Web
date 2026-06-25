@@ -7095,6 +7095,11 @@ async function handleCheckout(request, env) {
     });
   }
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
+  const customerNoteTypeRaw = String(body.customer_note_type || "").trim().toLowerCase();
+  const customerNoteRaw = String(body.customer_note || "").trim();
+  const allowedNoteTypes = /* @__PURE__ */ new Set(["delivery", "measurement", "gift", "other"]);
+  const customerNoteType = allowedNoteTypes.has(customerNoteTypeRaw) ? customerNoteTypeRaw : "";
+  const customerNote = customerNoteRaw.slice(0, 450);
   const shippingCountryInput = body.shipping_country || body.country_code || "";
   const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -7280,7 +7285,8 @@ async function handleCheckout(request, env) {
     }
   } catch {
   }
-  const siteUrl = request.url.includes("localhost") || request.url.includes("127.0.0.1") ? "http://localhost:8788" : request.url.includes("mildmate-new.pages.dev") ? "https://mildmate-new.pages.dev" : "https://www.mildmate.com";
+  const reqUrl = new URL(request.url);
+  const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
     const params = new URLSearchParams();
     params.append("customer_email", normalizedEmail);
@@ -7291,6 +7297,8 @@ async function handleCheckout(request, env) {
     if (name) params.append("metadata[name]", name);
     if (phone) params.append("metadata[phone]", phone);
     if (address) params.append("metadata[address]", address);
+    if (customerNoteType) params.append("metadata[customer_note_type]", customerNoteType);
+    if (customerNote) params.append("metadata[customer_note]", customerNote);
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));
@@ -7466,6 +7474,8 @@ async function handleStripeWebhook(request, env) {
   }
   const session = event.data.object;
   const metadata = session.metadata || {};
+  const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
+  const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
   let items = [];
   try {
     const rawItems = JSON.parse(metadata.items || "[]");
@@ -7494,8 +7504,9 @@ async function handleStripeWebhook(request, env) {
           stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
           shipping_address, product_slug, product_title_en, fabric, color,
           width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-          custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, 'confirmed')`
+          custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+          customer_note_type, customer_note, status
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
       ).bind(
         session.id,
         session.payment_intent || null,
@@ -7518,7 +7529,9 @@ async function handleStripeWebhook(request, env) {
         sessionCurrency === "thb" ? unitPriceMajor : null,
         sessionCurrency,
         item.qty || 1,
-        metadata.discount_code || null
+        metadata.discount_code || null,
+        customerNoteType,
+        customerNote
       ).run();
       if (metadata.discount_code) {
         try {
@@ -7610,6 +7623,9 @@ We'll notify you when your order ships.
     }
     const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
     try {
+      const customerNoteText = customerNote ? `
+Message Type: ${customerNoteType || "other"}
+Customer Message: ${customerNote}` : "";
       const teamMail = await sendEmail(env, {
         to: teamEmail,
         subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
@@ -7618,7 +7634,7 @@ We'll notify you when your order ships.
 Order: #${session.id.slice(-8)}
 Customer: ${metadata.name || "Guest"} (${email})
 Phone: ${metadata.phone || "N/A"}
-Address: ${metadata.address || "N/A"}
+Address: ${metadata.address || "N/A"}${customerNoteText}
 
 Items:
 ${itemList}
