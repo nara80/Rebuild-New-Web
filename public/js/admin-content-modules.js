@@ -28,7 +28,6 @@
   var REVIEW_CHANNELS = [
     { key: "etsy", label: "Etsy", type: "marketplace", link: "https://www.etsy.com/shop/MildMate?ref=seller-platform-mcnav#reviews", logo: "/images/Logo/Etsy.png" },
     { key: "ebay", label: "eBay", type: "marketplace", link: "https://www.ebay.com/str/mildmate?_tab=feedback", logo: "/images/Logo/eBay.png" },
-    { key: "amazon", label: "Amazon", type: "marketplace", link: "https://www.mildmate.com/", logo: "/images/Logo/Amazon.png" },
     { key: "shopee", label: "Shopee", type: "marketplace", link: "https://shopee.co.th/buyer/418731510/rating?shop_id=418711933", logo: "/images/Logo/Shopee.png" },
     { key: "lazada", label: "Lazada", type: "marketplace", link: "https://www.lazada.co.th/needed-shop/?from=wangpu&q=All-Products&rating=5", logo: "/images/Logo/Lazada.png" },
     { key: "website", label: "Website", type: "direct", logo: "/images/logo.png" },

@@ -214,7 +214,7 @@ export async function buildBlogPostHTML(post: any, env: any, lang: string = "en"
       relatedProductsHtml = products.map((p: any) => {
         const pSlug = escHtml(p.slug);
         const pTitle = escHtml(p.title_en || "");
-        const pImg = p.image_url ? escHtml(toPublicR2Url(p.image_url)) : "/images/placeholder.svg";
+        const pImg = p.image_url ? escHtml(toPublicR2Url(p.image_url)) : "/images/logo.webp";
         const pPrice = p.base_price_usd ? "$" + Math.round(p.base_price_usd) : "";
         const pLink = "/product/" + pSlug + "/";
         return '<div class="related-card">'

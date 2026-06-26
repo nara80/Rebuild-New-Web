@@ -803,7 +803,10 @@ mildmate-web/
 â”‚       â”œâ”€â”€ admin-contacts.ts       â† Admin: contacts management
 â”‚       â”œâ”€â”€ admin-stats.ts          â† Admin: dashboard statistics
 â”‚       â”œâ”€â”€ admin-shipping.ts       â† Admin: shipping rates CRUD (THB-only, OTHER protected)
-â”‚       â””â”€â”€ admin-quotes.ts         â† Admin: custom quotes management (status, price, expiry)
+â”‚       â”œâ”€â”€ admin-quotes.ts         â† Admin: custom quotes management (status, price, expiry)
+â”‚       â”œâ”€â”€ admin-offers.ts         â† Admin: GET/POST offers config in D1 `recovery_config`
+â”‚       â”œâ”€â”€ admin-campaigns.ts      â† Admin: GET/POST/DELETE campaigns in D1 `marketing_campaigns`
+â”‚       â””â”€â”€ admin-thankyou-dispatch.ts â† Admin: manual due thank-you dispatch + diagnostics
 
 â””â”€â”€ migrations/
     â”œâ”€â”€ 001_initial.sql             â† products/orders/abandoned_carts/subscribers/rate_limits
@@ -858,6 +861,7 @@ Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no
 ## D1 Database Schema
 
 **Actual schema has evolved beyond 001–030 (repo currently includes migrations through `034_*`, including `031_product_faq_fields.sql` for `faq_en`/`faq_th` and `034_orders_customer_note.sql` for checkout notes). Run migrations in order for the target environment.**
+**Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, and `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent.
 
 ```sql
 -- Products (migration 001 + 006)
@@ -1027,6 +1031,12 @@ CREATE TABLE blog_posts (
 | DELETE | /api/admin/blog | handleAdminBlog | Delete post (admin) |
 | GET | /api/blog/posts | handleBlogPosts | List published posts (public) |
 | GET | /api/blog/posts?slug=x | handleBlogPosts | Get single published post (public) |
+| GET | /api/admin/offers | handleAdminOffers | Read D1-backed marketing offer config (`recovery_config`) |
+| POST | /api/admin/offers | handleAdminOffers | Save D1-backed marketing offer config (`recovery_config`) |
+| GET | /api/admin/campaigns | handleAdminCampaigns | List D1-backed marketing campaigns |
+| POST | /api/admin/campaigns | handleAdminCampaigns | Create/update marketing campaign |
+| DELETE | /api/admin/campaigns?id=N | handleAdminCampaigns | Delete marketing campaign by id |
+| POST | /api/admin/thankyou-dispatch | handleAdminThankyouDispatch | Manually send due thank-you emails and return sent/failed/skipped details |
 
 ### Frontend Files
 - **Admin:** /admin/blog.html — dedicated blog CMS page with WYSIWYG editor
@@ -1046,13 +1056,13 @@ CREATE TABLE blog_posts (
 | **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → current canonical product set (28 live product pages), ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
 | **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on all 28 product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-06-23:** product descriptions centralized to D1 across all product templates and FAQ EN/TH moved to D1/Admin fields. | ✅ Complete |
-| **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; cron trigger configured via Cloudflare Dashboard; optional checkout message type + note saved to orders and team email) |
-| **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts â‰¥$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. Cron trigger in Cloudflare Dashboard (configured via Cloudflare Dashboard triggers panel). | ✅ Built |
-| **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing** (abandoned cart config, thankyou config, recovery stages management, admin accounts). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |
+| **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; optional checkout message type + note saved to orders/team email; checkout success/cancel URL now derived from request origin to keep preview sessions on preview domain; runtime worker artifacts reconciled with source) |
+| **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. Cron trigger remains configured via Cloudflare Dashboard. | ✅ Built |
+| **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed) |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏳ Pending |
 
-> **Note:** Phase 2 (SEO URLs) is already deployed (271 rules via `_redirects` + product middleware, 2026-06-14). Phase 5 (Checkout/Stripe/Auth) is ✅ Built and includes optional checkout message capture to orders/email. Phase 6 (Abandoned Cart) is ✅ Built. Phase 7 (Admin Dashboard) is ✅ Built. Phase 8 (Polish + Launch) is ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. Part B DONE: Stripe live mode keys deployed).
+> **Note:** Phase 2 (SEO URLs) is already deployed (271 rules via `_redirects` + product middleware, 2026-06-14). Phase 5 (Checkout/Stripe/Auth) is ✅ Built and now reconciled for preview-safe request-origin redirects. Phase 6 (Abandoned Cart) is ✅ Built with cron + manual due-send endpoint. Phase 7 (Admin Dashboard) is ✅ Built with D1-backed marketing offers/campaigns and manual thank-you dispatch visibility. Phase 8 (Polish + Launch) is ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. Part B DONE: Stripe live mode keys deployed).
 
 ---
 
@@ -1688,6 +1698,21 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 - Max 50 emails/day overall; 5+3+3 per-stage batching. thankyou_queue sends 1-year discount code post-purchase.
 - All config driven from D1 recovery_config table (migrations 018) - not hardcoded.
 - Cron trigger configured via Cloudflare Dashboard (wrangler.toml [triggers] registered in project triggers panel).
+
+### Thank-you Dispatch and Dedupe (Reconciled 2026-06-26)
+- Manual due-send endpoint is live: `POST /api/admin/thankyou-dispatch` (used by Super Admin "Send Due Thank-you Now").
+- Dispatch API returns diagnostics with sent/failed/skipped counts and per-email detail arrays.
+- Handler auto-heals `thankyou_queue` with `sent_at` and `last_error` columns when missing in target DB.
+- Webhook dedupe guard is active: skip queue insertion for duplicate `order_id`; suppress new thank-you issuance when an active issued thank-you code already exists for the email; allow reissue after code is used/expired.
+
+### Marketing Admin Data Source (Reconciled 2026-06-26)
+- "Send Offers" config is persisted in D1 via `/api/admin/offers` (`recovery_config`) — not browser localStorage.
+- "Run a Sale" campaigns are persisted in D1 via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API).
+- Marketing endpoints use production-safe auth parity (Clerk user lookup fallback + `ADMIN_EMAILS` allowlist).
+
+### Checkout Preview Safety (Reconciled 2026-06-26)
+- Stripe Checkout success/cancel URLs are built from request origin in `workers/api/checkout.ts` (with localhost exception), preventing preview environments from redirecting to production domains.
+- Runtime worker bundles (`public/index.js`, `public/_worker.js`) must stay synced with source checkout/webhook behavior after backend edits.
 
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().

@@ -630,7 +630,7 @@ function renderListingCards(rows: any[], lang: 'en' | 'th'): string {
     const usd = Math.round(Number(row.base_price_usd || 0));
     const thb = Math.round(Number(row.base_price_thb || 0));
     const priceLabel = lang === 'th' ? `เริ่มต้น ฿${thb.toLocaleString('en-US')}` : `From US$${usd}`;
-    const image = pickPrimaryImage(row.images, row.image_url) || '/images/placeholder.jpg';
+    const image = pickPrimaryImage(row.images, row.image_url) || '/images/logo.webp';
     const href = lang === 'th' ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
     const isFixed = fixedProductSlugs.has(String(row.slug || '').toLowerCase());
     const ctaLabel = isFixed ? ctaView : ctaStandard;

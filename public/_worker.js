@@ -174,7 +174,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
       relatedProductsHtml = products.map((p) => {
         const pSlug = escHtml(p.slug);
         const pTitle = escHtml(p.title_en || "");
-        const pImg = p.image_url ? escHtml(toPublicR2Url(p.image_url)) : "/images/placeholder.svg";
+        const pImg = p.image_url ? escHtml(toPublicR2Url(p.image_url)) : "/images/logo.webp";
         const pPrice = p.base_price_usd ? "$" + Math.round(p.base_price_usd) : "";
         const pLink = "/product/" + pSlug + "/";
         return '<div class="related-card"><a href="' + pLink + '" class="card-image"><img src="' + pImg + '" alt="' + pTitle + '" loading="lazy"></a><div class="card-body"><div class="card-title"><a href="' + pLink + '" style="color:inherit;text-decoration:none">' + pTitle + "</a></div>" + (pPrice ? '<div class="card-price">' + pPrice + "</div>" : "") + '<a href="' + pLink + '" class="btn btn-primary">Shop Now</a></div></div>';
@@ -10177,7 +10177,7 @@ function renderListingCards(rows, lang) {
     const usd = Math.round(Number(row.base_price_usd || 0));
     const thb = Math.round(Number(row.base_price_thb || 0));
     const priceLabel = lang === "th" ? `\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 \u0E3F${thb.toLocaleString("en-US")}` : `From US$${usd}`;
-    const image = pickPrimaryImage(row.images, row.image_url) || "/images/placeholder.jpg";
+    const image = pickPrimaryImage(row.images, row.image_url) || "/images/logo.webp";
     const href = lang === "th" ? `/th/product/${row.slug}/` : `/product/${row.slug}/`;
     const isFixed = fixedProductSlugs.has(String(row.slug || "").toLowerCase());
     const ctaLabel = isFixed ? ctaView : ctaStandard;
