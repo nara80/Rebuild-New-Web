@@ -31,6 +31,8 @@ interface ProductRow {
   title_th: string | null;
   description_en: string | null;
   description_th: string | null;
+  faq_en: string | null;
+  faq_th: string | null;
   card_benefit_en: string | null;
   card_benefit_th: string | null;
   category: string;
@@ -168,7 +170,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB as D1Database;
     const result = await db.prepare(
-      `SELECT id, slug, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th,
+      `SELECT id, slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
               category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
@@ -199,14 +201,16 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
 
       await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
       ).bind(
         slug,
         body.title_en || body.titleEN || slug,
         body.title_th || body.titleTH || null,
         body.description_en || body.descEN || null,
         body.description_th || body.descTH || null,
+        body.faq_en || body.faqEN || null,
+        body.faq_th || body.faqTH || null,
         body.card_benefit_en || body.cardBenefitEN || "",
         body.card_benefit_th || body.cardBenefitTH || "",
         body.category || "sheets",
@@ -267,6 +271,7 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       // Build update query dynamically from allowed fields
       const allowed = [
         "title_en", "title_th", "description_en", "description_th",
+        "faq_en", "faq_th",
         "card_benefit_en", "card_benefit_th",
         "tags", "youtube_url", "images", "image_url", "fabric_options", "category",
         "product_type", "niches"

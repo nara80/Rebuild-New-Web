@@ -49,6 +49,9 @@ import { handleAdminBlog } from "../../workers/api/admin-blog";
 import { handleBlogPosts } from "../../workers/api/blog-posts";
 import { handleReviews, handleAdminReviews } from "../../workers/api/reviews";
 import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
+import { handleAdminThankyouDispatch } from "../../workers/api/admin-thankyou-dispatch";
+import { handleAdminOffers } from "../../workers/api/admin-offers";
+import { handleAdminCampaigns } from "../../workers/api/admin-campaigns";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
 import { handleShippingCalculate } from "../../workers/api/shipping";
@@ -202,6 +205,21 @@ export const onRequest: PagesFunction<{
   // Admin recovery test — triggers abandoned cart recovery email manually
   if (path === "/api/admin/recovery-test" || path === "/api/admin/recovery-test/") {
     return handleAdminRecoveryTest(request, env);
+  }
+
+  // Admin offers config (recovery + thankyou) stored in D1 recovery_config
+  if (path === "/api/admin/offers" || path === "/api/admin/offers/") {
+    return handleAdminOffers(request, env);
+  }
+
+  // Admin marketing campaigns (Run a Sale)
+  if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
+    return handleAdminCampaigns(request, env);
+  }
+
+  // Admin thankyou queue dispatch — manual send for due items
+  if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
+    return handleAdminThankyouDispatch(request, env);
   }
 
   // Public checkout shipping quote

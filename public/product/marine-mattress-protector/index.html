@@ -628,6 +628,19 @@
           if(!gallery.length&&fallback)gallery.push(fallback);
           buildCarousel();
           if(typeof window.syncDesktopColumnsHeight==='function')window.syncDesktopColumnsHeight();
+
+          var lang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang.toLowerCase() : 'en';
+          var desc = (lang === 'th' && p.description_th) ? p.description_th : p.description_en;
+          if (desc) {
+            var descPanel = document.getElementById('info-panel-description');
+            if (descPanel) descPanel.innerHTML = desc;
+          }
+
+          var faq = (lang === 'th' && p.faq_th) ? p.faq_th : p.faq_en;
+          if (faq) {
+            var faqPanel = document.getElementById('info-panel-faq');
+            if (faqPanel) faqPanel.innerHTML = faq;
+          }
         }).catch(function(){});
     })();
   </script>

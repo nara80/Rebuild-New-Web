@@ -345,19 +345,35 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
         sendAfterHours = Number(map.thankyou_send_after_hours) || 1;
       }
 
-      const discountCode = 'THANKS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const expiresAt = new Date(Date.now() + 365 * 86400 * 1000).toISOString().replace('T', ' ').slice(0, 19);
-      const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+      const normalizedEmail = email.toLowerCase();
+      const existingForOrder = await env.DB.prepare(
+        "SELECT id FROM thankyou_queue WHERE order_id = ?1 LIMIT 1"
+      ).bind(session.id).first();
+      if (existingForOrder) {
+        console.log(`Webhook: thankyou skip (already queued for order ${session.id})`);
+      } else {
+        const activeClaim = await env.DB.prepare(
+          "SELECT code, expires_at FROM discount_claims WHERE email = ?1 AND source = 'thankyou' AND status = 'issued' AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
+        ).bind(normalizedEmail).first() as any;
 
-      await env.DB.prepare(
-        "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
-      ).bind(discountCode, email.toLowerCase(), discountPct, expiresAt).run();
+        if (activeClaim) {
+          console.log(`Webhook: thankyou skip (active code exists for ${normalizedEmail}: ${activeClaim.code})`);
+        } else {
+          const discountCode = 'THANKS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          const expiresAt = new Date(Date.now() + 365 * 86400 * 1000).toISOString().replace('T', ' ').slice(0, 19);
+          const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1000).toISOString().replace('T', ' ').slice(0, 19);
 
-      await env.DB.prepare(
-        "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
-      ).bind(session.id, email.toLowerCase(), discountCode, discountPct, sendAfter).run();
+          await env.DB.prepare(
+            "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
+          ).bind(discountCode, normalizedEmail, discountPct, expiresAt).run();
 
-      console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+          await env.DB.prepare(
+            "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
+          ).bind(session.id, normalizedEmail, discountCode, discountPct, sendAfter).run();
+
+          console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+        }
+      }
     } catch (e: any) {
       console.error('Thankyou queue insert failed:', e.message);
     }

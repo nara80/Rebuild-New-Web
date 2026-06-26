@@ -98,7 +98,7 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function applyLocalizedDescriptionFromD1(html: string, description: string, isTh: boolean, slug: string): string {
+function applyLocalizedDescriptionFromD1(html: string, description: string, isTh: boolean): string {
   const text = String(description || '').trim();
   if (!text) return html;
   const escaped = escapeHtml(text);
@@ -111,60 +111,7 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
   if (isTh) {
     html = html
       .replace(/data-info-tab="description">[\s\S]*?<\/button>/i, 'data-info-tab="description">รายละเอียด</button>')
-      .replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">คำถามที่พบบ่อย</button>')
-      .replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, '<p class="product-tagline">ปลอกผ้านวมซิป 3 ด้าน เปลี่ยนง่าย ซักสะดวก เลือกได้ 4 เนื้อผ้าพรีเมียม</p>');
-  }
-
-  if (isTh && slug === '3-sided-duvet') {
-    const thaiPanel = `<div class="info-panel active" id="info-panel-description">
-          <h3>ทำไมต้องปลอกผ้านวมซิป 3 ด้าน?</h3>
-          <p>${escaped}</p>
-          <ul>
-            <li>ซิป 3 ด้าน เปลี่ยนผ้านวมได้ในไม่กี่นาที</li><li>เหมาะสำหรับบ้านที่ซักผ้าบ่อยและบ้านที่มีสัตว์เลี้ยง</li><li>สั่งตัดตามขนาดผ้านวมจริงได้ (ซม. หรือ นิ้ว)</li><li>เลือกได้ 4 เนื้อผ้าพรีเมียม</li><li>ซักเครื่องได้ แห้งไว</li>
-          </ul>
-          <h3>ซิป 3 ด้าน — ซักง่าย ใช้งานสะดวก</h3>
-          <p>ซิปเปิดได้ 3 ด้าน ช่วยให้ถอดและใส่ผ้านวมง่ายขึ้น ไม่ต้องยัดมุมให้เสียเวลา มีให้เลือกครบ 4 เนื้อผ้าพรีเมียม และหากเลือกผ้า PremaCotton จะเป็นตัวเลือกที่ผ่านมาตรฐาน OEKO-TEX®</p>
-          <ul>
-            <li>ซิป 3 ด้าน เปลี่ยนปลอกได้รวดเร็ว</li><li>มีให้เลือก 4 เนื้อผ้า</li><li>สั่งตัดตามขนาดผ้านวมของคุณ</li><li>เฉพาะผ้า PremaCotton ที่ผ่านมาตรฐาน OEKO-TEX®</li><li>ดูแลง่าย แห้งไว</li>
-          </ul>
-        </div>`;
-    const thaiFaqPanel = `<div class="info-panel" id="info-panel-faq">
-          <details class="faq-item" open>
-            <summary>เลือกขนาดอย่างไรให้พอดี?</summary>
-            <p>ดูได้จาก<a href="/th/sizeguide/">คู่มือขนาด</a>สำหรับไซซ์มาตรฐาน หรือกรอกขนาดจริงเพื่อสั่งตัดตามต้องการ</p>
-          </details>
-          <details class="faq-item">
-            <summary>สั่งขนาดพิเศษได้ไหม?</summary>
-            <p>ได้ สามารถเลือก <strong>Custom Size</strong> ใส่ขนาด และส่งคำขอใบเสนอราคาได้เลย</p>
-          </details>
-          <details class="faq-item">
-            <summary>ผ้าและการดูแลรักษาเป็นอย่างไร?</summary>
-            <ul>
-              <li>ซักเครื่องน้ำเย็น (30°C / 86°F) โหมดถนอมผ้า</li><li>ห้ามใช้น้ำยาฟอกขาว ใช้น้ำยาซักผ้าอ่อนโยน</li><li>อบแห้งไฟอ่อนหรือผึ่งลม ผ้าแห้งไว</li><li>ไม่จำเป็นต้องรีด ผ้ายับยาก</li><li>ไม่แนะนำซักแห้ง เพราะสารเคมีอาจทำลายเนื้อผ้า</li>
-            </ul>
-          </details>
-          <details class="faq-item">
-            <summary>จัดส่งใช้เวลานานเท่าไร?</summary>
-            <p>ทุกชิ้นตัดเย็บตามออเดอร์จากประเทศไทย ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง และจะแจ้งอีกครั้งในอีเมลยืนยันคำสั่งซื้อ/ใบเสนอราคา</p>
-          </details>
-        </div>`;
-    const descStart = html.search(/<div[^>]*id="info-panel-description"[^>]*>/i);
-    const faqStart = html.search(/<div[^>]*id="info-panel-faq"[^>]*>/i);
-    if (descStart >= 0 && faqStart > descStart) {
-      const withThaiDesc = html.slice(0, descStart) + thaiPanel + '\n        ' + html.slice(faqStart);
-      const faqStart2 = withThaiDesc.search(/<div[^>]*id="info-panel-faq"[^>]*>/i);
-      const reviewsMatch = /<div[^>]*id="reviews"[^>]*>/i.exec(withThaiDesc.slice(Math.max(0, faqStart2)));
-      const reviewsStart = reviewsMatch ? Math.max(0, faqStart2) + reviewsMatch.index : -1;
-      if (faqStart2 >= 0 && reviewsStart > faqStart2) {
-        return withThaiDesc.slice(0, faqStart2) + thaiFaqPanel + '\n    ' + withThaiDesc.slice(reviewsStart);
-      }
-      return withThaiDesc;
-    }
-    html = html.replace(
-      /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
-      `$1${escaped}$2`
-    );
-    return html;
+      .replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">คำถามที่พบบ่อย</button>');
   }
 
   html = html.replace(
@@ -226,7 +173,7 @@ export async function onRequest(context: any): Promise<Response> {
     const product = await stmt.first() as any;
 
     const localizedDescription = isTh ? String(product?.description_th || '') : String(product?.description_en || '');
-    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, slug);
+    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
     let images: string[] = [];

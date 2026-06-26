@@ -435,7 +435,7 @@
         <div class="pricing-panel">
           <div class="config-tabs">
             <button class="config-tab active" data-tab="standard">Standard Sizes</button>
-            <button class="config-tab" data-tab="custom">Custom Quote</button>
+            <button class="config-tab" data-tab="custom">Custom Size</button>
           </div>
           
           <div class="panel-label">Fabric</div><div class="specs-grid"><div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value">CloudSoft</div></div><div class="spec-item"><div class="spec-label">Drying</div><div class="spec-value">Quick-Dry</div></div><div class="spec-item"><div class="spec-label">Climate</div><div class="spec-value">Moisture-Wicking</div></div><div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">100% Long-Staple Cotton</div></div></div>
@@ -902,32 +902,12 @@
       var desc = (lang === 'th' && p.description_th) ? p.description_th : p.description_en;
       if (desc) {
         var descPanel = document.getElementById('info-panel-description');
-        var keepServerThaiPanel = (lang === 'th' && slug === '3-sided-duvet');
-        if (descPanel && !keepServerThaiPanel) descPanel.innerHTML = desc;
+        if (descPanel) descPanel.innerHTML = desc;
       }
-      if (lang === 'th' && slug === '3-sided-duvet') {
+      var faq = (lang === 'th' && p.faq_th) ? p.faq_th : p.faq_en;
+      if (faq) {
         var faqPanel = document.getElementById('info-panel-faq');
-        if (faqPanel) {
-          faqPanel.innerHTML =
-            '<details class="faq-item" open>' +
-              '<summary>เลือกขนาดอย่างไรให้พอดี?</summary>' +
-              '<p>ดูได้จาก<a href="/th/sizeguide/">คู่มือขนาด</a>สำหรับไซซ์มาตรฐาน หรือกรอกขนาดจริงเพื่อสั่งตัดตามต้องการ</p>' +
-            '</details>' +
-            '<details class="faq-item">' +
-              '<summary>สั่งขนาดพิเศษได้ไหม?</summary>' +
-              '<p>ได้ สามารถเลือก <strong>Custom Size</strong> ใส่ขนาด และส่งคำขอใบเสนอราคาได้เลย</p>' +
-            '</details>' +
-            '<details class="faq-item">' +
-              '<summary>ผ้าและการดูแลรักษาเป็นอย่างไร?</summary>' +
-              '<ul>' +
-                '<li>ซักเครื่องน้ำเย็น (30°C / 86°F) โหมดถนอมผ้า</li><li>ห้ามใช้น้ำยาฟอกขาว ใช้น้ำยาซักผ้าอ่อนโยน</li><li>อบแห้งไฟอ่อนหรือผึ่งลม ผ้าแห้งไว</li><li>ไม่จำเป็นต้องรีด ผ้ายับยาก</li><li>ไม่แนะนำซักแห้ง เพราะสารเคมีอาจทำลายเนื้อผ้า</li>' +
-              '</ul>' +
-            '</details>' +
-            '<details class="faq-item">' +
-              '<summary>จัดส่งใช้เวลานานเท่าไร?</summary>' +
-              '<p>ทุกชิ้นตัดเย็บตามออเดอร์จากประเทศไทย ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง และจะแจ้งอีกครั้งในอีเมลยืนยันคำสั่งซื้อหรือใบเสนอราคา</p>' +
-            '</details>';
-        }
+        if (faqPanel) faqPanel.innerHTML = faq;
       }
 
       // Option D: Update fabric options based on D1 fabric_options

@@ -64,7 +64,7 @@
 | Order Confirmed | `/order-confirmed/` | ✅ Built |
 | My Account | `/account/` | ✅ Built |
 | Order Tracking | Inline in `/account/` Orders panel | ✅ Built — Option A (carrier code + tracking number, auto-generated carrier URL, no external API needed) |
-| All 258 WP URLs | various | Phase 2 redirect file — pre-launch after Phase 8 |
+| All 258 WP URLs | various | Phase 2 redirect file — deployed (2026-06-14) |
 
 ### ### Blog Pages (D1-backed, SSR via Pages Function)
 
@@ -106,9 +106,8 @@
 ### Admin Pages (Google login required)
 | Page | URL | Status |
 |---|---|---|
-| Admin Hub | `/admin/` | ✅ Built — role cards linking to super-admin.html + admin.html |
-| Super Admin | `/admin/super-admin.html` | ✅ Built — products CRUD, orders, R2 upload, pricing params, marketing, customers (D1), subscribers |
-| Admin | `/admin/admin.html` | ✅ Built — orders, products, subscribers, customers (D1) |
+| Admin | `/admin/` | ✅ Built — products CRUD, orders, R2 upload, pricing params, shipping/marketing, customers/subscribers, blog links |
+| Super Admin | `/super-admin/` | ✅ Built — full admin + higher-privilege controls |
 
 ---
 
@@ -385,7 +384,7 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 [PRODUCT GRID]  3-col desktop, 2-col mobile — data pulled from D1
   Card: Image | Title | Price (THB or USD) | "View Options" CTA
 ```
-> Category pages (`/marine/`, `/family/`, `/deep-pocket/`, `/pets/`, `/boarding-dorm/`, `/rv-truck/`) render the same grid pre-filtered by category. **All data is driven from `data/products.json`** via `scripts/regenerate-products.js`. Run the regenerator after any change to the JSON file.
+> Category pages (`/marine/`, `/family/`, `/deep-pocket/`, `/pets/`, `/boarding-dorm/`, `/rv-truck/`) render the same grid pre-filtered by category. Product pages are generated from `data/products.json` + templates via `scripts/build-products.js`; runtime content is managed from D1.
 
 ### 5. Product Detail (`/product/[slug]/`)
 
@@ -579,6 +578,7 @@ Covers: data collected, usage, cookies, third parties (Stripe, Resend), rights
   Row 4: Apt/Suite    | Country*      (autocomplete: address-line2, country — 61 countries)
   Row 5: City*        | Postal Code*  (autocomplete: address-level2, postal-code)
   Row 6: Province/State*              (autocomplete: address-level1)
+  Optional: Message Type + Message to MildMate (saved on order and sent in team order email)
   Valid checkmarks on required fields (blue circle âœ“)
   Phone: country code select + number input (auto-detected from geo)
   [Back to Cart] [Review & Pay]
@@ -699,7 +699,7 @@ mildmate-web/
 â”‚   â”œâ”€â”€ blogs/v-berth-sheets-vs-standard/index.html  â† First real blog post
 â”‚   â”œâ”€â”€ blogs/[slug]/index.html      â† Individual blog post pages (copy from template)
 â”‚   â”‚
-â”‚   â”œâ”€â”€ product/[slug]/index.html    â† 83 product detail pages (standard + custom paths)
+â”‚   â”œâ”€â”€ product/[slug]/index.html    â† 28 product detail pages (standard + custom paths)
 â”‚   â”œâ”€â”€ quote/[quote-id]/index.html  â† Magic link: locked custom quote → Add to Cart
 â”‚   â”‚
 â”‚   â”œâ”€â”€ th/sizeguide/                â† #1 SEO page (WordPress /mattress-size-th/* → /sizeguide/, /th/mattress-size-th/* → /th/sizeguide/)
@@ -711,7 +711,7 @@ mildmate-web/
 â”‚   â”œâ”€â”€ js/
 â”‚   â”‚   â”œâ”€â”€ cart.js                  â† localStorage cart logic
 â”‚   â”‚   â”œâ”€â”€ configurator.js          â† Homepage price calculator (both modes)
-â”‚   â”‚   â”œâ”€â”€ product-configurator.js  â† Shared product page configurator (19 products, 6 formula types)
+â”‚   â”‚   â”œâ”€â”€ product-configurator.js  â† Shared product-page configurator for standard configurable products (marine uses dedicated template logic)
 â”‚   â”‚   â”œâ”€â”€ product-sizes.js         â† Centralized size data (174 entries, 8 regions — synced from /sizeguide/)
 â”‚   â”‚   â”œâ”€â”€ geo.js                   â† Currency toggle
 â”‚   â”‚   â”œâ”€â”€ reviews-carousel.js       â† Review + related-products carousels (homepage + product pages)
@@ -831,7 +831,11 @@ mildmate-web/
     â”œâ”€â”€ 021_promo_codes.sql         â† promo_codes + promo_redemptions tables (admin-created custom promo)
     â”œâ”€â”€ 022_promo_min_usd.sql       â† order_minimum_thb -> order_minimum_usd on promo_codes
     â”œâ”€â”€ 023_blog_posts.sql          â† blog_posts table (bilingual EN/TH CMS)
-    â””â”€â”€ 026_product_type_niches.sql â† product_type + niches columns on products (applied directly)
+    â”œâ”€â”€ 026_product_type_niches.sql â† product_type + niches columns on products (applied directly)
+    â”œâ”€â”€ 031_product_faq_fields.sql  â† adds `faq_en`/`faq_th` to products
+    â”œâ”€â”€ 032_product_card_benefits.sql â† product card benefit fields
+    â”œâ”€â”€ 033_marine_protector_pricing_params.sql â† marine protector pricing params
+    â””â”€â”€ 034_orders_customer_note.sql â† checkout message fields on orders (`customer_note_type`, `customer_note`)
 â””â”€â”€ MildMateDataBase/ExistingWeb/    â† WordPress URL source data
 ```
 
@@ -839,11 +843,11 @@ mildmate-web/
 
 ## SEO URL Strategy
 
-Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** — no HTML placeholder pages are created for old WordPress URLs. Everything goes through `public/_redirects`.
+Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no HTML placeholder pages are created for old WordPress URLs. Everything goes through `public/_redirects`.
 
 | Type | Count | Action |
 |---|---|---|
-| Product URLs | 81 | `_redirects` → 27 product pages (1:1 where possible, category redirect for size variants) |
+| Product URLs | 81 | `_redirects` → canonical product pages (28 live product pages; 1:1 where possible, category redirect for size variants) |
 | Static page URLs | ~102 | `_redirects` → existing new site pages, or → `/` for orphaned URLs |
 | Clean EN slugs | ~80 | Redirect or preserve depending on new site match |
 | `/th/` prefixed pages | ~20 | Redirect ? `/th/` pages (? Homepage, About, Contact, Fabric, Size Guide, FAQ, Shipping, Policy, Reviews, Custom Measurement, How to Measure now built) or ? EN equivalent for pages without TH version |
@@ -853,7 +857,7 @@ Phase 2 runs pre-launch after Phase 8. The approach is **redirect-first** — no
 
 ## D1 Database Schema
 
-**Actual schema (migrations 001–030). Run `npx wrangler d1 execute mildmate-db --remote --file=migrations/001_initial.sql` to initialize.**
+**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `034_*`, including `031_product_faq_fields.sql` for `faq_en`/`faq_th` and `034_orders_customer_note.sql` for checkout notes). Run migrations in order for the target environment.**
 
 ```sql
 -- Products (migration 001 + 006)
@@ -862,6 +866,7 @@ CREATE TABLE products (
   slug TEXT UNIQUE NOT NULL,
   title_en TEXT NOT NULL, title_th TEXT,
   description_en TEXT, description_th TEXT,
+  faq_en TEXT, faq_th TEXT,
   category TEXT NOT NULL,          -- 'sheets', 'duvet-covers', 'pillowcases', etc.
   product_type TEXT,               -- single value: sheets, duvet-covers, pillowcases, protection, accessories (added by 026)
   niches TEXT,                    -- comma-separated niche slugs: marine, family, pets, deep-pocket, boarding-dorm, rv-truck (added by 026)
@@ -896,10 +901,18 @@ CREATE TABLE orders (
   width_cm REAL, length_cm REAL, depth_cm REAL,
   width_in REAL, length_in REAL, depth_in REAL,
   custom_notes TEXT,
+  discount_code TEXT,
+  carrier_code TEXT,
+  tracking_number TEXT,
+  tracking_url TEXT,
+  shipping_status TEXT,
+  shipped_at DATETIME,
+  customer_note_type TEXT,
+  customer_note TEXT,
   price_usd REAL, price_thb REAL,
   currency TEXT DEFAULT 'USD',
   quantity INTEGER DEFAULT 1,
-  status TEXT DEFAULT 'pending',  -- 'pending' | 'in-production' | 'shipped' | 'cancelled'
+  status TEXT DEFAULT 'pending',  -- 'pending' | 'production' | 'confirmed' | 'shipped' | 'cancelled'
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -1021,7 +1034,7 @@ CREATE TABLE blog_posts (
 - **Post:** /blogs/{slug}/ — Pages Function (unctions/blogs/[[path]].ts) SSR from D1
 
 
- 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers
+ 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note
 
 ---
 
@@ -1030,16 +1043,16 @@ CREATE TABLE blog_posts (
 | Phase | Scope | Key Output |
 |---|---|---|
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
-| **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → 27 product pages, ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
+| **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → current canonical product set (28 live product pages), ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on all 27 product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. | ✅ Complete |
-| **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; cron trigger configured via Cloudflare Dashboard) |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on all 28 product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-06-23:** product descriptions centralized to D1 across all product templates and FAQ EN/TH moved to D1/Admin fields. | ✅ Complete |
+| **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; cron trigger configured via Cloudflare Dashboard; optional checkout message type + note saved to orders and team email) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts â‰¥$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. Cron trigger in Cloudflare Dashboard (configured via Cloudflare Dashboard triggers panel). | ✅ Built |
 | **7** | Admin Dashboard | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing** (abandoned cart config, thankyou config, recovery stages management, admin accounts). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. All workers protected via `authorizeAdmin()`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed) |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ⏳ Pending |
 
-> **Note:** Phase 2 (SEO URLs) runs pre-launch after Phase 8 is complete. Phase 5 (Checkout/Stripe/Auth) is ✅ Built. Phase 6 (Abandoned Cart) is ✅ Built. Phase 7 (Admin Dashboard) is ✅ Built. Phase 8 (Polish + Launch) is ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. Part B DONE: Stripe live mode keys deployed).
+> **Note:** Phase 2 (SEO URLs) is already deployed (271 rules via `_redirects` + product middleware, 2026-06-14). Phase 5 (Checkout/Stripe/Auth) is ✅ Built and includes optional checkout message capture to orders/email. Phase 6 (Abandoned Cart) is ✅ Built. Phase 7 (Admin Dashboard) is ✅ Built. Phase 8 (Polish + Launch) is ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. Part B DONE: Stripe live mode keys deployed).
 
 ---
 
@@ -1212,15 +1225,15 @@ Active for 4 products: Standard, Deep Pocket, Family, Pet-Proof Mattress Protect
 All product page size-selects are auto-populated from this data by `product-configurator.js`.
 To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`.
 
-### Configurator Pricing Status (2026-05-21 — All 27 Complete)
+### Configurator Pricing Status (Reconciled 2026-06-23 — 28 Products)
 
 | Status | Count | Products |
 |---|---|---|
-| Live formula | 20 | 7 fitted (incl. Marine V-Berth) + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
+| Live formula | 25 | 6 fitted + 2 marine (V-Berth path) + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
 | No configurator needed | 3 | BedBridge Connector, Bed Lifter, Duvet Insert (Thai fixed-size) |
 | Awaiting | 0 | — |
 
-**All 27 products now have live pricing formulas or don't require configurators.**
+**All 28 products now have live pricing formulas or don't require configurators.**
 
 **V-Berth formula (Marine Fitted Sheet):** `calcVBerthFitted()` — width = max(HW,FW)+2D+14, length = L+2D+14. CloudSoft fabric. Same sewing tiers as fitted sheet. Shape selector supports **14 shapes (01–14)** with per-shape measurement fields/diagrams and geometry-driven pricing. VERTH_MARKUP = 8.15 (680% margin). "Select Mattress Size" hidden — replaced by shape selector.
 
@@ -1230,7 +1243,7 @@ To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`
 
 ### Hybrid Pricing Architecture (Future — D1 standard_prices)
 
-When all 27 product formulas are ready:
+When all formula-backed product paths are ready:
 
 ```
 Standard Size selected → GET /api/pricing?product=...&size=153x203x30&fabric=cloudsoft
@@ -1435,10 +1448,10 @@ Product data lives in **`data/products.json`** — a single JSON file that drive
 ```
 data/products.json
        â”‚
-       â”œâ”€â”€â–º scripts/regenerate-products.js
+       â”œâ”€â”€â–º scripts/build-products.js
        â”‚         â”‚
-       â”‚         â”œâ”€â”€â–º public/products/index.html        (EN shop, 27 cards)
-       â”‚         â”œâ”€â”€â–º public/th/products/index.html     (TH shop, 27 cards)
+       â”‚         â”œâ”€â”€â–º public/products/index.html        (EN shop, 28 cards)
+       â”‚         â”œâ”€â”€â–º public/th/products/index.html     (TH shop, 28 cards)
        â”‚         â”œâ”€â”€â–º public/sheets/index.html          (EN type, 9 cards)
        â”‚         â”œâ”€â”€â–º public/pillowcases/index.html    (EN type, 3 cards)
        â”‚         â”œâ”€â”€â–º public/marine/index.html          (EN niche, 7 cards)
@@ -1446,7 +1459,7 @@ data/products.json
        â”‚         â””â”€â”€â–º ...all type + niche pages (EN + TH)
 ```
 
-**D1 `products` table is separate** — it stores orders/custom dimensions from Phase 5+. The JSON drives the storefront catalog pages only.
+**D1 `products` table is separate** — it stores the live product catalog/content used by API/Admin and SSR runtime overrides (descriptions, FAQs, images, metadata). `data/products.json` drives static page generation; D1 provides runtime-managed content.
 
 ### JSON Schema (`data/products.json`)
 
@@ -1484,45 +1497,31 @@ data/products.json
 | Niche page (`/marine/`, `/family/`, etc.) | Primary type + current niche | `PILLOWCASES` `MARINE` |
 | **No DUVET tag** on pillowcase cards | DUVET is for Duvet Cover products only | — |
 
-### Regenerator Command
+### Product Build Command
 
 ```bash
-node scripts/regenerate-products.js
+node scripts/build-products.js
 
 # Output:
-# ✅ 23 pages updated, 189 cards generated
-# ðŸ” Filter consistency check:
-#   sheets         → 9 products
-#   duvet-covers  → 6 products
-#   pillowcases    → 3 products
-#   protection     → 7 products
-#   accessories   → 2 products
-#   marine        → 7 products
-#   family        → 8 products
-#   pets          → 8 products
-#   deep-pocket   → 7 products
-#   boarding-dorm  → 6 products
-#   rv-truck      → 8 products
+# ✅ regenerates all 28 product pages from templates
 ```
 
 ### Adding a New Product
 
 1. Add entry to `data/products.json`
 2. Add image to `public/images/products/<slug>/main.jpg`
-3. Run: `node scripts/regenerate-products.js`
-4. All 23 pages auto-update
+3. Run: `node scripts/build-products.js`
+4. All 28 product pages regenerate from templates
 
-### Product Dashboard (Phase 7 — Future)
+### Product Dashboard (Phase 7 — Built)
 
-Admin CRUD interface that edits `data/products.json`:
-- Title (EN + TH)
-- Description (EN + TH)
-- Tags: dual dropdown (Product Type + Niche Category) — populated from JSON metadata
-- Images: drag & drop (up to 10 per product) → uploads to R2
-- Video: optional URL field
-- Prices: per Size + Fabric matrix
+Admin and Super Admin dashboards manage live product data in D1:
+- Title/description EN+TH, FAQ EN+TH, card benefits EN+TH
+- Images (R2 upload + ordered image list), optional YouTube URL
+- Product activation/sorting and taxonomy fields (product_type, niches)
+- Pricing/shipping-related admin modules and order management in the same control plane
 
-D1 schema remains unchanged — serves order/custom-dimension storage from Phase 5+.
+D1 is the runtime source for product content; JSON/template files remain the static generation source.
 
 ---
 
@@ -1667,14 +1666,14 @@ New catalog system files + configurator:
 â”‚   â”œâ”€â”€ templates.json             â† HTML card templates
 â”‚   â””â”€â”€ HOW_TO_USE.md             â† Catalog system documentation
 â”œâ”€â”€ scripts/
-â”‚   â”œâ”€â”€ build-products.js          â† Full page generator (initial build)
-â”‚   â””â”€â”€ regenerate-products.js     â† Incremental updater (run after JSON changes)
+â”‚   â”œâ”€â”€ build-products.js          â† Product page generator
+â”‚   â””â”€â”€ build-blogs.js             â† Blog page generator
 â”œâ”€â”€ public/js/
 â”‚   â”œâ”€â”€ configurator.js            â† Homepage configurator
-â”‚   â””â”€â”€ product-configurator.js    â† Shared product page configurator (4 fitted sheet products)
+â”‚   â””â”€â”€ product-configurator.js    â† Shared product page configurator
 ```
 
-All existing pages remain in `public/`. The regenerator overwrites only the product grid sections in each page — hero, descriptions, footer, and all other content is preserved.
+All existing pages remain in `public/`. Product/blog generators rebuild target pages from templates and data files.
 
 
 ---
@@ -1693,5 +1692,5 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
-### Database Migrations (001-030)
-All 30 migrations applied (001-023, 024-030 via separate numbered files). Tables include abandoned_carts, recovery_stages (migration 017), recovery_config (migration 018), thankyou_queue (migration 020), promo_codes (migration 021), blog_posts (migration 023), reviews (migration 024), site_templates (migration 024), shipping_product_tiers (migration 027), shipping_add_rates (migration 028/029/030).
+### Database Migrations (001-034 in repo)
+Repo currently contains migrations through `034_orders_customer_note.sql`, including split-number families (`024_*`, `031_*`). Recent additions include product FAQ fields (`031_product_faq_fields.sql`), card benefits (`032_*`), marine protector pricing params (`033_*`), and checkout message fields on orders (`034_*`).

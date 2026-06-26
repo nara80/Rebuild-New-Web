@@ -56,6 +56,8 @@ export interface Product {
   price_thb: number | null;
   description_en: string | null;
   description_th: string | null;
+  faq_en?: string | null;
+  faq_th?: string | null;
   card_benefit_en?: string | null;
   card_benefit_th?: string | null;
   image_url: string | null;

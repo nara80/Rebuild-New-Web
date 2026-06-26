@@ -21,12 +21,15 @@ import { handleAdminCustomers } from "./admin-customers";
 import { handleAdminStats } from "./admin-stats";
 import { handleAdminShippingRates, handleAdminShippingProductTiers, handleAdminShippingAddRates } from "./admin-shipping";
 import { handleAdminQuotes } from "./admin-quotes";
+import { handleAdminThankyouDispatch } from "./admin-thankyou-dispatch";
 import { handleDiscountValidate, handleDiscountClaim } from "./discount";
 import { handleAdminPromo } from "./admin-promo";
 import { handleAdminBlog } from "./admin-blog";
 import { handleBlogPosts } from "./blog-posts";
 import { handleAdminContacts } from "./admin-contacts";
 import { handleAdminTemplates } from "./admin-templates";
+import { handleAdminOffers } from "./admin-offers";
+import { handleAdminCampaigns } from "./admin-campaigns";
 import { handleFavorites } from "./favorites";
 import { handleReviews, handleAdminReviews } from "./reviews";
 import { handleCheckout } from "./checkout";
@@ -157,6 +160,21 @@ export default {
     // Admin API — sales custom quotes
     if (path === "/api/admin/quotes" || path === "/api/admin/quotes/") {
       return handleAdminQuotes(request, env);
+    }
+
+    // Admin API — offers config persisted in D1 recovery_config
+    if (path === "/api/admin/offers" || path === "/api/admin/offers/") {
+      return handleAdminOffers(request, env);
+    }
+
+    // Admin API — Run a Sale campaigns
+    if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
+      return handleAdminCampaigns(request, env);
+    }
+
+    // Admin API — manual dispatch for due thank-you emails
+    if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
+      return handleAdminThankyouDispatch(request, env);
     }
 
     // Public API — shipping quote calculation for checkout totals

@@ -1839,6 +1839,8 @@ async function archiveQuote(quoteId) {
 
 // ── Marketing Tab (Campaigns + Offers) ──
 var marketingSub = 'campaigns'; // 'campaigns' or 'offers' or 'promo'
+var offersConfigCache = null;
+var campaignsConfigCache = null;
 
 async function rMarketing(){
   var tabs='<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--c-border)">'+
@@ -1846,14 +1848,27 @@ async function rMarketing(){
     '<a href="#" onclick="marketingSub=\'offers\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
     '<a href="#" onclick="marketingSub=\'promo\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='promo'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🎟️ Promo Codes</a>'+
   '</div>';
-  if (marketingSub === 'offers') return tabs + rOffers();
+  if (marketingSub === 'offers') return tabs + (await rOffers());
   if (marketingSub === 'promo') return tabs + (await rPromoCodes());
-  return tabs + rCampaigns();
+  return tabs + (await rCampaigns());
 }
 
-function rCampaigns(){
-  var campaigns=[];
-  try{ campaigns=JSON.parse(localStorage.getItem(MildMateCampaigns.STORAGE_KEY)||'[]'); }catch(e){}
+async function loadCampaignsFromServer(forceReload){
+  if (!forceReload && campaignsConfigCache) return campaignsConfigCache;
+  try {
+    var headers = await getAdminAuthHeaders(false);
+    var resp = await fetch('/api/admin/campaigns', { headers: headers });
+    if (!resp.ok) return [];
+    var data = await resp.json();
+    campaignsConfigCache = (data && data.campaigns) ? data.campaigns : [];
+    return campaignsConfigCache;
+  } catch(e) {
+    return [];
+  }
+}
+
+async function rCampaigns(){
+  var campaigns = await loadCampaignsFromServer(false);
   var now=Date.now();
 
   var h='<div class="card"><div class="card-header"><span>Active Sales</span><button class="btn btn-primary btn-sm" onclick="showNewCampaignForm()">+ New Sale</button></div><div class="card-body">';
@@ -1944,7 +1959,7 @@ function toggleCampProds(checked) {
   document.querySelectorAll('.camp-prod').forEach(function(cb) { cb.checked = checked; });
 }
 
-function createCampaign(){
+async function createCampaign(){
   var name=document.getElementById('camp-name').value.trim();
   var discount=parseInt(document.getElementById('camp-discount').value)||15;
   var start=document.getElementById('camp-start').value;
@@ -1956,15 +1971,39 @@ function createCampaign(){
   var slugs = [];
   document.querySelectorAll('.camp-prod:checked').forEach(function(cb) { slugs.push(cb.value); });
   if (slugs.length === 0) { toast('Select at least one product'); return; }
-  MildMateCampaigns.addCampaign({name:name,discount:discount,productSlugs:slugs,startDate:start,endDate:end});
-  toast('Campaign created: '+name+' ('+discount+'% off)');
-  document.getElementById('page-content').innerHTML=rMarketing();
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var resp = await fetch('/api/admin/campaigns', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ name:name, discount:discount, productSlugs:slugs, startDate:start, endDate:end })
+    });
+    var data = await resp.json();
+    if (!resp.ok) { toast(data.error || 'Failed to create campaign'); return; }
+    campaignsConfigCache = null;
+    toast('Campaign created: '+name+' ('+discount+'% off)');
+    showPage('marketing');
+  } catch(e) {
+    toast('Network error: ' + e.message);
+  }
 }
 
-function deleteCampaign(id){
-  MildMateCampaigns.deleteCampaign(id);
-  toast('Campaign deleted');
-  document.getElementById('page-content').innerHTML=rMarketing();
+async function deleteCampaign(id){
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var resp = await fetch('/api/admin/campaigns', {
+      method: 'DELETE',
+      headers: headers,
+      body: JSON.stringify({ id:id })
+    });
+    var data = await resp.json();
+    if (!resp.ok) { toast(data.error || 'Failed to delete campaign'); return; }
+    campaignsConfigCache = null;
+    toast('Campaign deleted');
+    showPage('marketing');
+  } catch(e) {
+    toast('Network error: ' + e.message);
+  }
 }
 
 // ── Promo Codes View ──
@@ -2058,7 +2097,7 @@ async function createPromo(){
     var j = await res.json();
     if (!res.ok) { toast(j.error || 'Failed to create promo code'); return; }
     toast('Promo code ' + j.code + ' created (' + j.discount_pct + '% off, expires ' + j.expires_at + ')');
-    document.getElementById('page-content').innerHTML = rMarketing();
+    showPage('marketing');
   } catch(e) { toast('Network error: ' + e.message); }
 }
 
@@ -2072,11 +2111,26 @@ async function revokePromo(id){
     });
     if (!res.ok) { var j = await res.json(); toast(j.error || 'Failed to revoke'); return; }
     toast('Promo code revoked');
-    document.getElementById('page-content').innerHTML = rMarketing();
+    showPage('marketing');
   } catch(e) { toast('Network error: ' + e.message); }
 }
-function rOffers(){
-  var offers=MildMateCampaigns.getOffers();
+async function loadOffersFromServer(forceReload){
+  if (!forceReload && offersConfigCache) return offersConfigCache;
+  var defaults = { basketThreshold:150, stage2Enabled:true, stage2Discount:10, stage3Enabled:true, stage3Discount:10, expiryDays:60, cronHour:10, thankyou:20, thankyouHours:1 };
+  try {
+    var headers = await getAdminAuthHeaders(false);
+    var resp = await fetch('/api/admin/offers', { headers: headers });
+    if (!resp.ok) return defaults;
+    var data = await resp.json();
+    offersConfigCache = data && data.offers ? data.offers : defaults;
+    return offersConfigCache;
+  } catch(e) {
+    return defaults;
+  }
+}
+
+async function rOffers(){
+  var offers = await loadOffersFromServer(false);
   var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';
 
   // 🛒 Abandoned Cart Recovery — Basket Threshold + Multi-Stage
@@ -2151,6 +2205,11 @@ function rOffers(){
   h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Discount %</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou" value="'+offers.thankyou+'" min="5" max="50" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>';
   h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Send After (hours)</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-thankyou-hours" value="'+(offers.thankyouHours||1)+'" min="1" max="72" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
     offerDesc('After an order is confirmed, send a thank-you discount to encourage repeat purchase. Expires 1 year after sent.')+
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:8px">'+
+      '<button class="btn btn-outline btn-sm" onclick="dispatchThankyouNow()">Send Due Thank-you Now</button>'+
+      '<span id="thankyou-dispatch-result" style="font-size:0.75rem;color:var(--c-muted)"></span>'+
+    '</div>'+
+    '<div id="thankyou-dispatch-detail" style="font-size:0.72rem;color:var(--c-muted);margin-top:8px;line-height:1.45"></div>'+
   '</div></div>';
 
   h+='<button class=\"btn btn-primary\" style=\"margin-top:16px\" onclick=\"saveAllOffers()\">Save Offers</button>';
@@ -2182,6 +2241,67 @@ function testRecoveryStage(stage){
       result.innerHTML = '<span style=\"color:var(--c-red)\">❌ ' + e.message + '</span>';
     });
 }
+
+async function dispatchThankyouNow(){
+  var result = document.getElementById('thankyou-dispatch-result');
+  var detail = document.getElementById('thankyou-dispatch-detail');
+  if (result) result.textContent = 'Dispatching due thank-you emails...';
+  if (detail) detail.innerHTML = '';
+  try {
+    var headers = await getAdminAuthHeaders(false);
+    headers['Content-Type'] = 'application/json';
+    var resp = await fetch('/api/admin/thankyou-dispatch', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ limit: 100 })
+    });
+    var data = await resp.json();
+    if (!resp.ok) {
+      if (result) result.innerHTML = '<span style="color:var(--c-red)">❌ ' + (data.error || 'Dispatch failed') + '</span>';
+      return;
+    }
+    if (result) {
+      result.innerHTML = '<span style="color:var(--c-green)">✅ Sent ' + (data.sent || 0) + ' / ' + (data.processed || 0) + ' due emails</span>';
+      if ((data.failed || 0) > 0) {
+        result.innerHTML += '<span style="color:var(--c-amber)"> (failed: ' + data.failed + ')</span>';
+      }
+      if ((data.skipped || 0) > 0) {
+        result.innerHTML += '<span style="color:var(--c-muted)"> (skipped: ' + data.skipped + ')</span>';
+      }
+    }
+    if (detail) {
+      var sentLines = (data.sent_items || []).slice(0, 8).map(function(it){
+        return '✅ ' + (it.email || '') + ' — ' + (it.order_id || '') + ' — ' + (it.code || '');
+      });
+      if (!sentLines.length && (data.sent_emails || []).length) {
+        sentLines = (data.sent_emails || []).slice(0, 8).map(function(email){
+          return '✅ ' + email;
+        });
+      }
+      var failedLines = (data.failed_items || []).slice(0, 8).map(function(it){
+        return '❌ ' + (it.email || '') + ' — ' + (it.order_id || '') + ' — ' + (it.error || 'failed');
+      });
+      if (!failedLines.length && (data.failed_emails || []).length) {
+        failedLines = (data.failed_emails || []).slice(0, 8).map(function(email){
+          return '❌ ' + email;
+        });
+      }
+      var skippedLines = (data.skipped_items || []).slice(0, 8).map(function(it){
+        return '⏭ ' + (it.email || '') + ' — ' + (it.order_id || '') + ' — ' + (it.reason || 'skipped');
+      });
+      if (!skippedLines.length && (data.skipped_emails || []).length) {
+        skippedLines = (data.skipped_emails || []).slice(0, 8).map(function(email){
+          return '⏭ ' + email;
+        });
+      }
+      var lines = sentLines.concat(failedLines).concat(skippedLines);
+      detail.innerHTML = lines.length ? lines.join('<br>') : 'No due items were processed.';
+    }
+  } catch (e) {
+    if (result) result.innerHTML = '<span style="color:var(--c-red)">❌ ' + e.message + '</span>';
+  }
+}
+
 function offerCard(id,title,icon){
   return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><span style="font-size:1.5rem">'+icon+'</span><span style="font-weight:600;font-size:0.9375rem">'+title+'</span></div>';
 }
@@ -2190,7 +2310,7 @@ function offerDesc(text){
   return '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:4px;padding-top:8px;border-top:1px solid var(--c-border)">'+text+'</p>';
 }
 
-function saveAllOffers(){
+async function saveAllOffers(){
   var offers={
     basketThreshold:parseInt(document.getElementById('offer-basket-threshold').value)||150,
     stage2Enabled:document.getElementById('offer-stage2-enabled').checked,
@@ -2202,8 +2322,23 @@ function saveAllOffers(){
     thankyou:parseInt(document.getElementById('offer-thankyou').value)||20,
     thankyouHours:parseInt(document.getElementById('offer-thankyou-hours').value)||1
   };
-  MildMateCampaigns.saveOffers(offers);
-  toast('Offers saved: Basket \u2265$'+offers.basketThreshold+' | Stage2 '+(offers.stage2Enabled?offers.stage2Discount+'%':'Off')+' | Stage3 '+(offers.stage3Enabled?offers.stage3Discount+'%':'Off')+' | Expires '+offers.expiryDays+'d');
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var resp = await fetch('/api/admin/offers', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(offers)
+    });
+    var data = await resp.json();
+    if (!resp.ok) {
+      toast(data.error || 'Failed to save offers');
+      return;
+    }
+    offersConfigCache = data && data.offers ? data.offers : offers;
+    toast('Offers saved to D1: Basket \u2265$'+offers.basketThreshold+' | Stage2 '+(offers.stage2Enabled?offers.stage2Discount+'%':'Off')+' | Stage3 '+(offers.stage3Enabled?offers.stage3Discount+'%':'Off')+' | Expires '+offers.expiryDays+'d');
+  } catch(e) {
+    toast('Network error: ' + e.message);
+  }
 }
 
 // ── Product Editor (inherited from Admin) ──
