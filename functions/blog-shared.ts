@@ -32,6 +32,24 @@ function normalizeR2InHtml(html: string): string {
     .replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
 }
 
+function extractExcerptFromHtml(html: string, maxLen: number = 140): string {
+  if (!html) return "";
+  const text = String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "";
+  return text.length > maxLen ? text.slice(0, maxLen).trim() : text;
+}
+
 export async function buildBlogListingHTML(env: any, page: number = 1, lang: string = "en", categoryFilter: string = "All"): Promise<Response> {
   const isThai = lang === "th";
   try {
@@ -77,10 +95,10 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
 
     const stmt = isFiltered
       ? env.DB.prepare(
-        "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' AND (category = ? OR categories_json LIKE ?) ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+        "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,body_en,body_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' AND (category = ? OR categories_json LIKE ?) ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
       ).bind(activeCategory, '%"' + activeCategory + '"%', PER_PAGE, offset)
       : env.DB.prepare(
-        "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+        "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,body_en,body_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
       ).bind(PER_PAGE, offset);
     const { results } = await stmt.all();
     const posts = results || [];
@@ -109,7 +127,10 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
       const alt = esc(isThai ? (post.featured_image_alt_th || post.title_th || post.title_en || "") : (post.featured_image_alt_en || post.title_en || ""));
       const slug = esc(post.slug);
       const title = esc(isThai ? (post.title_th || post.title_en || "") : (post.title_en || ""));
-      const desc = esc(isThai ? (post.meta_description_th || post.meta_description_en || "") : (post.meta_description_en || "")).substring(0, 140);
+      const rawMetaDesc = isThai ? (post.meta_description_th || post.meta_description_en || "") : (post.meta_description_en || "");
+      const fallbackDesc = extractExcerptFromHtml(isThai ? (post.body_th || post.body_en || "") : (post.body_en || post.body_th || ""), 140);
+      const descPlain = String(rawMetaDesc || "").trim() || fallbackDesc;
+      const desc = esc(descPlain).substring(0, 140);
       const cats = parseCats(post.categories_json);
       const cat = esc(isThai && CATEGORY_TH[cats[0] || post.category || "General"] ? CATEGORY_TH[cats[0] || post.category || "General"] : (cats[0] || post.category || "General"));
       const date = formatDate(post.created_at);
@@ -117,7 +138,7 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
       const card = '<div class="blog-card"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="lazy"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">' + (isThai ? "อ่านต่อ" : "Read more") + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
 
       if (page === 1 && i === 0 && post.is_featured) {
-        featuredHtml = '<div class="featured-post"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="eager"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + esc(isThai ? (post.meta_description_th || post.meta_description_en || "") : (post.meta_description_en || "")) + '</p><a href="' + link + '" class="card-read-more">' + (isThai ? "อ่านบทความ" : "Read article") + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
+        featuredHtml = '<div class="featured-post"><div class="card-image"><a href="' + link + '"><img src="' + img + '" alt="' + alt + '" loading="eager"></a></div><div class="card-body"><div class="card-category">' + cat + '</div><div class="card-date"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> ' + date + '</div><h2 class="card-title"><a href="' + link + '">' + title + '</a></h2><p class="card-excerpt">' + desc + (desc.length >= 140 ? "..." : "") + '</p><a href="' + link + '" class="card-read-more">' + (isThai ? "อ่านบทความ" : "Read article") + ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></div></div>';
       } else {
         gridHtml += card;
       }
