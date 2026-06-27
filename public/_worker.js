@@ -31,23 +31,11 @@ function normalizeR2InHtml(html) {
   return html.replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`).replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
 }
 __name(normalizeR2InHtml, "normalizeR2InHtml");
-async function buildBlogListingHTML(env, page = 1, lang = "en") {
+async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter = "All") {
   const isThai = lang === "th";
-  const prefix = isThai ? "/th" : "";
   try {
     const PER_PAGE = 8;
-    const countStmt = env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published'");
-    const countResult = await countStmt.first();
-    const totalPosts = countResult?.total || 0;
-    const totalPages = Math.max(1, Math.ceil(totalPosts / PER_PAGE));
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-    const offset = (page - 1) * PER_PAGE;
-    const stmt = env.DB.prepare(
-      "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
-    ).bind(PER_PAGE, offset);
-    const { results } = await stmt.all();
-    const posts = results || [];
+    const selectedCategory = (categoryFilter || "All").trim();
     const parseCats = /* @__PURE__ */ __name((raw) => {
       try {
         const arr = JSON.parse(raw || "[]");
@@ -57,8 +45,12 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
         return [];
       }
     }, "parseCats");
+    const allCatsStmt = env.DB.prepare(
+      "SELECT category,categories_json FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC"
+    );
+    const { results: categoryRows } = await allCatsStmt.all();
     const categorySet = /* @__PURE__ */ new Set(["All"]);
-    posts.forEach((p) => {
+    (categoryRows || []).forEach((p) => {
       const cats = parseCats(p.categories_json);
       if (cats.length) {
         cats.forEach((c) => categorySet.add(c));
@@ -67,6 +59,22 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       }
     });
     const categories = Array.from(categorySet);
+    const isFiltered = selectedCategory !== "All" && categories.includes(selectedCategory);
+    const activeCategory = isFiltered ? selectedCategory : "All";
+    const countStmt = isFiltered ? env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published' AND (category = ? OR categories_json LIKE ?)").bind(activeCategory, '%"' + activeCategory + '"%') : env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published'");
+    const countResult = await countStmt.first();
+    const totalPosts = countResult?.total || 0;
+    const totalPages = Math.max(1, Math.ceil(totalPosts / PER_PAGE));
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    const offset = (page - 1) * PER_PAGE;
+    const stmt = isFiltered ? env.DB.prepare(
+      "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' AND (category = ? OR categories_json LIKE ?) ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+    ).bind(activeCategory, '%"' + activeCategory + '"%', PER_PAGE, offset) : env.DB.prepare(
+      "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+    ).bind(PER_PAGE, offset);
+    const { results } = await stmt.all();
+    const posts = results || [];
     const esc = /* @__PURE__ */ __name((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
     let featuredHtml = "";
     let gridHtml = "";
@@ -74,9 +82,12 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       "Marine & Yacht": "\u0E40\u0E23\u0E37\u0E2D",
       "Family & Co-Sleep": "\u0E04\u0E23\u0E2D\u0E1A\u0E04\u0E23\u0E31\u0E27",
       "Pet Owner": "\u0E17\u0E32\u0E2A\u0E2B\u0E21\u0E32 \u0E41\u0E21\u0E27",
+      "Deep Pocket": "\u0E04\u0E27\u0E32\u0E21\u0E25\u0E36\u0E01\u0E1E\u0E34\u0E40\u0E28\u0E29",
       "Bedding Guide": "\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19",
       "Boarding Dorm": "\u0E2B\u0E2D\u0E1E\u0E31\u0E01\u0E19\u0E31\u0E01\u0E40\u0E23\u0E35\u0E22\u0E19",
       "RV & Truck Cab": "\u0E23\u0E16\u0E41\u0E25\u0E30\u0E23\u0E16\u0E1A\u0E23\u0E23\u0E17\u0E38\u0E01",
+      "Product News": "\u0E02\u0E48\u0E32\u0E27\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32",
+      "Others": "\u0E2D\u0E37\u0E48\u0E19\u0E46",
       "All": "\u0E17\u0E31\u0E49\u0E07\u0E2B\u0E21\u0E14"
     };
     posts.forEach((post, i) => {
@@ -96,9 +107,11 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
         gridHtml += card;
       }
     });
-    const filterBtns = categories.map(
-      (c) => '<button class="filter-tab' + (c === "All" ? " active" : "") + `" onclick="window.location.href='` + (isThai ? "/th" : "") + `/blogs/'">` + (isThai && CATEGORY_TH[c] ? CATEGORY_TH[c] : c) + "</button>"
-    ).join("");
+    const filterBtns = categories.map((c) => {
+      const isActive = c === activeCategory;
+      const qs = c === "All" ? "" : "?category=" + encodeURIComponent(c);
+      return '<button class="filter-tab' + (isActive ? " active" : "") + `" onclick="window.location.href='` + (isThai ? "/th" : "") + "/blogs/" + qs + `'">` + (isThai && CATEGORY_TH[c] ? CATEGORY_TH[c] : c) + "</button>";
+    }).join("");
     const newsletter = "";
     let paginationHtml = "";
     if (totalPages > 1) {
@@ -108,11 +121,18 @@ async function buildBlogListingHTML(env, page = 1, lang = "en") {
       const nextDisabled = page >= totalPages;
       const escAttr = /* @__PURE__ */ __name((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
       const baseUrl = (isThai ? "/th" : "") + "/blogs/";
+      const categoryQs = activeCategory === "All" ? "" : "category=" + encodeURIComponent(activeCategory);
+      const pageUrl = /* @__PURE__ */ __name((p) => {
+        const params = [];
+        if (categoryQs) params.push(categoryQs);
+        if (p > 1) params.push("page=" + p);
+        return baseUrl + (params.length ? "?" + params.join("&") : "");
+      }, "pageUrl");
       let dotsHtml = "";
       for (let p = 1; p <= totalPages; p++) {
-        dotsHtml += '<button class="pag-dot' + (p === page ? " active" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + p) + `'" aria-label="Page ` + p + '"></button>';
+        dotsHtml += '<button class="pag-dot' + (p === page ? " active" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(p)) + `'" aria-label="Page ` + p + '"></button>';
       }
-      paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + (prevPage > 1 ? "?page=" + prevPage : "")) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(baseUrl + "?page=" + nextPage) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
+      paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(prevPage)) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(nextPage)) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
     }
     const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
     return new Response(html, {
@@ -355,7 +375,8 @@ async function onRequest(context) {
   const path = url.pathname;
   if (path === "/th/blogs/" || path === "/th/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
-    return buildBlogListingHTML(env, page, "th");
+    const category = (url.searchParams.get("category") || "All").trim();
+    return buildBlogListingHTML(env, page, "th", category);
   }
   const segments = path.replace(/^\/th\/blogs\/?/, "").split("/").filter(Boolean);
   if (segments.length !== 1 || segments[0].includes(".")) {
@@ -9012,7 +9033,8 @@ async function onRequest4(context) {
   const path = url.pathname;
   if (path === "/blogs/" || path === "/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
-    return buildBlogListingHTML(env, page, "en");
+    const category = (url.searchParams.get("category") || "All").trim();
+    return buildBlogListingHTML(env, page, "en", category);
   }
   const segments = path.replace(/^\/blogs\/?/, "").split("/").filter(Boolean);
   if (segments.length !== 1 || segments[0].includes(".")) {
@@ -10349,7 +10371,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest9, "onRequest");
 
-// ../.wrangler/tmp/pages-nEDqOR/functionsRoutes-0.5551993217428906.mjs
+// ../.wrangler/tmp/pages-Yh3FFa/functionsRoutes-0.5497858307766745.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

@@ -9,7 +9,8 @@ export async function onRequest(context): Promise<Response> {
   // /blogs/ → SSR listing page
   if (path === "/blogs/" || path === "/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
-    return buildBlogListingHTML(env, page, "en");
+    const category = (url.searchParams.get("category") || "All").trim();
+    return buildBlogListingHTML(env, page, "en", category);
   }
 
   // Let static assets under /blogs/* pass through

@@ -9,7 +9,8 @@ export async function onRequest(context): Promise<Response> {
   // /th/blogs/ → Thai SSR listing page
   if (path === "/th/blogs/" || path === "/th/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
-    return buildBlogListingHTML(env, page, "th");
+    const category = (url.searchParams.get("category") || "All").trim();
+    return buildBlogListingHTML(env, page, "th", category);
   }
 
   // /th/blogs/{slug}/ → Thai SSR blog post

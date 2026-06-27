@@ -32,25 +32,11 @@ function normalizeR2InHtml(html: string): string {
     .replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
 }
 
-export async function buildBlogListingHTML(env: any, page: number = 1, lang: string = "en"): Promise<Response> {
+export async function buildBlogListingHTML(env: any, page: number = 1, lang: string = "en", categoryFilter: string = "All"): Promise<Response> {
   const isThai = lang === "th";
-  const prefix = isThai ? "/th" : "";
   try {
     const PER_PAGE = 8;
-    const countStmt = env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published'");
-    const countResult = await countStmt.first();
-    const totalPosts = countResult?.total || 0;
-    const totalPages = Math.max(1, Math.ceil(totalPosts / PER_PAGE));
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
-    const offset = (page - 1) * PER_PAGE;
-
-    const stmt = env.DB.prepare(
-      "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
-    ).bind(PER_PAGE, offset);
-    const { results } = await stmt.all();
-    const posts = results || [];
-
+    const selectedCategory = (categoryFilter || "All").trim();
     const parseCats = (raw: any): string[] => {
       try {
         const arr = JSON.parse(raw || "[]");
@@ -61,8 +47,12 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
       }
     };
 
+    const allCatsStmt = env.DB.prepare(
+      "SELECT category,categories_json FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC"
+    );
+    const { results: categoryRows } = await allCatsStmt.all();
     const categorySet = new Set(["All"]);
-    posts.forEach((p: any) => {
+    (categoryRows || []).forEach((p: any) => {
       const cats = parseCats(p.categories_json);
       if (cats.length) {
         cats.forEach((c) => categorySet.add(c));
@@ -71,6 +61,29 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
       }
     });
     const categories = Array.from(categorySet);
+    const isFiltered = selectedCategory !== "All" && categories.includes(selectedCategory);
+    const activeCategory = isFiltered ? selectedCategory : "All";
+
+    const countStmt = isFiltered
+      ? env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published' AND (category = ? OR categories_json LIKE ?)")
+        .bind(activeCategory, '%"' + activeCategory + '"%')
+      : env.DB.prepare("SELECT COUNT(*) as total FROM blog_posts WHERE status='published'");
+    const countResult = await countStmt.first();
+    const totalPosts = countResult?.total || 0;
+    const totalPages = Math.max(1, Math.ceil(totalPosts / PER_PAGE));
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    const offset = (page - 1) * PER_PAGE;
+
+    const stmt = isFiltered
+      ? env.DB.prepare(
+        "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' AND (category = ? OR categories_json LIKE ?) ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+      ).bind(activeCategory, '%"' + activeCategory + '"%', PER_PAGE, offset)
+      : env.DB.prepare(
+        "SELECT id,slug,title_en,title_th,meta_description_en,meta_description_th,featured_image,featured_image_alt_en,featured_image_alt_th,category,categories_json,author,read_time_en,read_time_th,created_at,is_featured FROM blog_posts WHERE status='published' ORDER BY is_featured DESC,created_at DESC LIMIT ? OFFSET ?"
+      ).bind(PER_PAGE, offset);
+    const { results } = await stmt.all();
+    const posts = results || [];
 
     const esc = (s: string) => s ? s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;") : "";
 
@@ -82,9 +95,12 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
       "Marine & Yacht": "เรือ",
       "Family & Co-Sleep": "ครอบครัว",
       "Pet Owner": "ทาสหมา แมว",
+      "Deep Pocket": "ความลึกพิเศษ",
       "Bedding Guide": "คู่มือเครื่องนอน",
       "Boarding Dorm": "หอพักนักเรียน",
       "RV & Truck Cab": "รถและรถบรรทุก",
+      "Product News": "ข่าวสินค้า",
+      "Others": "อื่นๆ",
       "All": "ทั้งหมด"
     };
 
@@ -108,9 +124,11 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
     });
 
     // Thai category label mapping for filter tabs
-    const filterBtns = categories.map((c: string) =>
-      '<button class="filter-tab' + (c === "All" ? " active" : "") + '" onclick="window.location.href=\'' + (isThai ? "/th" : "") + '/blogs/\'">' + (isThai && CATEGORY_TH[c] ? CATEGORY_TH[c] : c) + '</button>'
-    ).join("");
+    const filterBtns = categories.map((c: string) => {
+      const isActive = c === activeCategory;
+      const qs = c === "All" ? "" : ("?category=" + encodeURIComponent(c));
+      return '<button class="filter-tab' + (isActive ? " active" : "") + '" onclick="window.location.href=\'' + (isThai ? "/th" : "") + '/blogs/' + qs + '\'">' + (isThai && CATEGORY_TH[c] ? CATEGORY_TH[c] : c) + '</button>';
+    }).join("");
 
     const newsletter = '';
 
@@ -123,18 +141,25 @@ export async function buildBlogListingHTML(env: any, page: number = 1, lang: str
 
       const escAttr = (s: string) => String(s).replace(/"/g,"&quot;").replace(/&/g,"&amp;");
       const baseUrl = (isThai ? "/th" : "") + '/blogs/';
+      const categoryQs = activeCategory === "All" ? "" : ("category=" + encodeURIComponent(activeCategory));
+      const pageUrl = (p: number) => {
+        const params: string[] = [];
+        if (categoryQs) params.push(categoryQs);
+        if (p > 1) params.push("page=" + p);
+        return baseUrl + (params.length ? ("?" + params.join("&")) : "");
+      };
 
       let dotsHtml = '';
       for (let p = 1; p <= totalPages; p++) {
-        dotsHtml += '<button class="pag-dot' + (p === page ? ' active' : '') + '" onclick="window.location.href=\'' + escAttr(baseUrl + '?page=' + p) + '\'" aria-label="Page ' + p + '"></button>';
+        dotsHtml += '<button class="pag-dot' + (p === page ? ' active' : '') + '" onclick="window.location.href=\'' + escAttr(pageUrl(p)) + '\'" aria-label="Page ' + p + '"></button>';
       }
 
       paginationHtml = '<div class="blog-pagination">'
-        + '<button class="pag-arrow' + (prevDisabled ? ' disabled' : '') + '" onclick="window.location.href=\'' + escAttr(baseUrl + (prevPage > 1 ? '?page=' + prevPage : '')) + '\'"' + (prevDisabled ? ' disabled' : '') + ' aria-label="Previous page">'
+        + '<button class="pag-arrow' + (prevDisabled ? ' disabled' : '') + '" onclick="window.location.href=\'' + escAttr(pageUrl(prevPage)) + '\'"' + (prevDisabled ? ' disabled' : '') + ' aria-label="Previous page">'
         + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>'
         + '</button>'
         + '<div class="pag-dots">' + dotsHtml + '</div>'
-        + '<button class="pag-arrow' + (nextDisabled ? ' disabled' : '') + '" onclick="window.location.href=\'' + escAttr(baseUrl + '?page=' + nextPage) + '\'"' + (nextDisabled ? ' disabled' : '') + ' aria-label="Next page">'
+        + '<button class="pag-arrow' + (nextDisabled ? ' disabled' : '') + '" onclick="window.location.href=\'' + escAttr(pageUrl(nextPage)) + '\'"' + (nextDisabled ? ' disabled' : '') + ' aria-label="Next page">'
         + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>'
         + '</button>'
         + '</div>';
