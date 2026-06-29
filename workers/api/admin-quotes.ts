@@ -206,26 +206,77 @@ async function sendMagicLinkEmail(env: any, request: Request, quote: any): Promi
 
   const quoteLink = buildQuoteLink(request, quote.quote_id);
   const product = String(quote.product_slug || "").replace(/-/g, " ");
-  const prettyProduct = product.replace(/\b\w/g, (c) => c.toUpperCase()) || "Custom Product";
+  const prettyProduct = product.replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Custom Product";
   const expires = quote.expires_at ? new Date(String(quote.expires_at).replace(" ", "T") + "Z") : null;
   const expiryText = expires && !isNaN(expires.getTime()) ? expires.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : null;
 
+  // ── Parse dimensions ──────────────────────────────────────────────────────
+  let dimStr = "—";
+  let shapeLine = "";
+  try {
+    const d: any = JSON.parse(String(quote.dimensions || "{}"));
+    if (d && typeof d === "object") {
+      const unit = d.unit || "cm";
+      if (d.shape_code || d.shape_name || d.values) {
+        const shapeCode = d.shape_code ? String(d.shape_code) : "";
+        const shapeName = d.shape_name ? String(d.shape_name) : "";
+        if (shapeCode || shapeName) {
+          shapeLine = `Boat Mattress Shape: ${shapeCode}${shapeCode && shapeName ? ". " : ""}${shapeName}`.trim();
+        }
+        if (d.values && typeof d.values === "object") {
+          const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+          const keys = Object.keys(d.values).sort((a: string, b: string) => {
+            const ai = order.indexOf(a);
+            const bi = order.indexOf(b);
+            if (ai === -1 && bi === -1) return a.localeCompare(b);
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+          });
+          dimStr = keys.map((k: string) => `${k}: ${d.values[k]} ${unit}`).join("\n");
+        }
+      } else if (d.w && d.l) {
+        dimStr = d.d ? `${d.w} × ${d.l} × ${d.d} ${unit}` : `${d.w} × ${d.l} ${unit}`;
+      }
+    }
+  } catch { dimStr = String(quote.dimensions || "—"); }
+
+  // ── Build specs lines (fabric & colour are optional) ─────────────────────
+  const specsLines: string[] = [`Product: ${prettyProduct}`];
+  if (shapeLine) specsLines.push(shapeLine);
+  specsLines.push(`Dimensions: ${dimStr}`);
+  if (quote.fabric) specsLines.push(`Fabric: ${quote.fabric}`);
+  if (quote.color) specsLines.push(`Colour: ${quote.color}`);
+
+  // ── Build price line (show only the confirmed currency, no conversion) ────
   const priceLine = hasUsdPrice
-    ? `$${priceUsd.toLocaleString()} USD (approx. ฿${priceThb.toLocaleString()} THB)`
+    ? `$${priceUsd.toLocaleString()} USD`
     : `฿${priceThb.toLocaleString()} THB`;
 
   const body = [
     `Hi ${quote.customer_name || "there"},`,
     "",
-    `Your custom quote is ready: ${quote.quote_id}`,
-    `Product: ${prettyProduct}`,
-    `Price: ${priceLine}`,
-    expiryText ? `Valid until: ${expiryText}` : "",
+    "Your custom quote is ready.",
     "",
-    "Use this secure link to add your quote directly to cart:",
-    quoteLink,
+    "━━━ Your Order ━━━",
+    ...specsLines,
     "",
-    "If you have any questions, reply to this email and our team will help.",
+    "The website configurator provides an estimated price. This quotation reflects the confirmed production price based on your selected specifications.",
+    "",
+    "━━━ Your Quote ━━━",
+    `Confirmed Price: ${priceLine}`,
+    "Shipping: Included (Thailand orders)",
+    "Shipping: Calculated at checkout (all other destinations)",
+    "",
+    "Please review your measurements carefully before ordering — this item will be made specifically for you.",
+    "",
+    "Made to order within 5–7 business days before dispatch.",
+    "",
+    "━━━ Your Quote Link ━━━",
+    `>>> ${quoteLink} <<<`,
+    expiryText ? `(Valid until: ${expiryText})` : "",
+    "",
+    "Need help or have a measurement question? Simply reply to this email — we're here to help.",
     "",
     "MildMate Team",
   ].filter(Boolean).join("\n");
@@ -234,7 +285,7 @@ async function sendMagicLinkEmail(env: any, request: Request, quote: any): Promi
     to: String(quote.email).trim().toLowerCase(),
     from: env.QUOTE_FROM_EMAIL || "MildMate <orders@mildmate.com>",
     replyTo: env.QUOTE_REPLY_TO || "orders@mildmate.com",
-    subject: `Your MildMate quote ${quote.quote_id} is ready`,
+    subject: `Your MildMate Quote — ${quote.quote_id} Ready for Review`,
     text: body,
   });
   return { success: result.success, error: result.error };
