@@ -15,6 +15,39 @@ async function checkRateLimit(db: any, ip: string, endpoint: string, max: number
   return (row?.cnt || 0) >= max;
 }
 
+async function verifyTurnstile(env: any, token: string, ip: string): Promise<{ ok: boolean; status: number; error?: string }> {
+  if (!env.TURNSTILE_SECRET_KEY) {
+    console.error("TURNSTILE_SECRET_KEY is missing");
+    return { ok: false, status: 503, error: "Security verification is temporarily unavailable. Please try again later." };
+  }
+
+  if (!token) {
+    return { ok: false, status: 400, error: "Please complete the security check." };
+  }
+
+  const payload = new URLSearchParams({
+    secret: env.TURNSTILE_SECRET_KEY,
+    response: token,
+  });
+  if (ip && ip !== "unknown") payload.append("remoteip", ip);
+
+  try {
+    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: payload.toString(),
+    });
+    const result: any = await resp.json();
+    if (!result?.success) {
+      return { ok: false, status: 400, error: "Security verification failed. Please try again." };
+    }
+    return { ok: true, status: 200 };
+  } catch (e: any) {
+    console.error("Turnstile verify error:", e?.message || e);
+    return { ok: false, status: 502, error: "Security verification failed. Please try again." };
+  }
+}
+
 export async function handleQuote(request: Request, env: any): Promise<Response> {
   const url = new URL(request.url);
 
@@ -99,6 +132,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
   try {
     const body: any = await request.json();
     const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+    const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
 
     // ── Honeypot check — bots auto-fill hidden fields ──
     if (_website && _website.length > 0) {
@@ -111,6 +145,17 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
 
     // ── IP rate limit ──
     const ip = request.headers.get("cf-connecting-ip") || "unknown";
+
+    const turnstile = await verifyTurnstile(env, turnstileToken, ip);
+    if (!turnstile.ok) {
+      return new Response(JSON.stringify({
+        error: turnstile.error || "Security verification failed."
+      }), {
+        status: turnstile.status,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     if (await checkRateLimit(env.DB, ip, "quote", QUOTE_RATE_LIMIT)) {
       return new Response(JSON.stringify({
         error: "Too many requests. Please try again later."

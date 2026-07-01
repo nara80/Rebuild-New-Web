@@ -1895,6 +1895,40 @@ function isValidEmail2(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 __name(isValidEmail2, "isValidEmail");
+async function verifyTurnstileToken(env, token, ip) {
+  if (!env.TURNSTILE_SECRET_KEY) {
+    console.error("TURNSTILE_SECRET_KEY is missing");
+    return {
+      ok: false,
+      status: 503,
+      error: "Security verification is temporarily unavailable. Please try again later."
+    };
+  }
+  if (!token) {
+    return { ok: false, status: 400, error: "Please complete the security check." };
+  }
+  const payload = new URLSearchParams({
+    secret: env.TURNSTILE_SECRET_KEY,
+    response: token
+  });
+  if (ip && ip !== "unknown") payload.append("remoteip", ip);
+  try {
+    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: payload.toString()
+    });
+    const result = await resp.json();
+    if (!result?.success) {
+      return { ok: false, status: 400, error: "Security verification failed. Please try again." };
+    }
+    return { ok: true, status: 200 };
+  } catch (e) {
+    console.error("Turnstile verify error:", e?.message || e);
+    return { ok: false, status: 502, error: "Security verification failed. Please try again." };
+  }
+}
+__name(verifyTurnstileToken, "verifyTurnstileToken");
 async function handleContact(request, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -1924,6 +1958,15 @@ async function handleContact(request, env) {
   const inquiryType = (body.inquiry_type || "").trim();
   const subject = (body.subject || "").trim() || inquiryType || "General Inquiry";
   const message = (body.message || "").trim();
+  const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  const turnstile = await verifyTurnstileToken(env, turnstileToken, ip);
+  if (!turnstile.ok) {
+    return new Response(
+      JSON.stringify({ error: turnstile.error || "Security verification failed." }),
+      { status: turnstile.status, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+  }
   if (!name || !email || !isValidEmail2(email) || !message) {
     return new Response(
       JSON.stringify({ error: "Name, email, and message are required and email must be valid." }),
@@ -1941,7 +1984,7 @@ Message:
 ${message}
 
 ---
-Sent from: ${request.headers.get("cf-connecting-ip") || "unknown"}
+Sent from: ${ip}
 User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
   let emailStatus = "not_sent";
   try {
@@ -2062,6 +2105,7 @@ async function handleQuote(request, env) {
   try {
     const body = await request.json();
     const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+    const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
     if (_website && _website.length > 0) {
       return new Response(JSON.stringify({ success: true, message: "Quote submitted." }), {
         status: 201,
@@ -2069,6 +2113,15 @@ async function handleQuote(request, env) {
       });
     }
     const ip = request.headers.get("cf-connecting-ip") || "unknown";
+    const turnstile = await verifyTurnstileToken(env, turnstileToken, ip);
+    if (!turnstile.ok) {
+      return new Response(JSON.stringify({
+        error: turnstile.error || "Security verification failed."
+      }), {
+        status: turnstile.status,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
     if (await checkRateLimit(env.DB, ip, "quote", QUOTE_RATE_LIMIT)) {
       return new Response(JSON.stringify({
         error: "Too many requests. Please try again later."

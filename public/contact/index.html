@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Contact MildMate  -  Technical support, custom sizing consultation, and manufacturing inquiries. Response within 4 hours.">
   <title>Contact  -  Technical Support & Manufacturing Consultation | MildMate</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -508,6 +509,9 @@
               <label for="message">Message</label>
               <textarea id="message" name="message" rows="5" required placeholder="Describe your mattress shape, boat model, or question..."></textarea>
             </div>
+            <div class="input-group">
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAADts338jUP9D3kg6"></div>
+            </div>
             <button type="submit" id="contact-submit" class="btn-submit">Send to Engineering Team</button>
           </form>
         </div>
@@ -652,6 +656,19 @@
       const submitBtn = document.getElementById('contact-submit');
       const feedback = document.getElementById('form-feedback');
       if (!form || !submitBtn || !feedback) return;
+      function getTurnstileToken() {
+        const directInForm = form.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+        if (directInForm && directInForm.value) return directInForm.value.trim();
+        const directInDoc = document.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+        if (directInDoc && directInDoc.value) return directInDoc.value.trim();
+        try {
+          if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
+            const token = window.turnstile.getResponse();
+            if (token) return token.trim();
+          }
+        } catch (_) {}
+        return '';
+      }
 
       /* — Marine Quote pre-fill — */
       (function(){
@@ -712,6 +729,15 @@
           inquiry_type: form.inquiry_type.value,
           message: form.message.value.trim(),
         };
+        const turnstileToken = getTurnstileToken();
+        if (!turnstileToken) {
+          feedback.className = 'form-feedback error';
+          feedback.textContent = 'Please complete the security check.';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send to Engineering Team';
+          return;
+        }
+        payload.turnstile_token = turnstileToken;
         // If marine quote, remap fields for /api/quote
         var colorInput = document.getElementById('quote-color');
         var slugInput = document.getElementById('quote-slug');
@@ -739,6 +765,7 @@
               dimensions: JSON.stringify(dims),
               fabric: 'CloudSoft',
               color: colorInput.value,
+              turnstile_token: turnstileToken,
               quoted_price_thb: null,
               quoted_price_usd: null
             };
@@ -752,6 +779,7 @@
               feedback.className = 'form-feedback success';
               feedback.textContent = data.message || 'Quote submitted. We\'ll email you within 24 hours.';
               form.reset();
+              if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
             } else {
               feedback.className = 'form-feedback error';
               feedback.textContent = data.error || 'Something went wrong. Please try again.';
@@ -768,6 +796,7 @@
             feedback.className = 'form-feedback success';
             feedback.textContent = data.message || 'Message sent. Our engineering team will respond within 4 hours.';
             form.reset();
+            if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
           } else {
             feedback.className = 'form-feedback error';
             feedback.textContent = data.error || 'Something went wrong. Please try again.';

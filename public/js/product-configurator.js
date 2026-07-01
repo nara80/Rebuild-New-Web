@@ -9,6 +9,7 @@
   // -- Detect product variant --
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
+  var isRVTruckFitted = path.indexOf('/product/rv-truck-fitted-sheet/') !== -1;
   var isFlatSheet = path.indexOf('flat-sheet') !== -1;
   var isEncasement = path.indexOf('encasement') !== -1;
   var isPetOwner = path.indexOf('pet-owner') !== -1;
@@ -22,6 +23,7 @@
   var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
   var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
+  var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
 
   // Non-deep products — depth > 30 cm / 12″ should redirect to deep pocket variants
   var isShallowFitted = path.indexOf('fitted-sheet') !== -1 && path.indexOf('deep-pocket-fitted-sheet') === -1 && !isMarineFitted && !isFamily && !isPetOwner;
@@ -587,7 +589,11 @@
   // -- Populate size-select from centralized size data --
   function populateSizeSelect() {
     if (!sizeSelect || typeof PRODUCT_SIZES === 'undefined') return;
-    var typeKey = isDuvet ? 'duvet' : (isPillowcase || isPillowProtector) ? 'pillow' : 'fitted-sheet';
+    var typeKey = isDuvet
+      ? 'duvet'
+      : (isPillowcase || isPillowProtector)
+      ? 'pillow'
+      : (isRVTruckFitted ? 'truck-fitted-sheet' : 'fitted-sheet');
     var sizes = PRODUCT_SIZES[typeKey];
     if (!sizes) return;
 
@@ -604,7 +610,9 @@
       for (var i = 0; i < items.length; i++) {
         var s = items[i];
         var option = document.createElement('option');
-        option.value = typeKey === 'fitted-sheet' ? s.w + 'x' + s.l + 'x' + s.d : s.w + 'x' + s.l;
+        option.value = (typeKey === 'fitted-sheet' || typeKey === 'truck-fitted-sheet')
+          ? s.w + 'x' + s.l + 'x' + s.d
+          : s.w + 'x' + s.l;
         option.textContent = region === 'us'
           ? s.label + ' ' + s.inch + '\u2033'
           : s.label + ' \u2014 ' + s.cm + ' cm';
@@ -825,6 +833,32 @@
     if (marineShapeSelect) enhanceSelectToPills(marineShapeSelect);
   }
 
+  function ensureTurnstileScript() {
+    if (document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) return;
+    var s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    s.async = true;
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  ensureTurnstileScript();
+
+  function getTurnstileToken(scopeEl) {
+    var root = scopeEl || document;
+    var direct = root.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+    if (direct && direct.value) return String(direct.value).trim();
+    var inDoc = document.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+    if (inDoc && inDoc.value) return String(inDoc.value).trim();
+    try {
+      if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
+        var token = window.turnstile.getResponse();
+        if (token) return String(token).trim();
+      }
+    } catch (e) {}
+    return '';
+  }
+
   // -- Inject quote popup HTML --
   var popupHTML = '' +
     '<div class="quote-overlay" id="quote-overlay">' +
@@ -846,6 +880,7 @@
           '<div style="position:absolute;left:-9999px" aria-hidden="true">' +
             '<label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off"></label>' +
           '</div>' +
+          '<div class="cf-turnstile" data-sitekey="' + TURNSTILE_SITE_KEY + '"></div>' +
           '<button type="submit" class="quote-submit-btn" id="qf-submit">Submit</button>' +
           '<p class="quote-form-note">We\'ll email you within 24 hours.</p>' +
         '</form>' +
@@ -1297,6 +1332,11 @@
       : state.fabric;
 
     var productSlug = window.location.pathname.split('/').filter(Boolean).slice(-1)[0] || 'fitted-sheet';
+    var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
+    if (!turnstileToken) {
+      alert('Please complete the security check.');
+      return;
+    }
 
     var submitBtn = document.getElementById('qf-submit');
     submitBtn.disabled = true;
@@ -1322,6 +1362,7 @@
         })(),
         quoted_price_thb: state.quotePriceThb,
         quoted_price_usd: state.quotePriceUsd,
+        turnstile_token: turnstileToken,
         _website: (document.querySelector('[name="_website"]') ? document.querySelector('[name="_website"]').value : '') || undefined
       })
     })
@@ -1332,6 +1373,7 @@
 
       if (data.success) {
         quoteOverlay.classList.remove('open');
+        if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
         document.getElementById('confirm-text').innerHTML =
           'We\'ll email <strong>' + esc(email) + '</strong> within 24 hours.';
         document.getElementById('confirm-details').innerHTML =

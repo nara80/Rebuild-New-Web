@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ติดต่อ MildMate  -  การสนับสนุนด้านเทคนิค การปรึกษาขนาดสั่งทำ และสอบถามการผลิต ตอบกลับภายใน 4 ชั่วโมง">
   <title>ติดต่อเรา  -  การสนับสนุนด้านเทคนิคและการปรึกษาการผลิต | MildMate</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <link href="/css/fonts.css?v=2" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -508,6 +509,9 @@
               <label for="message">ข้อความ</label>
               <textarea id="message" name="message" rows="5" required placeholder="แนบรายละเอียดขนาด รูปทรงที่นอน หรือคำถามของคุณได้เลย เช่น ความกว้าง ความยาว ความหนา รูปถ่าย หรือแบบร่าง"></textarea>
             </div>
+            <div class="input-group">
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAADts338jUP9D3kg6"></div>
+            </div>
             <button type="submit" id="contact-submit" class="btn-submit">ส่งรายละเอียดเพื่อขอคำแนะนำ</button>
           </form>
         </div>
@@ -652,6 +656,19 @@
       const submitBtn = document.getElementById('contact-submit');
       const feedback = document.getElementById('form-feedback');
       if (!form || !submitBtn || !feedback) return;
+      function getTurnstileToken() {
+        const directInForm = form.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+        if (directInForm && directInForm.value) return directInForm.value.trim();
+        const directInDoc = document.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+        if (directInDoc && directInDoc.value) return directInDoc.value.trim();
+        try {
+          if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
+            const token = window.turnstile.getResponse();
+            if (token) return token.trim();
+          }
+        } catch (_) {}
+        return '';
+      }
 
       form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -666,6 +683,15 @@
           inquiry_type: form.inquiry_type.value,
           message: form.message.value.trim(),
         };
+        const turnstileToken = getTurnstileToken();
+        if (!turnstileToken) {
+          feedback.className = 'form-feedback error';
+          feedback.textContent = 'กรุณายืนยันการตรวจสอบความปลอดภัย';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'ส่งรายละเอียดเพื่อขอคำแนะนำ';
+          return;
+        }
+        payload.turnstile_token = turnstileToken;
 
         try {
           const res = await fetch('/api/contact', {
@@ -679,6 +705,7 @@
             feedback.className = 'form-feedback success';
             feedback.textContent = data.message || 'ส่งรายละเอียดแล้ว ทีม MildMate จะตอบกลับภายใน 4 ชั่วโมง';
             form.reset();
+            if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
           } else {
             feedback.className = 'form-feedback error';
             feedback.textContent = data.error || 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง';
