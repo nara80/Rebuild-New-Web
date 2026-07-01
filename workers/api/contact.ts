@@ -6,7 +6,8 @@ import { sendEmail } from "./email";
 export interface ContactInput {
   name: string;
   email: string;
-  subject: string;
+  subject?: string;
+  inquiry_type?: string;
   message: string;
 }
 
@@ -44,12 +45,13 @@ export async function handleContact(request: Request, env: any): Promise<Respons
 
   const name = (body.name || "").trim();
   const email = (body.email || "").trim().toLowerCase();
-  const subject = (body.subject || "").trim();
+  const inquiryType = (body.inquiry_type || "").trim();
+  const subject = (body.subject || "").trim() || inquiryType || "General Inquiry";
   const message = (body.message || "").trim();
 
-  if (!name || !email || !isValidEmail(email) || !subject || !message) {
+  if (!name || !email || !isValidEmail(email) || !message) {
     return new Response(
-      JSON.stringify({ error: "All fields are required and email must be valid." }),
+      JSON.stringify({ error: "Name, email, and message are required and email must be valid." }),
       { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
@@ -59,6 +61,7 @@ export async function handleContact(request: Request, env: any): Promise<Respons
 Name: ${name}
 Email: ${email}
 Subject: ${subject}
+Inquiry Type: ${inquiryType || "general"}
 
 Message:
 ${message}

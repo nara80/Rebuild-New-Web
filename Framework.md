@@ -1714,6 +1714,11 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 - Stripe Checkout success/cancel URLs are built from request origin in `workers/api/checkout.ts` (with localhost exception), preventing preview environments from redirecting to production domains.
 - Runtime worker bundles (`public/index.js`, `public/_worker.js`) must stay synced with source checkout/webhook behavior after backend edits.
 
+### Contact Form Payload Compatibility (Reconciled 2026-07-01)
+- `/contact/` posts `{name, email, inquiry_type, message}` and does not send `subject`.
+- Contact handler must accept `inquiry_type` and derive subject fallback (`subject || inquiry_type || "General Inquiry"`), while validating only required fields: name, email, message.
+- Keep runtime parity for this path as well: sync `workers/api/contact.ts` with `public/index.js` and `public/_worker.js` after contact API changes.
+
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
