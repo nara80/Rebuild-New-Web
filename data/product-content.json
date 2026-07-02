@@ -6,8 +6,8 @@
   "products": {
     "standard-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "12-inch / 30cm deep pocket for standard mattresses. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip.",
-      "metaDescription": "Standard Fitted Sheet by MildMate  -  12-inch / 30cm deep pocket for standard mattresses. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip. Ships worldwide.",
+      "tagline": "12-inch / 30cm deep pocket for standard mattresses. Custom-fitted so it won't slip.",
+      "metaDescription": "Standard Fitted Sheet by MildMate  -  12-inch / 30cm deep pocket for standard mattresses. Custom-fitted so it won't slip. Ships worldwide.",
       "ratingCount": 112,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -38,15 +38,15 @@
         "Custom-made to your exact W × L × D mattress dimensions",
         "12-inch / 30cm deep pocket  -  fits standard mattresses",
         "Full-perimeter elastic for a secure, non-slip fit",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "9 color options",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabFabricTitle": "CloudSoft — Standard Edition",
-      "tabFabricP": "CloudSoft is a 100% long-staple cotton weave with a smooth, breathable construction ideal for everyday use. The 30cm pocket depth accommodates standard mattress thicknesses while the full-perimeter elastic ensures a snug fit. PremaCotton option is OEKO-TEX® certified with no toxic dye or finish.",
+      "tabFabricP": "CloudSoft is a 100% long-staple cotton weave with a smooth, breathable construction ideal for everyday use. The 30cm pocket depth accommodates standard mattress thicknesses while the full-perimeter elastic ensures a snug fit.",
       "tabFabricBullets": [
         "100% long-staple cotton — soft and durable",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Wrinkle-resistant — looks neat without ironing",
         "Full-perimeter elastic — no clips needed",
         "Quick-dry — convenient for frequent washing"
@@ -101,7 +101,7 @@
         "Full-perimeter elastic for a secure, non-slip fit on adjustable bases",
         "Split-king and dual-adjustable options available",
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
-        "PremaCotton option is OEKO-TEX® certified"
+        "Four fabric collections available"
       ],
       "tabFabricTitle": "Extra-Deep Pocket for Thick Mattresses",
       "tabFabricP": "Designed for thick mattresses, adjustable beds, and pillow-tops. Full-perimeter elastic ensures the sheet stays put even on adjustable bases. Available in 4 premium fabric choices.",
@@ -109,7 +109,7 @@
         "51cm / 20in pocket depth",
         "Full-perimeter elastic",
         "4 fabric choices",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -270,8 +270,8 @@
     },
     "dorm-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "Extra-durable for dorm life. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip off the dorm mattress.",
-      "metaDescription": "Dorm Fitted Sheet by MildMate  -  Extra-durable for dorm life. PremaCotton option is OEKO-TEX® certified. Custom-fitted so it won't slip off the dorm mattress. Ships worldwide.",
+      "tagline": "Extra-durable for dorm life. Custom-fitted so it won't slip off the dorm mattress.",
+      "metaDescription": "Dorm Fitted Sheet by MildMate  -  Extra-durable for dorm life. Custom-fitted so it won't slip off the dorm mattress. Ships worldwide.",
       "ratingCount": 68,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -306,7 +306,7 @@
         "Full-perimeter elastic for a secure, non-slip fit",
         "Quick-dry  -  wash today, wear tomorrow",
         "Extra-durable construction for dorm use",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "5 color options including dorm-friendly Navy and Dark Grey"
       ],
       "tabFabricTitle": "Built for Dorm Life",
@@ -315,7 +315,7 @@
         "Extra-durable for dorm use",
         "Quick-dry — wash today, wear tomorrow",
         "Full-perimeter elastic",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "5 dorm-friendly colors"
       ],
       "tabCareBullets": [
@@ -358,23 +358,23 @@
         "mattress-encasement-general",
         "boat-fitted-sheet"
       ],
-      "tabDescriptionTitle": "Built for Life on the Road",
-      "tabDescriptionP": "RV and truck cab mattresses are thinner than standard home mattresses - typically 15 - 20cm depth. CloudSoft fits perfectly with 20cm max pocket depth, full-perimeter elastic, and stays secure while driving. Quick-dry fabric handles the moisture that comes with life on the road.",
+      "tabDescriptionTitle": "Made for RV & Truck Sleeper Mattresses",
+      "tabDescriptionP": "Vehicle mattresses are often thinner and less standardized than home beds. This sheet is made to your submitted W × L × D dimensions, helping reduce bunching, loose corners, and daily bed-reset friction in tight sleeper spaces.",
       "tabDescriptionBullets": [
         "Custom-made to your exact W × L × D mattress dimensions",
-        "Full-perimeter elastic for a secure, non-slip fit while driving",
-        "Quick-dry - wash and dry at the next stop",
-        "Moisture-wicking for humid cab environments",
-        ". - no toxic dye or finish",
-        "4 road-appropriate color options"
+        "CloudSoft-only for this product",
+        "Full-perimeter elastic for better mattress grip",
+        "Quick-dry and moisture-managing for enclosed cab environments",
+        "Suitable for RV and truck sleeper rectangular mattresses",
+        "Special-shape mattresses can be confirmed by photo or drawing before production"
       ],
-      "tabFabricTitle": "Built for Life on the Road",
-      "tabFabricP": "Designed for RV and truck cab mattresses with quick-dry fabric and full-perimeter elastic that stays secure while driving. The 20cm max pocket fits the thinner mattresses found in vehicles.",
+      "tabFabricTitle": "CloudSoft for Road-Use Practicality",
+      "tabFabricP": "CloudSoft is chosen for this product because it is soft, lightweight, quick-drying, and easier to handle in compact sleeping spaces where regular wash-and-reset cycles are common.",
       "tabFabricBullets": [
-        "Quick-dry — wash at the next stop",
-        "Moisture-wicking for humid cabs",
-        "Full-perimeter elastic",
-        "4 road-appropriate colors"
+        "Soft and smooth hand feel",
+        "Quick-dry for on-route laundry routines",
+        "Moisture-managing comfort in enclosed cabins",
+        "Lightweight and easy to fold, fit, and maintain"
       ],
       "tabCareBullets": [
         "Machine wash cold (30&deg;C / 86&deg;F)  -  gentle cycle",
@@ -389,8 +389,8 @@
     },
     "family-fitted-sheet": {
       "productType": "fitted-sheet",
-      "tagline": "Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. PremaCotton option is OEKO-TEX® certified.",
-      "metaDescription": "Family Fitted Sheet by MildMate  -  Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. PremaCotton option is OEKO-TEX® certified. Ships worldwide.",
+      "tagline": "Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. Four fabric collections available.",
+      "metaDescription": "Family Fitted Sheet by MildMate  -  Custom-fitted for family-size mattresses, co-sleeping setups, and floor beds. Four fabric collections available. Ships worldwide.",
       "ratingCount": 76,
       "breadcrumbCategoryUrl": "/sheets/",
       "breadcrumbCategoryLabel": "Fitted Sheets",
@@ -425,14 +425,14 @@
         "Custom-made to your exact W  —  L  —  D mattress dimensions",
         "Full-perimeter elastic for a secure, non-slip fit",
         "Quick-dry  -  convenient for family laundry",
-        "PremaCotton option is OEKO-TEX® certified  -  safe for children",
+        "Designed for family use",
         "5 soothing color options including Sky and Sea",
         "Floor bed and tatami sizes available"
       ],
       "tabFabricTitle": "Designed for Family Sleep",
-      "tabFabricP": "Custom-made to your exact family mattress dimensions. PremaCotton option is OEKO-TEX® certified and safe for children. Full-perimeter elastic handles the movement of family co-sleeping.",
+      "tabFabricP": "Custom-made to your exact family mattress dimensions. Designed for family use. Full-perimeter elastic handles the movement of family co-sleeping.",
       "tabFabricBullets": [
-        "Safe for children — PremaCotton option is OEKO-TEX® certified",
+        "Safe for children",
         "Custom to any mattress size",
         "Full-perimeter elastic",
         "5 soothing colors",
@@ -558,7 +558,7 @@
         "Double-stitched hem for durability and crisp finish",
         "Custom-sized to any mattress dimension",
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
-        "PremaCotton option is OEKO-TEX® certified"
+        "Four fabric collections available"
       ],
       "tabFabricTitle": "Classic Flat Sheet",
       "tabFabricP": "A timeless flat sheet made to your exact dimensions. Generous tuck allowance and double-stitched hem for a crisp hotel finish. Available in 4 premium fabric choices.",
@@ -566,7 +566,7 @@
         "25cm tuck allowance on all sides",
         "Double-stitched hem",
         "4 fabric choices",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -617,7 +617,7 @@
         "Double-stitched hem for durability and crisp finish",
         "Custom-sized to any mattress dimension",
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
-        "PremaCotton option is OEKO-TEX® certified"
+        "Four fabric collections available"
       ],
       "tabFabricTitle": "Oversized for Thick Mattresses",
       "tabFabricP": "Designed for mattresses thicker than 35cm. Generous 25cm tuck allowance on all sides keeps it neatly in place on thick pillow-tops and adjustable beds.",
@@ -625,7 +625,7 @@
         "25cm tuck allowance on all sides",
         "Double-stitched hem",
         "4 fabric choices",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
@@ -690,7 +690,7 @@
         "Custom-sized to your exact duvet dimensions (cm or inches)",
         "Available in all 9 BreezePlus colors",
         "Machine washable, quick dry",
-        "PremaCotton option is OEKO-TEX® certified"
+        "Four fabric collections available"
       ],
       "tabFabricTitle": "3-Sided Zipper — Easy Laundry",
       "tabFabricP": "The 3-sided zipper opens on three edges so you never fight the duvet into a corner again. Available in all 4 premium fabrics including the pet-hair-resistant BreezePlus.",
@@ -698,7 +698,7 @@
         "3-sided zipper — change duvet in minutes",
         "4 fabric choices",
         "Custom-sized to your duvet",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Quick-dry"
       ],
       "tabCareBullets": [
@@ -845,8 +845,8 @@
     },
     "duvet-cover-rv": {
       "productType": "duvet",
-      "tagline": "CloudSoft quick-dry fabric built for mobile living. 3-sided zipper for quick laundry on the road.",
-      "metaDescription": "Duvet Cover - RV & Truck Cab by MildMate. CloudSoft quick-dry fabric built for mobile living. 3-sided zipper for quick laundry on the road. Made to measure worldwide.",
+      "tagline": "CloudSoft-only duvet cover with a 3-sided U-shape zipper for easier bedding changes on the road.",
+      "metaDescription": "Duvet Cover — RV & Truck by MildMate. CloudSoft-only with a 3-sided U-shape zipper for easier insert changes in compact sleeper spaces. Made to your dimensions.",
       "ratingCount": 72,
       "breadcrumbCategoryUrl": "/duvet-covers/",
       "breadcrumbCategoryLabel": "Duvet Covers",
@@ -876,22 +876,22 @@
         "pillowcase-envelope",
         "mattress-encasement-general"
       ],
-      "tabDescriptionTitle": "RV & Truck Duvet Cover",
-      "tabDescriptionP": "Designed for RV and truck sleeper cabins with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in compact spaces. Custom-made to your exact duvet dimensions.",
+      "tabDescriptionTitle": "Made for RV and Truck Sleeper Duvets",
+      "tabDescriptionP": "Built for compact mobile sleeping setups where bedding has to be practical. This cover uses a 3-sided U-shape zipper for easier insert changes and is made with CloudSoft only for this product.",
       "tabDescriptionBullets": [
-        "3-sided YKK zipper - easy duvet changes in compact spaces",
-        "CloudSoft quick-dry fabric - ideal for mobile living",
-        "Custom-made to your exact W x L dimensions",
-        ". - no toxic chemicals",
-        "Wrinkle-resistant and quick-dry"
+        "3-sided U-shape zipper for easier insert loading and removal",
+        "CloudSoft-only for this product",
+        "Custom-made to your exact duvet W x L dimensions",
+        "Quick-dry and moisture-managing for enclosed cabin environments",
+        "Wrinkle-resistant for simpler day-to-day upkeep on the road"
       ],
-      "tabFabricTitle": "CloudSoft — RV Edition",
-      "tabFabricP": "CloudSoft quick-dry fabric built for mobile living. 3-sided zipper for easy laundry on the road. Custom-made to your exact duvet dimensions.",
+      "tabFabricTitle": "CloudSoft for Mobile Living",
+      "tabFabricP": "CloudSoft is selected for this RV/truck duvet cover because it is lightweight, quick-drying, and easier to handle in tight sleeper spaces.",
       "tabFabricBullets": [
-        "Quick-dry — ideal for mobile",
-        "3-sided YKK zipper",
-        "Custom-made to your duvet",
-        "Wrinkle-resistant"
+        "Soft, smooth hand feel",
+        "Quick-dry for on-route laundry routines",
+        "Moisture-managing comfort in enclosed cabins",
+        "3-sided U-shape zipper for easier insert changes"
       ],
       "tabCareBullets": [
         "Machine wash warm (40C / 104F) - regular cycle",
@@ -947,7 +947,7 @@
         "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe",
         "Available in 9 BreezePlus colors (other fabrics vary)",
         "Machine washable, quick dry",
-        "PremaCotton option is OEKO-TEX® certified"
+        "Four fabric collections available"
       ],
       "tabFabricTitle": "Built for Dorm Living",
       "tabFabricP": "Designed for boarding school dorms with 3-sided zipper for easy linen changes in shared laundry facilities. Available in Double and Single sizes.",
@@ -955,7 +955,7 @@
         "3-sided zipper — easy laundry",
         "Double + Single sizes",
         "4 fabric choices",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Quick-dry"
       ],
       "tabCareBullets": [
@@ -1010,12 +1010,12 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Envelope Pillowcase",
-      "tabDescriptionP": "Classic tuck-in envelope closure with no zipper needed. The pillow slips in and stays securely tucked. Custom-made to your exact pillow dimensions with 100% long-staple cotton and PremaCotton option has OEKO-TEX® certification.",
+      "tabDescriptionP": "Classic tuck-in envelope closure with no zipper needed. The pillow slips in and stays securely tucked. Custom-made to your exact pillow dimensions with 100% long-staple cotton.",
       "tabDescriptionBullets": [
         "Envelope tuck-in closure — no zipper, no hardware",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Wrinkle-resistant and quick-dry"
       ],
       "tabFabricTitle": "Premium Fabrics",
@@ -1078,12 +1078,12 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Zipper Pillowcase",
-      "tabDescriptionP": "Secure YKK zipper enclosure keeps the pillow perfectly in place. The zipper glides smoothly and stays hidden for a clean look. Custom-made to your exact pillow dimensions with PremaCotton option is OEKO-TEX® certified fabrics.",
+      "tabDescriptionP": "Secure YKK zipper enclosure keeps the pillow perfectly in place. The zipper glides smoothly and stays hidden for a clean look. Custom-made to your exact pillow dimensions.",
       "tabDescriptionBullets": [
         "YKK zipper — smooth, durable, hidden design",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Wrinkle-resistant and quick-dry"
       ],
       "tabFabricTitle": "Premium Fabrics",
@@ -1146,13 +1146,13 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Sham Pillowcase",
-      "tabDescriptionP": "Decorative flange-edge sham with 15% extra fabric for elegant drape and overhang. The hotel-style design elevates any bedroom with its sophisticated border detail. Custom-made to your exact pillow dimensions with PremaCotton option is OEKO-TEX® certified fabrics.",
+      "tabDescriptionP": "Decorative flange-edge sham with 15% extra fabric for elegant drape and overhang. The hotel-style design elevates any bedroom with its sophisticated border detail. Custom-made to your exact pillow dimensions.",
       "tabDescriptionBullets": [
         "Decorative flange-edge — premium hotel style",
         "15% extra fabric for elegant drape and overhang",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
-        "PremaCotton option is OEKO-TEX® certified"
+        "Four fabric collections available"
       ],
       "tabFabricTitle": "Premium Fabrics",
       "tabFabricP": "Available in 4 premium fabric options. CloudSoft for everyday luxury, BreezePlus for pet owners, PremaCotton for the premium feel, and EcoLuxe for natural unbleached cotton.",
@@ -1224,7 +1224,7 @@
         "Do not iron the TPU layer",
         "Remove and re-install monthly for hygiene"
       ],
-      "review1Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">J</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Jennifer R.</div>\r\n                <div class=\"review-country\">United States</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"I have severe dust mite allergies and this encasement has made a huge difference. Complete peace of mind with the 6-sided protection. OEKO-TEX certification was important for me.\"</div>\r\n            <div class=\"review-product\">Verified purchase: 6-Sided Mattress Encasement · Queen / Pure White</div></div>",
+      "review1Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">J</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Jennifer R.</div>\r\n                <div class=\"review-country\">United States</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"I have severe dust mite allergies and this encasement has made a huge difference. Complete peace of mind with the 6-sided protection. Product safety was important for me.\"</div>\r\n            <div class=\"review-product\">Verified purchase: 6-Sided Mattress Encasement · Queen / Pure White</div></div>",
       "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">M</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Michael T.</div>\r\n                <div class=\"review-country\">Australia</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Needed full protection for my mattress after moving into a rental. The TPU layer is completely waterproof and it's held up well after several washes.\"</div>\r\n            <div class=\"review-product\">Verified purchase: 6-Sided Mattress Encasement · King / Pure White</div>",
       "fabricMode": "badge"
     },
@@ -1283,13 +1283,13 @@
         "Remove and re-install monthly for hygiene"
       ],
       "review1Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">T</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Tom R.</div>\r\n                <div class=\"review-country\">United States</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Perfect for my Class B camper van. The 8 inch depth was exactly what I needed and it stays in place even on bumpy roads. Good quality TPU layer.\"</div>\r\n            <div class=\"review-product\">Verified purchase: RV & Truck Mattress Encasement · Short Twin / Pure White</div></div>",
-      "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">K</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Karen S.</div>\r\n                <div class=\"review-country\">Australia</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"We have a caravan and needed proper protection for the mattress. The 6-sided encasement gives us complete peace of mind. OEKO-TEX certified was important for us.\"</div>\r\n            <div class=\"review-product\">Verified purchase: RV & Truck Mattress Encasement · Small Double / Sand</div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">K</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Karen S.</div>\r\n                <div class=\"review-country\">Australia</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"We have a caravan and needed proper protection for the mattress. The 6-sided encasement gives us complete peace of mind. Product safety was important for us.\"</div>\r\n            <div class=\"review-product\">Verified purchase: RV & Truck Mattress Encasement · Small Double / Sand</div>",
       "fabricMode": "badge"
     },
     "pillow-protector-general": {
       "productType": "pillow-protector",
-      "tagline": "TPU waterproof liner + your choice of outer fabric. PremaCotton option is OEKO-TEX® certified, 100% fluid barrier that keeps your pillow fresh and dry.",
-      "metaDescription": "Pillow Protector by MildMate  -  TPU waterproof liner + your choice of outer fabric (CloudSoft, BreezePlus, PremaCotton, EcoLuxe). PremaCotton option is OEKO-TEX® certified. Ships worldwide.",
+      "tagline": "TPU waterproof liner + your choice of outer fabric, 100% fluid barrier that keeps your pillow fresh and dry.",
+      "metaDescription": "Pillow Protector by MildMate  -  TPU waterproof liner + your choice of outer fabric (CloudSoft, BreezePlus, PremaCotton, EcoLuxe). Ships worldwide.",
       "ratingCount": 78,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1339,12 +1339,12 @@
         "3-sided-duvet"
       ],
       "tabDescriptionTitle": "Complete Waterproof Protection for Your Pillow",
-      "tabDescriptionP": "The Pillow Protector combines a TPU (Thermoplastic Polyurethane) waterproof inner layer with your choice of premium outer fabric. Blocks 100% of fluids  -  sweat, drool, pet accidents  -  while keeping your pillow clean and fresh. PremaCotton option is OEKO-TEX® certified for safety.",
+      "tabDescriptionP": "The Pillow Protector combines a TPU (Thermoplastic Polyurethane) waterproof inner layer with your choice of premium outer fabric. Blocks 100% of fluids  -  sweat, drool, pet accidents  -  while keeping your pillow clean and fresh.",
       "tabDescriptionBullets": [
         "TPU inner  -  100% waterproof, quiet, skin-safe",
         "4 outer fabric options: CloudSoft, BreezePlus, PremaCotton, EcoLuxe",
         "Envelop-style closure  -  fits all standard pillow sizes",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Extends pillow lifespan by protecting from moisture and wear",
         "Machine washable, quick dry"
       ],
@@ -1354,7 +1354,7 @@
         "TPU inner — 100% waterproof",
         "4 outer fabric options",
         "Envelope-style closure",
-        "PremaCotton option is OEKO-TEX® certified",
+        "Four fabric collections available",
         "Machine washable, quick dry"
       ],
       "tabCareBullets": [
@@ -1365,7 +1365,7 @@
         "Remove promptly from dryer to prevent wrinkling"
       ],
       "review1Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">S</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Sarah M.</div>\r\n                <div class=\"review-country\">United States</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Perfect for my daughter's pillow  -  she tends to drool at night and this keeps everything dry. The TPU layer is actually quiet, not plastic-like at all. Great value.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Pillow Protector · Standard / CloudSoft</div></div>",
-      "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">A</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Andy T.</div>\r\n                <div class=\"review-country\">Thailand</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Hot sleeper and this EcoLuxe version is amazing  -  stays cool all night. Waterproof too, which is a bonus. OEKO-TEX gives peace of mind.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Pillow Protector · King / EcoLuxe</div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">A</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Andy T.</div>\r\n                <div class=\"review-country\">Thailand</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Hot sleeper and this EcoLuxe version is amazing  -  stays cool all night. Waterproof too, which is a bonus. It gives peace of mind.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Pillow Protector · King / EcoLuxe</div>",
       "fabricMode": "all"
     },
     "marine-mattress-protector": {

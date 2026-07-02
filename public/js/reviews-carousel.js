@@ -454,7 +454,7 @@
     var path = window.location.pathname || '/';
 
     // Product page — load reviews from product-specific endpoint
-    var productMatch = path.match(/^\/product\/([^\/]+)\//);
+    var productMatch = path.match(/^\/(?:th\/)?product\/([^\/]+)\/?$/);
     if (productMatch) {
       var productSlug = productMatch[1];
       await loadProductPageReviews(productSlug);
