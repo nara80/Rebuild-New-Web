@@ -578,16 +578,14 @@ async function onRequest2(context) {
       html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} \u2014 MildMate</title>`);
       html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} \u2014 MildMate"`);
       html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} \u2014 MildMate"`);
-      if (product && product.title_en) {
-        html = html.replace(
-          new RegExp(`<h1 class="product-title">\\s*${product.title_en.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*(.*?)\\s*</h1>`, "i"),
-          `<h1 class="product-title">${title}$1</h1>`
-        );
-        html = html.replace(
-          new RegExp(`<span>\\s*${product.title_en.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*</span>`, "i"),
-          `<span>${title}</span>`
-        );
-      }
+      html = html.replace(
+        /<h1 class="product-title">[\s\S]*?<\/h1>/i,
+        `<h1 class="product-title">${title}</h1>`
+      );
+      html = html.replace(
+        /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
+        `$1${title}$2`
+      );
     }
     if (product && (product.image_url || product.images)) {
       const THUMB_COUNT = 6;
