@@ -112,23 +112,41 @@ UPDATE products SET description_en = '<h3>Designed for Family Sleep</h3>
 <li>5 soothing colors</li>
 <li>Floor bed and tatami sizes available</li>
 </ul>' WHERE slug = 'family-fitted-sheet';
-UPDATE products SET description_en = '<h3>Engineered for Real Pet Owners</h3>
-<p>Not just "pet-friendly" - actually designed around what happens when dogs and cats sleep on your bed every night. BreezePlus is a 50/50 long-staple cotton and microfiber blend where the microfiber creates a ultra-smooth surface that pet hair literally slides off. No more soaking, brushing, or lint rollers after every nap.</p>
+UPDATE products SET description_en = '<h3>Bedsheets That Work WITH Your Pets, Not Against Them!</h3>
+<p>Tired of endless pet hair on your bedding? Our Pet Hair Resistant Fitted Sheet is the ultimate solution. Crafted from our premium BreezePlus Cotton Blend, this sheet offers unparalleled comfort, effortless pet hair removal, and 100% chemical-free peace of mind for you and your pets.</p>
+<h3>Why BreezePlus Sheets Are a Game-Changer for Pet Parents:</h3>
 <ul>
-<li>Pet hair resistant - hair slides off instead of embedding</li>
-<li>cool-to-the-touch comfort — microfiber dissipates heat</li>
-<li>100% chemical-free -.</li>
-<li>Custom-made to your exact W — L — D mattress dimensions</li>
-<li>Extra-deep pocket options for thick mattresses</li>
-<li>Quick-dry after washing</li>
+<li><strong>Effortless Pet Hair Removal:</strong> Our specially engineered fabric finish prevents pet hair from embedding. A simple shake or quick vacuum removes up to 99% of pet hair, eliminating the need for constant lint rolling!</li>
+<li><strong>100% Chemical-Free:</strong> Made without harsh treatments, dyes, or finishes, our sheets are completely safe for sensitive pets and humans. Enjoy gentle bedding that promotes a healthier sleep environment.</li>
+<li><strong>Cooling Comfort for Hot Sleepers:</strong> The advanced moisture-wicking cotton blend ensures these sheets stay cool and breathable, even with cuddly pets sleeping beside you.</li>
+<li><strong>Accident & Spill Ready:</strong> Featuring a quick-dry, breathable weave, our sheets handle drool, spills, and minor accidents with ease. Stains release effortlessly in a normal wash.</li>
+<li><strong>Custom Snug Fit:</strong> Designed with a 360° strong elastic and custom pocket depth to fit your exact mattress height. Enjoy a secure, snug fit on any mattress type without slipping.</li>
 </ul>
-<h3>BreezePlus — Anti-Fur Weave</h3>
-<p>BreezePlus is a 50/50 long-staple cotton and microfiber blend where the microfiber creates an ultra-smooth surface that pet hair literally slides off. cool-to-the-touch comfort.</p>
+<h3>BreezePlus — Pet Hair Resistant Finish</h3>
+<p>Our exclusive BreezePlus Fabric is a premium cotton blend (50% cotton, 50% microfiber). This unique combination offers the natural softness and breathability of cotton with the durability and easy-care properties of microfiber. It is wrinkle-resistant and provides the perfect balance of comfort and strength.</p>
 <ul>
-<li>Pet hair slides off instead of embedding</li>
-<li>cool-to-the-touch comfort</li>
-<li>Custom-made to your mattress</li>
-<li>Quick-dry after washing</li>
+<li>Pet hair slides off easily instead of embedding</li>
+<li>Cool-to-the-touch moisture-wicking comfort</li>
+<li>Custom-made to your exact mattress size and depth</li>
+<li>Wrinkle-resistant and quick-dry after washing</li>
+</ul>' WHERE slug = 'pet-owner-fitted-sheet';
+UPDATE products SET description_th = '<h3>ผ้าปูที่นอนที่เข้าใจสัตว์เลี้ยงของคุณอย่างแท้จริง</h3>
+<p>เบื่อไหมกับปัญหาขนสัตว์เลี้ยงติดที่นอนฝังแน่น? ผ้าปูที่นอนสำหรับสัตว์เลี้ยงของเราคือคำตอบที่ดีที่สุด ผลิตจากผ้า BreezePlus Cotton Blend เกรดพรีเมียม ให้สัมผัสที่สบายอย่างเหนือระดับ ช่วยให้ปัดขนสัตว์เลี้ยงออกได้อย่างง่ายดาย และปลอดภัยจากสารเคมีตกค้าง 100% เพื่อสุขภาพที่ดีของคุณและสัตว์เลี้ยงที่คุณรัก</p>
+<h3>ทำไมผ้าปูที่นอน BreezePlus จึงตอบโจทย์คนรักสัตว์เลี้ยง:</h3>
+<ul>
+<li><strong>ปัดขนออกง่าย ไม่ฝังแน่น:</strong> นวัตกรรมการทอพิเศษช่วยป้องกันไม่ให้ขนสัตว์ฝังเข้าไปในเส้นใย เพียงแค่สะบัดหรือดูดฝุ่นเบา ๆ ก็สามารถเอาขนออกได้ถึง 99% หมดห่วงเรื่องขนติดผ้าปูและการอุดตันในเครื่องซักผ้า!</li>
+<li><strong>ปลอดภัยจากสารเคมี 100%:</strong> ปราศจากการใช้สารเคมีอันตราย สีย้อม หรือสารเคลือบผิวที่เป็นพิษ ปลอดภัยอย่างยิ่งสำหรับผิวแพ้ง่ายของทั้งคนและสัตว์เลี้ยง ช่วยสร้างบรรยากาศการนอนที่สะอาดบริสุทธิ์</li>
+<li><strong>เย็นสบายสำหรับคนนอนร้อน:</strong> เทคโนโลยีช่วยระบายความชื้นและระบายอากาศได้อย่างยอดเยี่ยม ช่วยให้ผ้าปูที่นอนรู้สึกเย็นสบายและไม่อับชื้น แม้จะมีสัตว์เลี้ยงนอนซุกอยู่ข้าง ๆ</li>
+<li><strong>รองรับคราบสกปรกและของเหลว:</strong> เนื้อผ้าทอแบบระบายอากาศได้ดีและแห้งไว สามารถรับมือกับน้ำลาย คราบสกปรก หรืออุบัติเหตุเล็กน้อยจากสัตว์เลี้ยงได้ง่าย ซักทำความสะอาดและขจัดคราบออกได้ง่ายด้วยการซักปกติ</li>
+<li><strong>ขนาดพอดี ไร้รอยย่น:</strong> มาพร้อมยางยืดรอบผืน 360 องศา และผลิตตามความลึกที่นอนที่คุณเลือก เพื่อให้ฟิตพอดีกับที่นอนทุกขนาด ไม่หลุดหรือย่นระหว่างคืน</li>
+</ul>
+<h3>วัสดุและคุณสมบัติของ BreezePlus:</h3>
+<p>ผ้า BreezePlus เกรดพรีเมียมเป็นผ้าผสมระหว่างฝ้ายยาวพิเศษ (Long-staple Cotton) 50% และไมโครไฟเบอร์ 50% ให้ความนุ่มนวลและระบายอากาศตามธรรมชาติของฝ้าย ควบคู่กับความทนทาน ดูแลรักษาง่าย ยับยาก และทนทานต่อการขีดข่วนจากเล็บสัตว์เลี้ยง</p>
+<ul>
+<li>ขนสัตว์เลี้ยงลื่นหลุดง่าย ไม่ฝังแน่นในเนื้อผ้า</li>
+<li>สัมผัสเย็นสบาย ระบายความร้อนและชื้นได้ดี</li>
+<li>ตัดเย็บแบบ Made-to-Order พอดีกับขนาดและความหนาที่นอนของคุณ</li>
+<li>ยับยาก แห้งไวหลังการซัก</li>
 </ul>' WHERE slug = 'pet-owner-fitted-sheet';
 UPDATE products SET description_en = '<h3>Classic Flat Sheet — Custom-Made to Your Bed</h3>
 <p>A timeless flat sheet made to your exact mattress dimensions. With a 25cm tuck allowance on all sides and a double-stitched hem, it gives you the crisp, clean hotel look. Use it as a lightweight summer cover, a layer between you and the duvet, or tuck it in hospital-corners style.</p>
