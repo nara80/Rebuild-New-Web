@@ -589,7 +589,9 @@
   // -- Populate size-select from centralized size data --
   function populateSizeSelect() {
     if (!sizeSelect || typeof PRODUCT_SIZES === 'undefined') return;
-    var typeKey = isDuvet
+    var typeKey = (isFamily || isProtectorFamily)
+      ? 'family'
+      : isDuvet
       ? 'duvet'
       : (isPillowcase || isPillowProtector)
       ? 'pillow'
@@ -609,9 +611,10 @@
       optgroup.setAttribute('data-region', region);
       for (var i = 0; i < items.length; i++) {
         var s = items[i];
+        var depth = (typeof s.d === 'number' && isFinite(s.d)) ? s.d : 30;
         var option = document.createElement('option');
-        option.value = (typeKey === 'fitted-sheet' || typeKey === 'truck-fitted-sheet')
-          ? s.w + 'x' + s.l + 'x' + s.d
+        option.value = (typeKey === 'fitted-sheet' || typeKey === 'truck-fitted-sheet' || typeKey === 'family')
+          ? s.w + 'x' + s.l + 'x' + depth
           : s.w + 'x' + s.l;
         option.textContent = region === 'us'
           ? s.label + ' ' + s.inch + '\u2033'
