@@ -6,19 +6,19 @@ This guide covers the cleanup of your Etsy and eBay catalogs, consolidating simi
 
 ## 📋 Action Checklist
 
-*   [ ] **Identify Master Duvet Cover Listing:**
+*   [x] **Identify Master Duvet Cover Listing:**
     *   Look at your Etsy Shop Manager stats. Identify which of your standard 3-sided zipper duvet cover listings has the most historical sales and reviews.
     *   We will make this listing the **Master Home Duvet Cover**.
-*   [ ] **Configure Variations & Personalization (Detailed Step-by-Step below):**
+*   [x] **Configure Variations & Personalization (Detailed Step-by-Step below):**
     *   Set up **Size** as Variation 1.
     *   Set up **Fabric Type** as Variation 2.
     *   Enable the **Personalization Box** for Color Selection.
-*   [ ] **Setup Redirects on Redundant Listings:**
+*   [x] **Setup Redirects on Redundant Listings:**
     *   For the other 3 standard duvet cover listings, place this message at the very top of their descriptions:  
         `"✨ WE HAVE CONSOLIDATED OUR LISTINGS! Click here to see all fabrics, colors, and custom sizes in one place: [Link to Master Listing]"`
-*   [ ] **Deactivate Redundant Listings:**
+*   [x] **Deactivate Redundant Listings:**
     *   Once the new Master Listing begins receiving views and sales, deactivate the old fabric-specific listings to prevent choice confusion.
-*   [ ] **Audit Low-Traffic Standard Sheets:**
+*   [x] **Audit Low-Traffic Standard Sheets:**
     *   Identify standard fitted sheet listings (plain cotton/microfiber) with zero sales and zero views in the last 12 months.
     *   Merge them into a single consolidated standard sheet listing or deactivate them.
 

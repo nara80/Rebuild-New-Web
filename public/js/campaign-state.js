@@ -8,6 +8,10 @@ var MildMateCampaigns = (function(){
   var STORAGE_KEY = 'mildmate_campaigns';
   var OFFERS_KEY = 'mildmate_offers';
   var FAVORITES_KEY = 'mildmate_favorites';
+  function isSuperAdminPage(){
+    try { return window.location.pathname.indexOf('/super-admin/') === 0; }
+    catch(e){ return false; }
+  }
 
   function load(key, fallback){
     try {
@@ -49,6 +53,8 @@ var MildMateCampaigns = (function(){
 
   // ── Campaigns ──
   function getActiveCampaigns(){
+    // Storefront must never trust localStorage campaigns
+    if (!isSuperAdminPage()) return [];
     var all = load(STORAGE_KEY, []);
     var now = Date.now();
     return all.filter(function(c){
@@ -59,10 +65,12 @@ var MildMateCampaigns = (function(){
   }
 
   function getAllCampaigns(){
+    if (!isSuperAdminPage()) return [];
     return load(STORAGE_KEY, []);
   }
 
   function addCampaign(c){
+    if (!isSuperAdminPage()) return c;
     var all = load(STORAGE_KEY, []);
     c.id = 'CAMP' + Date.now();
     all.push(c);
@@ -71,6 +79,7 @@ var MildMateCampaigns = (function(){
   }
 
   function deleteCampaign(id){
+    if (!isSuperAdminPage()) return;
     var all = load(STORAGE_KEY, []);
     var filtered = all.filter(function(c){ return c.id !== id; });
     save(STORAGE_KEY, filtered);

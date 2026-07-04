@@ -347,6 +347,7 @@
           <h2>Select Product Category</h2>
           <div id="type-tabs" class="type-tabs">
             <button class="type-btn active" data-type="standard">Standard Mattress</button>
+            <button class="type-btn" data-type="truck">Truck Sleeper</button>
             <button class="type-btn" data-type="family">Family / Co-Sleep</button>
             <button class="type-btn" data-type="pillow">Pillow</button>
             <button class="type-btn" data-type="duvet">Duvet / Comforter</button>
@@ -473,6 +474,17 @@
             { name: 'Queen', cm: '153 × 203', in: '60 × 80', price: '$49' },
             { name: 'King', cm: '193 × 203', in: '76 × 80', price: '$55' },
             { name: 'Cal King', cm: '183 × 213', in: '72 × 84', price: '$58' },
+          ],
+          truck: [
+            { name: '32x80 (Narrow)', cm: '81 × 203', in: '32 × 80', price: '$35' },
+            { name: '35x79 (International LT)', cm: '89 × 201', in: '35 × 79', price: '$36' },
+            { name: '36x79 (Volvo VNL)', cm: '91 × 201', in: '36 × 79', price: '$37' },
+            { name: '36x80 (Cascadia)', cm: '91 × 203', in: '36 × 80', price: '$38' },
+            { name: '38x80 (Kenworth)', cm: '97 × 203', in: '38 × 80', price: '$38' },
+            { name: '39x80 (Western Star)', cm: '99 × 203', in: '39 × 80', price: '$38' },
+            { name: '39x81 (Volvo VNL Large)', cm: '99 × 206', in: '39 × 81', price: '$39' },
+            { name: '40x80 (Cascadia Extra-Wide)', cm: '102 × 203', in: '40 × 80', price: '$40' },
+            { name: '42x80 (Peterbilt/Kenworth)', cm: '107 × 203', in: '42 × 80', price: '$42' },
           ],
           family: [
             { name: '2× Twin XL', cm: '198 × 203', in: '78 × 80', price: 'Quote' },
@@ -749,21 +761,33 @@
             <div class="size-dims">${col2Label}</div>
           </div>
         `;
-        rows.forEach(r => {
-          const parts = r.name.split('\n');
-          const displayName = parts.length > 1
-            ? parts[0] + '<span class="size-name-sub">' + parts.slice(1).join('') + '</span>'
-            : r.name;
+        if (!rows.length) {
           html += `
             <div class="size-row">
-              <div class="size-name">${displayName}</div>
+              <div class="size-name">No standard data in this region</div>
               <div class="size-dims">
-                <span class="cm">${r.cm} cm</span>
-                <span class="in">(${r.in} in)</span>
+                <span class="cm">Use Custom Size</span>
+                <span class="in">(made to order)</span>
               </div>
             </div>
           `;
-        });
+        } else {
+          rows.forEach(r => {
+            const parts = r.name.split('\n');
+            const displayName = parts.length > 1
+              ? parts[0] + '<span class="size-name-sub">' + parts.slice(1).join('') + '</span>'
+              : r.name;
+            html += `
+              <div class="size-row">
+                <div class="size-name">${displayName}</div>
+                <div class="size-dims">
+                  <span class="cm">${r.cm} cm</span>
+                  <span class="in">(${r.in} in)</span>
+                </div>
+              </div>
+            `;
+          });
+        }
         document.getElementById('size-data-body').innerHTML = html;
       }
 

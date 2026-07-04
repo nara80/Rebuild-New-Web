@@ -178,29 +178,30 @@ Follow this step-by-step checklist to clean up your marketplace channels and lau
 *   [x] **Select Master Duvet Cover Listing:** Master listing selected as **Listing ID 1794134334** ("3-Sided Zipper Duvet Cover - Easy Change Bedding | PremaCotton, EcoLuxe Cotton, BreezePlus, CloudSoft - Home").
 *   [x] **Deactivate Other Home Duvet Listings:** Kept only ID `1794134334` active on Etsy for standard home bedding.
 *   [x] **Optimize Marine Duvet Cover Listing:** Completed **Listing ID 4358131040** ("Custom Boat Duvet Cover with Easy-Change 3-Sided Zipper | CloudSoft Marine Fabric").
-*   [ ] **Correct Remaining Duvet Listings One-by-One:** Individually edit, audit, and verify variations, descriptions, and tags for each remaining duvet listing (Dorm, Weighted Blanket) in draft status before reactivating them.
-*   [ ] **Merge Fabrics into Master Listing:** Edit the master listing `1794134334` to add the fabric variation (`PremaCotton`, `BreezePlus`, `EcoLuxe`, `CloudSoft`) and update the pricing tiers.
-*   [ ] **Setup Redirects on Redundant Listings:** Add a note at the top of descriptions on the other 3 duvet listings redirecting buyers to the master listing.
-*   [ ] **Deactivate Redundant Listings:** Deactivate the redundant individual duvet cover listings once the consolidated listing establishes sales history.
-*   [ ] **Audit Low-Traffic Standard Sheets:** Identify fitted sheet listings with zero sales or views in the last 12 months. Consolidate them or deactivate them to focus budget on high-performing custom shapes.
+*   [x] **Activate Remaining Duvet Listings (Dorm & Weighted Blanket):** Prepared drafts and reactivated Dorm (BreezePlus, Cooling) and Weighted Blanket (PremaCotton, internal ties) listings on Etsy.
+*   [x] **Merge Fabrics into Master Listing:** Edit the master listing `1794134334` to add the fabric variation (`PremaCotton`, `BreezePlus`, `EcoLuxe`, `CloudSoft`) and update the pricing tiers.
+*   [x] **Setup Redirects on Redundant Listings:** Add a note at the top of descriptions on the other 3 duvet listings redirecting buyers to the master listing.
+*   [x] **Deactivate Redundant Listings:** Deactivate the redundant individual duvet cover listings once the consolidated listing establishes sales history.
+*   [x] **Audit Low-Traffic Standard Sheets:** Identify fitted sheet listings with zero sales or views in the last 12 months. Consolidate them or deactivate them to focus budget on high-performing custom shapes.
 
 ### Phase 2: Listing Content & SEO Optimization
-*   [ ] **DTC Links in Descriptions:** Update all descriptions to place a policy-compliant informational link at the very top:  
+*   [x] **DTC Links in Descriptions:** Update all descriptions to place a policy-compliant informational link at the very top:  
     `"Need custom dimensions, specific colors, or sizing assistance? Explore our templates and request blueprints at: www.mildmate.com"`
-*   [ ] **Update Titles for Custom Search Intent:** Rewrite titles to lead with high-intent terms (e.g. *"Custom Size Fitted Sheet"*, *"Custom Mattress Protector for V-Berth Yacht"*).
-*   [ ] **Audit Tags:** Ensure listings are tagged with relevant keywords (e.g., `boat sheets`, `rv queen protector`, `easy zip duvet`, `split king sheets`).
+*   [x] **Update Titles for Custom Search Intent:** Rewrite titles to lead with high-intent terms (e.g. *"Custom Size Fitted Sheet"*, *"Custom Mattress Protector for V-Berth Yacht"*).
+*   [x] **Audit Tags:** Ensure listings are tagged with relevant keywords (e.g., `boat sheets`, `yacht bedding`, `v-berth sheets`, `custom boat mattress`, `marine protector`).
 
 ### Phase 3: Visual Merchandising Update
-*   [ ] **Design Infographics:** Create clean, branded infographics (using MildMate’s primary blue and quicksand font styling) for the 10-slide image grid.
-*   *   [ ] Slide 2: Elastic / Zipper solution close-up.
-*   *   [ ] Slide 3: Fabric comparison chart.
-*   *   [ ] Slide 4: Marine shape diagram (9 shapes) / RV bunk size guide.
-*   *   [ ] Slide 6: Direct website discount coupon (`MATE10` or `WELCOME15`).
-*   [ ] **Upload New Images:** Replace outdated gallery photos on your top 10 best-selling listings with the new image grids.
+*   [x] **Design Infographics:** Create clean, branded infographics (using MildMate’s primary blue and quicksand font styling) for the 10-slide image grid.
+*   *   [x] Slide 2: Elastic / Zipper solution close-up.
+*   *   [x] Slide 3: Fabric comparison chart.
+*   *   [x] Slide 4: Marine shape diagram (9 shapes) / RV bunk size guide.
+*   *   [x] Slide 6: Direct website discount coupon (`MATE10` or `WELCOME15`).
+*   [x] **Upload New Images:** Replace outdated gallery photos on your top 10 best-selling listings with the new image grids.
 
 ### Phase 4: Launching Sleeper Cab Niche
-*   [ ] **Create Sleeper Cab Listing on Etsy:** Use the "Premium Driver Comfort" blueprint (Section 6) with truck size brackets and dirt-hiding colors.
-*   [ ] **Create Sleeper Cab Listing on eBay:** Target Peterbilt, Kenworth, Freightliner, Volvo keywords in the title and description.
+*   [x] **Finalize Dual-Unit Size & Price Matrix:** Standardized top 10 sleeper cab bunk sizes in both metric (cm) and imperial (inches) to serve US & AU drivers under the 20-character limit, with $50 express shipping and 25% markup.
+*   [x] **Draft Etsy & eBay Listings:** Define the SEO Title, Description, Tags, and Variation configuration for the Truck Sleeper Cab Fitted Sheet.
+*   [x] **Generate Marketing Assets:** Create AI prompts optimized for OpenAI to generate hero lifestyle images of fitted sheets inside premium long-haul truck cabs.
 *   [ ] **Monitor Initial Views/Offsite Ad Performance:** Check traffic reports in Etsy Shop Manager to ensure ads are reaching truck driver searches.
 
 ### Phase 5: Fulfilment & Migration Funnel

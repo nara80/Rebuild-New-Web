@@ -6,17 +6,17 @@ This guide covers updating your listing descriptions, titles, and tags to maximi
 
 ## 📋 Action Checklist
 
-*   [ ] **Place Compliant DTC Link at the Top of Descriptions:**
+*   [x] **Place Compliant DTC Link at the Top of Descriptions:**
     *   Insert a policy-compliant link at the first line of every description. Frame it as an informational or sizing tool utility to avoid Etsy's Fee Avoidance flags (do NOT offer coupon codes, discounts, or state that it is cheaper on your website):  
         `"👉 Need custom dimensions, specific colors, or sizing assistance? Explore our templates and request blueprints at: www.mildmate.com"`
-*   [ ] **Configure Variation Option Limits (20-Character Rule):**
+*   [x] **Configure Variation Option Limits (20-Character Rule):**
     *   Etsy imposes a strict **20-character limit** on variation option names. Abbreviate regional sizes and dimensions to keep them within limits (e.g. use `UK King (225x220)` instead of `UK King / EU King (225 x 220 cm)`).
     *   Keep fabric variation labels clean and concise (`PremaCotton`, `BreezePlus`, `EcoLuxe`, `CloudSoft`).
-*   [ ] **Update Titles for Custom Search Intent:**
+*   [x] **Update Titles for Custom Search Intent:**
     *   Optimize your titles to lead with keywords that highlight customization, as standard sizes are highly competitive.
     *   *Example (Marine):* `Custom Marine Fitted Sheet for V-Berth & Yacht Mattresses | Custom Any Size & Shape`
     *   *Example (Family):* `Custom Family Bed Fitted Sheet - Giant Co-Sleeping Bedding | Custom Sizes up to 10ft`
-*   [ ] **Audit and Update Listing Tags:**
+*   [x] **Audit and Update Listing Tags:**
     *   Ensure each listing uses all 13 tags on Etsy. Remove generic tags and focus on high-intent search terms:
         *   *Marine tags:* `boat sheets`, `yacht bedding`, `v-berth sheets`, `custom boat mattress`, `marine protector`.
         *   *Family tags:* `family bed sheet`, `co sleeping sheets`, `giant sheets`, `oversized bedding`, `custom size sheets`.
