@@ -1617,8 +1617,10 @@
             showError('Please fill in all required fields (all fields marked with * are required).');
             return;
           }
-          if (!email.includes('@')) {
-            showError('Please enter a valid email address.');
+          var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            showError('Please enter a valid email address (e.g. name@example.com).');
+            document.getElementById('cust-email').focus();
             return;
           }
         }
@@ -1814,7 +1816,13 @@
           if (resp.ok && data.url) {
             window.location.href = data.url;
           } else {
-            showError(data.error || 'Payment setup failed. Please try again.');
+            // Humanize known Stripe error messages
+            var errMsg = data.error || 'Payment setup failed. Please try again.';
+            if (errMsg.toLowerCase().indexOf('invalid email') >= 0 || errMsg.toLowerCase().indexOf('email address') >= 0) {
+              errMsg = 'Please enter a valid email address (e.g. name@example.com).';
+              document.getElementById('cust-email') && document.getElementById('cust-email').focus();
+            }
+            showError(errMsg);
             // If error mentions discount/code, reset discount state so UI matches reality
             if (data.error && (data.error.indexOf('discount') >= 0 || data.error.indexOf('code') >= 0 || data.error.indexOf('used') >= 0)) {
               discountApplied = false;
