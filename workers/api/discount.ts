@@ -106,7 +106,7 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
   if ((claim.email || "").toLowerCase() !== email) {
     return new Response(JSON.stringify({
       valid: false,
-      error: "This welcome code is linked to a different email account.",
+      error: "This code is tied to a different email. Please enter the same email you used to subscribe.",
     }), { headers });
   }
 

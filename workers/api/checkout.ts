@@ -116,7 +116,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         });
       }
       if (String(claim.email || "").toLowerCase() !== normalizedEmail) {
-        return new Response(JSON.stringify({ error: "This welcome code is linked to a different email account." }), {
+        return new Response(JSON.stringify({ error: "This code is tied to a different email. Please enter the same email you used to subscribe." }), {
           status: 400, headers: { "Content-Type": "application/json" },
         });
       }

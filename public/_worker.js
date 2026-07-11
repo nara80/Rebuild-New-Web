@@ -5506,7 +5506,7 @@ async function handleDiscountValidate(request, env) {
   if ((claim.email || "").toLowerCase() !== email) {
     return new Response(JSON.stringify({
       valid: false,
-      error: "This welcome code is linked to a different email account."
+      error: "This code is tied to a different email. Please enter the same email you used to subscribe."
     }), { headers });
   }
   if (claim.status === "used") {
@@ -7720,7 +7720,7 @@ async function handleCheckout(request, env) {
         });
       }
       if (String(claim.email || "").toLowerCase() !== normalizedEmail) {
-        return new Response(JSON.stringify({ error: "This welcome code is linked to a different email account." }), {
+        return new Response(JSON.stringify({ error: "This code is tied to a different email. Please enter the same email you used to subscribe." }), {
           status: 400,
           headers: { "Content-Type": "application/json" }
         });
