@@ -7922,7 +7922,7 @@ async function handleCheckout(request, env) {
       console.error("Stripe error:", stripeData);
       const stripeMsg = stripeData?.error?.message || stripeData?.message || "Payment service error";
       return new Response(JSON.stringify({ error: stripeMsg }), {
-        status: 502,
+        status: 400,
         headers: { "Content-Type": "application/json" }
       });
     }
@@ -7935,7 +7935,7 @@ async function handleCheckout(request, env) {
   } catch (e) {
     console.error("Checkout error:", e.message);
     return new Response(JSON.stringify({ error: "Payment service unavailable" }), {
-      status: 502,
+      status: 400,
       headers: { "Content-Type": "application/json" }
     });
   }

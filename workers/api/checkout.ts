@@ -356,7 +356,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         stripeData?.message ||
         "Payment service error";
       return new Response(JSON.stringify({ error: stripeMsg }), {
-        status: 502,
+        status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
@@ -370,7 +370,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   } catch (e: any) {
     console.error("Checkout error:", e.message);
     return new Response(JSON.stringify({ error: "Payment service unavailable" }), {
-      status: 502,
+      status: 400,
       headers: { "Content-Type": "application/json" },
     });
   }

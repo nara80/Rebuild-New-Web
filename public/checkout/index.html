@@ -1796,7 +1796,20 @@
             })
           });
 
-          var data = await resp.json();
+          var data;
+          try {
+            data = await resp.json();
+          } catch(jsonErr) {
+            // Cloudflare intercepted response as HTML (e.g. 502/503 gateway error)
+            showError('Payment service temporarily unavailable. Please try again in a moment.');
+            btn.disabled = false;
+            text.style.display = '';
+            spin.style.display = 'none';
+            if (mPay) { mPay.disabled = false; }
+            var mSpin2b = document.getElementById('pay-spinner-mobile');
+            if (mSpin2b) mSpin2b.style.display = 'none';
+            return;
+          }
 
           if (resp.ok && data.url) {
             window.location.href = data.url;
