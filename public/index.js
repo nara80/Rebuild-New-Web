@@ -5726,58 +5726,31 @@ async function handleAdminPromo(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  // Auth: Clerk JWT (Bearer) or ADMIN_SECRET fallback
+  // Auth: only write ops need Bearer/Secret — GET is covered by admin middleware cookie gate
   const _promoHostname = (request.headers.get("Host") || "").toLowerCase();
   const _promoProdHost = _promoHostname === "www.mildmate.com" || _promoHostname === "mildmate.com" || _promoHostname.endsWith(".mildmate.com");
-  if (_promoProdHost) {
-    const _promoAuthHeader = request.headers.get("Authorization") || "";
-    if (_promoAuthHeader.startsWith("Bearer ")) {
-      const _promoVerified = await verifyClerkJwt(request, env);
-      if (_promoVerified.valid) {
-        const _promoRaw = _promoVerified.payload.raw || {};
-        const _promoEmail = String(_promoVerified.payload.email || _promoRaw.email || "").toLowerCase();
-        const _promoAllowed = String(env.ADMIN_EMAILS || "").split(",").map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
-        const _promoHasRole = (function(r){ if(!r) return false; const c=[]; if(r.role) c.push(r.role); if(r.public_metadata?.role) c.push(r.public_metadata.role); const f=[]; for(const x of c){ if(Array.isArray(x)) f.push(...x.map(String)); else f.push(String(x)); } return f.some(function(v){ const rv=v.toLowerCase(); return rv==="admin"||rv==="super-admin"||rv==="super_admin"||rv.endsWith(":admin")||rv.endsWith("/admin"); }); })(_promoRaw);
-        if (_promoHasRole || (_promoEmail && _promoAllowed.includes(_promoEmail))) {
-          // authorised via Clerk
-        } else {
-          const _promoSub = _promoVerified.payload.sub;
-          const _promoClerkKey = env.CLERK_SECRET_KEY;
-          let _promoClerkOk = false;
-          if (_promoSub && _promoClerkKey) {
-            try {
-              const _promoClerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(_promoSub), { headers: { Authorization: "Bearer " + _promoClerkKey } });
-              if (_promoClerkResp.ok) {
-                const _promoUser = await _promoClerkResp.json();
-                const _promoClerkEmail = (_promoUser.email_addresses?.find(function(e){ return e.id === _promoUser.primary_email_address_id; })?.email_address || "").toLowerCase();
-                const _promoMeta = _promoUser.public_metadata || {};
-                const _promoMetaHasRole = (function(r){ if(!r) return false; const c=[]; if(r.role) c.push(r.role); const f=[]; for(const x of c){ if(Array.isArray(x)) f.push(...x.map(String)); else f.push(String(x)); } return f.some(function(v){ const rv=v.toLowerCase(); return rv==="admin"||rv==="super-admin"||rv==="super_admin"||rv.endsWith(":admin")||rv.endsWith("/admin"); }); })(_promoMeta);
-                if (_promoAllowed.includes(_promoClerkEmail) || _promoMetaHasRole) _promoClerkOk = true;
-              }
-            } catch(e) {}
-          }
-          if (!_promoClerkOk) {
-            return new Response(JSON.stringify({ error: "Forbidden: admin role required" }), { status: 403, headers });
-          }
-        }
-      } else {
+  const db = env.DB;
+  const url = new URL(request.url);
+  const method = request.method;
+  if (method === "POST" || method === "DELETE") {
+    const _promoAuthHeader2 = request.headers.get("Authorization") || "";
+    if (_promoAuthHeader2.startsWith("Bearer ")) {
+      const _promoVerified2 = await verifyClerkJwt(request, env);
+      if (!_promoVerified2.valid) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
       }
-    } else {
-      const _promoSecret = (request.headers.get("X-Admin-Secret") || "").trim();
-      const _promoExpected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-      if (!_promoSecret || !_promoExpected || _promoSecret !== _promoExpected) {
+    } else if (_promoProdHost) {
+      const _promoSecret2 = (request.headers.get("X-Admin-Secret") || "").trim();
+      const _promoExpected2 = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+      if (!_promoSecret2 || !_promoExpected2 || _promoSecret2 !== _promoExpected2) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
       }
     }
   }
-  const db = env.DB;
-  const url = new URL(request.url);
-  const method = request.method;
   if (method === "GET") {
     const rows = await db.prepare(`
       SELECT
-        p.id, p.code, p.discount_pct, p.order_minimum_thb, p.duration_days,
+        p.id, p.code, p.discount_pct, p.order_minimum_usd, p.duration_days,
         p.max_uses, p.use_count, p.per_email_limit, p.is_active,
         p.created_by, p.created_at, p.expires_at,
         (SELECT COUNT(*) FROM promo_redemptions pr WHERE pr.promo_id = p.id) as total_redemptions
