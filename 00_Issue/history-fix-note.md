@@ -1048,3 +1048,121 @@ When `marine-mattress-protector` was introduced, rollout was partially complete:
   - This verifies checkout now keeps preview host context instead of forcing production host.
 - **Stripe payload reconciliation:** ✅
   - Earlier payloads with `success_url=https://mildmate-new.pages.dev/...` were identified as stale-runtime evidence and superseded by the patched runtime + preview verification above.
+
+---
+
+## 25) `/checkout` Promo Code + Payment "Network error" (2026-07-11)
+
+### Incident scope (what was observed)
+- Clicking **[Pay Now]** at `/checkout/` with promo code `BECCA20` applied showed:
+  - `"Network error. Please check your connection and try again."`
+- Browser DevTools showed no network request completing — or HTTP 500/502 with empty body.
+- Without a promo code, checkout worked fine (Stripe session created, redirect succeeded).
+
+---
+
+### Root cause 1 — Stale SQL column name crashes the Worker (HTTP 500)
+
+**Files affected:** `workers/api/checkout.ts`, `public/_worker.js`
+
+**What happened:**
+- Migration `022_promo_min_usd.sql` renamed the column `order_minimum_thb` → `order_minimum_usd` on the `promo_codes` table.
+- The checkout worker's promo-code SQL query still selected **both** the old and new column names:
+  ```sql
+  SELECT id, discount_pct, order_minimum_usd, order_minimum_thb, ...
+  FROM promo_codes WHERE code = ? AND is_active = 1
+  ```
+- D1 threw `no such column: order_minimum_thb` (SQLITE_ERROR) → Worker crashed → Cloudflare returned HTTP 500 with empty HTML body → `resp.json()` in the frontend threw a `SyntaxError` → caught as "Network error".
+
+**Confirmed via:**
+```bash
+npx wrangler d1 execute mildmate-db-prod --command "SELECT order_minimum_thb FROM promo_codes LIMIT 1;" --remote
+# → ✘ [ERROR] no such column: order_minimum_thb : SQLITE_ERROR [code: 7500]
+```
+
+**Fix applied:**
+- Removed `order_minimum_thb` from the SELECT clause in `checkout.ts` and `_worker.js`.
+- Simplified `minUsd` fallback: `promo.order_minimum_usd ?? 0` (no longer falls back to deleted column).
+- Committed: `fix: remove stale order_minimum_thb column from promo checkout query (migration 022 renamed it)`
+
+---
+
+### Root cause 2 — Worker returns HTTP 502 → Cloudflare intercepts body (HTTP 502 empty)
+
+**Files affected:** `workers/api/checkout.ts`, `public/_worker.js`
+
+**What happened:**
+- After fix 1, checkout with a **malformed email** (e.g. `adf2adgag@adga`, no proper TLD) reached Stripe, which rejected it with an error JSON.
+- The Worker correctly caught the Stripe error, but returned it with **HTTP status 502**:
+  ```ts
+  return new Response(JSON.stringify({ error: stripeMsg }), { status: 502, ... });
+  ```
+- **Cloudflare intercepts all 502 responses** at the edge and replaces the response body with its own HTML error page. The JSON body from the Worker was silently discarded.
+- `resp.json()` in the frontend received HTML → threw `SyntaxError` → caught as "Network error".
+
+**Confirmed via:**
+```powershell
+# With bad email + BECCA20 → HTTP 502, empty body
+# With valid email + BECCA20 → HTTP 200, Stripe session created ✅
+```
+
+**Fix applied:**
+- Changed Stripe error response status from `502` → `400` in `checkout.ts` and `_worker.js`.
+  - Cloudflare only intercepts 502/503 gateway errors; 400 passes through with body intact.
+- Added resilient JSON parse in `checkout/index.html`:
+  ```js
+  try {
+    data = await resp.json();
+  } catch(jsonErr) {
+    // Cloudflare intercepted response as HTML
+    showError('Payment service temporarily unavailable. Please try again in a moment.');
+    return;
+  }
+  ```
+- Committed: `fix: return 400 (not 502) for Stripe errors so Cloudflare passes JSON body through; make resp.json() resilient in frontend`
+
+---
+
+### Root cause 3 — Frontend email validation too weak; Stripe error message leaked as-is
+
+**Files affected:** `public/checkout/index.html`
+
+**What happened:**
+- Frontend `goToStep()` validation only checked `email.includes('@')` — passing `adfa@agfag` (no TLD) through to the API.
+- Stripe rejected with message: `"Invalid email address: adfa@agfag"` — a raw technical message surfaced directly in the UI error banner.
+
+**Fix applied:**
+- Strengthened email regex at `goToStep()`:
+  ```js
+  var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showError('Please enter a valid email address (e.g. name@example.com).');
+    document.getElementById('cust-email').focus();
+    return;
+  }
+  ```
+- Added Stripe email error humanizer in `processPayment()`:
+  ```js
+  if (errMsg.toLowerCase().indexOf('invalid email') >= 0 || errMsg.toLowerCase().indexOf('email address') >= 0) {
+    errMsg = 'Please enter a valid email address (e.g. name@example.com).';
+  }
+  ```
+- Committed: `fix: strengthen email validation (require domain.tld), humanize Stripe invalid-email error`
+
+---
+
+### Verification status
+
+| Check | Status |
+|---|---|
+| `order_minimum_thb` column no longer in SQL query | ✅ |
+| `BECCA20` + valid email → HTTP 200 + Stripe session | ✅ |
+| `BECCA20` + invalid email → HTTP 400 + JSON `{"error":"Invalid email address: ..."}` | ✅ |
+| Frontend shows "Please enter a valid email" before API call for malformed emails | ✅ |
+| Stripe raw error message no longer leaks to UI | ✅ |
+
+### Key lessons / runbook note
+- **Cloudflare intercepts 5xx responses** and replaces body with HTML. Never return 502/503 from a Worker when you want the JSON error body to reach the frontend. Use 4xx instead.
+- **After any `ALTER TABLE RENAME COLUMN` migration**, grep `_worker.js` and all `.ts` worker files for the old column name to catch stale references before they hit production.
+- **`resp.json()` can throw** if Cloudflare returns HTML instead of JSON — always wrap in its own `try/catch` separate from the outer fetch error handler.
+
