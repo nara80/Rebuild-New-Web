@@ -5461,7 +5461,7 @@ async function handleDiscountValidate(request, env) {
   }
   const db = env.DB;
   const promo = await db.prepare(
-    "SELECT id, code, discount_pct, order_minimum_usd, order_minimum_thb, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
+    "SELECT id, code, discount_pct, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
   ).bind(code).first();
   if (promo) {
     if (!promo.is_active) {
@@ -5473,7 +5473,7 @@ async function handleDiscountValidate(request, env) {
     if (promo.max_uses !== null && promo.use_count >= promo.max_uses) {
       return new Response(JSON.stringify({ valid: false, error: "This promo code has reached its usage limit" }), { headers });
     }
-    const minUsd = promo.order_minimum_usd ?? promo.order_minimum_thb ?? 0;
+    const minUsd = promo.order_minimum_usd ?? 0;
     if (minUsd > 0 && (body.cart_total_usd || 0) < minUsd) {
       return new Response(JSON.stringify({
         valid: false,
