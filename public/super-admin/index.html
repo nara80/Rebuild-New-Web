@@ -2103,6 +2103,7 @@ async function createPromo(){
     var j = await res.json();
     if (!res.ok) { toast(j.error || 'Failed to create promo code'); return; }
     toast('Promo code ' + j.code + ' created (' + j.discount_pct + '% off, expires ' + j.expires_at + ')');
+    marketingSub = 'promo';
     showPage('marketing');
   } catch(e) { toast('Network error: ' + e.message); }
 }
@@ -2117,6 +2118,7 @@ async function revokePromo(id){
     });
     if (!res.ok) { var j = await res.json(); toast(j.error || 'Failed to revoke'); return; }
     toast('Promo code revoked');
+    marketingSub = 'promo';
     showPage('marketing');
   } catch(e) { toast('Network error: ' + e.message); }
 }
