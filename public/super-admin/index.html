@@ -2016,7 +2016,7 @@ async function deleteCampaign(id){
 async function rPromoCodes(){
   var codes = [];
   try {
-    var res = await fetch('/api/admin/promo', { headers: { 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' } });
+    var res = await fetch('/api/admin/promo', { headers: await getAdminAuthHeaders(false) });
     if (res.ok) { var j = await res.json(); codes = j.codes || []; }
   } catch(e) { toast('Failed to load promo codes: ' + e.message); }
 
@@ -2097,7 +2097,7 @@ async function createPromo(){
   try {
     var res = await fetch('/api/admin/promo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' },
+      headers: await getAdminAuthHeaders(true),
       body: JSON.stringify({ code: code, discount_pct: discount, order_minimum_thb: minOrder, duration_days: duration, max_uses: maxUses, per_email_limit: perEmail })
     });
     var j = await res.json();
@@ -2112,7 +2112,7 @@ async function revokePromo(id){
   try {
     var res = await fetch('/api/admin/promo', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': localStorage.getItem('admin_secret') || '' },
+      headers: await getAdminAuthHeaders(true),
       body: JSON.stringify({ id: id })
     });
     if (!res.ok) { var j = await res.json(); toast(j.error || 'Failed to revoke'); return; }

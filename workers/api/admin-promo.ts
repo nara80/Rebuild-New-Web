@@ -3,12 +3,84 @@
 // GET    /api/admin/promo     — list all promo codes with usage
 // DELETE /api/admin/promo     — revoke a promo code by id
 
+import { verifyClerkJwt } from "./clerk-verify";
+
+function isProductionHost(hostname: string): boolean {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
+}
+
+function hasAdminRole(raw: any): boolean {
+  if (!raw) return false;
+  const candidates: any[] = [];
+  if (raw.role) candidates.push(raw.role);
+  if (raw.roles) candidates.push(raw.roles);
+  if (raw.public_metadata?.role) candidates.push(raw.public_metadata.role);
+  if (raw.publicMetadata?.role) candidates.push(raw.publicMetadata.role);
+  if (raw.metadata?.role) candidates.push(raw.metadata.role);
+  if (raw.organization_role) candidates.push(raw.organization_role);
+  if (raw.org_role) candidates.push(raw.org_role);
+  const flat: string[] = [];
+  for (const c of candidates) {
+    if (Array.isArray(c)) flat.push(...c.map(String));
+    else if (typeof c === "string") flat.push(c);
+  }
+  return flat.some((v) => {
+    const r = String(v).toLowerCase();
+    return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
+  });
+}
+
+function emailAllowed(email: string, env: any): boolean {
+  const allow = String(env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((s: string) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return !!email && allow.includes(email.toLowerCase());
+}
+
+async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const hostname = request.headers.get("Host") || "";
+  if (!isProductionHost(hostname)) return { ok: true };
+
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
+    const raw = (verified as any).payload?.raw || {};
+    if (hasAdminRole(raw)) return { ok: true };
+    const jwtEmail = String(raw.email || (verified as any).payload?.email || "").trim().toLowerCase();
+    if (emailAllowed(jwtEmail, env)) return { ok: true };
+    const sub = String((verified as any).payload?.sub || "").trim();
+    const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+    if (sub && clerkKey) {
+      try {
+        const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+          headers: { Authorization: "Bearer " + clerkKey }
+        });
+        if (clerkResp.ok) {
+          const user = await clerkResp.json() as any;
+          const email = user.email_addresses?.find((e: any) => e.id === user.primary_email_address_id)?.email_address || "";
+          const metadata = user.public_metadata || {};
+          if (emailAllowed(email, env) || hasAdminRole(metadata)) return { ok: true };
+        }
+      } catch {}
+    }
+    return { ok: false, status: 403, error: "Forbidden: admin role required" };
+  }
+
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const expectedSecret = String(env.ADMIN_SECRET || "").trim();
+  if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+
 export async function handleAdminPromo(request: Request, env: any): Promise<Response> {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization",
   };
 
   if (request.method === "OPTIONS") {
@@ -16,11 +88,9 @@ export async function handleAdminPromo(request: Request, env: any): Promise<Resp
   }
 
   // Admin auth check
-  const secret = request.headers.get("X-Admin-Secret") || "";
-  const adminSecret = env.ADMIN_EMAILS || "";
-  const isAdmin = secret === adminSecret || (secret.length > 0 && adminSecret.length > 0);
-  if (!isAdmin && !request.url.includes("localhost") && !request.url.includes("pages.dev")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
 
   const db = env.DB;
