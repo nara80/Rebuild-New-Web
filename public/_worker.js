@@ -7667,7 +7667,7 @@ async function handleCheckout(request, env) {
       });
     }
     const promo = await env.DB.prepare(
-      "SELECT id, discount_pct, order_minimum_usd, order_minimum_thb, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
+      "SELECT id, discount_pct, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
     ).bind(discountCode).first();
     if (promo) {
       if (promo.expires_at && promo.expires_at < (/* @__PURE__ */ new Date()).toISOString()) {
@@ -7682,7 +7682,7 @@ async function handleCheckout(request, env) {
           headers: { "Content-Type": "application/json" }
         });
       }
-      const minUsd = promo.order_minimum_usd ?? promo.order_minimum_thb ?? 0;
+      const minUsd = promo.order_minimum_usd ?? 0;
       if (minUsd > 0 && (cart_total_usd || 0) < minUsd) {
         return new Response(JSON.stringify({
           error: `Minimum order of $${minUsd} USD required for this code (your cart: $${Math.round(cart_total_usd || 0)} USD)`
