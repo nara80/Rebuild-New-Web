@@ -7658,6 +7658,7 @@ async function handleCheckout(request, env) {
   const discountCode = (body.discount_code || "").trim().toUpperCase();
   let discountApplied = false;
   let discountPct = 0;
+  let freeShipping = false;
   let discountType = null;
   if (discountCode) {
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
@@ -7667,7 +7668,7 @@ async function handleCheckout(request, env) {
       });
     }
     const promo = await env.DB.prepare(
-      "SELECT id, discount_pct, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
+      "SELECT id, discount_pct, free_shipping, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
     ).bind(discountCode).first();
     if (promo) {
       if (promo.expires_at && promo.expires_at < (/* @__PURE__ */ new Date()).toISOString()) {
@@ -7701,6 +7702,7 @@ async function handleCheckout(request, env) {
       }
       discountApplied = true;
       discountPct = promo.discount_pct;
+      freeShipping = promo.free_shipping === 1;
       discountType = "promo";
     } else {
       const claim = await env.DB.prepare(
@@ -7808,7 +7810,7 @@ async function handleCheckout(request, env) {
       quantity: item.qty || 1
     };
   });
-  const shippingMinor = Math.round(Number(shippingQuote?.amount || 0) * 100);
+  const shippingMinor = freeShipping ? 0 : Math.round(Number(shippingQuote?.amount || 0) * 100);
   if (shippingMinor > 0) {
     lineItems.push({
       price_data: {

@@ -130,6 +130,7 @@ export async function handleAdminPromo(request: Request, env: any): Promise<Resp
     let body: {
       code?: string;
       discount_pct?: number;
+      free_shipping?: number;
       order_minimum_thb?: number;
       duration_days?: number;
       max_uses?: number;
@@ -143,6 +144,7 @@ export async function handleAdminPromo(request: Request, env: any): Promise<Resp
     const {
       code,
       discount_pct,
+      free_shipping = 0,
       order_minimum_thb = 0,
       duration_days = 7,
       max_uses = 1,
@@ -181,9 +183,9 @@ export async function handleAdminPromo(request: Request, env: any): Promise<Resp
     const expiresAtISO = expiresAt.toISOString().replace("T", " ").substring(0, 19);
 
     await db.prepare(`
-      INSERT INTO promo_codes (code, discount_pct, order_minimum_usd, duration_days, max_uses, per_email_limit, created_by, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(normalizedCode, Number(discount_pct), Number(order_minimum_thb), Number(duration_days),
+      INSERT INTO promo_codes (code, discount_pct, free_shipping, order_minimum_usd, duration_days, max_uses, per_email_limit, created_by, expires_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(normalizedCode, Number(discount_pct), free_shipping ? 1 : 0, Number(order_minimum_thb), Number(duration_days),
              max_uses === null ? null : Number(max_uses), Number(per_email_limit), created_by, expiresAtISO).run();
 
     return new Response(JSON.stringify({

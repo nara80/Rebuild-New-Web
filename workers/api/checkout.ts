@@ -58,6 +58,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   const discountCode = (body.discount_code || "").trim().toUpperCase();
   let discountApplied = false;
   let discountPct = 0;
+  let freeShipping = false;
   let discountType = null; // 'promo' | 'welcome'
   if (discountCode) {
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
@@ -67,7 +68,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     }
     // Check promo_codes FIRST (admin-created, mutual exclusivity)
     const promo = await env.DB.prepare(
-      "SELECT id, discount_pct, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
+      "SELECT id, discount_pct, free_shipping, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ? AND is_active = 1"
     ).bind(discountCode).first() as any;
     if (promo) {
       if (promo.expires_at && promo.expires_at < new Date().toISOString()) {
@@ -98,6 +99,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       }
       discountApplied = true;
       discountPct = promo.discount_pct;
+      freeShipping = promo.free_shipping === 1;
       discountType = "promo";
     } else {
       // Fall back to welcome/discount_claims (mutually exclusive with promo)
@@ -221,7 +223,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     };
   });
 
-  const shippingMinor = Math.round(Number(shippingQuote?.amount || 0) * 100);
+  const shippingMinor = freeShipping ? 0 : Math.round(Number(shippingQuote?.amount || 0) * 100);
   if (shippingMinor > 0) {
     lineItems.push({
       price_data: {

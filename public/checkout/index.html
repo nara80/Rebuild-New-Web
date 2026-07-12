@@ -430,10 +430,11 @@
 
           <div class="checkout-sidebar" id="cart-totals" style="display:none">
             <div class="sidebar-heading">Order Summary</div>
-            <div class="totals-row"><span>Subtotal</span><span id="subtotal">—</span></div>
+            <div class="totals-row" style="display:none"><span>Subtotal</span><span id="subtotal">—</span></div>
             <div class="totals-row" id="discount-row-step1" style="display:none"><span>Discount</span><span id="discount-amount-step1" style="color:#ef4444">—</span></div>
-            <div class="totals-row"><span>Shipping</span><span id="shipping-step1">—</span></div>
-            <div class="totals-row grand"><span>Total</span><span id="grand-total">—</span></div>
+            <div class="totals-row" style="display:none"><span>Shipping</span><span id="shipping-step1">—</span></div>
+            <div class="totals-row grand"><span>Subtotal</span><span id="grand-total">—</span></div>
+            <p style="font-size:0.75rem;color:#64748b;margin-top:6px;line-height:1.4;">* Shipping will be calculated at the next step</p>
             <button class="btn btn-primary" id="btn-to-step2" onclick="goToStep(2)" disabled>
               Checkout
             </button>
@@ -626,6 +627,7 @@
       var discountApplied = false;
       var discountCode = '';
       var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
+      var freeShipping = false; // set true when promo code has free_shipping=1
       var shippingState = {
         serviceLevel: 'standard',
         currency: 'USD',
@@ -735,6 +737,10 @@
         var el = document.getElementById(id);
         if (el) el.textContent = value;
       }
+      function setHTML(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.innerHTML = value;
+      }
 
       var EU_COUNTRIES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
       var NO_TARIFF_NOTE = ['TH','US','CA','AU'];
@@ -803,23 +809,23 @@
         }, 0);
         var discountedSubtotal = discountApplied ? rawSubtotal * (100 - discountPercent) / 100 : rawSubtotal;
         var discountAmt = discountApplied ? rawSubtotal - discountedSubtotal : 0;
-        var shipping = Number(shippingState.amount || 0);
-        var standardAmount = standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping;
+        var shipping = freeShipping ? 0 : Number(shippingState.amount || 0);
+        var standardAmount = freeShipping ? 0 : (standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping);
         var total = (discountApplied ? discountedSubtotal : rawSubtotal) + shipping;
-        var shippingText = formatMoney(shipping, currency);
-        var standardShippingText = formatMoney(standardAmount, currency);
+        var shippingText = freeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(shipping, currency);
+        var standardShippingText = freeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(standardAmount, currency);
         var subtotalDisplay = rawSubtotal;
 
         setText('subtotal', formatMoney(subtotalDisplay, currency));
-        setText('shipping-step1', standardShippingText);
+        setHTML('shipping-step1', standardShippingText);
         setText('grand-total', formatMoney((discountApplied ? discountedSubtotal : rawSubtotal) + standardAmount, currency));
 
         setText('step2-subtotal', formatMoney(subtotalDisplay, currency));
-        setText('step2-shipping', standardShippingText);
+        setHTML('step2-shipping', standardShippingText);
         setText('step2-total', formatMoney((discountApplied ? discountedSubtotal : rawSubtotal) + standardAmount, currency));
 
         setText('pay-subtotal-sidebar', formatMoney(subtotalDisplay, currency));
-        setText('pay-shipping-sidebar', shippingText);
+        setHTML('pay-shipping-sidebar', shippingText);
         setText('pay-total-sidebar', formatMoney(total, currency));
         setText('bar-total-step3', formatMoney(total, currency));
 
@@ -1729,8 +1735,11 @@
             discountApplied = true;
             discountCode = code;
             discountPercent = data.discount_percent || 15;
+            freeShipping = data.free_shipping === true;
+            var discountLabel = discountPercent > 0 ? discountPercent + '% discount' : '';
+            var shippingLabel = freeShipping ? (discountLabel ? ' + free shipping' : 'Free shipping') : '';
             msg.style.color = "#16a34a";
-            msg.innerHTML = discountPercent + '% discount applied! <span id="remove-discount-btn" style="cursor:pointer;color:#ef4444;font-size:0.875rem;margin-left:8px;text-decoration:underline">Remove</span> (expires ' + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ')';
+            msg.innerHTML = (discountLabel + shippingLabel) + ' applied! <span id="remove-discount-btn" style="cursor:pointer;color:#ef4444;font-size:0.875rem;margin-left:8px;text-decoration:underline">Remove</span> (expires ' + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ')';
             document.getElementById("btn-apply-discount").disabled = true;
             document.getElementById("discount-input").disabled = true;
             document.getElementById("remove-discount-btn").onclick = removeDiscountCode;
@@ -1749,6 +1758,7 @@
         discountApplied = false;
         discountCode = '';
         discountPercent = 15;
+        freeShipping = false;
         var input = document.getElementById('discount-input');
         var msg = document.getElementById('discount-msg');
         var btn = document.getElementById('btn-apply-discount');

@@ -57,7 +57,7 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
 
   // ── 1. Check promo_codes FIRST (admin-created, mutual exclusivity) ──
   const promo = await db.prepare(
-    "SELECT id, code, discount_pct, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
+    "SELECT id, code, discount_pct, free_shipping, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
   ).bind(code).first() as any;
 
   if (promo) {
@@ -89,6 +89,7 @@ export async function handleDiscountValidate(request: Request, env: any): Promis
       valid: true,
       code: promo.code,
       discount_percent: promo.discount_pct,
+      free_shipping: promo.free_shipping === 1,
       discount_type: "promo",
       expires_at: promo.expires_at,
       source: "promo",

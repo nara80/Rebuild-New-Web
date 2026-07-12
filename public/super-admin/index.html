@@ -2076,6 +2076,7 @@ function showNewPromoForm(){
     '<div class="form-group"><label>Duration *</label><select id="promo-duration" style="padding:10px 12px;border:2px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;width:100%"><option value="1">1 day</option><option value="3">3 days</option><option value="7" selected>7 days</option></select></div></div>'+
     '<div class="form-row"><div class="form-group"><label>Max Uses <span style="font-weight:400;font-size:0.7rem;color:var(--c-muted)">(blank = unlimited)</span></label><input type="number" id="promo-max-uses" placeholder="e.g. 100" min="1"></div>'+
     '<div class="form-group"><label><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="promo-per-email" checked style="margin:0"> Single use per buyer</label></label><span style="font-size:0.75rem;color:var(--c-muted);display:block;margin-top:4px">One code per email address at checkout</span></div></div>'+
+    '<div class="form-group" style="margin-bottom:16px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="promo-free-shipping" style="margin:0"> Free Shipping</label><span style="font-size:0.75rem;color:var(--c-muted);display:block;margin-top:4px">Shipping is not charged at checkout when this code is applied</span></div>'+
     '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-primary" onclick="createPromo()">Generate Code</button>'+
     '<button class="btn btn-outline" onclick="document.getElementById(\'new-promo-form\').remove()">Cancel</button></div>'+
   '</div></div>';
@@ -2090,6 +2091,7 @@ async function createPromo(){
   var duration = parseInt(document.getElementById('promo-duration').value) || 7;
   var maxUses = document.getElementById('promo-max-uses').value ? parseInt(document.getElementById('promo-max-uses').value) : null;
   var perEmail = document.getElementById('promo-per-email').checked ? 1 : 0;
+  var freeShip = document.getElementById('promo-free-shipping').checked ? 1 : 0;
   if (!code || code.length < 3) { toast('Code must be at least 3 characters (letters and numbers only)'); return; }
   if (discount < 1 || discount > 100) { toast('Discount must be 1–100%'); return; }
   if (duration < 1) { toast('Duration must be at least 1 day'); return; }
@@ -2098,7 +2100,7 @@ async function createPromo(){
     var res = await fetch('/api/admin/promo', {
       method: 'POST',
       headers: await getAdminAuthHeaders(true),
-      body: JSON.stringify({ code: code, discount_pct: discount, order_minimum_thb: minOrder, duration_days: duration, max_uses: maxUses, per_email_limit: perEmail })
+      body: JSON.stringify({ code: code, discount_pct: discount, free_shipping: freeShip, order_minimum_thb: minOrder, duration_days: duration, max_uses: maxUses, per_email_limit: perEmail })
     });
     var j = await res.json();
     if (!res.ok) { toast(j.error || 'Failed to create promo code'); return; }
