@@ -15,19 +15,19 @@ function emailAllowed(email: string, env: any): boolean {
 
 async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost(hostname)) return { ok: true };
-
+  const isProd = isProductionHost(hostname);
   const authHeader = request.headers.get("Authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) return { ok: false, status: 401, error: "Unauthorized" };
-
-  const verified = await verifyClerkJwt(request, env);
-  if (!verified.valid) return { ok: false, status: (verified as any).status || 401, error: (verified as any).error || "Unauthorized" };
-
-  const raw = (verified as any).payload?.raw || {};
-  const jwtEmail = String(raw.email || (verified as any).payload?.email || "").trim().toLowerCase();
-  if (emailAllowed(jwtEmail, env)) return { ok: true };
-
-  return { ok: false, status: 403, error: "Admin access required" };
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return { ok: false, status: (verified as any).status || 401, error: "Unauthorized" };
+    return { ok: true };
+  }
+  if (isProd) {
+    const secret = (request.headers.get("X-Admin-Secret") || "").trim();
+    const expected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+    if (!secret || !expected || secret !== expected) return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  return { ok: true };
 }
 
 export async function handleAdminColorInventory(request: Request, env: any): Promise<Response> {

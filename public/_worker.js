@@ -5734,14 +5734,16 @@ async function handleAdminColorInventory(request, env) {
   if (request.method === "OPTIONS") return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" } });
   const hostname = (request.headers.get("Host") || "").toLowerCase();
   const isProd = hostname === "www.mildmate.com" || hostname === "mildmate.com" || hostname.endsWith(".mildmate.com");
-  if (isProd) {
+  if (request.method === "PUT" || request.method === "GET") {
     const authHeader = request.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
-    const verified = await verifyClerkJwt(request, env);
-    if (!verified.valid) return new Response(JSON.stringify({ error: verified.error }), { status: verified.status || 401, headers });
-    const jwtEmail = String(verified.payload?.raw?.email || verified.payload?.email || "").toLowerCase();
-    const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-    if (!allow.includes(jwtEmail)) return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers });
+    if (authHeader.startsWith("Bearer ")) {
+      const verified = await verifyClerkJwt(request, env);
+      if (!verified.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
+    } else if (isProd) {
+      const secret = (request.headers.get("X-Admin-Secret") || "").trim();
+      const expected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+      if (!secret || !expected || secret !== expected) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
+    }
   }
   const db = env.DB;
   if (request.method === "GET") {
