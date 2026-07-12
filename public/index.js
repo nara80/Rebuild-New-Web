@@ -5750,7 +5750,7 @@ async function handleAdminPromo(request, env) {
   if (method === "GET") {
     const rows = await db.prepare(`
       SELECT
-        p.id, p.code, p.discount_pct, p.order_minimum_usd, p.duration_days,
+        p.id, p.code, p.discount_pct, p.free_shipping, p.order_minimum_usd, p.duration_days,
         p.max_uses, p.use_count, p.per_email_limit, p.is_active,
         p.created_by, p.created_at, p.expires_at,
         (SELECT COUNT(*) FROM promo_redemptions pr WHERE pr.promo_id = p.id) as total_redemptions

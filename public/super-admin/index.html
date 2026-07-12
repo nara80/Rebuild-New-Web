@@ -2031,6 +2031,7 @@ async function rPromoCodes(){
     h += '<thead><tr style="border-bottom:2px solid var(--c-border)">';
     h += '<th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Code</th>';
     h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Discount</th>';
+    h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Free Ship</th>';
     h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Min Order</th>';
     h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Uses</th>';
     h += '<th style="text-align:center;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px">Per Email</th>';
@@ -2048,6 +2049,7 @@ async function rPromoCodes(){
       h += '<tr style="border-bottom:1px solid var(--c-border)">';
       h += '<td style="padding:10px 10px;font-family:monospace;font-weight:700;font-size:0.875rem">' + p.code + '</td>';
       h += '<td style="padding:10px 10px;text-align:center;font-weight:700;color:var(--c-red)">' + p.discount_pct + '%</td>';
+      h += '<td style="padding:10px 10px;text-align:center">' + (p.free_shipping ? '<span class="badge badge-success">FREE</span>' : '<span style="color:var(--c-muted)">—</span>') + '</td>';
       h += '<td style="padding:10px 10px;text-align:center;color:var(--c-muted)">' + (p.order_minimum_usd > 0 ? '$' + p.order_minimum_usd + ' USD' : '—') + '</td>';
       h += '<td style="padding:10px 10px;text-align:center">' + usesDisplay + '</td>';
       h += '<td style="padding:10px 10px;text-align:center;color:var(--c-muted)">' + (p.per_email_limit ? 'Yes' : 'No') + '</td>';
