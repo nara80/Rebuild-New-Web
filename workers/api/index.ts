@@ -24,6 +24,8 @@ import { handleAdminQuotes } from "./admin-quotes";
 import { handleAdminThankyouDispatch } from "./admin-thankyou-dispatch";
 import { handleDiscountValidate, handleDiscountClaim } from "./discount";
 import { handleAdminPromo } from "./admin-promo";
+import { handleColorInventory } from "./color-inventory";
+import { handleAdminColorInventory } from "./admin-color-inventory";
 import { handleAdminBlog } from "./admin-blog";
 import { handleBlogPosts } from "./blog-posts";
 import { handleAdminContacts } from "./admin-contacts";
@@ -130,6 +132,16 @@ export default {
     // Admin API — promo codes (create, list, revoke)
     if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
       return handleAdminPromo(request, env);
+    }
+
+    // Public API — fabric color inventory (for product pages)
+    if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
+      return handleColorInventory(request, env);
+    }
+
+    // Admin API — fabric color inventory management
+    if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
+      return handleAdminColorInventory(request, env);
     }
 
     // Admin Blog Posts — CRUD

@@ -234,6 +234,7 @@ tr:hover td{background:#f8fafc}
     <a href="#" data-page="stat"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="19" x2="20" y2="19"/><rect x="6" y="10" width="3" height="7"/><rect x="11" y="7" width="3" height="10"/><rect x="16" y="4" width="3" height="13"/></svg> Stat</a>
     <div class="sidebar-section">Admin Features</div>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
+    <a href="#" data-page="color-inventory"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 2v20"/><path d="M2 12h20"/></svg> Color Inventory</a>
     <a href="#" class="sidebar-action" onclick="startNewProduct()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Product</a>
     <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
     <a href="#" data-page="quotes"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg> Quotes</a>
@@ -333,6 +334,7 @@ function renderPage(name) {
     case 'blog': return rBlog();
     case 'reviews': return rReviews();
     case 'products': return rProducts();
+    case 'color-inventory': return rColorInventory();
     case 'orders': return rOrders();
     case 'quotes': return renderQuotes();
     case 'customers': return rCustomers();
@@ -2981,6 +2983,77 @@ async function removeImageSlot(idx) {
   toast(_pendingCount() + " pending — click Save to apply.");
 }
 
+
+// ── Color Inventory ──
+var COLOR_META = {
+  breezeplus:   { label: 'BreezePlus',   swatches: { 'dark-grey':'#4D545B','silver':'#B7BEC8','sand':'#D9D1C1','sky':'#9CCAE1','emerald':'#618283','sea':'#5A7DA2','pure-white':'#FFFFFF','baby-pink':'#E9B7BF','ivory':'#F1EFE1' } },
+  cloudsoft:    { label: 'CloudSoft',    swatches: { 'mint':'#67E4D3','charcoal':'#5E5E5E','grey':'#A5A9B4','sapphire':'#385E9D','forest':'#486C6A','denim':'#1E4477','rosegold':'#D48C98','beige':'#E1D1B1','ovaltine':'#B99F87','white':'#FFFFFF','lavender':'#9581B1','olive':'#93B09D' } },
+  premacotton:  { label: 'PremaCotton',  swatches: { 'snow-white':'#FFFFFF' } },
+  ecoluxe:      { label: 'EcoLuxe',      swatches: { 'vanilla-linen':'#f3e5ab' } }
+};
+
+async function rColorInventory() {
+  var h = '<div class="card"><div class="card-header"><span>Color Inventory</span><span style="font-size:0.75rem;color:var(--c-muted)">Toggle to mark colors as Out of Stock — changes reflect on product pages immediately</span></div><div class="card-body">';
+  var rows = [];
+  try {
+    var res = await fetch('/api/admin/color-inventory', { headers: await getAdminAuthHeaders(false) });
+    if (res.ok) { var j = await res.json(); rows = j.inventory || []; }
+  } catch(e) { toast('Failed to load color inventory: ' + e.message); }
+
+  // Build lookup
+  var inv = {};
+  rows.forEach(function(r) { if (!inv[r.fabric]) inv[r.fabric] = {}; inv[r.fabric][r.color] = r.in_stock; });
+
+  Object.keys(COLOR_META).forEach(function(fabric) {
+    var meta = COLOR_META[fabric];
+    h += '<div style="margin-bottom:32px">';
+    h += '<h3 style="font-size:0.9375rem;font-weight:700;color:var(--c-text);margin-bottom:12px">' + meta.label + '</h3>';
+    h += '<div style="display:flex;flex-wrap:wrap;gap:16px">';
+    Object.keys(meta.swatches).forEach(function(color) {
+      var hex = meta.swatches[color];
+      var inStock = inv[fabric] && inv[fabric][color] !== undefined ? inv[fabric][color] : 1;
+      var isLight = (color === 'pure-white' || color === 'snow-white' || color === 'white' || color === 'vanilla-linen' || color === 'ivory');
+      var border = isLight ? '1px solid #ccc' : 'none';
+      var swatchStyle = 'width:36px;height:36px;border-radius:50%;background:' + hex + ';border:' + border + ';display:inline-block;flex-shrink:0;' + (inStock ? '' : 'opacity:0.3;position:relative;');
+      var toggleId = 'ci-' + fabric + '-' + color;
+      h += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:72px;text-align:center">';
+      h += '<div style="' + swatchStyle + '" id="sw-' + toggleId + '"></div>';
+      h += '<span style="font-size:0.6875rem;font-weight:600;color:var(--c-text);word-break:break-all">' + color + '</span>';
+      h += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.6875rem;font-weight:700;color:' + (inStock ? 'var(--c-green)' : 'var(--c-red)') + '" id="lbl-' + toggleId + '">';
+      h += '<input type="checkbox" id="' + toggleId + '" data-fabric="' + fabric + '" data-color="' + color + '" ' + (inStock ? 'checked' : '') + ' onchange="toggleColorStock(this)" style="margin:0">';
+      h += (inStock ? 'In Stock' : 'Out of Stock');
+      h += '</label>';
+      h += '</div>';
+    });
+    h += '</div></div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+window.toggleColorStock = async function(checkbox) {
+  var fabric = checkbox.dataset.fabric;
+  var color = checkbox.dataset.color;
+  var inStock = checkbox.checked ? 1 : 0;
+  var lblId = 'lbl-ci-' + fabric + '-' + color;
+  var swId = 'sw-ci-' + fabric + '-' + color;
+  try {
+    var res = await fetch('/api/admin/color-inventory', {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await getAdminAuthHeaders(false)),
+      body: JSON.stringify({ updates: [{ fabric: fabric, color: color, in_stock: inStock }] })
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
+    var lbl = document.getElementById(lblId);
+    var sw = document.getElementById(swId);
+    if (lbl) { lbl.style.color = inStock ? 'var(--c-green)' : 'var(--c-red)'; lbl.lastChild.textContent = inStock ? 'In Stock' : 'Out of Stock'; }
+    if (sw) sw.style.opacity = inStock ? '1' : '0.3';
+    toast((inStock ? '✓ ' : '✗ ') + fabric + ' / ' + color + ' marked ' + (inStock ? 'In Stock' : 'Out of Stock'));
+  } catch(e) {
+    checkbox.checked = !checkbox.checked;
+    toast('Failed: ' + e.message);
+  }
+};
 
 async function rProducts(){
   var ps = await getProducts();

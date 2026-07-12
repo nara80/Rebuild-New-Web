@@ -5461,7 +5461,7 @@ async function handleDiscountValidate(request, env) {
   }
   const db = env.DB;
   const promo = await db.prepare(
-    "SELECT id, code, discount_pct, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
+    "SELECT id, code, discount_pct, free_shipping, order_minimum_usd, max_uses, use_count, per_email_limit, is_active, expires_at FROM promo_codes WHERE code = ?"
   ).bind(code).first();
   if (promo) {
     if (!promo.is_active) {
@@ -5492,6 +5492,7 @@ async function handleDiscountValidate(request, env) {
       valid: true,
       code: promo.code,
       discount_percent: promo.discount_pct,
+      free_shipping: promo.free_shipping === 1,
       discount_type: "promo",
       expires_at: promo.expires_at,
       source: "promo"
@@ -5714,6 +5715,50 @@ async function handleAdminContacts(request, env) {
   return json8({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
+
+// ../workers/api/color-inventory.ts
+async function handleColorInventory(request, env) {
+  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": "public, max-age=60" };
+  if (request.method === "OPTIONS") return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
+  try {
+    const rows = await env.DB.prepare("SELECT fabric, color, in_stock FROM fabric_color_inventory ORDER BY fabric, color").all();
+    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
+  } catch (e) {
+    return new Response(JSON.stringify({ inventory: [] }), { headers });
+  }
+}
+
+// ../workers/api/admin-color-inventory.ts
+async function handleAdminColorInventory(request, env) {
+  const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" };
+  if (request.method === "OPTIONS") return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" } });
+  const hostname = (request.headers.get("Host") || "").toLowerCase();
+  const isProd = hostname === "www.mildmate.com" || hostname === "mildmate.com" || hostname.endsWith(".mildmate.com");
+  if (isProd) {
+    const authHeader = request.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers });
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return new Response(JSON.stringify({ error: verified.error }), { status: verified.status || 401, headers });
+    const jwtEmail = String(verified.payload?.raw?.email || verified.payload?.email || "").toLowerCase();
+    const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+    if (!allow.includes(jwtEmail)) return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers });
+  }
+  const db = env.DB;
+  if (request.method === "GET") {
+    const rows = await db.prepare("SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color").all();
+    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
+  }
+  if (request.method === "PUT") {
+    let body;
+    try { body = await request.json(); } catch { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers }); }
+    if (!Array.isArray(body.updates) || body.updates.length === 0) return new Response(JSON.stringify({ error: "updates array required" }), { status: 400, headers });
+    for (const item of body.updates) {
+      await db.prepare("INSERT INTO fabric_color_inventory (fabric, color, in_stock, updated_at) VALUES (?, ?, ?, datetime('now')) ON CONFLICT(fabric, color) DO UPDATE SET in_stock = excluded.in_stock, updated_at = excluded.updated_at").bind(String(item.fabric), String(item.color), item.in_stock ? 1 : 0).run();
+    }
+    return new Response(JSON.stringify({ success: true, updated: body.updates.length }), { headers });
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+}
 
 // ../workers/api/admin-promo.ts
 async function handleAdminPromo(request, env) {
@@ -8997,6 +9042,12 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
     return handleAdminPromo(request, env);
+  }
+  if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
+    return handleColorInventory(request, env);
+  }
+  if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
+    return handleAdminColorInventory(request, env);
   }
   if (path === "/api/admin/blog" || path === "/api/admin/blog/") {
     return handleAdminBlog(request, env);

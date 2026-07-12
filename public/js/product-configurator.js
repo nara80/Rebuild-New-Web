@@ -929,6 +929,14 @@
     '.quote-confirm-details strong{color:#333}';
   document.head.appendChild(styleEl);
 
+  // -- Out-of-stock swatch styles --
+  var invStyle = document.createElement('style');
+  invStyle.textContent =
+    '.color-option.out-of-stock{opacity:0.3!important;cursor:not-allowed!important;pointer-events:none;position:relative}' +
+    '.color-option.out-of-stock::after{content:"";position:absolute;top:50%;left:-2px;right:-2px;height:2px;background:rgba(0,0,0,0.55);transform:rotate(-45deg);pointer-events:none}' +
+    '.color-option.out-of-stock-badge{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:0.6rem;font-weight:700;color:#dc2626;letter-spacing:0.03em}';
+  document.head.appendChild(invStyle);
+
   // -- Parse "WxLxD" string from option value --
   function parseSizeVal(val) {
     if (!val || val === 'custom') return null;
@@ -1189,14 +1197,16 @@
       groups.forEach(function (g) {
         g.style.display = g.dataset.fabric === state.fabric ? '' : 'none';
       });
-      // Reset selection to first color of the new fabric
+      // Reset selection to first in-stock color of the new fabric
       var activeGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
       if (activeGroup) {
         var opts = activeGroup.querySelectorAll('.color-option');
         opts.forEach(function (o) { o.classList.remove('selected'); });
-        if (opts.length > 0) opts[0].classList.add('selected');
+        var firstAvailable = activeGroup.querySelector('.color-option:not(.out-of-stock)') || opts[0];
+        if (firstAvailable) firstAvailable.classList.add('selected');
         updateSelectedColorName(activeGroup);
       }
+      applyColorInventory();
       validateForm();
     });
   }
@@ -1527,4 +1537,55 @@
 
   // -- Init: default price --
   updateAllPrices();
+
+  // -- Color inventory: fetch and apply out-of-stock state --
+  var colorInventory = {};
+
+  function applyColorInventory() {
+    document.querySelectorAll('.fabric-color-group').forEach(function (group) {
+      var fabric = group.dataset.fabric;
+      var fabricStock = colorInventory[fabric] || {};
+      var swatches = group.querySelectorAll('.color-option');
+      swatches.forEach(function (sw) {
+        var color = sw.dataset.color;
+        var inStock = fabricStock[color] !== false;
+        if (!inStock) {
+          sw.classList.add('out-of-stock');
+          sw.title = 'Out of Stock';
+          // Deselect if currently selected; pick first available instead
+          if (sw.classList.contains('selected')) {
+            sw.classList.remove('selected');
+            var first = group.querySelector('.color-option:not(.out-of-stock)');
+            if (first) {
+              first.classList.add('selected');
+              updateSelectedColorName(group);
+            }
+          }
+        } else {
+          sw.classList.remove('out-of-stock');
+          if (sw.title === 'Out of Stock') sw.title = sw.getAttribute('data-original-title') || sw.title;
+        }
+      });
+    });
+    validateForm();
+  }
+
+  // Prevent clicking out-of-stock swatches (belt-and-suspenders alongside pointer-events:none)
+  document.querySelectorAll('.fabric-color-group').forEach(function (group) {
+    group.addEventListener('click', function (e) {
+      var sw = e.target.closest('.color-option');
+      if (sw && sw.classList.contains('out-of-stock')) { e.stopImmediatePropagation(); e.preventDefault(); }
+    }, true);
+  });
+
+  fetch('/api/color-inventory')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      (data.inventory || []).forEach(function (item) {
+        if (!colorInventory[item.fabric]) colorInventory[item.fabric] = {};
+        colorInventory[item.fabric][item.color] = item.in_stock === 1;
+      });
+      applyColorInventory();
+    })
+    .catch(function () {});
 })();
