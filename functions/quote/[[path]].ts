@@ -211,26 +211,6 @@ export const onRequest: PagesFunction<{
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="/" class="logo-link" aria-label="MildMate Home">
-        <picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></picture>
-      </a>
-      <div class="header-right">
-        <nav class="quote-nav" aria-label="Primary">
-          <a href="/products/">Products</a>
-          <a href="/fabric/">Fabric</a>
-          <a href="/sizeguide/">Size Guide</a>
-          <a href="/contact/">Contact</a>
-        </nav>
-        <div class="lang-toggle" role="group" aria-label="Language switch">
-          <span data-lang="en" class="active" style="cursor:pointer" onclick="switchLang('en')">EN</span>
-          <span style="color:var(--color-border)">/</span>
-          <span data-lang="th" style="cursor:pointer" onclick="switchLang('th')">TH</span>
-        </div>
-      </div>
-    </div>
-  </header>
   <main>
     ${quote ? `
       <section class="card quote-hero">

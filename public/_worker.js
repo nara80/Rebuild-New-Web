@@ -7699,6 +7699,7 @@ async function handleCheckout(request, env) {
   const allowedNoteTypes = /* @__PURE__ */ new Set(["delivery", "measurement", "gift", "other"]);
   const customerNoteType = allowedNoteTypes.has(customerNoteTypeRaw) ? customerNoteTypeRaw : "";
   const customerNote = customerNoteRaw.slice(0, 450);
+  const policyConsentedAt = String(body.policy_consented_at || "").trim().slice(0, 30);
   const shippingCountryInput = body.shipping_country || body.country_code || "";
   const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -7886,6 +7887,35 @@ async function handleCheckout(request, env) {
     }
   } catch {
   }
+  function toNumber(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : void 0;
+  }
+  function parseSizeText(sizeText) {
+    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
+    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+    if (!m) return {};
+    const unitRaw = String(m[4] || "").toLowerCase();
+    const unit = unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm";
+    return {
+      w: toNumber(m[1]),
+      l: toNumber(m[2]),
+      d: toNumber(m[3]),
+      unit
+    };
+  }
+  function buildMetadataDims(item) {
+    const src = item.dimensions || {};
+    const sizeText = String(src.size_text || src.label || "").trim();
+    const parsed = sizeText ? parseSizeText(sizeText) : {};
+    return {
+      w: toNumber(src.w) ?? parsed.w,
+      l: toNumber(src.l) ?? parsed.l,
+      d: toNumber(src.d) ?? parsed.d,
+      unit: String(src.unit || parsed.unit || "cm"),
+      size_text: sizeText || void 0
+    };
+  }
   const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
@@ -7900,6 +7930,7 @@ async function handleCheckout(request, env) {
     if (address) params.append("metadata[address]", address);
     if (customerNoteType) params.append("metadata[customer_note_type]", customerNoteType);
     if (customerNote) params.append("metadata[customer_note]", customerNote);
+    if (policyConsentedAt) params.append("metadata[policy_consented_at]", policyConsentedAt);
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));
@@ -7920,12 +7951,7 @@ async function handleCheckout(request, env) {
       name: i.product_name,
       fabric: i.fabric,
       color: i.color,
-      dims: {
-        w: i.dimensions?.w,
-        l: i.dimensions?.l,
-        d: i.dimensions?.d,
-        unit: i.dimensions?.unit || "cm"
-      },
+      dims: buildMetadataDims(i),
       qty: i.qty || 1,
       u: lineItems[idx]?.price_data?.unit_amount || 0
       // minor unit (cents/satang)
@@ -8096,10 +8122,42 @@ async function handleStripeWebhook(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object;
+    const amount = (charge.amount || 0) / 100;
+    const currency = String(charge.currency || "usd").toUpperCase();
+    const chargeId = String(charge.id || "");
+    const receiptUrl = String(charge.receipt_url || "");
+    const reason = String(charge.refunds?.data?.[0]?.reason || "unknown");
+    const billingName = String(charge.billing_details?.name || "");
+    const billingEmail = String(charge.billing_details?.email || charge.receipt_email || "");
+    const paymentMethod = String(charge.payment_method_details?.card?.brand || "") + " \u2022\u2022\u2022\u2022 " + String(charge.payment_method_details?.card?.last4 || "????");
+    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
+    try {
+      const emailBody = ["REFUND ISSUED", "", "Charge: " + chargeId, "Amount: " + amount.toFixed(2) + " " + currency, "Reason: " + reason, "Payment: " + paymentMethod, "", billingName ? "Customer: " + billingName : "", billingEmail ? "Email: " + billingEmail : "", receiptUrl ? "Receipt: " + receiptUrl : "", "", "\u2014 MildMate Stripe Webhook"].filter(Boolean).join("\n");
+      const teamMail = await sendEmail(env, { to: teamEmail, subject: "\u26A0\uFE0F Refund \u2014 " + amount.toFixed(2) + " " + currency + " \u2014 MildMate", text: emailBody });
+      if (!teamMail.success) console.error("Refund alert email failed:", teamMail.error || "unknown error");
+    } catch (err) { console.error("Refund alert exception:", err?.message || err); }
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+  }
+  if (event.type === "charge.dispute.created" || event.type === "customer.dispute.created") {
+    const dispute = event.data.object;
+    const chargeId = String(dispute.charge || "");
+    const amount = (dispute.amount || 0) / 100;
+    const currency = String(dispute.currency || "usd").toUpperCase();
+    const reason = String(dispute.reason || "unknown");
+    const status = String(dispute.status || "needs_response");
+    const evidenceDueBy = String(dispute.evidence_details?.due_by || "N/A");
+    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
+    try {
+      const emailBody = ["DISPUTE / CHARGEBACK FILED", "", "Charge: " + chargeId, "Amount: " + amount.toFixed(2) + " " + currency, "Reason: " + reason, "Status: " + status, "Evidence Due By: " + evidenceDueBy, "", "Action required: respond in Stripe Dashboard before the evidence deadline.", "", "\u2014 MildMate Stripe Webhook"].join("\n");
+      const teamMail = await sendEmail(env, { to: teamEmail, subject: "\uD83D\uDEA8 Dispute \u2014 " + amount.toFixed(2) + " " + currency + " \u2014 MildMate", text: emailBody });
+      if (!teamMail.success) console.error("Dispute alert email failed:", teamMail.error || "unknown error");
+    } catch (err) { console.error("Dispute alert exception:", err?.message || err); }
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+  }
   if (event.type !== "checkout.session.completed") {
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { "Content-Type": "application/json" }
-    });
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
   }
   const session = event.data.object;
   const metadata = session.metadata || {};
@@ -8124,8 +8182,38 @@ async function handleStripeWebhook(request, env) {
   const sessionCurrency = String(session.currency || "usd").toLowerCase();
   const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
   const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
+  const toFiniteNumber = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : void 0;
+  };
+  const parseDimsFromSizeText = (sizeText) => {
+    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
+    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+    if (!m) return {};
+    const unitRaw = String(m[4] || "").toLowerCase();
+    return {
+      w: toFiniteNumber(m[1]),
+      l: toFiniteNumber(m[2]),
+      d: toFiniteNumber(m[3]),
+      unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
+    };
+  };
+  const formatDimsForEmail = (dims) => {
+    const w = toFiniteNumber(dims?.w);
+    const l = toFiniteNumber(dims?.l);
+    const d = toFiniteNumber(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
+    const sizeText = String(dims?.size_text || "").trim();
+    if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
+    return `?\xD7? ${unit}`;
+  };
   for (const item of items) {
     const dims = item.dims || {};
+    const parsedDims = parseDimsFromSizeText(dims?.size_text);
+    const widthCm = toFiniteNumber(dims.w) ?? parsedDims.w ?? null;
+    const lengthCm = toFiniteNumber(dims.l) ?? parsedDims.l ?? null;
+    const depthCm = toFiniteNumber(dims.d) ?? parsedDims.d ?? null;
     const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
     const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
     try {
@@ -8149,9 +8237,9 @@ async function handleStripeWebhook(request, env) {
           item.name || "",
           item.fabric || null,
           item.color || null,
-          dims.w || null,
-          dims.l || null,
-          dims.d || null,
+          widthCm,
+          lengthCm,
+          depthCm,
           null,
           null,
           null,
@@ -8183,9 +8271,9 @@ async function handleStripeWebhook(request, env) {
           item.name || "",
           item.fabric || null,
           item.color || null,
-          dims.w || null,
-          dims.l || null,
-          dims.d || null,
+          widthCm,
+          lengthCm,
+          depthCm,
           null,
           null,
           null,
@@ -8259,7 +8347,7 @@ async function handleStripeWebhook(request, env) {
   if (email && env.RESEND_API_KEY) {
     const itemList = items.map((i) => {
       const dims = i.dims || {};
-      return `- ${i.name} | ${i.fabric || "N/A"} | ${dims.w || "?"}\xD7${dims.l || "?"}${dims.d ? `\xD7${dims.d}` : ""} ${dims.unit || "cm"} | Qty: ${i.qty || 1}`;
+      return `- ${i.name} | ${i.fabric || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
     }).join("\n");
     const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
     try {
@@ -9246,11 +9334,12 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     }
   }
   const isExpired = quote?.expires_at ? /* @__PURE__ */ new Date(quote.expires_at + "Z") < /* @__PURE__ */ new Date() : false;
-  const isApproved = quote?.status === "approved";
   const priceThb = quote?.quoted_price || null;
   const explicitPriceUsd = quote?.quoted_price_usd || null;
   const isUsdQuoted = explicitPriceUsd != null && explicitPriceUsd > 0;
   const priceUsd = isUsdQuoted ? explicitPriceUsd : priceThb ? Math.round(priceThb / usdRate) : null;
+  const hasPrice = !!(priceThb && priceThb > 0 || priceUsd && priceUsd > 0);
+  const isCheckoutReady = !isExpired && hasPrice;
   function esc(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -9284,6 +9373,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
   <style>
     :root {
       --color-primary: #2c96f4;
@@ -9311,11 +9401,24 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     .header-inner{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:12px 24px}
     .logo-link img{height:32px;width:auto}
     .header-right{display:flex;align-items:center;gap:16px;font-size:0.8125rem;font-weight:600}
+    .quote-nav{display:flex;align-items:center;gap:14px}
+    .quote-nav a{font-size:0.875rem;font-weight:600;color:var(--color-text)}
+    .quote-nav a:hover{color:var(--color-primary);text-decoration:none}
     /* Main */
     main{max-width:1120px;margin:0 auto;padding:32px 24px 64px}
-    h1{font-size:1.375rem;font-weight:700;color:var(--color-heading);margin-bottom:4px}
-    .subtitle{font-size:0.875rem;color:var(--color-muted);margin-bottom:24px}
+    h1{font-size:1.65rem;font-weight:700;color:var(--color-heading);margin-bottom:4px;line-height:1.25}
+    .subtitle{font-size:0.875rem;color:var(--color-muted)}
+    .quote-hero{margin-bottom:16px}
+    .quote-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .quote-eyebrow{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-primary);margin-bottom:6px}
+    .quote-hero-desc{margin-top:10px;font-size:0.9375rem;color:var(--color-text)}
+    .status-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;white-space:nowrap}
+    .status-pill.pending{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+    .status-pill.approved{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .status-pill.expired{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
     .quote-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:24px;align-items:start}
+    .quote-main{display:flex;flex-direction:column;gap:16px}
+    .section-title{font-size:1.06rem;font-weight:700;color:var(--color-heading);margin-bottom:12px}
     /* Card */
     .card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
     .spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -9329,7 +9432,11 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     .validity-badge{margin-top:14px;display:flex;align-items:flex-start;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:10px 12px;font-size:0.8125rem;line-height:1.4}
     .validity-badge svg{flex-shrink:0;margin-top:1px}
     .transaction-note{margin-top:10px;font-size:0.8125rem;color:var(--color-muted)}
+    .fine-print{margin-top:8px;font-size:0.75rem;color:var(--color-muted)}
     .transaction-card .btn{margin-top:16px}
+    .next-steps{list-style:none;display:flex;flex-direction:column;gap:10px}
+    .next-steps li{display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--color-text)}
+    .next-steps li::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--color-primary);margin-top:7px;flex-shrink:0}
     /* Status banners */
     .banner{padding:14px 18px;border-radius:var(--radius);margin-bottom:20px;font-size:0.875rem;line-height:1.5}
     .banner-expired{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
@@ -9360,7 +9467,11 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
       .quote-layout{grid-template-columns:1fr}
       .transaction-card{position:static}
     }
+    @media(max-width:860px){
+      .quote-nav{display:none}
+    }
     @media(max-width:640px){
+      .quote-hero-top{flex-direction:column}
       .spec-grid{grid-template-columns:1fr}
     }
     @media(max-width:480px){
@@ -9371,31 +9482,26 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="/" class="logo-link" aria-label="MildMate Home">
-        <picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></picture>
-      </a>
-      <div class="header-right">
-        <div class="lang-toggle" role="group" aria-label="Language switch">
-          <span data-lang="en" class="active" style="cursor:pointer" onclick="switchLang('en')">EN</span>
-          <span style="color:var(--color-border)">/</span>
-          <span data-lang="th" style="cursor:pointer" onclick="switchLang('th')">TH</span>
-        </div>
-      </div>
-    </div>
-  </header>
   <main>
     ${quote ? `
-      <h1>Custom Quote</h1>
-      <p class="subtitle">${esc(quoteId)} &middot; ${esc(productTitle)}</p>
+      <section class="card quote-hero">
+        <div class="quote-hero-top">
+          <div>
+            <div class="quote-eyebrow">Custom Quote</div>
+            <h1>${esc(productTitle)}</h1>
+            <p class="subtitle">Quote ID: ${esc(quoteId)}</p>
+          </div>
+          <span class="status-pill ${isExpired ? "expired" : isCheckoutReady ? "approved" : "pending"}">${isExpired ? "Expired" : isCheckoutReady ? "Ready" : "Pending"}</span>
+        </div>
+        <p class="quote-hero-desc">
+          ${isExpired ? `This quote expired on ${(/* @__PURE__ */ new Date(quote.expires_at + "Z")).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Please request a new quote.` : isCheckoutReady ? "Your custom quote is confirmed. Add it to cart to complete checkout." : "Your quote is being reviewed. We\u2019ll email you once pricing is approved."}
+        </p>
+      </section>
+
       <div class="quote-layout">
         <section class="quote-main">
-          ${isExpired ? `<div class="banner banner-expired"><strong>Quote Expired</strong><br>This quote expired on ${(/* @__PURE__ */ new Date(quote.expires_at + "Z")).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Please request a new quote.</div>` : ""}
-          ${!isExpired && !isApproved ? `<div class="banner banner-pending"><strong>Quote Pending</strong><br>This quote is awaiting pricing. We will email you once your price is ready.</div>` : ""}
-          ${isApproved && !isExpired ? `<div class="banner banner-success"><strong>Quote Approved</strong><br>Your custom price has been confirmed. Add to cart to complete your order.</div>` : ""}
-
           <div class="card">
+            <h2 class="section-title">Quote Details</h2>
             <div class="spec-grid">
               <div class="spec-item">
                 <div class="label">Product</div>
@@ -9415,6 +9521,12 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
               </div>
             </div>
           </div>
+          <div class="card">
+            <h2 class="section-title">Next Steps</h2>
+            <ul class="next-steps">
+              ${isExpired ? `<li>Submit a new quote request with your latest size and fabric details.</li><li>Our team will reconfirm your pricing and send a fresh quote link.</li>` : isCheckoutReady ? `<li>Click <strong>Add to Cart</strong> and proceed to checkout.</li><li>Shipping and tax will be calculated based on your destination.</li>` : `<li>Our team is preparing your final quote amount.</li><li>You will receive an email as soon as this quote is approved.</li>`}
+            </ul>
+          </div>
         </section>
 
         <aside class="card transaction-card">
@@ -9426,9 +9538,10 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
               <span>Price valid until ${(/* @__PURE__ */ new Date(quote.expires_at + "Z")).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
             </div>
           ` : ""}
-          ${isApproved && !isExpired && priceThb ? `
+          <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
+          ${isCheckoutReady ? `
           <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.type===item.type&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions);});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Review &amp; Pay';this.style.background='var(--color-success)';this.onclick=function(){window.location.href='/checkout/';};}catch(e){}}return false;">Add to Cart</button>
-          ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "We'll send pricing confirmation once your quote is approved."}</div>`}
+          ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
     ` : `
