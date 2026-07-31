@@ -58,11 +58,12 @@ export const onRequest: PagesFunction<{
   }
 
   const isExpired = quote?.expires_at ? new Date(quote.expires_at + "Z") < new Date() : false;
-  const isApproved = quote?.status === "approved";
   const priceThb = quote?.quoted_price || null;
   const explicitPriceUsd = quote?.quoted_price_usd || null;
   const isUsdQuoted = explicitPriceUsd != null && explicitPriceUsd > 0;
   const priceUsd = isUsdQuoted ? explicitPriceUsd : (priceThb ? Math.round(priceThb / usdRate) : null);
+  const hasPrice = !!((priceThb && priceThb > 0) || (priceUsd && priceUsd > 0));
+  const isCheckoutReady = !isExpired && hasPrice;
 
   function esc(s: string) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -101,6 +102,7 @@ export const onRequest: PagesFunction<{
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
   <style>
     :root {
       --color-primary: #2c96f4;
@@ -128,11 +130,24 @@ export const onRequest: PagesFunction<{
     .header-inner{display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:12px 24px}
     .logo-link img{height:32px;width:auto}
     .header-right{display:flex;align-items:center;gap:16px;font-size:0.8125rem;font-weight:600}
+    .quote-nav{display:flex;align-items:center;gap:14px}
+    .quote-nav a{font-size:0.875rem;font-weight:600;color:var(--color-text)}
+    .quote-nav a:hover{color:var(--color-primary);text-decoration:none}
     /* Main */
     main{max-width:1120px;margin:0 auto;padding:32px 24px 64px}
-    h1{font-size:1.375rem;font-weight:700;color:var(--color-heading);margin-bottom:4px}
-    .subtitle{font-size:0.875rem;color:var(--color-muted);margin-bottom:24px}
+    h1{font-size:1.65rem;font-weight:700;color:var(--color-heading);margin-bottom:4px;line-height:1.25}
+    .subtitle{font-size:0.875rem;color:var(--color-muted)}
+    .quote-hero{margin-bottom:16px}
+    .quote-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .quote-eyebrow{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-primary);margin-bottom:6px}
+    .quote-hero-desc{margin-top:10px;font-size:0.9375rem;color:var(--color-text)}
+    .status-pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;white-space:nowrap}
+    .status-pill.pending{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+    .status-pill.approved{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+    .status-pill.expired{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
     .quote-layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:24px;align-items:start}
+    .quote-main{display:flex;flex-direction:column;gap:16px}
+    .section-title{font-size:1.06rem;font-weight:700;color:var(--color-heading);margin-bottom:12px}
     /* Card */
     .card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
     .spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -146,7 +161,11 @@ export const onRequest: PagesFunction<{
     .validity-badge{margin-top:14px;display:flex;align-items:flex-start;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:10px;padding:10px 12px;font-size:0.8125rem;line-height:1.4}
     .validity-badge svg{flex-shrink:0;margin-top:1px}
     .transaction-note{margin-top:10px;font-size:0.8125rem;color:var(--color-muted)}
+    .fine-print{margin-top:8px;font-size:0.75rem;color:var(--color-muted)}
     .transaction-card .btn{margin-top:16px}
+    .next-steps{list-style:none;display:flex;flex-direction:column;gap:10px}
+    .next-steps li{display:flex;align-items:flex-start;gap:10px;font-size:0.9rem;color:var(--color-text)}
+    .next-steps li::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--color-primary);margin-top:7px;flex-shrink:0}
     /* Status banners */
     .banner{padding:14px 18px;border-radius:var(--radius);margin-bottom:20px;font-size:0.875rem;line-height:1.5}
     .banner-expired{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
@@ -177,7 +196,11 @@ export const onRequest: PagesFunction<{
       .quote-layout{grid-template-columns:1fr}
       .transaction-card{position:static}
     }
+    @media(max-width:860px){
+      .quote-nav{display:none}
+    }
     @media(max-width:640px){
+      .quote-hero-top{flex-direction:column}
       .spec-grid{grid-template-columns:1fr}
     }
     @media(max-width:480px){
@@ -194,6 +217,12 @@ export const onRequest: PagesFunction<{
         <picture><source srcset="/images/logo.webp" type="image/webp"><img src="/images/logo.png" alt="MildMate" width="180" height="50"></picture>
       </a>
       <div class="header-right">
+        <nav class="quote-nav" aria-label="Primary">
+          <a href="/products/">Products</a>
+          <a href="/fabric/">Fabric</a>
+          <a href="/sizeguide/">Size Guide</a>
+          <a href="/contact/">Contact</a>
+        </nav>
         <div class="lang-toggle" role="group" aria-label="Language switch">
           <span data-lang="en" class="active" style="cursor:pointer" onclick="switchLang('en')">EN</span>
           <span style="color:var(--color-border)">/</span>
@@ -204,15 +233,24 @@ export const onRequest: PagesFunction<{
   </header>
   <main>
     ${quote ? `
-      <h1>Custom Quote</h1>
-      <p class="subtitle">${esc(quoteId)} &middot; ${esc(productTitle)}</p>
+      <section class="card quote-hero">
+        <div class="quote-hero-top">
+          <div>
+            <div class="quote-eyebrow">Custom Quote</div>
+            <h1>${esc(productTitle)}</h1>
+            <p class="subtitle">Quote ID: ${esc(quoteId)}</p>
+          </div>
+          <span class="status-pill ${isExpired ? "expired" : (isCheckoutReady ? "approved" : "pending")}">${isExpired ? "Expired" : (isCheckoutReady ? "Ready" : "Pending")}</span>
+        </div>
+        <p class="quote-hero-desc">
+          ${isExpired ? `This quote expired on ${new Date(quote.expires_at + "Z").toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"})}. Please request a new quote.` : (isCheckoutReady ? "Your custom quote is confirmed. Add it to cart to complete checkout." : "Your quote is being reviewed. We’ll email you once pricing is approved.")}
+        </p>
+      </section>
+
       <div class="quote-layout">
         <section class="quote-main">
-          ${isExpired ? `<div class="banner banner-expired"><strong>Quote Expired</strong><br>This quote expired on ${new Date(quote.expires_at + "Z").toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"})}. Please request a new quote.</div>` : ""}
-          ${!isExpired && !isApproved ? `<div class="banner banner-pending"><strong>Quote Pending</strong><br>This quote is awaiting pricing. We will email you once your price is ready.</div>` : ""}
-          ${isApproved && !isExpired ? `<div class="banner banner-success"><strong>Quote Approved</strong><br>Your custom price has been confirmed. Add to cart to complete your order.</div>` : ""}
-
           <div class="card">
+            <h2 class="section-title">Quote Details</h2>
             <div class="spec-grid">
               <div class="spec-item">
                 <div class="label">Product</div>
@@ -232,6 +270,16 @@ export const onRequest: PagesFunction<{
               </div>
             </div>
           </div>
+          <div class="card">
+            <h2 class="section-title">Next Steps</h2>
+            <ul class="next-steps">
+              ${isExpired
+                ? `<li>Submit a new quote request with your latest size and fabric details.</li><li>Our team will reconfirm your pricing and send a fresh quote link.</li>`
+                : (isCheckoutReady
+                  ? `<li>Click <strong>Add to Cart</strong> and proceed to checkout.</li><li>Shipping and tax will be calculated based on your destination.</li>`
+                  : `<li>Our team is preparing your final quote amount.</li><li>You will receive an email as soon as this quote is approved.</li>`)}
+            </ul>
+          </div>
         </section>
 
         <aside class="card transaction-card">
@@ -248,9 +296,10 @@ export const onRequest: PagesFunction<{
               <span>Price valid until ${new Date(quote.expires_at + "Z").toLocaleDateString("en-GB", {day:"numeric",month:"long",year:"numeric"})}</span>
             </div>
           ` : ""}
-          ${isApproved && !isExpired && priceThb ? `
+          <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
+          ${isCheckoutReady ? `
           <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.type===item.type&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions);});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Review &amp; Pay';this.style.background='var(--color-success)';this.onclick=function(){window.location.href='/checkout/';};}catch(e){}}return false;">Add to Cart</button>
-          ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "We'll send pricing confirmation once your quote is approved."}</div>`}
+          ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
     ` : `
