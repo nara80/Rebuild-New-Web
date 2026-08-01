@@ -1304,6 +1304,7 @@ var sampleOrders = [
   {id:'#002',date:'2026-05-20',customer:'sarah@email.com',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',fabric:'CloudSoft',status:'production',total:'$94'},
   {id:'#003',date:'2026-05-19',customer:'mike@email.com',product:'Family Fitted Sheet',dims:'250×220×35 cm',fabric:'BreezePlus',status:'shipped',total:'฿2,100'}
 ];
+var orderShowArchived = false;
 
 function isProdAdminRuntime() {
   var h = (location && location.hostname ? location.hostname : '').toLowerCase();
@@ -1455,6 +1456,7 @@ function mapOrderRow(o) {
     status: o.status || 'pending',
     total: price,
     dbId: o.id,
+    isArchived: Number(o.is_archived || 0) === 1,
     carrierCode: o.carrier_code || '',
     trackingNumber: o.tracking_number || '',
     trackingUrl: o.tracking_url || buildTrackingUrl(o.carrier_code || '', o.tracking_number || '')
@@ -1466,7 +1468,7 @@ async function rOrders(){
   var fromApi = false;
   var fetchError = '';
   try {
-    var resp = await fetch('/api/admin/orders', { headers: await getAdminAuthHeaders(false) });
+    var resp = await fetch('/api/admin/orders?include_archived=' + (orderShowArchived ? '1' : '0'), { headers: await getAdminAuthHeaders(false) });
     if (resp.ok) {
       var data = await resp.json();
       orders = Array.isArray(data.orders) ? data.orders.map(mapOrderRow) : [];
@@ -1488,7 +1490,14 @@ async function rOrders(){
     }
   }
 
-  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders'+(fromApi?' (D1)':' (sample)')+'</span></div><div class="card-body"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Total</th><th>Tracking</th><th>Status</th></tr></thead><tbody>';
+  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders'+(fromApi?' (D1)':' (sample)')+'</span></div><div class="card-body">';
+  if (fromApi) {
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">' +
+      '<label style="display:flex;align-items:center;gap:8px;font-size:0.8125rem;color:var(--c-muted)"><input type="checkbox" ' + (orderShowArchived ? 'checked' : '') + ' onchange="toggleOrderArchivedView(this.checked)">Show archived cancelled</label>' +
+      '<span style="font-size:0.75rem;color:var(--c-muted)">Use Archive on cancelled orders instead of deleting.</span>' +
+      '</div>';
+  }
+  h += '<div class="table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Total</th><th>Tracking</th><th>Status</th>' + (fromApi ? '<th>Actions</th>' : '') + '</tr></thead><tbody>';
   orders.forEach(function(o){
     var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
     var trackingCell = '—';
@@ -1503,14 +1512,46 @@ async function rOrders(){
       h+='<td><select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+
         ['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+
         '</select></td>';
+      var canArchiveCancelled = o.status === 'cancelled';
+      if (canArchiveCancelled) {
+        var actionLabel = o.isArchived ? 'Unarchive' : 'Archive';
+        var actionStyle = o.isArchived ? '' : 'color:var(--c-red);border-color:var(--c-red)';
+        h += '<td><button class="btn btn-sm btn-outline" style="'+actionStyle+'" onclick="setOrderArchived('+o.dbId+','+(o.isArchived ? 'false' : 'true')+')">'+actionLabel+'</button></td>';
+      } else {
+        h += '<td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
+      }
     } else {
       h+='<td><span class="badge '+bc+'">'+o.status+'</span></td>';
     }
     h+='</tr>';
   });
-  h+='</tbody></table></div></div>';
+  h+='</tbody></table></div></div></div>';
   h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">'+(fromApi?'Orders loaded from D1 database.':'Sandbox sample data (non-production fallback).')+'</p>';
   return h;
+}
+
+function toggleOrderArchivedView(checked) {
+  orderShowArchived = !!checked;
+  showPage('orders');
+}
+
+async function setOrderArchived(orderId, isArchived) {
+  try {
+    var resp = await fetch('/api/admin/orders/' + orderId, {
+      method: 'PUT',
+      headers: await getAdminAuthHeaders(true),
+      body: JSON.stringify({ is_archived: !!isArchived })
+    });
+    if (resp.ok) {
+      document.getElementById('page-content').innerHTML = await rOrders();
+      toast(isArchived ? 'Order archived' : 'Order unarchived');
+    } else {
+      var err = await resp.json().catch(function(){ return {}; });
+      toast('Failed: ' + (err.error || resp.status));
+    }
+  } catch (e) {
+    toast('Network error: ' + e.message);
+  }
 }
 
 async function updateOrderStatus(orderId, newStatus, selectEl) {

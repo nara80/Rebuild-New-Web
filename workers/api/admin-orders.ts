@@ -65,6 +65,7 @@ async function ensureOrderShippingSchema(env: any): Promise<void> {
       if (!existing.has("shipped_at")) alters.push("ALTER TABLE orders ADD COLUMN shipped_at DATETIME");
       if (!existing.has("customer_note_type")) alters.push("ALTER TABLE orders ADD COLUMN customer_note_type TEXT");
       if (!existing.has("customer_note")) alters.push("ALTER TABLE orders ADD COLUMN customer_note TEXT");
+      if (!existing.has("is_archived")) alters.push("ALTER TABLE orders ADD COLUMN is_archived INTEGER NOT NULL DEFAULT 0");
       for (const sql of alters) await env.DB.prepare(sql).run();
       orderShippingSchemaReady = true;
     })().finally(() => {
@@ -235,8 +236,10 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
   // GET /api/admin/orders — list all orders, newest first
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
-    const result = await db.prepare(
-      `SELECT id, stripe_session_id, stripe_payment_intent_id,
+    const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
+    const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
+    const sql = shouldIncludeArchived
+      ? `SELECT id, stripe_session_id, stripe_payment_intent_id,
               email, customer_name, phone, shipping_address,
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
@@ -244,9 +247,23 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
               custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at
+              shipping_status, shipped_at, is_archived
        FROM orders
        ORDER BY created_at DESC`
+      : `SELECT id, stripe_session_id, stripe_payment_intent_id,
+              email, customer_name, phone, shipping_address,
+              product_slug, product_title_en, fabric, color,
+              width_cm, length_cm, depth_cm,
+              width_in, length_in, depth_in,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              status, created_at,
+              carrier_code, tracking_number, tracking_url,
+              shipping_status, shipped_at, is_archived
+       FROM orders
+       WHERE COALESCE(is_archived, 0) = 0
+       ORDER BY created_at DESC`;
+    const result = await db.prepare(
+      sql
     ).all();
 
     return json({ orders: result.results });
@@ -266,7 +283,7 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
               custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at
+              shipping_status, shipped_at, is_archived
        FROM orders
        WHERE id = ?`
     ).bind(orderId).first();
@@ -282,14 +299,18 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
   if (method === "PUT" && idMatch) {
     const orderId = parseInt(idMatch[1]);
     const body: any = await request.json();
-    const newStatus = body.status;
+    const newStatus = body.status ? String(body.status).trim().toLowerCase() : "";
+    const hasArchiveFlag = Object.prototype.hasOwnProperty.call(body || {}, "is_archived");
+    const archiveValue = hasArchiveFlag
+      ? ((body.is_archived === true || body.is_archived === 1 || String(body.is_archived).toLowerCase() === "true") ? 1 : 0)
+      : null;
 
-    if (!newStatus) {
-      return json({ error: "status field required" }, 400);
+    if (!newStatus && !hasArchiveFlag) {
+      return json({ error: "status or is_archived field required" }, 400);
     }
 
     const validStatuses = ["pending", "production", "shipped", "cancelled", "confirmed"];
-    if (validStatuses.indexOf(newStatus) === -1) {
+    if (newStatus && validStatuses.indexOf(newStatus) === -1) {
       return json({ error: "Invalid status. Must be one of: " + validStatuses.join(", ") }, 400);
     }
 
@@ -301,6 +322,12 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
     ).bind(orderId).first();
     if (!currentOrder) {
       return json({ error: "Order not found" }, 404);
+    }
+
+    if (!newStatus && hasArchiveFlag) {
+      await db.prepare("UPDATE orders SET is_archived = ?1 WHERE id = ?2")
+        .bind(archiveValue, orderId).run();
+      return json({ ok: true, id: orderId, is_archived: archiveValue });
     }
 
     if (newStatus === "shipped") {
@@ -324,9 +351,10 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
              tracking_number = ?3,
              tracking_url = ?4,
              shipping_status = ?5,
-             shipped_at = ?6
-         WHERE id = ?7`
-      ).bind(newStatus, carrierCode, trackingNumber, trackingUrl, shippingStatus, shippedAt, orderId).run();
+             shipped_at = ?6,
+             is_archived = COALESCE(?7, is_archived)
+         WHERE id = ?8`
+      ).bind(newStatus, carrierCode, trackingNumber, trackingUrl, shippingStatus, shippedAt, archiveValue, orderId).run();
 
       if (currentOrder.email && env.RESEND_API_KEY) {
         const orderCode = String(currentOrder.stripe_session_id || orderId).slice(-8);
@@ -363,13 +391,14 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
         tracking_url: trackingUrl,
         shipping_status: shippingStatus,
         shipped_at: shippedAt,
+        is_archived: archiveValue,
       });
     }
 
-    await db.prepare("UPDATE orders SET status = ? WHERE id = ?")
-      .bind(newStatus, orderId).run();
+    await db.prepare("UPDATE orders SET status = ?1, is_archived = COALESCE(?2, is_archived) WHERE id = ?3")
+      .bind(newStatus, archiveValue, orderId).run();
 
-    return json({ ok: true, id: orderId, status: newStatus });
+    return json({ ok: true, id: orderId, status: newStatus, is_archived: archiveValue });
   }
 
   // OPTIONS — CORS preflight
