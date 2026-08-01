@@ -115,7 +115,97 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     });
   }
 
-  // Only handle checkout.session.completed
+  // ── Handle charge.refunded — send team alert ──
+  if (event.type === "charge.refunded") {
+    const charge = event.data.object;
+    const amount = (charge.amount || 0) / 100;
+    const currency = String(charge.currency || "usd").toUpperCase();
+    const chargeId = String(charge.id || "");
+    const receiptUrl = String(charge.receipt_url || "");
+    const reason = String(charge.refunds?.data?.[0]?.reason || "unknown");
+    const billingName = String(charge.billing_details?.name || "");
+    const billingEmail = String(charge.billing_details?.email || charge.receipt_email || "");
+    const paymentMethod = String(charge.payment_method_details?.card?.brand || "")
+      + " •••• " + String(charge.payment_method_details?.card?.last4 || "????");
+
+    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
+    try {
+      const emailBody = [
+        `REFUND ISSUED`,
+        ``,
+        `Charge: ${chargeId}`,
+        `Amount: ${amount.toFixed(2)} ${currency}`,
+        `Reason: ${reason}`,
+        `Payment: ${paymentMethod}`,
+        ``,
+        billingName ? `Customer: ${billingName}` : "",
+        billingEmail ? `Email: ${billingEmail}` : "",
+        receiptUrl ? `Receipt: ${receiptUrl}` : "",
+        ``,
+        `\u2014 MildMate Stripe Webhook`,
+      ].filter(Boolean).join("\n");
+
+      const teamMail = await sendEmail(env, {
+        to: teamEmail,
+        subject: `\u26A0\uFE0F Refund \u2014 ${amount.toFixed(2)} ${currency} \u2014 MildMate`,
+        text: emailBody,
+      });
+      if (!teamMail.success) {
+        console.error("Refund alert email failed:", teamMail.error || "unknown error");
+      }
+    } catch (err: any) {
+      console.error("Refund alert exception:", err?.message || err);
+    }
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // ── Handle charge.dispute.created — send team alert ──
+  if (event.type === "charge.dispute.created" || event.type === "customer.dispute.created") {
+    const dispute = event.data.object;
+    const chargeId = String(dispute.charge || "");
+    const amount = (dispute.amount || 0) / 100;
+    const currency = String(dispute.currency || "usd").toUpperCase();
+    const reason = String(dispute.reason || "unknown");
+    const status = String(dispute.status || "needs_response");
+    const evidenceDueBy = String(dispute.evidence_details?.due_by || "N/A");
+
+    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
+    try {
+      const emailBody = [
+        `DISPUTE / CHARGEBACK FILED`,
+        ``,
+        `Charge: ${chargeId}`,
+        `Amount: ${amount.toFixed(2)} ${currency}`,
+        `Reason: ${reason}`,
+        `Status: ${status}`,
+        `Evidence Due By: ${evidenceDueBy}`,
+        ``,
+        `Action required: respond in Stripe Dashboard before the evidence deadline.`,
+        ``,
+        `\u2014 MildMate Stripe Webhook`,
+      ].join("\n");
+
+      const teamMail = await sendEmail(env, {
+        to: teamEmail,
+        subject: `\uD83D\uDEA8 Dispute \u2014 ${amount.toFixed(2)} ${currency} \u2014 MildMate`,
+        text: emailBody,
+      });
+      if (!teamMail.success) {
+        console.error("Dispute alert email failed:", teamMail.error || "unknown error");
+      }
+    } catch (err: any) {
+      console.error("Dispute alert exception:", err?.message || err);
+    }
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // Only handle checkout.session.completed for order processing
   if (event.type !== "checkout.session.completed") {
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" },
@@ -126,6 +216,12 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
   const metadata = session.metadata || {};
   const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
   const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
+  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
+  const shippingServiceType = shippingServiceLevelRaw === "standard"
+    ? "Standard"
+    : shippingServiceLevelRaw === "express"
+      ? "Express"
+      : "N/A";
   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
 
   let items: any[] = [];
@@ -149,10 +245,40 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
   const fallbackUnitAmount = totalQty > 0 && session.amount_total
     ? Math.round(session.amount_total / totalQty)
     : 0;
+  const toFiniteNumber = (v: any): number | undefined => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const parseDimsFromSizeText = (sizeText: any): { w?: number; l?: number; d?: number; unit?: string } => {
+    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
+    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+    if (!m) return {};
+    const unitRaw = String(m[4] || "").toLowerCase();
+    return {
+      w: toFiniteNumber(m[1]),
+      l: toFiniteNumber(m[2]),
+      d: toFiniteNumber(m[3]),
+      unit: (unitRaw === "inch" || unitRaw === "in") ? "inch" : "cm",
+    };
+  };
+  const formatDimsForEmail = (dims: any): string => {
+    const w = toFiniteNumber(dims?.w);
+    const l = toFiniteNumber(dims?.l);
+    const d = toFiniteNumber(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}×${l}${d ? `×${d}` : ""} ${unit}`;
+    const sizeText = String(dims?.size_text || "").trim();
+    if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
+    return `?×? ${unit}`;
+  };
 
   // Save each item as an order row
   for (const item of items) {
     const dims = item.dims || {};
+    const parsedDims = parseDimsFromSizeText(dims?.size_text);
+    const widthCm = toFiniteNumber(dims.w) ?? parsedDims.w ?? null;
+    const lengthCm = toFiniteNumber(dims.l) ?? parsedDims.l ?? null;
+    const depthCm = toFiniteNumber(dims.d) ?? parsedDims.d ?? null;
     const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
     const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
     try {
@@ -176,9 +302,9 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
           item.name || "",
           item.fabric || null,
           item.color || null,
-          dims.w || null,
-          dims.l || null,
-          dims.d || null,
+          widthCm,
+          lengthCm,
+          depthCm,
           null, null, null,
           null,
           sessionCurrency === "usd" ? unitPriceMajor : null,
@@ -208,9 +334,9 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
           item.name || "",
           item.fabric || null,
           item.color || null,
-          dims.w || null,
-          dims.l || null,
-          dims.d || null,
+          widthCm,
+          lengthCm,
+          depthCm,
           null, null, null,
           null,
           sessionCurrency === "usd" ? unitPriceMajor : null,
@@ -293,7 +419,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
   if (email && env.RESEND_API_KEY) {
     const itemList = items.map((i: any) => {
       const dims = i.dims || {};
-      return `- ${i.name} | ${i.fabric || "N/A"} | ${dims.w || "?"}\u00D7${dims.l || "?"}${dims.d ? `\u00D7${dims.d}` : ""} ${dims.unit || "cm"} | Qty: ${i.qty || 1}`;
+      return `- ${i.name} | ${i.fabric || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
     }).join("\n");
 
     const total = session.amount_total
@@ -323,7 +449,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
       const teamMail = await sendEmail(env, {
         to: teamEmail,
         subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}`,
+        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}\nShipping Type: ${shippingServiceType}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}`,
       });
       if (!teamMail.success) {
         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);

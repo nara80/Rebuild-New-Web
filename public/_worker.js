@@ -8163,6 +8163,8 @@ async function handleStripeWebhook(request, env) {
   const metadata = session.metadata || {};
   const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
   const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
+  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
+  const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
   let items = [];
   try {
@@ -8386,7 +8388,8 @@ Customer Message: ${customerNote}` : "";
 Order: #${session.id.slice(-8)}
 Customer: ${metadata.name || "Guest"} (${email})
 Phone: ${metadata.phone || "N/A"}
-Address: ${metadata.address || "N/A"}${customerNoteText}
+Address: ${metadata.address || "N/A"}
+Shipping Type: ${shippingServiceType}${customerNoteText}
 
 Items:
 ${itemList}
