@@ -21,7 +21,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var
 .sidebar-badge{font-size:0.625rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:auto}
 .sidebar-badge.amber{background:rgba(217,119,6,0.2);color:#fbbf24}
 .sidebar-section{font-size:0.625rem;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.35);padding:12px 20px 6px}
-.main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow-y:auto;min-width:0}
 .toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
 .toolbar h2{font-size:1.125rem;font-weight:600}
 .toolbar-actions{display:flex;gap:8px;align-items:center}
@@ -100,7 +100,9 @@ tr:hover td{background:#f8fafc}
 .slot-move-btn{flex:1;min-height:24px;border:none;border-radius:4px;background:rgba(15,23,42,.82);color:#fff;font-size:0.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .slot-move-btn:disabled{opacity:.4;cursor:not-allowed}
 .image-slot.has-image:hover .slot-move-controls,.image-slot.has-image:focus-within .slot-move-controls{display:flex}
-.table-wrap{overflow-x:auto;max-width:100%}
+.table-wrap{overflow-x:auto;max-width:100%;width:100%}
+.quote-table{table-layout:fixed;min-width:1100px}
+.quote-table th,.quote-table td{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.dashboard-grid{overflow-x:auto;display:flex;gap:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px}.dashboard-grid>*{min-width:200px;flex-shrink:0;scroll-snap-align:start}.stats-grid{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px}.stats-grid>*{min-width:170px;flex-shrink:0;scroll-snap-align:start}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,minmax(120px,1fr))}.form-row{grid-template-columns:1fr}.content{padding:12px}.toolbar{padding:12px 16px}.card{margin-bottom:12px}.table-wrap{-webkit-overflow-scrolling:touch}.image-slot.has-image .slot-move-controls{display:flex}}
 .tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
@@ -235,6 +237,7 @@ tr:hover td{background:#f8fafc}
     <div class="sidebar-section">Admin Features</div>
     <a href="#" data-page="products"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Products</a>
     <a href="#" data-page="color-inventory"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/><path d="M12 2v20"/><path d="M2 12h20"/></svg> Color Inventory</a>
+    <a href="#" data-page="boat-models"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l2-5h14l2 5v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 16h8"/><path d="M7 11h10"/></svg> Boat Models</a>
     <a href="#" class="sidebar-action" onclick="startNewProduct()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Product</a>
     <a href="#" data-page="orders"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Orders</a>
     <a href="#" data-page="quotes"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg> Quotes</a>
@@ -283,7 +286,7 @@ window.addEventListener('clerk:signed-out', function() {
   document.getElementById('admin-sign-in-btn').style.display = '';document.getElementById('admin-sign-out-link').style.display = 'none';
 });
 // ── Page Router ──
-var pages = ['dashboard','pricing','diy','exchange','shipping','marketing','stat','blog','reviews','products','orders','quotes','customers','contacts','subscribers','accounts'];
+var pages = ['dashboard','pricing','diy','exchange','shipping','marketing','stat','blog','reviews','products','color-inventory','boat-models','orders','quotes','customers','contacts','subscribers','accounts'];
 var currentPage = 'dashboard';
 
 async function showPage(name) {
@@ -294,6 +297,7 @@ async function showPage(name) {
   document.getElementById('page-title').textContent = {
     dashboard:'Dashboard',pricing:'Pricing Parameters',diy:'DIY Prices',
     exchange:'Exchange Rates',shipping:'Shipping Rates',marketing:'Marketing',stat:'Stat',blog:'Blog',reviews:'Reviews',products:'Products',orders:'Orders',quotes:'Quotes',
+    'color-inventory':'Color Inventory','boat-models':'Boat Models',
     customers:'Customers',contacts:'Contacts',subscribers:'Newsletter',accounts:'Admin Accounts'
   }[name];
   var result = renderPage(name);
@@ -335,6 +339,7 @@ function renderPage(name) {
     case 'reviews': return rReviews();
     case 'products': return rProducts();
     case 'color-inventory': return rColorInventory();
+    case 'boat-models': return rBoatModels();
     case 'orders': return rOrders();
     case 'quotes': return renderQuotes();
     case 'customers': return rCustomers();
@@ -1643,7 +1648,7 @@ async function renderQuotes() {
   if (!quotes.length) {
     h += '<p style="color:var(--c-muted);text-align:center;padding:24px">No quotes found for this status.</p>';
   } else {
-    h += '<div class="table-wrap"><table><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Fabric</th><th>Color</th><th>Size</th><th>Status</th><th>Price</th><th>Expires</th><th class="quote-actions-cell">Actions</th></tr></thead><tbody>';
+    h += '<div class="table-wrap"><table class="quote-table"><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Fabric</th><th>Color</th><th>Size</th><th>Status</th><th>Price</th><th>Expires</th><th class="quote-actions-cell">Actions</th></tr></thead><tbody>';
     quotes.forEach(function(q){
       var statusBadge = q.status === 'approved'
         ? 'badge-shipped'
@@ -3054,6 +3059,160 @@ window.toggleColorStock = async function(checkbox) {
     toast('Failed: ' + e.message);
   }
 };
+
+var _boatModelsCache = [];
+var _editingBoatModelId = 0;
+
+function boatModelShapeOptions(selected) {
+  var opts = ['<option value="">Select shape</option>'];
+  for (var i = 1; i <= 14; i++) {
+    var code = String(i).padStart(2, '0');
+    opts.push('<option value="' + code + '"' + (selected === code ? ' selected' : '') + '>' + code + '</option>');
+  }
+  return opts.join('');
+}
+
+function getBoatModelPayloadFromForm() {
+  var modelName = ((document.getElementById('bm-model-name') || {}).value || '').trim();
+  var modelKey = ((document.getElementById('bm-model-key') || {}).value || '').trim();
+  var shapeCode = ((document.getElementById('bm-shape-code') || {}).value || '').trim();
+  var notes = ((document.getElementById('bm-notes') || {}).value || '').trim();
+  var dimensionsRaw = ((document.getElementById('bm-dimensions-json') || {}).value || '').trim();
+  var isActive = !!((document.getElementById('bm-is-active') || {}).checked);
+  var dimensions = {};
+  if (dimensionsRaw) dimensions = JSON.parse(dimensionsRaw);
+  return {
+    id: _editingBoatModelId || undefined,
+    model_name: modelName,
+    model_key: modelKey,
+    shape_code: shapeCode,
+    notes: notes,
+    is_active: isActive ? 1 : 0,
+    dimensions: dimensions
+  };
+}
+
+function resetBoatModelForm() {
+  _editingBoatModelId = 0;
+  var n = document.getElementById('bm-model-name'); if (n) n.value = '';
+  var k = document.getElementById('bm-model-key'); if (k) k.value = '';
+  var s = document.getElementById('bm-shape-code'); if (s) s.value = '';
+  var d = document.getElementById('bm-dimensions-json'); if (d) d.value = '';
+  var t = document.getElementById('bm-notes'); if (t) t.value = '';
+  var a = document.getElementById('bm-is-active'); if (a) a.checked = true;
+  var saveBtn = document.getElementById('bm-save-btn');
+  if (saveBtn) saveBtn.textContent = 'Add Boat Model';
+}
+
+function editBoatModel(id) {
+  var item = (_boatModelsCache || []).find(function(m) { return Number(m.id) === Number(id); });
+  if (!item) return;
+  _editingBoatModelId = Number(item.id || 0);
+  var n = document.getElementById('bm-model-name'); if (n) n.value = item.model_name || '';
+  var k = document.getElementById('bm-model-key'); if (k) k.value = item.model_key || '';
+  var s = document.getElementById('bm-shape-code'); if (s) s.value = item.shape_code || '';
+  var d = document.getElementById('bm-dimensions-json'); if (d) d.value = item.dimensions_json || '';
+  var t = document.getElementById('bm-notes'); if (t) t.value = item.notes || '';
+  var a = document.getElementById('bm-is-active'); if (a) a.checked = Number(item.is_active) === 1;
+  var saveBtn = document.getElementById('bm-save-btn');
+  if (saveBtn) saveBtn.textContent = 'Update Boat Model';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteBoatModel(id) {
+  if (!confirm('Delete this boat model?')) return;
+  try {
+    var res = await fetch('/api/admin/boat-models', {
+      method: 'DELETE',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await getAdminAuthHeaders(false)),
+      body: JSON.stringify({ id: id })
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    toast('Boat model deleted');
+    document.getElementById('page-content').innerHTML = await rBoatModels();
+  } catch (e) {
+    toast('Failed: ' + e.message);
+  }
+}
+
+async function saveBoatModel() {
+  try {
+    var payload = getBoatModelPayloadFromForm();
+    if (!payload.model_name) { toast('Model name is required'); return; }
+    if (!payload.shape_code) { toast('Shape code is required'); return; }
+    if (!payload.dimensions || Object.keys(payload.dimensions).length === 0) { toast('Dimensions JSON is required'); return; }
+
+    var res = await fetch('/api/admin/boat-models', {
+      method: payload.id ? 'PUT' : 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await getAdminAuthHeaders(false)),
+      body: JSON.stringify(payload)
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    toast(payload.id ? 'Boat model updated' : 'Boat model added');
+    resetBoatModelForm();
+    document.getElementById('page-content').innerHTML = await rBoatModels();
+  } catch (e) {
+    toast('Failed: ' + e.message);
+  }
+}
+
+async function rBoatModels() {
+  var rows = [];
+  try {
+    var res = await fetch('/api/admin/boat-models', { headers: await getAdminAuthHeaders(false) });
+    if (res.ok) {
+      var data = await res.json();
+      rows = data.models || [];
+    } else {
+      var err = await res.json().catch(function() { return {}; });
+      return '<div class="card"><div class="card-header">Boat Models</div><div class="card-body"><p style="color:var(--c-red)">Failed to load: ' + escHtml(err.error || ('HTTP ' + res.status)) + '</p></div></div>';
+    }
+  } catch (e) {
+    return '<div class="card"><div class="card-header">Boat Models</div><div class="card-body"><p style="color:var(--c-red)">Failed to load: ' + escHtml(e.message) + '</p></div></div>';
+  }
+  _boatModelsCache = rows;
+
+  var h = '';
+  h += '<div class="card"><div class="card-header"><span>Boat Model Knowledge Base</span><span style="font-size:0.75rem;color:var(--c-muted)">Marine fitted sheet auto-fill</span></div><div class="card-body">';
+  h += '<div class="form-row">' +
+         '<div class="form-group"><label>Boat Model Name</label><input id="bm-model-name" placeholder="e.g. 2007 Meridian 391 Sedan"></div>' +
+         '<div class="form-group"><label>Model Key (optional)</label><input id="bm-model-key" placeholder="e.g. 2007_meridian_391_sedan"></div>' +
+       '</div>';
+  h += '<div class="form-row">' +
+         '<div class="form-group"><label>Shape Code</label><select id="bm-shape-code">' + boatModelShapeOptions('') + '</select></div>' +
+         '<div class="form-group"><label>Active</label><label style="display:flex;align-items:center;gap:8px;height:40px"><input id="bm-is-active" type="checkbox" checked> Available on product page</label></div>' +
+       '</div>';
+  h += '<div class="form-group"><label>Dimensions JSON (cm)</label><textarea id="bm-dimensions-json" placeholder=\'{"L":200,"A":180,"D":70,"B":120,"C":120,"T":12}\'></textarea><small style="color:var(--c-muted)">Use shape field keys (A,B,C,D...T). Values in cm.</small></div>';
+  h += '<div class="form-group"><label>Notes</label><input id="bm-notes" placeholder="Optional production notes"></div>';
+  h += '<div style="display:flex;gap:8px"><button id="bm-save-btn" class="btn btn-primary" onclick="saveBoatModel()">Add Boat Model</button><button class="btn btn-outline" onclick="resetBoatModelForm()">Reset</button></div>';
+  h += '</div></div>';
+
+  h += '<div class="card"><div class="card-header"><span>Saved Models</span><span style="font-size:0.75rem;color:var(--c-muted)">' + rows.length + ' models</span></div><div class="card-body">';
+  if (!rows.length) {
+    h += '<p style="color:var(--c-muted);text-align:center;padding:28px 0">No boat models yet.</p>';
+  } else {
+    h += '<div class="table-wrap"><table><thead><tr><th>Model</th><th>Shape</th><th>Dimensions</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
+    rows.forEach(function(row) {
+      var dims = {};
+      try { dims = JSON.parse(row.dimensions_json || '{}'); } catch (e) {}
+      var dimPairs = Object.keys(dims).slice(0, 6).map(function(k) { return k + ':' + dims[k]; }).join(', ');
+      var extra = Object.keys(dims).length > 6 ? '…' : '';
+      h += '<tr>' +
+             '<td><strong>' + escHtml(row.model_name || '') + '</strong><br><span style="font-size:0.72rem;color:var(--c-muted)">' + escHtml(row.model_key || '') + '</span></td>' +
+             '<td>' + escHtml(row.shape_code || '—') + '</td>' +
+             '<td><span style="font-family:monospace;font-size:0.75rem">' + escHtml(dimPairs + extra) + '</span></td>' +
+             '<td>' + (Number(row.is_active) === 1 ? '<span class="badge badge-shipped">Active</span>' : '<span class="badge badge-cancelled">Inactive</span>') + '</td>' +
+             '<td>' + escHtml((row.updated_at || '').replace('T', ' ').substring(0, 16) || '—') + '</td>' +
+             '<td><div style="display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editBoatModel(' + Number(row.id) + ')">Edit</button><button class="btn btn-sm btn-outline" style="color:var(--c-red);border-color:var(--c-red)" onclick="deleteBoatModel(' + Number(row.id) + ')">Delete</button></div></td>' +
+           '</tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+  h += '</div></div>';
+  return h;
+}
 
 async function rProducts(){
   var ps = await getProducts();
