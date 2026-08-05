@@ -43,16 +43,16 @@
         "Quick-dry and wrinkle-resistant"
       ],
       "tabFabricTitle": "CloudSoft — Standard Edition",
-      "tabFabricP": "CloudSoft is a 100% polyester microfiber with a soft, smooth feel and easy-care construction ideal for everyday use. The 30cm pocket depth accommodates standard mattress thicknesses while the full-perimeter elastic ensures a snug fit.",
+      "tabFabricP": "CloudSoft is a 115 GSM premium microfiber with a soft, smooth feel and easy-care construction ideal for everyday use. The 30cm pocket depth accommodates standard mattress thicknesses while the full-perimeter elastic ensures a snug fit.",
       "tabFabricBullets": [
-        "100% polyester microfiber — soft and durable",
+        "115 GSM premium microfiber — soft and durable",
         "Four fabric collections available",
         "Wrinkle-resistant — looks neat without ironing",
         "Full-perimeter elastic — no clips needed",
         "Quick-dry — convenient for frequent washing"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40&deg;C / 104&deg;F)  -  regular cycle",
+        "Machine wash warm (60&deg;C / 140&deg;F)  -  regular cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed  -  wrinkle-resistant by design",
@@ -113,7 +113,7 @@
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — regular cycle",
+        "Machine wash warm (60°C / 140°F) — regular cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed — wrinkle-resistant by design"
@@ -258,7 +258,7 @@
         "12 marine-inspired colors"
       ],
       "tabCareBullets": [
-        "Machine wash cold (30°C / 86°F)  -  gentle cycle",
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry low or hang dry",
         "No ironing needed  -  wrinkle-resistant by design",
@@ -319,7 +319,7 @@
         "5 dorm-friendly colors"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40&deg;C / 104&deg;F)  -  regular cycle",
+        "Machine wash warm (60&deg;C / 140&deg;F)  -  regular cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed  -  wrinkle-resistant by design",
@@ -439,7 +439,7 @@
         "Floor bed and tatami sizes available"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F)  -  regular cycle",
+        "Machine wash warm (60°C / 140°F)  -  regular cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed  -  wrinkle-resistant by design",
@@ -508,7 +508,7 @@
         "Wrinkle-resistant and quick-dry after washing"
       ],
       "tabCareBullets": [
-        "Machine wash cold (30°C / 86°F)  -  gentle cycle",
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry low or hang dry",
         "No ironing needed  -  wrinkle-resistant by design",
@@ -569,7 +569,7 @@
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — regular cycle",
+        "Machine wash warm (60°C / 140°F) — regular cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed — wrinkle-resistant by design"
@@ -628,7 +628,7 @@
         "Quick-dry and wrinkle-resistant"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — regular cycle",
+        "Machine wash warm (60°C / 140°F) — regular cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed — wrinkle-resistant by design"
@@ -701,7 +701,7 @@
         "Quick-dry"
       ],
       "tabCareBullets": [
-        "Machine wash cold (30°C / 86°F) — gentle cycle",
+        "Machine wash warm (60°C / 140°F) — gentle cycle",
         "Do not bleach — use mild detergent only",
         "Tumble dry low or hang dry — fabrics dry quickly",
         "No ironing needed — wrinkle-resistant by design",
@@ -771,7 +771,7 @@
         "Quick-dry"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F)  -  gentle cycle",
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry low or hang dry",
         "No ironing needed  -  wrinkle-resistant by design",
@@ -817,7 +817,7 @@
       "tabDescriptionTitle": "Marine Duvet Cover",
       "tabDescriptionP": "Designed for marine and yacht use with CloudSoft quick-dry fabric. 3-sided zipper for easy linen changes in tight cabin spaces. Custom-made to your exact duvet dimensions. The 3-sided zipper opens on two long edges and one short edge, making duvet cover changes effortless even in confined spaces.",
       "tabDescriptionBullets": [
-        "3-sided YKK zipper - easy duvet changes in tight spaces",
+        "3-sided YKK No. 5 coil zipper — easy duvet changes in tight spaces",
         "CloudSoft quick-dry fabric - ideal for marine environments",
         "Custom-made to your exact W x L dimensions",
         ". - no toxic chemicals",
@@ -827,12 +827,12 @@
       "tabFabricP": "CloudSoft quick-dry fabric built for marine environments. 3-sided zipper for easy linen changes in tight cabin spaces. Custom-made to your exact duvet dimensions.",
       "tabFabricBullets": [
         "Quick-dry — ideal for marine",
-        "3-sided YKK zipper",
+        "3-sided YKK No. 5 coil zipper",
         "Custom-made to your duvet",
         "Wrinkle-resistant"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40C / 104F) - regular cycle",
+        "Machine wash warm (60°C / 140°F) - regular cycle",
         "Do not bleach - mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed - wrinkle-resistant by design",
@@ -893,7 +893,7 @@
         "3-sided U-shape zipper for easier insert changes"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40C / 104F) - regular cycle",
+        "Machine wash warm (60°C / 140°F) - regular cycle",
         "Do not bleach - mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed - wrinkle-resistant by design",
@@ -958,7 +958,7 @@
         "Quick-dry"
       ],
       "tabCareBullets": [
-        "Machine wash cold (30°C / 86°F) - gentle cycle",
+        "Machine wash warm (60°C / 140°F) - gentle cycle",
         "Do not bleach - use mild detergent only",
         "Tumble dry low or hang dry - fabrics dry quickly",
         "No ironing needed - wrinkle-resistant by design",
@@ -1020,13 +1020,13 @@
       "tabFabricTitle": "Premium Fabrics",
       "tabFabricP": "Available in 4 premium fabric options. CloudSoft for everyday luxury, BreezePlus for pet owners, PremaCotton for the premium feel, and EcoLuxe for natural unbleached cotton.",
       "tabFabricBullets": [
-        "CloudSoft — 100% polyester microfiber, soft and durable",
+        "CloudSoft — 115 GSM premium microfiber, soft and durable",
         "BreezePlus — Anti-fur weave, pet hair slides off",
         "PremaCotton — Premium long-staple, extra silky feel",
         "EcoLuxe — Natural unbleached cotton, earth-friendly"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — regular cycle",
+        "Machine wash warm (60°C / 140°F) — regular cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed — wrinkle-resistant by design",
@@ -1038,7 +1038,7 @@
     },
     "pillowcase-zipper": {
       "productType": "pillowcase",
-      "tagline": "Secure zipper enclosure keeps the pillow perfectly in place. YKK zipper for smooth operation wash after wash.",
+      "tagline": "Secure zipper enclosure keeps the pillow perfectly in place. YKK No. 5 coil zipper for smooth operation wash after wash.",
       "metaDescription": "Zipper Pillowcase by MildMate — secure YKK zipper enclosure. Custom-made to your exact pillow dimensions in 4 premium fabrics.",
       "ratingCount": 89,
       "breadcrumbCategoryUrl": "/pillowcases/",
@@ -1077,9 +1077,9 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Zipper Pillowcase",
-      "tabDescriptionP": "Secure YKK zipper enclosure keeps the pillow perfectly in place. The zipper glides smoothly and stays hidden for a clean look. Custom-made to your exact pillow dimensions.",
+      "tabDescriptionP": "Secure YKK No. 5 coil zipper enclosure keeps the pillow perfectly in place. The zipper glides smoothly and stays hidden for a clean look. Custom-made to your exact pillow dimensions.",
       "tabDescriptionBullets": [
-        "YKK zipper — smooth, durable, hidden design",
+        "YKK No. 5 coil zipper — smooth, durable, hidden design",
         "Custom-made to your exact pillow dimensions",
         "4 premium fabric options",
         "Four fabric collections available",
@@ -1088,14 +1088,14 @@
       "tabFabricTitle": "Premium Fabrics",
       "tabFabricP": "Available in 4 premium fabric options. CloudSoft for everyday luxury, BreezePlus for pet owners, PremaCotton for the premium feel, and EcoLuxe for natural unbleached cotton.",
       "tabFabricBullets": [
-        "CloudSoft — 100% polyester microfiber, soft and durable",
+        "CloudSoft — 115 GSM premium microfiber, soft and durable",
         "BreezePlus — Anti-fur weave, pet hair slides off",
         "PremaCotton — Premium long-staple, extra silky feel",
         "EcoLuxe — Natural unbleached cotton, earth-friendly"
       ],
       "tabCareBullets": [
         "Close zipper before washing to prevent snagging",
-        "Machine wash warm (40°C / 104°F) — regular cycle",
+        "Machine wash warm (60°C / 140°F) — regular cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed — wrinkle-resistant by design"
@@ -1156,13 +1156,13 @@
       "tabFabricTitle": "Premium Fabrics",
       "tabFabricP": "Available in 4 premium fabric options. CloudSoft for everyday luxury, BreezePlus for pet owners, PremaCotton for the premium feel, and EcoLuxe for natural unbleached cotton.",
       "tabFabricBullets": [
-        "CloudSoft — 100% polyester microfiber, soft and durable",
+        "CloudSoft — 115 GSM premium microfiber, soft and durable",
         "BreezePlus — Anti-fur weave, pet hair slides off",
         "PremaCotton — Premium long-staple, extra silky feel",
         "EcoLuxe — Natural unbleached cotton, earth-friendly"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — regular cycle",
+        "Machine wash warm (60°C / 140°F) — regular cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry medium or hang dry",
         "No ironing needed — wrinkle-resistant by design",
@@ -1217,7 +1217,7 @@
         "Ideal for allergy sufferers"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F)  -  gentle cycle",
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron the TPU layer",
@@ -1275,7 +1275,7 @@
         "Pure White and Sand colors"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F)  -  gentle cycle",
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
         "Do not bleach  -  mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron the TPU layer",
@@ -1357,7 +1357,7 @@
         "Machine washable, quick dry"
       ],
       "tabCareBullets": [
-        "Machine wash cold (30°C)  -  gentle cycle",
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
         "Do not bleach",
         "Tumble dry low or hang dry",
         "Do not iron TPU layer",
@@ -1414,7 +1414,7 @@
         "Machine washable and quick-dry care routine"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — gentle cycle",
+        "Machine wash warm (60°C / 140°F) — gentle cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron TPU-backed layer",
@@ -1467,7 +1467,7 @@
         "Full-perimeter elastic"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — gentle cycle",
+        "Machine wash warm (60°C / 140°F) — gentle cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron the TPU layer",
@@ -1525,7 +1525,7 @@
         "Family-size dimensions"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — gentle cycle",
+        "Machine wash warm (60°C / 140°F) — gentle cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron the TPU layer",
@@ -1582,7 +1582,7 @@
         "Quiet and comfortable"
       ],
       "tabCareBullets": [
-        "Machine wash warm (40°C / 104°F) — gentle cycle",
+        "Machine wash warm (60°C / 140°F) — gentle cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron the TPU layer",
@@ -1639,7 +1639,7 @@
         "cool-to-the-touch comfort"
       ],
       "tabCareBullets": [
-        "Machine wash cold (30°C / 86°F) — gentle cycle",
+        "Machine wash warm (60°C / 140°F) — gentle cycle",
         "Do not bleach — mild detergent only",
         "Tumble dry low or hang dry",
         "Do not iron the TPU layer",

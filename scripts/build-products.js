@@ -146,7 +146,7 @@ function buildFabricHTML(p) {
       { label: 'Fabric', value: 'CloudSoft' },
       { label: 'Drying', value: 'Quick-Dry' },
       { label: 'Climate', value: 'Moisture-Wicking' },
-      { label: 'Material', value: '100% Polyester Microfiber' }
+      { label: 'Material', value: '115 GSM Premium Microfiber' }
     ];
     let grid = '<div class="panel-label">Fabric</div><div class="specs-grid">';
     specs.forEach(s => {
@@ -547,7 +547,7 @@ function buildFixedContentHTML(slug, p) {
       + '<div class="tab-content" id="tab-care" role="tabpanel">'
       + '<h3>Care Instructions</h3>'
       + '<ul>'
-      + '<li>Machine wash warm (40°C / 104°F) — gentle cycle</li>'
+      + '<li>Machine wash warm (60°C / 140°F) — gentle cycle</li>'
       + '<li>Do not bleach â€” mild detergent only</li>'
       + '<li>Tumble dry low or hang dry â€” microfiber dries quickly</li>'
       + '<li>Fluff after drying to restore loft</li>'
