@@ -146,7 +146,7 @@ function buildFabricHTML(p) {
       { label: 'Fabric', value: 'CloudSoft' },
       { label: 'Drying', value: 'Quick-Dry' },
       { label: 'Climate', value: 'Moisture-Wicking' },
-      { label: 'Material', value: '100% Long-Staple Cotton' }
+      { label: 'Material', value: '100% Polyester Microfiber' }
     ];
     let grid = '<div class="panel-label">Fabric</div><div class="specs-grid">';
     specs.forEach(s => {

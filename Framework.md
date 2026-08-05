@@ -1601,7 +1601,7 @@ padding: 72px 24px 56px;
 | Product | Fabric Options |
 |---|---|
 | Pet Owner (Fitted/Duvet) | BreezePlus only (specs grid: Pet Hair Resistant, Cool-to-the-Touch, 50/50 Blend) |
-| Marine & Yacht (Fitted/Duvet) | CloudSoft only (specs grid: Quick-Dry, Moisture-Wicking, 100% Cotton) |
+| Marine & Yacht (Fitted/Duvet) | CloudSoft only (specs grid: Quick-Dry, Moisture-Wicking, 100% Polyester Microfiber) |
 | RV & Truck (Fitted/Duvet) | CloudSoft only (specs grid) |
 | Fitted Sheets (other) | All 4: fabric dropdown + per-fabric color selector |
 | Flat Sheets | All 4: fabric dropdown + per-fabric color selector |
@@ -1728,5 +1728,33 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
-### Database Migrations (001-034 in repo)
-Repo currently contains migrations through `034_orders_customer_note.sql`, including split-number families (`024_*`, `031_*`). Recent additions include product FAQ fields (`031_product_faq_fields.sql`), card benefits (`032_*`), marine protector pricing params (`033_*`), and checkout message fields on orders (`034_*`).
+### Database Migrations (001-036 in repo)
+Repo currently contains migrations through `036_fabric_color_inventory.sql`, including split-number families (`024_*`, `031_*`). Recent additions: product FAQ fields (`031_*`), card benefits (`032_*`), marine protector pricing params (`033_*`), checkout message fields on orders (`034_*`), free_shipping column on promo_codes (`035_*`), fabric_color_inventory table + 24-color seed (`036_*`).
+
+### Fabric Color Inventory System (implemented 2026-07-12)
+- D1 table `fabric_color_inventory` (migration 036): `id, fabric, color, in_stock, updated_at` with UNIQUE(fabric, color).
+- 24 colors seeded across BreezePlus (9), CloudSoft (12), PremaCotton (1), EcoLuxe (1). Sky + Baby Pink pre-seeded as OOS.
+- Public API: GET `/api/color-inventory` returns `{fabric: {color: bool}}` map (60s cache). Handled by `workers/api/color-inventory.ts` + registered in `workers/api/index.ts` + mirrored in runtime bundles.
+- Admin API: GET/PUT `/api/admin/color-inventory`. Auth: JWT validity check only (no email allowlist) + X-Admin-Secret fallback. Handled by `workers/api/admin-color-inventory.ts`.
+- Product configurator (`public/js/product-configurator.js`): fetches inventory on load, applies `.out-of-stock` CSS class (opacity 0.3 + diagonal strikethrough SVG) to OOS swatches, blocks click events, re-applies on fabric switch, auto-selects first available color.
+- Super Admin Color Inventory page (`rColorInventory()` in `public/super-admin/index.html`): visual swatch grid per fabric, checkbox toggles, instant PUT save, toast feedback.
+
+### Free Shipping Promo Codes (implemented 2026-07-12)
+- `promo_codes` table has `free_shipping` BOOLEAN column (migration 035, default 0).
+- When a promo code with `free_shipping = 1` is applied at checkout, shipping is zeroed.
+- Super Admin Promo Codes table shows a "Free Ship" column.
+- Files to keep in sync: `workers/api/checkout.ts`, `workers/api/discount.ts`, `public/checkout/index.html`, `public/index.js`, `public/_worker.js`.
+
+### Shipping Tier 3 Additional Rate (changed 2026-07)
+- `shipping_add_rates.add_thb` for `tier = 3` (pillowcase-type products) reduced from ฿150 → ฿50 (~$1.50/item).
+- Applied to both `mildmate-db-prod` and `mildmate-db` (preview). No code changes — checkout reads D1 dynamically.
+- Rationale: ฿150 per pillow caused cart abandonment; ฿50 is priced as minor add-on.
+
+### Product H1 / Breadcrumb Title Fix (deployed 2026-07)
+- `functions/product/[[path]].ts`, `public/_worker.js`, `public/index.js` all unconditionally replace H1 and breadcrumb from D1 `title_en` / `title_th` (removed `if (isTh)` guard that caused EN pages to skip replacement).
+- Verified 28/28 slugs correct on both EN and TH. Any future H1/breadcrumb edits must apply to all three files.
+
+### Family / Co-Sleep Size Presets (implemented 2026-07)
+- `product-configurator.js` `populateSizeSelect()` uses `PRODUCT_SIZES['family']` when product is `family-fitted-sheet` or `mattress-protector-family`.
+- Family size entries lack a depth field; configurator uses `d = s.d ?? 30` as safe default.
+- Standard Size tab on those product pages now shows Family/Co-Sleep combined sizes instead of regular mattress sizes.
