@@ -223,7 +223,8 @@
           <p style="color: var(--color-muted); max-width: 400px; margin: 0 auto 24px;">Try removing a filter, or send us your mattress details for a custom recommendation.</p>
           <a href="/custom-measurement/" class="btn btn-primary" style="display: inline-block; padding: 12px 32px; text-decoration: none;">Start a Custom Quote</a>
         </div>
-    <div class="product-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;">
+    <div class="product-grid" id="products-grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px;">
+          <!-- PRODUCTS_GRID_START -->
           <article class="product-card" data-categories="sheets" data-title="standard fitted sheet" data-price="38">
             <div class="product-image">
               <img src="/images/products/standard-fitted-sheet/main.jpg" alt="Standard Fitted Sheet" width="800" height="600" loading="lazy" decoding="async">
@@ -266,6 +267,21 @@
               <p class="product-benefit">Custom-fit for V-berths and unusual boat mattress shapes.</p>
               <div class="product-fabrics-info">Custom size &middot; Multiple fabrics</div>
               <a href="/product/marine-fitted-sheet/" class="btn btn-primary" style="margin-top:auto;">Choose Size &amp; Fabric</a>
+            </div>
+          </article>
+
+          <article class="product-card" data-categories="sheets,marine,custom-shape" data-title="marine top sheet" data-price="48">
+            <div class="product-image">
+              <img src="/images/products/marine-top-sheet/main.jpg" alt="Marine Top Sheet" width="800" height="600" loading="lazy" decoding="async">
+            </div>
+            <div class="product-info">
+              <div class="product-tags" aria-label="Categories"><a href="/sheets/" class="card-tag" style="text-decoration:none;">SHEETS</a><a href="/products/" class="card-tag" style="text-decoration:none;">MARINE & YACHT</a></div>
+              <h3 class="product-title">Marine Top Sheet</h3>
+              <div class="product-price" data-usd="48" data-thb="1695">From US$48</div>
+              <div class="product-price-note">Excludes shipping, tax & tariff</div>
+              <p class="product-benefit">Shape-matched loose top sheet for V-berth and irregular marine mattresses.</p>
+              <div class="product-fabrics-info">Custom size &middot; CloudSoft (12 colors)</div>
+              <a href="/product/marine-top-sheet/" class="btn btn-primary" style="margin-top:auto;">Choose Size &amp; Fabric</a>
             </div>
           </article>
 
@@ -643,6 +659,7 @@
               <a href="/product/mattress-lift-helper/" class="btn btn-primary" style="margin-top:auto;">View Details</a>
             </div>
           </article>
+          <!-- PRODUCTS_GRID_END -->
         </div>
       
       
@@ -724,6 +741,8 @@
         });
 
         // Handle Pagination & Visibility
+        var showAll = activeFilters.type === 'all' && activeFilters.niche === 'all';
+        var effectiveLimit = showAll ? filtered.length : visibleLimit;
         if (filtered.length === 0) {
           noResults.style.display = 'block';
           grid.style.display = 'none';
@@ -733,14 +752,14 @@
           grid.style.display = '';
           
           filtered.forEach(function(card, idx) {
-            if (idx < visibleLimit) {
+            if (idx < effectiveLimit) {
               card.style.display = '';
             } else {
               card.style.display = 'none';
             }
           });
           
-          if (filtered.length > visibleLimit) {
+          if (!showAll && filtered.length > effectiveLimit) {
             loadMoreContainer.style.display = '';
           } else {
             loadMoreContainer.style.display = 'none';
