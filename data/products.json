@@ -58,6 +58,18 @@
       "displayOrder": 3
     },
     {
+      "slug": "marine-top-sheet",
+      "name": "Marine Top Sheet",
+      "nameTh": "ผ้าปูบนเรือทรงสั่งตัด",
+      "categories": ["sheets", "marine"],
+      "priceUsd": 48,
+      "priceThb": 1695,
+      "image": "/images/products/marine-top-sheet/main.jpg",
+      "url": "/product/marine-top-sheet/",
+      "urlTh": "/th/product/marine-top-sheet/",
+      "displayOrder": 4
+    },
+    {
       "slug": "dorm-fitted-sheet",
       "name": "Dorm Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â«Ã Â¸Â­Ã Â¸Å¾Ã Â¸Â±Ã Â¸Â",

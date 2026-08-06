@@ -268,6 +268,64 @@
       "review2Html": "<div class=\"review-card\"><div class=\"review-header\">\r\n              <div class=\"review-avatar\">S</div>\r\n              <div class=\"review-meta\">\r\n                <div class=\"review-name\">Sarah M.</div>\r\n                <div class=\"review-country\">Australia</div>\r\n              </div>\r\n              <div class=\"review-stars\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"#f59e0b\" stroke=\"#f59e0b\" stroke-width=\"1.5\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/></svg></div>\r\n            </div>\r\n            <div class=\"review-text\">\"Finally a sheet that fits my yacht master berth properly. The custom dimensions were spot-on and the quick-dry fabric is a lifesaver at sea. Highly recommend.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Boat Fitted Sheet · King / CloudSoft Sea Grass Green</div>",
       "fabricMode": "badge"
     },
+    "marine-top-sheet": {
+      "productType": "marine",
+      "tagline": "Custom shape-matched marine top sheet. 14 boat mattress shapes, made to your dimensions, CloudSoft quick-dry comfort.",
+      "metaDescription": "Marine Top Sheet by MildMate — custom shape-matched flat sheet for V-berth and irregular boat mattresses. 14 shape options, made-to-measure in CloudSoft.",
+      "ratingCount": 18,
+      "breadcrumbCategoryUrl": "/sheets/",
+      "breadcrumbCategoryLabel": "Sheets",
+      "breadcrumbName": "Marine Top Sheet",
+      "fabrics": [
+        "cloudsoft"
+      ],
+      "lockedFabric": "cloudsoft",
+      "needsDepth": true,
+      "tags": [
+        {
+          "url": "/sheets/",
+          "label": "Sheets"
+        },
+        {
+          "url": "/marine/",
+          "label": "Marine &amp; Yacht"
+        }
+      ],
+      "relatedSlugs": [
+        "marine-fitted-sheet",
+        "duvet-cover-marine",
+        "marine-mattress-protector",
+        "pillowcase-envelope"
+      ],
+      "tabDescriptionTitle": "Custom Shape-Matched Marine Top Sheet",
+      "tabDescriptionP": "Boat mattresses are rarely standard. This top sheet is made to follow your approved mattress outline, with extra allowance for side coverage and tuck-under comfort. It is a loose, non-elastic flat sheet designed for V-berths, island berths, quarter berths, and irregular marine mattress layouts.",
+      "tabDescriptionBullets": [
+        "Built from your approved boat mattress outline",
+        "Loose flat-sheet style (no fitted corners and no 360° elastic)",
+        "Supports 14 marine mattress shapes with visual guides",
+        "Use cm or inch inputs for easier measuring",
+        "Designed for cleaner drape and reduced bunching on tapered berths",
+        "Made in Thailand and shipped worldwide"
+      ],
+      "tabFabricTitle": "CloudSoft Marine Fabric",
+      "tabFabricP": "CloudSoft 115 GSM premium microfiber is soft, quick-dry, and practical for enclosed marine cabins. Lightweight handling makes wash-and-reset routines easier on board while maintaining a smooth, neat finish.",
+      "tabFabricBullets": [
+        "115 GSM premium microfiber",
+        "Quick-dry and lightweight",
+        "Moisture-managing comfort for marine use",
+        "Wrinkle-resistant and easy to maintain",
+        "Available in 12 CloudSoft colors"
+      ],
+      "tabCareBullets": [
+        "Machine wash warm (60°C / 140°F)  -  gentle cycle",
+        "Do not bleach  -  mild detergent only",
+        "Tumble dry low or hang dry",
+        "No ironing needed  -  wrinkle-resistant by design"
+      ],
+      "review1Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">J</div><div class=\"review-meta\"><div class=\"review-name\">James B.</div><div class=\"review-country\">United States</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"The shape-matched top sheet follows our V-berth much better than standard rectangular sheets. Tucking is easier and it looks much cleaner.\"</div><div class=\"review-product\">Verified purchase: Marine Top Sheet · Custom / CloudSoft White</div></div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">E</div><div class=\"review-meta\"><div class=\"review-name\">Emily R.</div><div class=\"review-country\">Australia</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Great communication during shape review. The finished top sheet is soft, quick-drying, and much easier to manage in our aft cabin.\"</div><div class=\"review-product\">Verified purchase: Marine Top Sheet · Custom / CloudSoft Beige</div></div>",
+      "fabricMode": "badge"
+    },
     "dorm-fitted-sheet": {
       "productType": "fitted-sheet",
       "tagline": "Extra-durable for dorm life. Custom-fitted so it won't slip off the dorm mattress.",

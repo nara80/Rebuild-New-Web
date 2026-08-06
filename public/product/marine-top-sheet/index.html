@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#1E293B;--color-heading:#0F172A;--color-bg:#ffffff;--color-surface:#F8FAFC;--color-border:#e2e8f0;--color-muted:#64748b;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.10);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-muted);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2;color:var(--color-text)}h2{font-size:1.75rem;font-weight:700;line-height:1.3;color:var(--color-text)}h3{font-size:1.25rem;font-weight:600;line-height:1.4;color:var(--color-text)}p{font-size:1rem;font-weight:400;margin-bottom:1rem;color:var(--color-muted)}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Marine Top Sheet by MildMate — custom shape-matched flat sheet for V-berth and irregular boat mattresses. 14 shape options, made-to-measure in CloudSoft.">
+  <meta name="product-image" content="/images/products/marine-top-sheet/main.jpg">
+  <title>Marine Top Sheet — MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .product-page{background:#F8FAFC}
+    .product-layout{max-width:1280px;margin:0 auto;padding:40px 24px 56px;display:grid;grid-template-columns:minmax(0,55%) minmax(0,45%);gap:40px;align-items:start}
+    .product-gallery{position:sticky;top:96px;min-width:0;align-self:start}
+    .product-info{min-width:0;--desktop-col-height:calc(100vh - 120px);height:var(--desktop-col-height);max-height:var(--desktop-col-height);overflow-y:auto;padding-right:8px}
+    .product-info::-webkit-scrollbar{width:8px}
+    .product-info::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
+    .carousel-wrap{position:relative;overflow:hidden;background:#F8FAFC;border-radius:8px;border:1px solid #e2e8f0}
+    .carousel-track{display:flex;transition:transform 0.35s ease;will-change:transform}
+    .carousel-track.no-transition{transition:none}
+    .carousel-slide{flex:0 0 100%;width:100%;aspect-ratio:1/1}
+    .carousel-slide img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none}
+    .carousel-slide-video{position:relative;background:#000;cursor:pointer}
+    .carousel-slide-video .yt-thumb{width:100%;height:100%;object-fit:cover;display:block}
+    .carousel-slide-video .yt-play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .carousel-slide-video .yt-play-circle{width:68px;height:48px;border-radius:12px;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+    .carousel-slide-video:hover .yt-play-circle{background:#ff0000}
+    .carousel-slide-video .yt-play-circle svg{width:24px;height:24px;fill:#fff}
+    .carousel-slide-video iframe{width:100%;height:100%;border:none;display:block}
+    .carousel-prev,.carousel-next{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.88);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:background 0.15s}
+    .carousel-prev:hover,.carousel-next:hover{background:#fff}
+    .carousel-prev{left:10px}.carousel-next{right:10px}
+    .carousel-prev svg,.carousel-next svg{stroke:#1E293B}
+    .carousel-dots-wrap{position:absolute;left:0;right:0;bottom:10px;z-index:6;display:flex;justify-content:center;align-items:center;gap:6px;pointer-events:none}
+    .carousel-dot{width:8px;height:8px;border-radius:50%;border:none;background:#cbd5e1;cursor:pointer;transition:all 0.2s;padding:0}
+    .carousel-dot.active{background:#2c96f4;width:24px;border-radius:4px}
+    .carousel-dot{pointer-events:auto}
+    .carousel-thumbs{display:none}
+    .carousel-thumb{width:64px;height:64px;border-radius:8px;border:2px solid #dbe3ee;background:#fff;padding:0;overflow:hidden;flex:0 0 auto}
+    .carousel-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .carousel-thumb.active{border-color:#2c96f4;box-shadow:0 0 0 2px rgba(44,150,244,0.2)}
+    .product-info{}
+    .product-breadcrumb{font-size:0.8125rem;color:#475569;margin-bottom:16px}
+    .product-breadcrumb a{color:#1e40af;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+    .product-breadcrumb a:hover{color:#1e3a8a}
+    .product-title{font-size:2.25rem;font-weight:700;color:#1E293B;line-height:1.2;margin-bottom:8px}
+    .product-title-row{display:flex;align-items:center;gap:12px}
+    .favorite-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--color-border);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.125rem;transition:all var(--transition);flex-shrink:0;padding:0}
+    .favorite-btn:hover{border-color:#dc2626;transform:scale(1.1)}
+    .favorite-btn.active{border-color:#dc2626;background:#fef2f2}
+    .favorite-toast{font-size:0.75rem;color:var(--color-muted);margin-top:4px;min-height:1.2em}
+    .product-tagline{font-size:1rem;color:#64748b;margin-bottom:16px;line-height:1.5}
+    .price-summary{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+    .price-summary .price-value{font-size:1.75rem;font-weight:700;color:var(--color-primary)}
+    .price-summary .price-sub{font-size:0.75rem;color:#475569}
+    .pricing-panel{background:#fff;border:1px solid #e2e8f0;border-radius:var(--radius);padding:16px;margin-bottom:24px}
+    .panel-section{padding:16px;border-radius:8px;margin-bottom:20px;background:#fff;border:1px solid #e2e8f0}
+    .panel-section:last-child{margin-bottom:0}
+    .panel-label{font-size:0.8125rem;font-weight:700;color:var(--color-text);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .price-block{border-top:1px solid #e2e8f0;padding-top:20px;margin-top:20px}
+    .price-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+    .price-row .price-label{font-size:0.8125rem;color:#475569}
+    .price-value{font-size:2rem;font-weight:700;color:var(--color-primary)}
+    .price-sub{font-size:0.75rem;color:#94a3b8}
+    .price-breakdown{margin:8px 0 12px}
+    .price-breakdown details{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px}
+    .price-breakdown summary{cursor:pointer;font-size:0.75rem;font-weight:700;color:#334155}
+    .price-breakdown ul{margin:8px 0 0;padding-left:16px}
+    .price-breakdown li{font-size:0.75rem;color:#475569;line-height:1.5}
+    .desktop-cta-sticky{position:sticky;bottom:0;z-index:8;margin-top:12px;padding:12px 0 4px;border-top:1px solid #e2e8f0;background:linear-gradient(to top,#fff 82%,rgba(255,255,255,0.96) 100%)}
+    .desktop-cta-sticky .price-block{margin-top:0;padding-top:0;border-top:none}
+    .add-to-cart-row{display:flex;gap:12px;margin-top:20px}
+    .btn-add-cart{flex:1;padding:16px 24px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius);font-family:var(--font-main);font-size:1rem;font-weight:700;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-add-cart:hover{background:var(--color-primary-dark)}
+    .btn-add-cart:disabled{background:#94a3b8;cursor:not-allowed}
+    .fabric-badge{display:inline-block;padding:8px 16px;border:2px solid var(--color-primary);border-radius:var(--radius);font-weight:600;font-size:0.875rem;color:var(--color-primary);background:#eff6ff;margin-bottom:16px}
+    .specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+    .spec-item{background:var(--color-surface);padding:12px 14px;border-radius:var(--radius);border:1px solid #e2e8f0}
+    .spec-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:4px}
+    .spec-value{font-size:0.9rem;font-weight:600;color:var(--color-text)}
+    .color-selector{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;max-width:360px}
+    .color-option{width:48px;height:48px;border-radius:50%;border:2px solid #cbd5e1;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.08)}
+    .color-option.selected{border-color:var(--color-primary);border-width:3px;box-shadow:0 0 0 2px rgba(44,150,244,0.3)}
+    .color-option:not(.selected){opacity:0.55}
+    .color-option:hover{opacity:1;border-color:#94a3b8}
+    .selected-color-name{margin-top:8px;font-size:0.8125rem;font-weight:600;color:#1E293B}
+    .payment-badges{display:flex;align-items:center;gap:12px;margin-top:16px;font-size:0.75rem;color:#64748b;padding:10px 14px;background:var(--color-surface);border-radius:6px;border:1px solid #e2e8f0}
+    .payment-badge{display:flex;align-items:center;gap:4px}
+    .trust-signals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:14px 16px;background:#F8FAFC;border:1px solid #e2e8f0;border-radius:8px}
+    .trust-signals-mobile{display:none}
+    .trust-item{display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#1E293B;white-space:nowrap}
+    .trust-item svg{width:16px;height:16px;color:var(--color-primary);flex-shrink:0}
+    /* Marine Shape Configurator */
+    .shape-select{width:100%;padding:12px 14px;border:2px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;min-height:48px}
+    .shape-select:focus{outline:none;border-color:var(--color-primary)}
+    .shape-guide{border:1px solid var(--color-border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;background:#fff}
+    .shape-guide img{width:100%;height:auto;display:block}
+    .shape-guide-caption{font-size:0.75rem;color:#64748b;padding:8px 12px;text-align:center;background:var(--color-surface)}
+    .shape-coming-soon{display:flex;align-items:center;gap:8px;padding:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--radius);margin-bottom:16px;color:#c2410c;font-size:0.875rem;font-weight:600}
+    .dim-inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+    .dim-field{display:flex;flex-direction:column;gap:4px}
+    .dim-field label{font-size:0.75rem;font-weight:600;color:#64748b;display:flex;align-items:center;gap:4px}
+    .dim-field input{padding:12px 14px;border:2px solid var(--color-border);border-radius:8px;font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);width:100%;box-sizing:border-box;min-height:48px}
+    .dim-field input:focus{outline:2px solid var(--color-primary);outline-offset:2px;border-color:var(--color-primary)}
+    .dim-helper{font-size:0.6875rem;color:#94a3b8;margin-top:2px;line-height:1.4}
+    .shape-estimate-wrap{grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:2px}
+    .shape-estimate-btn{padding:8px 12px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:8px;font-family:var(--font-main);font-size:0.75rem;font-weight:700;cursor:pointer}
+    .shape-estimate-btn:hover{background:#dbeafe}
+    .shape-estimate-note{font-size:0.75rem;color:#64748b}
+    .unit-toggle{display:flex;gap:0;border:2px solid var(--color-border);border-radius:6px;overflow:hidden;width:fit-content}
+    .unit-btn{padding:8px 16px;border:none;background:#fff;font-size:0.875rem;font-weight:600;cursor:pointer;color:#64748b;font-family:var(--font-main);transition:all 0.15s}
+    .unit-btn.active{background:#1e40af;color:#fff}
+    .unit-warning{margin-bottom:12px;font-size:0.75rem;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:8px 10px;line-height:1.45}
+    .info-matrix{margin-top:10px}
+    .info-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .info-tab{min-height:48px;border:2px solid #dbe3ee;border-radius:8px;background:#fff;color:#1E293B;font-weight:700;font-size:0.9375rem;transition:border-color .15s,background-color .15s}
+    .info-tab:hover{border-color:var(--color-primary)}
+    .info-tab.active{border:2px solid #1e40af;background:#dbeafe;color:#1e3a8a}
+    .info-panel{display:none;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px}
+    .info-panel.active{display:block}
+    .info-panel h3{font-size:1.125rem;font-weight:700;color:#1E293B;margin-bottom:12px}
+    .info-panel p{color:#64748b;line-height:1.7;margin-bottom:12px}
+    .info-panel ul{padding-left:20px;margin-bottom:16px}
+    .info-panel ul li{margin-bottom:6px;color:#64748b;line-height:1.5;list-style:disc}
+    .faq-item{border:1px solid #e2e8f0;border-radius:8px;background:#F8FAFC;padding:12px 14px;margin-bottom:10px}
+    .faq-item summary{font-size:0.875rem;font-weight:700;color:#1E293B;cursor:pointer}
+    .faq-item p,.faq-item ul{margin-top:8px;margin-bottom:0}
+    .related-section{margin-top:64px}
+    .related-section h2{font-size:1.5rem;font-weight:700;color:var(--color-text);margin-bottom:24px}
+    .related-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    .related-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid #e2e8f0;transition:transform 0.2s,box-shadow 0.2s}
+    .related-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+    .related-card .card-image{position:relative;overflow:hidden}
+    .related-card .card-image img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+    .related-card .card-body{padding:16px}
+    .related-card .card-title{font-size:0.875rem;font-weight:700;color:var(--color-text);margin-bottom:6px;line-height:1.3}
+    .related-card .card-price{font-size:0.9375rem;font-weight:700;color:#1e40af}
+    .related-card .card-price-note{font-size:0.75rem;color:#475569}
+    .related-card .rel-note{color:#475569}
+    .tag-pill{display:inline-flex;align-items:center;padding:5px 12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:999px;font-size:0.75rem;font-weight:600;color:var(--color-text);text-decoration:none;transition:all 0.2s}
+    .tag-pill:hover{border-color:var(--color-primary);color:var(--color-primary);background:#eff6ff}
+    @media(max-width:1024px){
+      .product-layout{grid-template-columns:1fr;gap:32px}
+      .product-gallery{position:static}
+      .product-info{height:auto;max-height:none;overflow:visible;padding-right:0}
+      .related-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:640px){
+      .product-layout{grid-template-columns:1fr;gap:16px;padding:24px 16px 24px}
+      .product-gallery{position:static;width:100%}
+      .product-title{font-size:1.75rem}
+      .pricing-panel{padding:12px;margin-bottom:12px}
+      .panel-section{margin-bottom:12px;padding:12px}
+      .price-summary{padding:12px 14px}
+      .dim-inputs{grid-template-columns:1fr}
+      .trust-signals-mobile{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:10px 12px;margin-bottom:16px}
+      .trust-signals-mobile .trust-item{flex-direction:column;text-align:center;gap:4px;font-size:0.75rem;font-weight:700}
+      .trust-signals-mobile .trust-item svg{width:18px;height:18px}
+      .carousel-thumbs{display:flex;gap:12px;overflow-x:auto;padding:10px 2px 2px}
+      .carousel-thumbs::-webkit-scrollbar{display:none}
+      .carousel-prev,.carousel-next{display:none}
+      .trust-signals-desktop-wrap{display:none}
+      .trust-signals-desktop{display:none}
+      .desktop-cta-sticky{position:static;margin-top:8px;padding:0;border-top:none;background:transparent}
+      .desktop-cta-sticky .price-block{border-top:1px solid #e2e8f0;padding-top:20px}
+      .related-grid{grid-template-columns:repeat(2,1fr)}
+      .mobile-cta-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #e2e8f0;padding:12px 16px;z-index:200;display:flex;gap:12px;align-items:center;box-shadow:0 -4px 16px rgba(0,0,0,0.10)}
+      .mobile-cta-bar .cta-price-wrap{flex:1;display:flex;flex-direction:column;gap:2px}
+      .mobile-cta-bar .cta-price{font-weight:700;font-size:0.9375rem;color:var(--color-text)}
+      .mobile-cta-bar .cta-btn{padding:12px 24px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius);font-weight:700;font-size:0.9375rem;font-family:var(--font-main);cursor:pointer;white-space:nowrap;transition:background 0.15s}
+      .mobile-cta-bar .cta-btn:hover{background:var(--color-primary-dark)}
+      .mobile-cta-bar .cta-btn:disabled{background:#94a3b8;cursor:not-allowed}
+    }
+    @media(max-width:480px){
+      .dim-inputs{grid-template-columns:1fr}
+      .related-grid{grid-template-columns:1fr}
+    }
+  </style>
+
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="Marine Top Sheet — MildMate">
+  <meta property="og:description" content="Marine Top Sheet by MildMate — custom shape-matched flat sheet for V-berth and irregular boat mattresses. 14 shape options, made-to-measure in CloudSoft.">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Marine Top Sheet — MildMate">
+  <meta name="twitter:description" content="Marine Top Sheet by MildMate — custom shape-matched flat sheet for V-berth and irregular boat mattresses. 14 shape options, made-to-measure in CloudSoft.">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+
+      window.__mildmateLoadAnalytics = loadAnalytics;
+
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) {
+        loadAnalytics();
+        return;
+      }
+
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+      if (document.readyState === 'complete') {
+        setTimeout(startOnce, 6000);
+      } else {
+        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+      }
+    })();
+  </script>
+</head>
+<body class="product-page">
+  <!-- Phase 8: GTM (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- __HEADER__ -->
+  <main>
+    <div class="container" style="padding-top:24px;">
+      <nav class="product-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a> &rsaquo;
+        <a href="/sheets/">Sheets</a> &rsaquo;
+        <span>Marine Top Sheet</span>
+      </nav>
+    </div>
+    <div class="product-layout">
+      <div class="product-gallery">
+        <div class="carousel-wrap" id="carousel-wrap">
+          <div class="carousel-track" id="carousel-track">
+            <div class="carousel-slide">
+              <img src="/images/products/marine-top-sheet/main.jpg" alt="Marine Top Sheet" id="gallery-main-img" width="800" height="800" loading="eager" fetchpriority="high" decoding="async">
+            </div>
+          </div>
+          <button class="carousel-prev" id="carousel-prev" aria-label="Previous image">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="carousel-next" id="carousel-next" aria-label="Next image">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="carousel-dots-wrap" id="carousel-dots-wrap"></div>
+        </div>
+        <div class="carousel-thumbs" id="carousel-thumbs"></div>
+      </div>
+      <div class="product-info">
+        <div class="product-title-row">
+          <h1 class="product-title">Marine Top Sheet</h1>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
+        </div>
+        <p class="favorite-toast" id="fav-toast"></p>
+        <p class="product-tagline">Custom shape-matched marine top sheet. 14 boat mattress shapes, made to your dimensions, CloudSoft quick-dry comfort.</p>
+        <div class="price-summary" id="price-summary">
+          <div class="price-row">
+            <span class="price-label">Estimated Price</span>
+            <span class="price-value" id="price-display-top"> — </span>
+          </div>
+          <span class="price-sub" id="price-top-sub">Enter your mattress dimensions below</span>
+        </div>
+        <div class="trust-signals trust-signals-mobile">
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Premium Quality</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top-Rated</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7L9 18l-5-5"/></svg>Custom Fit</div>
+          <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Worldwide</div>
+        </div>
+        <div class="pricing-panel" id="marine-configurator">
+          <!-- Shape Selector -->
+          <div class="panel-section">
+            <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
+            <select class="shape-select" id="marine-shape-select">
+              <option value=""> — Select a shape — </option>
+            </select>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
+              <label class="panel-label" for="boat-model-input" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Auto-fill dimensions</label>
+              <input id="boat-model-input" list="boat-model-list" class="shape-select" placeholder="Type boat model (e.g. 2007 Meridian 391 Sedan)">
+              <datalist id="boat-model-list"></datalist>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                <button type="button" class="shape-estimate-btn" id="boat-model-apply-btn">Use this model</button>
+                <span id="boat-model-status" style="font-size:0.75rem;color:#64748b"></span>
+              </div>
+            </div>
+          </div>
+          <!-- Schematic Diagram -->
+          <div class="shape-guide" id="shape-guide-wrap">
+            <img src="" alt="Shape diagram" id="shape-guide-img" style="display:none;">
+            <div class="shape-guide-caption" id="shape-caption" style="display:none;"></div>
+            <div id="shape-guide-placeholder" style="padding:40px 20px;text-align:center;color:#94a3b8;font-size:0.875rem;">
+              Select a shape above to see the measurement diagram
+            </div>
+          </div>
+          <!-- Coming Soon Message -->
+          <div class="shape-coming-soon" id="shape-coming-soon" style="display:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>This shape's measurement form is coming soon. In the meantime, please contact us directly for a custom quote.</span>
+          </div>
+          <!-- CloudSoft Fabric Badge -->
+          <div class="fabric-badge" id="material-badge">CloudSoft — Marine Edition</div>
+          <div class="specs-grid" id="material-specs">
+            <div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value">CloudSoft</div></div>
+            <div class="spec-item"><div class="spec-label">Drying</div><div class="spec-value">Quick-Dry</div></div>
+            <div class="spec-item"><div class="spec-label">Climate</div><div class="spec-value">Moisture-Wicking</div></div>
+            <div class="spec-item"><div class="spec-label">Material</div><div class="spec-value">Premium Microfiber</div></div>
+          </div>
+          <!-- Dimension Inputs (dynamic per shape) -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <strong style="font-size:0.9375rem;">Enter your exact mattress dimensions</strong>
+            <div class="unit-toggle">
+              <button class="unit-btn active" id="unit-cm">cm</button>
+              <button class="unit-btn" id="unit-in">inch</button>
+            </div>
+          </div>
+          <div class="unit-warning" id="unit-warning-note">Default: <strong>cm</strong>. Using inches? Switch to <strong>inch</strong> first.</div>
+          <div class="dim-inputs" id="dim-inputs-container">
+            <!-- Populated by JS -->
+          </div>
+          <div id="bf-note" style="display:none; font-size:0.75rem; color:#64748b; margin-bottom:8px; font-style:italic;">Cut corner fields (B, F) are for measurement verification only — they do not affect pricing.</div>
+          <div class="area-warning" id="area-warning" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#b91c1c; font-size:0.875rem; font-weight:600; line-height:1.5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
+          </div>
+          <div class="price-row" style="margin-bottom:12px;">
+            <span class="price-label">Estimated Price</span>
+            <span class="price-value" id="custom-price" style="font-size:1.5rem;"> — </span>
+          </div>
+          <div id="price-breakdown" class="price-breakdown"></div>
+          <!-- Color Selector -->
+          <div class="panel-section fabric-color-group" data-fabric="breezeplus" style="display:none"><div class="panel-label">Color — BreezePlus</div><div class="color-selector"><div class="color-option selected" data-color="dark-grey" style="background:#4D545B;" title="Dark Grey"></div><div class="color-option" data-color="silver" style="background:#B7BEC8;" title="Silver"></div><div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div><div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div><div class="color-option" data-color="emerald" style="background:#618283;" title="Emerald"></div><div class="color-option" data-color="sea" style="background:#5A7DA2;" title="Sea"></div><div class="color-option" data-color="pure-white" style="background:#FFFFFF; border:2px solid #ccc;" title="Pure White"></div><div class="color-option" data-color="baby-pink" style="background:#E9B7BF;" title="Baby Pink"></div><div class="color-option" data-color="ivory" style="background:#F1EFE1;" title="Ivory"></div></div></div><div class="panel-section fabric-color-group" data-fabric="cloudsoft"><div class="panel-label">Color — CloudSoft</div><div class="color-selector"><div class="color-option selected" data-color="mint" style="background:#67E4D3;" title="Mint"></div><div class="color-option" data-color="charcoal" style="background:#5E5E5E;" title="Charcoal"></div><div class="color-option" data-color="grey" style="background:#A5A9B4;" title="Grey"></div><div class="color-option" data-color="sapphire" style="background:#385E9D;" title="Sapphire"></div><div class="color-option" data-color="forest" style="background:#486C6A;" title="Forest"></div><div class="color-option" data-color="denim" style="background:#1E4477;" title="Denim"></div><div class="color-option" data-color="rosegold" style="background:#D48C98;" title="RoseGold"></div><div class="color-option" data-color="beige" style="background:#E1D1B1;" title="Beige"></div><div class="color-option" data-color="ovaltine" style="background:#B99F87;" title="Ovaltine"></div><div class="color-option" data-color="white" style="background:#FFFFFF;" title="White"></div><div class="color-option" data-color="lavender" style="background:#9581B1;" title="Lavender"></div><div class="color-option" data-color="olive" style="background:#93B09D;" title="Olive"></div></div></div><div class="panel-section fabric-color-group" data-fabric="premacotton" style="display:none"><div class="panel-label">Color — PremaCotton</div><div class="color-selector"><div class="color-option selected" data-color="snow-white" style="background:#ffffff; border:2px solid #ccc;" title="Snow White"></div></div></div><div class="panel-section fabric-color-group" data-fabric="ecoluxe" style="display:none"><div class="panel-label">Color — EcoLuxe</div><div class="color-selector"><div class="color-option selected" data-color="vanilla-linen" style="background:#f3e5ab;" title="Vanilla Linen"></div></div></div>
+          <div class="desktop-cta-sticky">
+            <div class="price-block">
+              <div class="price-row">
+                <span class="price-label">Price</span>
+                <span class="price-value" id="price-display"> — </span>
+              </div>
+            </div>
+            <button class="btn-add-cart" id="add-to-cart" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              Request Custom Quote
+            </button>
+          </div>
+          <div class="payment-badges">
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Visa / MC</span>
+            <span class="payment-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Secure checkout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container trust-signals-desktop-wrap" style="max-width:1280px;padding:0 24px 28px;">
+      <div class="trust-signals trust-signals-desktop">
+        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Premium Quality</div>
+        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg> Top-Rated Etsy Boutique</div>
+        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Ships from Thailand</div>
+        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> +66 (0)87 236 2364</div>
+      </div>
+    </div>
+    <div class="container" style="max-width:1280px;padding:0 24px;">
+      <div class="info-matrix">
+        <div class="info-tabs">
+          <button class="info-tab active" type="button" data-info-tab="description">Description</button>
+          <button class="info-tab" type="button" data-info-tab="faq">FAQs</button>
+        </div>
+        <div class="info-panel active" id="info-panel-description">
+          <h3>Custom Shape-Matched Marine Top Sheet</h3>
+          <p>Boat mattresses are rarely standard. This top sheet is made to follow your approved mattress outline, with extra allowance for side coverage and tuck-under comfort. It is a loose, non-elastic flat sheet designed for V-berths, island berths, quarter berths, and irregular marine mattress layouts.</p>
+          <ul><li>Built from your approved boat mattress outline</li><li>Loose flat-sheet style (no fitted corners and no 360° elastic)</li><li>Supports 14 marine mattress shapes with visual guides</li><li>Use cm or inch inputs for easier measuring</li><li>Designed for cleaner drape and reduced bunching on tapered berths</li><li>Made in Thailand and shipped worldwide</li></ul>
+          <h3>CloudSoft Marine Fabric</h3>
+          <p>CloudSoft 115 GSM premium microfiber is soft, quick-dry, and practical for enclosed marine cabins. Lightweight handling makes wash-and-reset routines easier on board while maintaining a smooth, neat finish.</p>
+          <ul><li>115 GSM premium microfiber</li><li>Quick-dry and lightweight</li><li>Moisture-managing comfort for marine use</li><li>Wrinkle-resistant and easy to maintain</li><li>Available in 12 CloudSoft colors</li></ul>
+        </div>
+        <div class="info-panel" id="info-panel-faq">
+          <details class="faq-item" open><summary>What fabric and care details should I know?</summary><ul><li>Machine wash warm (60°C / 140°F)  -  gentle cycle</li><li>Do not bleach  -  mild detergent only</li><li>Tumble dry low or hang dry</li><li>No ironing needed  -  wrinkle-resistant by design</li></ul></details><details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for an accurate custom fit.</p></details><details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each sheet is custom-made to your exact shape and dimensions. Production takes 5–7 business days. Shipping times vary by destination — you'll receive a tracking number once dispatched.</p></details><details class="faq-item"><summary>What if my shape isn't listed?</summary><p>Choose the closest shape and add notes in the quote form — we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>
+        </div>
+      </div>
+    </div>
+    <div class="container" id="reviews" style="max-width:1280px;padding:0 24px;">
+      <div class="reviews-section">
+        <div class="reviews-header"><h2>Customer Reviews</h2></div>
+        <div class="reviews-summary" id="product-review-summary">
+          <div class="summary-score" id="product-review-score">5.0</div>
+          <div class="summary-detail">
+            <div class="summary-stars" id="product-review-stars">★★★★★</div>
+            <div class="summary-text" id="product-review-count">Loading reviews...</div>
+          </div>
+        </div>
+        <div class="reviews-carousel-wrapper" id="product-reviews-wrapper" style="padding:0 44px;position:relative;">
+          <button class="carousel-arrow carousel-prev reviews-prev" aria-label="Previous review" style="left:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <div class="reviews-track" id="product-reviews-track"></div>
+          <button class="carousel-arrow carousel-next reviews-next" aria-label="Next review" style="right:0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="rc-dots" id="product-review-dots"></div>
+      </div>
+    </div>
+    <div class="container" style="max-width:1280px;padding:0 24px;">
+      <div class="related-section">
+        <h2>You might also like</h2>
+        <div class="related-grid"><a href="/product/marine-fitted-sheet/" class="related-card"><div class="card-image"><img src="/images/products/boat-fitted-sheet/main.jpg" alt="Marine Fitted Sheet" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Marine Fitted Sheet</div><div class="card-price">From USD 52.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/duvet-cover-marine/" class="related-card"><div class="card-image"><img src="/images/products/duvet-cover-marine/main.jpg" alt="Duvet Cover — Marine" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Duvet Cover — Marine</div><div class="card-price">From USD 65.00</div><div class="card-price-note">CloudSoft</div></div></a><a href="/product/marine-mattress-protector/" class="related-card"><div class="card-image"><img src="https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781748617971-bdh8v6.jpg" alt="Marine Mattress Protector" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Marine Mattress Protector</div><div class="card-price">From USD 49.00</div><div class="card-price-note">TPU Waterproof</div></div></a><a href="/product/pillowcase-envelope/" class="related-card"><div class="card-image"><img src="/images/products/pillowcase-envelope/main.jpg" alt="Envelope Pillowcase" width="400" height="300" loading="lazy"></div><div class="card-body"><div class="card-title">Envelope Pillowcase</div><div class="card-price">From USD 16.00</div><div class="card-price-note">CloudSoft</div></div></a></div>
+      </div>
+    </div>
+    <div class="container" style="max-width:1280px;padding:0 24px 64px;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <span style="font-size:0.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;">Tags:</span>
+        <a href="/sheets/" class="tag-pill">Sheets</a><a href="/marine/" class="tag-pill">Marine &amp; Yacht</a>
+      </div>
+    </div>
+  </main>
+  <!-- __FOOTER__ -->
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script src="/js/campaign-state.js?v=20260601"></script>
+  <script src="/js/reviews-carousel.js"></script>
+  <div class="mobile-cta-bar" id="mobile-cta-bar">
+    <div class="cta-price-wrap">
+      <span class="cta-price" id="mobile-cta-price"> — </span>
+    </div>
+    <button class="cta-btn" id="mobile-add-to-cart" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Request Custom Quote
+    </button>
+  </div>
+  <script>
+    /* ── Mobile CTA sync ── */
+    (function(){
+      var bar=document.getElementById('mobile-cta-bar');
+      var desktopBtn=document.getElementById('add-to-cart');
+      var mobileBtn=document.getElementById('mobile-add-to-cart');
+      var priceDisplay=document.getElementById('price-display');
+      var mobilePrice=document.getElementById('mobile-cta-price');
+      if(!bar||!desktopBtn||!mobileBtn)return;
+      if(priceDisplay&&mobilePrice){
+        var priceObserver=new MutationObserver(function(){mobilePrice.innerHTML=priceDisplay.innerHTML});
+        priceObserver.observe(priceDisplay,{childList:true,characterData:true,subtree:true});
+        mobilePrice.innerHTML=priceDisplay.innerHTML;
+      }
+      if(desktopBtn&&mobileBtn){
+        var disabledObserver=new MutationObserver(function(){mobileBtn.disabled=desktopBtn.disabled});
+        disabledObserver.observe(desktopBtn,{attributes:true,attributeFilter:['disabled']});
+        mobileBtn.disabled=desktopBtn.disabled;
+        var textObserver=new MutationObserver(function(){mobileBtn.innerHTML=desktopBtn.innerHTML});
+        textObserver.observe(desktopBtn,{childList:true,characterData:true,subtree:true});
+        mobileBtn.innerHTML=desktopBtn.innerHTML;
+      }
+      if(mobileBtn&&desktopBtn){mobileBtn.addEventListener('click',function(){desktopBtn.click()})}
+    })();
+
+    /* ── Favorite Toggle ── */
+    var productSlug='marine-top-sheet';
+    var productName='Marine Top Sheet';
+    function updateFavUI(){
+      var btn=document.getElementById('fav-btn');
+      var toast=document.getElementById('fav-toast');
+      if(!btn)return;
+      var isFav=MildMateCampaigns.isFavorite(productSlug);
+      btn.innerHTML=isFav?'♥':'♡';
+      btn.className=isFav?'favorite-btn active':'favorite-btn';
+      btn.title=isFav?'Remove from favorites':'Save to favorites';
+    }
+    window.toggleFavoriteProduct=async function(){
+      var isFav=MildMateCampaigns.toggleFavorite(productSlug,productName);
+      updateFavUI();
+      var toast=document.getElementById('fav-toast');
+      if(toast){toast.textContent=isFav?'♥ Saved!':'';toast.style.color='#dc2626'}
+      if(window.MildMateCampaigns&&typeof MildMateCampaigns.toggleFavoriteServer==='function'){
+        var result=await MildMateCampaigns.toggleFavoriteServer(productSlug,productName);
+        if(!result.ok){MildMateCampaigns.toggleFavorite(productSlug,productName);updateFavUI()}
+      }
+    };
+    async function hydrateFavorites(){
+      if(window.MildMateCampaigns&&typeof MildMateCampaigns.syncFavoritesFromServer==='function'){await MildMateCampaigns.syncFavoritesFromServer()}
+      updateFavUI();
+    }
+    hydrateFavorites();
+    window.addEventListener('clerk:signed-in',hydrateFavorites);
+    window.addEventListener('clerk:signed-out',updateFavUI);
+
+    /* ── Desktop columns sync ── */
+    (function(){
+      function syncDesktopColumnsHeight(){
+        var infoCol=document.querySelector('.product-info');
+        var mediaCol=document.querySelector('.product-gallery');
+        if(!infoCol||!mediaCol)return;
+        if(window.innerWidth<=1024){infoCol.style.removeProperty('--desktop-col-height');return}
+        var mediaHeight=Math.round(mediaCol.getBoundingClientRect().height);
+        if(mediaHeight>0)infoCol.style.setProperty('--desktop-col-height',mediaHeight+'px');
+      }
+      window.syncDesktopColumnsHeight=syncDesktopColumnsHeight;
+      window.addEventListener('load',syncDesktopColumnsHeight);
+      window.addEventListener('resize',syncDesktopColumnsHeight);
+      setTimeout(syncDesktopColumnsHeight,200);
+    })();
+  </script>
+
+  <script>
+    /* ── Image Carousel ── */
+    (function(){
+      var slug=location.pathname.split('/').filter(Boolean).pop();
+      var currentSlide=0;
+      var gallery=[];
+      function extractYouTubeId(url){
+        if(!url)return'';
+        var m=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        return m?m[1]:'';
+      }
+      function buildCarousel(){
+        var wrap=document.getElementById('carousel-wrap');
+        var track=document.getElementById('carousel-track');
+        var dotsWrap=document.getElementById('carousel-dots-wrap');
+        var thumbsWrap=document.getElementById('carousel-thumbs');
+        if(!wrap||!track||!gallery.length)return;
+        if(gallery.length===1){
+          var prevBtn=document.getElementById('carousel-prev');
+          var nextBtn=document.getElementById('carousel-next');
+          if(prevBtn)prevBtn.style.display='none';
+          if(nextBtn)nextBtn.style.display='none';
+          if(dotsWrap)dotsWrap.style.display='none';
+          if(thumbsWrap)thumbsWrap.style.display='none';
+        }
+        track.innerHTML=gallery.map(function(item,i){
+          if(typeof item==='object'&&item.videoId){
+            var thumb='https://img.youtube.com/vi/'+item.videoId+'/hqdefault.jpg';
+            return '<div class="carousel-slide carousel-slide-video" data-video-id="'+item.videoId+'"><img class="yt-thumb" src="'+thumb+'" alt="Product video" width="480" height="360" loading="lazy"><div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
+          }
+          return '<div class="carousel-slide"><img src="'+item+'" alt="Product image" width="800" height="800" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+'></div>';
+        }).join('');
+        dotsWrap.innerHTML=gallery.map(function(item,i){
+          return '<button class="carousel-dot'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="'+(typeof item==='object'&&item.videoId?'Video':'Image '+(i+1))+'"></button>';
+        }).join('');
+        if(thumbsWrap){
+          thumbsWrap.innerHTML=gallery.map(function(item,i){
+            if(typeof item==='object'&&item.videoId){
+              var thumb='https://img.youtube.com/vi/'+item.videoId+'/default.jpg';
+              return '<button class="carousel-thumb thumb-video'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Video thumbnail"><img src="'+thumb+'" alt="Video thumb" loading="lazy"></button>';
+            }
+            return '<button class="carousel-thumb'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Thumbnail '+(i+1)+'"><img src="'+item+'" alt="Product thumbnail '+(i+1)+'" loading="lazy"></button>';
+          }).join('');
+        }
+        track.addEventListener('click',function(e){
+          var slide=e.target.closest('.carousel-slide-video');
+          if(!slide)return;
+          var videoId=slide.getAttribute('data-video-id');
+          if(!videoId||slide.querySelector('iframe'))return;
+          slide.innerHTML='<iframe src="https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+        });
+        dotsWrap.querySelectorAll('.carousel-dot').forEach(function(dot){
+          dot.addEventListener('click',function(){goToSlide(parseInt(dot.getAttribute('data-idx'),10))});
+        });
+        if(thumbsWrap){
+          thumbsWrap.querySelectorAll('.carousel-thumb').forEach(function(thumb){
+            thumb.addEventListener('click',function(){goToSlide(parseInt(thumb.getAttribute('data-idx'),10))});
+          });
+        }
+        var prevBtn=document.getElementById('carousel-prev');
+        var nextBtn=document.getElementById('carousel-next');
+        if(prevBtn)prevBtn.addEventListener('click',function(){goToSlide(currentSlide-1)});
+        if(nextBtn)nextBtn.addEventListener('click',function(){goToSlide(currentSlide+1)});
+        var touchStartX=0;
+        wrap.addEventListener('touchstart',function(e){touchStartX=e.changedTouches[0].screenX},{passive:true});
+        wrap.addEventListener('touchend',function(e){
+          var dx=e.changedTouches[0].screenX-touchStartX;
+          if(Math.abs(dx)>50){if(dx<0)goToSlide(currentSlide+1);else goToSlide(currentSlide-1)}
+        },{passive:true});
+        goToSlide(0);
+        if(typeof window.syncDesktopColumnsHeight==='function')window.syncDesktopColumnsHeight();
+      }
+      function goToSlide(idx){
+        if(!gallery.length)return;
+        if(idx<0)idx=gallery.length-1;
+        if(idx>=gallery.length)idx=0;
+        currentSlide=idx;
+        var track=document.getElementById('carousel-track');
+        if(track){track.classList.remove('no-transition');track.style.transform='translateX(-'+(idx*100)+'%)'}
+        document.querySelectorAll('.carousel-dot').forEach(function(d){d.classList.remove('active')});
+        var dots=document.querySelectorAll('.carousel-dot');
+        if(dots[idx])dots[idx].classList.add('active');
+        var thumbs=document.querySelectorAll('.carousel-thumb');
+        thumbs.forEach(function(t){t.classList.remove('active')});
+        if(thumbs[idx]){thumbs[idx].classList.add('active');if(typeof thumbs[idx].scrollIntoView==='function'){thumbs[idx].scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})}}
+      }
+      fetch('/api/products/'+slug)
+        .then(function(r){return r.json()})
+        .then(function(payload){
+          var p=payload&&(payload.product||payload);
+          if(!p)return;
+          var imgs = [];
+          try {
+            imgs = JSON.parse(p.images || "[]");
+          } catch(e) {
+            try {
+              imgs = JSON.parse((p.images || "[]").replace(/\\"/g, '"'));
+            } catch(err) {
+              imgs = [];
+            }
+          }
+          while (imgs.length < 20) imgs.push("");
+          var fallback=p.image_url||"";
+          var heroImg=imgs[0]||fallback;
+          if(heroImg)gallery.push(heroImg);
+          var ytId=extractYouTubeId(p.youtube_url||'');
+          if(ytId)gallery.push({videoId:ytId});
+          for(var i=1;i<imgs.length;i++)if(imgs[i])gallery.push(imgs[i]);
+          if(!gallery.length&&fallback)gallery.push(fallback);
+          buildCarousel();
+          if(typeof window.syncDesktopColumnsHeight==='function')window.syncDesktopColumnsHeight();
+
+          var lang = (document.documentElement && document.documentElement.lang) ? document.documentElement.lang.toLowerCase() : 'en';
+          var desc = (lang === 'th' && p.description_th) ? p.description_th : p.description_en;
+          if (desc) {
+            var descPanel = document.getElementById('info-panel-description');
+            if (descPanel) descPanel.innerHTML = desc;
+          }
+
+          var faq = (lang === 'th' && p.faq_th) ? p.faq_th : p.faq_en;
+          if (faq) {
+            var faqPanel = document.getElementById('info-panel-faq');
+            if (faqPanel) faqPanel.innerHTML = faq;
+          }
+        }).catch(function(){});
+    })();
+  </script>
+
+  <script>
+    /* ── Marine Shape Configurator ── */
+    (function(){
+      var shapes = [{"code":"01","name":"V-Berth – 4 Sides","schematic":"/images/BoatShapes/001_V-Berth.jpg","formula":"vberth-4sides"},{"code":"02","name":"V-Berth Cut Corner – 6 Sides","schematic":"/images/BoatShapes/002_V-Berth_CutCorner.jpg","formula":"vberth-cut-corner"},{"code":"03","name":"V-Berth Rounded Nose","schematic":"/images/BoatShapes/003_V-Berth_RoundedNose.jpg","formula":"vberth-rounded-nose"},{"code":"04","name":"V-Berth Split – 2 Pieces","schematic":"/images/BoatShapes/004_V-Berth_2Pieces.jpg","formula":"vberth-split"},{"code":"05","name":"Island 6 Sides / Hexagon Bunk","schematic":"/images/BoatShapes/005_HexagonBunk.jpg","formula":"island-6"},{"code":"06","name":"Island 7 Sides","schematic":"/images/BoatShapes/006_Island_7Sides.jpg","formula":"island-7"},{"code":"07","name":"Island 8 Sides / Octagon Bunk","schematic":"/images/BoatShapes/007_Island_8Sides.jpg","formula":"island-8"},{"code":"08","name":"Rectangle","schematic":"/images/BoatShapes/008_Rectangle.jpg","formula":"rectangle"},{"code":"09","name":"Rectangle Cut-Off Corner – 5 Sides","schematic":"/images/BoatShapes/009_Rectangle_CutOff.jpg","formula":"rect-cut-1"},{"code":"10","name":"Rectangle Two Cut-Off Corners – 6 Sides","schematic":"/images/BoatShapes/010_Rectangle_TwoCutOff.jpg","formula":"rect-cut-2"},{"code":"11","name":"Radius Corner Rectangle","schematic":"/images/BoatShapes/011_RadiusCorner.jpg","formula":"radius-rect"},{"code":"12","name":"Quarter Berth / Side Berth Tapered","schematic":"/images/BoatShapes/012_QuarterBerth.jpg","formula":"quarter-berth"},{"code":"13","name":"Aft Cabin Irregular Mattress","schematic":"/images/BoatShapes/013_AftCabin.jpg","formula":"aft-cabin"},{"code":"14","name":"Notched Mattress / Obstruction Cut-Out","schematic":"/images/BoatShapes/014_NotchedMattress.jpg","formula":"notched"}];
+
+      var shapeSelect = document.getElementById('marine-shape-select');
+      var guideImg = document.getElementById('shape-guide-img');
+      var guideCaption = document.getElementById('shape-caption');
+      var guidePlaceholder = document.getElementById('shape-guide-placeholder');
+      var comingSoon = document.getElementById('shape-coming-soon');
+      var dimsContainer = document.getElementById('dim-inputs-container');
+      var customPrice = document.getElementById('custom-price');
+      var priceBreakdown = document.getElementById('price-breakdown');
+      var priceDisplay = document.getElementById('price-display');
+      var priceDisplayTop = document.getElementById('price-display-top');
+      var priceTopSub = document.getElementById('price-top-sub');
+      var unitWarningNote = document.getElementById('unit-warning-note');
+      var addToCartBtn = document.getElementById('add-to-cart');
+      var boatModelInput = document.getElementById('boat-model-input');
+      var boatModelList = document.getElementById('boat-model-list');
+      var boatModelApplyBtn = document.getElementById('boat-model-apply-btn');
+      var boatModelStatus = document.getElementById('boat-model-status');
+      var currentQuotePriceThb = 0;
+      var currentQuotePriceUsd = 0;
+      var boatModels = [];
+      var activeBoatModel = null;
+
+      function normalizeModelText(v){
+        return String(v || '').trim().toLowerCase().replace(/[_\s-]+/g, ' ').trim();
+      }
+
+      function setBoatModelStatus(text, isError){
+        if(!boatModelStatus) return;
+        boatModelStatus.textContent = text || '';
+        boatModelStatus.style.color = isError ? '#b91c1c' : '#64748b';
+      }
+
+      function findBoatModelByInput(value){
+        var needle = normalizeModelText(value);
+        if(!needle) return null;
+        for(var i=0;i<boatModels.length;i++){
+          var m = boatModels[i];
+          var byName = normalizeModelText(m.model_name);
+          var byKey = normalizeModelText(String(m.model_key || '').replace(/_/g, ' '));
+          if(needle === byName || needle === byKey) return m;
+        }
+        return null;
+      }
+
+      function fillDimensionsFromModel(model){
+        if(!model || !model.dimensions) return;
+        Object.keys(model.dimensions).forEach(function(k){
+          var el = document.getElementById('dim-' + String(k).toUpperCase());
+          if(!el) return;
+          var n = Number(model.dimensions[k]);
+          if(!isFinite(n) || n <= 0) return;
+          if(currentUnit === 'in') el.value = (n / 2.54).toFixed(1);
+          else el.value = Math.round(n * 100) / 100;
+        });
+      }
+
+      function applyBoatModel(model){
+        if(!model) return;
+        if(!shapeFields[model.shape_code]){
+          setBoatModelStatus('Model shape is not supported on this page yet.', true);
+          return;
+        }
+        shapeSelect.value = model.shape_code;
+        shapeSelect.dispatchEvent(new Event('change'));
+        fillDimensionsFromModel(model);
+        autoComputeShape10();
+        updatePrice();
+        activeBoatModel = model;
+        setBoatModelStatus('Applied: ' + (model.model_name || model.model_key), false);
+      }
+
+      function loadBoatModels(){
+        if(!boatModelList) return;
+        fetch('/api/boat-models')
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(payload){
+            var rows = payload && Array.isArray(payload.models) ? payload.models : [];
+            boatModels = rows;
+            boatModelList.innerHTML = rows.map(function(m){
+              var label = m.model_name || m.model_key || '';
+              return '<option value="' + String(label).replace(/"/g, '&quot;') + '"></option>';
+            }).join('');
+            setBoatModelStatus(rows.length ? (rows.length + ' boat models available') : 'No saved boat models yet', false);
+          })
+          .catch(function(){
+            setBoatModelStatus('Boat model lookup unavailable right now.', true);
+          });
+      }
+
+      /* Populate shape dropdown */
+      shapes.forEach(function(s){
+        var opt = document.createElement('option');
+        opt.value = s.code;
+        opt.textContent = s.code + '. ' + s.name + (s.comingSoon ? ' (Coming Soon)' : '');
+        if(s.comingSoon) opt.disabled = true;
+        shapeSelect.appendChild(opt);
+      });
+
+      if(boatModelApplyBtn){
+        boatModelApplyBtn.addEventListener('click', function(){
+          var model = findBoatModelByInput(boatModelInput && boatModelInput.value);
+          if(!model){
+            setBoatModelStatus('Model not found. Please pick from suggestions.', true);
+            return;
+          }
+          applyBoatModel(model);
+        });
+      }
+      if(boatModelInput){
+        boatModelInput.addEventListener('change', function(){
+          var model = findBoatModelByInput(boatModelInput.value);
+          if(model) setBoatModelStatus('Found model. Click "Use this model".', false);
+        });
+      }
+
+      /* ── Dimension field definitions per shape ── */
+      var shapeFields = {
+        '01': [
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'A',label:'Bottom (A) *',placeholder:'e.g. 180',required:true},
+          {id:'D',label:'Top (D) *',placeholder:'e.g. 70',required:true},
+          {id:'B',label:'Left Side (B) — auto, mirrors C',placeholder:'auto'},
+          {id:'C',label:'Right Side (C) — mirrors B',placeholder:'auto'},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '02': [
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'A',label:'Bottom (A) *',placeholder:'e.g. 180',required:true},
+          {id:'D',label:'Top (D) *',placeholder:'e.g. 70',required:true},
+          {id:'B',label:'Cut Corner L — foot (B) — mirrors F',placeholder:'auto',required:true},
+          {id:'F',label:'Cut Corner R — foot (F) — mirrors B',placeholder:'auto',required:true},
+          {id:'C',label:'Left Side (C) — auto estimate, mirrors E',placeholder:'auto',required:true},
+          {id:'E',label:'Right Side (E) — auto estimate, mirrors C',placeholder:'auto',required:true}
+        ],
+        '03': [
+          {id:'C',label:'Head Top — Rounded (C) *',placeholder:'e.g. 70',required:true},
+          {id:'A',label:'Foot Bottom (A) *',placeholder:'e.g. 180',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'B',label:'Left Side (B) — auto, mirrors D',placeholder:'auto'},
+          {id:'D',label:'Right Side (D) — mirrors B',placeholder:'auto'},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '04': [
+          {id:'C',label:'Head Top — Left (C) * — mirrors E',placeholder:'e.g. 90',required:true},
+          {id:'E',label:'Head Top — Right (E) *',placeholder:'e.g. 90',required:true},
+          {id:'A',label:'Foot Bottom — Total (A) *',placeholder:'e.g. 180',required:true},
+          {id:'D',label:'Center Length (D) *',placeholder:'e.g. 210',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
+          {id:'B',label:'Left Side (B) — mirrors F',placeholder:'auto',required:true},
+          {id:'F',label:'Right Side (F)',placeholder:'auto',required:true}
+        ],
+        '05': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 80',required:true},
+          {id:'D',label:'Foot Bottom (D) *',placeholder:'e.g. 100',required:true},
+          {id:'B',label:'Left Upper (B) — mirrors F',placeholder:'e.g. 80',required:true},
+          {id:'F',label:'Right Upper (F)',placeholder:'e.g. 80',required:true},
+          {id:'C',label:'Left Lower (C) — mirrors E',placeholder:'e.g. 80',required:true},
+          {id:'E',label:'Right Lower (E)',placeholder:'e.g. 80',required:true},
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '06': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 70',required:true},
+          {id:'B',label:'Left Side 1 (B) — mirrors G',placeholder:'auto',required:true},
+          {id:'G',label:'Right Side 1 (G)',placeholder:'auto',required:true},
+          {id:'C',label:'Left Side 2 (C) — mirrors F',placeholder:'e.g. 70',required:true},
+          {id:'F',label:'Right Side 2 (F)',placeholder:'e.g. 70',required:true},
+          {id:'D',label:'Left Side 3 (D) — mirrors E',placeholder:'auto',required:true},
+          {id:'E',label:'Right Side 3 (E)',placeholder:'auto',required:true},
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L1',label:'Length 1 (L1) — Head to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'L2',label:'Length 2 (L2) — Bottom corner to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '07': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 60',required:true},
+          {id:'E',label:'Foot Bottom (E) *',placeholder:'e.g. 80',required:true},
+          {id:'B',label:'Left Side 1 (B) — mirrors H',placeholder:'e.g. 60',required:true},
+          {id:'H',label:'Right Side 1 (H) — mirrors B',placeholder:'e.g. 60',required:true},
+          {id:'C',label:'Left Side 2 (C) — mirrors G',placeholder:'e.g. 60',required:true},
+          {id:'G',label:'Right Side 2 (G) — mirrors C',placeholder:'e.g. 60',required:true},
+          {id:'D',label:'Left Side 3 (D) — mirrors F',placeholder:'e.g. 60',required:true},
+          {id:'F',label:'Right Side 3 (F) — mirrors D',placeholder:'e.g. 60',required:true},
+          {id:'W1',label:'Top Width (W1) *',placeholder:'e.g. 160',required:true},
+          {id:'W2',label:'Bottom Width (W2) *',placeholder:'e.g. 160',required:true},
+          {id:'L1',label:'Length 1 (L1) — Head to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'L2',label:'Length 2 (L2) — Bottom corner to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '08': [
+          {id:'A',label:'Width 1 (A) * — mirrors C',placeholder:'e.g. 150',required:true},
+          {id:'C',label:'Width 2 (C)',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Length 1 (B) * — mirrors D',placeholder:'e.g. 200',required:true},
+          {id:'D',label:'Length 2 (D)',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '09': [
+          {id:'D',label:'Bottom (D) * — D > A',placeholder:'e.g. 180',required:true},
+          {id:'A',label:'Top (A) *',placeholder:'e.g. 150',required:true},
+          {id:'E',label:'Side (E) * — E > C',placeholder:'e.g. 200',required:true},
+          {id:'C',label:'Side (C) *',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Cut Corner (B) — auto',placeholder:'auto',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '10': [
+          {id:'A',label:'Head Top (A) *',placeholder:'e.g. 60',required:true},
+          {id:'D',label:'Foot Bottom (D) *',placeholder:'e.g. 74',required:true},
+          {id:'L',label:'Center Length (L) *',placeholder:'e.g. 67',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 8',required:true},
+          {id:'C',label:'Left Side (C)',placeholder:'auto'},
+          {id:'E',label:'Right Side (E) — mirrors C',placeholder:'auto'},
+          {id:'B',label:'Cut Corner — L (B) — optional',placeholder:'auto',optional:true},
+          {id:'F',label:'Cut Corner — R (F) — optional',placeholder:'auto',optional:true}
+        ],
+        '11': [
+          {id:'A',label:'Width 1 (A) * — mirrors C',placeholder:'e.g. 150',required:true},
+          {id:'C',label:'Width 2 (C)',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Length 1 (B) * — mirrors D',placeholder:'e.g. 200',required:true},
+          {id:'D',label:'Length 2 (D)',placeholder:'e.g. 200',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '12': [
+          {id:'B',label:'Parallel Side 1 (B) *',placeholder:'e.g. 210',required:true},
+          {id:'D',label:'Parallel Side 2 (D) *',placeholder:'e.g. 70',required:true},
+          {id:'C',label:'Height (C) *',placeholder:'e.g. 200',required:true},
+          {id:'A',label:'Side (A) — auto',placeholder:'auto',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '13': [
+          {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
+          {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
+          {id:'A',label:'Top (A)',placeholder:'e.g. 120',required:true},
+          {id:'D',label:'Bottom (D)',placeholder:'e.g. 180',required:true},
+          {id:'C',label:'Left (C)',placeholder:'e.g. 80',required:true},
+          {id:'F',label:'Right (F)',placeholder:'e.g. 90',required:true},
+          {id:'B',label:'Diagonal 1 (B) — auto',placeholder:'auto',required:true},
+          {id:'E',label:'Diagonal 2 (E) — auto',placeholder:'auto',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ],
+        '14': [
+          {id:'A',label:'Long Side 1 (A) * — mirrors G',placeholder:'e.g. 150',required:true},
+          {id:'G',label:'Long Side 2 (G)',placeholder:'e.g. 150',required:true},
+          {id:'B',label:'Upper Side (B)',placeholder:'e.g. 50',required:true},
+          {id:'D',label:'Notch Width (D)',placeholder:'e.g. 30',required:true},
+          {id:'F',label:'Lower Side (F)',placeholder:'e.g. 50',required:true},
+          {id:'H',label:'Total Side (H) — auto',placeholder:'auto',required:true},
+          {id:'C',label:'Notch Depth (C) — mirrors E',placeholder:'e.g. 30',required:true},
+          {id:'E',label:'Notch Depth (E)',placeholder:'e.g. 30',required:true},
+          {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
+        ]
+      };
+
+      function buildDimInputs(shapeCode){
+        dimsContainer.innerHTML = '';
+        var fields = shapeFields[shapeCode];
+        if(!fields) return;
+        fields.forEach(function(f){
+          var div = document.createElement('div');
+          div.className = 'dim-field';
+          var attrs = '';
+          if(f.required) attrs += ' required';
+          if(f.readonly) attrs += ' readonly style="background:#f1f5f9;color:#64748b;"';
+          if(f.optional) attrs += ' style="border-style:dashed;"';
+          div.innerHTML = '<label for="dim-'+f.id+'">'+f.label+'</label><input type="number" id="dim-'+f.id+'" placeholder="'+f.placeholder+'" min="1" max="600"'+attrs+'>';
+          dimsContainer.appendChild(div);
+        });
+        if(shapeCode === '02'){
+          var estWrap = document.createElement('div');
+          estWrap.className = 'shape-estimate-wrap';
+          estWrap.innerHTML = '<button type="button" class="shape-estimate-btn" id="shape02-estimate-btn">Estimate B/F/C/E</button><span class="shape-estimate-note" id="shape02-estimate-note">Uses equilateral-cut assumptions. You can edit results.</span>';
+          dimsContainer.appendChild(estWrap);
+          var estBtn = document.getElementById('shape02-estimate-btn');
+          if(estBtn){
+            estBtn.addEventListener('click', function(){
+              applyShape02Estimate(true);
+              updatePrice();
+            });
+          }
+        }
+      }
+
+      /* ── Area Calculation Formulas ── */
+      function getVal(id){
+        var el = document.getElementById('dim-'+id);
+        if(!el) return 0;
+        var v = parseFloat(el.value) || 0;
+        if(currentUnit === 'in' && v > 0) v = v * 2.54;
+        return v;
+      }
+
+      function applyShape02Estimate(showNote){
+        var aEl = document.getElementById('dim-A');
+        var dEl = document.getElementById('dim-D');
+        var lEl = document.getElementById('dim-L');
+        var bEl = document.getElementById('dim-B');
+        var fEl = document.getElementById('dim-F');
+        var cEl = document.getElementById('dim-C');
+        var eEl = document.getElementById('dim-E');
+        if(!aEl || !dEl || !lEl || !bEl || !fEl || !cEl || !eEl) return false;
+
+        var a = parseFloat(aEl.value) || 0;
+        var d = parseFloat(dEl.value) || 0;
+        var l = parseFloat(lEl.value) || 0;
+        if(a <= 0 || d <= 0 || l <= 0) return false;
+
+        var bEst = Math.max((a - d) / 2, 0);
+        var fEst = bEst;
+        var wEst = a + bEst + fEst;
+        var cEst = Math.sqrt(Math.pow((wEst - d) / 2, 2) + Math.pow(l, 2));
+        var eEst = cEst;
+
+        bEl.value = Math.round(bEst);
+        fEl.value = Math.round(fEst);
+        cEl.value = Math.round(cEst);
+        eEl.value = Math.round(eEst);
+
+        if(showNote){
+          var note = document.getElementById('shape02-estimate-note');
+          if(note){
+            var areaEst = ((wEst + d) / 2) * l;
+            var unitArea = currentUnit === 'in' ? 'in²' : 'cm²';
+            note.textContent = 'Estimated W ≈ ' + Math.round(wEst) + ', top area ≈ ' + Math.round(areaEst) + ' ' + unitArea + '. You can edit B/F/C/E.';
+          }
+        }
+        return true;
+      }
+
+      function calcArea(shapeCode){
+        var A,B,C,D,E,F,G,H,W,L,T,NW,NL,topArea,perimeter;
+
+        switch(shapeCode){
+          case '01': /* V-Berth: trapezoid area ((A+D)/2)×L, perimeter A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');L=getVal('L');T=getVal('T');
+            if(!A||!D||!L||!T) return 0;
+            topArea = ((A+D)/2) * L;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '02': /* V-Berth Cut Corner: trapezoid area ((A+D)/2)×L, perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
+            if(!A||!D||!L||!T) return 0;
+            topArea = ((A+D)/2) * L;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '03': /* V-Berth Rounded Nose: trapezoid area ((A+C)/2)×L, perimeter A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');L=getVal('L');T=getVal('T');
+            if(!A||!C||!L||!T) return 0;
+            topArea = ((A+C)/2) * L;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '04': /* V-Berth Split: ((C+E+A)/2)×D, perimeter C+E+A+2D+B+F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');T=getVal('T');
+            if(!C||!E||!A||!D||!T) return 0;
+            topArea = ((C + E + A) / 2) * D;
+            perimeter = C + E + A + 2*D + B + F;
+            return topArea + (perimeter * (T + 10));
+
+          case '05': /* Island 6-Sides: bounding rectangle W×L, perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
+            if(!W||!L||!T) return 0;
+            topArea = W * L;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '06': /* Island 7-Sides: split geometry with derived L = C + L1 + L2 */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');W=getVal('W');T=getVal('T');
+            var L1=getVal('L1'); var L2=getVal('L2');
+            L = C + L1 + L2;
+            if(!A||!W||!C||!L1||!L2||!T) return 0;
+            topArea = ((W + A) / 2) * L1 + (W * C) + (W * L2 / 2);
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F+G;
+            return topArea + (perimeter * (T + 10));
+
+          case '07': /* Island 8-Sides: split geometry with derived L = C + L1 + L2 */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');T=getVal('T');
+            var W1=getVal('W1'); var W2=getVal('W2'); var L1=getVal('L1'); var L2=getVal('L2');
+            L = C + L1 + L2;
+            if(!A||!E||!C||!W1||!W2||!L1||!L2||!T) return 0;
+            topArea = ((W1 + A) / 2) * L1 + ((W1 + W2) / 2) * C + ((W2 + E) / 2) * L2;
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F+G+H;
+            return topArea + (perimeter * (T + 10));
+
+          case '08': /* Rectangle: A×B (Width × Length), perimeter = A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
+            if(!A||!B||!T) return 0;
+            topArea = A * B;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '09': /* Rectangle Cut-Off: C×D + ((D+A)/2)×(E-C), perimeter A-E */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');T=getVal('T');
+            if(!A||!D||!C||!E||!T) return 0;
+            topArea = C * D + ((D + A) / 2) * (E - C);
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E;
+            return topArea + (perimeter * (T + 10));
+
+          case '10': /* Rectangle Two Cut-Off: D×L − (L−C)(D−A), perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
+            if(!A||!D||!L||!C||!T) return 0;
+            topArea = D * L - (L - C) * (D - A);
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '11': /* Radius Corner Rectangle: same as Rectangle — A×B */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
+            if(!A||!B||!T) return 0;
+            topArea = A * B;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '12': /* Quarter Berth: trapezoid ((B+D)/2)×C, perimeter A+B+C+D */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
+            if(!B||!D||!C||!T) return 0;
+            topArea = ((B + D) / 2) * C;
+            perimeter = A+B+C+D;
+            return topArea + (perimeter * (T + 10));
+
+          case '13': /* Aft Cabin: W×L − ((L-C)(W-A))/2 − ((L-F)(W-D))/2, perimeter A-F */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
+            if(!W||!L||!T) return 0;
+            topArea = W * L - ((L - C) * (W - A)) / 2 - ((L - F) * (W - D)) / 2;
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F;
+            return topArea + (perimeter * (T + 10));
+
+          case '14': /* Notched Mattress: A×H − D×C, perimeter A-H */
+            A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');T=getVal('T');
+            if(!A||!H||!T) return 0;
+            topArea = A * H - D * C;
+            if(topArea < 0) topArea = 0;
+            perimeter = A+B+C+D+E+F+G+H;
+            return topArea + (perimeter * (T + 10));
+
+          default:
+            return 0;
+        }
+      }
+
+      /* ── Area limit ── */
+      var MAX_TOP_AREA_CM = 41300; /* 6,400 sq.inch */
+
+      function getTopArea(shapeCode){
+        /* Returns the bounding-rectangle top area used in calcArea */
+        if(!shapeCode) return 0;
+        switch(shapeCode){
+          case '01': return ((getVal('A')+getVal('D'))/2) * getVal('L');
+          case '02': return ((getVal('A')+getVal('D'))/2) * getVal('L');
+          case '03': return ((getVal('A')+getVal('C'))/2) * getVal('L');
+          case '04': return ((getVal('C')+getVal('E')+getVal('A'))/2) * getVal('D');
+          case '05': return getVal('W') * getVal('L');
+          case '06': var a06=getVal('A'),w06=getVal('W'),c06=getVal('C'),l106=getVal('L1'),l206=getVal('L2'); return Math.max(0, ((w06+a06)/2)*l106 + (w06*c06) + (w06*l206/2));
+          case '07': var a07=getVal('A'),e07=getVal('E'),c07=getVal('C'),w107=getVal('W1'),w207=getVal('W2'),l107=getVal('L1'),l207=getVal('L2'); return Math.max(0, ((w107+a07)/2)*l107 + ((w107+w207)/2)*c07 + ((w207+e07)/2)*l207);
+          case '13': var a13=getVal('A'),c13=getVal('C'),d13=getVal('D'),f13=getVal('F'),w13=getVal('W'),l13=getVal('L'); return Math.max(0, w13*l13 - ((l13-c13)*(w13-a13))/2 - ((l13-f13)*(w13-d13))/2);
+          case '09': var a09=getVal('A'),c09=getVal('C'),d09=getVal('D'),e09=getVal('E'); return Math.max(0, c09*d09 + ((d09+a09)/2)*(e09-c09));
+          case '10': var a10=getVal('A'),d10=getVal('D'),l10=getVal('L'),c10=getVal('C'); return d10*l10 - (l10-c10)*(d10-a10);
+          case '12': return ((getVal('B')+getVal('D'))/2) * getVal('C');
+          case '14': var a14=getVal('A'),h14=getVal('H'),d14=getVal('D'),c14=getVal('C'); return Math.max(0, a14*h14 - d14*c14);
+          default: return getVal('A') * getVal('B');
+        }
+      }
+
+      var isMarineProtector = productSlug === 'marine-mattress-protector';
+      var quoteFabricKey = isMarineProtector ? 'tpu' : 'cloudsoft';
+      var quoteFabricLabel = isMarineProtector ? '3-Layer Waterproof Protector' : 'CloudSoft';
+      var shapeSelectLabelEl = document.getElementById('shape-select-label');
+      var materialBadgeEl = document.getElementById('material-badge');
+      var materialSpecsEl = document.getElementById('material-specs');
+      if(isMarineProtector){
+        if(shapeSelectLabelEl) shapeSelectLabelEl.textContent = 'Choose Your Marine Mattress Shape';
+        if(materialBadgeEl) materialBadgeEl.textContent = 'Marine Mattress Protector — 3-Layer Waterproof';
+        if(materialSpecsEl){
+          materialSpecsEl.innerHTML =
+            '<div class="spec-item"><div class="spec-label">Top Layer</div><div class="spec-value">Cotton Quilted</div></div>' +
+            '<div class="spec-item"><div class="spec-label">Layer 2 (Core)</div><div class="spec-value">Polyester Filling</div></div>' +
+            '<div class="spec-item"><div class="spec-label">Layer 3 (Backing)</div><div class="spec-value">TPU Waterproof</div></div>' +
+            '<div class="spec-item"><div class="spec-label">Protection</div><div class="spec-value">Water Spills &amp; Accidents</div></div>';
+        }
+      }
+
+      /* ── Marine fitted-sheet pricing (same formula as server, marine margin) ── */
+      var SQCM_PER_YARD = 23774.4;       // 91.44 × 260
+      var CLOUDSOFT_RATE = 100;          // THB/yard
+      var FABRIC_WASTE = 1.20;           // 20% waste
+      var ACC_RATE = 0.10;               // accessories = 10% of fabric
+      var PACK_COST = 100;               // THB
+      var DELIVERY_COST = 50;            // THB
+      var OP_RATE = 0.15;                // operating
+      var MKT_RATE = 0.20;               // marketing
+      var MARINE_MARGIN_RATE = 6.80;     // marine-specific margin (680%)
+      var MARINE_PROTECTOR_MARGIN_RATE = 0.15; // marine protector margin (15% default)
+      var MARINE_PROTECTOR_WASTE = 1.50; // marine protector waste factor (50% default)
+      var MARINE_SEWING_COST = 500;      // marine protector sewing cost (THB)
+      var THB_PER_USD = 30;              // approximate
+      var SEWING_TIERS = [               // tiered by fabric area (cm²)
+        {max:24000,cost:120},{max:33600,cost:180},{max:38400,cost:240},
+        {max:48000,cost:300},{max:60000,cost:360},{max:84000,cost:420},
+        {max:91200,cost:500},{max:120000,cost:650},{max:Infinity,cost:800}
+      ];
+      var PROTECTOR_FABRIC_TIERS = [
+        { max: 3200, cost: 550 },
+        { max: 6620, cost: 670 },
+        { max: 8000, cost: 920 },
+        { max: 9000, cost: 980 },
+        { max: 10300, cost: 1100 },
+        { max: 11300, cost: 1200 },
+        { max: Infinity, cost: 1300 }
+      ];
+      var PROTECTOR_DEPTH_TIERS = [
+        { min: 0, cost: 0 },
+        { min: 30, cost: 200 },
+        { min: 52, cost: 400 },
+        { min: 57, cost: 600 }
+      ];
+      var PROTECTOR_PACKING = 200;
+      var PROTECTOR_DELIVERY = 80;
+      var SQCM_PER_SQINCH = 6.4516;
+      function getMarineSewingCost(area){
+        for(var i=0;i<SEWING_TIERS.length;i++){
+          if(area<=SEWING_TIERS[i].max) return SEWING_TIERS[i].cost;
+        }
+        return 800;
+      }
+      function getProtectorFabricCost(areaSqInch){
+        for(var i=0;i<PROTECTOR_FABRIC_TIERS.length;i++){
+          if(areaSqInch <= PROTECTOR_FABRIC_TIERS[i].max) return PROTECTOR_FABRIC_TIERS[i].cost;
+        }
+        return PROTECTOR_FABRIC_TIERS[PROTECTOR_FABRIC_TIERS.length - 1].cost;
+      }
+      function getProtectorDepthCost(dCm){
+        for(var i=PROTECTOR_DEPTH_TIERS.length - 1;i>=0;i--){
+          if(dCm >= PROTECTOR_DEPTH_TIERS[i].min) return PROTECTOR_DEPTH_TIERS[i].cost;
+        }
+        return 0;
+      }
+      function calcMarinePriceBreakdown(fabricAreaSqCm){
+        var fabricCost = (fabricAreaSqCm * CLOUDSOFT_RATE / SQCM_PER_YARD) * FABRIC_WASTE;
+        var sewingCost = getMarineSewingCost(fabricAreaSqCm);
+        var accessories = fabricCost * ACC_RATE;
+        var subtotal = fabricCost + sewingCost + accessories + PACK_COST + DELIVERY_COST;
+        var operating = subtotal * OP_RATE;
+        var marketing  = subtotal * MKT_RATE;
+        var margin     = subtotal * MARINE_MARGIN_RATE;
+        var total = subtotal + operating + marketing + margin;
+        return {
+          fabricCost: fabricCost,
+          sewingCost: sewingCost,
+          accessories: accessories,
+          packing: PACK_COST,
+          delivery: DELIVERY_COST,
+          subtotal: subtotal,
+          operating: operating,
+          marketing: marketing,
+          margin: margin,
+          total: total,
+          roundedThb: Math.ceil(total / 100) * 100
+        };
+      }
+      function calcMarineProtectorBreakdown(topAreaSqCm, depthCm){
+        var areaSqInch = topAreaSqCm / SQCM_PER_SQINCH;
+        var baseFabricCost = getProtectorFabricCost(areaSqInch);
+        var baseDepthCost = getProtectorDepthCost(depthCm);
+        var fabricCost = baseFabricCost * MARINE_PROTECTOR_WASTE;
+        var depthCost = baseDepthCost * MARINE_PROTECTOR_WASTE;
+        var subtotal = fabricCost + depthCost + MARINE_SEWING_COST + PROTECTOR_PACKING + PROTECTOR_DELIVERY;
+        var operating = subtotal * OP_RATE;
+        var marketing = subtotal * MKT_RATE;
+        var margin = subtotal * MARINE_PROTECTOR_MARGIN_RATE;
+        var total = subtotal + operating + marketing + margin;
+        return {
+          areaSqCm: topAreaSqCm,
+          areaSqInch: areaSqInch,
+          baseFabricCost: baseFabricCost,
+          baseDepthCost: baseDepthCost,
+          wasteFactor: MARINE_PROTECTOR_WASTE,
+          fabricCost: fabricCost,
+          depthCost: depthCost,
+          marineSewing: MARINE_SEWING_COST,
+          packing: PROTECTOR_PACKING,
+          delivery: PROTECTOR_DELIVERY,
+          subtotal: subtotal,
+          operating: operating,
+          marketing: marketing,
+          margin: margin,
+          total: total,
+          roundedThb: Math.ceil(total / 100) * 100
+        };
+      }
+      function formatTHB(n){
+        return '฿' + Math.round(n).toLocaleString();
+      }
+      function renderPriceBreakdown(bd){
+        if(!priceBreakdown) return;
+        if(!bd){
+          priceBreakdown.innerHTML = '';
+          return;
+        }
+        if(isMarineProtector){
+          priceBreakdown.innerHTML =
+            '<details><summary>Cost breakdown (THB)</summary><ul>' +
+            '<li>Top Area: ' + Math.round(bd.areaSqCm).toLocaleString() + ' cm² (' + Math.round(bd.areaSqInch).toLocaleString() + ' in²)</li>' +
+            '<li>Fabric Tier Cost: ' + formatTHB(bd.baseFabricCost) + ' × ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.fabricCost) + '</li>' +
+            '<li>Depth Surcharge: ' + formatTHB(bd.baseDepthCost) + ' × ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.depthCost) + '</li>' +
+            '<li>Marine Sewing Cost: ' + formatTHB(bd.marineSewing) + '</li>' +
+            '<li>Packing: ' + formatTHB(bd.packing) + '</li>' +
+            '<li>Delivery: ' + formatTHB(bd.delivery) + '</li>' +
+            '<li>Subtotal: ' + formatTHB(bd.subtotal) + '</li>' +
+            '<li>Operating (' + Math.round(OP_RATE * 100) + '%): ' + formatTHB(bd.operating) + '</li>' +
+            '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
+            '<li>Margin (' + Math.round(MARINE_PROTECTOR_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
+            '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
+            '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+            '</ul></details>';
+          return;
+        }
+        var area = Math.round((bd.fabricCost / (CLOUDSOFT_RATE / SQCM_PER_YARD) / FABRIC_WASTE) || 0);
+        var fabricFormula = '(' + area.toLocaleString() + ' × ' + CLOUDSOFT_RATE.toLocaleString() + ' ÷ ' + SQCM_PER_YARD.toLocaleString(undefined,{maximumFractionDigits:1}) + ') × ' + FABRIC_WASTE.toFixed(2);
+        var accessoriesPct = Math.round(ACC_RATE * 100);
+        priceBreakdown.innerHTML =
+          '<details><summary>Cost breakdown (THB)</summary><ul>' +
+          '<li>Fabric Cost: ' + fabricFormula + ' = ' + formatTHB(bd.fabricCost) + '</li>' +
+          '<li>Sewing Cost: tier by area (' + area.toLocaleString() + ' cm²) = ' + formatTHB(bd.sewingCost) + '</li>' +
+          '<li>Accessories (' + accessoriesPct + '% of fabric): ' + formatTHB(bd.accessories) + '</li>' +
+          '<li>Packing: ' + formatTHB(bd.packing) + '</li>' +
+          '<li>Delivery: ' + formatTHB(bd.delivery) + '</li>' +
+          '<li>Subtotal: ' + formatTHB(bd.subtotal) + '</li>' +
+          '<li>Operating (' + Math.round(OP_RATE * 100) + '%): ' + formatTHB(bd.operating) + '</li>' +
+          '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
+          '<li>Margin (' + Math.round(MARINE_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
+          '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
+          '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+          '</ul></details>';
+      }
+      function applyMarinePricingParams(payload){
+        if(!payload) return;
+        var fixed = payload.fixed_costs || {};
+        var rates = payload.fabric_rates || {};
+        var margins = payload.margins || {};
+        if(typeof rates.cloudsoft === 'number' && rates.cloudsoft > 0) CLOUDSOFT_RATE = rates.cloudsoft;
+        if(typeof fixed.waste_factor_fabric === 'number' && fixed.waste_factor_fabric >= 0) FABRIC_WASTE = 1 + (fixed.waste_factor_fabric / 100);
+        if(typeof fixed.accessories_rate === 'number' && fixed.accessories_rate >= 0) ACC_RATE = fixed.accessories_rate / 100;
+        if(typeof fixed.packing_cost === 'number' && fixed.packing_cost >= 0) PACK_COST = fixed.packing_cost;
+        if(typeof fixed.delivery_cost === 'number' && fixed.delivery_cost >= 0) DELIVERY_COST = fixed.delivery_cost;
+        if(typeof fixed.ops_rate === 'number' && fixed.ops_rate >= 0) OP_RATE = fixed.ops_rate / 100;
+        if(typeof fixed.mkt_rate === 'number' && fixed.mkt_rate >= 0) MKT_RATE = fixed.mkt_rate / 100;
+        if(typeof margins.marine === 'number' && margins.marine >= 0) MARINE_MARGIN_RATE = margins.marine / 100;
+        if(typeof margins.protector_marine === 'number' && margins.protector_marine >= 0) MARINE_PROTECTOR_MARGIN_RATE = margins.protector_marine / 100;
+        if(typeof fixed.waste_factor_marine_mattress === 'number' && fixed.waste_factor_marine_mattress >= 0) MARINE_PROTECTOR_WASTE = 1 + (fixed.waste_factor_marine_mattress / 100);
+        if(typeof fixed.marine_sewing_cost === 'number' && fixed.marine_sewing_cost >= 0) MARINE_SEWING_COST = fixed.marine_sewing_cost;
+        if(typeof fixed.protector_packing === 'number' && fixed.protector_packing >= 0) PROTECTOR_PACKING = fixed.protector_packing;
+        if(typeof fixed.protector_delivery === 'number' && fixed.protector_delivery >= 0) PROTECTOR_DELIVERY = fixed.protector_delivery;
+        if(Array.isArray(payload.protector_fabric_tiers) && payload.protector_fabric_tiers.length){
+          var nextFabricTiers = [];
+          for(var f=0;f<payload.protector_fabric_tiers.length;f++){
+            var ft = payload.protector_fabric_tiers[f];
+            if(ft && typeof ft.max === 'number' && typeof ft.cost === 'number') nextFabricTiers.push({ max: ft.max, cost: ft.cost });
+          }
+          if(nextFabricTiers.length){
+            nextFabricTiers.sort(function(a,b){ return a.max - b.max; });
+            PROTECTOR_FABRIC_TIERS = nextFabricTiers;
+          }
+        }
+        if(Array.isArray(payload.protector_depth_tiers) && payload.protector_depth_tiers.length){
+          var nextDepthTiers = [];
+          for(var d=0;d<payload.protector_depth_tiers.length;d++){
+            var dt = payload.protector_depth_tiers[d];
+            if(dt && typeof dt.min === 'number' && typeof dt.cost === 'number') nextDepthTiers.push({ min: dt.min, cost: dt.cost });
+          }
+          if(nextDepthTiers.length){
+            nextDepthTiers.sort(function(a,b){ return a.min - b.min; });
+            PROTECTOR_DEPTH_TIERS = nextDepthTiers;
+          }
+        }
+        if(Array.isArray(payload.sewing_tiers) && payload.sewing_tiers.length){
+          var nextTiers = [];
+          for(var i=0;i<payload.sewing_tiers.length;i++){
+            var t = payload.sewing_tiers[i];
+            if(t && typeof t.max === 'number' && typeof t.cost === 'number') nextTiers.push({ max:t.max, cost:t.cost });
+          }
+          if(nextTiers.length){
+            nextTiers.sort(function(a,b){ return a.max - b.max; });
+            SEWING_TIERS = nextTiers;
+          }
+        }
+        if(Array.isArray(payload.exchange_rates)){
+          for(var j=0;j<payload.exchange_rates.length;j++){
+            var rate = payload.exchange_rates[j];
+            if(rate && rate.currency === 'USD' && typeof rate.rate_per_thb === 'number' && rate.rate_per_thb > 0){
+              THB_PER_USD = 1 / rate.rate_per_thb;
+              break;
+            }
+          }
+        }
+      }
+      function loadMarinePricingParams(){
+        fetch('/api/pricing-params')
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(payload){
+            applyMarinePricingParams(payload);
+            updatePrice();
+          })
+          .catch(function(){});
+      }
+      function formatPrice(priceThb){
+        /* EN page → USD, TH page → THB */
+        var isThai = document.documentElement.lang === 'th';
+        if(isThai){
+          return '฿' + priceThb.toLocaleString();
+        }
+        var usd = Math.round(priceThb / THB_PER_USD);
+        return '$' + usd.toLocaleString();
+      }
+
+      function updatePrice(){
+        var code = shapeSelect.value;
+        var warningEl = document.getElementById('area-warning');
+        if(!code || shapeFields[code] === undefined){
+          customPrice.textContent = ' — ';
+          priceDisplay.textContent = ' — ';
+          priceDisplayTop.textContent = ' — ';
+          priceTopSub.textContent = 'Enter your mattress dimensions below';
+          currentQuotePriceThb = 0;
+          currentQuotePriceUsd = 0;
+          renderPriceBreakdown(null);
+          addToCartBtn.disabled = true;
+          if(warningEl) warningEl.style.display = 'none';
+          return;
+        }
+        /* Check top area limit */
+        var topArea = getTopArea(code);
+        if(topArea > MAX_TOP_AREA_CM){
+          if(warningEl) warningEl.style.display = 'block';
+          if(warningEl) warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.';
+          customPrice.textContent = ' — ';
+          currentQuotePriceThb = 0;
+          currentQuotePriceUsd = 0;
+          renderPriceBreakdown(null);
+          addToCartBtn.disabled = true;
+          return;
+        }
+        /* Shape 01-05 + 10 geometric validation */
+        if(code === '01' || code === '02' || code === '03' || code === '04' || code === '05' || code === '07' || code === '09' || code === '10'){
+          var msgs = [];
+          if(code === '01'){
+            var a01 = getVal('A'), d01 = getVal('D');
+            if(a01 > 0 && d01 > 0 && a01 <= d01) msgs.push('Foot (A) must be greater than Head (D)');
+          } else if(code === '02'){
+            var a02 = getVal('A'), d02 = getVal('D'), b02 = getVal('B'), f02 = getVal('F'), c02 = getVal('C'), e02 = getVal('E');
+            if(a02 > 0 && d02 > 0 && a02 <= d02) msgs.push('Foot (A) must be greater than Head (D)');
+            if(a02 > 0 && d02 > 0 && (!b02 || !f02 || !c02 || !e02)) msgs.push('Tap "Estimate B/F/C/E" or enter B, F, C, E manually');
+          } else if(code === '03'){
+            var a03 = getVal('A'), c03 = getVal('C');
+            if(a03 > 0 && c03 > 0 && a03 <= c03) msgs.push('Foot (A) must be greater than Head (C)');
+          } else if(code === '04'){
+            var a04 = getVal('A'), c04 = getVal('C'), e04 = getVal('E');
+            if(a04 > 0 && c04 > 0 && e04 > 0 && (c04 + e04) >= a04) msgs.push('Total head (C + E) must be less than Foot (A)');
+          } else if(code === '05'){
+            var a05 = getVal('A'), d05 = getVal('D');
+            if(a05 > 0 && d05 > 0 && a05 > d05) msgs.push('Foot (D) must be greater than Head (A)');
+          } else if(code === '07'){
+            var a07 = getVal('A'), e07 = getVal('E');
+            if(a07 > 0 && e07 > 0 && e07 <= a07) msgs.push('Foot (E) must be greater than Head (A)');
+          } else if(code === '09'){
+            var a09 = getVal('A'), d09 = getVal('D'), c09 = getVal('C'), e09 = getVal('E');
+            if(a09 > 0 && d09 > 0 && d09 <= a09) msgs.push('Bottom (D) must be greater than Top (A)');
+            if(c09 > 0 && e09 > 0 && e09 <= c09) msgs.push('Side (E) must be greater than Side (C)');
+          } else if(code === '10'){
+            var a10 = getVal('A'), d10 = getVal('D'), l10 = getVal('L'), c10 = getVal('C'), e10 = getVal('E');
+            if(a10 > 0 && d10 > 0 && d10 <= a10) msgs.push('Foot (D) must be greater than Head (A)');
+            if(l10 > 0 && c10 > 0 && c10 >= l10) msgs.push('Left side (C) must be less than Center Length (L)');
+            if(l10 > 0 && e10 > 0 && e10 >= l10) msgs.push('Right side (E) must be less than Center Length (L)');
+          }
+          if(msgs.length > 0){
+            if(warningEl){ warningEl.style.display = 'block'; warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+msgs.join('; ')+'.'; }
+            customPrice.textContent = ' — ';
+            currentQuotePriceThb = 0;
+            currentQuotePriceUsd = 0;
+            renderPriceBreakdown(null);
+            addToCartBtn.disabled = true;
+            return;
+          }
+        }
+        if(warningEl) warningEl.style.display = 'none';
+        var pricingArea = isMarineProtector ? getTopArea(code) : calcArea(code);
+        if(pricingArea <= 0){
+          customPrice.textContent = ' — ';
+          currentQuotePriceThb = 0;
+          currentQuotePriceUsd = 0;
+          renderPriceBreakdown(null);
+          addToCartBtn.disabled = true;
+          return;
+        }
+        var breakdown;
+        if(isMarineProtector){
+          var depthCm = getVal('T');
+          if(depthCm <= 0){
+            customPrice.textContent = ' — ';
+            currentQuotePriceThb = 0;
+            currentQuotePriceUsd = 0;
+            renderPriceBreakdown(null);
+            addToCartBtn.disabled = true;
+            return;
+          }
+          breakdown = calcMarineProtectorBreakdown(pricingArea, depthCm);
+        } else {
+          breakdown = calcMarinePriceBreakdown(pricingArea);
+        }
+        var priceThb = breakdown.roundedThb;
+        var priceStr = formatPrice(priceThb);
+        customPrice.textContent = priceStr;
+        priceDisplay.textContent = priceStr;
+        priceDisplayTop.textContent = priceStr;
+        priceTopSub.textContent = 'Estimated — Exact price confirmed in quote';
+        currentQuotePriceThb = priceThb;
+        currentQuotePriceUsd = Math.round((priceThb / THB_PER_USD) * 100) / 100;
+        renderPriceBreakdown(breakdown);
+        addToCartBtn.disabled = false;
+      }
+
+      shapeSelect.addEventListener('change', function(){
+        var code = shapeSelect.value;
+        if(!code) return;
+
+        var shape = shapes.find(function(s){return s.code===code});
+
+        /* Schematic image */
+        if(shape && shape.schematic){
+          guideImg.src = shape.schematic;
+          guideImg.style.display = 'block';
+          guideCaption.textContent = shape.name + ' — Measurement Diagram';
+          guideCaption.style.display = 'block';
+          guidePlaceholder.style.display = 'none';
+        } else {
+          guideImg.style.display = 'none';
+          guideCaption.style.display = 'none';
+          guidePlaceholder.style.display = 'block';
+        }
+
+        /* Coming soon flag */
+        if(shape && shape.comingSoon){
+          comingSoon.style.display = 'flex';
+          dimsContainer.innerHTML = '';
+          customPrice.textContent = ' — ';
+          currentQuotePriceThb = 0;
+          currentQuotePriceUsd = 0;
+          renderPriceBreakdown(null);
+          addToCartBtn.disabled = true;
+          return;
+        }
+        comingSoon.style.display = 'none';
+
+        buildDimInputs(code);
+        autoComputeShape10();
+        updatePrice();
+      });
+
+      /* Auto-fill computed side lengths by shape */
+      var _mirroring = false;
+      function autoComputeShape10(sourceId){
+        var code = shapeSelect.value;
+        var lEl = document.getElementById('dim-L');
+        var lVal = parseFloat(lEl?.value) || 0;
+        if(code === '01'){
+          /* Shape 01: B = C = √(((A-D)/2)^2 + L^2), but allow manual B/C edits */
+          if(sourceId === 'dim-B' || sourceId === 'dim-C') return;
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var bEl = document.getElementById('dim-B');
+          var cEl = document.getElementById('dim-C');
+          var aVal = parseFloat(aEl?.value) || 0;
+          var dVal = parseFloat(dEl?.value) || 0;
+          if(aVal > 0 && dVal > 0 && lVal > 0 && bEl && cEl){
+            var side = Math.round(Math.sqrt(Math.pow((aVal - dVal) / 2, 2) + lVal * lVal));
+            if(!isNaN(side) && side > 0){
+              bEl.value = side;
+              cEl.value = side;
+            }
+          }
+        } else if(code === '02'){
+          /* Shape 02: use Estimate button for B/F/C/E defaults (manual values stay editable) */
+        } else if(code === '03'){
+          /* Shape 03: B = D = √(((A-C)/2)^2 + L^2), but allow manual B/D edits */
+          if(sourceId === 'dim-B' || sourceId === 'dim-D') return;
+          var aEl = document.getElementById('dim-A');
+          var cEl = document.getElementById('dim-C');
+          var bEl = document.getElementById('dim-B');
+          var dEl = document.getElementById('dim-D');
+          var aVal = parseFloat(aEl?.value) || 0;
+          var cVal = parseFloat(cEl?.value) || 0;
+          if(aVal > 0 && cVal > 0 && lVal > 0 && bEl && dEl){
+            var side03 = Math.round(Math.sqrt(Math.pow((aVal - cVal) / 2, 2) + lVal * lVal));
+            if(!isNaN(side03) && side03 > 0){
+              bEl.value = side03;
+              dEl.value = side03;
+            }
+          }
+        } else if(code === '04'){
+          /* Shape 04: auto-fill C=E if empty, compute B/F from D/C/A */
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          var fEl = document.getElementById('dim-F');
+          var dEl = document.getElementById('dim-D');
+          if(!cEl || !eEl || !bEl || !fEl || !dEl) return;
+          var cVal = parseFloat(cEl.value) || 0;
+          var eVal = parseFloat(eEl.value) || 0;
+          var dVal = parseFloat(dEl.value) || 0;
+          if(cVal <= 0 && eVal <= 0){
+            var defC = Math.max(1, (dVal || 200) * 0.4);
+            cEl.value = Math.round(defC);
+            eEl.value = Math.round(defC);
+            cVal = Math.round(defC);
+          }
+          var aEl = document.getElementById('dim-A');
+          var aVal = parseFloat(aEl?.value) || 0;
+          cVal = parseFloat(cEl.value) || 0;
+          if(aVal > 0 && dVal > 0 && cVal > 0){
+            var hCut = (aVal / 2) - cVal;
+            if(hCut < 0) hCut = 0;
+            var bf = Math.round(Math.sqrt(dVal*dVal + hCut*hCut));
+            if(!isNaN(bf) && bf > 0){
+              bEl.value = bf;
+              fEl.value = bf;
+            }
+          }
+        } else if(code === '06'){
+          /* Shape 06: auto-fill B=G and D=E from A/W/L1/L2, while keeping fields editable */
+          if(sourceId === 'dim-B' || sourceId === 'dim-G' || sourceId === 'dim-D' || sourceId === 'dim-E') return;
+          var a06El = document.getElementById('dim-A');
+          var w06El = document.getElementById('dim-W');
+          var l106El = document.getElementById('dim-L1');
+          var l206El = document.getElementById('dim-L2');
+          var b06El = document.getElementById('dim-B');
+          var g06El = document.getElementById('dim-G');
+          var d06El = document.getElementById('dim-D');
+          var e06El = document.getElementById('dim-E');
+          if(!a06El || !w06El || !l106El || !l206El || !b06El || !g06El || !d06El || !e06El) return;
+          var a06Val = parseFloat(a06El.value) || 0;
+          var w06Val = parseFloat(w06El.value) || 0;
+          var l106Val = parseFloat(l106El.value) || 0;
+          var l206Val = parseFloat(l206El.value) || 0;
+          if(a06Val > 0 && w06Val > 0 && l106Val > 0){
+            var bg06 = Math.round(Math.sqrt(Math.pow((a06Val - w06Val) / 2, 2) + Math.pow(l106Val, 2)));
+            if(!isNaN(bg06) && bg06 > 0){
+              b06El.value = bg06;
+              g06El.value = bg06;
+            }
+          }
+          if(w06Val > 0 && l206Val > 0){
+            var de06 = Math.round(Math.sqrt(Math.pow(l206Val, 2) + Math.pow(w06Val / 2, 2)));
+            if(!isNaN(de06) && de06 > 0){
+              d06El.value = de06;
+              e06El.value = de06;
+            }
+          }
+        } else if(code === '07'){
+          /* Shape 07: auto-fill B=H and D=F from A/E/W1/W2/L1/L2, while keeping fields editable */
+          if(sourceId === 'dim-B' || sourceId === 'dim-H' || sourceId === 'dim-D' || sourceId === 'dim-F') return;
+          var a07El = document.getElementById('dim-A');
+          var e07El = document.getElementById('dim-E');
+          var w107El = document.getElementById('dim-W1');
+          var w207El = document.getElementById('dim-W2');
+          var l107El = document.getElementById('dim-L1');
+          var l207El = document.getElementById('dim-L2');
+          var b07El = document.getElementById('dim-B');
+          var h07El = document.getElementById('dim-H');
+          var d07El = document.getElementById('dim-D');
+          var f07El = document.getElementById('dim-F');
+          if(!a07El || !e07El || !w107El || !w207El || !l107El || !l207El || !b07El || !h07El || !d07El || !f07El) return;
+          var a07Val = parseFloat(a07El.value) || 0;
+          var e07Val = parseFloat(e07El.value) || 0;
+          var w107Val = parseFloat(w107El.value) || 0;
+          var w207Val = parseFloat(w207El.value) || 0;
+          var l107Val = parseFloat(l107El.value) || 0;
+          var l207Val = parseFloat(l207El.value) || 0;
+          if(a07Val > 0 && w107Val > 0 && l107Val > 0){
+            var bh07 = Math.round(Math.sqrt(Math.pow(l107Val, 2) + Math.pow((w107Val - a07Val) / 2, 2)));
+            if(!isNaN(bh07) && bh07 > 0){
+              b07El.value = bh07;
+              h07El.value = bh07;
+            }
+          }
+          if(e07Val > 0 && w207Val > 0 && l207Val > 0){
+            var df07 = Math.round(Math.sqrt(Math.pow(l207Val, 2) + Math.pow((w207Val - e07Val) / 2, 2)));
+            if(!isNaN(df07) && df07 > 0){
+              d07El.value = df07;
+              f07El.value = df07;
+            }
+          }
+        } else if(code === '09'){
+          /* Shape 09: auto-fill B = √((D-A)² + (E-C)²) */
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          if(aEl && dEl && cEl && eEl && bEl){
+            var aVal = parseFloat(aEl.value) || 0;
+            var dVal = parseFloat(dEl.value) || 0;
+            var cVal = parseFloat(cEl.value) || 0;
+            var eVal = parseFloat(eEl.value) || 0;
+            if(aVal > 0 && dVal > 0 && cVal > 0 && eVal > 0){
+              var bVal = Math.round(Math.sqrt((dVal-aVal)*(dVal-aVal) + (eVal-cVal)*(eVal-cVal)));
+              if(!isNaN(bVal) && bVal > 0) bEl.value = bVal;
+            }
+          }
+        } else if(code === '12'){
+          /* Shape 12: auto-fill A = √(C² + ((B-D)/2)²) */
+          var bEl_ = document.getElementById('dim-B');
+          var dEl_ = document.getElementById('dim-D');
+          var cEl_ = document.getElementById('dim-C');
+          var aEl_ = document.getElementById('dim-A');
+          if(bEl_ && dEl_ && cEl_ && aEl_){
+            var bVal_ = parseFloat(bEl_.value) || 0;
+            var dVal_ = parseFloat(dEl_.value) || 0;
+            var cVal_ = parseFloat(cEl_.value) || 0;
+            if(bVal_ > 0 && dVal_ > 0 && cVal_ > 0){
+              var hDiff = (bVal_ - dVal_) / 2;
+              var aVal = Math.round(Math.sqrt(cVal_*cVal_ + hDiff*hDiff));
+              if(!isNaN(aVal) && aVal > 0) aEl_.value = aVal;
+            }
+          }
+        } else if(code === '13'){
+          /* Shape 13: auto-fill B = √((W-A)²+(L-C)²), E = √((W-D)²+(L-F)²) */
+          var wEl = document.getElementById('dim-W');
+          var lEl = document.getElementById('dim-L');
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var cEl = document.getElementById('dim-C');
+          var fEl = document.getElementById('dim-F');
+          var bEl = document.getElementById('dim-B');
+          var eEl = document.getElementById('dim-E');
+          if(wEl && lEl && aEl && dEl && cEl && fEl && bEl && eEl){
+            var wV = parseFloat(wEl.value) || 0;
+            var lV = parseFloat(lEl.value) || 0;
+            var aV = parseFloat(aEl.value) || 0;
+            var dV = parseFloat(dEl.value) || 0;
+            var cV = parseFloat(cEl.value) || 0;
+            var fV = parseFloat(fEl.value) || 0;
+            if(wV > 0 && lV > 0){
+              var bVal = Math.round(Math.sqrt((wV-aV)*(wV-aV) + (lV-cV)*(lV-cV)));
+              if(!isNaN(bVal) && bVal > 0) bEl.value = bVal;
+              var eVal = Math.round(Math.sqrt((wV-dV)*(wV-dV) + (lV-fV)*(lV-fV)));
+              if(!isNaN(eVal) && eVal > 0) eEl.value = eVal;
+            }
+          }
+        } else if(code === '14'){
+          /* Shape 14: auto-fill H = B + D + F */
+          var bEl = document.getElementById('dim-B');
+          var dEl = document.getElementById('dim-D');
+          var fEl = document.getElementById('dim-F');
+          var hEl = document.getElementById('dim-H');
+          if(bEl && dEl && fEl && hEl){
+            var bVal = parseFloat(bEl.value) || 0;
+            var dVal = parseFloat(dEl.value) || 0;
+            var fVal = parseFloat(fEl.value) || 0;
+            if(bVal + dVal + fVal > 0){
+              hEl.value = Math.round(bVal + dVal + fVal);
+            }
+          }
+        } else if(code === '10'){
+          /* Shape 10: auto-fill C=E=L-1 if empty, compute B/F */
+          var cEl = document.getElementById('dim-C');
+          var eEl = document.getElementById('dim-E');
+          var bEl = document.getElementById('dim-B');
+          var fEl = document.getElementById('dim-F');
+          if(!cEl || !eEl || !bEl || !fEl || !lEl) return;
+          var cVal = parseFloat(cEl.value) || 0;
+          var eVal = parseFloat(eEl.value) || 0;
+          if(lVal > 0 && cVal <= 0 && eVal <= 0){
+            var defC = Math.max(1, lVal - 1);
+            cEl.value = defC;
+            eEl.value = defC;
+            cVal = defC;
+          }
+          var aEl = document.getElementById('dim-A');
+          var dEl = document.getElementById('dim-D');
+          var aVal = parseFloat(aEl?.value) || 0;
+          var dVal = parseFloat(dEl?.value) || 0;
+          cVal = parseFloat(cEl.value) || 0;
+          if(aVal > 0 && dVal > 0 && lVal > 0 && cVal > 0){
+            var hCut = (dVal - aVal) / 2;
+            if(hCut < 0) hCut = 0;
+            var vCut = lVal - cVal;
+            if(vCut < 0) vCut = 0;
+            var bf = Math.round(Math.sqrt(hCut*hCut + vCut*vCut));
+            if(!isNaN(bf) && bf > 0){
+              bEl.value = bf;
+              fEl.value = bf;
+            }
+          }
+        }
+      }
+      /* Live price update + B↔C (shape 01) / C↔E (shape 10) mirroring */
+      dimsContainer.addEventListener('input', function(e){
+        if(e.target.tagName !== 'INPUT') return;
+        /* Mirror: Shape 01 B↔C, Shape 02 C↔E + B↔F, Shape 10 C↔E */
+        var code = shapeSelect.value;
+        if(!_mirroring){
+          if(code === '01'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '02'){
+            if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-B'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '03'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '04'){
+            if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-B'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '05'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '06'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var gEl = document.getElementById('dim-G'); if(gEl) gEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-G'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '07'){
+            if(e.target.id === 'dim-B'){
+              _mirroring = true; var hEl = document.getElementById('dim-H'); if(hEl) hEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-H'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var gEl = document.getElementById('dim-G'); if(gEl) gEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-G'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var fEl = document.getElementById('dim-F'); if(fEl) fEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-F'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '08' || code === '11'){
+            if(e.target.id === 'dim-A'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var aEl = document.getElementById('dim-A'); if(aEl) aEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-B'){
+              _mirroring = true; var dEl = document.getElementById('dim-D'); if(dEl) dEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-D'){
+              _mirroring = true; var bEl = document.getElementById('dim-B'); if(bEl) bEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '14'){
+            if(e.target.id === 'dim-A'){
+              _mirroring = true; var gEl = document.getElementById('dim-G'); if(gEl) gEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-G'){
+              _mirroring = true; var aEl = document.getElementById('dim-A'); if(aEl) aEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            }
+          } else if(code === '10'){
+            if(e.target.id === 'dim-C'){
+              _mirroring = true; var eEl = document.getElementById('dim-E'); if(eEl) eEl.value = e.target.value; _mirroring = false;
+            } else if(e.target.id === 'dim-E'){
+              _mirroring = true; var cEl = document.getElementById('dim-C'); if(cEl) cEl.value = e.target.value; _mirroring = false;
+            }
+          }
+        }
+        /* Optional fields: show measurement-only notice */
+        var optIds = (code === '01') ? ['dim-B','dim-C'] : (code === '10') ? ['dim-B','dim-F'] : [];
+        if(optIds.indexOf(e.target.id) !== -1){
+          var note = document.getElementById('bf-note');
+          if(note) note.style.display = 'block';
+        }
+        autoComputeShape10(e.target.id);
+        updatePrice();
+      });
+
+      /* Quote button */
+      function getActiveMarineColorGroup(){
+        var cloudsoftGroup = document.querySelector('.fabric-color-group[data-fabric="cloudsoft"]');
+        if(cloudsoftGroup) return cloudsoftGroup;
+        var groups = document.querySelectorAll('.fabric-color-group');
+        for(var i=0;i<groups.length;i++){
+          var g = groups[i];
+          if(g.style.display === 'none') continue;
+          return g;
+        }
+        return null;
+      }
+      function getSelectedMarineColorEl(){
+        var group = getActiveMarineColorGroup();
+        if(!group) return null;
+        return group.querySelector('.color-option.selected') || group.querySelector('.color-option');
+      }
+      function getSelectedMarineColor(){
+        var el = getSelectedMarineColorEl();
+        return el ? (el.getAttribute('data-color') || el.getAttribute('title') || '') : '';
+      }
+      /* Color selector click handler */
+      var colorOptions = document.querySelectorAll('.color-option');
+      colorOptions.forEach(function(co){
+        co.addEventListener('click', function(){
+          var group = this.closest('.fabric-color-group');
+          if(group){
+            group.querySelectorAll('.color-option').forEach(function(c){ c.classList.remove('selected'); });
+          }
+          this.classList.add('selected');
+        });
+      });
+      /* Inject quote popup HTML (same workflow as product-configurable) */
+      var popupHTML = '' +
+        '<div class="quote-overlay" id="quote-overlay">' +
+          '<div class="quote-popup">' +
+            '<button class="quote-close" id="quote-close">&times;</button>' +
+            '<h3 class="quote-popup-title">Custom Quote</h3>' +
+            '<form id="quote-form" novalidate>' +
+              '<label class="quote-field">Name <span class="quote-req">*</span>' +
+                '<input type="text" id="qf-name" required placeholder="Your full name">' +
+                '<span class="quote-err" id="qf-name-err"></span></label>' +
+              '<label class="quote-field">Email <span class="quote-req">*</span>' +
+                '<input type="email" id="qf-email" required placeholder="your@email.com">' +
+                '<span class="quote-err" id="qf-email-err"></span></label>' +
+              '<label class="quote-field">Address' +
+                '<input type="text" id="qf-address" placeholder="Optional"></label>' +
+              '<label class="quote-field">Telephone' +
+                '<input type="text" id="qf-phone" placeholder="Optional"></label>' +
+              '<div style="position:absolute;left:-9999px" aria-hidden="true">' +
+                '<label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off"></label>' +
+              '</div>' +
+              '<button type="submit" class="quote-submit-btn" id="qf-submit">Submit</button>' +
+              '<p class="quote-form-note">We\'ll email you within 24 hours.</p>' +
+            '</form>' +
+          '</div>' +
+        '</div>' +
+        '<div class="quote-overlay" id="confirm-overlay">' +
+          '<div class="quote-popup">' +
+            '<button class="quote-close" id="confirm-close">&times;</button>' +
+            '<div class="quote-confirm-icon">&#10003;</div>' +
+            '<h3 class="quote-popup-title">Quote Submitted</h3>' +
+            '<p class="quote-confirm-text" id="confirm-text"></p>' +
+            '<div class="quote-confirm-details" id="confirm-details"></div>' +
+            '<button class="quote-submit-btn" id="confirm-ok">OK</button>' +
+          '</div>' +
+        '</div>';
+
+      var tmp = document.createElement('div');
+      tmp.innerHTML = popupHTML;
+      while(tmp.firstChild) document.body.appendChild(tmp.firstChild);
+
+      var styleEl = document.createElement('style');
+      styleEl.textContent = '' +
+        '.quote-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:10000;align-items:center;justify-content:center}' +
+        '.quote-overlay.open{display:flex}' +
+        '.quote-popup{background:#fff;border-radius:12px;padding:32px;width:90%;max-width:440px;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.18);animation:qSlide .25s ease}' +
+        '@keyframes qSlide{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}' +
+        '.quote-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;color:#999;cursor:pointer;line-height:1}' +
+        '.quote-close:hover{color:#333}' +
+        '.quote-popup-title{font-size:1.35rem;font-weight:700;color:#1a7fd4;margin:0 0 20px;text-align:center}' +
+        '.quote-field{display:block;margin-bottom:14px;font-size:.9rem;color:#555}' +
+        '.quote-field input{display:block;width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:.95rem;margin-top:4px;box-sizing:border-box}' +
+        '.quote-field input:focus{border-color:#2c96f4;outline:none;box-shadow:0 0 0 3px rgba(44,150,244,.15)}' +
+        '.quote-req{color:#e53e3e}' +
+        '.quote-err{font-size:.8rem;color:#e53e3e;display:none;margin-top:2px}' +
+        '.quote-err.show{display:block}' +
+        '.quote-submit-btn{width:100%;padding:12px;background:#2c96f4;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}' +
+        '.quote-submit-btn:hover{background:#1a7fd4}' +
+        '.quote-submit-btn:disabled{opacity:.6;cursor:not-allowed}' +
+        '.quote-form-note{font-size:.8rem;color:#888;text-align:center;margin:12px 0 0}' +
+        '.quote-confirm-icon{width:56px;height:56px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}' +
+        '.quote-confirm-text{text-align:center;color:#555;margin:0 0 16px;line-height:1.5}' +
+        '.quote-confirm-details{background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;font-size:.9rem;color:#555;line-height:1.6}' +
+        '.quote-confirm-details strong{color:#333}';
+      document.head.appendChild(styleEl);
+
+      var quoteOverlay = document.getElementById('quote-overlay');
+      var confirmOverlay = document.getElementById('confirm-overlay');
+      var quoteForm = document.getElementById('quote-form');
+      var quoteSubmitBtn = document.getElementById('qf-submit');
+
+      function escHtml(s){
+        var d = document.createElement('div');
+        d.textContent = String(s == null ? '' : s);
+        return d.innerHTML;
+      }
+      function collectMarineQuoteData(){
+        var code = shapeSelect.value;
+        if(!code) return null;
+        var shape = shapes.find(function(s){ return s.code === code; });
+        var area = Math.round(calcArea(code));
+        if(!area || !currentQuotePriceThb) return null;
+        var fields = shapeFields[code] || [];
+        var values = {};
+        var detailsList = [];
+        fields.forEach(function(f){
+          var val = Math.round(getVal(f.id));
+          values[f.id] = val;
+          detailsList.push(f.id + ': ' + val + ' cm');
+        });
+        return {
+          shapeCode: code,
+          shapeName: shape ? shape.name : code,
+          areaCm2: area,
+          values: values,
+          detailsList: detailsList
+        };
+      }
+      function openQuotePopup(){
+        var data = collectMarineQuoteData();
+        if(!data){
+          updatePrice();
+          alert('Please complete valid dimensions before requesting a quote.');
+          return;
+        }
+        if(quoteOverlay){
+          quoteOverlay.classList.add('open');
+          var qfName = document.getElementById('qf-name');
+          if(qfName) qfName.focus();
+        }
+      }
+
+      addToCartBtn.addEventListener('click', function(){
+        openQuotePopup();
+      });
+
+      if(quoteForm){
+        quoteForm.addEventListener('submit', function(e){
+          e.preventDefault();
+          var qfName = document.getElementById('qf-name');
+          var qfEmail = document.getElementById('qf-email');
+          var name = (qfName && qfName.value || '').trim();
+          var email = (qfEmail && qfEmail.value || '').trim();
+          var errName = document.getElementById('qf-name-err');
+          var errEmail = document.getElementById('qf-email-err');
+          var valid = true;
+
+          if(errName){ errName.classList.remove('show'); errName.textContent = ''; }
+          if(errEmail){ errEmail.classList.remove('show'); errEmail.textContent = ''; }
+          if(!name){
+            if(errName){ errName.textContent = 'Please enter your name'; errName.classList.add('show'); }
+            valid = false;
+          }
+          if(!email || email.indexOf('@') === -1){
+            if(errEmail){ errEmail.textContent = 'Please enter a valid email'; errEmail.classList.add('show'); }
+            valid = false;
+          }
+          var quoteData = collectMarineQuoteData();
+          if(!quoteData){
+            valid = false;
+            alert('Please complete valid dimensions before submitting the quote.');
+          }
+          if(!valid) return;
+
+          if(quoteSubmitBtn){
+            quoteSubmitBtn.disabled = true;
+            quoteSubmitBtn.textContent = 'Submitting...';
+          }
+
+          var honeypot = quoteForm.querySelector('[name="_website"]');
+          fetch('/api/quote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customer_name: name,
+              email: email,
+              address: (document.getElementById('qf-address') || {}).value || undefined,
+              telephone: (document.getElementById('qf-phone') || {}).value || undefined,
+              product_slug: productSlug,
+              dimensions: {
+                unit: 'cm',
+                shape_code: quoteData.shapeCode,
+                shape_name: quoteData.shapeName,
+                boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
+                boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined,
+                area_cm2: quoteData.areaCm2,
+                values: quoteData.values
+              },
+              fabric: quoteFabricKey,
+              color: getSelectedMarineColor() || undefined,
+              quoted_price_thb: currentQuotePriceThb || undefined,
+              quoted_price_usd: currentQuotePriceUsd || undefined,
+              _website: honeypot ? honeypot.value : undefined
+            })
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if(quoteSubmitBtn){
+              quoteSubmitBtn.disabled = false;
+              quoteSubmitBtn.textContent = 'Submit';
+            }
+            if(!data || !data.success){
+              alert('Error: ' + ((data && data.error) || 'Something went wrong.'));
+              return;
+            }
+            if(quoteOverlay) quoteOverlay.classList.remove('open');
+            var confirmText = document.getElementById('confirm-text');
+            var confirmDetails = document.getElementById('confirm-details');
+            if(confirmText) confirmText.innerHTML = 'We\'ll email <strong>' + escHtml(email) + '</strong> within 24 hours.';
+            if(confirmDetails){
+              confirmDetails.innerHTML =
+                '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
+                '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
+                '<strong>Area:</strong> ' + quoteData.areaCm2.toLocaleString() + ' cm²<br>' +
+                '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
+                '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || '—') + '<br>' +
+                (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
+                '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || '—');
+            }
+            if(confirmOverlay) confirmOverlay.classList.add('open');
+          })
+          .catch(function(){
+            if(quoteSubmitBtn){
+              quoteSubmitBtn.disabled = false;
+              quoteSubmitBtn.textContent = 'Submit';
+            }
+            alert('Network error. Please try again.');
+          });
+        });
+      }
+
+      var quoteClose = document.getElementById('quote-close');
+      var confirmClose = document.getElementById('confirm-close');
+      var confirmOk = document.getElementById('confirm-ok');
+      if(quoteClose) quoteClose.addEventListener('click', function(){ if(quoteOverlay) quoteOverlay.classList.remove('open'); });
+      if(confirmClose) confirmClose.addEventListener('click', function(){ if(confirmOverlay) confirmOverlay.classList.remove('open'); });
+      if(confirmOk) confirmOk.addEventListener('click', function(){ if(confirmOverlay) confirmOverlay.classList.remove('open'); });
+      if(quoteOverlay) quoteOverlay.addEventListener('click', function(e){ if(e.target === quoteOverlay) quoteOverlay.classList.remove('open'); });
+      if(confirmOverlay) confirmOverlay.addEventListener('click', function(e){ if(e.target === confirmOverlay) confirmOverlay.classList.remove('open'); });
+
+      /* Unit toggle cm/in */
+      var currentUnit = 'cm';
+      function syncUnitWarning(){
+        if(!unitWarningNote) return;
+        unitWarningNote.style.display = (currentUnit === 'in') ? 'none' : 'block';
+      }
+      document.getElementById('unit-cm').addEventListener('click', function(){
+        if(currentUnit === 'cm') return;
+        currentUnit = 'cm';
+        this.classList.add('active');
+        document.getElementById('unit-in').classList.remove('active');
+        syncUnitWarning();
+        convertAllInputs('in','cm');
+        autoComputeShape10();
+        updatePrice();
+      });
+      document.getElementById('unit-in').addEventListener('click', function(){
+        if(currentUnit === 'in') return;
+        currentUnit = 'in';
+        this.classList.add('active');
+        document.getElementById('unit-cm').classList.remove('active');
+        syncUnitWarning();
+        convertAllInputs('cm','in');
+        autoComputeShape10();
+        updatePrice();
+      });
+
+      function convertAllInputs(fromUnit, toUnit){
+        var code = shapeSelect.value;
+        var fields = shapeFields[code];
+        if(!fields) return;
+        var factor = (fromUnit === 'cm' && toUnit === 'in') ? 0.393701 : 2.54;
+        fields.forEach(function(f){
+          if(f.readonly) return; /* skip computed fields */
+          var el = document.getElementById('dim-'+f.id);
+          if(!el) return;
+          var val = parseFloat(el.value);
+          if(!isNaN(val) && val > 0){
+            el.value = Math.round(val * factor);
+            if(fromUnit === 'in' && toUnit === 'cm' && val <= 2) el.value = '';
+          }
+          el.placeholder = (toUnit === 'cm') ? f.placeholder : f.placeholder.replace(/\d+(\.\d+)?/g, function(m){return Math.round(parseFloat(m)*0.393701)});
+        });
+      }
+
+      loadBoatModels();
+      loadMarinePricingParams();
+      syncUnitWarning();
+    })();
+  </script>
+
+  <script>
+    /* ── Info Tabs ── */
+    (function(){
+      document.querySelectorAll('[data-info-tab]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var tabId = btn.getAttribute('data-info-tab');
+          document.querySelectorAll('.info-tab').forEach(function(b){b.classList.remove('active')});
+          btn.classList.add('active');
+          document.querySelectorAll('.info-panel').forEach(function(p){p.classList.remove('active')});
+          var panel = document.getElementById('info-panel-' + tabId);
+          if(panel) panel.classList.add('active');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
+
+

@@ -2,6 +2,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'standard-fitted-sheet',
   'deep-pocket-fitted-sheet',
   'marine-fitted-sheet',
+  'marine-top-sheet',
   'dorm-fitted-sheet',
   'rv-truck-fitted-sheet',
   'family-fitted-sheet',
@@ -53,7 +54,8 @@ function hasToken(slug: string, token: string): boolean {
 function resolveLegacyProduct(slug: string): string {
   if (slug === '%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1') return '/product/duvet-insert/';
   if (slug.startsWith('%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9')) return '/product/family-fitted-sheet/';
-  if (slug.startsWith('product-boat-bedding') || slug.startsWith('product-boat-top-sheet')) return '/product/marine-fitted-sheet/';
+  if (slug.startsWith('product-boat-top-sheet')) return '/product/marine-top-sheet/';
+  if (slug.startsWith('product-boat-bedding')) return '/product/marine-fitted-sheet/';
   if (slug.includes('boat') && slug.includes('pillow')) return '/product/pillowcase-envelope/';
 
   if (slug.includes('dorm')) return slug.includes('duvet') ? '/product/duvet-cover-dorm/' : '/product/dorm-fitted-sheet/';

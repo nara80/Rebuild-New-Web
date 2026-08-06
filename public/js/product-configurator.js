@@ -23,10 +23,12 @@
   var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
   var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
+  var isMarineTopSheet = path.indexOf('marine-top-sheet') !== -1;
+  var isMarineShapeProduct = isMarineFitted || isMarineTopSheet;
   var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
 
   // Non-deep products — depth > 30 cm / 12″ should redirect to deep pocket variants
-  var isShallowFitted = path.indexOf('fitted-sheet') !== -1 && path.indexOf('deep-pocket-fitted-sheet') === -1 && !isMarineFitted && !isFamily && !isPetOwner;
+  var isShallowFitted = path.indexOf('fitted-sheet') !== -1 && path.indexOf('deep-pocket-fitted-sheet') === -1 && !isMarineShapeProduct && !isFamily && !isPetOwner;
   var isStandardFlat = isFlatSheet && path.indexOf('flat-sheet-extra-deep-pocket') === -1 && path.indexOf('flat-sheet-standard') !== -1;
   var isShallowProtector = isProtectorStandard || isProtectorPetProof;
   var MAX_SHALLOW_DEPTH_CM = 30; // ≈ 12″
@@ -85,7 +87,7 @@
   var CUSTOM_QUOTE_SURCHARGE = pctVal('custom_quote_surcharge', 15);
   var WASTE_FABRIC = 1 + pVal('waste_factor_fabric', 20) / 100;
   var ACCESSORIES_RATE = pctVal('accessories_rate', 10);
-  var MARGIN_RATE = isMarineFitted ? pctVal('marine', 680)
+  var MARGIN_RATE = isMarineShapeProduct ? pctVal('marine', 680)
     : isRVTruck ? pctVal('rv_truck', 45)
     : isFamily ? pctVal('family', 50)
     : isEncasement ? pctVal('encasement', 50)
@@ -349,6 +351,22 @@
     return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100, fw: w, fl: fl };
   }
 
+  function calcMarineTopSheet(hwCm, fwCm, lCm, dCm, fabric) {
+    var tuck = FLAT_TUCK;
+    var sideAllowance = dCm + tuck;
+    var w = Math.max(hwCm, fwCm) + 2 * sideAllowance;
+    var fl = lCm + 2 * sideAllowance;
+    var area = w * fl;
+    var yardRate = FABRIC_RATES[fabric] || 100;
+    var fabricCost = (area * yardRate / SQCM_PER_YARD) * WASTE_FABRIC;
+    var sewingCost = FLAT_SEWING;
+    var subtotal = fabricCost + sewingCost + PACKING + DELIVERY;
+    var total = subtotal * VERTH_MARKUP;
+    var rounded = Math.ceil(total / 100) * 100;
+    var usd = Math.round((rounded / THB_TO_USD) * 100) / 100;
+    return { thb: rounded, usd: usd, area: Math.round(area * 100) / 100, fw: w, fl: fl };
+  }
+
   function inchToCm(v) { return v * 2.54; }
   function cmToInch(v) { return v * 0.393701; }
 
@@ -466,10 +484,10 @@
     var hasColorSwatches = document.querySelectorAll('.color-option').length > 0;
     var activeGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
     var hasSelectedColor = activeGroup ? !!activeGroup.querySelector('.color-option.selected') : false;
-    var isPetOwnerOrMarine = isPetOwner || isMarineFitted;
+    var isPetOwnerOrMarine = isPetOwner || isMarineShapeProduct;
     var noColorRequired = isPetOwnerOrMarine || noColorSwatches;
     // Marine: shape select IS the size/region selector — region always passes
-    var noRegionRequired = isMarineFitted;
+    var noRegionRequired = isMarineShapeProduct;
 
     return {
       region: noRegionRequired || !!state.region,
@@ -514,6 +532,7 @@
   }
 
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
+  if (isMarineShapeProduct) state.fabric = 'cloudsoft'; // Marine shape products: CloudSoft only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
 
@@ -524,7 +543,7 @@
   }
 
   // -- Marine Fitted Sheet — shape-based pricing --
-  if (isMarineFitted) {
+  if (isMarineShapeProduct) {
     state.fabric = 'cloudsoft';
     // Hide "Select Mattress Size" — marine uses "Choose Your Berth Shape" instead
     if (sizeSelect) {
@@ -831,7 +850,7 @@
   }
 
   if (fabricSelect) enhanceSelectToPills(fabricSelect);
-  if (isMarineFitted) {
+  if (isMarineShapeProduct) {
     var marineShapeSelect = document.getElementById('marine-shape-select');
     if (marineShapeSelect) enhanceSelectToPills(marineShapeSelect);
   }
@@ -993,7 +1012,7 @@
   function updateStandardPrice() {
     if (!sizeSelect || !priceDisplay) return;
     // Marine has no standard size dropdown — pricing handled by shape selector + custom dims
-    if (isMarineFitted) return;
+    if (isMarineShapeProduct) return;
     var val = sizeSelect.value;
     if (val === 'custom') {
       switchToTab('custom');
@@ -1094,16 +1113,18 @@
       return;
     }
 
-    // V-Berth fitted sheet: formula-based pricing
-    if (isMarineFitted) {
+    // Marine shape products: formula-based pricing
+    if (isMarineShapeProduct) {
       var dimFootW = document.getElementById('dim-foot-width');
       var fw = parseFloat(dimFootW && dimFootW.value) || 0;
       if (state.unit === 'in') fw = inchToCm(fw);
       if (fw <= 0) { customPrice.textContent = 'Enter Foot Width (FW)'; customPrice.style.fontSize = '0.85rem'; if (addToCartBtn) addToCartBtn.disabled = true; return; }
       if (!dCm) {
-        dCm = state.unit === 'in' ? 7 : 17.78;
+        dCm = isMarineTopSheet ? (state.unit === 'in' ? 5 : 12.7) : (state.unit === 'in' ? 7 : 17.78);
       }
-      var result = calcVBerthFitted(wCm, fw, lCm, dCm, state.fabric);
+      var result = isMarineTopSheet
+        ? calcMarineTopSheet(wCm, fw, lCm, dCm, state.fabric)
+        : calcVBerthFitted(wCm, fw, lCm, dCm, state.fabric);
       var sf = 1 + CUSTOM_QUOTE_SURCHARGE;
       result.thb = Math.ceil((result.thb * sf) / 100) * 100;
       result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
@@ -1355,6 +1376,10 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Submitting...';
 
+    var activeQuoteColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
+    var selectedQuoteColorEl = activeQuoteColorGroup ? activeQuoteColorGroup.querySelector('.color-option.selected') : null;
+    var selectedQuoteColor = selectedQuoteColorEl ? selectedQuoteColorEl.getAttribute('data-color') : undefined;
+
     fetch('/api/quote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1366,9 +1391,9 @@
         product_slug: productSlug,
         dimensions: { w: wCm, l: lCm, d: dCm, unit: 'cm' },
         fabric: state.fabric,
-        color: document.querySelector('.color-option.selected') ? document.querySelector('.color-option.selected').getAttribute('data-color') : undefined,
+        color: selectedQuoteColor,
         marine_shape: (function () {
-          if (!isMarineFitted) return undefined;
+          if (!isMarineShapeProduct) return undefined;
           var sm = document.getElementById('marine-shape-select');
           var so = sm && sm.selectedOptions[0];
           return so && so.value ? { code: so.value, name: so.textContent.split('\u2014').slice(1).join('\u2014').split('(')[0].trim() } : undefined;
@@ -1392,10 +1417,7 @@
         document.getElementById('confirm-details').innerHTML =
           '<strong>Dimension:</strong> ' + dimDisplay + '<br>' +
           '<strong>Fabric:</strong> ' + fabricName + '<br>' +
-          '<strong>Color:</strong> ' + ((function () {
-            var selectedSwatch = document.querySelector('.color-option.selected');
-            return selectedSwatch ? (selectedSwatch.getAttribute('title') || selectedSwatch.getAttribute('data-color') || '—') : '—';
-          })()) + '<br>' +
+          '<strong>Color:</strong> ' + (selectedQuoteColorEl ? (selectedQuoteColorEl.getAttribute('title') || selectedQuoteColorEl.getAttribute('data-color') || '—') : '—') + '<br>' +
           (state.quotePriceUsd ? '<strong>Price:</strong> $' + state.quotePriceUsd.toFixed(2) + ' USD<br>' : '') +
           '<strong>Quote ID:</strong> ' + data.quote_id;
         confirmOverlay.classList.add('open');
@@ -1461,7 +1483,7 @@
       if (sizeSelect && sizeSelect.selectedOptions[0] && sizeSelect.value && sizeSelect.value !== 'custom') {
         sizeLabel = sizeSelect.selectedOptions[0].text.trim();
       }
-      if (isMarineFitted) {
+      if (isMarineShapeProduct) {
         var ms = document.getElementById('marine-shape-select');
         if (ms && ms.selectedOptions[0] && ms.value) {
           sizeLabel = ms.selectedOptions[0].text.trim();
