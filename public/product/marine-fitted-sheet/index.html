@@ -84,6 +84,8 @@
     .color-option.selected{border-color:var(--color-primary);border-width:3px;box-shadow:0 0 0 2px rgba(44,150,244,0.3)}
     .color-option:not(.selected){opacity:0.55}
     .color-option:hover{opacity:1;border-color:#94a3b8}
+    .color-option.out-of-stock{display:none!important}
+    .color-stock-note{margin-top:8px;font-size:0.75rem;color:#64748b}
     .selected-color-name{margin-top:8px;font-size:0.8125rem;font-weight:600;color:#1E293B}
     .payment-badges{display:flex;align-items:center;gap:12px;margin-top:16px;font-size:0.75rem;color:#64748b;padding:10px 14px;background:var(--color-surface);border-radius:6px;border:1px solid #e2e8f0}
     .payment-badge{display:flex;align-items:center;gap:4px}
@@ -357,6 +359,7 @@
           <div id="price-breakdown" class="price-breakdown"></div>
           <!-- Color Selector -->
           <div class="panel-section fabric-color-group" data-fabric="breezeplus" style="display:none"><div class="panel-label">Color — BreezePlus</div><div class="color-selector"><div class="color-option selected" data-color="dark-grey" style="background:#4D545B;" title="Dark Grey"></div><div class="color-option" data-color="silver" style="background:#B7BEC8;" title="Silver"></div><div class="color-option" data-color="sand" style="background:#D9D1C1;" title="Sand"></div><div class="color-option" data-color="sky" style="background:#9CCAE1;" title="Sky"></div><div class="color-option" data-color="emerald" style="background:#618283;" title="Emerald"></div><div class="color-option" data-color="sea" style="background:#5A7DA2;" title="Sea"></div><div class="color-option" data-color="pure-white" style="background:#FFFFFF; border:2px solid #ccc;" title="Pure White"></div><div class="color-option" data-color="baby-pink" style="background:#E9B7BF;" title="Baby Pink"></div><div class="color-option" data-color="ivory" style="background:#F1EFE1;" title="Ivory"></div></div></div><div class="panel-section fabric-color-group" data-fabric="cloudsoft"><div class="panel-label">Color — CloudSoft</div><div class="color-selector"><div class="color-option selected" data-color="mint" style="background:#67E4D3;" title="Mint"></div><div class="color-option" data-color="charcoal" style="background:#5E5E5E;" title="Charcoal"></div><div class="color-option" data-color="grey" style="background:#A5A9B4;" title="Grey"></div><div class="color-option" data-color="sapphire" style="background:#385E9D;" title="Sapphire"></div><div class="color-option" data-color="forest" style="background:#486C6A;" title="Forest"></div><div class="color-option" data-color="denim" style="background:#1E4477;" title="Denim"></div><div class="color-option" data-color="rosegold" style="background:#D48C98;" title="RoseGold"></div><div class="color-option" data-color="beige" style="background:#E1D1B1;" title="Beige"></div><div class="color-option" data-color="ovaltine" style="background:#B99F87;" title="Ovaltine"></div><div class="color-option" data-color="white" style="background:#FFFFFF;" title="White"></div><div class="color-option" data-color="lavender" style="background:#9581B1;" title="Lavender"></div><div class="color-option" data-color="olive" style="background:#93B09D;" title="Olive"></div></div></div><div class="panel-section fabric-color-group" data-fabric="premacotton" style="display:none"><div class="panel-label">Color — PremaCotton</div><div class="color-selector"><div class="color-option selected" data-color="snow-white" style="background:#ffffff; border:2px solid #ccc;" title="Snow White"></div></div></div><div class="panel-section fabric-color-group" data-fabric="ecoluxe" style="display:none"><div class="panel-label">Color — EcoLuxe</div><div class="color-selector"><div class="color-option selected" data-color="vanilla-linen" style="background:#f3e5ab;" title="Vanilla Linen"></div></div></div>
+          <div class="color-stock-note" id="marine-color-stock-note"></div>
           <div class="desktop-cta-sticky">
             <div class="price-block">
               <div class="price-row">
@@ -1898,6 +1901,7 @@
       var colorOptions = document.querySelectorAll('.color-option');
       colorOptions.forEach(function(co){
         co.addEventListener('click', function(){
+          if(this.classList.contains('out-of-stock')) return;
           var group = this.closest('.fabric-color-group');
           if(group){
             group.querySelectorAll('.color-option').forEach(function(c){ c.classList.remove('selected'); });
@@ -1905,6 +1909,56 @@
           this.classList.add('selected');
         });
       });
+
+      /* Apply inventory availability (CloudSoft on marine pages) */
+      function applyMarineColorInventory(items){
+        var inventoryByFabric = {};
+        (items || []).forEach(function(item){
+          var fabric = String(item.fabric || '').toLowerCase();
+          var color = String(item.color || '').toLowerCase();
+          if(!fabric || !color) return;
+          if(!inventoryByFabric[fabric]) inventoryByFabric[fabric] = {};
+          inventoryByFabric[fabric][color] = Number(item.in_stock) === 1;
+        });
+
+        var cloudsoftGroup = document.querySelector('.fabric-color-group[data-fabric="cloudsoft"]');
+        if(!cloudsoftGroup) return;
+        var stock = inventoryByFabric.cloudsoft || {};
+        var swatches = cloudsoftGroup.querySelectorAll('.color-option');
+        var hiddenCount = 0;
+        swatches.forEach(function(sw){
+          var color = String(sw.getAttribute('data-color') || '').toLowerCase();
+          var inStock = stock[color] !== false;
+          if(!inStock){
+            sw.classList.add('out-of-stock');
+            hiddenCount++;
+            if(sw.classList.contains('selected')) sw.classList.remove('selected');
+          } else {
+            sw.classList.remove('out-of-stock');
+          }
+        });
+
+        if(!cloudsoftGroup.querySelector('.color-option.selected:not(.out-of-stock)')){
+          var firstAvailable = cloudsoftGroup.querySelector('.color-option:not(.out-of-stock)');
+          if(firstAvailable) firstAvailable.classList.add('selected');
+        }
+
+        var total = swatches.length;
+        var available = total - hiddenCount;
+        var note = document.getElementById('marine-color-stock-note');
+        if(note){
+          if(hiddenCount > 0){
+            note.textContent = available + ' colors available now • ' + hiddenCount + ' currently out of stock';
+          } else {
+            note.textContent = total + ' colors available now';
+          }
+        }
+      }
+
+      fetch('/api/color-inventory')
+        .then(function(r){ return r.json(); })
+        .then(function(data){ applyMarineColorInventory(data && data.inventory ? data.inventory : []); })
+        .catch(function(){});
       /* Inject quote popup HTML (same workflow as product-configurable) */
       var popupHTML = '' +
         '<div class="quote-overlay" id="quote-overlay">' +

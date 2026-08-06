@@ -6,6 +6,38 @@
   1. **Thai homepage text/font correctness (`/th/`)**
   2. **Homepage Lighthouse performance diagnostics (`/`)**
 
+---
+
+## Reconciliation Snapshot (2026-08-06) — Actual Completed / Built / Verified
+
+This section is the current source of truth for the latest `/products/` and marine product visibility fixes.
+
+### Completed work
+1. **`/products/` moved to D1-driven rendering path**
+   - Added SSR route handler at `functions/products/[[path]].ts`.
+   - Product cards are generated from D1 `products` rows (`is_active=1`) and injected into `public/products/index.html` between:
+     - `<!-- PRODUCTS_GRID_START -->`
+     - `<!-- PRODUCTS_GRID_END -->`
+2. **All Products pagination behavior fixed**
+   - Updated `/products/` filter/pagination script so when both filters are `all`, the page shows the full catalog instead of capping at 12 cards.
+   - Fix applies to both desktop and mobile because logic is shared JS.
+3. **Production catalog data reconciled**
+   - `marine-top-sheet` row was missing in production D1 (`mildmate-db-prod`).
+   - Applied `migrations/038_marine_top_sheet.sql` to production D1.
+   - Verified `marine-top-sheet` exists and is active (`is_active=1`).
+4. **Production deployment + verification completed**
+   - Deployed latest site bundle to Pages `main`.
+   - Verified rendered card count by HTML inspection:
+     - `https://main.mildmate-new.pages.dev/products/` -> **29 cards**
+     - `https://www.mildmate.com/products/` -> **29 cards**
+   - Verified API now includes `slug: "marine-top-sheet"` in production.
+
+### Current verified state (now)
+- `/product/marine-top-sheet/` is live.
+- `/products/` is D1-backed and shows **29 products**.
+- Accessories filter still returns 2 products as expected.
+- “All Products” now returns full catalog (29), not 12.
+
 ## 1) Thai homepage fix (`/th/`)
 
 ### Root cause
