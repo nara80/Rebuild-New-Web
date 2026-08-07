@@ -1,5 +1,5 @@
 # Phase 7 — Admin Dashboard
-**Status (2026-06-10): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `public/super-admin/index.html` + `public/admin/index.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Global `functions/_middleware.ts` (D1 header/footer SSR + Thai link rewriting), `functions/blog-shared.ts` (blog SSR renderer), `functions/product/[[path]].ts` (product SSR + image overrides), `functions/th/blogs/[[path]].ts` (Thai blog SSR), `functions/super-admin/_middleware.ts` (re-exports admin middleware) all built. Migrations 017–026 applied (recovery_stages, recovery_config, discount_pct, thankyou_queue, promo_codes, promo_redemptions, blog_posts, blog_categories_json, reviews, site_templates, reviews_review_date, product_type_niches). Option B (Cloudflare Access) is optional for launch — defense-in-depth only. **Old sandbox files (`/admin/sandbox/`) removed 2026-06-10 — 301 redirect remains in `_redirects`.**
+**Status (2026-07-12): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `public/super-admin/index.html` + `public/admin/index.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron), **Promo Codes** (admin-created codes with optional `free_shipping` flag — Super Admin table shows Free Ship column), **Color Inventory** (Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback, `fabric_color_inventory` D1 table). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Global `functions/_middleware.ts` (D1 header/footer SSR + Thai link rewriting), `functions/blog-shared.ts` (blog SSR renderer), `functions/product/[[path]].ts` (product SSR + image overrides + H1/breadcrumb always replaced from D1 title), `functions/th/blogs/[[path]].ts` (Thai blog SSR), `functions/super-admin/_middleware.ts` (re-exports admin middleware) all built. Migrations 017–036 applied. Option B (Cloudflare Access) is optional for launch — defense-in-depth only. **Old sandbox files (`/admin/sandbox/`) removed 2026-06-10 — 301 redirect remains in `_redirects`.**
 **Goal:** Build a private management interface for your team — protected by Clerk admin authentication.
 
 **End Result:** A clean, Clerk-protected dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can update order status live.
@@ -21,10 +21,12 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 │ Dashboard  │   [Main content area — changes per sidebar tab]    │
 │ Pricing    │                                                    │
 │ DIY Prices │   Super Admin only: pricing params, exchange       │
-│ Exchange   │   rates, marketing campaigns, admin accounts       │
-│ Marketing  │                                                    │
-│ Products   │   Admin: products CRUD, orders, customers,         │
-│ Orders     │   subscribers, CSV export                          │
+│ Exchange   │   rates, marketing campaigns, admin accounts,      │
+│ Marketing  │   promo codes (free_shipping), color inventory     │
+│ Promo Codes│                                                    │
+│ Color Inv. │   Admin: products CRUD, orders, customers,         │
+│ Products   │   subscribers, CSV export                          │
+│ Orders     │                                                    │
 │ Customers  │                                                    │
 │ Subscribers│                                                    │
 │ Accounts   │                                                    │
@@ -55,7 +57,7 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 | File | What It Is |
 |---|---|
 | `public/admin/index.html` | Admin hub — role cards linking to super-admin + admin |
-| `public/super-admin/index.html` | Full super-admin — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown + Option A shipping tracking), R2 drag-drop upload (20 slots), Customers (D1-grouped by email), Subscribers CSV, Pricing Params, DIY Prices, Exchange Rates, **Shipping Rates** (THB-only with USD preview, country dropdown from D1), Marketing (campaigns + offers), Admin Accounts, **Quotes** (sales quote CRUD with dual-currency THB/USD, soft-delete via archived, Resend magic-link email) |
+| `public/super-admin/index.html` | Full super-admin — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown + Option A shipping tracking), R2 drag-drop upload (20 slots), Customers (D1-grouped by email), Subscribers CSV, Pricing Params, DIY Prices, Exchange Rates, **Shipping Rates** (THB-only with USD preview, country dropdown from D1), Marketing (campaigns + offers), Admin Accounts, **Quotes** (sales quote CRUD with dual-currency THB/USD, soft-delete via archived, Resend magic-link email), **Promo Codes** (admin-created codes, optional `free_shipping` flag, Free Ship column in table), **Color Inventory** (`rColorInventory()` — visual swatch grid per fabric, real-time OOS checkbox toggle, toast feedback, PUT `/api/admin/color-inventory`) |
 | `public/admin/admin.html` | Admin dashboard — sidebar SPA, Products CRUD, Orders (D1 live + status dropdown), Customers (D1-grouped), Subscribers CSV, Marketing, **Quotes** (sales quote CRUD) |
 | `public/_redirects` | `/admin/sandbox/*` → `/admin/:splat` (301) |
 | `functions/admin/_middleware.ts` | **Option A auth** — Clerk JWT verification + admin role/email check for all `/admin/*` requests. Non-admins redirected to sign-in. Dev bypass on pages.dev/localhost. |
@@ -72,6 +74,9 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 | `workers/api/countries.ts` | Centralized country master list — D1 `countries_master` table (95 countries + OTHER), `GET /api/countries` endpoint consumed by checkout, /account, and super-admin dropdowns. |
 | `workers/api/admin-contacts.ts` | Admin: contacts management — list, view, delete contact form submissions from D1. |
 | `workers/api/admin-stats.ts` | Admin: dashboard statistics (today/7d/30d orders + revenue) — schema self-heal, dual-currency. **Wired to super-admin Dashboard tab ✅** (`loadStats()` called in sidebar SPA init). |
+| `workers/api/admin-promo.ts` | Admin: promo codes CRUD (GET/POST/PUT/DELETE `promo_codes`; `promo_redemptions` tracking; `free_shipping` boolean flag). |
+| `workers/api/color-inventory.ts` | Public: GET `/api/color-inventory` — returns `{fabric: {color: bool}}` in_stock map; 60s cache. |
+| `workers/api/admin-color-inventory.ts` | Admin: GET/PUT `/api/admin/color-inventory` — JWT validity check only (no email allowlist) + X-Admin-Secret fallback. |
 | `workers/api/clerk-verify.ts` | Shared Clerk JWT verification via Web Crypto + JWKS |
 
 ### Migrations Applied by Phase 7
@@ -90,6 +95,17 @@ The dashboard has 8–10 sections across two views, accessible from a left sideb
 | `024_site_templates.sql` | `site_templates` table (centralized header/footer in D1) |
 | `025_reviews_review_date.sql` | `review_date` column on `reviews` |
 | `026_product_type_niches.sql` | `product_type` + `niches` columns on `products` |
+| `027_shipping_tiers.sql` | `shipping_product_tiers` table — tier mapping for all 28 products |
+| `028_shipping_add_rates.sql` | `shipping_add_rates` table — global additional shipping costs per tier |
+| `029_seed_tier_rates.sql` | Seeds initial tier rates |
+| `030_fix_product_tiers.sql` | Corrects tier assignments for all 28 products |
+| `031_marine_mattress_protector.sql` | Marine Mattress Protector seeding + pricing support |
+| `031_product_faq_fields.sql` | `faq_en` / `faq_th` columns on `products` |
+| `032_product_card_benefits.sql` | Card benefit fields on `products` for listing cards |
+| `033_marine_protector_pricing_params.sql` | Pricing parameter extensions for marine protector |
+| `034_orders_customer_note.sql` | `customer_note_type` / `customer_note` columns on `orders` |
+| `035_promo_free_shipping.sql` | `free_shipping` BOOLEAN column on `promo_codes` |
+| `036_fabric_color_inventory.sql` | `fabric_color_inventory` table + seed 24 colors (Sky + Baby Pink pre-seeded OOS) |
 
 ---
 
@@ -194,6 +210,11 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 - [x] Clerk admin roles assigned to team members (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin)
 - [x] `ADMIN_EMAILS` env var set on Cloudflare (comma-separated)
 - [x] `QUOTE_FROM_EMAIL` / `QUOTE_REPLY_TO` env vars set for quote magic-link emails
+- [x] Promo Codes with `free_shipping` flag (migration 035, `admin-promo.ts`, Super Admin table with Free Ship column)
+- [x] Color Inventory system (migration 036, `color-inventory.ts`, `admin-color-inventory.ts`, Super Admin Color Inventory page, product configurator OOS swatch blocking)
+- [x] Shipping Tier 3 additional rate reduced ฿150 → ฿50 (applied to both prod + preview D1)
+- [x] Product H1/breadcrumb always replaced from D1 title (EN + TH, all 28 slugs verified)
+- [x] Family/Co-Sleep size presets in product configurator (`family-fitted-sheet`, `mattress-protector-family`)
 - [ ] Option B — Cloudflare Access (optional, for launch — defense-in-depth only)
 
 ---
@@ -208,6 +229,7 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 | Product list won't select | Missing `_pendingUploads`/`_pendingCount` declarations — fixed in super-admin. |
 | Image upload fails | Check R2 bucket binding `MILDMATE_ASSETS` in `wrangler.toml`. |
 | CSV export empty | No subscribers in D1. Test footer signup flow first. |
+| "Admin access required" on Color Inventory toggle | Color inventory admin endpoint must verify JWT validity only — do NOT check email against `ADMIN_EMAILS` allowlist. This pattern differs from some other admin endpoints; see `workers/api/admin-color-inventory.ts`. |
 
 ---
 

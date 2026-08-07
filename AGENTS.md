@@ -83,10 +83,10 @@ This file is read by Droid at the start of every session. It contains all critic
 | Phase | Status | Notes |
 |---|---|---|
 | 0 — Mockup | ✅ Approved | Design reference in `mockup.html` — not in project root |
-| 1 — Foundation | ✅ Complete | Scaffold, D1 migrations established; repository now contains migrations through `034_*` (including product FAQ/card-benefit/pricing extensions and checkout customer-note fields), local server tested, placeholder index.html |
+| 1 — Foundation | ✅ Complete | Scaffold, D1 migrations established; repository now contains migrations through `038_*` (including product FAQ/card-benefit/pricing extensions, checkout customer-note fields, boat model registry, and marine top sheet seed), local server tested, placeholder index.html |
 | 2 — SEO URLs | ✅ Deployed | 271 rules via `public/_redirects` (258 WP URLs + 13 navigation) + `functions/product/` middleware redirect worker — deployed 2026-06-14 |
 | 3 — Design System | ✅ Complete | Header, footer, CSS, nav.js, search overlay, mobile drawer left |
-| 4 — Homepage + Products | ✅ Complete | **Everything built and deployed** — all static pages, 28 product pages, 12 category pages, **blog system** (D1-backed, admin CMS at `/admin/blog.html`, public listing at `/blogs/`, SSR post pages at `/blogs/{slug}/` via Pages Function), configurator, Workers API (products, pricing, geo, subscribe, unsubscribe, quote, contact, email, blog posts), cookie consent, Resend email, R2 uploader, admin dashboard (Phase 7 precursor), image compression, full 4-col footer, bilingual EN/TH. Language-driven currency (EN→USD, TH→THB). Shipping rates Option A (THB source, geo-country, OTHER fallback). D1-backed country master list (95 countries). **D1-backed dynamic product reviews** on all 28 product pages (GET `/api/products/:slug/reviews` with 4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy now aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards (Marine, Family, Deep Pocket, Pet Owner, Boarding Dorm, RV & Truck). **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH: dark-charcoal primary text, medium-grey supporting text, blue reserved for actions/highlights, with mobile legibility/tap-target improvements. Full details in Phase4.md completion summary. **Thai localization:** Homepage TH (`/th/`) built with full marketing audit copy; `/th/about/`, `/th/contact/` pages built with Thai marketing audits applied; Thai nav link routing fixed (middleware rewrite order + client-side nav.js safeguard for 12+ bilingual routes). **Material Intelligence copy audit**: desktop grid, mobile cards, and details accordion updated on both English (`/`) and Thai (`/th/`) homepages, and fabric collections pages updated on both English (`/fabric/`) and Thai (`/th/fabric/`) to resolve unverified fabric claims (removing "3-5°C cooler", "organic", "hypoallergenic" and sustainability absolute claims) in compliance with fabric page guidelines. **Latest reconciliation (2026-06-23):** product description content centralized to D1 across all 28 product pages, slug-specific Thai hardcoding removed, and FAQ EN/TH fields added to Admin/Super Admin + D1 (`faq_en`, `faq_th`). |
+| 4 — Homepage + Products | ✅ Complete | **Everything built and deployed** — all static pages, 29 product pages in source (28 deployed baseline + marine top sheet built/verified locally), 12 category pages, **blog system** (D1-backed, admin CMS at `/admin/blog.html`, public listing at `/blogs/`, SSR post pages at `/blogs/{slug}/` via Pages Function), configurator, Workers API (products, pricing, geo, subscribe, unsubscribe, quote, contact, email, blog posts), cookie consent, Resend email, R2 uploader, admin dashboard (Phase 7 precursor), image compression, full 4-col footer, bilingual EN/TH. Language-driven currency (EN→USD, TH→THB). Shipping rates Option A (THB source, geo-country, OTHER fallback). D1-backed country master list (95 countries). **D1-backed dynamic product reviews** on all product pages (GET `/api/products/:slug/reviews` with 4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy now aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards (Marine, Family, Deep Pocket, Pet Owner, Boarding Dorm, RV & Truck). **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH: dark-charcoal primary text, medium-grey supporting text, blue reserved for actions/highlights, with mobile legibility/tap-target improvements. Full details in Phase4.md completion summary. **Thai localization:** Homepage TH (`/th/`) built with full marketing audit copy; `/th/about/`, `/th/contact/` pages built with Thai marketing audits applied; Thai nav link routing fixed (middleware rewrite order + client-side nav.js safeguard for 12+ bilingual routes). **Material Intelligence copy audit**: desktop grid, mobile cards, and details accordion updated on both English (`/`) and Thai (`/th/`) homepages, and fabric collections pages updated on both English (`/fabric/`) and Thai (`/th/fabric/`) to resolve unverified fabric claims (removing "3-5°C cooler", "organic", "hypoallergenic" and sustainability absolute claims) in compliance with fabric page guidelines. **Latest reconciliation (2026-08-06):** marine top sheet (`/product/marine-top-sheet/`) added with EN/TH metadata, marine-shape configurator flow, D1 seed migration, and image set; rebuilt successfully and lint-verified locally. |
 | 5 — Checkout + Stripe + Auth | ✅ Complete | Stripe Checkout Sessions (redirect flow), PromptPay for TH, webhook saves orders to D1 + Resend emails, 3-step checkout UI, order-confirmed page. **Auth: Clerk multi-provider** (Google / Facebook / Email) hosted-page redirect, JWT verified in Workers via Web Crypto + JWKS. Cart→server sync via PUT/DELETE `/api/customers/cart`. Quote magic link at `/quote/QT-XXXXX/`. Default-address pre-fill on checkout. **Sequential add-to-cart validation:** Country/Region chip highlighted first, then Size, Fabric, Color — each required before proceeding; US/CA auto-selected on load. **Checkout message system (implemented):** optional `Message Type` + free-text customer message captured on Step 2, passed via checkout metadata, stored on orders (`customer_note_type`, `customer_note`), and included in team order emails. **Preview-origin reconciliation completed:** checkout success/cancel URLs now derive from request origin (no preview→production leak), and runtime bundles were synced with source (`workers/api/checkout.ts`, `public/index.js`, `public/_worker.js`). Cart duplicate fix: case-insensitive + trim on color when checking for existing cart items (`cart.js` add() and `workers/api/customers.ts` loadFromServer). **Account portal `/account/`**: 4-tab (Dashboard/Orders/Favorites/Addresses), 25/75 desktop layout, saved addresses CRUD (D1, migration 009), favorites wishlist (migration 013). **Workers `/api/customers/addresses`**: GET/POST/PUT/DELETE. **Option A order tracking**: carrier code + tracking number entered by admin on shipped, URL auto-generated from templates, inline in `/account` Orders panel. Workers API defensive schema self-heal on all endpoints. Country-specific tariff/tax notes in Payment step (EU/UK/OTHER → note; TH/US/CA/AU → hidden). Order thumbnail dual-match resolution (slug normalization + title fallback). Centralized shipping-quote engine (`workers/api/shipping.ts`) with THB rates and exchange-rate conversion. D1 country master list (`workers/api/countries.ts`, 95 countries + OTHER) consumed by checkout, /account, and super-admin. **Thank-you discount emails:** webhook inserts into `thankyou_queue` (migrations 017–020), `functions/cron.ts` sends 1-year discount code post-purchase. **Complete:** Option 3 production-auth hardening (Clerk production instance migrated & verified). |
 | 6 — Abandoned Cart | ✅ Built | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). **`functions/cron.ts`**: multi-stage recovery (Stage 1: 24h gentle reminder; Stage 2: 72h discount offer for carts ≥$150; Stage 3: 7d last-chance) — configurable via D1 `recovery_config` table (migration 018), D1 `recovery_stages` table (migration 017). `buildThankyouEmail` sends 1-year discount code post-purchase via `thankyou_queue` (migration 020). **Manual operations added:** `/api/admin/thankyou-dispatch` sends due thank-you rows on-demand from Super Admin and returns sent/failed/skipped detail. |
 | 7 — Admin Dashboard | ✅ Built | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized to D1**: abandoned cart config (`recovery_config`), thank-you config, Send Offers config via `/api/admin/offers`, and Run-a-Sale campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes manual button **Send Due Thank-you Now** with per-email sent/failed/skipped output. **Promo Codes:** admin-created codes with optional `free_shipping` flag; Super Admin table shows Free Ship column. **Color Inventory:** Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback (`/api/admin/color-inventory`). **Blog CMS:** dedicated `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), featured image preview, write/preview toggle. Public `/blogs/` SSR listing reads D1 directly (server-side), `/blogs/{slug}/` SSR individual post from D1 via Pages Function (YouTube embed hero, featured image fallback, gradient fallback). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs use production Clerk + `ADMIN_EMAILS` fallback parity for robust admin auth. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. |
@@ -237,7 +237,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 ### Primary Navigation — Product Type (SEO discoverability)
 | Category | URL | Products | Count |
 |---|---|---|---|
-| Sheets | `/sheets/` | Standard Fitted Sheet, Deep Pocket Fitted Sheet, Marine Fitted Sheet, Dorm Fitted Sheet, RV & Truck Fitted Sheet, Family Fitted Sheet, Pet Owner Fitted Sheet, Flat Sheet — Standard, Flat Sheet — Extra Deep Pocket | 9 |
+| Sheets | `/sheets/` | Standard Fitted Sheet, Deep Pocket Fitted Sheet, Marine Fitted Sheet, Marine Top Sheet, Dorm Fitted Sheet, RV & Truck Fitted Sheet, Family Fitted Sheet, Pet Owner Fitted Sheet, Flat Sheet — Standard, Flat Sheet — Extra Deep Pocket | 10 |
 | Duvet Covers | `/duvet-covers/` | 3-Sided Zipper Duvet Cover, Pet Owner Duvet Cover, Duvet Cover — Marine, Duvet Cover — RV, Duvet Cover — Dorm, Duvet Insert | 6 |
 | Pillowcases | `/pillowcases/` | Envelope Pillowcase, Zipper Pillowcase, Sham Pillowcase | 3 |
 | Protection | `/protection/` | Mattress Protector — Standard, Mattress Protector — Family, Mattress Protector — Deep Pocket, Pet-Proof Mattress Protector, 6-Sided Mattress Encasement, RV & Truck Mattress Encasement, Pillow Protector | 7 |
@@ -246,51 +246,52 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 ### SEO Landing Pages — Niche / Use-Case (high-conversion)
 | Niche | URL | Products Covered |
 |---|---|---|
-| Marine & Yacht | `/marine/` | Marine Fitted Sheet, Duvet Cover — Marine, 6-Sided Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
+| Marine & Yacht | `/marine/` | Marine Fitted Sheet, Marine Top Sheet, Duvet Cover — Marine, 6-Sided Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | Family & Co-Sleep | `/family/` | Family Fitted Sheet, 3-Sided Zipper Duvet Cover, Mattress Protector — Family, BedBridge Connector, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | Deep Pocket | `/deep-pocket/` | Deep Pocket Fitted Sheet, Flat Sheet — Extra Deep Pocket, Mattress Protector — Deep Pocket, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | Boarding Dorm | `/boarding-dorm/` | Dorm Fitted Sheet, Duvet Cover — Dorm, 6-Sided Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | Pet Owner Bedding | `/pets/` | Pet Owner Fitted Sheet, Pet Owner Duvet Cover, Pet-Proof Mattress Protector, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | RV & Truck Cab | `/rv-truck/` | RV & Truck Fitted Sheet, Duvet Cover — RV, 6-Sided Mattress Encasement, RV & Truck Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 
-### Complete Product Catalog (28 products)
+### Complete Product Catalog (29 products)
 
 | # | Product | URL | Product Type | Niche / Use-Case |
 |---|---|---|---|---|
 | 1 | Standard Fitted Sheet | `/product/standard-fitted-sheet/` | Sheets | — |
 | 2 | Deep Pocket Fitted Sheet | `/product/deep-pocket-fitted-sheet/` | Sheets | Deep Pocket |
 | 3 | Marine Fitted Sheet | `/product/marine-fitted-sheet/` | Sheets | Marine & Yacht |
-| 4 | Dorm Fitted Sheet | `/product/dorm-fitted-sheet/` | Sheets | Boarding Dorm |
-| 5 | RV & Truck Fitted Sheet | `/product/rv-truck-fitted-sheet/` | Sheets | RV & Truck Cab |
-| 6 | Family Fitted Sheet | `/product/family-fitted-sheet/` | Sheets | Family & Co-Sleep |
-| 7 | Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Sheets | Pet Owner |
-| 8 | Flat Sheet — Standard | `/product/flat-sheet-standard/` | Sheets | — |
-| 9 | Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Sheets | Deep Pocket |
-| 10 | 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Covers | Family & Co-Sleep |
-| 11 | Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Covers | Pet Owner |
-| 12 | Duvet Cover — Marine | `/product/duvet-cover-marine/` | Duvet Covers | Marine & Yacht |
-| 13 | Duvet Cover — RV | `/product/duvet-cover-rv/` | Duvet Covers | RV & Truck Cab |
-| 14 | Duvet Cover — Dorm | `/product/duvet-cover-dorm/` | Duvet Covers | Boarding Dorm |
-| 15 | Duvet Insert | `/product/duvet-insert/` | Duvet Covers | — |
-| 16 | Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 17 | Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 18 | Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 19 | Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection | — |
-| 20 | Mattress Protector — Family | `/product/mattress-protector-family/` | Protection | Family & Co-Sleep |
-| 21 | Mattress Protector — Deep Pocket | `/product/mattress-protector-deep-pocket/` | Protection | Deep Pocket |
-| 22 | Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protection | Pet Owner |
-| 23 | 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protection | Marine & Yacht, RV & Truck Cab |
-| 24 | RV & Truck Mattress Encasement | `/product/rv-truck-mattress-encasement/` | Protection | RV & Truck Cab |
-| 25 | Pillow Protector | `/product/pillow-protector-general/` | Protection | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
-| 26 | BedBridge Connector | `/product/bedbridge-connector/` | Accessories | Family & Co-Sleep |
-| 27 | Easy Bed Maker & Mattress Lifter | `/product/mattress-lift-helper/` | Accessories | — |
-| 28 | Marine Mattress Protector | `/product/marine-mattress-protector/` | Protection | Marine & Yacht |
+| 4 | Marine Top Sheet | `/product/marine-top-sheet/` | Sheets | Marine & Yacht |
+| 5 | Dorm Fitted Sheet | `/product/dorm-fitted-sheet/` | Sheets | Boarding Dorm |
+| 6 | RV & Truck Fitted Sheet | `/product/rv-truck-fitted-sheet/` | Sheets | RV & Truck Cab |
+| 7 | Family Fitted Sheet | `/product/family-fitted-sheet/` | Sheets | Family & Co-Sleep |
+| 8 | Pet Owner Fitted Sheet | `/product/pet-owner-fitted-sheet/` | Sheets | Pet Owner |
+| 9 | Flat Sheet — Standard | `/product/flat-sheet-standard/` | Sheets | — |
+| 10 | Flat Sheet — Extra Deep Pocket | `/product/flat-sheet-extra-deep-pocket/` | Sheets | Deep Pocket |
+| 11 | 3-Sided Zipper Duvet Cover | `/product/3-sided-duvet/` | Duvet Covers | Family & Co-Sleep |
+| 12 | Pet Owner Duvet Cover | `/product/pet-owner-duvet-cover/` | Duvet Covers | Pet Owner |
+| 13 | Duvet Cover — Marine | `/product/duvet-cover-marine/` | Duvet Covers | Marine & Yacht |
+| 14 | Duvet Cover — RV | `/product/duvet-cover-rv/` | Duvet Covers | RV & Truck Cab |
+| 15 | Duvet Cover — Dorm | `/product/duvet-cover-dorm/` | Duvet Covers | Boarding Dorm |
+| 16 | Duvet Insert | `/product/duvet-insert/` | Duvet Covers | — |
+| 17 | Envelope Pillowcase | `/product/pillowcase-envelope/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 18 | Zipper Pillowcase | `/product/pillowcase-zipper/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 19 | Sham Pillowcase | `/product/pillowcase-sham/` | Pillowcases | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 20 | Mattress Protector — Standard | `/product/mattress-protector-standard/` | Protection | — |
+| 21 | Mattress Protector — Family | `/product/mattress-protector-family/` | Protection | Family & Co-Sleep |
+| 22 | Mattress Protector — Deep Pocket | `/product/mattress-protector-deep-pocket/` | Protection | Deep Pocket |
+| 23 | Pet-Proof Mattress Protector | `/product/pet-proof-mattress-protector/` | Protection | Pet Owner |
+| 24 | 6-Sided Mattress Encasement | `/product/mattress-encasement-general/` | Protection | Marine & Yacht, RV & Truck Cab |
+| 25 | RV & Truck Mattress Encasement | `/product/rv-truck-mattress-encasement/` | Protection | RV & Truck Cab |
+| 26 | Pillow Protector | `/product/pillow-protector-general/` | Protection | Marine, Family, Pets, Deep Pocket, Boarding Dorm, RV & Truck |
+| 27 | BedBridge Connector | `/product/bedbridge-connector/` | Accessories | Family & Co-Sleep |
+| 28 | Easy Bed Maker & Mattress Lifter | `/product/mattress-lift-helper/` | Accessories | — |
+| 29 | Marine Mattress Protector | `/product/marine-mattress-protector/` | Protection | Marine & Yacht |
 
 ---
 
 ## Configurator Pricing Status
 
-**25 of 28 products** have live pricing formulas (all requiring a configurator). **3 products** are fixed-price and need no configurator (see section below).
+**26 of 29 products** have live pricing formulas (all requiring a configurator). **3 products** are fixed-price and need no configurator (see section below).
 
 All product detail pages use the shared `public/js/product-configurator.js` which auto-detects the product type from the URL path and applies the correct pricing formula. The full workflow is: [Custom Size] → enter dimensions → live price → [Custom Quote] → popup form (Name/Email) → POST `/api/quote` → Resend email to contact@mildmate.com.
 
@@ -298,7 +299,7 @@ Size dropdowns on all product pages are auto-populated from `public/js/product-s
 
 USD prices displayed as whole dollars (no decimals).
 
-### Products with Live Pricing Formula (25 of 28)
+### Products with Live Pricing Formula (26 of 29)
 
 | Product | Formula | Server Function | Markup |
 |---|---|---|---|
@@ -309,6 +310,7 @@ USD prices displayed as whole dollars (no decimals).
 | Pet Owner Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/30% |
 | Family Fitted Sheet | Fitted sheet | `calculateFittedSheetPrice()` | 15/20/50% |
 | Marine Fitted Sheet | V-Berth formula | `calcVBerthFitted()` | 680% margin |
+| Marine Top Sheet | Marine top-sheet formula (shape + tuck allowance) | `calcMarineTopSheet()` (client configurator) | 680% margin |
 | Marine Mattress Protector | Marine V-Berth formula path | `calcVBerthFitted()` | 680% margin |
 | Flat Sheet — Standard | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
 | Flat Sheet — Extra Deep Pocket | Flat sheet | `calculateFlatSheetPrice()` | 15/20/30% |
@@ -362,7 +364,7 @@ Marine Fitted Sheet uses a **V-Berth-specific configurator** with hybrid pricing
 - Shape prices discounted 30% from original: A=$94, B=$111, C=$125, D=$125, E=$138, F=$110, G=$108, H=$132
 - Responsive: desktop 4-col, tablet 2×2, mobile 1-col stack
 
-All 28 products now have live pricing formulas or don't require configurators.
+All 29 products now have live pricing formulas or don't require configurators.
 
 ---
 
@@ -389,10 +391,10 @@ All 28 products now have live pricing formulas or don't require configurators.
 - `countries_master` — country lookup list (migration 016)
 - `reviews` — dynamic product reviews (migration 024, 025)
 - `site_templates` — centralized templates for header/footer (migration 024)
-- `shipping_product_tiers` — tier mapping for all 28 products (migration 027, 030)
+- `shipping_product_tiers` — tier mapping for all 29 products (migration 027, 030, 038 update)
 - `shipping_add_rates` — global additional shipping costs per tier (migration 028, 029, 030)
 
-Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory
+Active migrations (in order): 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet
 
 ---
 
@@ -437,7 +439,7 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── images/                        ← Products, categories, fabrics, hero, router
 │   ├── _redirects                    ← 301 redirects (WordPress era + Phase 2 SEO URLs)
 │   ├── _headers                      ← Security headers (CSP, HSTS)
-│   ├── product/                      ← 28 EN product detail pages (static HTML)
+│   ├── product/                      ← 29 EN product detail pages (static HTML)
 │   ├── th/product/                    ← 27 TH product detail pages (≨️ Pending — not yet generated from templates)
 │   ├── sheets/duvet-covers/pillowcases/protection/accessories/  ← EN+TH category listings
 │   ├── marine/family/deep-pocket/boarding-dorm/pets/rv-truck/  ← EN+TH SEO landing pages
@@ -517,13 +519,13 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── product-marine.html          ← Dedicated V-Berth Marine Fitted Sheet template (hybrid shape selector + custom dims)
 │   └── blog-post.html               ← Template for blog posts (has global header + footer)
 ├── scripts/
-│   ├── build-products.js            ← Generates all 28 product pages from templates
+│   ├── build-products.js            ← Generates all 29 product pages from templates
 │   └── build-blogs.js               ← Generates blog posts from templates
 ├── data/
 │   ├── products.json                ← Source of truth for product catalog
 │   ├── product-content.json         ← Tab content, reviews, tags per product
 │   └── blog-posts.json              ← Blog post content
-├── migrations/                       ← 40 migration files currently in repo (001–034 range, including split 024/031 numbering families)
+├── migrations/                       ← 42 migration files currently in repo (001–038 range, including split 024/031 numbering families)
 │   ├── 001_initial.sql             ← products/orders/abandoned_carts/subscribers/rate_limits
 │   ├── 002_add_tags.sql             ← tags column on products
 │   ├── 002_discount_claims.sql       ← discount_claims table
@@ -557,7 +559,9 @@ D:\00_MildMate\Re-Build_Web\
 │   ├── 033_marine_protector_pricing_params.sql ← pricing parameter extensions
 │   ├── 034_orders_customer_note.sql ← adds `customer_note_type` / `customer_note` to orders
 │   ├── 035_promo_free_shipping.sql  ← adds `free_shipping` boolean column to promo_codes
-│   └── 036_fabric_color_inventory.sql ← `fabric_color_inventory` table + seed 24 colors (Sky + Baby Pink pre-seeded OOS)
+│   ├── 036_fabric_color_inventory.sql ← `fabric_color_inventory` table + seed 24 colors (Sky + Baby Pink pre-seeded OOS)
+│   ├── 037_boat_models.sql           ← `boat_models` registry for marine auto-fill lookup
+│   └── 038_marine_top_sheet.sql      ← seeds `marine-top-sheet` product + shipping tier mapping
 └── MildMateDataBase/ExistingWeb/    ← WordPress URL source data
 ```
 
@@ -574,7 +578,7 @@ D:\00_MildMate\Re-Build_Web\
 ## Notes for Future Droid Sessions
 
 - **ALWAYS read `Framework.md` at the start of every session** — it contains the full site blueprint, page layouts, design system, database schema, and build phases. AGENTS.md is summary memory; Framework.md is the complete specification.
-- **Centralized Product Template System:** All 28 product pages are generated from three templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
+- **Centralized Product Template System:** All 29 product pages are generated from three templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
 - **Rule of thumb (new product pages):** Always set a **feature-image placeholder** at creation time (`/images/placeholder.jpg`) in both data/migration paths. Replace with final product image later from Super Admin upload/editor.
 - **Fabric Specs Grids (replacing dropdowns):** Products with locked/exclusive fabrics show a material specs grid instead of a fabric dropdown. TPU products (encasements, pillow protector): TPU Waterproof Membrane + Water Spills & Accidents. 3-layer protectors: Cotton Quilted + Polyester Filling + TPU Waterproof. BreezePlus-only (pet products): Pet Hair Resistant + Cool-to-the-Touch + 50/50 Blend. CloudSoft-only (marine/RV): Quick-Dry + Moisture-Wicking + 100% Polyester Microfiber.
 - **Fabric Color Selector:** Products with fabric choices show per-fabric color swatches in a 6-column CSS grid. Each fabric has its own color set matching `/fabric/` data (BreezePlus: 9, CloudSoft: 12, PremaCotton: 1, EcoLuxe: 1). Label updates and swatches swap when fabric selection changes. White/light colors are visible via border + inset shadow.
@@ -602,7 +606,7 @@ D:\00_MildMate\Re-Build_Web\
 - **Marketing is D1-backed (no localStorage source of truth):** Super Admin Send Offers reads/writes via `/api/admin/offers` (`recovery_config`), and Run-a-Sale campaigns use `/api/admin/campaigns` (`marketing_campaigns` ensured in D1).
 - **Thank-you dispatch operations:** `/api/admin/thankyou-dispatch` manually sends due thank-you emails and returns per-item sent/failed/skipped diagnostics (including email lists) for operations visibility.
 - **Thank-you dedupe policy (implemented):** `workers/api/webhook.ts` avoids queue duplicates for the same `order_id` and suppresses new thank-you issuance when an active issued thank-you code already exists for the email; reissue is allowed after used/expired.
-- **D1-backed Product Reviews:** GET `/api/products/:slug/reviews` returns up to 10 reviews sorted by: Tier 0 (niche match w/photo), Tier 1 (product match w/photo), Tier 2 (marketplace), Tier 3 (other) — newest first within each tier. Product templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) include a dynamic reviews carousel container (`#product-reviews-track` + arrows + dots). `public/js/reviews-carousel.js` contains `loadProductPageReviews(slug)` which auto-detects `/product/{slug}/` from URL, fetches reviews, renders cards with conditional photo (1:1 square) and "Show more" toggle (only shown if text > 280 chars), updates summary text ("1,000+ verified buyers"), and initializes carousel. Rebuild all 28 product pages via `node scripts/build-products.js` after template changes.
+- **D1-backed Product Reviews:** GET `/api/products/:slug/reviews` returns up to 10 reviews sorted by: Tier 0 (niche match w/photo), Tier 1 (product match w/photo), Tier 2 (marketplace), Tier 3 (other) — newest first within each tier. Product templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) include a dynamic reviews carousel container (`#product-reviews-track` + arrows + dots). `public/js/reviews-carousel.js` contains `loadProductPageReviews(slug)` which auto-detects `/product/{slug}/` from URL, fetches reviews, renders cards with conditional photo (1:1 square) and "Show more" toggle (only shown if text > 280 chars), updates summary text ("1,000+ verified buyers"), and initializes carousel. Rebuild all 29 product pages via `node scripts/build-products.js` after template changes.
 - **product_type + niches columns:** Added to the `products` D1 table. `product_type` is a single value (sheets, duvet-covers, pillowcases, protection, accessories). `niches` is a comma-separated list of niche slugs (marine, family, pets, deep-pocket, boarding-dorm, rv-truck). Auto-populated from existing `category` CSV column (first value = product_type, rest = niches). The API lists products at `/api/products` now supports `?product_type=` and `?niche=` query params alongside the legacy `?category=` filter.
 - **Homepage card parity (current):**  
   - **Shop by Product:** 6 cards (Sheets, Duvet Covers, Pillowcases, Protection, Accessories, All Products `/products/`)  
