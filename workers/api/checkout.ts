@@ -10,7 +10,7 @@ interface CartItem {
   id?: string;
   product_slug: string;
   product_name: string;
-  dimensions: { w: number; l: number; d?: number; unit: string };
+  dimensions: { w?: number; l?: number; d?: number; unit?: string; size_text?: string; label?: string };
   fabric: string;
   color: string;
   price_usd: number;
@@ -52,6 +52,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   const allowedNoteTypes = new Set(["delivery", "measurement", "gift", "other"]);
   const customerNoteType = allowedNoteTypes.has(customerNoteTypeRaw) ? customerNoteTypeRaw : "";
   const customerNote = customerNoteRaw.slice(0, 450);
+  const policyConsentedAt = String(body.policy_consented_at || "").trim().slice(0, 30);
   const shippingCountryInput = body.shipping_country || body.country_code || "";
   const shippingServiceLevel = body.shipping_service_level || "express";
   const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -257,6 +258,36 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     // Non-critical
   }
 
+  function toNumber(v: any): number | undefined {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  function parseSizeText(sizeText: string): { w?: number; l?: number; d?: number; unit?: string } {
+    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
+    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+    if (!m) return {};
+    const unitRaw = String(m[4] || "").toLowerCase();
+    const unit = unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm";
+    return {
+      w: toNumber(m[1]),
+      l: toNumber(m[2]),
+      d: toNumber(m[3]),
+      unit,
+    };
+  }
+  function buildMetadataDims(item: CartItem) {
+    const src = item.dimensions || {};
+    const sizeText = String((src as any).size_text || (src as any).label || "").trim();
+    const parsed = sizeText ? parseSizeText(sizeText) : {};
+    return {
+      w: toNumber((src as any).w) ?? parsed.w,
+      l: toNumber((src as any).l) ?? parsed.l,
+      d: toNumber((src as any).d) ?? parsed.d,
+      unit: String((src as any).unit || parsed.unit || "cm"),
+      size_text: sizeText || undefined,
+    };
+  }
+
   // Create Stripe Checkout Session
   const reqUrl = new URL(request.url);
   const siteUrl =
@@ -277,6 +308,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     if (address) params.append("metadata[address]", address);
     if (customerNoteType) params.append("metadata[customer_note_type]", customerNoteType);
     if (customerNote) params.append("metadata[customer_note]", customerNote);
+    if (policyConsentedAt) params.append("metadata[policy_consented_at]", policyConsentedAt);
     params.append("metadata[shipping_country_requested]", String(shippingQuote?.requested_country || "").toUpperCase());
     params.append("metadata[shipping_country_applied]", String(shippingQuote?.applied_country || "").toUpperCase());
     params.append("metadata[shipping_country_name]", String(shippingQuote?.country_name || ""));
@@ -297,12 +329,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       name: i.product_name,
       fabric: i.fabric,
       color: i.color,
-      dims: {
-        w: i.dimensions?.w,
-        l: i.dimensions?.l,
-        d: i.dimensions?.d,
-        unit: i.dimensions?.unit || "cm",
-      },
+      dims: buildMetadataDims(i),
       qty: i.qty || 1,
       u: lineItems[idx]?.price_data?.unit_amount || 0, // minor unit (cents/satang)
     }));

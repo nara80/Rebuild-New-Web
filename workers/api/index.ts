@@ -26,6 +26,8 @@ import { handleDiscountValidate, handleDiscountClaim } from "./discount";
 import { handleAdminPromo } from "./admin-promo";
 import { handleColorInventory } from "./color-inventory";
 import { handleAdminColorInventory } from "./admin-color-inventory";
+import { handleBoatModels } from "./boat-models";
+import { handleAdminBoatModels } from "./admin-boat-models";
 import { handleAdminBlog } from "./admin-blog";
 import { handleBlogPosts } from "./blog-posts";
 import { handleAdminContacts } from "./admin-contacts";
@@ -139,9 +141,19 @@ export default {
       return handleColorInventory(request, env);
     }
 
+    // Public API — boat model lookup for marine configurator
+    if (path === "/api/boat-models" || path === "/api/boat-models/") {
+      return handleBoatModels(request, env);
+    }
+
     // Admin API — fabric color inventory management
     if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
       return handleAdminColorInventory(request, env);
+    }
+
+    // Admin API — boat model knowledge base
+    if (path === "/api/admin/boat-models" || path === "/api/admin/boat-models/") {
+      return handleAdminBoatModels(request, env);
     }
 
     // Admin Blog Posts — CRUD

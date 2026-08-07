@@ -425,6 +425,7 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
   "deep-pocket-fitted-sheet",
   "marine-fitted-sheet",
+  "marine-top-sheet",
   "dorm-fitted-sheet",
   "rv-truck-fitted-sheet",
   "family-fitted-sheet",
@@ -473,7 +474,8 @@ __name(hasToken, "hasToken");
 function resolveLegacyProduct(slug) {
   if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
   if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
-  if (slug.startsWith("product-boat-bedding") || slug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
+  if (slug.startsWith("product-boat-bedding")) return "/product/marine-fitted-sheet/";
+  if (slug.startsWith("product-boat-top-sheet")) return "/product/marine-top-sheet/";
   if (slug.includes("boat") && slug.includes("pillow")) return "/product/pillowcase-envelope/";
   if (slug.includes("dorm")) return slug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
   if (slug.includes("rv-truck") || hasToken(slug, "rv") || slug.includes("truck")) {
@@ -10276,6 +10278,7 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
   "deep-pocket-fitted-sheet",
   "marine-fitted-sheet",
+  "marine-top-sheet",
   "dorm-fitted-sheet",
   "rv-truck-fitted-sheet",
   "family-fitted-sheet",
@@ -10317,7 +10320,8 @@ function resolveLegacyProductPath(pathname) {
   const rawSlug = subpath.replace(/\/+$/, "").toLowerCase();
   if (rawSlug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
   if (rawSlug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
-  if (rawSlug.startsWith("product-boat-bedding") || rawSlug.startsWith("product-boat-top-sheet")) return "/product/marine-fitted-sheet/";
+  if (rawSlug.startsWith("product-boat-bedding")) return "/product/marine-fitted-sheet/";
+  if (rawSlug.startsWith("product-boat-top-sheet")) return "/product/marine-top-sheet/";
   if (rawSlug.includes("boat") && rawSlug.includes("pillow")) return "/product/pillowcase-envelope/";
   if (rawSlug.includes("dorm")) return rawSlug.includes("duvet") ? "/product/duvet-cover-dorm/" : "/product/dorm-fitted-sheet/";
   if (rawSlug.includes("rv-truck") || hasToken2(rawSlug, "rv") || rawSlug.includes("truck")) {

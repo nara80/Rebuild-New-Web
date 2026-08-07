@@ -45,6 +45,8 @@ import { handleAdminQuotes } from "../../workers/api/admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "../../workers/api/discount";
 import { handleAdminContacts } from "../../workers/api/admin-contacts";
 import { handleAdminPromo } from "../../workers/api/admin-promo";
+import { handleBoatModels } from "../../workers/api/boat-models";
+import { handleAdminBoatModels } from "../../workers/api/admin-boat-models";
 import { handleAdminBlog } from "../../workers/api/admin-blog";
 import { handleBlogPosts } from "../../workers/api/blog-posts";
 import { handleReviews, handleAdminReviews } from "../../workers/api/reviews";
@@ -180,6 +182,16 @@ export const onRequest: PagesFunction<{
   // Admin promo codes
   if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
     return handleAdminPromo(request, env);
+  }
+
+  // Public boat model lookup (marine fitted sheet)
+  if (path === "/api/boat-models" || path === "/api/boat-models/") {
+    return handleBoatModels(request, env);
+  }
+
+  // Admin boat model management
+  if (path === "/api/admin/boat-models" || path === "/api/admin/boat-models/") {
+    return handleAdminBoatModels(request, env);
   }
 
   // Admin Blog Posts — CRUD
