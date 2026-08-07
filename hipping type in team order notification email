@@ -1,0 +1,247 @@
+[1mdiff --git a/public/_worker.js b/public/_worker.js[m
+[1mindex 8e1131d..8101255 100644[m
+[1m--- a/public/_worker.js[m
+[1m+++ b/public/_worker.js[m
+[36m@@ -8163,6 +8163,8 @@[m [masync function handleStripeWebhook(request, env) {[m
+   const metadata = session.metadata || {};[m
+   const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;[m
+   const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;[m
+[32m+[m[32m  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();[m
+[32m+[m[32m  const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";[m
+   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);[m
+   let items = [];[m
+   try {[m
+[36m@@ -8386,7 +8388,8 @@[m [mCustomer Message: ${customerNote}` : "";[m
+ Order: #${session.id.slice(-8)}[m
+ Customer: ${metadata.name || "Guest"} (${email})[m
+ Phone: ${metadata.phone || "N/A"}[m
+[31m-Address: ${metadata.address || "N/A"}${customerNoteText}[m
+[32m+[m[32mAddress: ${metadata.address || "N/A"}[m
+[32m+[m[32mShipping Type: ${shippingServiceType}${customerNoteText}[m
+ [m
+ Items:[m
+ ${itemList}[m
+[1mdiff --git a/public/index.js b/public/index.js[m
+[1mindex 4ccea4c..07627a3 100644[m
+[1m--- a/public/index.js[m
+[1m+++ b/public/index.js[m
+[36m@@ -8163,6 +8163,8 @@[m [masync function handleStripeWebhook(request, env) {[m
+   const metadata = session.metadata || {};[m
+   const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;[m
+   const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;[m
+[32m+[m[32m  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();[m
+[32m+[m[32m  const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";[m
+   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);[m
+   let items = [];[m
+   try {[m
+[36m@@ -8386,7 +8388,8 @@[m [mCustomer Message: ${customerNote}` : "";[m
+ Order: #${session.id.slice(-8)}[m
+ Customer: ${metadata.name || "Guest"} (${email})[m
+ Phone: ${metadata.phone || "N/A"}[m
+[31m-Address: ${metadata.address || "N/A"}${customerNoteText}[m
+[32m+[m[32mAddress: ${metadata.address || "N/A"}[m
+[32m+[m[32mShipping Type: ${shippingServiceType}${customerNoteText}[m
+ [m
+ Items:[m
+ ${itemList}[m
+[1mdiff --git a/workers/api/webhook.ts b/workers/api/webhook.ts[m
+[1mindex f59a9ff..f64cdcc 100644[m
+[1m--- a/workers/api/webhook.ts[m
+[1m+++ b/workers/api/webhook.ts[m
+[36m@@ -115,7 +115,97 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+     });[m
+   }[m
+ [m
+[31m-  // Only handle checkout.session.completed[m
+[32m+[m[32m  // ── Handle charge.refunded — send team alert ──[m
+[32m+[m[32m  if (event.type === "charge.refunded") {[m
+[32m+[m[32m    const charge = event.data.object;[m
+[32m+[m[32m    const amount = (charge.amount || 0) / 100;[m
+[32m+[m[32m    const currency = String(charge.currency || "usd").toUpperCase();[m
+[32m+[m[32m    const chargeId = String(charge.id || "");[m
+[32m+[m[32m    const receiptUrl = String(charge.receipt_url || "");[m
+[32m+[m[32m    const reason = String(charge.refunds?.data?.[0]?.reason || "unknown");[m
+[32m+[m[32m    const billingName = String(charge.billing_details?.name || "");[m
+[32m+[m[32m    const billingEmail = String(charge.billing_details?.email || charge.receipt_email || "");[m
+[32m+[m[32m    const paymentMethod = String(charge.payment_method_details?.card?.brand || "")[m
+[32m+[m[32m      + " •••• " + String(charge.payment_method_details?.card?.last4 || "????");[m
+[32m+[m
+[32m+[m[32m    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      const emailBody = [[m
+[32m+[m[32m        `REFUND ISSUED`,[m
+[32m+[m[32m        ``,[m
+[32m+[m[32m        `Charge: ${chargeId}`,[m
+[32m+[m[32m        `Amount: ${amount.toFixed(2)} ${currency}`,[m
+[32m+[m[32m        `Reason: ${reason}`,[m
+[32m+[m[32m        `Payment: ${paymentMethod}`,[m
+[32m+[m[32m        ``,[m
+[32m+[m[32m        billingName ? `Customer: ${billingName}` : "",[m
+[32m+[m[32m        billingEmail ? `Email: ${billingEmail}` : "",[m
+[32m+[m[32m        receiptUrl ? `Receipt: ${receiptUrl}` : "",[m
+[32m+[m[32m        ``,[m
+[32m+[m[32m        `\u2014 MildMate Stripe Webhook`,[m
+[32m+[m[32m      ].filter(Boolean).join("\n");[m
+[32m+[m
+[32m+[m[32m      const teamMail = await sendEmail(env, {[m
+[32m+[m[32m        to: teamEmail,[m
+[32m+[m[32m        subject: `\u26A0\uFE0F Refund \u2014 ${amount.toFixed(2)} ${currency} \u2014 MildMate`,[m
+[32m+[m[32m        text: emailBody,[m
+[32m+[m[32m      });[m
+[32m+[m[32m      if (!teamMail.success) {[m
+[32m+[m[32m        console.error("Refund alert email failed:", teamMail.error || "unknown error");[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } catch (err: any) {[m
+[32m+[m[32m      console.error("Refund alert exception:", err?.message || err);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return new Response(JSON.stringify({ received: true }), {[m
+[32m+[m[32m      headers: { "Content-Type": "application/json" },[m
+[32m+[m[32m    });[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // ── Handle charge.dispute.created — send team alert ──[m
+[32m+[m[32m  if (event.type === "charge.dispute.created" || event.type === "customer.dispute.created") {[m
+[32m+[m[32m    const dispute = event.data.object;[m
+[32m+[m[32m    const chargeId = String(dispute.charge || "");[m
+[32m+[m[32m    const amount = (dispute.amount || 0) / 100;[m
+[32m+[m[32m    const currency = String(dispute.currency || "usd").toUpperCase();[m
+[32m+[m[32m    const reason = String(dispute.reason || "unknown");[m
+[32m+[m[32m    const status = String(dispute.status || "needs_response");[m
+[32m+[m[32m    const evidenceDueBy = String(dispute.evidence_details?.due_by || "N/A");[m
+[32m+[m
+[32m+[m[32m    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      const emailBody = [[m
+[32m+[m[32m        `DISPUTE / CHARGEBACK FILED`,[m
+[32m+[m[32m        ``,[m
+[32m+[m[32m        `Charge: ${chargeId}`,[m
+[32m+[m[32m        `Amount: ${amount.toFixed(2)} ${currency}`,[m
+[32m+[m[32m        `Reason: ${reason}`,[m
+[32m+[m[32m        `Status: ${status}`,[m
+[32m+[m[32m        `Evidence Due By: ${evidenceDueBy}`,[m
+[32m+[m[32m        ``,[m
+[32m+[m[32m        `Action required: respond in Stripe Dashboard before the evidence deadline.`,[m
+[32m+[m[32m        ``,[m
+[32m+[m[32m        `\u2014 MildMate Stripe Webhook`,[m
+[32m+[m[32m      ].join("\n");[m
+[32m+[m
+[32m+[m[32m      const teamMail = await sendEmail(env, {[m
+[32m+[m[32m        to: teamEmail,[m
+[32m+[m[32m        subject: `\uD83D\uDEA8 Dispute \u2014 ${amount.toFixed(2)} ${currency} \u2014 MildMate`,[m
+[32m+[m[32m        text: emailBody,[m
+[32m+[m[32m      });[m
+[32m+[m[32m      if (!teamMail.success) {[m
+[32m+[m[32m        console.error("Dispute alert email failed:", teamMail.error || "unknown error");[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } catch (err: any) {[m
+[32m+[m[32m      console.error("Dispute alert exception:", err?.message || err);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return new Response(JSON.stringify({ received: true }), {[m
+[32m+[m[32m      headers: { "Content-Type": "application/json" },[m
+[32m+[m[32m    });[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Only handle checkout.session.completed for order processing[m
+   if (event.type !== "checkout.session.completed") {[m
+     return new Response(JSON.stringify({ received: true }), {[m
+       headers: { "Content-Type": "application/json" },[m
+[36m@@ -126,6 +216,12 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+   const metadata = session.metadata || {};[m
+   const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;[m
+   const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;[m
+[32m+[m[32m  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();[m
+[32m+[m[32m  const shippingServiceType = shippingServiceLevelRaw === "standard"[m
+[32m+[m[32m    ? "Standard"[m
+[32m+[m[32m    : shippingServiceLevelRaw === "express"[m
+[32m+[m[32m      ? "Express"[m
+[32m+[m[32m      : "N/A";[m
+   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);[m
+ [m
+   let items: any[] = [];[m
+[36m@@ -149,10 +245,40 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+   const fallbackUnitAmount = totalQty > 0 && session.amount_total[m
+     ? Math.round(session.amount_total / totalQty)[m
+     : 0;[m
+[32m+[m[32m  const toFiniteNumber = (v: any): number | undefined => {[m
+[32m+[m[32m    const n = Number(v);[m
+[32m+[m[32m    return Number.isFinite(n) ? n : undefined;[m
+[32m+[m[32m  };[m
+[32m+[m[32m  const parseDimsFromSizeText = (sizeText: any): { w?: number; l?: number; d?: number; unit?: string } => {[m
+[32m+[m[32m    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();[m
+[32m+[m[32m    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);[m
+[32m+[m[32m    if (!m) return {};[m
+[32m+[m[32m    const unitRaw = String(m[4] || "").toLowerCase();[m
+[32m+[m[32m    return {[m
+[32m+[m[32m      w: toFiniteNumber(m[1]),[m
+[32m+[m[32m      l: toFiniteNumber(m[2]),[m
+[32m+[m[32m      d: toFiniteNumber(m[3]),[m
+[32m+[m[32m      unit: (unitRaw === "inch" || unitRaw === "in") ? "inch" : "cm",[m
+[32m+[m[32m    };[m
+[32m+[m[32m  };[m
+[32m+[m[32m  const formatDimsForEmail = (dims: any): string => {[m
+[32m+[m[32m    const w = toFiniteNumber(dims?.w);[m
+[32m+[m[32m    const l = toFiniteNumber(dims?.l);[m
+[32m+[m[32m    const d = toFiniteNumber(dims?.d);[m
+[32m+[m[32m    const unit = String(dims?.unit || "cm");[m
+[32m+[m[32m    if (w && l) return `${w}×${l}${d ? `×${d}` : ""} ${unit}`;[m
+[32m+[m[32m    const sizeText = String(dims?.size_text || "").trim();[m
+[32m+[m[32m    if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();[m
+[32m+[m[32m    return `?×? ${unit}`;[m
+[32m+[m[32m  };[m
+ [m
+   // Save each item as an order row[m
+   for (const item of items) {[m
+     const dims = item.dims || {};[m
+[32m+[m[32m    const parsedDims = parseDimsFromSizeText(dims?.size_text);[m
+[32m+[m[32m    const widthCm = toFiniteNumber(dims.w) ?? parsedDims.w ?? null;[m
+[32m+[m[32m    const lengthCm = toFiniteNumber(dims.l) ?? parsedDims.l ?? null;[m
+[32m+[m[32m    const depthCm = toFiniteNumber(dims.d) ?? parsedDims.d ?? null;[m
+     const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;[m
+     const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;[m
+     try {[m
+[36m@@ -176,9 +302,9 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+           item.name || "",[m
+           item.fabric || null,[m
+           item.color || null,[m
+[31m-          dims.w || null,[m
+[31m-          dims.l || null,[m
+[31m-          dims.d || null,[m
+[32m+[m[32m          widthCm,[m
+[32m+[m[32m          lengthCm,[m
+[32m+[m[32m          depthCm,[m
+           null, null, null,[m
+           null,[m
+           sessionCurrency === "usd" ? unitPriceMajor : null,[m
+[36m@@ -208,9 +334,9 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+           item.name || "",[m
+           item.fabric || null,[m
+           item.color || null,[m
+[31m-          dims.w || null,[m
+[31m-          dims.l || null,[m
+[31m-          dims.d || null,[m
+[32m+[m[32m          widthCm,[m
+[32m+[m[32m          lengthCm,[m
+[32m+[m[32m          depthCm,[m
+           null, null, null,[m
+           null,[m
+           sessionCurrency === "usd" ? unitPriceMajor : null,[m
+[36m@@ -293,7 +419,7 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+   if (email && env.RESEND_API_KEY) {[m
+     const itemList = items.map((i: any) => {[m
+       const dims = i.dims || {};[m
+[31m-      return `- ${i.name} | ${i.fabric || "N/A"} | ${dims.w || "?"}\u00D7${dims.l || "?"}${dims.d ? `\u00D7${dims.d}` : ""} ${dims.unit || "cm"} | Qty: ${i.qty || 1}`;[m
+[32m+[m[32m      return `- ${i.name} | ${i.fabric || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;[m
+     }).join("\n");[m
+ [m
+     const total = session.amount_total[m
+[36m@@ -323,7 +449,7 @@[m [mexport async function handleStripeWebhook(request: Request, env: any): Promise<R[m
+       const teamMail = await sendEmail(env, {[m
+         to: teamEmail,[m
+         subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,[m
+[31m-        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}`,[m
+[32m+[m[32m        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}\nShipping Type: ${shippingServiceType}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}`,[m
+       });[m
+       if (!teamMail.success) {[m
+         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);[m

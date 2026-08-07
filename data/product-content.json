@@ -695,6 +695,66 @@
       "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">S</div><div class=\"review-meta\"><div class=\"review-name\">Sarah K.</div><div class=\"review-country\">United Kingdom</div></div><div class=\"review-stars\">★★★★★</div></div>\r\n            <div class=\"review-text\">\"`\"Ordered for our 18-inch pillow top and it is exactly what we needed. No more exposed mattress at the sides. The CloudSoft fabric feels incredible.\"\"</div>\r\n            <div class=\"review-product\">Verified purchase: Extra Deep Pocket Flat Sheet · Split King / BreezePlus Dark Grey</div>",
       "fabricMode": "all"
     },
+    "co-sleeping-top-sheet": {
+      "productType": "flat-sheet",
+      "tagline": "One continuous sheet for two side-by-side mattresses. Custom-made with a generous 10-inch under-tuck allowance. Available in all 4 premium fabrics.",
+      "metaDescription": "Co-Sleeping Top Sheet by MildMate — one continuous custom flat sheet for two side-by-side mattresses. 10 in / 25 cm under-tuck allowance. 4 fabric choices. Custom-made.",
+      "ratingCount": 32,
+      "breadcrumbCategoryUrl": "/sheets/",
+      "breadcrumbCategoryLabel": "Sheets",
+      "breadcrumbName": "Co-Sleeping Top Sheet",
+      "fabrics": [
+        "cloudsoft",
+        "breezeplus",
+        "premacotton",
+        "ecoluxe"
+      ],
+      "lockedFabric": null,
+      "needsDepth": true,
+      "tags": [
+        {
+          "url": "/sheets/",
+          "label": "Sheets"
+        },
+        {
+          "url": "/family/",
+          "label": "Co-Sleeping"
+        }
+      ],
+      "relatedSlugs": [
+        "family-fitted-sheet",
+        "flat-sheet-standard",
+        "mattress-protector-family",
+        "bedbridge-connector"
+      ],
+      "tabDescriptionTitle": "One Sheet for Two Mattresses — Co-Sleeping Made Easy",
+      "tabDescriptionP": "Upgrade your family sleep setup with one continuous, made-to-order flat sheet designed to cover two side-by-side mattresses as one combined family bed. The sheet is cut according to your selected mattress combination, with additional fabric added for covering the mattress sides and a generous 10 in / 25 cm under-tuck allowance.",
+      "tabDescriptionBullets": [
+        "One continuous sheet covers two side-by-side mattresses",
+        "Generous 10 in / 25 cm under-tuck allowance",
+        "Reduces the feeling of separate bedding",
+        "Custom-sized to your combined mattress measurements",
+        "4 fabric choices: BreezePlus, CloudSoft, PremaCotton, EcoLuxe"
+      ],
+      "tabFabricTitle": "Designed for Co-Sleeping Families",
+      "tabFabricP": "A single continuous sheet eliminates the gap between two separate sheets. Generous 10 in / 25 cm under-tuck allowance on outer edges. Double-stitched hem for durability. Available in all 4 premium fabric collections.",
+      "tabFabricBullets": [
+        "One continuous sheet — no gap, no separate bedding",
+        "10 in / 25 cm under-tuck allowance on outer edges",
+        "Double-stitched hem for durability",
+        "4 fabric collections available",
+        "Custom-sized to your mattress combination"
+      ],
+      "tabCareBullets": [
+        "Machine wash warm (60°C / 140°F) — regular cycle",
+        "Do not bleach — mild detergent only",
+        "Tumble dry medium or hang dry",
+        "No ironing needed — wrinkle-resistant by design"
+      ],
+      "review1Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">L</div><div class=\"review-meta\"><div class=\"review-name\">Laura M.</div><div class=\"review-country\">United States</div></div><div class=\"review-stars\">★★★★★</div></div>\r\n            <div class=\"review-text\">\"Finally, a sheet that actually covers our entire co-sleeping setup! We have a queen plus twin for our toddler and this one continuous sheet makes bedtime so much smoother. No more gap between sheets.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Co-Sleeping Top Sheet · Queen + Twin · CloudSoft Silver</div></div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">R</div><div class=\"review-meta\"><div class=\"review-name\">Rachel P.</div><div class=\"review-country\">United Kingdom</div></div><div class=\"review-stars\">★★★★★</div></div>\r\n            <div class=\"review-text\">\"We had been using two separate flat sheets for our co-sleeping arrangement and it was always messy. This one-piece custom sheet is brilliant — generous tuck, beautiful fabric, and it actually stays in place.\"</div>\r\n            <div class=\"review-product\">Verified purchase: Co-Sleeping Top Sheet · King + Single · BreezePlus Dark Grey</div>",
+      "fabricMode": "all"
+    },
     "3-sided-duvet": {
       "productType": "duvet",
       "tagline": "Easy-change duvet cover with 3-sided zipper. Available in all 4 premium fabrics.",

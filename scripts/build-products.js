@@ -93,7 +93,10 @@ const dimLabels = {
 
 // Max dimensions by product type
 function getMaxDims(productType) {
-  if (['fitted-sheet', 'flat-sheet', 'encasement', 'protector'].includes(productType)) {
+  if (productType === 'flat-sheet') {
+    return { width: 400, length: 300, depth: 60 };
+  }
+  if (['fitted-sheet', 'encasement', 'protector'].includes(productType)) {
     return { width: 300, length: 300, depth: 60 };
   }
   return { width: 120, length: 120, depth: null };

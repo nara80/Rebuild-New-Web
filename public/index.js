@@ -432,6 +432,7 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "pet-owner-fitted-sheet",
   "flat-sheet-standard",
   "flat-sheet-extra-deep-pocket",
+  "co-sleeping-top-sheet",
   "3-sided-duvet",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
@@ -10285,6 +10286,7 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "pet-owner-fitted-sheet",
   "flat-sheet-standard",
   "flat-sheet-extra-deep-pocket",
+  "co-sleeping-top-sheet",
   "3-sided-duvet",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
@@ -10336,7 +10338,8 @@ function resolveLegacyProductPath(pathname) {
     if (rawSlug.includes("pillow")) return "/product/pillowcase-zipper/";
     return "/product/pet-owner-fitted-sheet/";
   }
-  if (rawSlug.includes("co-sleeping") || rawSlug.includes("family")) return "/product/family-fitted-sheet/";
+  if (rawSlug.includes("co-sleeping")) return "/product/co-sleeping-top-sheet/";
+  if (rawSlug.includes("family")) return "/product/family-fitted-sheet/";
   if (rawSlug.includes("duvet")) return "/product/3-sided-duvet/";
   if (rawSlug.includes("encasement") || rawSlug.includes("zippered-tpu-mattress-cover")) return "/product/mattress-encasement-general/";
   if (rawSlug.includes("sheet-protectors") || rawSlug.includes("protector") || rawSlug === "pillow-case") return "/product/mattress-protector-standard/";
