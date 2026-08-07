@@ -37,8 +37,8 @@ VALUES (
   1,
   1,
   10,
-  '/images/products/co-sleeping-top-sheet/main.jpg',
-  '["/images/products/co-sleeping-top-sheet/main.jpg"]',
+  '/images/products/co-sleeping-top-sheet/hero.jpg',
+  '["/images/products/co-sleeping-top-sheet/hero.jpg","/images/products/co-sleeping-top-sheet/main.jpg"]',
   'sheets, family, co-sleeping, top-sheet, flat-sheet',
   'One continuous sheet covering two side-by-side mattresses with generous 10-inch under-tuck allowance',
   'ผ้าปูผืนเดียวคลุมสองที่นอนข้างกันพร้อมเผื่อชายผ้าสอดใต้ 10 นิ้ว สำหรับครอบครัว Co-Sleeping'

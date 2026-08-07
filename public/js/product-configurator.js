@@ -14,6 +14,7 @@
   var isEncasement = path.indexOf('encasement') !== -1;
   var isPetOwner = path.indexOf('pet-owner') !== -1;
   var isFamily = path.indexOf('family-fitted-sheet') !== -1;
+  var isCoSleeping = path.indexOf('co-sleeping-top-sheet') !== -1;
   var isDuvet = path.indexOf('duvet') !== -1;
   var isPillowProtector = path.indexOf('pillow-protector') !== -1;
   var isMattressProtector = (path.indexOf('mattress-protector') !== -1 || path.indexOf('pet-proof-mattress-protector') !== -1) && path.indexOf('pillow-protector') === -1;
@@ -113,7 +114,7 @@
     }
   }
 
-  var MAX_W = isFamily ? 9999 : pVal('max_width_cm', 220);
+  var MAX_W = (isFamily || isCoSleeping) ? 9999 : pVal('max_width_cm', 220);
 
   var FABRIC_RATES = {
     cloudsoft: pVal('cloudsoft', 100),
@@ -608,7 +609,7 @@
   // -- Populate size-select from centralized size data --
   function populateSizeSelect() {
     if (!sizeSelect || typeof PRODUCT_SIZES === 'undefined') return;
-    var typeKey = (isFamily || isProtectorFamily)
+    var typeKey = (isFamily || isProtectorFamily || isCoSleeping)
       ? 'family'
       : isDuvet
       ? 'duvet'
