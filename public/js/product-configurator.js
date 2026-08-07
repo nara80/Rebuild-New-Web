@@ -873,11 +873,16 @@
     if (_turnstileRendered) return;
     var el = document.querySelector('.cf-turnstile');
     if (!el) return;
-    if (!window.turnstile || typeof window.turnstile.render !== 'function') return;
-    try {
-      window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY });
-      _turnstileRendered = true;
-    } catch (e) {}
+    if (window.turnstile && typeof window.turnstile.render === 'function') {
+      try { window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); _turnstileRendered = true; } catch (e) {}
+    } else {
+      var ts = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+      if (ts) ts.addEventListener('load', function(){
+        if (window.turnstile && typeof window.turnstile.render === 'function') {
+          try { window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); _turnstileRendered = true; } catch(e) {}
+        }
+      });
+    }
   }
 
   function getTurnstileToken(scopeEl) {
