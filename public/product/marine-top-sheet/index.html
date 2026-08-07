@@ -1991,7 +1991,7 @@
               '<div style="position:absolute;left:-9999px" aria-hidden="true">' +
                 '<label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off"></label>' +
               '</div>' +
-              '<div class="cf-turnstile" data-sitekey="' + TURNSTILE_SITE_KEY + '"></div>' +
+              '<div class="cf-turnstile" id="marine-ts-widget"></div>' +
               '<button type="submit" class="quote-submit-btn" id="qf-submit">Submit</button>' +
               '<p class="quote-form-note">We\'ll email you within 24 hours.</p>' +
             '</form>' +
@@ -2084,25 +2084,30 @@
         if (direct && direct.value) return String(direct.value).trim();
         try {
           if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
-            var token = window.turnstile.getResponse();
+            var token = (_marineWidgetId !== null)
+              ? window.turnstile.getResponse(_marineWidgetId)
+              : window.turnstile.getResponse();
             if (token) return String(token).trim();
           }
         } catch (e) {}
         return '';
       }
 
-      var _marineTurnstileRendered = false;
+      var _marineWidgetId = null;
       function renderTurnstileWidget(){
-        if (_marineTurnstileRendered) return;
-        var el = document.querySelector('.cf-turnstile');
+        var el = document.getElementById('marine-ts-widget');
         if (!el) return;
         if (window.turnstile && typeof window.turnstile.render === 'function') {
-          try { window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); _marineTurnstileRendered = true; } catch(e) {}
+          if (_marineWidgetId !== null) {
+            try { window.turnstile.reset(_marineWidgetId); } catch(e) {}
+          } else {
+            try { _marineWidgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); } catch(e) {}
+          }
         } else {
           var ts = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
           if (ts) ts.addEventListener('load', function(){
             if (window.turnstile && typeof window.turnstile.render === 'function') {
-              try { window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); _marineTurnstileRendered = true; } catch(e) {}
+              try { _marineWidgetId = window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); } catch(e) {}
             }
           });
         }
@@ -2116,7 +2121,7 @@
         }
         if(quoteOverlay){
           quoteOverlay.classList.add('open');
-          renderTurnstileWidget();
+          setTimeout(renderTurnstileWidget, 50);
           var qfName = document.getElementById('qf-name');
           if(qfName) qfName.focus();
         }
