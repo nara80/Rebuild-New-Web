@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -280,7 +280,7 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">Marine Fitted Sheet</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">14 boat mattress shapes. Enter dimensions. Get an instant price. 12 colors. Quick-dry CloudSoft. Ships worldwide.</p>
@@ -411,7 +411,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">★★★★★</div>
+            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -457,7 +457,7 @@
     </button>
   </div>
   <script>
-    /* ── Mobile CTA sync ── */
+    /* â”€â”€ Mobile CTA sync â”€â”€ */
     (function(){
       var bar=document.getElementById('mobile-cta-bar');
       var desktopBtn=document.getElementById('add-to-cart');
@@ -481,16 +481,16 @@
       if(mobileBtn&&desktopBtn){mobileBtn.addEventListener('click',function(){desktopBtn.click()})}
     })();
 
-    /* ── Favorite Toggle ── */
+    /* â”€â”€ Favorite Toggle â”€â”€ */
     var productSlug='marine-fitted-sheet';
     var productName='Marine Fitted Sheet';
-    var TURNSTILE_SITE_KEY = '0x4AAAAAABLOFwCfozL2Fzcx';
+    var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
     function updateFavUI(){
       var btn=document.getElementById('fav-btn');
       var toast=document.getElementById('fav-toast');
       if(!btn)return;
       var isFav=MildMateCampaigns.isFavorite(productSlug);
-      btn.innerHTML=isFav?'♥':'♡';
+      btn.innerHTML=isFav?'â™¥':'â™¡';
       btn.className=isFav?'favorite-btn active':'favorite-btn';
       btn.title=isFav?'Remove from favorites':'Save to favorites';
     }
@@ -498,7 +498,7 @@
       var isFav=MildMateCampaigns.toggleFavorite(productSlug,productName);
       updateFavUI();
       var toast=document.getElementById('fav-toast');
-      if(toast){toast.textContent=isFav?'♥ Saved!':'';toast.style.color='#dc2626'}
+      if(toast){toast.textContent=isFav?'â™¥ Saved!':'';toast.style.color='#dc2626'}
       if(window.MildMateCampaigns&&typeof MildMateCampaigns.toggleFavoriteServer==='function'){
         var result=await MildMateCampaigns.toggleFavoriteServer(productSlug,productName);
         if(!result.ok){MildMateCampaigns.toggleFavorite(productSlug,productName);updateFavUI()}
@@ -512,7 +512,7 @@
     window.addEventListener('clerk:signed-in',hydrateFavorites);
     window.addEventListener('clerk:signed-out',updateFavUI);
 
-    /* ── Desktop columns sync ── */
+    /* â”€â”€ Desktop columns sync â”€â”€ */
     (function(){
       function syncDesktopColumnsHeight(){
         var infoCol=document.querySelector('.product-info');
@@ -530,7 +530,7 @@
   </script>
 
   <script>
-    /* ── Image Carousel ── */
+    /* â”€â”€ Image Carousel â”€â”€ */
     (function(){
       var slug=location.pathname.split('/').filter(Boolean).pop();
       var currentSlide=0;
@@ -673,7 +673,7 @@
   </script>
 
   <script>
-    /* ── Marine Shape Configurator ── */
+    /* â”€â”€ Marine Shape Configurator â”€â”€ */
     (function(){
       var shapes = [{"code":"01","name":"V-Berth – 4 Sides","schematic":"/images/BoatShapes/001_V-Berth.jpg","formula":"vberth-4sides"},{"code":"02","name":"V-Berth Cut Corner – 6 Sides","schematic":"/images/BoatShapes/002_V-Berth_CutCorner.jpg","formula":"vberth-cut-corner"},{"code":"03","name":"V-Berth Rounded Nose","schematic":"/images/BoatShapes/003_V-Berth_RoundedNose.jpg","formula":"vberth-rounded-nose"},{"code":"04","name":"V-Berth Split – 2 Pieces","schematic":"/images/BoatShapes/004_V-Berth_2Pieces.jpg","formula":"vberth-split"},{"code":"05","name":"Island 6 Sides / Hexagon Bunk","schematic":"/images/BoatShapes/005_HexagonBunk.jpg","formula":"island-6"},{"code":"06","name":"Island 7 Sides","schematic":"/images/BoatShapes/006_Island_7Sides.jpg","formula":"island-7"},{"code":"07","name":"Island 8 Sides / Octagon Bunk","schematic":"/images/BoatShapes/007_Island_8Sides.jpg","formula":"island-8"},{"code":"08","name":"Rectangle","schematic":"/images/BoatShapes/008_Rectangle.jpg","formula":"rectangle"},{"code":"09","name":"Rectangle Cut-Off Corner – 5 Sides","schematic":"/images/BoatShapes/009_Rectangle_CutOff.jpg","formula":"rect-cut-1"},{"code":"10","name":"Rectangle Two Cut-Off Corners – 6 Sides","schematic":"/images/BoatShapes/010_Rectangle_TwoCutOff.jpg","formula":"rect-cut-2"},{"code":"11","name":"Radius Corner Rectangle","schematic":"/images/BoatShapes/011_RadiusCorner.jpg","formula":"radius-rect"},{"code":"12","name":"Quarter Berth / Side Berth Tapered","schematic":"/images/BoatShapes/012_QuarterBerth.jpg","formula":"quarter-berth"},{"code":"13","name":"Aft Cabin Irregular Mattress","schematic":"/images/BoatShapes/013_AftCabin.jpg","formula":"aft-cabin"},{"code":"14","name":"Notched Mattress / Obstruction Cut-Out","schematic":"/images/BoatShapes/014_NotchedMattress.jpg","formula":"notched"}];
 
@@ -792,7 +792,7 @@
         });
       }
 
-      /* ── Dimension field definitions per shape ── */
+      /* â”€â”€ Dimension field definitions per shape â”€â”€ */
       var shapeFields = {
         '01': [
           {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
@@ -960,7 +960,7 @@
         }
       }
 
-      /* ── Area Calculation Formulas ── */
+      /* â”€â”€ Area Calculation Formulas â”€â”€ */
       function getVal(id){
         var el = document.getElementById('dim-'+id);
         if(!el) return 0;
@@ -1000,7 +1000,7 @@
           if(note){
             var areaEst = ((wEst + d) / 2) * l;
             var unitArea = currentUnit === 'in' ? 'in²' : 'cm²';
-            note.textContent = 'Estimated W ≈ ' + Math.round(wEst) + ', top area ≈ ' + Math.round(areaEst) + ' ' + unitArea + '. You can edit B/F/C/E.';
+            note.textContent = 'Estimated W â‰ˆ ' + Math.round(wEst) + ', top area â‰ˆ ' + Math.round(areaEst) + ' ' + unitArea + '. You can edit B/F/C/E.';
           }
         }
         return true;
@@ -1080,7 +1080,7 @@
             perimeter = A+B+C+D+E;
             return topArea + (perimeter * (T + 10));
 
-          case '10': /* Rectangle Two Cut-Off: D×L − (L−C)(D−A), perimeter A-F */
+          case '10': /* Rectangle Two Cut-Off: D×L âˆ’ (Lâˆ’C)(Dâˆ’A), perimeter A-F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
             if(!A||!D||!L||!C||!T) return 0;
             topArea = D * L - (L - C) * (D - A);
@@ -1102,7 +1102,7 @@
             perimeter = A+B+C+D;
             return topArea + (perimeter * (T + 10));
 
-          case '13': /* Aft Cabin: W×L − ((L-C)(W-A))/2 − ((L-F)(W-D))/2, perimeter A-F */
+          case '13': /* Aft Cabin: W×L âˆ’ ((L-C)(W-A))/2 âˆ’ ((L-F)(W-D))/2, perimeter A-F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
             if(!W||!L||!T) return 0;
             topArea = W * L - ((L - C) * (W - A)) / 2 - ((L - F) * (W - D)) / 2;
@@ -1110,7 +1110,7 @@
             perimeter = A+B+C+D+E+F;
             return topArea + (perimeter * (T + 10));
 
-          case '14': /* Notched Mattress: A×H − D×C, perimeter A-H */
+          case '14': /* Notched Mattress: A×H âˆ’ D×C, perimeter A-H */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');T=getVal('T');
             if(!A||!H||!T) return 0;
             topArea = A * H - D * C;
@@ -1123,7 +1123,7 @@
         }
       }
 
-      /* ── Area limit ── */
+      /* â”€â”€ Area limit â”€â”€ */
       var MAX_TOP_AREA_CM = 41300; /* 6,400 sq.inch */
 
       function getTopArea(shapeCode){
@@ -1164,7 +1164,7 @@
         }
       }
 
-      /* ── Marine fitted-sheet pricing (same formula as server, marine margin) ── */
+      /* â”€â”€ Marine fitted-sheet pricing (same formula as server, marine margin) â”€â”€ */
       var SQCM_PER_YARD = 23774.4;       // 91.44 × 260
       var CLOUDSOFT_RATE = 100;          // THB/yard
       var FABRIC_WASTE = 1.20;           // 20% waste
@@ -1273,7 +1273,7 @@
         };
       }
       function formatTHB(n){
-        return '฿' + Math.round(n).toLocaleString();
+        return 'à¸¿' + Math.round(n).toLocaleString();
       }
       function renderPriceBreakdown(bd){
         if(!priceBreakdown) return;
@@ -1295,12 +1295,12 @@
             '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
             '<li>Margin (' + Math.round(MARINE_PROTECTOR_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
             '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
-            '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+            '<li><strong>Total charged (rounded to next à¸¿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
             '</ul></details>';
           return;
         }
         var area = Math.round((bd.fabricCost / (CLOUDSOFT_RATE / SQCM_PER_YARD) / FABRIC_WASTE) || 0);
-        var fabricFormula = '(' + area.toLocaleString() + ' × ' + CLOUDSOFT_RATE.toLocaleString() + ' ÷ ' + SQCM_PER_YARD.toLocaleString(undefined,{maximumFractionDigits:1}) + ') × ' + FABRIC_WASTE.toFixed(2);
+        var fabricFormula = '(' + area.toLocaleString() + ' × ' + CLOUDSOFT_RATE.toLocaleString() + ' Ã· ' + SQCM_PER_YARD.toLocaleString(undefined,{maximumFractionDigits:1}) + ') × ' + FABRIC_WASTE.toFixed(2);
         var accessoriesPct = Math.round(ACC_RATE * 100);
         priceBreakdown.innerHTML =
           '<details><summary>Cost breakdown (THB)</summary><ul>' +
@@ -1314,7 +1314,7 @@
           '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
           '<li>Margin (' + Math.round(MARINE_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
           '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
-          '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+          '<li><strong>Total charged (rounded to next à¸¿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
           '</ul></details>';
       }
       function applyMarinePricingParams(payload){
@@ -1388,10 +1388,10 @@
           .catch(function(){});
       }
       function formatPrice(priceThb){
-        /* EN page → USD, TH page → THB */
+        /* EN page â†’ USD, TH page â†’ THB */
         var isThai = document.documentElement.lang === 'th';
         if(isThai){
-          return '฿' + priceThb.toLocaleString();
+          return 'à¸¿' + priceThb.toLocaleString();
         }
         var usd = Math.round(priceThb / THB_PER_USD);
         return '$' + usd.toLocaleString();
@@ -1547,7 +1547,7 @@
         var lEl = document.getElementById('dim-L');
         var lVal = parseFloat(lEl?.value) || 0;
         if(code === '01'){
-          /* Shape 01: B = C = √(((A-D)/2)^2 + L^2), but allow manual B/C edits */
+          /* Shape 01: B = C = âˆš(((A-D)/2)^2 + L^2), but allow manual B/C edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-C') return;
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
@@ -1565,7 +1565,7 @@
         } else if(code === '02'){
           /* Shape 02: use Estimate button for B/F/C/E defaults (manual values stay editable) */
         } else if(code === '03'){
-          /* Shape 03: B = D = √(((A-C)/2)^2 + L^2), but allow manual B/D edits */
+          /* Shape 03: B = D = âˆš(((A-C)/2)^2 + L^2), but allow manual B/D edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-D') return;
           var aEl = document.getElementById('dim-A');
           var cEl = document.getElementById('dim-C');
@@ -1674,7 +1674,7 @@
             }
           }
         } else if(code === '09'){
-          /* Shape 09: auto-fill B = √((D-A)² + (E-C)²) */
+          /* Shape 09: auto-fill B = âˆš((D-A)² + (E-C)²) */
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
           var cEl = document.getElementById('dim-C');
@@ -1691,7 +1691,7 @@
             }
           }
         } else if(code === '12'){
-          /* Shape 12: auto-fill A = √(C² + ((B-D)/2)²) */
+          /* Shape 12: auto-fill A = âˆš(C² + ((B-D)/2)²) */
           var bEl_ = document.getElementById('dim-B');
           var dEl_ = document.getElementById('dim-D');
           var cEl_ = document.getElementById('dim-C');
@@ -1707,7 +1707,7 @@
             }
           }
         } else if(code === '13'){
-          /* Shape 13: auto-fill B = √((W-A)²+(L-C)²), E = √((W-D)²+(L-F)²) */
+          /* Shape 13: auto-fill B = âˆš((W-A)²+(L-C)²), E = âˆš((W-D)²+(L-F)²) */
           var wEl = document.getElementById('dim-W');
           var lEl = document.getElementById('dim-L');
           var aEl = document.getElementById('dim-A');
@@ -1777,10 +1777,10 @@
           }
         }
       }
-      /* Live price update + B↔C (shape 01) / C↔E (shape 10) mirroring */
+      /* Live price update + Bâ†”C (shape 01) / Câ†”E (shape 10) mirroring */
       dimsContainer.addEventListener('input', function(e){
         if(e.target.tagName !== 'INPUT') return;
-        /* Mirror: Shape 01 B↔C, Shape 02 C↔E + B↔F, Shape 10 C↔E */
+        /* Mirror: Shape 01 Bâ†”C, Shape 02 Câ†”E + Bâ†”F, Shape 10 Câ†”E */
         var code = shapeSelect.value;
         if(!_mirroring){
           if(code === '01'){
@@ -2293,7 +2293,7 @@
   </script>
 
   <script>
-    /* ── Info Tabs ── */
+    /* â”€â”€ Info Tabs â”€â”€ */
     (function(){
       document.querySelectorAll('[data-info-tab]').forEach(function(btn){
         btn.addEventListener('click', function(){

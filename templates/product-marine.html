@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -280,14 +280,14 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">{{PRODUCT_NAME}}{{SHORT_TITLE}}</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">{{TAGLINE}}</p>
         <div class="price-summary" id="price-summary">
           <div class="price-row">
             <span class="price-label">Estimated Price</span>
-            <span class="price-value" id="price-display-top"> — </span>
+            <span class="price-value" id="price-display-top"> â€” </span>
           </div>
           <span class="price-sub" id="price-top-sub">Enter your mattress dimensions below</span>
         </div>
@@ -302,7 +302,7 @@
           <div class="panel-section">
             <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
             <select class="shape-select" id="marine-shape-select">
-              <option value=""> — Select a shape — </option>
+              <option value=""> â€” Select a shape â€” </option>
             </select>
             <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
               <label class="panel-label" for="boat-model-input" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Auto-fill dimensions</label>
@@ -328,7 +328,7 @@
             <span>This shape's measurement form is coming soon. In the meantime, please contact us directly for a custom quote.</span>
           </div>
           <!-- CloudSoft Fabric Badge -->
-          <div class="fabric-badge" id="material-badge">CloudSoft — Marine Edition</div>
+          <div class="fabric-badge" id="material-badge">CloudSoft â€” Marine Edition</div>
           <div class="specs-grid" id="material-specs">
             <div class="spec-item"><div class="spec-label">Fabric</div><div class="spec-value">CloudSoft</div></div>
             <div class="spec-item"><div class="spec-label">Drying</div><div class="spec-value">Quick-Dry</div></div>
@@ -347,14 +347,14 @@
           <div class="dim-inputs" id="dim-inputs-container">
             <!-- Populated by JS -->
           </div>
-          <div id="bf-note" style="display:none; font-size:0.75rem; color:#64748b; margin-bottom:8px; font-style:italic;">Cut corner fields (B, F) are for measurement verification only — they do not affect pricing.</div>
+          <div id="bf-note" style="display:none; font-size:0.75rem; color:#64748b; margin-bottom:8px; font-style:italic;">Cut corner fields (B, F) are for measurement verification only â€” they do not affect pricing.</div>
           <div class="area-warning" id="area-warning" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#b91c1c; font-size:0.875rem; font-weight:600; line-height:1.5;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
+            This mattress area exceeds our maximum of 41,300 cmÂ² (6,400 sq.in). Try splitting into 2 pieces â€” select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
           </div>
           <div class="price-row" style="margin-bottom:12px;">
             <span class="price-label">Estimated Price</span>
-            <span class="price-value" id="custom-price" style="font-size:1.5rem;"> — </span>
+            <span class="price-value" id="custom-price" style="font-size:1.5rem;"> â€” </span>
           </div>
           <div id="price-breakdown" class="price-breakdown"></div>
           <!-- Color Selector -->
@@ -363,7 +363,7 @@
             <div class="price-block">
               <div class="price-row">
                 <span class="price-label">Price</span>
-                <span class="price-value" id="price-display"> — </span>
+                <span class="price-value" id="price-display"> â€” </span>
               </div>
             </div>
             <button class="btn-add-cart" id="add-to-cart" disabled>
@@ -411,7 +411,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">★★★★★</div>
+            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -449,7 +449,7 @@
   <script src="/js/reviews-carousel.js"></script>
   <div class="mobile-cta-bar" id="mobile-cta-bar">
     <div class="cta-price-wrap">
-      <span class="cta-price" id="mobile-cta-price"> — </span>
+      <span class="cta-price" id="mobile-cta-price"> â€” </span>
     </div>
     <button class="cta-btn" id="mobile-add-to-cart" disabled>
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -457,7 +457,7 @@
     </button>
   </div>
   <script>
-    /* ── Mobile CTA sync ── */
+    /* â”€â”€ Mobile CTA sync â”€â”€ */
     (function(){
       var bar=document.getElementById('mobile-cta-bar');
       var desktopBtn=document.getElementById('add-to-cart');
@@ -481,16 +481,16 @@
       if(mobileBtn&&desktopBtn){mobileBtn.addEventListener('click',function(){desktopBtn.click()})}
     })();
 
-    /* ── Favorite Toggle ── */
+    /* â”€â”€ Favorite Toggle â”€â”€ */
     var productSlug='{{PRODUCT_SLUG}}';
     var productName='{{PRODUCT_NAME}}';
-    var TURNSTILE_SITE_KEY = '0x4AAAAAABLOFwCfozL2Fzcx';
+    var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
     function updateFavUI(){
       var btn=document.getElementById('fav-btn');
       var toast=document.getElementById('fav-toast');
       if(!btn)return;
       var isFav=MildMateCampaigns.isFavorite(productSlug);
-      btn.innerHTML=isFav?'♥':'♡';
+      btn.innerHTML=isFav?'â™¥':'â™¡';
       btn.className=isFav?'favorite-btn active':'favorite-btn';
       btn.title=isFav?'Remove from favorites':'Save to favorites';
     }
@@ -498,7 +498,7 @@
       var isFav=MildMateCampaigns.toggleFavorite(productSlug,productName);
       updateFavUI();
       var toast=document.getElementById('fav-toast');
-      if(toast){toast.textContent=isFav?'♥ Saved!':'';toast.style.color='#dc2626'}
+      if(toast){toast.textContent=isFav?'â™¥ Saved!':'';toast.style.color='#dc2626'}
       if(window.MildMateCampaigns&&typeof MildMateCampaigns.toggleFavoriteServer==='function'){
         var result=await MildMateCampaigns.toggleFavoriteServer(productSlug,productName);
         if(!result.ok){MildMateCampaigns.toggleFavorite(productSlug,productName);updateFavUI()}
@@ -512,7 +512,7 @@
     window.addEventListener('clerk:signed-in',hydrateFavorites);
     window.addEventListener('clerk:signed-out',updateFavUI);
 
-    /* ── Desktop columns sync ── */
+    /* â”€â”€ Desktop columns sync â”€â”€ */
     (function(){
       function syncDesktopColumnsHeight(){
         var infoCol=document.querySelector('.product-info');
@@ -530,7 +530,7 @@
   </script>
 
   <script>
-    /* ── Image Carousel ── */
+    /* â”€â”€ Image Carousel â”€â”€ */
     (function(){
       var slug=location.pathname.split('/').filter(Boolean).pop();
       var currentSlide=0;
@@ -673,7 +673,7 @@
   </script>
 
   <script>
-    /* ── Marine Shape Configurator ── */
+    /* â”€â”€ Marine Shape Configurator â”€â”€ */
     (function(){
       var shapes = {{MARINE_SHAPES_JS}};
 
@@ -792,14 +792,14 @@
         });
       }
 
-      /* ── Dimension field definitions per shape ── */
+      /* â”€â”€ Dimension field definitions per shape â”€â”€ */
       var shapeFields = {
         '01': [
           {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
           {id:'A',label:'Bottom (A) *',placeholder:'e.g. 180',required:true},
           {id:'D',label:'Top (D) *',placeholder:'e.g. 70',required:true},
-          {id:'B',label:'Left Side (B) — auto, mirrors C',placeholder:'auto'},
-          {id:'C',label:'Right Side (C) — mirrors B',placeholder:'auto'},
+          {id:'B',label:'Left Side (B) â€” auto, mirrors C',placeholder:'auto'},
+          {id:'C',label:'Right Side (C) â€” mirrors B',placeholder:'auto'},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '02': [
@@ -807,34 +807,34 @@
           {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
           {id:'A',label:'Bottom (A) *',placeholder:'e.g. 180',required:true},
           {id:'D',label:'Top (D) *',placeholder:'e.g. 70',required:true},
-          {id:'B',label:'Cut Corner L — foot (B) — mirrors F',placeholder:'auto',required:true},
-          {id:'F',label:'Cut Corner R — foot (F) — mirrors B',placeholder:'auto',required:true},
-          {id:'C',label:'Left Side (C) — auto estimate, mirrors E',placeholder:'auto',required:true},
-          {id:'E',label:'Right Side (E) — auto estimate, mirrors C',placeholder:'auto',required:true}
+          {id:'B',label:'Cut Corner L â€” foot (B) â€” mirrors F',placeholder:'auto',required:true},
+          {id:'F',label:'Cut Corner R â€” foot (F) â€” mirrors B',placeholder:'auto',required:true},
+          {id:'C',label:'Left Side (C) â€” auto estimate, mirrors E',placeholder:'auto',required:true},
+          {id:'E',label:'Right Side (E) â€” auto estimate, mirrors C',placeholder:'auto',required:true}
         ],
         '03': [
-          {id:'C',label:'Head Top — Rounded (C) *',placeholder:'e.g. 70',required:true},
+          {id:'C',label:'Head Top â€” Rounded (C) *',placeholder:'e.g. 70',required:true},
           {id:'A',label:'Foot Bottom (A) *',placeholder:'e.g. 180',required:true},
           {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
-          {id:'B',label:'Left Side (B) — auto, mirrors D',placeholder:'auto'},
-          {id:'D',label:'Right Side (D) — mirrors B',placeholder:'auto'},
+          {id:'B',label:'Left Side (B) â€” auto, mirrors D',placeholder:'auto'},
+          {id:'D',label:'Right Side (D) â€” mirrors B',placeholder:'auto'},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '04': [
-          {id:'C',label:'Head Top — Left (C) * — mirrors E',placeholder:'e.g. 90',required:true},
-          {id:'E',label:'Head Top — Right (E) *',placeholder:'e.g. 90',required:true},
-          {id:'A',label:'Foot Bottom — Total (A) *',placeholder:'e.g. 180',required:true},
+          {id:'C',label:'Head Top â€” Left (C) * â€” mirrors E',placeholder:'e.g. 90',required:true},
+          {id:'E',label:'Head Top â€” Right (E) *',placeholder:'e.g. 90',required:true},
+          {id:'A',label:'Foot Bottom â€” Total (A) *',placeholder:'e.g. 180',required:true},
           {id:'D',label:'Center Length (D) *',placeholder:'e.g. 210',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true},
-          {id:'B',label:'Left Side (B) — mirrors F',placeholder:'auto',required:true},
+          {id:'B',label:'Left Side (B) â€” mirrors F',placeholder:'auto',required:true},
           {id:'F',label:'Right Side (F)',placeholder:'auto',required:true}
         ],
         '05': [
           {id:'A',label:'Head Top (A) *',placeholder:'e.g. 80',required:true},
           {id:'D',label:'Foot Bottom (D) *',placeholder:'e.g. 100',required:true},
-          {id:'B',label:'Left Upper (B) — mirrors F',placeholder:'e.g. 80',required:true},
+          {id:'B',label:'Left Upper (B) â€” mirrors F',placeholder:'e.g. 80',required:true},
           {id:'F',label:'Right Upper (F)',placeholder:'e.g. 80',required:true},
-          {id:'C',label:'Left Lower (C) — mirrors E',placeholder:'e.g. 80',required:true},
+          {id:'C',label:'Left Lower (C) â€” mirrors E',placeholder:'e.g. 80',required:true},
           {id:'E',label:'Right Lower (E)',placeholder:'e.g. 80',required:true},
           {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
           {id:'L',label:'Max Length (L) *',placeholder:'e.g. 200',required:true},
@@ -842,45 +842,45 @@
         ],
         '06': [
           {id:'A',label:'Head Top (A) *',placeholder:'e.g. 70',required:true},
-          {id:'B',label:'Left Side 1 (B) — mirrors G',placeholder:'auto',required:true},
+          {id:'B',label:'Left Side 1 (B) â€” mirrors G',placeholder:'auto',required:true},
           {id:'G',label:'Right Side 1 (G)',placeholder:'auto',required:true},
-          {id:'C',label:'Left Side 2 (C) — mirrors F',placeholder:'e.g. 70',required:true},
+          {id:'C',label:'Left Side 2 (C) â€” mirrors F',placeholder:'e.g. 70',required:true},
           {id:'F',label:'Right Side 2 (F)',placeholder:'e.g. 70',required:true},
-          {id:'D',label:'Left Side 3 (D) — mirrors E',placeholder:'auto',required:true},
+          {id:'D',label:'Left Side 3 (D) â€” mirrors E',placeholder:'auto',required:true},
           {id:'E',label:'Right Side 3 (E)',placeholder:'auto',required:true},
           {id:'W',label:'Max Width (W) *',placeholder:'e.g. 160',required:true},
-          {id:'L1',label:'Length 1 (L1) — Head to C line (90°) *',placeholder:'e.g. 60',required:true},
-          {id:'L2',label:'Length 2 (L2) — Bottom corner to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'L1',label:'Length 1 (L1) â€” Head to C line (90Â°) *',placeholder:'e.g. 60',required:true},
+          {id:'L2',label:'Length 2 (L2) â€” Bottom corner to C line (90Â°) *',placeholder:'e.g. 60',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '07': [
           {id:'A',label:'Head Top (A) *',placeholder:'e.g. 60',required:true},
           {id:'E',label:'Foot Bottom (E) *',placeholder:'e.g. 80',required:true},
-          {id:'B',label:'Left Side 1 (B) — mirrors H',placeholder:'e.g. 60',required:true},
-          {id:'H',label:'Right Side 1 (H) — mirrors B',placeholder:'e.g. 60',required:true},
-          {id:'C',label:'Left Side 2 (C) — mirrors G',placeholder:'e.g. 60',required:true},
-          {id:'G',label:'Right Side 2 (G) — mirrors C',placeholder:'e.g. 60',required:true},
-          {id:'D',label:'Left Side 3 (D) — mirrors F',placeholder:'e.g. 60',required:true},
-          {id:'F',label:'Right Side 3 (F) — mirrors D',placeholder:'e.g. 60',required:true},
+          {id:'B',label:'Left Side 1 (B) â€” mirrors H',placeholder:'e.g. 60',required:true},
+          {id:'H',label:'Right Side 1 (H) â€” mirrors B',placeholder:'e.g. 60',required:true},
+          {id:'C',label:'Left Side 2 (C) â€” mirrors G',placeholder:'e.g. 60',required:true},
+          {id:'G',label:'Right Side 2 (G) â€” mirrors C',placeholder:'e.g. 60',required:true},
+          {id:'D',label:'Left Side 3 (D) â€” mirrors F',placeholder:'e.g. 60',required:true},
+          {id:'F',label:'Right Side 3 (F) â€” mirrors D',placeholder:'e.g. 60',required:true},
           {id:'W1',label:'Top Width (W1) *',placeholder:'e.g. 160',required:true},
           {id:'W2',label:'Bottom Width (W2) *',placeholder:'e.g. 160',required:true},
-          {id:'L1',label:'Length 1 (L1) — Head to C line (90°) *',placeholder:'e.g. 60',required:true},
-          {id:'L2',label:'Length 2 (L2) — Bottom corner to C line (90°) *',placeholder:'e.g. 60',required:true},
+          {id:'L1',label:'Length 1 (L1) â€” Head to C line (90Â°) *',placeholder:'e.g. 60',required:true},
+          {id:'L2',label:'Length 2 (L2) â€” Bottom corner to C line (90Â°) *',placeholder:'e.g. 60',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '08': [
-          {id:'A',label:'Width 1 (A) * — mirrors C',placeholder:'e.g. 150',required:true},
+          {id:'A',label:'Width 1 (A) * â€” mirrors C',placeholder:'e.g. 150',required:true},
           {id:'C',label:'Width 2 (C)',placeholder:'e.g. 150',required:true},
-          {id:'B',label:'Length 1 (B) * — mirrors D',placeholder:'e.g. 200',required:true},
+          {id:'B',label:'Length 1 (B) * â€” mirrors D',placeholder:'e.g. 200',required:true},
           {id:'D',label:'Length 2 (D)',placeholder:'e.g. 200',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '09': [
-          {id:'D',label:'Bottom (D) * — D > A',placeholder:'e.g. 180',required:true},
+          {id:'D',label:'Bottom (D) * â€” D > A',placeholder:'e.g. 180',required:true},
           {id:'A',label:'Top (A) *',placeholder:'e.g. 150',required:true},
-          {id:'E',label:'Side (E) * — E > C',placeholder:'e.g. 200',required:true},
+          {id:'E',label:'Side (E) * â€” E > C',placeholder:'e.g. 200',required:true},
           {id:'C',label:'Side (C) *',placeholder:'e.g. 150',required:true},
-          {id:'B',label:'Cut Corner (B) — auto',placeholder:'auto',required:true},
+          {id:'B',label:'Cut Corner (B) â€” auto',placeholder:'auto',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '10': [
@@ -889,14 +889,14 @@
           {id:'L',label:'Center Length (L) *',placeholder:'e.g. 67',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 8',required:true},
           {id:'C',label:'Left Side (C)',placeholder:'auto'},
-          {id:'E',label:'Right Side (E) — mirrors C',placeholder:'auto'},
-          {id:'B',label:'Cut Corner — L (B) — optional',placeholder:'auto',optional:true},
-          {id:'F',label:'Cut Corner — R (F) — optional',placeholder:'auto',optional:true}
+          {id:'E',label:'Right Side (E) â€” mirrors C',placeholder:'auto'},
+          {id:'B',label:'Cut Corner â€” L (B) â€” optional',placeholder:'auto',optional:true},
+          {id:'F',label:'Cut Corner â€” R (F) â€” optional',placeholder:'auto',optional:true}
         ],
         '11': [
-          {id:'A',label:'Width 1 (A) * — mirrors C',placeholder:'e.g. 150',required:true},
+          {id:'A',label:'Width 1 (A) * â€” mirrors C',placeholder:'e.g. 150',required:true},
           {id:'C',label:'Width 2 (C)',placeholder:'e.g. 150',required:true},
-          {id:'B',label:'Length 1 (B) * — mirrors D',placeholder:'e.g. 200',required:true},
+          {id:'B',label:'Length 1 (B) * â€” mirrors D',placeholder:'e.g. 200',required:true},
           {id:'D',label:'Length 2 (D)',placeholder:'e.g. 200',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
@@ -904,7 +904,7 @@
           {id:'B',label:'Parallel Side 1 (B) *',placeholder:'e.g. 210',required:true},
           {id:'D',label:'Parallel Side 2 (D) *',placeholder:'e.g. 70',required:true},
           {id:'C',label:'Height (C) *',placeholder:'e.g. 200',required:true},
-          {id:'A',label:'Side (A) — auto',placeholder:'auto',required:true},
+          {id:'A',label:'Side (A) â€” auto',placeholder:'auto',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '13': [
@@ -914,18 +914,18 @@
           {id:'D',label:'Bottom (D)',placeholder:'e.g. 180',required:true},
           {id:'C',label:'Left (C)',placeholder:'e.g. 80',required:true},
           {id:'F',label:'Right (F)',placeholder:'e.g. 90',required:true},
-          {id:'B',label:'Diagonal 1 (B) — auto',placeholder:'auto',required:true},
-          {id:'E',label:'Diagonal 2 (E) — auto',placeholder:'auto',required:true},
+          {id:'B',label:'Diagonal 1 (B) â€” auto',placeholder:'auto',required:true},
+          {id:'E',label:'Diagonal 2 (E) â€” auto',placeholder:'auto',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ],
         '14': [
-          {id:'A',label:'Long Side 1 (A) * — mirrors G',placeholder:'e.g. 150',required:true},
+          {id:'A',label:'Long Side 1 (A) * â€” mirrors G',placeholder:'e.g. 150',required:true},
           {id:'G',label:'Long Side 2 (G)',placeholder:'e.g. 150',required:true},
           {id:'B',label:'Upper Side (B)',placeholder:'e.g. 50',required:true},
           {id:'D',label:'Notch Width (D)',placeholder:'e.g. 30',required:true},
           {id:'F',label:'Lower Side (F)',placeholder:'e.g. 50',required:true},
-          {id:'H',label:'Total Side (H) — auto',placeholder:'auto',required:true},
-          {id:'C',label:'Notch Depth (C) — mirrors E',placeholder:'e.g. 30',required:true},
+          {id:'H',label:'Total Side (H) â€” auto',placeholder:'auto',required:true},
+          {id:'C',label:'Notch Depth (C) â€” mirrors E',placeholder:'e.g. 30',required:true},
           {id:'E',label:'Notch Depth (E)',placeholder:'e.g. 30',required:true},
           {id:'T',label:'Mattress Thickness (T) *',placeholder:'e.g. 10',required:true}
         ]
@@ -960,7 +960,7 @@
         }
       }
 
-      /* ── Area Calculation Formulas ── */
+      /* â”€â”€ Area Calculation Formulas â”€â”€ */
       function getVal(id){
         var el = document.getElementById('dim-'+id);
         if(!el) return 0;
@@ -999,8 +999,8 @@
           var note = document.getElementById('shape02-estimate-note');
           if(note){
             var areaEst = ((wEst + d) / 2) * l;
-            var unitArea = currentUnit === 'in' ? 'in²' : 'cm²';
-            note.textContent = 'Estimated W ≈ ' + Math.round(wEst) + ', top area ≈ ' + Math.round(areaEst) + ' ' + unitArea + '. You can edit B/F/C/E.';
+            var unitArea = currentUnit === 'in' ? 'inÂ²' : 'cmÂ²';
+            note.textContent = 'Estimated W â‰ˆ ' + Math.round(wEst) + ', top area â‰ˆ ' + Math.round(areaEst) + ' ' + unitArea + '. You can edit B/F/C/E.';
           }
         }
         return true;
@@ -1010,35 +1010,35 @@
         var A,B,C,D,E,F,G,H,W,L,T,NW,NL,topArea,perimeter;
 
         switch(shapeCode){
-          case '01': /* V-Berth: trapezoid area ((A+D)/2)×L, perimeter A+B+C+D */
+          case '01': /* V-Berth: trapezoid area ((A+D)/2)Ã—L, perimeter A+B+C+D */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');L=getVal('L');T=getVal('T');
             if(!A||!D||!L||!T) return 0;
             topArea = ((A+D)/2) * L;
             perimeter = A+B+C+D;
             return topArea + (perimeter * (T + 10));
 
-          case '02': /* V-Berth Cut Corner: trapezoid area ((A+D)/2)×L, perimeter A-F */
+          case '02': /* V-Berth Cut Corner: trapezoid area ((A+D)/2)Ã—L, perimeter A-F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
             if(!A||!D||!L||!T) return 0;
             topArea = ((A+D)/2) * L;
             perimeter = A+B+C+D+E+F;
             return topArea + (perimeter * (T + 10));
 
-          case '03': /* V-Berth Rounded Nose: trapezoid area ((A+C)/2)×L, perimeter A+B+C+D */
+          case '03': /* V-Berth Rounded Nose: trapezoid area ((A+C)/2)Ã—L, perimeter A+B+C+D */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');L=getVal('L');T=getVal('T');
             if(!A||!C||!L||!T) return 0;
             topArea = ((A+C)/2) * L;
             perimeter = A+B+C+D;
             return topArea + (perimeter * (T + 10));
 
-          case '04': /* V-Berth Split: ((C+E+A)/2)×D, perimeter C+E+A+2D+B+F */
+          case '04': /* V-Berth Split: ((C+E+A)/2)Ã—D, perimeter C+E+A+2D+B+F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');T=getVal('T');
             if(!C||!E||!A||!D||!T) return 0;
             topArea = ((C + E + A) / 2) * D;
             perimeter = C + E + A + 2*D + B + F;
             return topArea + (perimeter * (T + 10));
 
-          case '05': /* Island 6-Sides: bounding rectangle W×L, perimeter A-F */
+          case '05': /* Island 6-Sides: bounding rectangle WÃ—L, perimeter A-F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
             if(!W||!L||!T) return 0;
             topArea = W * L;
@@ -1065,14 +1065,14 @@
             perimeter = A+B+C+D+E+F+G+H;
             return topArea + (perimeter * (T + 10));
 
-          case '08': /* Rectangle: A×B (Width × Length), perimeter = A+B+C+D */
+          case '08': /* Rectangle: AÃ—B (Width Ã— Length), perimeter = A+B+C+D */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
             if(!A||!B||!T) return 0;
             topArea = A * B;
             perimeter = A+B+C+D;
             return topArea + (perimeter * (T + 10));
 
-          case '09': /* Rectangle Cut-Off: C×D + ((D+A)/2)×(E-C), perimeter A-E */
+          case '09': /* Rectangle Cut-Off: CÃ—D + ((D+A)/2)Ã—(E-C), perimeter A-E */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');T=getVal('T');
             if(!A||!D||!C||!E||!T) return 0;
             topArea = C * D + ((D + A) / 2) * (E - C);
@@ -1080,7 +1080,7 @@
             perimeter = A+B+C+D+E;
             return topArea + (perimeter * (T + 10));
 
-          case '10': /* Rectangle Two Cut-Off: D×L − (L−C)(D−A), perimeter A-F */
+          case '10': /* Rectangle Two Cut-Off: DÃ—L âˆ’ (Lâˆ’C)(Dâˆ’A), perimeter A-F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');L=getVal('L');T=getVal('T');
             if(!A||!D||!L||!C||!T) return 0;
             topArea = D * L - (L - C) * (D - A);
@@ -1088,21 +1088,21 @@
             perimeter = A+B+C+D+E+F;
             return topArea + (perimeter * (T + 10));
 
-          case '11': /* Radius Corner Rectangle: same as Rectangle — A×B */
+          case '11': /* Radius Corner Rectangle: same as Rectangle â€” AÃ—B */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
             if(!A||!B||!T) return 0;
             topArea = A * B;
             perimeter = A+B+C+D;
             return topArea + (perimeter * (T + 10));
 
-          case '12': /* Quarter Berth: trapezoid ((B+D)/2)×C, perimeter A+B+C+D */
+          case '12': /* Quarter Berth: trapezoid ((B+D)/2)Ã—C, perimeter A+B+C+D */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');T=getVal('T');
             if(!B||!D||!C||!T) return 0;
             topArea = ((B + D) / 2) * C;
             perimeter = A+B+C+D;
             return topArea + (perimeter * (T + 10));
 
-          case '13': /* Aft Cabin: W×L − ((L-C)(W-A))/2 − ((L-F)(W-D))/2, perimeter A-F */
+          case '13': /* Aft Cabin: WÃ—L âˆ’ ((L-C)(W-A))/2 âˆ’ ((L-F)(W-D))/2, perimeter A-F */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');W=getVal('W');L=getVal('L');T=getVal('T');
             if(!W||!L||!T) return 0;
             topArea = W * L - ((L - C) * (W - A)) / 2 - ((L - F) * (W - D)) / 2;
@@ -1110,7 +1110,7 @@
             perimeter = A+B+C+D+E+F;
             return topArea + (perimeter * (T + 10));
 
-          case '14': /* Notched Mattress: A×H − D×C, perimeter A-H */
+          case '14': /* Notched Mattress: AÃ—H âˆ’ DÃ—C, perimeter A-H */
             A=getVal('A');B=getVal('B');C=getVal('C');D=getVal('D');E=getVal('E');F=getVal('F');G=getVal('G');H=getVal('H');T=getVal('T');
             if(!A||!H||!T) return 0;
             topArea = A * H - D * C;
@@ -1123,7 +1123,7 @@
         }
       }
 
-      /* ── Area limit ── */
+      /* â”€â”€ Area limit â”€â”€ */
       var MAX_TOP_AREA_CM = 41300; /* 6,400 sq.inch */
 
       function getTopArea(shapeCode){
@@ -1154,7 +1154,7 @@
       var materialSpecsEl = document.getElementById('material-specs');
       if(isMarineProtector){
         if(shapeSelectLabelEl) shapeSelectLabelEl.textContent = 'Choose Your Marine Mattress Shape';
-        if(materialBadgeEl) materialBadgeEl.textContent = 'Marine Mattress Protector — 3-Layer Waterproof';
+        if(materialBadgeEl) materialBadgeEl.textContent = 'Marine Mattress Protector â€” 3-Layer Waterproof';
         if(materialSpecsEl){
           materialSpecsEl.innerHTML =
             '<div class="spec-item"><div class="spec-label">Top Layer</div><div class="spec-value">Cotton Quilted</div></div>' +
@@ -1164,8 +1164,8 @@
         }
       }
 
-      /* ── Marine fitted-sheet pricing (same formula as server, marine margin) ── */
-      var SQCM_PER_YARD = 23774.4;       // 91.44 × 260
+      /* â”€â”€ Marine fitted-sheet pricing (same formula as server, marine margin) â”€â”€ */
+      var SQCM_PER_YARD = 23774.4;       // 91.44 Ã— 260
       var CLOUDSOFT_RATE = 100;          // THB/yard
       var FABRIC_WASTE = 1.20;           // 20% waste
       var ACC_RATE = 0.10;               // accessories = 10% of fabric
@@ -1178,7 +1178,7 @@
       var MARINE_PROTECTOR_WASTE = 1.50; // marine protector waste factor (50% default)
       var MARINE_SEWING_COST = 500;      // marine protector sewing cost (THB)
       var THB_PER_USD = 30;              // approximate
-      var SEWING_TIERS = [               // tiered by fabric area (cm²)
+      var SEWING_TIERS = [               // tiered by fabric area (cmÂ²)
         {max:24000,cost:120},{max:33600,cost:180},{max:38400,cost:240},
         {max:48000,cost:300},{max:60000,cost:360},{max:84000,cost:420},
         {max:91200,cost:500},{max:120000,cost:650},{max:Infinity,cost:800}
@@ -1273,7 +1273,7 @@
         };
       }
       function formatTHB(n){
-        return '฿' + Math.round(n).toLocaleString();
+        return 'à¸¿' + Math.round(n).toLocaleString();
       }
       function renderPriceBreakdown(bd){
         if(!priceBreakdown) return;
@@ -1284,9 +1284,9 @@
         if(isMarineProtector){
           priceBreakdown.innerHTML =
             '<details><summary>Cost breakdown (THB)</summary><ul>' +
-            '<li>Top Area: ' + Math.round(bd.areaSqCm).toLocaleString() + ' cm² (' + Math.round(bd.areaSqInch).toLocaleString() + ' in²)</li>' +
-            '<li>Fabric Tier Cost: ' + formatTHB(bd.baseFabricCost) + ' × ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.fabricCost) + '</li>' +
-            '<li>Depth Surcharge: ' + formatTHB(bd.baseDepthCost) + ' × ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.depthCost) + '</li>' +
+            '<li>Top Area: ' + Math.round(bd.areaSqCm).toLocaleString() + ' cmÂ² (' + Math.round(bd.areaSqInch).toLocaleString() + ' inÂ²)</li>' +
+            '<li>Fabric Tier Cost: ' + formatTHB(bd.baseFabricCost) + ' Ã— ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.fabricCost) + '</li>' +
+            '<li>Depth Surcharge: ' + formatTHB(bd.baseDepthCost) + ' Ã— ' + bd.wasteFactor.toFixed(2) + ' = ' + formatTHB(bd.depthCost) + '</li>' +
             '<li>Marine Sewing Cost: ' + formatTHB(bd.marineSewing) + '</li>' +
             '<li>Packing: ' + formatTHB(bd.packing) + '</li>' +
             '<li>Delivery: ' + formatTHB(bd.delivery) + '</li>' +
@@ -1295,17 +1295,17 @@
             '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
             '<li>Margin (' + Math.round(MARINE_PROTECTOR_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
             '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
-            '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+            '<li><strong>Total charged (rounded to next à¸¿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
             '</ul></details>';
           return;
         }
         var area = Math.round((bd.fabricCost / (CLOUDSOFT_RATE / SQCM_PER_YARD) / FABRIC_WASTE) || 0);
-        var fabricFormula = '(' + area.toLocaleString() + ' × ' + CLOUDSOFT_RATE.toLocaleString() + ' ÷ ' + SQCM_PER_YARD.toLocaleString(undefined,{maximumFractionDigits:1}) + ') × ' + FABRIC_WASTE.toFixed(2);
+        var fabricFormula = '(' + area.toLocaleString() + ' Ã— ' + CLOUDSOFT_RATE.toLocaleString() + ' Ã· ' + SQCM_PER_YARD.toLocaleString(undefined,{maximumFractionDigits:1}) + ') Ã— ' + FABRIC_WASTE.toFixed(2);
         var accessoriesPct = Math.round(ACC_RATE * 100);
         priceBreakdown.innerHTML =
           '<details><summary>Cost breakdown (THB)</summary><ul>' +
           '<li>Fabric Cost: ' + fabricFormula + ' = ' + formatTHB(bd.fabricCost) + '</li>' +
-          '<li>Sewing Cost: tier by area (' + area.toLocaleString() + ' cm²) = ' + formatTHB(bd.sewingCost) + '</li>' +
+          '<li>Sewing Cost: tier by area (' + area.toLocaleString() + ' cmÂ²) = ' + formatTHB(bd.sewingCost) + '</li>' +
           '<li>Accessories (' + accessoriesPct + '% of fabric): ' + formatTHB(bd.accessories) + '</li>' +
           '<li>Packing: ' + formatTHB(bd.packing) + '</li>' +
           '<li>Delivery: ' + formatTHB(bd.delivery) + '</li>' +
@@ -1314,7 +1314,7 @@
           '<li>Marketing (' + Math.round(MKT_RATE * 100) + '%): ' + formatTHB(bd.marketing) + '</li>' +
           '<li>Margin (' + Math.round(MARINE_MARGIN_RATE * 100) + '%): ' + formatTHB(bd.margin) + '</li>' +
           '<li>Total before rounding: ' + formatTHB(bd.total) + '</li>' +
-          '<li><strong>Total charged (rounded to next ฿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
+          '<li><strong>Total charged (rounded to next à¸¿100): ' + formatTHB(bd.roundedThb) + '</strong></li>' +
           '</ul></details>';
       }
       function applyMarinePricingParams(payload){
@@ -1388,10 +1388,10 @@
           .catch(function(){});
       }
       function formatPrice(priceThb){
-        /* EN page → USD, TH page → THB */
+        /* EN page â†’ USD, TH page â†’ THB */
         var isThai = document.documentElement.lang === 'th';
         if(isThai){
-          return '฿' + priceThb.toLocaleString();
+          return 'à¸¿' + priceThb.toLocaleString();
         }
         var usd = Math.round(priceThb / THB_PER_USD);
         return '$' + usd.toLocaleString();
@@ -1401,9 +1401,9 @@
         var code = shapeSelect.value;
         var warningEl = document.getElementById('area-warning');
         if(!code || shapeFields[code] === undefined){
-          customPrice.textContent = ' — ';
-          priceDisplay.textContent = ' — ';
-          priceDisplayTop.textContent = ' — ';
+          customPrice.textContent = ' â€” ';
+          priceDisplay.textContent = ' â€” ';
+          priceDisplayTop.textContent = ' â€” ';
           priceTopSub.textContent = 'Enter your mattress dimensions below';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
@@ -1416,8 +1416,8 @@
         var topArea = getTopArea(code);
         if(topArea > MAX_TOP_AREA_CM){
           if(warningEl) warningEl.style.display = 'block';
-          if(warningEl) warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.';
-          customPrice.textContent = ' — ';
+          if(warningEl) warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This mattress area exceeds our maximum of 41,300 cmÂ² (6,400 sq.in). Try splitting into 2 pieces â€” select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.';
+          customPrice.textContent = ' â€” ';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
           renderPriceBreakdown(null);
@@ -1458,7 +1458,7 @@
           }
           if(msgs.length > 0){
             if(warningEl){ warningEl.style.display = 'block'; warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+msgs.join('; ')+'.'; }
-            customPrice.textContent = ' — ';
+            customPrice.textContent = ' â€” ';
             currentQuotePriceThb = 0;
             currentQuotePriceUsd = 0;
             renderPriceBreakdown(null);
@@ -1469,7 +1469,7 @@
         if(warningEl) warningEl.style.display = 'none';
         var pricingArea = isMarineProtector ? getTopArea(code) : calcArea(code);
         if(pricingArea <= 0){
-          customPrice.textContent = ' — ';
+          customPrice.textContent = ' â€” ';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
           renderPriceBreakdown(null);
@@ -1480,7 +1480,7 @@
         if(isMarineProtector){
           var depthCm = getVal('T');
           if(depthCm <= 0){
-            customPrice.textContent = ' — ';
+            customPrice.textContent = ' â€” ';
             currentQuotePriceThb = 0;
             currentQuotePriceUsd = 0;
             renderPriceBreakdown(null);
@@ -1496,7 +1496,7 @@
         customPrice.textContent = priceStr;
         priceDisplay.textContent = priceStr;
         priceDisplayTop.textContent = priceStr;
-        priceTopSub.textContent = 'Estimated — Exact price confirmed in quote';
+        priceTopSub.textContent = 'Estimated â€” Exact price confirmed in quote';
         currentQuotePriceThb = priceThb;
         currentQuotePriceUsd = Math.round((priceThb / THB_PER_USD) * 100) / 100;
         renderPriceBreakdown(breakdown);
@@ -1513,7 +1513,7 @@
         if(shape && shape.schematic){
           guideImg.src = shape.schematic;
           guideImg.style.display = 'block';
-          guideCaption.textContent = shape.name + ' — Measurement Diagram';
+          guideCaption.textContent = shape.name + ' â€” Measurement Diagram';
           guideCaption.style.display = 'block';
           guidePlaceholder.style.display = 'none';
         } else {
@@ -1526,7 +1526,7 @@
         if(shape && shape.comingSoon){
           comingSoon.style.display = 'flex';
           dimsContainer.innerHTML = '';
-          customPrice.textContent = ' — ';
+          customPrice.textContent = ' â€” ';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
           renderPriceBreakdown(null);
@@ -1547,7 +1547,7 @@
         var lEl = document.getElementById('dim-L');
         var lVal = parseFloat(lEl?.value) || 0;
         if(code === '01'){
-          /* Shape 01: B = C = √(((A-D)/2)^2 + L^2), but allow manual B/C edits */
+          /* Shape 01: B = C = âˆš(((A-D)/2)^2 + L^2), but allow manual B/C edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-C') return;
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
@@ -1565,7 +1565,7 @@
         } else if(code === '02'){
           /* Shape 02: use Estimate button for B/F/C/E defaults (manual values stay editable) */
         } else if(code === '03'){
-          /* Shape 03: B = D = √(((A-C)/2)^2 + L^2), but allow manual B/D edits */
+          /* Shape 03: B = D = âˆš(((A-C)/2)^2 + L^2), but allow manual B/D edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-D') return;
           var aEl = document.getElementById('dim-A');
           var cEl = document.getElementById('dim-C');
@@ -1674,7 +1674,7 @@
             }
           }
         } else if(code === '09'){
-          /* Shape 09: auto-fill B = √((D-A)² + (E-C)²) */
+          /* Shape 09: auto-fill B = âˆš((D-A)Â² + (E-C)Â²) */
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
           var cEl = document.getElementById('dim-C');
@@ -1691,7 +1691,7 @@
             }
           }
         } else if(code === '12'){
-          /* Shape 12: auto-fill A = √(C² + ((B-D)/2)²) */
+          /* Shape 12: auto-fill A = âˆš(CÂ² + ((B-D)/2)Â²) */
           var bEl_ = document.getElementById('dim-B');
           var dEl_ = document.getElementById('dim-D');
           var cEl_ = document.getElementById('dim-C');
@@ -1707,7 +1707,7 @@
             }
           }
         } else if(code === '13'){
-          /* Shape 13: auto-fill B = √((W-A)²+(L-C)²), E = √((W-D)²+(L-F)²) */
+          /* Shape 13: auto-fill B = âˆš((W-A)Â²+(L-C)Â²), E = âˆš((W-D)Â²+(L-F)Â²) */
           var wEl = document.getElementById('dim-W');
           var lEl = document.getElementById('dim-L');
           var aEl = document.getElementById('dim-A');
@@ -1777,10 +1777,10 @@
           }
         }
       }
-      /* Live price update + B↔C (shape 01) / C↔E (shape 10) mirroring */
+      /* Live price update + Bâ†”C (shape 01) / Câ†”E (shape 10) mirroring */
       dimsContainer.addEventListener('input', function(e){
         if(e.target.tagName !== 'INPUT') return;
-        /* Mirror: Shape 01 B↔C, Shape 02 C↔E + B↔F, Shape 10 C↔E */
+        /* Mirror: Shape 01 Bâ†”C, Shape 02 Câ†”E + Bâ†”F, Shape 10 Câ†”E */
         var code = shapeSelect.value;
         if(!_mirroring){
           if(code === '01'){
@@ -2214,11 +2214,11 @@
               confirmDetails.innerHTML =
                 '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
                 '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
-                '<strong>Area:</strong> ' + quoteData.areaCm2.toLocaleString() + ' cm²<br>' +
+                '<strong>Area:</strong> ' + quoteData.areaCm2.toLocaleString() + ' cmÂ²<br>' +
                 '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
-                '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || '—') + '<br>' +
+                '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || 'â€”') + '<br>' +
                 (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
-                '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || '—');
+                '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || 'â€”');
             }
             if(confirmOverlay) confirmOverlay.classList.add('open');
           })
@@ -2293,7 +2293,7 @@
   </script>
 
   <script>
-    /* ── Info Tabs ── */
+    /* â”€â”€ Info Tabs â”€â”€ */
     (function(){
       document.querySelectorAll('[data-info-tab]').forEach(function(btn){
         btn.addEventListener('click', function(){

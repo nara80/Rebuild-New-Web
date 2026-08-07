@@ -46,17 +46,24 @@ This section is the current source of truth for the 2026-08-07 session: marine t
    - `flat-sheet` max width bumped to 400cm for King+King mattress combos
    - Runtime bundles synced (4 canonical insertions + 2 legacy redirect splits)
    - Admin seed arrays updated to 30 products
+   - Hero image (`001_Hero01.jpg`) added; family/co-sleep size presets wired via `isCoSleeping` in configurator
    - All cross-cutting features verified: Turnstile, color inventory, reviews, SEO tags
+
+8. **Marine quote Turnstile — 3-layer fix** (section 28)
+   - Wrong sitekey in marine template replaced with correct production key (pending push — Droid-Shield false positive)
+   - `data-sitekey` removed from popup HTML to prevent auto-render into hidden element
+   - `onload` retry fallback added to `renderTurnstileWidget()` in both marine template and configurator
+   - `widgetId` tracking + `reset()` on re-open; `getResponse(widgetId)` for reliable token
 
 ### Current verified state (now)
 - `/product/marine-top-sheet/` is live with 15-image + MP4 carousel
-- `/product/co-sleeping-top-sheet/` is generated and verified locally
+- `/product/co-sleeping-top-sheet/` is live (30th product), hero image + family size presets
 - `/products/` shows 30 products (SSR from D1)
 - Color inventory consistent across all product pages (no stock note, greyed + strikethrough)
-- Marine quote forms have Turnstile (pending manual push)
-- Admin dashboards include all 30 products with fresh-fetch behavior (pending manual push)
-- 3 commits at `origin/master`: `fd08d51`, `efbd392`, `8802cef`
-- New co-sleeping changes committed locally but pending push
+- Marine quote Turnstile: sitekey fix pending manual push (Droid-Shield false positive); rendering fixes deployed (`4472ab7`, `2b8977d`)
+- Admin dashboards include all 30 products
+- All pushes: `4b646f4`, `8802cef`, `efbd392`, `fd08d51`, `b03938e`, `2b988ef`, `2b8977d`, `4472ab7` pushed
+- Marine sitekey fix (`templates/product-marine.html`) staged — push manually: `git push origin master:main`
 
 ## 1) Thai homepage fix (`/th/`)
 
@@ -1270,6 +1277,107 @@ Create a new product page for Co-Sleeping Top Sheet (the 30th product), aligned 
 - 30 active products in production D1 ✅
 - Generated page at `/product/co-sleeping-top-sheet/` verified with all features ✅
 - New commits pending manual push (Droid-Shield false positive on TURNSTILE_SITE_KEY in prior commits)
+
+
+## 28) Marine quote Turnstile — "Troubleshoot" / invalidsitekey (2026-08-07)
+
+### Incident scope (what was observed)
+
+- On `/product/marine-top-sheet/` (and all marine product pages using `templates/product-marine.html`), clicking **[Custom Quote]** showed the Cloudflare Turnstile widget as a bare "Troubleshoot" link — no checkbox.
+- Submitting the form triggered a browser alert: `"Please complete the security check."`
+- Browser DevTools showed the Turnstile challenge request failing:
+  ```
+  GET https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/fr/hd68t/undefined/auto/invalidsitekey
+  Status: 400 Bad Request
+  ```
+- On `/product/standard-fitted-sheet/` (using `product-configurator.js`) Turnstile worked correctly, showing the checkbox.
+
+### Root cause analysis (3 independent bugs — all fixed)
+
+---
+
+#### Root cause 1 — Wrong sitekey in marine template (PRIMARY cause)
+
+**Files affected:** `templates/product-marine.html`, all 4 marine product pages
+
+**What happened:**
+- When the marine template Turnstile was originally added (commit `8802cef`), a different Turnstile sitekey was embedded than the one in `product-configurator.js`.
+- `product-configurator.js` (working): correct production sitekey for `mildmate.com`
+- `templates/product-marine.html` (broken): a different/test sitekey that Cloudflare rejects with `invalidsitekey`
+- Cloudflare's challenge URL path contained `undefined` (JavaScript string coercion of the wrong key resolving to an unrecognized token) and `invalidsitekey` as its status response.
+
+**Confirmed via:**
+- PowerShell regex to extract raw key values from both files → keys did not match
+- Cloudflare `400 Bad Request` with `invalidsitekey` in URL path confirmed key rejection
+
+**Fix applied:** Replaced the wrong sitekey in `templates/product-marine.html` with the correct production sitekey from `product-configurator.js` via PowerShell `$marine -replace`.
+
+---
+
+#### Root cause 2 — Turnstile auto-render into hidden popup (SECONDARY cause)
+
+**Files affected:** `templates/product-marine.html`
+
+**What happened:**
+- The quote popup HTML was injected once into the DOM at page load (while popup `display:none`).
+- The `.cf-turnstile` div had `data-sitekey` attribute, which Cloudflare Turnstile's auto-scanner picks up on `DOMContentLoaded`.
+- Turnstile tried to auto-render into the hidden element → iframe mounted in zero-height container → "Troubleshoot" broken state baked into the widget before popup ever opened.
+- When popup opened and `renderTurnstileWidget()` tried to call `turnstile.render()` again, a double-render conflict resulted.
+
+**Fix applied:**
+- Removed `data-sitekey` from the `.cf-turnstile` div → prevents auto-render on page load
+- Changed div to `id="marine-ts-widget"` for stable explicit targeting
+- All rendering via explicit `window.turnstile.render(el, { sitekey: KEY })` only when popup is open
+
+---
+
+#### Root cause 3 — No onload retry when Turnstile script not yet loaded (TERTIARY cause)
+
+**Files affected:** `templates/product-marine.html`, `public/js/product-configurator.js`
+
+**What happened:**
+- `renderTurnstileWidget()` had a silent early-return: `if (!window.turnstile) return;`
+- If popup opened before the async Turnstile script finished loading, the function returned without rendering — token never generated — "Please complete the security check" on submit.
+- Same bug existed in `product-configurator.js` for standard product quote popups.
+
+**Fix applied:**
+- Added `onload` event listener on the Turnstile `<script>` element — renders into the open popup's container once the script loads.
+- Standard configurator received same fix.
+
+---
+
+### Full fix summary (commits applied in sequence)
+
+| Commit | Fix |
+|---|---|
+| `2b8977d` | Onload retry fallback in `renderTurnstileWidget()` (both marine template + configurator) |
+| `4472ab7` | Remove `data-sitekey` from popup HTML; use explicit render with `widgetId` + `reset()`; 50ms open delay |
+| Pending push | Correct production sitekey in marine template — **definitive fix** |
+
+### Additional improvements in `renderTurnstileWidget()` (marine template)
+
+- Tracks `_marineWidgetId` (return value of `turnstile.render()`) — used for `turnstile.reset(widgetId)` on re-opens instead of re-rendering
+- `getTurnstileToken()` now calls `turnstile.getResponse(_marineWidgetId)` for reliable token extraction from the specific widget instance
+- 50ms `setTimeout` delay after `quoteOverlay.classList.add('open')` ensures popup is painted before Turnstile renders its iframe
+
+### Verification status
+
+| Check | Status |
+|---|---|
+| Correct sitekey in marine template | ✅ (pending push — Droid-Shield false positive on public sitekey) |
+| No `data-sitekey` auto-render on hidden popup | ✅ deployed (`4472ab7`) |
+| Onload retry fallback | ✅ deployed (`2b8977d`) |
+| `widgetId` tracking + `reset()` on re-open | ✅ deployed (`4472ab7`) |
+| `getResponse(widgetId)` for reliable token | ✅ deployed (`4472ab7`) |
+| Standard quote form (product-configurator.js) | ✅ unaffected (correct key, works) |
+| Marine product pages rebuilt | ✅ 4 pages (marine-fitted-sheet, marine-top-sheet, duvet-cover-marine, marine-mattress-protector) |
+| Lint | ✅ passed |
+
+### Key lesson / runbook note
+
+- **Turnstile SITE keys are public** (embedded in HTML, safe to commit). Droid-Shield treats them as secrets (false positive). Always verify the sitekey matches between templates by direct file comparison — do not copy from memory.
+- **Never put `data-sitekey` on a `.cf-turnstile` div that starts hidden** — Turnstile auto-scans on `DOMContentLoaded` and will attempt render into the hidden element, producing the "Troubleshoot" broken state.
+- After template sitekey changes, push manually: `git push origin master:main`
 
 
 ## 25) `/checkout` Promo Code + Payment "Network error" (2026-07-11)
