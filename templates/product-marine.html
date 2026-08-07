@@ -484,6 +484,7 @@
     /* ── Favorite Toggle ── */
     var productSlug='{{PRODUCT_SLUG}}';
     var productName='{{PRODUCT_NAME}}';
+    var TURNSTILE_SITE_KEY = '0x4AAAAAABLOFwCfozL2Fzcx';
     function updateFavUI(){
       var btn=document.getElementById('fav-btn');
       var toast=document.getElementById('fav-toast');
@@ -1975,6 +1976,7 @@
               '<div style="position:absolute;left:-9999px" aria-hidden="true">' +
                 '<label>Leave this empty <input type="text" name="_website" tabindex="-1" autocomplete="off"></label>' +
               '</div>' +
+              '<div class="cf-turnstile" data-sitekey="' + TURNSTILE_SITE_KEY + '"></div>' +
               '<button type="submit" class="quote-submit-btn" id="qf-submit">Submit</button>' +
               '<p class="quote-form-note">We\'ll email you within 24 hours.</p>' +
             '</form>' +
@@ -2052,6 +2054,36 @@
           detailsList: detailsList
         };
       }
+      function ensureTurnstileScript() {
+        if (document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) return;
+        var s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+        s.async = true;
+        s.defer = true;
+        document.head.appendChild(s);
+      }
+      ensureTurnstileScript();
+      function getTurnstileToken(scopeEl) {
+        var root = scopeEl || document;
+        var direct = root.querySelector('input[name="cf-turnstile-response"], textarea[name="cf-turnstile-response"]');
+        if (direct && direct.value) return String(direct.value).trim();
+        try {
+          if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
+            var token = window.turnstile.getResponse();
+            if (token) return String(token).trim();
+          }
+        } catch (e) {}
+        return '';
+      }
+
+      var _marineTurnstileRendered = false;
+      function renderTurnstileWidget(){
+        if (_marineTurnstileRendered) return;
+        var el = document.querySelector('.cf-turnstile');
+        if (!el) return;
+        if (!window.turnstile || typeof window.turnstile.render !== 'function') return;
+        try { window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY }); _marineTurnstileRendered = true; } catch(e) {}
+      }
       function openQuotePopup(){
         var data = collectMarineQuoteData();
         if(!data){
@@ -2061,6 +2093,7 @@
         }
         if(quoteOverlay){
           quoteOverlay.classList.add('open');
+          renderTurnstileWidget();
           var qfName = document.getElementById('qf-name');
           if(qfName) qfName.focus();
         }
@@ -2096,6 +2129,11 @@
             valid = false;
             alert('Please complete valid dimensions before submitting the quote.');
           }
+          var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
+          if (!turnstileToken) {
+            valid = false;
+            alert('Please complete the security check.');
+          }
           if(!valid) return;
 
           if(quoteSubmitBtn){
@@ -2126,6 +2164,7 @@
               color: getSelectedMarineColor() || undefined,
               quoted_price_thb: currentQuotePriceThb || undefined,
               quoted_price_usd: currentQuotePriceUsd || undefined,
+              turnstile_token: turnstileToken,
               _website: honeypot ? honeypot.value : undefined
             })
           })

@@ -855,16 +855,29 @@
     if (marineShapeSelect) enhanceSelectToPills(marineShapeSelect);
   }
 
+  var _turnstileRendered = false;
   function ensureTurnstileScript() {
     if (document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js"]')) return;
     var s = document.createElement('script');
     s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
     s.async = true;
     s.defer = true;
+    s.onload = function () { renderTurnstileWidget(); };
     document.head.appendChild(s);
   }
 
   ensureTurnstileScript();
+
+  function renderTurnstileWidget() {
+    if (_turnstileRendered) return;
+    var el = document.querySelector('.cf-turnstile');
+    if (!el) return;
+    if (!window.turnstile || typeof window.turnstile.render !== 'function') return;
+    try {
+      window.turnstile.render(el, { sitekey: TURNSTILE_SITE_KEY });
+      _turnstileRendered = true;
+    } catch (e) {}
+  }
 
   function getTurnstileToken(scopeEl) {
     var root = scopeEl || document;
@@ -1298,6 +1311,7 @@
       }
 
       quoteOverlay.classList.add('open');
+      renderTurnstileWidget();
       document.getElementById('qf-name').focus();
     });
   }
@@ -1458,6 +1472,7 @@
           return;
         }
         quoteOverlay.classList.add('open');
+        renderTurnstileWidget();
         var qfName = document.getElementById('qf-name');
         if (qfName) qfName.focus();
         return;
