@@ -559,16 +559,24 @@
             var thumb='https://img.youtube.com/vi/'+item.videoId+'/hqdefault.jpg';
             return '<div class="carousel-slide carousel-slide-video" data-video-id="'+item.videoId+'"><img class="yt-thumb" src="'+thumb+'" alt="Product video" width="480" height="360" loading="lazy"><div class="yt-play-btn"><div class="yt-play-circle"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div></div></div>';
           }
+          if(typeof item==='object'&&item.mp4){
+            return '<div class="carousel-slide"><video src="'+item.mp4+'" controls playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;display:block;background:#000" poster="'+item.poster+'"></video></div>';
+          }
           return '<div class="carousel-slide"><img src="'+item+'" alt="Product image" width="800" height="800" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+'></div>';
         }).join('');
         dotsWrap.innerHTML=gallery.map(function(item,i){
-          return '<button class="carousel-dot'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="'+(typeof item==='object'&&item.videoId?'Video':'Image '+(i+1))+'"></button>';
+          var label = typeof item==='object'&&item.videoId ? 'YouTube' : (typeof item==='object'&&item.mp4 ? 'Video' : 'Image '+(i+1));
+          return '<button class="carousel-dot'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="'+label+'"></button>';
         }).join('');
         if(thumbsWrap){
           thumbsWrap.innerHTML=gallery.map(function(item,i){
             if(typeof item==='object'&&item.videoId){
               var thumb='https://img.youtube.com/vi/'+item.videoId+'/default.jpg';
-              return '<button class="carousel-thumb thumb-video'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Video thumbnail"><img src="'+thumb+'" alt="Video thumb" loading="lazy"></button>';
+              return '<button class="carousel-thumb thumb-video'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="YouTube thumbnail"><img src="'+thumb+'" alt="Video thumb" loading="lazy"></button>';
+            }
+            if(typeof item==='object'&&item.mp4){
+              var videoThumb = item.poster || '';
+              return '<button class="carousel-thumb thumb-video'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Video thumbnail"><img src="'+videoThumb+'" alt="Video thumb" loading="lazy" style="object-fit:cover;background:#000"></button>';
             }
             return '<button class="carousel-thumb'+(i===0?' active':'')+'" data-idx="'+i+'" aria-label="Thumbnail '+(i+1)+'"><img src="'+item+'" alt="Product thumbnail '+(i+1)+'" loading="lazy"></button>';
           }).join('');
@@ -636,7 +644,14 @@
           if(heroImg)gallery.push(heroImg);
           var ytId=extractYouTubeId(p.youtube_url||'');
           if(ytId)gallery.push({videoId:ytId});
-          for(var i=1;i<imgs.length;i++)if(imgs[i])gallery.push(imgs[i]);
+          for(var i=1;i<imgs.length;i++)if(imgs[i]){
+            var imgSrc = imgs[i];
+            if(typeof imgSrc === 'string' && imgSrc.toLowerCase().indexOf('.mp4') !== -1){
+              gallery.push({mp4:imgSrc, poster:imgs[0]||fallback||''});
+            } else {
+              gallery.push(imgSrc);
+            }
+          }
           if(!gallery.length&&fallback)gallery.push(fallback);
           buildCarousel();
           if(typeof window.syncDesktopColumnsHeight==='function')window.syncDesktopColumnsHeight();

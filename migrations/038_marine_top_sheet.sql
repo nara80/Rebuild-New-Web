@@ -37,7 +37,7 @@ VALUES (
   1,
   4,
   '/images/products/marine-top-sheet/main.jpg',
-  '["/images/products/marine-top-sheet/main.jpg","/images/products/marine-top-sheet/how-to-order-1.jpg","/images/products/marine-top-sheet/how-to-order-2.jpg","/images/products/marine-top-sheet/problem-1.jpg","/images/products/marine-top-sheet/problem-2.jpg","/images/products/marine-top-sheet/tuck-10-inch.jpg","/images/products/marine-top-sheet/allowance-10-inch.jpg","/images/products/marine-top-sheet/easy-tucking.jpg"]',
+  '["/images/products/marine-top-sheet/main.jpg","/images/products/marine-top-sheet/how-to-order-1.jpg","/images/products/marine-top-sheet/how-to-order-2.jpg","/images/products/marine-top-sheet/problem-1.jpg","/images/products/marine-top-sheet/problem-2.jpg","/images/products/marine-top-sheet/tuck-10-inch.jpg","/images/products/marine-top-sheet/allowance-10-inch.jpg","/images/products/marine-top-sheet/easy-tucking.jpg","/images/products/marine-top-sheet/hero-marketing.jpg","/images/products/marine-top-sheet/problem-marketing-1.jpg","/images/products/marine-top-sheet/problem-marketing-2.jpg","/images/products/marine-top-sheet/tuck-marketing.jpg","/images/products/marine-top-sheet/allowance-marketing.jpg","/images/products/marine-top-sheet/easy-tucking-marketing.jpg","/images/products/marine-top-sheet/tuck-demo.mp4"]',
   'sheets, marine, custom-shape, top-sheet',
   'Shape-matched pattern with tuck-under allowance for marine mattresses',
   'แพทเทิร์นเข้ารูปพร้อมเผื่อชายผ้าสำหรับสอดใต้ที่นอนเรือ'
