@@ -471,11 +471,7 @@ function renderStatsFilterBar(period, targetCurrency, currencies) {
 }
 
 async function renderListingPerformanceCard(period, targetCurrency) {
-  var fallbackCurrencies = [
-    { currency: 'USD', symbol: '$' }, { currency: 'THB', symbol: '฿' }, { currency: 'EUR', symbol: '€' },
-    { currency: 'GBP', symbol: '£' }, { currency: 'JPY', symbol: '¥' }, { currency: 'AUD', symbol: 'A$' },
-    { currency: 'CAD', symbol: 'C$' }, { currency: 'SGD', symbol: 'S$' }, { currency: 'MYR', symbol: 'RM' }
-  ];
+  var fallbackCurrencies = [{ currency: (targetCurrency || 'USD').toUpperCase(), symbol: '' }];
   try {
     var resp = await fetch('/api/admin/stats?period=' + encodeURIComponent(period) + '&target_currency=' + encodeURIComponent(targetCurrency), {
       headers: await getAdminAuthHeaders(false)
@@ -551,28 +547,103 @@ function rReviews() {
 }
 
 // ── Pricing Parameters Page ──
-function getParams() {
-  var raw = localStorage.getItem("admin_params");
-  var def = [{"key":"fabric_rate_cloudsoft","value":100,"label":"CloudSoft Rate (THB/yd)","category":"fabric","products":"Marine,RV,Dorm,Family,Pets,Flat"},{"key":"fabric_rate_breezeplus","value":180,"label":"BreezePlus Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Dorm,Pets"},{"key":"fabric_rate_premacotton","value":180,"label":"PremaCotton Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Duvet,Pillow"},{"key":"fabric_rate_ecoluxe","value":180,"label":"EcoLuxe Rate (THB/yd)","category":"fabric","products":"Standard,DeepPkt,Duvet,Pillow"},{"key":"fabric_rate_tpu","value":120,"label":"TPU Rate (THB/lm)","category":"fabric","products":"Encasement,Protector,PillowProtect"},{"key":"waste_factor_fabric","value":20,"label":"Fabric Waste (%)","category":"waste","products":"Fitted,Flat,Duvet,Encase"},{"key":"waste_factor_pillowcase","value":60,"label":"Pillow Waste (%)","category":"waste","products":"Pillowcase,PillowProtect"},{"key":"waste_factor_marine_mattress","value":50,"label":"Marine Mattress Waste (%)","category":"waste","products":"MarineProtector"},{"key":"margin_rate_standard","value":30,"label":"Standard Fitted Margin","category":"margin","products":"Standard,DeepPkt,Dorm,Pets"},{"key":"margin_rate_marine","value":680,"label":"Marine V-Berth Margin","category":"margin","products":"Marine"},{"key":"margin_rate_family","value":50,"label":"Family Fitted Margin","category":"margin","products":"Family"},{"key":"margin_rate_rv_truck","value":45,"label":"RV & Truck Fitted Margin","category":"margin","products":"RV,Truck"},{"key":"margin_rate_encasement","value":50,"label":"Encasement Margin","category":"margin","products":"Encasement,RV Encase"},{"key":"encasement_mkt_rate","value":25,"label":"Encasement Marketing Rate","category":"margin","products":"Encasement,RV Encase"},{"key":"margin_rate_duvet","value":30,"label":"Duvet Cover Margin","category":"margin","products":"3-Sided,Pet,Marine,RV,Dorm"},{"key":"margin_rate_pillow","value":15,"label":"Pillowcase Margin","category":"margin","products":"Envelope,Zipper,Sham"},{"key":"margin_rate_pillow_protector","value":35,"label":"Pillow Protector Margin","category":"margin","products":"Pillow Protect"},{"key":"margin_rate_protector_standard","value":15,"label":"Protector Standard Margin","category":"margin","products":"Std,PetProof"},{"key":"margin_rate_protector_deep","value":25,"label":"Protector Deep Pocket Margin","category":"margin","products":"DeepPkt"},{"key":"margin_rate_protector_family","value":50,"label":"Protector Family Margin","category":"margin","products":"Family"},{"key":"margin_rate_protector_marine","value":15,"label":"Marine Protector Margin","category":"margin","products":"MarineProtector"},{"key":"protector_fabric_tier1_max","value":3200,"label":"Tier 1 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier1_cost","value":550,"label":"Tier 1 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier2_max","value":6620,"label":"Tier 2 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier2_cost","value":670,"label":"Tier 2 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier3_max","value":8000,"label":"Tier 3 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier3_cost","value":920,"label":"Tier 3 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier4_max","value":9000,"label":"Tier 4 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier4_cost","value":980,"label":"Tier 4 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier5_max","value":10300,"label":"Tier 5 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier5_cost","value":1100,"label":"Tier 5 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier6_max","value":11300,"label":"Tier 6 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier6_cost","value":1200,"label":"Tier 6 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier7_max","value":99999,"label":"Tier 7 — Max Area (sq.inch)","category":"protector_fabric","products":"All protectors"},{"key":"protector_fabric_tier7_cost","value":1300,"label":"Tier 7 — Fabric Cost (THB)","category":"protector_fabric","products":"All protectors"},{"key":"protector_depth_tier1_min","value":0,"label":"Tier 1 — Depth Min (cm)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier1_cost","value":0,"label":"Tier 1 — Surcharge < 30 cm (THB)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier2_min","value":30,"label":"Tier 2 — Depth Min (cm)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier2_cost","value":200,"label":"Tier 2 — Surcharge ≥ 30 cm (THB)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier3_min","value":52,"label":"Tier 3 — Depth Min (cm)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier3_cost","value":400,"label":"Tier 3 — Surcharge ≥ 52 cm (THB)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier4_min","value":57,"label":"Tier 4 — Depth Min (cm)","category":"protector_depth","products":"All protectors"},{"key":"protector_depth_tier4_cost","value":600,"label":"Tier 4 — Surcharge > 56 cm (THB)","category":"protector_depth","products":"All protectors"},{"key":"protector_packing","value":200,"label":"Protector Packing Cost (THB)","category":"fixed","products":"All protectors"},{"key":"protector_delivery","value":80,"label":"Protector Delivery Cost (THB)","category":"fixed","products":"All protectors"},{"key":"marine_sewing_cost","value":500,"label":"Marine Sewing Cost (THB)","category":"flat_sewing","products":"MarineProtector"},{"key":"sewing_tier1_cost","value":120,"label":"Fitted 3.5F (≤51,600 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier2_cost","value":200,"label":"Fitted 5,6F (≤71,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier3_cost","value":300,"label":"Fitted 8F, 6F+Ext (≤91,200 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier4_cost","value":400,"label":"Fitted 10F, 8F+Ext (≤120,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"sewing_tier5_cost","value":500,"label":"Fitted 10F+Ext (>120,000 cm²)","category":"sewing","products":"All 7 fitted sheets"},{"key":"duvet_tier1_cost","value":300,"label":"Duvet 70×90 (≤98,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier2_cost","value":400,"label":"Duvet 90×100 (≤139,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier3_cost","value":500,"label":"Duvet 110×100 (≤170,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"duvet_tier4_cost","value":600,"label":"Duvet 125×100 (>170,000 cm²)","category":"duvet_sewing","products":"5 duvet covers"},{"key":"encasement_sewing_cost","value":300,"label":"Encasement Sewing (flat)","category":"flat_sewing","products":"Encasement,RV Encase"},{"key":"flat_sewing_cost","value":250,"label":"Flat Sheet Sewing (flat)","category":"flat_sewing","products":"Flat Std,Flat Deep"},{"key":"pillow_sewing_cost","value":40,"label":"Pillowcase Sewing (per pc)","category":"flat_sewing","products":"Envelope,Zipper"},{"key":"pillow_sham_sewing_cost","value":50,"label":"Sham Sewing (per pc)","category":"flat_sewing","products":"Sham"},{"key":"packing_cost","value":100,"label":"Packing Cost","category":"fixed","products":"All products"},{"key":"delivery_cost","value":50,"label":"Delivery Cost","category":"fixed","products":"All products"},{"key":"zipper_rate","value":0.4,"label":"Zipper Rate (THB/cm)","category":"fixed","products":"Duvets,Encasement,Zipper Pillow"},{"key":"accessories_rate","value":10,"label":"Accessories Rate","category":"marketing","products":"All fitted sheets"},{"key":"ops_rate","value":15,"label":"Operations Rate","category":"operations","products":"All products"},{"key":"mkt_rate","value":20,"label":"Marketing Rate","category":"marketing","products":"All products"},{"key":"custom_quote_surcharge","value":15,"label":"Custom Quote Surcharge (%)","category":"operations","products":"All products"}];
-  if (raw) {
-    try {
-      var existing = JSON.parse(raw) || [];
-      var seen = {};
-      for (var i = 0; i < existing.length; i++) seen[existing[i].key] = true;
-      var changed = false;
-      for (var j = 0; j < def.length; j++) {
-        if (!seen[def[j].key]) { existing.push(def[j]); changed = true; }
-      }
-      if (changed) localStorage.setItem("admin_params", JSON.stringify(existing));
-      return existing;
-    } catch (_e) {}
-  }  localStorage.setItem("admin_params", JSON.stringify(def));
-  return def;
-}
-function saveParams(ps) { localStorage.setItem("admin_params", JSON.stringify(ps)); }
+var pricingParamsCache = [];
 
-function editParam(idx) {
-  var ps = getParams();
+function getParams() {
+  return Array.isArray(pricingParamsCache) ? pricingParamsCache : [];
+}
+
+function saveParams(ps) {
+  pricingParamsCache = Array.isArray(ps) ? ps.slice() : [];
+}
+
+function deriveParamProductsHint(key) {
+  if (!key) return "";
+  var tags = [];
+  if (typeof formulaParamKeys === 'object' && formulaParamKeys) {
+    Object.keys(formulaParamKeys).forEach(function(typeKey) {
+      var arr = formulaParamKeys[typeKey] || [];
+      if (arr.indexOf(key) !== -1) tags.push(typeKey);
+    });
+  }
+  return tags.join(", ");
+}
+
+async function tryRefreshPricingAuthToken() {
+  try {
+    if (window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') {
+      var fresh = await window.clerk.session.getToken({ skipCache: true });
+      if (fresh) return true;
+    }
+  } catch(e) {}
+  try {
+    if (typeof window.getClerkToken === 'function') {
+      var token = await window.getClerkToken();
+      if (token) return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+function renderPricingAuthError(message) {
+  return '<div class="card"><div class="card-body">' +
+    '<p style="color:var(--c-red);margin:0 0 10px 0"><strong>Pricing Parameters requires admin authentication.</strong></p>' +
+    '<p style="color:var(--c-muted);font-size:0.875rem;margin:0 0 12px 0">' + escHtml(message || 'Unauthorized') + '</p>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+      '<button class="btn btn-primary btn-sm" onclick="pricingSignInAndRetry()">Sign in and retry</button>' +
+      '<button class="btn btn-outline btn-sm" onclick="retryPricingParams()">Retry now</button>' +
+    '</div>' +
+  '</div></div>';
+}
+
+function retryPricingParams() {
+  pricingParamsCache = [];
+  showPage('pricing');
+}
+
+function pricingSignInAndRetry() {
+  try {
+    if (typeof signInWithClerk === 'function') {
+      signInWithClerk(window.location.href);
+      return;
+    }
+  } catch(e) {}
+  toast('Please sign in again and reopen Pricing Parameters');
+}
+
+async function loadPricingParamsFromD1(force) {
+  if (!force && Array.isArray(pricingParamsCache) && pricingParamsCache.length) return pricingParamsCache;
+  var resp = await fetch("/api/admin/pricing-params", {
+    method: "GET",
+    headers: await getAdminAuthHeaders(false)
+  });
+  if (resp.status === 401 || resp.status === 403) {
+    await tryRefreshPricingAuthToken();
+    resp = await fetch("/api/admin/pricing-params", {
+      method: "GET",
+      headers: await getAdminAuthHeaders(false)
+    });
+  }
+  if (!resp.ok) {
+    var err = new Error("Failed to load pricing params (" + resp.status + ")");
+    err.status = resp.status;
+    throw err;
+  }
+  var data = await resp.json();
+  var rows = Array.isArray(data.params) ? data.params : [];
+  pricingParamsCache = rows.map(function(r) {
+    return {
+      key: String(r.key || ""),
+      value: Number(r.value),
+      label: String(r.label || r.key || ""),
+      category: String(r.category || "fixed"),
+      products: deriveParamProductsHint(String(r.key || ""))
+    };
+  });
+  return pricingParamsCache;
+}
+async function editParam(idx) {
+  var ps = await loadPricingParamsFromD1(false);
   var p = ps[idx];
   if (!p) return;
   var pctCats = ["waste","margin","operations","marketing"];
@@ -581,30 +652,31 @@ function editParam(idx) {
   if (val === null) return;
   var num = parseFloat(val);
   if (isNaN(num)) { toast("Invalid number"); return; }
-  p.value = num;
-  saveParams(ps);
-  syncParam(p);
+
+  var ok = await syncParam({ key: p.key, value: num, label: p.label, category: p.category });
+  if (!ok) return;
+
+  await loadPricingParamsFromD1(true);
   toast("Saved: " + p.key + " = " + num + suffix);
-  document.getElementById("page-pricing").innerHTML = renderPricingParams();
+  document.getElementById("page-pricing").innerHTML = await renderPricingParams();
 }
-
-
-
 async function syncParam(p) {
   try {
-    var secret = localStorage.getItem("admin_secret") || "";
     var resp = await fetch("/api/admin/pricing-params", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Admin-Secret": secret },
+      headers: await getAdminAuthHeaders(true),
       body: JSON.stringify({ key: p.key, value: p.value, label: p.label, category: p.category })
     });
-    if (resp.ok) toast(p.key + " saved");
-    else if (resp.status === 401) toast("Set Admin Secret to save (401)");
-    else console.warn("D1 sync failed:", resp.status);
-  } catch(e) { /* offline */ }
+    if (resp.ok) return true;
+    if (resp.status === 401) toast("Set Admin Secret to save (401)");
+    else toast("Save failed: " + resp.status);
+    return false;
+  } catch(e) {
+    toast("Network error: " + (e && e.message ? e.message : e));
+    return false;
+  }
 }
-
-function renderPricingParams() {
+async function renderPricingParams() {
   var categories = {
     fabric: { label:"Fabric Rates", badge:"badge-fabric" },
     waste: { label:"Fabric Waste Factors", badge:"badge-waste" },
@@ -618,7 +690,21 @@ function renderPricingParams() {
     operations: { label:"Operations Rate", badge:"badge-ops" },
     marketing: { label:"Marketing Rate", badge:"badge-ops" }
   };
-  var sample = getParams();
+
+  var sample = [];
+  try {
+    sample = await loadPricingParamsFromD1(false);
+  } catch (e) {
+    if (e && (e.status === 401 || e.status === 403)) {
+      return renderPricingAuthError(e && e.message ? e.message : "Unauthorized");
+    }
+    return '<div class="card"><div class="card-body" style="color:var(--c-red)">Failed to load Pricing Params from D1: ' + escHtml(e && e.message ? e.message : String(e)) + '</div></div>';
+  }
+
+  if (!sample.length) {
+    return '<div class="card"><div class="card-body" style="color:var(--c-muted)">No pricing parameters found in D1.</div></div>';
+  }
+
   var catKeys = Object.keys(categories);
   var html = "";
   for(var c = 0; c < catKeys.length; c++) {
@@ -643,7 +729,6 @@ function renderPricingParams() {
         var tdata = tiers[tierNums[tn]];
         var maxVal = tdata.idxMax >= 0 ? sample[tdata.idxMax].value : '-';
         var costVal = tdata.idxCost >= 0 ? sample[tdata.idxCost].value : '-';
-        var editIdx = tdata.idxCost >= 0 ? tdata.idxCost : tdata.idxMax;
         html += "<tr><td><strong>Tier "+tierNums[tn]+"</strong></td><td>&le; "+Number(maxVal).toLocaleString()+" sq.inch</td><td><strong>"+Number(costVal).toLocaleString()+" THB</strong></td><td><span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border)\">All protectors</span></td><td style=\"white-space:nowrap\"><button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+tdata.idxMax+")\" title=\"Edit max area\">Max</button> <button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+tdata.idxCost+")\" title=\"Edit cost\">Cost</button></td></tr>";
       }
       html += "</tbody>";
@@ -663,8 +748,7 @@ function renderPricingParams() {
         var ddata = dtiers[dtierNums[dn]];
         var minVal = ddata.idxMin >= 0 ? sample[ddata.idxMin].value : '-';
         var dcostVal = ddata.idxCost >= 0 ? sample[ddata.idxCost].value : '-';
-        var deditIdx = ddata.idxCost >= 0 ? ddata.idxCost : ddata.idxMin;
-        var label = Number(minVal) === 0 ? '< 30 cm' : ('≥ ' + Number(minVal) + ' cm');
+        var label = Number(minVal) === 0 ? '< 30 cm' : ('>= ' + Number(minVal) + ' cm');
         html += "<tr><td><strong>Tier "+dtierNums[dn]+"</strong></td><td>"+label+"</td><td><strong>"+Number(dcostVal).toLocaleString()+" THB</strong></td><td><span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border)\">All protectors</span></td><td style=\"white-space:nowrap\"><button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+ddata.idxMin+")\" title=\"Edit min depth\">Min</button> <button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+ddata.idxCost+")\" title=\"Edit cost\">Cost</button></td></tr>";
       }
       html += "</tbody>";
@@ -674,9 +758,12 @@ function renderPricingParams() {
       for(var i = 0; i < sample.length; i++) {
         if (sample[i].category !== cat) continue;
         var productBadges = "";
-        if (sample[i].products) {
-          sample[i].products.split(",").forEach(function(p){
-            productBadges += "<span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap\">"+p.trim()+"</span>";
+        var productText = sample[i].products || deriveParamProductsHint(sample[i].key);
+        if (productText) {
+          productText.split(",").forEach(function(p){
+            var tag = p.trim();
+            if (!tag) return;
+            productBadges += "<span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap\">"+tag+"</span>";
           });
         }
         var pctCats = ["waste","margin","operations","marketing"];
@@ -691,6 +778,7 @@ function renderPricingParams() {
 
   return html;
 }
+
 // ── DIY Prices Page ──
 async function renderDiyPrices() {
   var html = '';
@@ -940,12 +1028,7 @@ function normalizeShippingCode(raw) {
   return '';
 }
 
-var SHIPPING_COUNTRY_FALLBACK = [
-  { code: 'TH', name: 'Thailand', is_fallback: false },
-  { code: 'US', name: 'United States', is_fallback: false },
-  { code: 'GB', name: 'United Kingdom', is_fallback: false },
-  { code: 'OTHER', name: 'Other Countries', is_fallback: true }
-];
+var SHIPPING_COUNTRY_FALLBACK = [];
 var shippingCountryOptionsCache = null;
 window._shippingServiceLevel = window._shippingServiceLevel || 'express';
 
@@ -966,7 +1049,7 @@ async function loadShippingCountryOptions() {
       return shippingCountryOptionsCache;
     }
   } catch (e) {}
-  shippingCountryOptionsCache = SHIPPING_COUNTRY_FALLBACK.slice();
+  shippingCountryOptionsCache = [];
   return shippingCountryOptionsCache;
 }
 
@@ -974,7 +1057,7 @@ function getShippingCountryName(code) {
   var normalized = normalizeShippingCode(code);
   var source = shippingCountryOptionsCache || SHIPPING_COUNTRY_FALLBACK;
   var found = source.find(function(c) { return c.code === normalized; });
-  return found ? found.name : (normalized === 'OTHER' ? 'Other Countries' : normalized);
+  return found ? found.name : (normalized || '—');
 }
 
 async function renderShippingRates() {
@@ -1299,17 +1382,7 @@ async function saveAddRate(tier) {
   }
 }
 // ── Orders (enhanced with status badges) ──
-var sampleOrders = [
-  {id:'#001',date:'2026-05-21',customer:'john@email.com',product:'Standard Fitted Sheet',dims:'153×203×30 cm',fabric:'CloudSoft',status:'pending',total:'฿1,250'},
-  {id:'#002',date:'2026-05-20',customer:'sarah@email.com',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',fabric:'CloudSoft',status:'production',total:'$94'},
-  {id:'#003',date:'2026-05-19',customer:'mike@email.com',product:'Family Fitted Sheet',dims:'250×220×35 cm',fabric:'BreezePlus',status:'shipped',total:'฿2,100'}
-];
 var orderShowArchived = false;
-
-function isProdAdminRuntime() {
-  var h = (location && location.hostname ? location.hostname : '').toLowerCase();
-  return h === 'www.mildmate.com' || h === 'mildmate.com' || h.endsWith('.pages.dev');
-}
 
 async function getAdminAuthHeaders(includeJson) {
   var headers = {};
@@ -1465,14 +1538,12 @@ function mapOrderRow(o) {
 
 async function rOrders(){
   var orders = [];
-  var fromApi = false;
   var fetchError = '';
   try {
     var resp = await fetch('/api/admin/orders?include_archived=' + (orderShowArchived ? '1' : '0'), { headers: await getAdminAuthHeaders(false) });
     if (resp.ok) {
       var data = await resp.json();
       orders = Array.isArray(data.orders) ? data.orders.map(mapOrderRow) : [];
-      fromApi = true;
     } else {
       var errData = null;
       try { errData = await resp.json(); } catch(e) {}
@@ -1482,22 +1553,16 @@ async function rOrders(){
     fetchError = e && e.message ? e.message : 'Network error';
   }
 
-  if (!fromApi) {
-    if (!isProdAdminRuntime()) {
-      orders = sampleOrders;
-    } else {
-      return '<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-red)">D1 unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Live D1 orders could not be loaded.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError || 'Unauthorized') + '</p><p style="color:var(--c-muted);font-size:0.8125rem;margin-top:8px">Sign in with an admin Clerk role or use admin secret on non-production only.</p></div></div>';
-    }
+  if (fetchError) {
+    return '<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-red)">API unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Could not load order data from D1.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError) + '</p></div></div>';
   }
 
-  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders'+(fromApi?' (D1)':' (sample)')+'</span></div><div class="card-body">';
-  if (fromApi) {
-    h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">' +
-      '<label style="display:flex;align-items:center;gap:8px;font-size:0.8125rem;color:var(--c-muted)"><input type="checkbox" ' + (orderShowArchived ? 'checked' : '') + ' onchange="toggleOrderArchivedView(this.checked)">Show archived cancelled</label>' +
-      '<span style="font-size:0.75rem;color:var(--c-muted)">Use Archive on cancelled orders instead of deleting.</span>' +
-      '</div>';
-  }
-  h += '<div class="table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Total</th><th>Tracking</th><th>Status</th>' + (fromApi ? '<th>Actions</th>' : '') + '</tr></thead><tbody>';
+  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders (D1)</span></div><div class="card-body">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:0.8125rem;color:var(--c-muted)"><input type="checkbox" ' + (orderShowArchived ? 'checked' : '') + ' onchange="toggleOrderArchivedView(this.checked)">Show archived cancelled</label>' +
+    '<span style="font-size:0.75rem;color:var(--c-muted)">Use Archive on cancelled orders instead of deleting.</span>' +
+    '</div>';
+  h += '<div class="table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Total</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
   orders.forEach(function(o){
     var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
     var trackingCell = '—';
@@ -1508,7 +1573,7 @@ async function rOrders(){
     }
     h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+escHtml(o.product)+'</td><td><strong>'+o.total+'</strong></td>';
     h+='<td style="font-size:0.75rem">'+trackingCell+'</td>';
-    if (fromApi && o.dbId) {
+    if (o.dbId) {
       h+='<td><select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+
         ['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+
         '</select></td>';
@@ -1521,12 +1586,12 @@ async function rOrders(){
         h += '<td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
       }
     } else {
-      h+='<td><span class="badge '+bc+'">'+o.status+'</span></td>';
+      h += '<td><span class="badge '+bc+'">'+o.status+'</span></td><td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
     }
     h+='</tr>';
   });
   h+='</tbody></table></div></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">'+(fromApi?'Orders loaded from D1 database.':'Sandbox sample data (non-production fallback).')+'</p>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Orders loaded from D1 database.</p>';
   return h;
 }
 
@@ -1589,9 +1654,6 @@ async function updateOrderStatus(orderId, newStatus, selectEl) {
 var quoteFilterStatus = 'all';
 
 var quoteFabricOptions = ['CloudSoft', 'BreezePlus', 'EcoLuxe', 'PremaCotton', 'Waterproof TPU', 'Other'];
-var quoteVirtualProducts = [
-  { slug: 'sample-fabric', title: 'Sample Fabric' }
-];
 
 async function fetchQuoteProducts() {
   try {
@@ -1605,13 +1667,9 @@ async function fetchQuoteProducts() {
         title: p.title_en || p.name || p.slug
       };
     }).filter(function(p){ return !!p.slug; });
-    quoteVirtualProducts.forEach(function(vp){
-      var exists = products.some(function(p){ return p.slug === vp.slug; });
-      if (!exists) products.push({ slug: vp.slug, title: vp.title });
-    });
     return products;
   } catch(e) {
-    return quoteVirtualProducts.slice();
+    return [];
   }
 }
 
@@ -2209,22 +2267,29 @@ async function revokePromo(id){
   } catch(e) { toast('Network error: ' + e.message); }
 }
 async function loadOffersFromServer(forceReload){
-  if (!forceReload && offersConfigCache) return offersConfigCache;
-  var defaults = { basketThreshold:150, stage2Enabled:true, stage2Discount:10, stage3Enabled:true, stage3Discount:10, expiryDays:60, cronHour:10, thankyou:20, thankyouHours:1 };
+  if (!forceReload && offersConfigCache) return { offers: offersConfigCache, error: '' };
   try {
     var headers = await getAdminAuthHeaders(false);
     var resp = await fetch('/api/admin/offers', { headers: headers });
-    if (!resp.ok) return defaults;
+    if (!resp.ok) {
+      var err = await resp.json().catch(function(){ return {}; });
+      return { offers: null, error: err.error || ('HTTP ' + resp.status) };
+    }
     var data = await resp.json();
-    offersConfigCache = data && data.offers ? data.offers : defaults;
-    return offersConfigCache;
+    if (!data || !data.offers) return { offers: null, error: 'Invalid offers payload' };
+    offersConfigCache = data.offers;
+    return { offers: offersConfigCache, error: '' };
   } catch(e) {
-    return defaults;
+    return { offers: null, error: e && e.message ? e.message : 'Network error' };
   }
 }
 
 async function rOffers(){
-  var offers = await loadOffersFromServer(false);
+  var loaded = await loadOffersFromServer(false);
+  if (loaded.error) {
+    return '<div class="card"><div class="card-header"><span>Automated Email Offers</span><span style="font-size:0.75rem;color:var(--c-red)">API unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Could not load marketing offer settings from D1.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(loaded.error) + '</p></div></div>';
+  }
+  var offers = loaded.offers || {};
   var h='<div class="card"><div class="card-header">Automated Email Offers</div><div class="card-body">';
 
   // 🛒 Abandoned Cart Recovery — Basket Threshold + Multi-Stage
@@ -2452,101 +2517,66 @@ function _clearPending() {
 
 async function getProducts() {
   if (_productsCache) return _productsCache;
+
+  function normalizeProducts(list) {
+    return (list || []).map(function(r) {
+      return {
+        slug: r.slug,
+        name: r.title_en || r.slug,
+        active: !!r.is_active,
+        category: r.category || "",
+        fabric: r.fabric_options || "",
+        formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
+        titleEN: r.title_en || "",
+        titleTH: r.title_th || "",
+        descEN: r.description_en || "",
+        descTH: r.description_th || "",
+        faqEN: r.faq_en || "",
+        faqTH: r.faq_th || "",
+        cardBenefitEN: r.card_benefit_en || "",
+        cardBenefitTH: r.card_benefit_th || "",
+        images: r.images || "[]",
+        imagesRaw: r.images || "[]",
+        video: r.youtube_url || "",
+        youtube_url: r.youtube_url || "",
+        tags: (r.tags||"").split(",").filter(Boolean),
+        is_active: r.is_active,
+        title_en: r.title_en,
+        title_th: r.title_th,
+        description_en: r.description_en,
+        description_th: r.description_th,
+        faq_en: r.faq_en || "",
+        faq_th: r.faq_th || "",
+        card_benefit_en: r.card_benefit_en || "",
+        card_benefit_th: r.card_benefit_th || "",
+        image_url: r.image_url || "",
+        id: r.id
+      };
+    });
+  }
+
   try {
     var adminHeaders = await getAdminAuthHeaders(false);
     var resp = await fetch("/api/admin/products", { headers: adminHeaders });
     if (resp.ok) {
-      var list = await resp.json();
-      // Normalize D1 fields for editor compatibility
-      _productsCache = list.map(function(r) {
-        return {
-          slug: r.slug,
-          name: r.title_en || r.slug,
-          active: !!r.is_active,
-          category: r.category || "",
-          fabric: r.fabric_options || "",
-          formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
-          titleEN: r.title_en || "",
-          titleTH: r.title_th || "",
-          descEN: r.description_en || "",
-          descTH: r.description_th || "",
-          faqEN: r.faq_en || "",
-          faqTH: r.faq_th || "",
-          cardBenefitEN: r.card_benefit_en || "",
-          cardBenefitTH: r.card_benefit_th || "",
-          images: r.images || "[]",
-          imagesRaw: r.images || "[]",
-          video: r.youtube_url || "",
-          youtube_url: r.youtube_url || "",
-          tags: (r.tags||"").split(",").filter(Boolean),
-          is_active: r.is_active,
-          title_en: r.title_en,
-          title_th: r.title_th,
-          description_en: r.description_en,
-          description_th: r.description_th,
-          faq_en: r.faq_en || "",
-          faq_th: r.faq_th || "",
-          card_benefit_en: r.card_benefit_en || "",
-          card_benefit_th: r.card_benefit_th || "",
-          image_url: r.image_url || "",
-          id: r.id
-        };
-      });
+      _productsCache = normalizeProducts(await resp.json());
       return _productsCache;
     }
   } catch(e) {}
-  // Fallback to public API (no auth, includes image_url)
+
   try {
     var pResp = await fetch("/api/products");
     if (pResp.ok) {
       var pJson = await pResp.json();
       var pList = pJson.products || pJson || [];
-      _productsCache = pList.map(function(r) {
-        return {
-          slug: r.slug,
-          name: r.title_en || r.slug,
-          active: !!r.is_active,
-          category: r.category || "",
-          fabric: r.fabric_options || "",
-          formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
-          titleEN: r.title_en || "",
-          titleTH: r.title_th || "",
-          descEN: r.description_en || "",
-          descTH: r.description_th || "",
-          faqEN: r.faq_en || "",
-          faqTH: r.faq_th || "",
-          cardBenefitEN: r.card_benefit_en || "",
-          cardBenefitTH: r.card_benefit_th || "",
-          images: r.images || "[]",
-          imagesRaw: r.images || "[]",
-          video: r.youtube_url || "",
-          youtube_url: r.youtube_url || "",
-          tags: (r.tags||"").split(",").filter(Boolean),
-          is_active: r.is_active,
-          title_en: r.title_en,
-          title_th: r.title_th,
-          description_en: r.description_en,
-          description_th: r.description_th,
-          faq_en: r.faq_en || "",
-          faq_th: r.faq_th || "",
-          card_benefit_en: r.card_benefit_en || "",
-          card_benefit_th: r.card_benefit_th || "",
-          image_url: r.image_url || "",
-          id: r.id
-        };
-      });
+      _productsCache = normalizeProducts(pList);
       return _productsCache;
     }
   } catch(e) {}
-  // Fallback: localStorage or seed 27-product catalog
-  var raw = localStorage.getItem("admin_products");
-  if (raw) { _productsCache = JSON.parse(raw); return _productsCache; }
-  var _seed = [{"slug":"standard-fitted-sheet","name":"Standard Fitted Sheet","active":true,"category":"sheets","fabric":"","formulaType":"fitted","titleEN":"Standard Fitted Sheet","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets"]},{"slug":"deep-pocket-fitted-sheet","name":"Deep Pocket Fitted Sheet","active":true,"category":"sheets, deep-pocket","fabric":"","formulaType":"fitted","titleEN":"Deep Pocket Fitted Sheet","titleTH":"ผ้าปูความลึกพิเศษ","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","deep-pocket"]},{"slug":"marine-fitted-sheet","name":"Marine Fitted Sheet","active":true,"category":"sheets, marine","fabric":"","formulaType":"vberth","titleEN":"Marine Fitted Sheet","titleTH":"ผ้าปูที่นอน Marine (V-Berth)","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","marine"]},{"slug":"marine-top-sheet","name":"Marine Top Sheet","active":true,"category":"sheets, marine","fabric":"","formulaType":"vberth","titleEN":"Marine Top Sheet","titleTH":"ผ้าปูบนเรือทรงสั่งตัด","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","marine"]},{"slug":"dorm-fitted-sheet","name":"Dorm Fitted Sheet","active":true,"category":"sheets, boarding-dorm","fabric":"","formulaType":"fitted","titleEN":"Dorm Fitted Sheet","titleTH":"ผ้าปูหอพัก","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","boarding-dorm"]},{"slug":"rv-truck-fitted-sheet","name":"RV & Truck Fitted Sheet","active":true,"category":"sheets, rv-truck","fabric":"","formulaType":"fitted","titleEN":"RV & Truck Fitted Sheet","titleTH":"ผ้าปูที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","rv-truck"]},{"slug":"family-fitted-sheet","name":"Family Fitted Sheet","active":true,"category":"sheets, family","fabric":"","formulaType":"fitted","titleEN":"Family Fitted Sheet","titleTH":"ผ้าปูครอบครัว Co-Sleep","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","family"]},{"slug":"pet-owner-fitted-sheet","name":"Pet Owner Fitted Sheet","active":true,"category":"sheets, pets","fabric":"","formulaType":"fitted","titleEN":"Pet Owner Fitted Sheet","titleTH":"ผ้าปูที่นอนสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","pets"]},{"slug":"flat-sheet-standard","name":"Flat Sheet — Standard","active":true,"category":"sheets","fabric":"","formulaType":"flat","titleEN":"Flat Sheet — Standard","titleTH":"ผ้าปูราบมาตรฐาน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets"]},{"slug":"flat-sheet-extra-deep-pocket","name":"Flat Sheet — Extra Deep Pocket","active":true,"category":"sheets, deep-pocket","fabric":"","formulaType":"flat","titleEN":"Flat Sheet — Extra Deep Pocket","titleTH":"ผ้าปูราบความลึกพิเศษ","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","deep-pocket"]},{"slug":"co-sleeping-top-sheet","name":"Co-Sleeping Top Sheet","active":true,"category":"sheets, family","fabric":"","formulaType":"flat","titleEN":"Co-Sleeping Top Sheet","titleTH":"ผ้าปูบน Co-Sleeping สั่งตัด","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["sheets","family"]},{"slug":"3-sided-duvet","name":"3-Sided Zipper Duvet Cover","active":true,"category":"duvet-covers, family","fabric":"","formulaType":"duvet","titleEN":"3-Sided Zipper Duvet Cover","titleTH":"ผ้าคลุมผ้าสวย 3 ด้านซิป","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","family"]},{"slug":"pet-owner-duvet-cover","name":"Pet Owner Duvet Cover","active":true,"category":"duvet-covers, pets","fabric":"","formulaType":"duvet","titleEN":"Pet Owner Duvet Cover","titleTH":"ผ้าคลุมผ้าสวยสำหรับสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","pets"]},{"slug":"duvet-cover-marine","name":"Duvet Cover — Marine","active":true,"category":"duvet-covers, marine","fabric":"","formulaType":"duvet","titleEN":"Duvet Cover — Marine","titleTH":"ผ้าคลุมผ้าสวย Marine","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","marine"]},{"slug":"duvet-cover-rv","name":"Duvet Cover — RV","active":true,"category":"duvet-covers, rv-truck","fabric":"","formulaType":"duvet","titleEN":"Duvet Cover — RV","titleTH":"ผ้าคลุมผ้าสวย RV","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","rv-truck"]},{"slug":"duvet-cover-dorm","name":"Duvet Cover — Dorm","active":true,"category":"duvet-covers, boarding-dorm","fabric":"","formulaType":"duvet","titleEN":"Duvet Cover — Dorm","titleTH":"ผ้าคลุมผ้าสวยหอพัก","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers","boarding-dorm"]},{"slug":"duvet-insert","name":"Duvet Insert","active":true,"category":"duvet-covers","fabric":"","formulaType":"fixed","titleEN":"Duvet Insert","titleTH":"ไส้ผ้านวม (Duvet Insert)","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["duvet-covers"]},{"slug":"pillowcase-envelope","name":"Envelope Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowcase","titleEN":"Envelope Pillowcase","titleTH":"ถุงหมอนแบบซอง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-zipper","name":"Zipper Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowcase","titleEN":"Zipper Pillowcase","titleTH":"ถุงหมอนซิป","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"pillowcase-sham","name":"Sham Pillowcase","active":true,"category":"pillowcases, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowcase","titleEN":"Sham Pillowcase","titleTH":"ถุงหมอน Sham","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["pillowcases","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"mattress-protector-standard","name":"Mattress Protector — Standard","active":true,"category":"protection","fabric":"","formulaType":"protector","titleEN":"Mattress Protector — Standard","titleTH":"ผ้าปูกันเปื้อนมาตรฐาน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection"]},{"slug":"mattress-protector-family","name":"Mattress Protector — Family","active":true,"category":"protection, family","fabric":"","formulaType":"protector","titleEN":"Mattress Protector — Family","titleTH":"ผ้าปูกันเปื้อนครอบครัว","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","family"]},{"slug":"mattress-protector-deep-pocket","name":"Mattress Protector — Deep Pocket","active":true,"category":"protection, deep-pocket","fabric":"","formulaType":"protector","titleEN":"Mattress Protector — Deep Pocket","titleTH":"ผ้าปูกันเปื้อนความลึกพิเศษ","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","deep-pocket"]},{"slug":"pet-proof-mattress-protector","name":"Pet-Proof Mattress Protector","active":true,"category":"protection, pets","fabric":"","formulaType":"protector","titleEN":"Pet-Proof Mattress Protector","titleTH":"ผ้าปูกันเปื้อนสัตว์เลี้ยง","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","pets"]},{"slug":"marine-mattress-protector","name":"Marine Mattress Protector","active":true,"category":"protection, marine","fabric":"","formulaType":"vberth","titleEN":"Marine Mattress Protector","titleTH":"ผ้าปูกันเปื้อน Marine","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","marine"]},{"slug":"mattress-encasement-general","name":"6-Sided Mattress Encasement","active":true,"category":"protection, marine, rv-truck","fabric":"","formulaType":"encasement","titleEN":"6-Sided Mattress Encasement","titleTH":"ผ้าห่อที่นอน 6 ด้าน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","marine","rv-truck"]},{"slug":"rv-truck-mattress-encasement","name":"RV & Truck Mattress Encasement","active":true,"category":"protection, rv-truck","fabric":"","formulaType":"encasement","titleEN":"RV & Truck Mattress Encasement","titleTH":"ผ้าห่อที่นอน RV & Truck","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","rv-truck"]},{"slug":"pillow-protector-general","name":"Pillow Protector","active":true,"category":"protection, marine, family, pets, deep-pocket, boarding-dorm, rv-truck","fabric":"","formulaType":"pillowprotector","titleEN":"Pillow Protector","titleTH":"ผ้ากันเปื้อนหมอน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["protection","marine","family","pets","deep-pocket","boarding-dorm","rv-truck"]},{"slug":"bedbridge-connector","name":"BedBridge Connector","active":true,"category":"accessories, family","fabric":"","formulaType":"fixed","titleEN":"BedBridge Connector","titleTH":"BedBridge Connector","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["accessories","family"]},{"slug":"mattress-lift-helper","name":"Easy Bed Maker & Mattress Lifter","active":true,"category":"accessories","fabric":"","formulaType":"fixed","titleEN":"Easy Bed Maker & Mattress Lifter","titleTH":"ตัวช่วยยกที่นอน","descEN":"","descTH":"","images":"[]","imagesRaw":"[]","youtube_url":"","video":"","tags":["accessories"]}];
-  _productsCache = _seed;
-  return _seed;
-}
 
-// ── Image Upload ──
+  _productsCache = [];
+  return _productsCache;
+}
 
 // ── Client-side image optimization ──
 function optimizeImage(file, maxDim) {
@@ -2830,13 +2860,6 @@ async function saveProduct() {
   var method = isNew ? "POST" : "PUT";
   var apiPath = isNew ? "/api/admin/products" : "/api/admin/products/" + slug;
 
-  if (isNew) {
-    // Save to localStorage too
-    ps.push({slug:slug, name:titleEN, active:true, category:category, product_type:category, niches:niches, fabric:fabricOptions, formulaType:formulaType,
-      titleEN:titleEN, titleTH:titleTH, descEN:descEN, descTH:descTH, faqEN:faqEN, faqTH:faqTH, images:(pImgs.length||1), video:youtube, tags:Object.keys(tagMap)});
-    saveProducts_toLocal(ps);
-  }
-
   try {
     var saveHeaders = await getAdminAuthHeaders(true);
     var resp = await fetch(apiPath, {
@@ -2870,7 +2893,7 @@ async function saveProduct() {
       _productsCache = null;
       if (isNew) {
         _newProductDraft = { images: [], hero: '', youtube: '' };
-        selectedProductIndex = ps.length - 1;
+        selectedProductIndex = -1;
         document.getElementById("page-content").innerHTML = await rProducts();
       }
     } else {
@@ -2880,13 +2903,6 @@ async function saveProduct() {
     toast("Save failed: " + e.message);
   }
 }
-function saveProducts_toLocal(ps) {
-  localStorage.setItem("admin_products", JSON.stringify(ps));
-  _productsCache = null;
-}
-
-function saveProducts(ps) { localStorage.setItem("admin_products", JSON.stringify(ps)); }
-
 var selectedProductIndex = -1;
 var _newProductDraft = { images: [], hero: '', youtube: '' };
 
@@ -3292,6 +3308,9 @@ async function rBoatModels() {
 async function rProducts(){
   _productsCache = null; // always fetch fresh from API
   var ps = await getProducts();
+  if (!ps.length) {
+    return '<div class="card"><div class="card-header"><span>Products</span><span style="font-size:0.75rem;color:var(--c-red)">API unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>No product records were returned from API.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Please verify /api/admin/products access and D1 data.</p></div></div>';
+  }
   var searchTerm = (document.getElementById('product-search')||{}).value||'';
   var catFilter = (document.getElementById('product-cat-filter')||{}).value||'';
   var pageInput = document.getElementById('product-page');
@@ -3374,17 +3393,6 @@ async function rProductsDraw(){ document.getElementById('page-content').innerHTM
 
 
 // ── Customers ──
-var sampleCustomers = [
-  {name:'John Doe',email:'john@email.com',phone:'+1 555-0101',country:'United States',address:'123 Main St, Austin TX 78701',
-    orders:[{id:'#001',date:'2026-05-21',product:'Standard Fitted Sheet',dims:'153×203×30 cm',total:'฿1,250',status:'pending'},
-            {id:'#007',date:'2026-04-10',product:'Envelope Pillowcase',dims:'50×75 cm',total:'$18',status:'shipped'}]},
-  {name:'Sarah Chen',email:'sarah@email.com',phone:'+66 812 345 678',country:'Thailand',address:'123 Sukhumvit Rd, Bangkok 10110',
-    orders:[{id:'#002',date:'2026-05-20',product:'Marine Fitted Sheet',dims:'HW:145 FW:70 L:120 D:20',total:'$94',status:'production'},
-            {id:'#006',date:'2026-03-15',product:'Duvet Cover — Marine',dims:'200×200 cm',total:'฿1,800',status:'shipped'}]},
-  {name:'Mike Ross',email:'mike@email.com',phone:'+44 7911 123456',country:'United Kingdom',address:'45 Oxford St, London W1D 2DZ',
-    orders:[{id:'#003',date:'2026-05-19',product:'Family Fitted Sheet',dims:'250×220×35 cm',total:'฿2,100',status:'shipped'}]}
-];
-
 var selectedCustomerIdx = -1;
 
 var formulaParamKeys = {
@@ -3399,12 +3407,11 @@ var formulaParamKeys = {
   fixed: ["packing_cost","delivery_cost","ops_rate","mkt_rate"]
 };
 
-// Append new product slug to matching param pill badges
 function syncBadgesForProduct(slug, fType, name) {
   var keys = formulaParamKeys[fType] || [];
   var params = getParams();
   var changed = false;
-  var tag = name.split(" ")[0]; // first word as short badge
+  var tag = name.split(" ")[0];
   params.forEach(function(p) {
     if (keys.indexOf(p.key) !== -1) {
       var existing = (p.products || "").split(",").map(function(s){ return s.trim(); });
@@ -3416,101 +3423,97 @@ function syncBadgesForProduct(slug, fType, name) {
   });
   if (changed) saveParams(params);
 }
+
 var customersData = [];
-var customersFromApi = false;
 
 function extractCountryFromAddress(address) {
   var raw = String(address || '').trim();
-  if (!raw || raw === '—') return '—';
+  if (!raw || raw === '--') return '--';
   var parts = raw.split(',').map(function(p) { return p.trim(); }).filter(Boolean);
-  if (!parts.length) return '—';
-  return parts[parts.length - 1] || '—';
+  if (!parts.length) return '--';
+  return parts[parts.length - 1] || '--';
 }
 
 async function rCustomers(){
-  if (selectedCustomerIdx >= 0) { return customersFromApi ? rCustomerDetailLive(selectedCustomerIdx) : rCustomerDetail(selectedCustomerIdx); }
+  if (selectedCustomerIdx >= 0) return rCustomerDetailLive(selectedCustomerIdx);
 
   customersData = [];
-  customersFromApi = false;
   var fetchError = '';
-
   try {
     var resp = await fetch('/api/admin/customers', { headers: await getAdminAuthHeaders(false) });
-    if (resp.ok) {
-      var data = await resp.json();
-      if (Array.isArray(data.customers) && data.customers.length > 0) {
-        customersData = data.customers.map(function(c, i) {
-          var totalStr = '';
-          if (c.total_thb > 0) { totalStr = (totalStr ? totalStr + ' / ' : '') + '\u0E3F' + Number(c.total_thb).toLocaleString(); }
-          if (c.total_usd > 0) { totalStr = (totalStr ? totalStr + ' / ' : '') + '$' + Number(c.total_usd); }
-          return {
-            _idx: i,
-            name: c.customer_name || (c.email ? c.email.split('@')[0] : '\u2014'),
-            email: c.email || '\u2014',
-            phone: c.phone || '\u2014',
-            country: extractCountryFromAddress(c.shipping_address),
-            address: c.shipping_address || '\u2014',
-            orderCount: c.order_count,
-            totalThb: c.total_thb,
-            totalUsd: c.total_usd,
-            totalStr: totalStr || '\u2014',
-            lastCurrency: c.last_currency,
-            lastOrder: c.last_order,
-            firstOrder: c.first_order
-          };
-        });
-        customersFromApi = true;
-      }
-    } else {
+    if (!resp.ok) {
       var errData = null;
       try { errData = await resp.json(); } catch(e) {}
       fetchError = (errData && errData.error) ? errData.error : ('HTTP ' + resp.status);
+    } else {
+      var data = await resp.json();
+      customersData = (Array.isArray(data.customers) ? data.customers : []).map(function(c, i) {
+        var totalStr = '';
+        if (c.total_thb > 0) totalStr += 'THB ' + Number(c.total_thb).toLocaleString();
+        if (c.total_usd > 0) totalStr += (totalStr ? ' / ' : '') + 'USD ' + Number(c.total_usd);
+        return {
+          _idx: i,
+          name: c.customer_name || (c.email ? c.email.split('@')[0] : '--'),
+          email: c.email || '--',
+          phone: c.phone || '--',
+          country: extractCountryFromAddress(c.shipping_address),
+          address: c.shipping_address || '--',
+          orderCount: Number(c.order_count || 0),
+          totalStr: totalStr || '--',
+          firstOrder: c.first_order
+        };
+      });
     }
   } catch(e) {
     fetchError = e && e.message ? e.message : 'Network error';
   }
 
-  if (!customersFromApi) {
-    if (!isProdAdminRuntime()) {
-      customersData = sampleCustomers;
-    } else {
-      return '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-red)">D1 unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Live D1 customers could not be loaded.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError || 'Unauthorized') + '</p><p style="color:var(--c-muted);font-size:0.8125rem;margin-top:8px">Sign in with an admin Clerk role or use admin secret on non-production only.</p></div></div>';
-    }
+  if (fetchError) {
+    return '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-red)">API unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Could not load customer data from D1.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError) + '</p></div></div>';
   }
 
-  var totalOrders = customersFromApi ? customersData.reduce(function(s,c){return s + c.orderCount;}, 0) : customersData.reduce(function(s,c){return s + (c.orders ? c.orders.length : 0);}, 0);
+  var totalOrders = customersData.reduce(function(s,c){ return s + c.orderCount; }, 0);
   var countryMap = {};
   customersData.forEach(function(c){
     var country = String(c.country || '').trim();
-    if (country && country !== '—') countryMap[country.toLowerCase()] = 1;
+    if (country && country !== '--') countryMap[country.toLowerCase()] = 1;
   });
   var countryCount = Object.keys(countryMap).length;
 
-  var h='<div class="stats-grid"><div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">'+customersData.length+'</div><div class="stat-sub">'+(customersFromApi ? 'Loaded from D1' : 'Sandbox sample')+'</div></div>'+
+  var h='<div class="stats-grid"><div class="stat-card"><div class="stat-label">Total Customers</div><div class="stat-value">'+customersData.length+'</div><div class="stat-sub">Loaded from D1</div></div>'+
     '<div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">'+totalOrders+'</div><div class="stat-sub">Across all customers</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Countries</div><div class="stat-value">'+(countryCount || '\u2014')+'</div><div class="stat-sub">'+(customersFromApi ? 'From latest shipping address' : 'International reach')+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value">\u2014</div><div class="stat-sub">'+(customersFromApi ? 'Per-customer totals' : 'Estimated USD')+'</div></div></div>'+
-    '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-muted)">' + (customersFromApi ? 'D1' : 'Sample') + ' \u2014 Click row to see detail</span></div><div class="card-body"><table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Orders</th><th></th></tr></thead><tbody>';
+    '<div class="stat-card"><div class="stat-label">Countries</div><div class="stat-value">'+(countryCount || '--')+'</div><div class="stat-sub">From latest shipping address</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value">--</div><div class="stat-sub">Per-customer totals</div></div></div>'+
+    '<div class="card"><div class="card-header"><span>Customers</span><span style="font-size:0.75rem;color:var(--c-muted)">D1 data - Click row to see detail</span></div><div class="card-body">';
 
-  customersData.forEach(function(c, i){
-    var orderCount = customersFromApi ? c.orderCount : (c.orders ? c.orders.length : 0);
-    h+='<tr style="cursor:pointer" onclick="selectedCustomerIdx='+i+';rCustomersDraw()"><td><strong>'+escHtml(c.name||'\u2014')+'</strong></td><td>'+escHtml(c.email||'\u2014')+'</td><td>'+escHtml(c.country||'\u2014')+'</td><td>'+orderCount+'</td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();selectedCustomerIdx='+i+';rCustomersDraw()">View</button></td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">'+(customersFromApi ? 'Customers loaded from D1 orders table (grouped by email).' : 'Customer view \u2014 name, address, order history, order status. Sandbox \u2014 no live data.')+'</p>';
+  if (!customersData.length) {
+    h += '<p style="color:var(--c-muted);text-align:center;padding:24px 0">No customers found in D1.</p>';
+  } else {
+    h += '<table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Orders</th><th></th></tr></thead><tbody>';
+    customersData.forEach(function(c, i){
+      h+='<tr style="cursor:pointer" onclick="selectedCustomerIdx='+i+';rCustomersDraw()"><td><strong>'+escHtml(c.name||'--')+'</strong></td><td>'+escHtml(c.email||'--')+'</td><td>'+escHtml(c.country||'--')+'</td><td>'+c.orderCount+'</td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();selectedCustomerIdx='+i+';rCustomersDraw()">View</button></td></tr>';
+    });
+    h+='</tbody></table>';
+  }
+  h += '</div></div>';
+  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Customers loaded from D1 orders table (grouped by email).</p>';
   return h;
 }
 
 async function rCustomerDetailLive(idx) {
   var c = customersData[idx];
   if (!c) return '<p>Customer not found.</p>';
-  var h = '<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCustomerIdx=-1;rCustomersDraw()">\u2190 Back to Customers</button>'+
+  var h = '<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCustomerIdx=-1;rCustomersDraw()">Back to Customers</button>'+
     '<div class="card"><div class="card-header">'+escHtml(c.name||c.email)+'</div><div class="card-body">'+
-    '<div class="form-row"><div class="form-group"><label>Name</label><input value="'+escHtml(c.name||'\u2014')+'" readonly style="background:var(--c-surface)"></div>'+
-    '<div class="form-group"><label>Email</label><input value="'+escHtml(c.email||'\u2014')+'" readonly style="background:var(--c-surface)"></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Phone</label><input value="'+escHtml(c.phone||'\u2014')+'" readonly style="background:var(--c-surface)"></div>'+
-    '<div class="form-group"><label>First Order</label><input value="'+(c.firstOrder||'\u2014').substring(0,10)+'" readonly style="background:var(--c-surface)"></div></div>'+
-    '<div class="form-group"><label>Address</label><textarea rows="2" readonly style="background:var(--c-surface)">'+escHtml(c.address||'\u2014')+'</textarea></div></div></div>';
+    '<div class="form-row"><div class="form-group"><label>Name</label><input value="'+escHtml(c.name||'--')+'" readonly style="background:var(--c-surface)"></div>'+
+    '<div class="form-group"><label>Email</label><input value="'+escHtml(c.email||'--')+'" readonly style="background:var(--c-surface)"></div></div>'+
+    '<div class="form-row"><div class="form-group"><label>Phone</label><input value="'+escHtml(c.phone||'--')+'" readonly style="background:var(--c-surface)"></div>'+
+    '<div class="form-group"><label>First Order</label><input value="'+(c.firstOrder||'--').substring(0,10)+'" readonly style="background:var(--c-surface)"></div></div>'+
+    '<div class="form-group"><label>Address</label><textarea rows="2" readonly style="background:var(--c-surface)">'+escHtml(c.address||'--')+'</textarea></div></div></div>';
+
+  if (!c.email || c.email === '--') {
+    return h + '<div class="card" style="margin-top:16px"><div class="card-header">Order History</div><div class="card-body"><p style="color:var(--c-muted)">No customer email available for order lookup.</p></div></div>';
+  }
 
   var fetchError = '';
   var orders = [];
@@ -3537,10 +3540,10 @@ async function rCustomerDetailLive(idx) {
     h += '<table><thead><tr><th>ID</th><th>Date</th><th>Product</th><th>Dimensions</th><th>Total</th><th>Status</th></tr></thead><tbody>';
     orders.forEach(function(o){
       var dims = [];
-      if (o.width_cm && o.length_cm) { dims.push(o.width_cm+'\u00D7'+o.length_cm); if(o.depth_cm) dims.push(o.depth_cm+' cm'); }
-      var price = o.price_thb ? '\u0E3F'+Number(o.price_thb).toLocaleString() : (o.price_usd ? '$'+Number(o.price_usd) : '\u2014');
+      if (o.width_cm && o.length_cm) { dims.push(o.width_cm+' x '+o.length_cm); if(o.depth_cm) dims.push(o.depth_cm+' cm'); }
+      var price = o.price_thb ? ('THB '+Number(o.price_thb).toLocaleString()) : (o.price_usd ? ('USD '+Number(o.price_usd)) : '--');
       var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
-      h+='<tr><td>#ORD-'+o.id+'</td><td>'+(o.created_at||'').substring(0,10)+'</td><td>'+escHtml(o.product_title_en||o.product_slug||'\u2014')+'</td><td style="font-size:0.8125rem">'+(dims.join(' \u00D7 ')||'\u2014')+'</td><td><strong>'+price+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
+      h+='<tr><td>#ORD-'+o.id+'</td><td>'+(o.created_at||'').substring(0,10)+'</td><td>'+escHtml(o.product_title_en||o.product_slug||'--')+'</td><td style="font-size:0.8125rem">'+(dims.join(' x ')||'--')+'</td><td><strong>'+price+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
     });
     h += '</tbody></table>';
   }
@@ -3550,57 +3553,59 @@ async function rCustomerDetailLive(idx) {
 
 async function rCustomersDraw(){document.getElementById('page-content').innerHTML=await rCustomers();}
 
-function rCustomerDetail(idx){
-  var c=sampleCustomers[idx];
-  var h='<button class="btn btn-outline btn-sm" style="margin-bottom:16px" onclick="selectedCustomerIdx=-1;rCustomersDraw()">← Back to Customers</button>'+
-    '<div class="card"><div class="card-header">'+c.name+'</div><div class="card-body">'+
-    '<div class="form-row"><div class="form-group"><label>Name</label><input value="'+c.name+'" readonly style="background:var(--c-surface)"></div>'+
-    '<div class="form-group"><label>Email</label><input value="'+c.email+'" readonly style="background:var(--c-surface)"></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Phone</label><input value="'+c.phone+'" readonly style="background:var(--c-surface)"></div>'+
-    '<div class="form-group"><label>Country</label><input value="'+c.country+'" readonly style="background:var(--c-surface)"></div></div>'+
-    '<div class="form-group"><label>Address</label><textarea rows="2" readonly style="background:var(--c-surface)">'+c.address+'</textarea></div></div></div>'+
-    '<div class="card"><div class="card-header">Order History ('+c.orders.length+' orders)</div><div class="card-body"><table><thead><tr><th>ID</th><th>Date</th><th>Product</th><th>Dimensions</th><th>Total</th><th>Status</th></tr></thead><tbody>';
-  c.orders.forEach(function(o){
-    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled'}[o.status];
-    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+o.product+'</td><td style="font-size:0.8125rem">'+o.dims+'</td><td><strong>'+o.total+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  return h;
+// Admin Accounts
+var accountsCache = null;
+
+function formatAdminDate(v){
+  var s = String(v || '').trim();
+  if (!s) return '--';
+  return s.replace('T', ' ').substring(0, 16);
 }
 
-// ── Admin Accounts ──
-var ACCOUNTS_KEY = 'mildmate_admin_accounts';
-
-function getAdminAccounts(){
-  try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]'); } catch(e) { return []; }
+async function loadAdminAccounts(forceReload){
+  if (!forceReload && accountsCache) return { accounts: accountsCache, error: '' };
+  try {
+    var resp = await fetch('/api/admin/accounts', { headers: await getAdminAuthHeaders(false) });
+    if (!resp.ok) {
+      var errData = null;
+      try { errData = await resp.json(); } catch(e) {}
+      return { accounts: [], error: (errData && errData.error) ? errData.error : ('HTTP ' + resp.status) };
+    }
+    var data = await resp.json();
+    accountsCache = Array.isArray(data.accounts) ? data.accounts : [];
+    return { accounts: accountsCache, error: '' };
+  } catch(e) {
+    return { accounts: [], error: e && e.message ? e.message : 'Network error' };
+  }
 }
 
-function saveAdminAccounts(list){
-  try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(list)); } catch(e) {}
-}
-
-function rAccounts(){
-  var accounts = getAdminAccounts();
-  if(accounts.length===0){
-    // seed defaults
-    accounts = [
-      {email:'super@mildmate.com',password:'admin123',role:'Super Admin',lastActive:'—',createdAt:'2026-05-21'},
-      {email:'admin@mildmate.com',password:'admin456',role:'Admin',lastActive:'—',createdAt:'2026-05-22'}
-    ];
-    saveAdminAccounts(accounts);
+async function rAccounts(){
+  var loaded = await loadAdminAccounts(false);
+  if (loaded.error) {
+    return '<div class="card"><div class="card-header"><span>Admin Accounts</span><span style="font-size:0.75rem;color:var(--c-red)">API unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Could not load admin accounts from D1.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(loaded.error) + '</p></div></div>';
   }
 
-  var h='<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat-card"><div class="stat-label">Total Admins</div><div class="stat-value">'+accounts.length+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Super Admins</div><div class="stat-value">'+accounts.filter(function(a){return a.role==='Super Admin';}).length+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Regular Admins</div><div class="stat-value">'+accounts.filter(function(a){return a.role==='Admin';}).length+'</div></div></div>'+
-    '<div class="card"><div class="card-header"><span>Admin Accounts</span><button class="btn btn-primary btn-sm" onclick="showAddAccountForm()">+ Add Admin</button></div><div class="card-body"><table><thead><tr><th>Email</th><th>Role</th><th>Password</th><th>Created</th><th>Last Active</th><th></th></tr></thead><tbody>';
+  var accounts = loaded.accounts || [];
+  var superCount = accounts.filter(function(a){ return a.role === 'Super Admin'; }).length;
+  var adminCount = accounts.filter(function(a){ return a.role === 'Admin'; }).length;
 
-  accounts.forEach(function(a,i){
-    h+='<tr><td><strong>'+a.email+'</strong></td><td><span class="badge '+(a.role==='Super Admin'?'badge-margin':'badge-sewing')+'">'+a.role+'</span></td><td style="font-family:monospace;font-size:0.75rem">••••••••</td><td>'+a.createdAt+'</td><td>'+a.lastActive+'</td>'+
-      '<td><button class="btn btn-sm btn-outline" onclick="deleteAccount('+i+')" style="color:var(--c-red)">'+(accounts.length<=1?'':'Delete')+'</button></td></tr>';
-  });
-  h+='</tbody></table></div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Manage admin accounts. Super Admin can add/delete. In production, authentication is via Cloudflare Access (Google login). Sandbox — localStorage.</p>';
+  var h='<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat-card"><div class="stat-label">Total Admins</div><div class="stat-value">'+accounts.length+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Super Admins</div><div class="stat-value">'+superCount+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Regular Admins</div><div class="stat-value">'+adminCount+'</div></div></div>'+
+    '<div class="card"><div class="card-header"><span>Admin Accounts</span><button class="btn btn-primary btn-sm" onclick="showAddAccountForm()">+ Add Admin</button></div><div class="card-body">';
+
+  if (!accounts.length) {
+    h += '<p style="color:var(--c-muted);text-align:center;padding:20px">No admin accounts found in D1.</p>';
+  } else {
+    h += '<table><thead><tr><th>Email</th><th>Role</th><th>Created</th><th>Last Active</th><th></th></tr></thead><tbody>';
+    accounts.forEach(function(a){
+      h+='<tr><td><strong>'+escHtml(a.email||'--')+'</strong></td><td><span class="badge '+(a.role==='Super Admin'?'badge-margin':'badge-sewing')+'">'+escHtml(a.role||'Admin')+'</span></td><td>'+escHtml(formatAdminDate(a.created_at))+'</td><td>'+escHtml(formatAdminDate(a.last_active))+'</td>'+
+        '<td><button class="btn btn-sm btn-outline" onclick="deleteAccount('+JSON.stringify(String(a.email || ''))+')" style="color:var(--c-red)">'+(accounts.length<=1?'':'Delete')+'</button></td></tr>';
+    });
+    h += '</tbody></table>';
+  }
+  h += '</div></div>';
+  h += '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Admin accounts are loaded from D1 via /api/admin/accounts.</p>';
   return h;
 }
 
@@ -3613,43 +3618,53 @@ function showAddAccountForm(){
   div.innerHTML='<div class="card"><div class="card-header">Add Admin Account</div><div class="card-body">'+
     '<div class="form-row"><div class="form-group"><label>Email *</label><input id="acct-email" type="email" placeholder="admin@mildmate.com"></div>'+
     '<div class="form-group"><label>Role</label><select id="acct-role"><option>Admin</option><option>Super Admin</option></select></div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Password *</label><input id="acct-password" type="password" placeholder="Min 6 characters"></div>'+
-    '<div class="form-group"><label>Confirm Password *</label><input id="acct-confirm" type="password" placeholder="Re-enter password"></div></div>'+
-    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Password stored locally for local preview only. Production uses Cloudflare Access Gmail OAuth — no passwords stored.</p>'+
     '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="addAccount()">Add Admin</button>'+
     '<button class="btn btn-outline" onclick="document.getElementById(\'add-account-form\').remove()">Cancel</button></div></div></div>';
   var content=document.getElementById('page-content');
   content.insertBefore(div, content.firstChild);
 }
 
-function addAccount(){
-  var email=document.getElementById('acct-email').value.trim();
-  var role=document.getElementById('acct-role').value;
-  var pw=document.getElementById('acct-password').value;
-  var confirm=document.getElementById('acct-confirm').value;
-  if(!email||!pw){toast('Fill all fields');return;}
-  if(!email.includes('@')){toast('Invalid email');return;}
-  if(pw.length<6){toast('Password must be 6+ characters');return;}
-  if(pw!==confirm){toast('Passwords do not match');return;}
-  var accounts=getAdminAccounts();
-  if(accounts.some(function(a){return a.email===email;})){toast('Email already exists');return;}
-  accounts.push({email:email,role:role,password:pw,lastActive:'—',createdAt:new Date().toISOString().split('T')[0]});
-  saveAdminAccounts(accounts);
-  toast('Admin added: '+email);
-  document.getElementById('page-content').innerHTML=rAccounts();
+async function addAccount(){
+  var email = ((document.getElementById('acct-email') || {}).value || '').trim().toLowerCase();
+  var role = ((document.getElementById('acct-role') || {}).value || 'Admin').trim();
+  if(!email || !email.includes('@')){ toast('Invalid email'); return; }
+  if(role !== 'Admin' && role !== 'Super Admin'){ toast('Role must be Admin or Super Admin'); return; }
+
+  try {
+    var resp = await fetch('/api/admin/accounts', {
+      method: 'POST',
+      headers: await getAdminAuthHeaders(true),
+      body: JSON.stringify({ email: email, role: role })
+    });
+    var data = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) { toast(data.error || ('Failed: HTTP ' + resp.status)); return; }
+    accountsCache = null;
+    toast('Admin saved: ' + email);
+    document.getElementById('page-content').innerHTML = await rAccounts();
+  } catch(e) {
+    toast('Network error: ' + e.message);
+  }
 }
 
-function deleteAccount(index){
-  var accounts=getAdminAccounts();
-  if(accounts.length<=1){toast('Cannot delete last admin account');return;}
-  var name=accounts[index].email;
-  accounts.splice(index,1);
-  saveAdminAccounts(accounts);
-  toast('Deleted: '+name);
-  document.getElementById('page-content').innerHTML=rAccounts();
+async function deleteAccount(email){
+  if (!email) return;
+  if (!confirm('Delete admin account "' + email + '"?')) return;
+  try {
+    var resp = await fetch('/api/admin/accounts?email=' + encodeURIComponent(email), {
+      method: 'DELETE',
+      headers: await getAdminAuthHeaders(false)
+    });
+    var data = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) { toast(data.error || ('Failed: HTTP ' + resp.status)); return; }
+    accountsCache = null;
+    toast('Deleted: ' + email);
+    document.getElementById('page-content').innerHTML = await rAccounts();
+  } catch(e) {
+    toast('Network error: ' + e.message);
+  }
 }
 
-// ── Init ──
+// Init
 showPage('dashboard');
 
 // ── Rich Text Toolbar ──
@@ -3697,4 +3712,5 @@ function updateToolbarState(editor) {
 <script src="../js/admin-content-modules.js"></script>
 </body>
 </html>
+
 
