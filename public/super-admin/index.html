@@ -3209,6 +3209,7 @@ function getBoatModelPayloadFromForm() {
   var modelKey = ((document.getElementById('bm-model-key') || {}).value || '').trim();
   var modelYear = Number(((document.getElementById('bm-model-year') || {}).value || '').trim());
   var priceUsd = Number(((document.getElementById('bm-price-usd') || {}).value || '').trim());
+  var modelLabel = (modelName && modelYear) ? (modelName + ' - ' + modelYear) : modelName;
   var shapeCode = ((document.getElementById('bm-shape-code') || {}).value || '').trim();
   var notes = ((document.getElementById('bm-notes') || {}).value || '').trim();
   var dimensionsRaw = ((document.getElementById('bm-dimensions-json') || {}).value || '').trim();
@@ -3218,6 +3219,7 @@ function getBoatModelPayloadFromForm() {
   return {
     id: _editingBoatModelId || undefined,
     model_name: modelName,
+    model_label: modelLabel,
     model_key: modelKey,
     model_year: modelYear,
     price_usd: priceUsd,
@@ -3339,15 +3341,15 @@ async function rBoatModels() {
   if (!rows.length) {
     h += '<p style="color:var(--c-muted);text-align:center;padding:28px 0">No boat models yet.</p>';
   } else {
-    h += '<div class="table-wrap"><table><thead><tr><th>Model</th><th>Year</th><th>Price</th><th>Shape</th><th>Dimensions</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
+    h += '<div class="table-wrap"><table><thead><tr><th>Model - Year</th><th>Price</th><th>Shape</th><th>Dimensions</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
     rows.forEach(function(row) {
       var dims = {};
       try { dims = JSON.parse(row.dimensions_json || '{}'); } catch (e) {}
       var dimPairs = Object.keys(dims).slice(0, 6).map(function(k) { return k + ':' + dims[k]; }).join(', ');
       var extra = Object.keys(dims).length > 6 ? '…' : '';
+      var modelLabel = row.model_label || (row.model_year ? ((row.model_name || '') + ' - ' + row.model_year) : (row.model_name || ''));
       h += '<tr>' +
-             '<td><strong>' + escHtml(row.model_name || '') + '</strong><br><span style="font-size:0.72rem;color:var(--c-muted)">' + escHtml(row.model_key || '') + '</span></td>' +
-             '<td>' + escHtml(row.model_year == null ? '—' : String(row.model_year)) + '</td>' +
+             '<td><strong>' + escHtml(modelLabel || row.model_name || '') + '</strong><br><span style="font-size:0.72rem;color:var(--c-muted)">' + escHtml(row.model_key || '') + '</span></td>' +
              '<td>' + (row.sale_price_usd == null ? '—' : ('$' + Number(row.sale_price_usd).toFixed(2))) + '</td>' +
              '<td>' + escHtml(row.shape_code || '—') + '</td>' +
              '<td><span style="font-family:monospace;font-size:0.75rem">' + escHtml(dimPairs + extra) + '</span></td>' +

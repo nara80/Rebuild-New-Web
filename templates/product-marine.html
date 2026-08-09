@@ -732,7 +732,7 @@
         updateBoatModelMeta(activeBoatModel);
         updatePrice();
         if(activeBoatModel){
-          setBoatModelStatus('Using fixed price for ' + activeBoatModel.model_name + '.', false);
+          setBoatModelStatus('Using fixed price for ' + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
         } else {
           setBoatModelStatus('No model selected. Use manual configurator below.', false);
         }
@@ -748,10 +748,9 @@
             var opts = ['<option value="">Select boat model (optional)</option>'];
             rows.forEach(function(m){
               var key = String(m.model_key || '');
-              var name = String(m.model_name || key);
-              var year = m.model_year ? String(m.model_year) : '—';
+              var label = String(m.model_label || m.model_name || key);
               var price = m.price_usd ? ('$' + Number(m.price_usd).toFixed(2)) : '—';
-              opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + name.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + year + ' — ' + price + '</option>');
+              opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + price + '</option>');
             });
             boatModelSelect.innerHTML = opts.join('');
             updateBoatModelMeta(null);
@@ -2066,7 +2065,7 @@
             areaCm2: null,
             values: {},
             detailsList: [
-              'Model: ' + (activeBoatModel.model_name || activeBoatModel.model_key || ''),
+              'Model: ' + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key || ''),
               'Year: ' + (activeBoatModel.model_year || '—'),
               'Price: $' + Number(activeBoatModel.price_usd).toFixed(2) + ' USD'
             ]
@@ -2205,14 +2204,14 @@
               product_slug: productSlug,
               dimensions: (quoteData.source === 'boat_model')
                 ? {
-                    boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
+                    boat_model_name: activeBoatModel ? (activeBoatModel.model_label || activeBoatModel.model_name) : undefined,
                     boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined
                   }
                 : {
                     unit: 'cm',
                     shape_code: quoteData.shapeCode,
                     shape_name: quoteData.shapeName,
-                    boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
+                    boat_model_name: activeBoatModel ? (activeBoatModel.model_label || activeBoatModel.model_name) : undefined,
                     boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined,
                     area_cm2: quoteData.areaCm2,
                     values: quoteData.values
@@ -2242,7 +2241,7 @@
             if(confirmDetails){
               if(quoteData.source === 'boat_model'){
                 confirmDetails.innerHTML =
-                  '<strong>Boat Model:</strong> ' + escHtml(activeBoatModel ? activeBoatModel.model_name : 'â€”') + '<br>' +
+                  '<strong>Boat Model:</strong> ' + escHtml(activeBoatModel ? (activeBoatModel.model_label || activeBoatModel.model_name) : 'â€”') + '<br>' +
                   '<strong>Year:</strong> ' + escHtml(activeBoatModel && activeBoatModel.model_year ? String(activeBoatModel.model_year) : 'â€”') + '<br>' +
                   '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
                   '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || 'â€”') + '<br>' +

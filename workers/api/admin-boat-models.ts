@@ -69,6 +69,7 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
     CREATE TABLE IF NOT EXISTS boat_models (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       model_key TEXT NOT NULL UNIQUE,
+      model_label TEXT,
       model_name TEXT NOT NULL,
       model_year INTEGER,
       sale_price_usd REAL,
@@ -80,6 +81,7 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
+  await ensureBoatModelsColumn(env, "model_label", "TEXT");
   await ensureBoatModelsColumn(env, "model_year", "INTEGER");
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
@@ -122,9 +124,9 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
 
   if (request.method === "GET") {
     const rows = await env.DB.prepare(
-      `SELECT id, model_key, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, is_active, updated_at
+      `SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, is_active, updated_at
        FROM boat_models
-       ORDER BY model_name ASC, model_year ASC, updated_at DESC, id DESC`
+       ORDER BY model_label ASC, model_name ASC, model_year ASC, updated_at DESC, id DESC`
     ).all() as any;
     return new Response(JSON.stringify({ models: rows.results || [] }), { headers });
   }
@@ -152,9 +154,11 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
     const priceUsd = Number(body.price_usd);
     const isActive = body.is_active === 0 || body.is_active === false ? 0 : 1;
     const dimensions = sanitizeDimensions(body.dimensions || {});
-    const modelKey = normalizeModelKey(body.model_key || `${modelName} ${modelYear || ""}`);
+    const modelLabel = String(body.model_label || `${modelName} - ${modelYear || ""}`).trim();
+    const modelKey = normalizeModelKey(body.model_key || modelLabel);
 
     if (!modelName) return new Response(JSON.stringify({ error: "model_name is required" }), { status: 400, headers });
+    if (!modelLabel) return new Response(JSON.stringify({ error: "model_label is required" }), { status: 400, headers });
     if (!modelKey) return new Response(JSON.stringify({ error: "model_key is required" }), { status: 400, headers });
     if (!Number.isFinite(modelYear) || modelYear < 1900 || modelYear > 2100) {
       return new Response(JSON.stringify({ error: "model_year must be between 1900 and 2100" }), { status: 400, headers });
@@ -173,9 +177,9 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
     if (id > 0) {
       await env.DB.prepare(
         `UPDATE boat_models
-         SET model_key = ?1, model_name = ?2, model_year = ?3, sale_price_usd = ?4, shape_code = ?5, dimensions_json = ?6, notes = ?7, is_active = ?8, updated_at = datetime('now')
-         WHERE id = ?9`
-      ).bind(modelKey, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, isActive, id).run();
+         SET model_key = ?1, model_label = ?2, model_name = ?3, model_year = ?4, sale_price_usd = ?5, shape_code = ?6, dimensions_json = ?7, notes = ?8, is_active = ?9, updated_at = datetime('now')
+         WHERE id = ?10`
+      ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, isActive, id).run();
       return new Response(JSON.stringify({ success: true, id }), { headers });
     }
 
@@ -185,9 +189,9 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
     }
 
     const insert = await env.DB.prepare(
-      `INSERT INTO boat_models (model_key, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, is_active, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, datetime('now'))`
-    ).bind(modelKey, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, isActive).run();
+      `INSERT INTO boat_models (model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, is_active, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, datetime('now'))`
+    ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, isActive).run();
     return new Response(JSON.stringify({ success: true, id: insert.meta?.last_row_id || null }), { headers });
   }
 

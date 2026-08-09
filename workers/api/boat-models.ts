@@ -1,6 +1,7 @@
 type BoatModelRow = {
   id: number;
   model_key: string;
+  model_label?: string | null;
   model_name: string;
   model_year?: number | null;
   sale_price_usd?: number | null;
@@ -22,6 +23,7 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
     CREATE TABLE IF NOT EXISTS boat_models (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       model_key TEXT NOT NULL UNIQUE,
+      model_label TEXT,
       model_name TEXT NOT NULL,
       model_year INTEGER,
       sale_price_usd REAL,
@@ -33,6 +35,7 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
+  await ensureBoatModelsColumn(env, "model_label", "TEXT");
   await ensureBoatModelsColumn(env, "model_year", "INTEGER");
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
@@ -57,7 +60,7 @@ export async function handleBoatModels(request: Request, env: any): Promise<Resp
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
 
     let sql = `
-      SELECT id, model_key, model_name, model_year, sale_price_usd, shape_code, updated_at
+      SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, updated_at
       FROM boat_models
       WHERE is_active = 1
         AND model_year IS NOT NULL
@@ -66,16 +69,17 @@ export async function handleBoatModels(request: Request, env: any): Promise<Resp
     `;
     let stmt: any;
     if (q) {
-      sql += " AND (lower(model_name) LIKE ?1 OR lower(model_key) LIKE ?1 OR CAST(model_year AS TEXT) LIKE ?1) ORDER BY model_name ASC, model_year ASC LIMIT ?2";
+      sql += " AND (lower(model_label) LIKE ?1 OR lower(model_name) LIKE ?1 OR lower(model_key) LIKE ?1 OR CAST(model_year AS TEXT) LIKE ?1) ORDER BY model_label ASC, model_name ASC, model_year ASC LIMIT ?2";
       stmt = env.DB.prepare(sql).bind(`%${q}%`, limit);
     } else {
-      sql += " ORDER BY model_name ASC, model_year ASC LIMIT ?1";
+      sql += " ORDER BY model_label ASC, model_name ASC, model_year ASC LIMIT ?1";
       stmt = env.DB.prepare(sql).bind(limit);
     }
     const rows = await stmt.all() as any;
     const models = (rows.results || []).map((r: BoatModelRow) => ({
       id: r.id,
       model_key: r.model_key,
+      model_label: (r.model_label && String(r.model_label).trim()) || `${r.model_name || ""}${r.model_year ? " - " + r.model_year : ""}`.trim(),
       model_name: r.model_name,
       model_year: r.model_year == null ? null : Number(r.model_year),
       price_usd: r.sale_price_usd == null ? null : Math.round(Number(r.sale_price_usd) * 100) / 100,
