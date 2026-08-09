@@ -2606,20 +2606,11 @@ async function isClerkAdmin(request, env) {
   try {
     const authHeader = request.headers.get("Authorization") || "";
     const hasBearer = authHeader.startsWith("Bearer ");
-    const token = hasBearer ? authHeader.slice(7).trim() : getClerkSessionToken(request);
-    if (!token) return false;
-    const verifyReq = new Request(request.url, {
-      method: request.method,
-      headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
-        Authorization: `Bearer ${token}`
-      })
-    });
-    const verified = await verifyClerkJwt(verifyReq, env);
+    if (!hasBearer) return false;
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return false;
     const raw = verified.payload.raw || {};
-    const email = String(verified.payload.email || "").trim().toLowerCase();
-    if (hasAdminRole(raw) || emailAllowed(email, env)) return true;
+    if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) return true;
     const sub = String(verified.payload.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (!sub || !clerkKey) return false;
@@ -2644,26 +2635,53 @@ async function isClerkAdmin(request, env) {
   }
 }
 __name(isClerkAdmin, "isClerkAdmin");
-async function handleAdminPricingParams(request, env) {
+function isProductionHost(hostname) {
+  if (!hostname) return false;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+  if (hostname.endsWith(".local")) return false;
+  return hostname === "www.mildmate.com" || hostname === "mildmate.com";
+}
+__name(isProductionHost, "isProductionHost");
+async function authorizeAdmin(request, env) {
+  const clerkOk = await isClerkAdmin(request, env);
+  if (clerkOk) return { ok: true };
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
   const host = new URL(request.url).hostname;
-  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-  if (!isDev) {
-    const clerkOk = await isClerkAdmin(request, env);
-    if (!clerkOk) {
-      const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-      const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-      if (!provided) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { "Content-Type": "application/json" }
-        });
-      }
-      if (configured && provided !== configured) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { "Content-Type": "application/json" }
-        });
-      }
+  const prodHost = isProductionHost(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configuredSecret) return { ok: true };
+  if (providedSecret === configuredSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin, "authorizeAdmin");
+async function handleAdminPricingParams(request, env) {
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (request.method === "GET") {
+    try {
+      const { results } = await env.DB.prepare(
+        "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
+      ).all();
+      return new Response(JSON.stringify({ params: results || [] }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message || "Failed to load pricing params" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
   if (request.method === "POST" || request.method === "PUT") {
