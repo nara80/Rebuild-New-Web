@@ -586,12 +586,27 @@ async function tryRefreshPricingAuthToken() {
 }
 
 function renderPricingAuthError(message) {
+  var handshakeHint = '';
+  try {
+    if (window.location && String(window.location.search || '').indexOf('__clerk_db_jwt=') >= 0) {
+      handshakeHint = '<p style="color:var(--c-muted);font-size:0.75rem;margin:0 0 10px 0">Sign-in handshake detected. If this keeps looping, use Admin Secret fallback below.</p>';
+    }
+  } catch(e) {}
+  var savedSecret = '';
+  try { savedSecret = localStorage.getItem('admin_secret') || ''; } catch(e) {}
   return '<div class="card"><div class="card-body">' +
     '<p style="color:var(--c-red);margin:0 0 10px 0"><strong>Pricing Parameters requires admin authentication.</strong></p>' +
     '<p style="color:var(--c-muted);font-size:0.875rem;margin:0 0 12px 0">' + escHtml(message || 'Unauthorized') + '</p>' +
+    handshakeHint +
     '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
       '<button class="btn btn-primary btn-sm" onclick="pricingSignInAndRetry()">Sign in and retry</button>' +
       '<button class="btn btn-outline btn-sm" onclick="retryPricingParams()">Retry now</button>' +
+    '</div><div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--c-border)">' +
+      '<div style="font-size:0.75rem;color:var(--c-muted);margin-bottom:8px">Admin Secret fallback</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+        '<input id="pricing-admin-secret" type="password" placeholder="Enter admin secret" value="' + escHtml(savedSecret) + '" style="min-width:220px;flex:1;padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;font-size:0.8125rem">' +
+        '<button class="btn btn-outline btn-sm" onclick="savePricingAdminSecretAndRetry()">Save secret and retry</button>' +
+      '</div>' +
     '</div>' +
   '</div></div>';
 }
@@ -601,7 +616,19 @@ function retryPricingParams() {
   showPage('pricing');
 }
 
-function pricingSignInAndRetry() {
+async function pricingSignInAndRetry() {
+  var hasToken = await tryRefreshPricingAuthToken();
+  if (hasToken) {
+    retryPricingParams();
+    return;
+  }
+  try {
+    if (window.location && String(window.location.search || '').indexOf('__clerk_db_jwt=') >= 0) {
+      toast('Finishing sign-in session... retrying');
+      setTimeout(function(){ retryPricingParams(); }, 1200);
+      return;
+    }
+  } catch(e) {}
   try {
     if (typeof signInWithClerk === 'function') {
       signInWithClerk(window.location.href);
@@ -609,6 +636,20 @@ function pricingSignInAndRetry() {
     }
   } catch(e) {}
   toast('Please sign in again and reopen Pricing Parameters');
+}
+
+function savePricingAdminSecretAndRetry() {
+  var el = document.getElementById('pricing-admin-secret');
+  var secret = el ? String(el.value || '').trim() : '';
+  if (!secret) {
+    toast('Admin secret is required');
+    return;
+  }
+  try {
+    localStorage.setItem('admin_secret', secret);
+    ADMIN_SECRET = secret;
+  } catch(e) {}
+  retryPricingParams();
 }
 
 async function loadPricingParamsFromD1(force) {
