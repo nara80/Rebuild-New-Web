@@ -96,14 +96,14 @@ async function isClerkAdmin(request: Request, env: any): Promise<boolean> {
   }
 }
 
-function isProductionHost(hostname: string): boolean {
+function isProductionHostPricing(hostname: string): boolean {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 
-async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+async function authorizeAdminPricing(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
   const clerkOk = await isClerkAdmin(request, env);
   if (clerkOk) return { ok: true };
 
@@ -114,7 +114,7 @@ async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } 
   }
 
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost(host);
+  const prodHost = isProductionHostPricing(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -126,7 +126,7 @@ async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } 
 }
 
 export async function handleAdminPricingParams(request: Request, env: any): Promise<Response> {
-  const auth = await authorizeAdmin(request, env);
+  const auth = await authorizeAdminPricing(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,

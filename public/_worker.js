@@ -2635,14 +2635,14 @@ async function isClerkAdmin(request, env) {
   }
 }
 __name(isClerkAdmin, "isClerkAdmin");
-function isProductionHost(hostname) {
+function isProductionHostPricing(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost, "isProductionHost");
-async function authorizeAdmin(request, env) {
+__name(isProductionHostPricing, "isProductionHostPricing");
+async function authorizeAdminPricing(request, env) {
   const clerkOk = await isClerkAdmin(request, env);
   if (clerkOk) return { ok: true };
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
@@ -2651,7 +2651,7 @@ async function authorizeAdmin(request, env) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost(host);
+  const prodHost = isProductionHostPricing(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -2660,9 +2660,9 @@ async function authorizeAdmin(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin, "authorizeAdmin");
+__name(authorizeAdminPricing, "authorizeAdminPricing");
 async function handleAdminPricingParams(request, env) {
-  const auth = await authorizeAdmin(request, env);
+  const auth = await authorizeAdminPricing(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
