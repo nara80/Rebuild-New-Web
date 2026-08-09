@@ -717,12 +717,19 @@
         return null;
       }
 
+      function getBoatModelAdjustedUsd(model){
+        var base = model && model.price_usd ? Number(model.price_usd) : 0;
+        if(!isFinite(base) || base <= 0) return 0;
+        var adjusted = isMarineProtector ? (base * 1.2) : base;
+        return Math.round(adjusted * 100) / 100;
+      }
+
       function updateBoatModelMeta(model){
         if(boatModelYear){
           boatModelYear.textContent = 'Year: ' + (model && model.model_year ? model.model_year : '—');
         }
         if(boatModelPrice){
-          var p = model && model.price_usd ? Number(model.price_usd) : 0;
+          var p = getBoatModelAdjustedUsd(model);
           boatModelPrice.textContent = p > 0 ? ('Price: $' + p.toFixed(2) + ' USD') : 'Price: —';
         }
       }
@@ -749,7 +756,8 @@
             rows.forEach(function(m){
               var key = String(m.model_key || '');
               var label = String(m.model_label || m.model_name || key);
-              var price = m.price_usd ? ('$' + Number(m.price_usd).toFixed(2)) : '—';
+              var adjustedUsd = getBoatModelAdjustedUsd(m);
+              var price = adjustedUsd > 0 ? ('$' + adjustedUsd.toFixed(2)) : '—';
               opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + price + '</option>');
             });
             boatModelSelect.innerHTML = opts.join('');
@@ -1394,8 +1402,9 @@
       function updatePrice(){
         var code = shapeSelect.value;
         var warningEl = document.getElementById('area-warning');
-        if(activeBoatModel && Number(activeBoatModel.price_usd) > 0){
-          var fixedUsd = Math.round(Number(activeBoatModel.price_usd) * 100) / 100;
+        var fixedModelUsd = getBoatModelAdjustedUsd(activeBoatModel);
+        if(activeBoatModel && fixedModelUsd > 0){
+          var fixedUsd = fixedModelUsd;
           var fixedThb = Math.round(fixedUsd * THB_PER_USD);
           var fixedDisplay = formatBoatModelPrice(fixedUsd);
           customPrice.textContent = fixedDisplay;
@@ -2057,7 +2066,8 @@
         return d.innerHTML;
       }
       function collectMarineQuoteData(){
-        if(activeBoatModel && Number(activeBoatModel.price_usd) > 0){
+        var boatModelUsd = getBoatModelAdjustedUsd(activeBoatModel);
+        if(activeBoatModel && boatModelUsd > 0){
           return {
             source: 'boat_model',
             shapeCode: activeBoatModel.shape_code || '',
@@ -2067,7 +2077,7 @@
             detailsList: [
               'Model: ' + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key || ''),
               'Year: ' + (activeBoatModel.model_year || '—'),
-              'Price: $' + Number(activeBoatModel.price_usd).toFixed(2) + ' USD'
+              'Price: $' + boatModelUsd.toFixed(2) + ' USD'
             ]
           };
         }
