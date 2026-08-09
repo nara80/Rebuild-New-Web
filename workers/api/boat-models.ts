@@ -2,12 +2,20 @@ type BoatModelRow = {
   id: number;
   model_key: string;
   model_name: string;
+  model_year?: number | null;
+  sale_price_usd?: number | null;
   shape_code: string;
-  dimensions_json: string;
-  notes?: string | null;
-  is_active: number;
   updated_at?: string | null;
 };
+
+async function ensureBoatModelsColumn(env: any, name: string, def: string): Promise<void> {
+  try {
+    await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
+  } catch (e: any) {
+    const msg = String(e?.message || "").toLowerCase();
+    if (!msg.includes("duplicate column")) throw e;
+  }
+}
 
 async function ensureBoatModelsTable(env: any): Promise<void> {
   await env.DB.prepare(`
@@ -15,6 +23,8 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       model_key TEXT NOT NULL UNIQUE,
       model_name TEXT NOT NULL,
+      model_year INTEGER,
+      sale_price_usd REAL,
       shape_code TEXT NOT NULL,
       dimensions_json TEXT NOT NULL,
       notes TEXT,
@@ -23,22 +33,8 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
-}
-
-function parseDimensions(raw: string): Record<string, number> {
-  try {
-    const parsed = JSON.parse(raw || "{}");
-    if (!parsed || typeof parsed !== "object") return {};
-    const out: Record<string, number> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      const n = Number(v);
-      if (!Number.isFinite(n) || n <= 0) continue;
-      out[String(k).toUpperCase()] = Math.round(n * 100) / 100;
-    }
-    return out;
-  } catch {
-    return {};
-  }
+  await ensureBoatModelsColumn(env, "model_year", "INTEGER");
+  await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
 
 export async function handleBoatModels(request: Request, env: any): Promise<Response> {
@@ -61,16 +57,19 @@ export async function handleBoatModels(request: Request, env: any): Promise<Resp
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
 
     let sql = `
-      SELECT id, model_key, model_name, shape_code, dimensions_json, notes, is_active, updated_at
+      SELECT id, model_key, model_name, model_year, sale_price_usd, shape_code, updated_at
       FROM boat_models
       WHERE is_active = 1
+        AND model_year IS NOT NULL
+        AND sale_price_usd IS NOT NULL
+        AND sale_price_usd > 0
     `;
     let stmt: any;
     if (q) {
-      sql += " AND (lower(model_name) LIKE ?1 OR lower(model_key) LIKE ?1) ORDER BY model_name ASC LIMIT ?2";
+      sql += " AND (lower(model_name) LIKE ?1 OR lower(model_key) LIKE ?1 OR CAST(model_year AS TEXT) LIKE ?1) ORDER BY model_name ASC, model_year ASC LIMIT ?2";
       stmt = env.DB.prepare(sql).bind(`%${q}%`, limit);
     } else {
-      sql += " ORDER BY model_name ASC LIMIT ?1";
+      sql += " ORDER BY model_name ASC, model_year ASC LIMIT ?1";
       stmt = env.DB.prepare(sql).bind(limit);
     }
     const rows = await stmt.all() as any;
@@ -78,9 +77,9 @@ export async function handleBoatModels(request: Request, env: any): Promise<Resp
       id: r.id,
       model_key: r.model_key,
       model_name: r.model_name,
+      model_year: r.model_year == null ? null : Number(r.model_year),
+      price_usd: r.sale_price_usd == null ? null : Math.round(Number(r.sale_price_usd) * 100) / 100,
       shape_code: r.shape_code,
-      dimensions: parseDimensions(r.dimensions_json),
-      notes: r.notes || "",
       updated_at: r.updated_at || null,
     }));
     return new Response(JSON.stringify({ models }), { headers });

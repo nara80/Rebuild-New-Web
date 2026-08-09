@@ -305,13 +305,15 @@
               <option value=""> â€” Select a shape â€” </option>
             </select>
             <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
-              <label class="panel-label" for="boat-model-input" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Auto-fill dimensions</label>
-              <input id="boat-model-input" list="boat-model-list" class="shape-select" placeholder="Type boat model (e.g. 2007 Meridian 391 Sedan)">
-              <datalist id="boat-model-list"></datalist>
-              <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-                <button type="button" class="shape-estimate-btn" id="boat-model-apply-btn">Use this model</button>
-                <span id="boat-model-status" style="font-size:0.75rem;color:#64748b"></span>
+              <label class="panel-label" for="boat-model-select" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Choose fixed-price option</label>
+              <select id="boat-model-select" class="shape-select">
+                <option value="">Select boat model (optional)</option>
+              </select>
+              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px">
+                <span id="boat-model-year" style="font-size:0.75rem;color:#475569">Year: â€”</span>
+                <span id="boat-model-price" style="font-size:0.75rem;color:#1d4ed8;font-weight:700">Price: â€”</span>
               </div>
+              <div style="margin-top:4px"><span id="boat-model-status" style="font-size:0.75rem;color:#64748b"></span></div>
             </div>
           </div>
           <!-- Schematic Diagram -->
@@ -690,18 +692,14 @@
       var priceTopSub = document.getElementById('price-top-sub');
       var unitWarningNote = document.getElementById('unit-warning-note');
       var addToCartBtn = document.getElementById('add-to-cart');
-      var boatModelInput = document.getElementById('boat-model-input');
-      var boatModelList = document.getElementById('boat-model-list');
-      var boatModelApplyBtn = document.getElementById('boat-model-apply-btn');
+      var boatModelSelect = document.getElementById('boat-model-select');
       var boatModelStatus = document.getElementById('boat-model-status');
+      var boatModelYear = document.getElementById('boat-model-year');
+      var boatModelPrice = document.getElementById('boat-model-price');
       var currentQuotePriceThb = 0;
       var currentQuotePriceUsd = 0;
       var boatModels = [];
       var activeBoatModel = null;
-
-      function normalizeModelText(v){
-        return String(v || '').trim().toLowerCase().replace(/[_\s-]+/g, ' ').trim();
-      }
 
       function setBoatModelStatus(text, isError){
         if(!boatModelStatus) return;
@@ -709,56 +707,54 @@
         boatModelStatus.style.color = isError ? '#b91c1c' : '#64748b';
       }
 
-      function findBoatModelByInput(value){
-        var needle = normalizeModelText(value);
+      function findBoatModelByKey(key){
+        var needle = String(key || '').trim().toLowerCase();
         if(!needle) return null;
         for(var i=0;i<boatModels.length;i++){
           var m = boatModels[i];
-          var byName = normalizeModelText(m.model_name);
-          var byKey = normalizeModelText(String(m.model_key || '').replace(/_/g, ' '));
-          if(needle === byName || needle === byKey) return m;
+          if(String(m.model_key || '').trim().toLowerCase() === needle) return m;
         }
         return null;
       }
 
-      function fillDimensionsFromModel(model){
-        if(!model || !model.dimensions) return;
-        Object.keys(model.dimensions).forEach(function(k){
-          var el = document.getElementById('dim-' + String(k).toUpperCase());
-          if(!el) return;
-          var n = Number(model.dimensions[k]);
-          if(!isFinite(n) || n <= 0) return;
-          if(currentUnit === 'in') el.value = (n / 2.54).toFixed(1);
-          else el.value = Math.round(n * 100) / 100;
-        });
+      function updateBoatModelMeta(model){
+        if(boatModelYear){
+          boatModelYear.textContent = 'Year: ' + (model && model.model_year ? model.model_year : '—');
+        }
+        if(boatModelPrice){
+          var p = model && model.price_usd ? Number(model.price_usd) : 0;
+          boatModelPrice.textContent = p > 0 ? ('Price: $' + p.toFixed(2) + ' USD') : 'Price: —';
+        }
       }
 
       function applyBoatModel(model){
-        if(!model) return;
-        if(!shapeFields[model.shape_code]){
-          setBoatModelStatus('Model shape is not supported on this page yet.', true);
-          return;
-        }
-        shapeSelect.value = model.shape_code;
-        shapeSelect.dispatchEvent(new Event('change'));
-        fillDimensionsFromModel(model);
-        autoComputeShape10();
+        activeBoatModel = model || null;
+        updateBoatModelMeta(activeBoatModel);
         updatePrice();
-        activeBoatModel = model;
-        setBoatModelStatus('Applied: ' + (model.model_name || model.model_key), false);
+        if(activeBoatModel){
+          setBoatModelStatus('Using fixed price for ' + activeBoatModel.model_name + '.', false);
+        } else {
+          setBoatModelStatus('No model selected. Use manual configurator below.', false);
+        }
       }
 
       function loadBoatModels(){
-        if(!boatModelList) return;
+        if(!boatModelSelect) return;
         fetch('/api/boat-models')
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(payload){
             var rows = payload && Array.isArray(payload.models) ? payload.models : [];
             boatModels = rows;
-            boatModelList.innerHTML = rows.map(function(m){
-              var label = m.model_name || m.model_key || '';
-              return '<option value="' + String(label).replace(/"/g, '&quot;') + '"></option>';
-            }).join('');
+            var opts = ['<option value="">Select boat model (optional)</option>'];
+            rows.forEach(function(m){
+              var key = String(m.model_key || '');
+              var name = String(m.model_name || key);
+              var year = m.model_year ? String(m.model_year) : '—';
+              var price = m.price_usd ? ('$' + Number(m.price_usd).toFixed(2)) : '—';
+              opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + name.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + year + ' — ' + price + '</option>');
+            });
+            boatModelSelect.innerHTML = opts.join('');
+            updateBoatModelMeta(null);
             setBoatModelStatus(rows.length ? (rows.length + ' boat models available') : 'No saved boat models yet', false);
           })
           .catch(function(){
@@ -775,20 +771,10 @@
         shapeSelect.appendChild(opt);
       });
 
-      if(boatModelApplyBtn){
-        boatModelApplyBtn.addEventListener('click', function(){
-          var model = findBoatModelByInput(boatModelInput && boatModelInput.value);
-          if(!model){
-            setBoatModelStatus('Model not found. Please pick from suggestions.', true);
-            return;
-          }
+      if(boatModelSelect){
+        boatModelSelect.addEventListener('change', function(){
+          var model = findBoatModelByKey(boatModelSelect.value);
           applyBoatModel(model);
-        });
-      }
-      if(boatModelInput){
-        boatModelInput.addEventListener('change', function(){
-          var model = findBoatModelByInput(boatModelInput.value);
-          if(model) setBoatModelStatus('Found model. Click "Use this model".', false);
         });
       }
 
@@ -1396,10 +1382,34 @@
         var usd = Math.round(priceThb / THB_PER_USD);
         return '$' + usd.toLocaleString();
       }
+      function formatBoatModelPrice(usd){
+        var n = Number(usd || 0);
+        if(!isFinite(n) || n <= 0) return ' â€” ';
+        var isThai = document.documentElement.lang === 'th';
+        if(isThai){
+          return 'à¸¿' + Math.round(n * THB_PER_USD).toLocaleString();
+        }
+        return '$' + n.toFixed(2);
+      }
 
       function updatePrice(){
         var code = shapeSelect.value;
         var warningEl = document.getElementById('area-warning');
+        if(activeBoatModel && Number(activeBoatModel.price_usd) > 0){
+          var fixedUsd = Math.round(Number(activeBoatModel.price_usd) * 100) / 100;
+          var fixedThb = Math.round(fixedUsd * THB_PER_USD);
+          var fixedDisplay = formatBoatModelPrice(fixedUsd);
+          customPrice.textContent = fixedDisplay;
+          priceDisplay.textContent = fixedDisplay;
+          priceDisplayTop.textContent = fixedDisplay;
+          priceTopSub.textContent = 'Fixed price for selected boat model';
+          currentQuotePriceUsd = fixedUsd;
+          currentQuotePriceThb = fixedThb;
+          renderPriceBreakdown(null);
+          addToCartBtn.disabled = false;
+          if(warningEl) warningEl.style.display = 'none';
+          return;
+        }
         if(!code || shapeFields[code] === undefined){
           customPrice.textContent = ' â€” ';
           priceDisplay.textContent = ' â€” ';
@@ -2048,6 +2058,20 @@
         return d.innerHTML;
       }
       function collectMarineQuoteData(){
+        if(activeBoatModel && Number(activeBoatModel.price_usd) > 0){
+          return {
+            source: 'boat_model',
+            shapeCode: activeBoatModel.shape_code || '',
+            shapeName: 'Boat Model Price',
+            areaCm2: null,
+            values: {},
+            detailsList: [
+              'Model: ' + (activeBoatModel.model_name || activeBoatModel.model_key || ''),
+              'Year: ' + (activeBoatModel.model_year || '—'),
+              'Price: $' + Number(activeBoatModel.price_usd).toFixed(2) + ' USD'
+            ]
+          };
+        }
         var code = shapeSelect.value;
         if(!code) return null;
         var shape = shapes.find(function(s){ return s.code === code; });
@@ -2116,7 +2140,7 @@
         var data = collectMarineQuoteData();
         if(!data){
           updatePrice();
-          alert('Please complete valid dimensions before requesting a quote.');
+          alert('Please choose a boat model or complete valid dimensions before requesting a quote.');
           return;
         }
         if(quoteOverlay){
@@ -2155,7 +2179,7 @@
           var quoteData = collectMarineQuoteData();
           if(!quoteData){
             valid = false;
-            alert('Please complete valid dimensions before submitting the quote.');
+            alert('Please choose a boat model or complete valid dimensions before submitting the quote.');
           }
           var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
           if (!turnstileToken) {
@@ -2179,15 +2203,20 @@
               address: (document.getElementById('qf-address') || {}).value || undefined,
               telephone: (document.getElementById('qf-phone') || {}).value || undefined,
               product_slug: productSlug,
-              dimensions: {
-                unit: 'cm',
-                shape_code: quoteData.shapeCode,
-                shape_name: quoteData.shapeName,
-                boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
-                boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined,
-                area_cm2: quoteData.areaCm2,
-                values: quoteData.values
-              },
+              dimensions: (quoteData.source === 'boat_model')
+                ? {
+                    boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
+                    boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined
+                  }
+                : {
+                    unit: 'cm',
+                    shape_code: quoteData.shapeCode,
+                    shape_name: quoteData.shapeName,
+                    boat_model_name: activeBoatModel ? activeBoatModel.model_name : undefined,
+                    boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined,
+                    area_cm2: quoteData.areaCm2,
+                    values: quoteData.values
+                  },
               fabric: quoteFabricKey,
               color: getSelectedMarineColor() || undefined,
               quoted_price_thb: currentQuotePriceThb || undefined,
@@ -2211,14 +2240,23 @@
             var confirmDetails = document.getElementById('confirm-details');
             if(confirmText) confirmText.innerHTML = 'We\'ll email <strong>' + escHtml(email) + '</strong> within 24 hours.';
             if(confirmDetails){
-              confirmDetails.innerHTML =
-                '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
-                '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
-                '<strong>Area:</strong> ' + quoteData.areaCm2.toLocaleString() + ' cmÂ²<br>' +
-                '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
-                '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || 'â€”') + '<br>' +
-                (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
-                '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || 'â€”');
+              if(quoteData.source === 'boat_model'){
+                confirmDetails.innerHTML =
+                  '<strong>Boat Model:</strong> ' + escHtml(activeBoatModel ? activeBoatModel.model_name : 'â€”') + '<br>' +
+                  '<strong>Year:</strong> ' + escHtml(activeBoatModel && activeBoatModel.model_year ? String(activeBoatModel.model_year) : 'â€”') + '<br>' +
+                  '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
+                  '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || 'â€”') + '<br>' +
+                  (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
+                  '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || 'â€”');
+              } else {
+                confirmDetails.innerHTML =
+                  '<strong>Shape:</strong> ' + escHtml(quoteData.shapeCode + '. ' + quoteData.shapeName) + '<br>' +
+                  '<strong>Dimensions:</strong> ' + escHtml(quoteData.detailsList.join(', ')) + '<br>' +
+                  '<strong>Fabric:</strong> ' + escHtml(quoteFabricLabel) + '<br>' +
+                  '<strong>Color:</strong> ' + escHtml(getSelectedMarineColor() || 'â€”') + '<br>' +
+                  (currentQuotePriceUsd ? '<strong>Price:</strong> $' + Number(currentQuotePriceUsd).toFixed(2) + ' USD<br>' : '') +
+                  '<strong>Quote ID:</strong> ' + escHtml(data.quote_id || 'â€”');
+              }
             }
             if(confirmOverlay) confirmOverlay.classList.add('open');
           })

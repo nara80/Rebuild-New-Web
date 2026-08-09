@@ -3207,6 +3207,8 @@ function boatModelShapeOptions(selected) {
 function getBoatModelPayloadFromForm() {
   var modelName = ((document.getElementById('bm-model-name') || {}).value || '').trim();
   var modelKey = ((document.getElementById('bm-model-key') || {}).value || '').trim();
+  var modelYear = Number(((document.getElementById('bm-model-year') || {}).value || '').trim());
+  var priceUsd = Number(((document.getElementById('bm-price-usd') || {}).value || '').trim());
   var shapeCode = ((document.getElementById('bm-shape-code') || {}).value || '').trim();
   var notes = ((document.getElementById('bm-notes') || {}).value || '').trim();
   var dimensionsRaw = ((document.getElementById('bm-dimensions-json') || {}).value || '').trim();
@@ -3217,6 +3219,8 @@ function getBoatModelPayloadFromForm() {
     id: _editingBoatModelId || undefined,
     model_name: modelName,
     model_key: modelKey,
+    model_year: modelYear,
+    price_usd: priceUsd,
     shape_code: shapeCode,
     notes: notes,
     is_active: isActive ? 1 : 0,
@@ -3228,6 +3232,8 @@ function resetBoatModelForm() {
   _editingBoatModelId = 0;
   var n = document.getElementById('bm-model-name'); if (n) n.value = '';
   var k = document.getElementById('bm-model-key'); if (k) k.value = '';
+  var y = document.getElementById('bm-model-year'); if (y) y.value = '';
+  var p = document.getElementById('bm-price-usd'); if (p) p.value = '';
   var s = document.getElementById('bm-shape-code'); if (s) s.value = '';
   var d = document.getElementById('bm-dimensions-json'); if (d) d.value = '';
   var t = document.getElementById('bm-notes'); if (t) t.value = '';
@@ -3242,6 +3248,8 @@ function editBoatModel(id) {
   _editingBoatModelId = Number(item.id || 0);
   var n = document.getElementById('bm-model-name'); if (n) n.value = item.model_name || '';
   var k = document.getElementById('bm-model-key'); if (k) k.value = item.model_key || '';
+  var y = document.getElementById('bm-model-year'); if (y) y.value = (item.model_year == null ? '' : String(item.model_year));
+  var p = document.getElementById('bm-price-usd'); if (p) p.value = (item.sale_price_usd == null ? '' : String(item.sale_price_usd));
   var s = document.getElementById('bm-shape-code'); if (s) s.value = item.shape_code || '';
   var d = document.getElementById('bm-dimensions-json'); if (d) d.value = item.dimensions_json || '';
   var t = document.getElementById('bm-notes'); if (t) t.value = item.notes || '';
@@ -3272,6 +3280,8 @@ async function saveBoatModel() {
   try {
     var payload = getBoatModelPayloadFromForm();
     if (!payload.model_name) { toast('Model name is required'); return; }
+    if (!payload.model_year || payload.model_year < 1900 || payload.model_year > 2100) { toast('Year must be between 1900 and 2100'); return; }
+    if (!payload.price_usd || payload.price_usd <= 0) { toast('Price (USD) must be greater than 0'); return; }
     if (!payload.shape_code) { toast('Shape code is required'); return; }
     if (!payload.dimensions || Object.keys(payload.dimensions).length === 0) { toast('Dimensions JSON is required'); return; }
 
@@ -3313,6 +3323,10 @@ async function rBoatModels() {
          '<div class="form-group"><label>Model Key (optional)</label><input id="bm-model-key" placeholder="e.g. 2007_meridian_391_sedan"></div>' +
        '</div>';
   h += '<div class="form-row">' +
+         '<div class="form-group"><label>Year</label><input id="bm-model-year" type="number" min="1900" max="2100" step="1" placeholder="e.g. 2007"></div>' +
+         '<div class="form-group"><label>Price (USD)</label><input id="bm-price-usd" type="number" min="0" step="0.01" placeholder="e.g. 180"></div>' +
+       '</div>';
+  h += '<div class="form-row">' +
          '<div class="form-group"><label>Shape Code</label><select id="bm-shape-code">' + boatModelShapeOptions('') + '</select></div>' +
          '<div class="form-group"><label>Active</label><label style="display:flex;align-items:center;gap:8px;height:40px"><input id="bm-is-active" type="checkbox" checked> Available on product page</label></div>' +
        '</div>';
@@ -3325,7 +3339,7 @@ async function rBoatModels() {
   if (!rows.length) {
     h += '<p style="color:var(--c-muted);text-align:center;padding:28px 0">No boat models yet.</p>';
   } else {
-    h += '<div class="table-wrap"><table><thead><tr><th>Model</th><th>Shape</th><th>Dimensions</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
+    h += '<div class="table-wrap"><table><thead><tr><th>Model</th><th>Year</th><th>Price</th><th>Shape</th><th>Dimensions</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
     rows.forEach(function(row) {
       var dims = {};
       try { dims = JSON.parse(row.dimensions_json || '{}'); } catch (e) {}
@@ -3333,6 +3347,8 @@ async function rBoatModels() {
       var extra = Object.keys(dims).length > 6 ? '…' : '';
       h += '<tr>' +
              '<td><strong>' + escHtml(row.model_name || '') + '</strong><br><span style="font-size:0.72rem;color:var(--c-muted)">' + escHtml(row.model_key || '') + '</span></td>' +
+             '<td>' + escHtml(row.model_year == null ? '—' : String(row.model_year)) + '</td>' +
+             '<td>' + (row.sale_price_usd == null ? '—' : ('$' + Number(row.sale_price_usd).toFixed(2))) + '</td>' +
              '<td>' + escHtml(row.shape_code || '—') + '</td>' +
              '<td><span style="font-family:monospace;font-size:0.75rem">' + escHtml(dimPairs + extra) + '</span></td>' +
              '<td>' + (Number(row.is_active) === 1 ? '<span class="badge badge-shipped">Active</span>' : '<span class="badge badge-cancelled">Inactive</span>') + '</td>' +
@@ -3442,7 +3458,7 @@ var formulaParamKeys = {
   duvet: ["waste_factor_fabric","margin_rate_duvet","packing_cost","delivery_cost","zipper_rate","ops_rate","mkt_rate"],
   pillowcase: ["waste_factor_pillowcase","margin_rate_pillow","pillow_sewing_cost","packing_cost","delivery_cost","ops_rate","mkt_rate"],
   pillow_protector: ["waste_factor_pillowcase","margin_rate_pillow_protector","packing_cost","delivery_cost","ops_rate","mkt_rate"],
-  encasement: ["waste_factor_fabric","margin_rate_encasement","encasement_mkt_rate","encasement_sewing_cost","packing_cost","delivery_cost","zipper_rate","ops_rate"],
+  encasement: ["waste_factor_fabric","margin_rate_encasement","encasement_sewing_cost","packing_cost","delivery_cost","zipper_rate","ops_rate","mkt_rate"],
   protector: ["margin_rate_protector_standard","margin_rate_protector_marine","waste_factor_marine_mattress","marine_sewing_cost","protector_packing","protector_delivery","ops_rate","mkt_rate"],
   vberth: ["waste_factor_fabric","margin_rate_marine","accessories_rate","packing_cost","delivery_cost","ops_rate","mkt_rate"],
   fixed: ["packing_cost","delivery_cost","ops_rate","mkt_rate"]
