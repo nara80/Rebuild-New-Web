@@ -566,8 +566,8 @@ function buildFixedContentHTML(slug, p) {
     
     // Overview
     html += '<div style="margin-bottom:40px;">';
-    html += '<h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Split Mattresses? Sleep on a Seamless New Bed.</h2>';
-    html += '<p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">The MildMate BedBridge Connector is the ultimate solution for bridging the uncomfortable gap between two split mattresses (such as two Twin XL or Double beds). It instantly transforms separate beds into one large, seamless sleeping surface. Perfect for couples with different mattress preferences, families who co-sleep, or guest room conversions.</p>';
+    html += '<h2 style="font-size:1.8rem; margin-bottom:12px; color:var(--color-heading);">Turn Two Mattresses Into One Smoother Joined Bed</h2>';
+    html += '<p style="font-size:1.1rem; color:var(--color-muted); line-height:1.6; max-width:800px;">The MildMate BedBridge Connector is a universal T-shaped mattress gap filler designed to soften the centre join between two closely aligned mattresses. Use the same 190 × 30 × 20 cm BedBridge across many Twin, Twin XL, King split-bed, guest-room, and family co-sleep setups. For unusual joined-bed sizes, the fitted sheet is normally the part to customize — not the BedBridge.</p>';
     html += '</div>';
 
     // How it works
@@ -578,19 +578,19 @@ function buildFixedContentHTML(slug, p) {
     html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
     html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">1</span>';
     html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Position the Wedge</h4>';
-    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Place the T-shaped wedge between the two mattresses. The center stem slides deep into the crevice, while the wide top panel lays flat on the bed surfaces.</p>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Place the T-shaped connector between the two mattresses. The 20 cm centre stem sits inside the gap while the top panel rests across both sleep surfaces.</p>';
     html += '</div>';
 
     html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
     html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">2</span>';
     html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Push Beds Together</h4>';
-    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push the mattresses flush. The high-density fiber compresses slightly to seal the gap and stay locked in place through natural friction—no straps needed.</p>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Push the mattresses closely together. Mattress compression helps hold the centre stem in position without wraparound straps or buckles.</p>';
     html += '</div>';
 
     html += '<div style="background:#fff; padding:20px; border-radius:6px; border:1px solid var(--color-border);">';
     html += '<span style="display:inline-block; width:28px; height:28px; line-height:28px; background:var(--color-primary); color:#fff; text-align:center; border-radius:50%; font-weight:bold; margin-bottom:12px;">3</span>';
     html += '<h4 style="margin-bottom:8px; color:var(--color-heading); font-size:1.05rem;">Cover with a Sheet</h4>';
-    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Cover both mattresses with a single fitted sheet. We recommend a MildMate elastic deep-pocket fitted sheet to pull everything together for a secure, zero-slip fit.</p>';
+    html += '<p style="font-size:0.875rem; color:var(--color-muted); line-height:1.5; margin:0;">Cover both mattresses and the BedBridge with one fitted sheet. Fitted-sheet tension adds stability and helps create a smoother joined sleeping surface.</p>';
     html += '</div>';
 
     html += '</div>';
@@ -603,24 +603,24 @@ function buildFixedContentHTML(slug, p) {
 
     const benefits = [
       {
-        title: 'Seamless Sleep for Couples (Split-to-Seamless Conversion)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> When partners use two different mattresses for individual comfort, a deep "valley" or gap forms in the middle, preventing closeness.<br><strong style="color:var(--color-heading);">The Solution:</strong> Our T-shaped wedge slides deep into the center crevice while the wide top panel rests flush against both mattresses, bridging the divide to create one continuous, level sleeping plane.'
+        title: 'One Universal Size for Many Joined-Bed Setups',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> BedBridge is supplied in one universal size: 190 cm length, 30 cm top width, and 20 cm centre depth.<br><strong style="color:var(--color-heading);">Why it matters:</strong> You normally do not need custom BedBridge sizing. For 200–203 cm mattresses, centre the BedBridge along the join; a small uncovered area near the head and foot is normal.'
       },
       {
-        title: 'Strap-Free, Tool-Free Setup (No-Strap Friction System)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Traditional bed connectors rely on annoying nylon straps wrapped around the entire mattress perimeter, which are difficult to hide and prone to loosening.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge stays locked in place through compression alone. The density and shape of the T-profile are naturally "sandwiched" by mattress pressure and the tension of your fitted sheet.'
+        title: '20 cm Centre Stem Works Across Many Mattress Depths',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> The centre stem is designed to sit inside the gap and does not need to match full mattress depth.<br><strong style="color:var(--color-heading);">Why it matters:</strong> A deeper mattress (for example 27 cm) does not require a deeper custom BedBridge.'
       },
       {
-        title: 'Twin XL-to-King Versatility (Standard-to-King Bridge)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Buying a dedicated King mattress for a guest room limits flexibility if you later need separate beds for individual guests.<br><strong style="color:var(--color-heading);">The Solution:</strong> At 190cm (75") long, this bridge provides full-length coverage for standard mattresses. It lets you create an "on-demand" King configuration that can be disassembled and stored in minutes.'
+        title: 'Strap-Free Practical Setup',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> No wraparound straps are required in normal use.<br><strong style="color:var(--color-heading);">Why it matters:</strong> Mattress compression plus fitted-sheet tension help keep the BedBridge in position while softening the centre join.'
       },
       {
-        title: 'Zero Humps or Ridges (True-Flush Surface Leveling)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Bulky, poorly designed bridges are too thick on top, creating a raised ridge in the center of the bed that is felt through the sheets.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge features a thin, tapered edge design on the top flange. This ensures the transition from mattress to bridge is nearly imperceptible under your sheets.'
+        title: 'Works Best Under One Correctly Sized Fitted Sheet',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> Cover both mattresses and the BedBridge with one fitted sheet with full-perimeter elastic and adequate pocket depth.<br><strong style="color:var(--color-heading);">Why it matters:</strong> For unusual combined sizes, customize the fitted sheet dimensions — not the BedBridge.'
       },
       {
-        title: 'Designed for Deep-Pocket Bedding (Systemic Anchoring)',
-        desc: '<strong style="color:var(--color-heading);">The Problem:</strong> Even the best bed bridge can shift or wiggle if the top sheet is loose or shallow.<br><strong style="color:var(--color-heading);">The Solution:</strong> The bridge is optimized for use with 360-degree elasticated deep-pocket sheets. The deep pockets pull the mattresses inward, while the elastic provides the downward force to keep the bridge firmly seated.'
+        title: 'Family and Floor-Bed Friendly Guidance',
+        desc: '<strong style="color:var(--color-heading);">The Detail:</strong> BedBridge can be used for family/co-sleep floor-bed setups when mattresses are aligned and the centre gap is about 2.5 cm (1 in) or less.<br><strong style="color:var(--color-heading);">Why it matters:</strong> If mattresses slide on smooth floors, adding a suitable non-slip underlay beneath them can improve stability.'
       }
     ];
 
@@ -635,6 +635,10 @@ function buildFixedContentHTML(slug, p) {
     });
 
     html += '</div>';
+    html += '</div>';
+
+    html += '<div style="margin-bottom:32px; background:#fff; border:1px solid var(--color-border); border-radius:6px; padding:16px 18px;">';
+    html += '<p style="margin:0; color:var(--color-muted); font-size:0.9375rem; line-height:1.6;"><strong style="color:var(--color-heading);">Important:</strong> BedBridge helps create a smoother transition between two mattresses, but it does not permanently lock mattresses together or guarantee that the centre join will be completely undetectable.</p>';
     html += '</div>';
 
     // Care Instructions

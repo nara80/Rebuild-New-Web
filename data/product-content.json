@@ -1544,8 +1544,8 @@
     },
     "mattress-protector-standard": {
       "productType": "protector",
-      "tagline": "Waterproof mattress protector with TPU inner layer. Fitted-sheet style for standard mattresses.",
-      "metaDescription": "Mattress Protector — Standard by MildMate. Waterproof TPU inner layer in fitted-sheet style. Custom-made to your mattress dimensions. Ships worldwide.",
+      "tagline": "Waterproof-top mattress protector with TPU backing on the top panel and a fitted cotton side skirt.",
+      "metaDescription": "Mattress Protector — Standard by MildMate. Quilted cotton top with TPU waterproof backing on the top panel only, plus fitted cotton side skirt and full-perimeter elastic.",
       "ratingCount": 56,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1567,21 +1567,21 @@
         "pillow-protector-general",
         "flat-sheet-standard"
       ],
-      "tabDescriptionTitle": "Waterproof Protection — Fitted Sheet Style",
-      "tabDescriptionP": "A fitted mattress protector with a TPU waterproof inner layer. Unlike a full encasement, this protector covers the top and sides of your mattress like a fitted sheet — easier to install and remove while still providing excellent water protection.",
+      "tabDescriptionTitle": "Waterproof Top Protection — Fitted Sheet Style",
+      "tabDescriptionP": "A fitted-sheet-style mattress protector with a quilted cotton top panel, polyester filling, and TPU waterproof backing on the top panel only. The side skirt is cotton fabric for fit and coverage, and does not provide waterproof side protection.",
       "tabDescriptionBullets": [
-        "TPU inner layer — 100% waterproof",
-        "Fitted-sheet style — easy to install and remove",
+        "TPU waterproof backing on top panel only",
+        "Fitted cotton side skirt (not waterproof)",
         "Custom-made to your exact mattress dimensions",
-        ". — no toxic chemicals",
+        "Full-perimeter elastic fitted-sheet hold",
         "Quiet and skin-safe — no plastic crinkle"
       ],
       "tabFabricTitle": "TPU Waterproof Protection",
-      "tabFabricP": "The TPU inner layer blocks all liquids from reaching your mattress while remaining quiet and comfortable. The fitted-sheet design with full-perimeter elastic keeps it secure on your mattress.",
+      "tabFabricP": "The TPU waterproof backing helps protect the mattress from spills and accidents through the top sleeping surface. The fitted cotton side skirt helps secure fit around the mattress but does not include TPU waterproof protection.",
       "tabFabricBullets": [
-        "100% waterproof TPU",
+        "Top panel waterproof protection",
         "Quiet — no crinkle",
-        "Skin-safe",
+        "Cotton side skirt for fit",
         "Full-perimeter elastic"
       ],
       "tabCareBullets": [
@@ -1597,8 +1597,8 @@
     },
     "mattress-protector-family": {
       "productType": "protector",
-      "tagline": "Waterproof mattress protector for family-size and co-sleeping setups. TPU inner layer. Safe for children.",
-      "metaDescription": "Mattress Protector — Family by MildMate. Waterproof TPU inner layer for family mattresses and co-sleeping setups. Custom-made. Ships worldwide.",
+      "tagline": "Family-size waterproof-top protector with TPU backing on the top panel and a fitted cotton side skirt.",
+      "metaDescription": "Mattress Protector — Family by MildMate. Quilted cotton top with TPU waterproof backing on the top panel only, plus fitted cotton side skirt and full-perimeter elastic.",
       "ratingCount": 42,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1624,22 +1624,22 @@
         "bedbridge-connector",
         "pillow-protector-general"
       ],
-      "tabDescriptionTitle": "Family-Size Waterproof Protection",
-      "tabDescriptionP": "Designed for family mattresses and co-sleeping setups. The TPU waterproof layer protects against spills and accidents while remaining safe for children with. Custom-made to your exact family mattress dimensions.",
+      "tabDescriptionTitle": "Family-Size Waterproof Top Protection",
+      "tabDescriptionP": "Designed for family mattresses and co-sleeping setups. The top panel uses quilted cotton, polyester filling, and TPU waterproof backing to help protect from spills through the sleeping surface. The fitted side skirt is cotton fabric and is not waterproof.",
       "tabDescriptionBullets": [
-        "TPU inner layer — 100% waterproof",
+        "TPU waterproof backing on top panel only",
         "Custom-made to family mattress dimensions",
-        ". — safe for children",
+        "Fitted cotton side skirt (not waterproof)",
         "Fitted-sheet style — easy to install",
         "Quiet and comfortable — no plastic crinkle"
       ],
-      "tabFabricTitle": "TPU — Safe for Children",
-      "tabFabricP": "The TPU inner layer is. and safe for children of all ages. Blocks all liquids while remaining quiet and comfortable. The fitted-sheet design makes it easy to remove for washing.",
+      "tabFabricTitle": "TPU Waterproof Top Panel",
+      "tabFabricP": "TPU waterproof backing is incorporated into the top panel to help reduce liquid penetration through the sleeping surface. The cotton side skirt is for fitted hold and side coverage only, and does not provide TPU waterproof side protection.",
       "tabFabricBullets": [
-        "100% waterproof TPU",
-        ". — child-safe",
+        "Top panel waterproof protection",
+        "Cotton side skirt",
         "Quiet — no crinkle",
-        "Fitted-sheet style",
+        "Full-perimeter elastic",
         "Family-size dimensions"
       ],
       "tabCareBullets": [
@@ -1712,8 +1712,8 @@
     },
     "pet-proof-mattress-protector": {
       "productType": "protector",
-      "tagline": "Pet-proof waterproof mattress protector. TPU inner layer with anti-scratch outer. Pet accidents stay on top.",
-      "metaDescription": "Pet-Proof Mattress Protector by MildMate. TPU waterproof layer with durable anti-scratch outer. Custom-made. Protects against pet accidents, fur, and scratches. Ships worldwide.",
+      "tagline": "Pet-proof protector with waterproof TPU backing on the top panel and durable BreezePlus outer for fur and scratch resistance.",
+      "metaDescription": "Pet-Proof Mattress Protector by MildMate. BreezePlus outer plus TPU waterproof backing on the top panel only, with fitted side skirt and elastic hold for pet households.",
       "ratingCount": 64,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1740,21 +1740,21 @@
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Built for Life with Pets",
-      "tabDescriptionP": "Pets bring joy — and accidents, fur, and the occasional scratch. The Pet-Proof Mattress Protector combines a TPU waterproof inner layer with BreezePlus outer fabric that resists pet hair and scratches. Fully. for safety.",
+      "tabDescriptionP": "Pets bring joy — and accidents, fur, and the occasional scratch. The Pet-Proof Mattress Protector combines a BreezePlus outer layer with TPU waterproof backing on the top panel to help protect the sleeping surface. The fitted side skirt is for mattress fit and is not a waterproof side barrier.",
       "tabDescriptionBullets": [
-        "TPU inner layer — 100% waterproof",
+        "TPU waterproof backing on top panel only",
         "BreezePlus outer — pet hair slides off",
         "Anti-scratch durable construction",
-        ". — safe for pets",
+        "Fitted side skirt (not waterproof)",
         "Custom-made to your mattress dimensions"
       ],
       "tabFabricTitle": "BreezePlus + TPU — Double Protection",
-      "tabFabricP": "BreezePlus outer fabric resists pet hair and scratches while the TPU inner layer blocks all liquids. The 50/50 cotton-microfiber blend stays cool-to-the-touch comfort — perfect for pets who run warm.",
+      "tabFabricP": "BreezePlus outer fabric helps resist pet hair and scratches, while TPU backing on the top panel helps protect against spills and pet accidents through the sleeping surface. Side coverage is fitted and supportive, but not TPU waterproof.",
       "tabFabricBullets": [
         "Hair slides off — no embedding",
-        "TPU waterproof layer",
+        "Top panel waterproof protection",
         "Anti-scratch design",
-        "cool-to-the-touch comfort"
+        "Cool-to-the-touch comfort"
       ],
       "tabCareBullets": [
         "Machine wash warm (60°C / 140°F) — gentle cycle",
@@ -1769,8 +1769,8 @@
     },
     "bedbridge-connector": {
       "productType": "fixed",
-      "tagline": "Transform two mattresses into one seamless sleeping surface. High-density microfiber T-wedge fills the gap - no straps needed.",
-      "metaDescription": "BedBridge Connector by MildMate - T-shaped microfiber wedge fills the gap between two mattresses. No-strap, friction-based system creates one seamless sleeping surface. Twin XL to King, family co-sleep. Ships worldwide.",
+      "tagline": "Universal 190 × 30 × 20 cm T-shaped connector that helps soften the centre gap between two mattresses — no wraparound straps required.",
+      "metaDescription": "MildMate BedBridge Connector — universal 190 × 30 × 20 cm T-shaped mattress gap filler. Helps create a smoother joined sleeping surface under one fitted sheet. Suitable for Twin, Twin XL, King split-bed, and family co-sleep setups.",
       "ratingCount": null,
       "breadcrumbCategoryUrl": "/accessories/",
       "breadcrumbCategoryLabel": "Accessories",
@@ -1826,7 +1826,7 @@
         },
         {
           "label": "Design",
-          "value": "T-Shaped Tension Wedge"
+          "value": "Universal T-Shaped Connector"
         }
       ]
     },
