@@ -8246,6 +8246,17 @@ async function handleFavorites(request, env) {
 __name(handleFavorites, "handleFavorites");
 
 // ../workers/api/checkout.ts
+function humanizeSlug(slug) {
+  return String(slug || "").split("-").filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+__name(humanizeSlug, "humanizeSlug");
+function getItemName(item) {
+  const raw = String(item.product_name || item.title || "").trim();
+  if (raw) return raw;
+  const fromSlug = humanizeSlug(item.product_slug || "");
+  return fromSlug || "Custom Product";
+}
+__name(getItemName, "getItemName");
 async function handleCheckout(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -8415,9 +8426,10 @@ async function handleCheckout(request, env) {
     });
   }
   const lineItems = items.map((item) => {
+    const itemName = getItemName(item);
     const unitAmount = currency === "thb" ? Math.round((item.price_thb || 0) * 100) : Math.round((item.price_usd || 0) * 100);
     const desc = [
-      item.product_name,
+      itemName,
       item.fabric ? `Fabric: ${item.fabric}` : "",
       item.color ? `Color: ${item.color}` : "",
       item.dimensions ? `${item.dimensions.w}\xD7${item.dimensions.l}${item.dimensions.d ? `\xD7${item.dimensions.d}` : ""} ${item.dimensions.unit}` : ""
@@ -8426,7 +8438,7 @@ async function handleCheckout(request, env) {
       price_data: {
         currency,
         product_data: {
-          name: item.product_name,
+          name: itemName,
           description: desc
         },
         unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount
@@ -8527,7 +8539,7 @@ async function handleCheckout(request, env) {
     }
     const metadataItems = items.map((i, idx) => ({
       slug: i.product_slug,
-      name: i.product_name,
+      name: getItemName(i),
       fabric: i.fabric,
       color: i.color,
       dims: buildMetadataDims(i),
@@ -10188,6 +10200,7 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
     id: "quote-" + quoteId + "-" + Date.now(),
     type: quote.product_slug,
     product_slug: quote.product_slug,
+    product_name: productTitle,
     title: productTitle,
     dimensions,
     fabric: quote.fabric,
@@ -11451,7 +11464,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest10, "onRequest");
 
-// ../.wrangler/tmp/pages-KePL3N/functionsRoutes-0.7685229604691789.mjs
+// ../.wrangler/tmp/pages-WkQDPw/functionsRoutes-0.6595788597103105.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

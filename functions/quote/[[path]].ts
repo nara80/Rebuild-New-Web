@@ -78,6 +78,7 @@ export const onRequest: PagesFunction<{
     id: "quote-" + quoteId + "-" + Date.now(),
     type: quote.product_slug,
     product_slug: quote.product_slug,
+    product_name: productTitle,
     title: productTitle,
     dimensions,
     fabric: quote.fabric,

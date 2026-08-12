@@ -9,7 +9,7 @@ interface CartItem {
   type: string;           // 'product' | 'custom_quote'
   id?: string;
   product_slug: string;
-  product_name: string;
+  product_name?: string;
   dimensions: { w?: number; l?: number; d?: number; unit?: string; size_text?: string; label?: string };
   fabric: string;
   color: string;
@@ -18,6 +18,21 @@ interface CartItem {
   qty: number;
   image?: string;
   quote_id?: string;      // only for custom_quote type
+}
+
+function humanizeSlug(slug: string): string {
+  return String(slug || "")
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function getItemName(item: CartItem): string {
+  const raw = String((item as any).product_name || (item as any).title || "").trim();
+  if (raw) return raw;
+  const fromSlug = humanizeSlug(item.product_slug || "");
+  return fromSlug || "Custom Product";
 }
 
 export async function handleCheckout(request: Request, env: any): Promise<Response> {
@@ -198,12 +213,13 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
 
   // Build Stripe line items
   const lineItems = items.map((item: CartItem) => {
+    const itemName = getItemName(item);
     const unitAmount = currency === "thb"
       ? Math.round((item.price_thb || 0) * 100)
       : Math.round((item.price_usd || 0) * 100);
 
     const desc = [
-      item.product_name,
+      itemName,
       item.fabric ? `Fabric: ${item.fabric}` : "",
       item.color ? `Color: ${item.color}` : "",
       item.dimensions
@@ -215,7 +231,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       price_data: {
         currency: currency,
         product_data: {
-          name: item.product_name,
+          name: itemName,
           description: desc,
         },
         unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount,
@@ -326,7 +342,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     }
     const metadataItems = items.map((i: CartItem, idx: number) => ({
       slug: i.product_slug,
-      name: i.product_name,
+      name: getItemName(i),
       fabric: i.fabric,
       color: i.color,
       dims: buildMetadataDims(i),

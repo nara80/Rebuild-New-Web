@@ -592,7 +592,7 @@
               </label>
               <p id="policy-consent-error" style="display:none;color:#ef4444;font-size:0.75rem;margin-top:6px;font-weight:600">Please confirm the order policy to proceed.</p>
             </div>
-            <button class="btn btn-primary" id="btn-pay" onclick="processPayment()" style="width:100%;margin-top:12px">
+            <button class="btn btn-primary" id="btn-pay" onclick="processPayment()" style="width:100%;margin-top:12px" disabled aria-disabled="true">
               <span id="pay-text">Pay Now</span>
               <span class="loading-spinner" id="pay-spinner" style="display:none"></span>
             </button>
@@ -610,7 +610,7 @@
           <span class="bar-total-label">Total</span>
           <span class="bar-total" id="bar-total-step3">—</span>
         </div>
-        <button class="btn btn-primary" id="btn-mobile-pay" onclick="processPayment()">
+        <button class="btn btn-primary" id="btn-mobile-pay" onclick="processPayment()" disabled aria-disabled="true">
           Pay Now
         </button>
       </div>
@@ -1020,6 +1020,27 @@
         var count = MildMateCart.get().items.reduce(function(s, i) { return s + (i.qty || 1); }, 0);
         if (badge) badge.textContent = count > 99 ? '99+' : count;
       }
+      function updatePolicyConsentGate() {
+        var consentCb = document.getElementById('policy-consent-cb');
+        var consentErr = document.getElementById('policy-consent-error');
+        var mobileNote = document.getElementById('mobile-policy-consent-note');
+        var canPay = !!(consentCb && consentCb.checked);
+        var payBtn = document.getElementById('btn-pay');
+        var mobilePayBtn = document.getElementById('btn-mobile-pay');
+
+        if (payBtn) {
+          payBtn.disabled = !canPay;
+          payBtn.setAttribute('aria-disabled', canPay ? 'false' : 'true');
+        }
+        if (mobilePayBtn) {
+          mobilePayBtn.disabled = !canPay;
+          mobilePayBtn.setAttribute('aria-disabled', canPay ? 'false' : 'true');
+        }
+        if (canPay) {
+          if (consentErr) consentErr.style.display = 'none';
+          if (mobileNote) mobileNote.style.display = 'none';
+        }
+      }
       updateBadge();
       var currentStep = 1;
       var authedEmail = null;
@@ -1060,6 +1081,12 @@
 
       // Render cart
       step1();
+      updatePolicyConsentGate();
+      (function bindPolicyConsentGate() {
+        var consentCb = document.getElementById('policy-consent-cb');
+        if (!consentCb) return;
+        consentCb.addEventListener('change', updatePolicyConsentGate);
+      })();
 
       async function checkAuth(opts) {
         opts = opts || {};
@@ -1699,6 +1726,7 @@
           populateStep2Summary();
         }
         if (step === 3) renderStep3();
+        if (step === 3) updatePolicyConsentGate();
       };
 
       function renderStep3() {
