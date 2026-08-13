@@ -49,7 +49,13 @@ export async function handleAdminColorInventory(request: Request, env: any): Pro
     const rows = await db.prepare(
       "SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color"
     ).all() as any;
-    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
+    const inventory = (rows.results || []).map((r: any) => ({
+      fabric: String(r.fabric || "").trim().toLowerCase(),
+      color: String(r.color || "").trim().toLowerCase(),
+      in_stock: Number(r.in_stock) === 1 ? 1 : 0,
+      updated_at: r.updated_at || null,
+    }));
+    return new Response(JSON.stringify({ inventory }), { headers });
   }
 
   if (request.method === "PUT") {
@@ -63,11 +69,18 @@ export async function handleAdminColorInventory(request: Request, env: any): Pro
     }
 
     for (const item of body.updates) {
+      const fabric = String(item.fabric || "").trim().toLowerCase();
+      const color = String(item.color || "").trim().toLowerCase();
+      const inStockRaw = item.in_stock;
+      const inStock = inStockRaw === 1 || inStockRaw === true || String(inStockRaw).trim() === "1" ? 1 : 0;
+      if (!fabric || !color) {
+        return new Response(JSON.stringify({ error: "fabric and color are required" }), { status: 400, headers });
+      }
       await db.prepare(
         `INSERT INTO fabric_color_inventory (fabric, color, in_stock, updated_at)
          VALUES (?, ?, ?, datetime('now'))
          ON CONFLICT(fabric, color) DO UPDATE SET in_stock = excluded.in_stock, updated_at = excluded.updated_at`
-      ).bind(String(item.fabric), String(item.color), item.in_stock ? 1 : 0).run();
+      ).bind(fabric, color, inStock).run();
     }
 
     return new Response(JSON.stringify({ success: true, updated: body.updates.length }), { headers });
