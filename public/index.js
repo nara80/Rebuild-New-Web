@@ -7935,6 +7935,82 @@ async function handleAdminAccounts(request, env) {
 }
 __name(handleAdminAccounts, "handleAdminAccounts");
 
+// ../workers/api/admin-color-inventory.ts
+function isProductionHost16(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
+}
+__name(isProductionHost16, "isProductionHost");
+async function authorizeAdmin15(request, env) {
+  const hostname = request.headers.get("Host") || "";
+  const isProd = isProductionHost16(hostname);
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return { ok: false, status: verified.status || 401, error: "Unauthorized" };
+    return { ok: true };
+  }
+  if (isProd) {
+    const secret = (request.headers.get("X-Admin-Secret") || "").trim();
+    const expected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+    if (!secret || !expected || secret !== expected) return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  return { ok: true };
+}
+__name(authorizeAdmin15, "authorizeAdmin");
+async function handleAdminColorInventory(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*"
+  };
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" } });
+  }
+  const auth = await authorizeAdmin15(request, env);
+  if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  const db = env.DB;
+  if (request.method === "GET") {
+    const rows = await db.prepare(
+      "SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color"
+    ).all();
+    const inventory = (rows.results || []).map((r) => ({
+      fabric: String(r.fabric || "").trim().toLowerCase(),
+      color: String(r.color || "").trim().toLowerCase(),
+      in_stock: Number(r.in_stock) === 1 ? 1 : 0,
+      updated_at: r.updated_at || null
+    }));
+    return new Response(JSON.stringify({ inventory }), { headers });
+  }
+  if (request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
+    }
+    if (!Array.isArray(body.updates) || body.updates.length === 0) {
+      return new Response(JSON.stringify({ error: "updates array required" }), { status: 400, headers });
+    }
+    for (const item of body.updates) {
+      const fabric = String(item.fabric || "").trim().toLowerCase();
+      const color = String(item.color || "").trim().toLowerCase();
+      const inStockRaw = item.in_stock;
+      const inStock = inStockRaw === 1 || inStockRaw === true || String(inStockRaw).trim() === "1" ? 1 : 0;
+      if (!fabric || !color) {
+        return new Response(JSON.stringify({ error: "fabric and color are required" }), { status: 400, headers });
+      }
+      await db.prepare(
+        `INSERT INTO fabric_color_inventory (fabric, color, in_stock, updated_at)
+         VALUES (?, ?, ?, datetime('now'))
+         ON CONFLICT(fabric, color) DO UPDATE SET in_stock = excluded.in_stock, updated_at = excluded.updated_at`
+      ).bind(fabric, color, inStock).run();
+    }
+    return new Response(JSON.stringify({ success: true, updated: body.updates.length }), { headers });
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+}
+__name(handleAdminColorInventory, "handleAdminColorInventory");
+
 // ../workers/api/favorites.ts
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
@@ -7974,13 +8050,13 @@ async function ensureFavoritesSchema(env) {
   await favoritesSchemaPromise;
 }
 __name(ensureFavoritesSchema, "ensureFavoritesSchema");
-function isProductionHost16(hostname) {
+function isProductionHost17(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost16, "isProductionHost");
+__name(isProductionHost17, "isProductionHost");
 function collectRoles13(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -8020,7 +8096,7 @@ function emailAllowed17(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed17, "emailAllowed");
-async function authorizeAdmin15(request, env) {
+async function authorizeAdmin16(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
@@ -8055,7 +8131,7 @@ async function authorizeAdmin15(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost16(host);
+  const prodHost = isProductionHost17(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -8064,7 +8140,7 @@ async function authorizeAdmin15(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin15, "authorizeAdmin");
+__name(authorizeAdmin16, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -8101,7 +8177,7 @@ async function handleFavorites(request, env) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
       return json9({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin15(request, env);
+    const auth = await authorizeAdmin16(request, env);
     if (!auth.ok) return json9({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
@@ -9801,6 +9877,9 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
     return handleAdminCampaigns(request, env);
   }
+  if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
+    return handleAdminColorInventory(request, env);
+  }
   if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
     return handleAdminAccounts(request, env);
   }
@@ -11464,7 +11543,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest10, "onRequest");
 
-// ../.wrangler/tmp/pages-8yEq1a/functionsRoutes-0.7582471851841528.mjs
+// ../.wrangler/tmp/pages-9HCfso/functionsRoutes-0.2910606370222464.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

@@ -54,6 +54,8 @@ import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
 import { handleAdminThankyouDispatch } from "../../workers/api/admin-thankyou-dispatch";
 import { handleAdminOffers } from "../../workers/api/admin-offers";
 import { handleAdminCampaigns } from "../../workers/api/admin-campaigns";
+import { handleAdminAccounts } from "../../workers/api/admin-accounts";
+import { handleAdminColorInventory } from "../../workers/api/admin-color-inventory";
 import { handleFavorites } from "../../workers/api/favorites";
 import { handleCheckout } from "../../workers/api/checkout";
 import { handleShippingCalculate } from "../../workers/api/shipping";
@@ -227,6 +229,16 @@ export const onRequest: PagesFunction<{
   // Admin marketing campaigns (Run a Sale)
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
     return handleAdminCampaigns(request, env);
+  }
+
+  // Admin color inventory
+  if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
+    return handleAdminColorInventory(request, env);
+  }
+
+  // Admin accounts
+  if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
+    return handleAdminAccounts(request, env);
   }
 
   // Admin thankyou queue dispatch — manual send for due items
