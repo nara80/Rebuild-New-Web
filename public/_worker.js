@@ -8987,7 +8987,7 @@ async function handleStripeWebhook(request, env) {
   if (email && env.RESEND_API_KEY) {
     const itemList = items.map((i) => {
       const dims = i.dims || {};
-      return `- ${i.name} | ${i.fabric || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
+      return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
     }).join("\n");
     const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
     try {
@@ -11464,7 +11464,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest10, "onRequest");
 
-// ../.wrangler/tmp/pages-WkQDPw/functionsRoutes-0.6595788597103105.mjs
+// ../.wrangler/tmp/pages-4dku25/functionsRoutes-0.7416532316766391.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",

@@ -419,7 +419,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
   if (email && env.RESEND_API_KEY) {
     const itemList = items.map((i: any) => {
       const dims = i.dims || {};
-      return `- ${i.name} | ${i.fabric || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
+      return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
     }).join("\n");
 
     const total = session.amount_total
