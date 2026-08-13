@@ -135,6 +135,16 @@ tr:hover td{background:#f8fafc}
 .quote-overlay.open{display:flex}
 .quote-popup{background:#fff;border-radius:var(--radius);padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative}
 .quote-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:1.5rem;color:var(--c-muted);cursor:pointer;padding:0;line-height:1}
+.order-detail-link{background:none;border:none;color:var(--c-blue);font-weight:600;cursor:pointer;padding:0;font-size:inherit;font-family:inherit}
+.order-detail-link:hover{text-decoration:underline}
+.order-detail-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:11000;padding:20px}
+.order-detail-modal{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.22);width:100%;max-width:760px;max-height:90vh;overflow:auto;position:relative;padding:20px}
+.order-detail-close{position:absolute;top:12px;right:14px;border:none;background:none;color:var(--c-muted);font-size:1.4rem;cursor:pointer}
+.order-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.order-detail-item{background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:10px}
+.order-detail-label{font-size:.6875rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.order-detail-value{font-size:.875rem;color:var(--c-text);word-break:break-word}
+@media(max-width:640px){.order-detail-grid{grid-template-columns:1fr}}
 .quote-close:hover{color:var(--c-dark)}
 .quote-popup-title{font-size:1.125rem;font-weight:700;color:var(--c-dark);margin-bottom:20px}
 .quote-field{margin-bottom:16px}
@@ -1577,6 +1587,105 @@ function mapOrderRow(o) {
   };
 }
 
+function formatOrderAddress(addrRaw) {
+  var s = String(addrRaw || '').trim();
+  if (!s) return '—';
+  try {
+    var a = JSON.parse(s);
+    if (a && typeof a === 'object') {
+      var parts = [a.line1, a.line2, a.city, a.state, a.postal_code, a.country].filter(Boolean);
+      return parts.length ? parts.join(', ') : s;
+    }
+  } catch(e) {}
+  return s;
+}
+
+function formatOrderDimensions(order) {
+  var cm = [];
+  if (order.width_cm || order.length_cm || order.depth_cm) {
+    if (order.width_cm && order.length_cm) cm.push(order.width_cm + '×' + order.length_cm);
+    if (order.depth_cm) cm.push(order.depth_cm);
+  }
+  var cmText = cm.length ? (cm.join('×') + ' cm') : '';
+  var inch = [];
+  if (order.width_in || order.length_in || order.depth_in) {
+    if (order.width_in && order.length_in) inch.push(order.width_in + '×' + order.length_in);
+    if (order.depth_in) inch.push(order.depth_in);
+  }
+  var inText = inch.length ? (inch.join('×') + ' in') : '';
+  if (cmText && inText) return cmText + ' (' + inText + ')';
+  return cmText || inText || '—';
+}
+
+async function openOrderDetail(orderId) {
+  if (!orderId) return;
+  var overlay = document.createElement('div');
+  overlay.className = 'order-detail-overlay';
+  overlay.innerHTML = '<div class="order-detail-modal"><button class="order-detail-close" aria-label="Close">×</button><h3 style="margin:0 0 12px;color:var(--c-dark)">Order Details</h3><p style="color:var(--c-muted)">Loading...</p></div>';
+  document.body.appendChild(overlay);
+  var closeBtn = overlay.querySelector('.order-detail-close');
+  function close() {
+    document.removeEventListener('keydown', onKey);
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+
+  try {
+    var resp = await fetch('/api/admin/orders/' + encodeURIComponent(orderId), { headers: await getAdminAuthHeaders(false) });
+    var data = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok || !data.order) {
+      throw new Error((data && data.error) || ('HTTP ' + resp.status));
+    }
+    var o = data.order;
+    var statusClass = {'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status] || 'badge-pending';
+    var trackingLabel = o.tracking_number ? (getCarrierLabel(o.carrier_code || '') + ': ' + o.tracking_number) : '—';
+    var detailRows = [
+      ['Order ID', '#' + String(o.id || '—')],
+      ['Created At', o.created_at || '—'],
+      ['Status', '<span class="badge ' + statusClass + '">' + escHtml(o.status || 'pending') + '</span>'],
+      ['Customer', escHtml(o.customer_name || '—')],
+      ['Email', escHtml(o.email || '—')],
+      ['Phone', escHtml(o.phone || '—')],
+      ['Shipping Address', escHtml(formatOrderAddress(o.shipping_address))],
+      ['Product', escHtml(o.product_title_en || o.product_slug || '—')],
+      ['Product Slug', escHtml(o.product_slug || '—')],
+      ['Size', escHtml(formatOrderDimensions(o))],
+      ['Fabric', escHtml(o.fabric || '—')],
+      ['Color', escHtml(o.color || '—')],
+      ['Price (USD)', o.price_usd != null ? ('$' + Number(o.price_usd).toLocaleString()) : '—'],
+      ['Price (THB)', o.price_thb != null ? ('฿' + Number(o.price_thb).toLocaleString()) : '—'],
+      ['Currency', escHtml((o.currency || '').toUpperCase() || '—')],
+      ['Stripe Session', escHtml(o.stripe_session_id || '—')],
+      ['Stripe PaymentIntent', escHtml(o.stripe_payment_intent_id || '—')],
+      ['Tracking', escHtml(trackingLabel)],
+      ['Tracking URL', o.tracking_url ? ('<a href="' + escHtml(o.tracking_url) + '" target="_blank" rel="noopener">' + escHtml(o.tracking_url) + '</a>') : '—'],
+      ['Shipping Status', escHtml(o.shipping_status || '—')],
+      ['Shipped At', escHtml(o.shipped_at || '—')],
+      ['Customer Note Type', escHtml(o.customer_note_type || '—')],
+      ['Customer Note', escHtml(o.customer_note || '—')],
+      ['Custom Notes', escHtml(o.custom_notes || '—')]
+    ];
+
+    var modal = overlay.querySelector('.order-detail-modal');
+    var html = '<button class="order-detail-close" aria-label="Close">×</button>' +
+      '<h3 style="margin:0 0 14px;color:var(--c-dark)">Order #' + escHtml(String(o.id || orderId)) + '</h3>' +
+      '<div class="order-detail-grid">' +
+      detailRows.map(function(r){
+        return '<div class="order-detail-item"><div class="order-detail-label">' + r[0] + '</div><div class="order-detail-value">' + r[1] + '</div></div>';
+      }).join('') +
+      '</div>';
+    modal.innerHTML = html;
+    modal.querySelector('.order-detail-close').addEventListener('click', close);
+  } catch (e) {
+    var modalErr = overlay.querySelector('.order-detail-modal');
+    modalErr.innerHTML = '<button class="order-detail-close" aria-label="Close">×</button><h3 style="margin:0 0 8px;color:var(--c-dark)">Order Details</h3><p style="color:var(--c-red)">Failed to load: ' + escHtml(e.message || 'Unknown error') + '</p>';
+    modalErr.querySelector('.order-detail-close').addEventListener('click', close);
+  }
+}
+
 async function rOrders(){
   var orders = [];
   var fetchError = '';
@@ -1612,7 +1721,10 @@ async function rOrders(){
       if (o.trackingUrl) trackingCell = '<a href="'+escHtml(o.trackingUrl)+'" target="_blank" rel="noopener">'+carrierLabel+': '+escHtml(o.trackingNumber)+'</a>';
       else trackingCell = carrierLabel+': '+escHtml(o.trackingNumber);
     }
-    h+='<tr><td>'+o.id+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+escHtml(o.product)+'</td><td><strong>'+o.total+'</strong></td>';
+    var orderIdCell = o.dbId
+      ? '<button class="order-detail-link" onclick="openOrderDetail(' + Number(o.dbId) + ')">' + escHtml(o.id) + '</button>'
+      : escHtml(o.id);
+    h+='<tr><td>'+orderIdCell+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+escHtml(o.product)+'</td><td><strong>'+o.total+'</strong></td>';
     h+='<td style="font-size:0.75rem">'+trackingCell+'</td>';
     if (o.dbId) {
       h+='<td><select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+
