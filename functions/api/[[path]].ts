@@ -63,6 +63,7 @@ import { handleStripeWebhook } from "../../workers/api/webhook";
 import { handleAuth } from "../../workers/api/auth";
 import { handleCustomers } from "../../workers/api/customers";
 import { handleOrderConfirmed } from "../../workers/api/order-confirmed";
+import { handleColorInventory } from "../../workers/api/color-inventory";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -116,6 +117,11 @@ export const onRequest: PagesFunction<{
   // Country master list
   if (path === "/api/countries" || path === "/api/countries/") {
     return handleCountries(request, env);
+  }
+
+  // Public color inventory for swatch OOS state
+  if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
+    return handleColorInventory(request, env);
   }
 
   // Subscribe

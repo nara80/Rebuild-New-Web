@@ -9746,6 +9746,27 @@ async function handleOrderConfirmed(request, env) {
 }
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
+// ../workers/api/color-inventory.ts
+async function handleColorInventory(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "public, max-age=60"
+  };
+  if (request.method === "OPTIONS") {
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
+  }
+  try {
+    const rows = await env.DB.prepare(
+      "SELECT fabric, color, in_stock FROM fabric_color_inventory ORDER BY fabric, color"
+    ).all();
+    return new Response(JSON.stringify({ inventory: rows.results || [] }), { headers });
+  } catch (e) {
+    return new Response(JSON.stringify({ inventory: [] }), { headers });
+  }
+}
+__name(handleColorInventory, "handleColorInventory");
+
 // api/[[path]].ts
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url5(url) {
@@ -9807,6 +9828,9 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/countries" || path === "/api/countries/") {
     return handleCountries(request, env);
+  }
+  if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
+    return handleColorInventory(request, env);
   }
   if (path === "/api/subscribe" || path === "/api/subscribe/") {
     return handleSubscribe(request, env);
@@ -11543,7 +11567,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest10, "onRequest");
 
-// ../.wrangler/tmp/pages-9HCfso/functionsRoutes-0.2910606370222464.mjs
+// ../.wrangler/tmp/pages-dAUAKK/functionsRoutes-0.9536547961718659.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
