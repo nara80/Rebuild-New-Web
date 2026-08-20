@@ -84,6 +84,8 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
   await ensureBoatModelsColumn(env, "model_label", "TEXT");
   await ensureBoatModelsColumn(env, "model_year", "INTEGER");
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
+  await ensureBoatModelsColumn(env, "schematic_key", "TEXT");
+  await ensureBoatModelsColumn(env, "schematic_url", "TEXT");
 }
 
 async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
@@ -123,7 +125,7 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
 
   if (request.method === "GET") {
     const rows = await env.DB.prepare(
-      `SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, is_active, updated_at
+      `SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, schematic_key, schematic_url, is_active, updated_at
        FROM boat_models
        ORDER BY model_label ASC, model_name ASC, model_year ASC, updated_at DESC, id DESC`
     ).all() as any;
@@ -153,8 +155,11 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
     const priceUsd = Number(body.price_usd);
     const isActive = body.is_active === 0 || body.is_active === false ? 0 : 1;
     const dimensions = sanitizeDimensions(body.dimensions || {});
+    const hasDimensionsPayload = body.dimensions && typeof body.dimensions === "object" && Object.keys(body.dimensions).length > 0;
     const modelLabel = String(body.model_label || `${modelName} - ${modelYear || ""}`).trim();
     const modelKey = normalizeModelKey(body.model_key || modelLabel);
+    const schematicKey = String(body.schematic_key || "").trim();
+    const schematicUrl = String(body.schematic_url || "").trim();
 
     if (!modelName) return new Response(JSON.stringify({ error: "model_name is required" }), { status: 400, headers });
     if (!modelLabel) return new Response(JSON.stringify({ error: "model_label is required" }), { status: 400, headers });
@@ -168,17 +173,21 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
     if (!/^(0[1-9]|1[0-4])$/.test(shapeCode)) {
       return new Response(JSON.stringify({ error: "shape_code must be 01-14" }), { status: 400, headers });
     }
-    if (!Object.keys(dimensions).length) {
-      return new Response(JSON.stringify({ error: "dimensions are required" }), { status: 400, headers });
+    if (schematicKey && !/^products\//i.test(schematicKey)) {
+      return new Response(JSON.stringify({ error: "schematic_key must start with products/" }), { status: 400, headers });
     }
-    const dimensionsJson = JSON.stringify(dimensions);
+    let dimensionsJson = JSON.stringify(dimensions);
 
     if (id > 0) {
+      if (!hasDimensionsPayload || !Object.keys(dimensions).length) {
+        const existingRow = await env.DB.prepare("SELECT dimensions_json FROM boat_models WHERE id = ?1").bind(id).first() as any;
+        dimensionsJson = String(existingRow?.dimensions_json || "{}");
+      }
       await env.DB.prepare(
         `UPDATE boat_models
-         SET model_key = ?1, model_label = ?2, model_name = ?3, model_year = ?4, sale_price_usd = ?5, shape_code = ?6, dimensions_json = ?7, notes = ?8, is_active = ?9, updated_at = datetime('now')
-         WHERE id = ?10`
-      ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, isActive, id).run();
+         SET model_key = ?1, model_label = ?2, model_name = ?3, model_year = ?4, sale_price_usd = ?5, shape_code = ?6, dimensions_json = ?7, notes = ?8, schematic_key = ?9, schematic_url = ?10, is_active = ?11, updated_at = datetime('now')
+         WHERE id = ?12`
+      ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, schematicKey || null, schematicUrl || null, isActive, id).run();
       return new Response(JSON.stringify({ success: true, id }), { headers });
     }
 
@@ -188,9 +197,9 @@ export async function handleAdminBoatModels(request: Request, env: any): Promise
     }
 
     const insert = await env.DB.prepare(
-      `INSERT INTO boat_models (model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, is_active, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, datetime('now'))`
-    ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, isActive).run();
+      `INSERT INTO boat_models (model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, schematic_key, schematic_url, is_active, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, datetime('now'))`
+    ).bind(modelKey, modelLabel, modelName, modelYear, priceUsd, shapeCode, dimensionsJson, notes || null, schematicKey || null, schematicUrl || null, isActive).run();
     return new Response(JSON.stringify({ success: true, id: insert.meta?.last_row_id || null }), { headers });
   }
 

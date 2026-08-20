@@ -3312,6 +3312,8 @@ window.toggleColorStock = async function(checkbox) {
 
 var _boatModelsCache = [];
 var _editingBoatModelId = 0;
+var _boatModelSchematicKey = '';
+var _boatModelSchematicUrl = '';
 
 function boatModelShapeOptions(selected) {
   var SHAPE_LABELS = {
@@ -3339,6 +3341,75 @@ function boatModelShapeOptions(selected) {
   return opts.join('');
 }
 
+function boatModelSchematicKeyFromUrl(url) {
+  var raw = String(url || '').trim();
+  if (!raw) return '';
+  var m = raw.match(/\/(products\/[^?#]+)/i);
+  if (!m || !m[1]) return '';
+  return decodeURIComponent(m[1]);
+}
+
+function setBoatModelSchematicState(key, url) {
+  _boatModelSchematicKey = String(key || '').trim();
+  _boatModelSchematicUrl = String(url || '').trim();
+  var input = document.getElementById('bm-schematic-url');
+  if (input) input.value = _boatModelSchematicUrl || '';
+  var keyEl = document.getElementById('bm-schematic-key');
+  if (keyEl) keyEl.textContent = _boatModelSchematicKey || 'No schematic uploaded';
+  var viewWrap = document.getElementById('bm-schematic-actions');
+  if (viewWrap) {
+    var has = !!_boatModelSchematicUrl;
+    viewWrap.style.display = has ? 'flex' : 'none';
+    var link = document.getElementById('bm-schematic-view');
+    if (link) link.setAttribute('href', has ? _boatModelSchematicUrl : '#');
+  }
+}
+
+async function uploadBoatModelSchematic() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function() {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      var uploadFile = file;
+      if (typeof optimizeImage === 'function') uploadFile = await optimizeImage(file, 2000);
+      var form = new FormData();
+      form.append('file', uploadFile);
+      var headers = await getAdminAuthHeaders(false);
+      var res = await fetch('/api/admin/upload', { method: 'POST', headers: headers, body: form });
+      var data = await res.json().catch(function() { return {}; });
+      if (!res.ok || !data.success) throw new Error(data.error || ('HTTP ' + res.status));
+      if (_boatModelSchematicKey && _boatModelSchematicKey !== data.key) {
+        try {
+          await fetch('/api/admin/upload?key=' + encodeURIComponent(_boatModelSchematicKey), {
+            method: 'DELETE',
+            headers: await getAdminAuthHeaders(false)
+          });
+        } catch (e) {}
+      }
+      setBoatModelSchematicState(data.key || '', data.url || data.cdnUrl || '');
+      toast('Schematic uploaded');
+    } catch (e) {
+      toast('Upload failed: ' + e.message);
+    }
+  };
+  input.click();
+}
+
+async function clearBoatModelSchematic() {
+  if (_boatModelSchematicKey) {
+    try {
+      await fetch('/api/admin/upload?key=' + encodeURIComponent(_boatModelSchematicKey), {
+        method: 'DELETE',
+        headers: await getAdminAuthHeaders(false)
+      });
+    } catch (e) {}
+  }
+  setBoatModelSchematicState('', '');
+}
+
 function getBoatModelPayloadFromForm() {
   var modelName = ((document.getElementById('bm-model-name') || {}).value || '').trim();
   var modelKey = ((document.getElementById('bm-model-key') || {}).value || '').trim();
@@ -3347,10 +3418,7 @@ function getBoatModelPayloadFromForm() {
   var modelLabel = (modelName && modelYear) ? (modelName + ' - ' + modelYear) : modelName;
   var shapeCode = ((document.getElementById('bm-shape-code') || {}).value || '').trim();
   var notes = ((document.getElementById('bm-notes') || {}).value || '').trim();
-  var dimensionsRaw = ((document.getElementById('bm-dimensions-json') || {}).value || '').trim();
   var isActive = !!((document.getElementById('bm-is-active') || {}).checked);
-  var dimensions = {};
-  if (dimensionsRaw) dimensions = JSON.parse(dimensionsRaw);
   return {
     id: _editingBoatModelId || undefined,
     model_name: modelName,
@@ -3360,8 +3428,10 @@ function getBoatModelPayloadFromForm() {
     price_usd: priceUsd,
     shape_code: shapeCode,
     notes: notes,
+    schematic_key: _boatModelSchematicKey || '',
+    schematic_url: _boatModelSchematicUrl || '',
     is_active: isActive ? 1 : 0,
-    dimensions: dimensions
+    dimensions: {}
   };
 }
 
@@ -3372,9 +3442,9 @@ function resetBoatModelForm() {
   var y = document.getElementById('bm-model-year'); if (y) y.value = '';
   var p = document.getElementById('bm-price-usd'); if (p) p.value = '';
   var s = document.getElementById('bm-shape-code'); if (s) s.value = '';
-  var d = document.getElementById('bm-dimensions-json'); if (d) d.value = '';
   var t = document.getElementById('bm-notes'); if (t) t.value = '';
   var a = document.getElementById('bm-is-active'); if (a) a.checked = true;
+  setBoatModelSchematicState('', '');
   var saveBtn = document.getElementById('bm-save-btn');
   if (saveBtn) saveBtn.textContent = 'Add Boat Model';
 }
@@ -3388,9 +3458,11 @@ function editBoatModel(id) {
   var y = document.getElementById('bm-model-year'); if (y) y.value = (item.model_year == null ? '' : String(item.model_year));
   var p = document.getElementById('bm-price-usd'); if (p) p.value = (item.sale_price_usd == null ? '' : String(item.sale_price_usd));
   var s = document.getElementById('bm-shape-code'); if (s) s.value = item.shape_code || '';
-  var d = document.getElementById('bm-dimensions-json'); if (d) d.value = item.dimensions_json || '';
   var t = document.getElementById('bm-notes'); if (t) t.value = item.notes || '';
   var a = document.getElementById('bm-is-active'); if (a) a.checked = Number(item.is_active) === 1;
+  var sUrl = String(item.schematic_url || '').trim();
+  var sKey = String(item.schematic_key || '').trim() || boatModelSchematicKeyFromUrl(sUrl);
+  setBoatModelSchematicState(sKey, sUrl);
   var saveBtn = document.getElementById('bm-save-btn');
   if (saveBtn) saveBtn.textContent = 'Update Boat Model';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3420,7 +3492,6 @@ async function saveBoatModel() {
     if (!payload.model_year || payload.model_year < 1900 || payload.model_year > 2100) { toast('Year must be between 1900 and 2100'); return; }
     if (!payload.price_usd || payload.price_usd <= 0) { toast('Price (USD) must be greater than 0'); return; }
     if (!payload.shape_code) { toast('Shape code is required'); return; }
-    if (!payload.dimensions || Object.keys(payload.dimensions).length === 0) { toast('Dimensions JSON is required'); return; }
 
     var res = await fetch('/api/admin/boat-models', {
       method: payload.id ? 'PUT' : 'POST',
@@ -3467,7 +3538,7 @@ async function rBoatModels() {
          '<div class="form-group"><label>Shape Code</label><select id="bm-shape-code">' + boatModelShapeOptions('') + '</select></div>' +
          '<div class="form-group"><label>Active</label><label style="display:flex;align-items:center;gap:8px;height:40px"><input id="bm-is-active" type="checkbox" checked> Available on product page</label></div>' +
        '</div>';
-  h += '<div class="form-group"><label>Dimensions JSON (cm)</label><textarea id="bm-dimensions-json" placeholder=\'{"L":200,"A":180,"D":70,"B":120,"C":120,"T":12}\'></textarea><small style="color:var(--c-muted)">Use shape field keys (A,B,C,D...T). Values in cm.</small></div>';
+  h += '<div class="form-group"><label>Schematic (R2)</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="bm-schematic-url" type="text" readonly placeholder="No schematic uploaded" style="flex:1;min-width:240px"><button type="button" class="btn btn-outline" onclick="uploadBoatModelSchematic()">Upload Schematic</button><button type="button" class="btn btn-outline" onclick="clearBoatModelSchematic()" style="color:var(--c-red);border-color:var(--c-red)">Clear</button></div><small id="bm-schematic-key" style="display:block;color:var(--c-muted);margin-top:6px">No schematic uploaded</small><div id="bm-schematic-actions" style="display:none;gap:8px;margin-top:8px"><a id="bm-schematic-view" class="btn btn-sm btn-outline" href="#" target="_blank" rel="noopener noreferrer">View Schematic</a></div></div>';
   h += '<div class="form-group"><label>Notes</label><input id="bm-notes" placeholder="Optional production notes"></div>';
   h += '<div style="display:flex;gap:8px"><button id="bm-save-btn" class="btn btn-primary" onclick="saveBoatModel()">Add Boat Model</button><button class="btn btn-outline" onclick="resetBoatModelForm()">Reset</button></div>';
   h += '</div></div>';
@@ -3476,18 +3547,16 @@ async function rBoatModels() {
   if (!rows.length) {
     h += '<p style="color:var(--c-muted);text-align:center;padding:28px 0">No boat models yet.</p>';
   } else {
-    h += '<div class="table-wrap"><table><thead><tr><th>Model - Year</th><th>Price</th><th>Shape</th><th>Dimensions</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
+    h += '<div class="table-wrap"><table><thead><tr><th>Model - Year</th><th>Price</th><th>Shape</th><th>Schematic</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>';
     rows.forEach(function(row) {
-      var dims = {};
-      try { dims = JSON.parse(row.dimensions_json || '{}'); } catch (e) {}
-      var dimPairs = Object.keys(dims).slice(0, 6).map(function(k) { return k + ':' + dims[k]; }).join(', ');
-      var extra = Object.keys(dims).length > 6 ? '…' : '';
       var modelLabel = row.model_label || (row.model_year ? ((row.model_name || '') + ' - ' + row.model_year) : (row.model_name || ''));
+      var schematicUrl = String(row.schematic_url || '').trim();
+      var schematicCell = schematicUrl ? ('<a href="' + escHtml(schematicUrl) + '" target="_blank" rel="noopener noreferrer">View</a>') : '<span style="color:var(--c-muted)">Not uploaded</span>';
       h += '<tr>' +
              '<td><strong>' + escHtml(modelLabel || row.model_name || '') + '</strong><br><span style="font-size:0.72rem;color:var(--c-muted)">' + escHtml(row.model_key || '') + '</span></td>' +
              '<td>' + (row.sale_price_usd == null ? '—' : ('$' + Number(row.sale_price_usd).toFixed(2))) + '</td>' +
              '<td>' + escHtml(row.shape_code || '—') + '</td>' +
-             '<td><span style="font-family:monospace;font-size:0.75rem">' + escHtml(dimPairs + extra) + '</span></td>' +
+             '<td>' + schematicCell + '</td>' +
              '<td>' + (Number(row.is_active) === 1 ? '<span class="badge badge-shipped">Active</span>' : '<span class="badge badge-cancelled">Inactive</span>') + '</td>' +
              '<td>' + escHtml((row.updated_at || '').replace('T', ' ').substring(0, 16) || '—') + '</td>' +
              '<td><div style="display:flex;gap:6px"><button class="btn btn-sm btn-outline" onclick="editBoatModel(' + Number(row.id) + ')">Edit</button><button class="btn btn-sm btn-outline" style="color:var(--c-red);border-color:var(--c-red)" onclick="deleteBoatModel(' + Number(row.id) + ')">Delete</button></div></td>' +
@@ -3496,6 +3565,7 @@ async function rBoatModels() {
     h += '</tbody></table></div>';
   }
   h += '</div></div>';
+  setTimeout(function() { setBoatModelSchematicState('', ''); }, 0);
   return h;
 }
 
