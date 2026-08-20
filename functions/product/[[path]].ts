@@ -9,6 +9,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'pet-owner-fitted-sheet',
   'flat-sheet-standard',
   'flat-sheet-extra-deep-pocket',
+  'co-sleeping-top-sheet',
   '3-sided-duvet',
   'pet-owner-duvet-cover',
   'duvet-cover-marine',
@@ -100,15 +101,44 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function stripHtml(value: string): string {
+  return String(value || '')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<\/?[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function truncateForMeta(value: string, max = 160): string {
+  const text = String(value || '').trim();
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+function looksLikeHtml(value: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(String(value || ''));
+}
+
+function buildDescriptionHtml(description: string): string {
+  const text = String(description || '').trim();
+  if (!text) return '';
+  if (looksLikeHtml(text)) return text;
+  return `<p>${escapeHtml(text)}</p>`;
+}
+
 function applyLocalizedDescriptionFromD1(html: string, description: string, isTh: boolean): string {
   const text = String(description || '').trim();
   if (!text) return html;
-  const escaped = escapeHtml(text);
+
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(text), 160));
+  const descriptionHtml = buildDescriptionHtml(text);
 
   html = html
-    .replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${escaped}">`)
-    .replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${escaped}">`)
-    .replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${escaped}">`);
+    .replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${metaDescription}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${metaDescription}">`)
+    .replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${metaDescription}">`);
 
   if (isTh) {
     html = html
@@ -117,8 +147,8 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
   }
 
   html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
-    `$1${escaped}$2`
+    /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+    `$1${descriptionHtml}\n        $2`
   );
   return html;
 }
@@ -170,11 +200,13 @@ export async function onRequest(context: any): Promise<Response> {
 
     // 2. Query D1 for this product's image, title, pricing, and category data
     const stmt = context.env.DB.prepare(
-      'SELECT image_url, images, title_en, title_th, description_en, description_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+      'SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
     ).bind(slug);
     const product = await stmt.first() as any;
 
-    const localizedDescription = isTh ? String(product?.description_th || '') : String(product?.description_en || '');
+    const localizedDescription = isTh
+      ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || '')
+      : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || '');
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
