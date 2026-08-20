@@ -3314,10 +3314,27 @@ var _boatModelsCache = [];
 var _editingBoatModelId = 0;
 
 function boatModelShapeOptions(selected) {
+  var SHAPE_LABELS = {
+    '01': 'V-Berth – 4 Sides',
+    '02': 'V-Berth Cut Corner – 6 Sides',
+    '03': 'V-Berth Rounded Nose',
+    '04': 'V-Berth Split – 2 Pieces',
+    '05': 'Island 6 Sides / Hexagon Bunk',
+    '06': 'Island 7 Sides',
+    '07': 'Island 8 Sides / Octagon Bunk',
+    '08': 'Rectangle',
+    '09': 'Rectangle Cut-Off Corner – 5 Sides',
+    '10': 'Rectangle Two Cut-Off Corners – 6 Sides',
+    '11': 'Radius Corner Rectangle',
+    '12': 'Quarter Berth / Side Berth Tapered',
+    '13': 'Aft Cabin Irregular Mattress',
+    '14': 'Notched Mattress / Obstruction Cut-Out'
+  };
   var opts = ['<option value="">Select shape</option>'];
   for (var i = 1; i <= 14; i++) {
     var code = String(i).padStart(2, '0');
-    opts.push('<option value="' + code + '"' + (selected === code ? ' selected' : '') + '>' + code + '</option>');
+    var label = SHAPE_LABELS[code] || '';
+    opts.push('<option value="' + code + '"' + (selected === code ? ' selected' : '') + '>' + code + (label ? ' - ' + label : '') + '</option>');
   }
   return opts.join('');
 }
