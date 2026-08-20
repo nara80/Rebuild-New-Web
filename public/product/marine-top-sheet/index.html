@@ -280,7 +280,7 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">Marine Top Sheet</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">Custom shape-matched marine top sheet. 14 boat mattress shapes, made to your dimensions, CloudSoft quick-dry comfort.</p>
@@ -413,7 +413,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
+            <div class="summary-stars" id="product-review-stars">★★★★★</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -492,7 +492,7 @@
       var toast=document.getElementById('fav-toast');
       if(!btn)return;
       var isFav=MildMateCampaigns.isFavorite(productSlug);
-      btn.innerHTML=isFav?'â™¥':'â™¡';
+      btn.innerHTML=isFav?'♥':'♡';
       btn.className=isFav?'favorite-btn active':'favorite-btn';
       btn.title=isFav?'Remove from favorites':'Save to favorites';
     }
@@ -500,7 +500,7 @@
       var isFav=MildMateCampaigns.toggleFavorite(productSlug,productName);
       updateFavUI();
       var toast=document.getElementById('fav-toast');
-      if(toast){toast.textContent=isFav?'â™¥ Saved!':'';toast.style.color='#dc2626'}
+      if(toast){toast.textContent=isFav?'♥ Saved!':'';toast.style.color='#dc2626'}
       if(window.MildMateCampaigns&&typeof MildMateCampaigns.toggleFavoriteServer==='function'){
         var result=await MildMateCampaigns.toggleFavoriteServer(productSlug,productName);
         if(!result.ok){MildMateCampaigns.toggleFavorite(productSlug,productName);updateFavUI()}
@@ -1565,7 +1565,7 @@
         var lEl = document.getElementById('dim-L');
         var lVal = parseFloat(lEl?.value) || 0;
         if(code === '01'){
-          /* Shape 01: B = C = âˆš(((A-D)/2)^2 + L^2), but allow manual B/C edits */
+          /* Shape 01: B = C = √(((A-D)/2)^2 + L^2), but allow manual B/C edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-C') return;
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
@@ -1583,7 +1583,7 @@
         } else if(code === '02'){
           /* Shape 02: use Estimate button for B/F/C/E defaults (manual values stay editable) */
         } else if(code === '03'){
-          /* Shape 03: B = D = âˆš(((A-C)/2)^2 + L^2), but allow manual B/D edits */
+          /* Shape 03: B = D = √(((A-C)/2)^2 + L^2), but allow manual B/D edits */
           if(sourceId === 'dim-B' || sourceId === 'dim-D') return;
           var aEl = document.getElementById('dim-A');
           var cEl = document.getElementById('dim-C');
@@ -1692,7 +1692,7 @@
             }
           }
         } else if(code === '09'){
-          /* Shape 09: auto-fill B = âˆš((D-A)² + (E-C)²) */
+          /* Shape 09: auto-fill B = √((D-A)² + (E-C)²) */
           var aEl = document.getElementById('dim-A');
           var dEl = document.getElementById('dim-D');
           var cEl = document.getElementById('dim-C');
@@ -1709,7 +1709,7 @@
             }
           }
         } else if(code === '12'){
-          /* Shape 12: auto-fill A = âˆš(C² + ((B-D)/2)²) */
+          /* Shape 12: auto-fill A = √(C² + ((B-D)/2)²) */
           var bEl_ = document.getElementById('dim-B');
           var dEl_ = document.getElementById('dim-D');
           var cEl_ = document.getElementById('dim-C');
@@ -1725,7 +1725,7 @@
             }
           }
         } else if(code === '13'){
-          /* Shape 13: auto-fill B = âˆš((W-A)²+(L-C)²), E = âˆš((W-D)²+(L-F)²) */
+          /* Shape 13: auto-fill B = √((W-A)²+(L-C)²), E = √((W-D)²+(L-F)²) */
           var wEl = document.getElementById('dim-W');
           var lEl = document.getElementById('dim-L');
           var aEl = document.getElementById('dim-A');
@@ -2356,5 +2356,6 @@
   </script>
 </body>
 </html>
+
 
 

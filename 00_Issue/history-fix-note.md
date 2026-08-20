@@ -8,6 +8,104 @@
 
 ---
 
+## Reconciliation Snapshot (2026-08-13) — Dorm Fitted Sheet OOS Color Still Selectable
+
+This section is the source of truth for `/product/dorm-fitted-sheet/` where CloudSoft `mint` (out of stock) was still selectable.
+
+### Verified symptoms
+- On live product page, users could still select `cloudsoft / mint` despite D1 stock flag being out of stock.
+- Public API check returned:
+  - `GET https://www.mildmate.com/api/color-inventory` → `{ "error": "Not Found" }`
+
+### Root cause (verified)
+- Public route existed in `workers/api/index.ts` but was **missing in `functions/api/[[path]].ts`** route bridge.
+- Because `/api/color-inventory` returned 404, `public/js/product-configurator.js` could not apply `.out-of-stock` swatch lock state.
+
+### Completed fixes (code + build + verification)
+1. **Public route wiring fix**
+   - Updated `functions/api/[[path]].ts`:
+     - added `handleColorInventory` import
+     - added explicit route handling for:
+       - `/api/color-inventory`
+       - `/api/color-inventory/`
+2. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+
+### Current status
+- ✅ Root cause identified and fixed in source
+- ✅ Runtime bundles rebuilt and lint-verified
+- ⏳ Pending production deployment for live OOS swatch enforcement restoration
+
+## Reconciliation Snapshot (2026-08-13) — Super Admin Color Inventory `Failed: Not Found`
+
+This section is the source of truth for the follow-up issue where unchecking a color in `/super-admin/` → **Color Inventory** returned `Failed: Not Found`.
+
+### Verified symptoms
+- On uncheck action, frontend sent valid payload:
+  - `{ updates: [{ fabric: "cloudsoft", color: "sapphire", in_stock: 0 }] }`
+- UI toast returned: **`Failed: Not Found`**
+
+### Root cause (verified)
+- API route existed in `workers/api/index.ts` but was **missing in `functions/api/[[path]].ts`** route bridge.
+- Result: Pages Function fell through to default 404 response for `/api/admin/color-inventory` on the deployed path.
+
+### Completed fixes (code + build + verification)
+1. **Route wiring fix**
+   - Updated `functions/api/[[path]].ts`:
+     - added `handleAdminColorInventory` import
+     - added explicit route handling for:
+       - `/api/admin/color-inventory`
+       - `/api/admin/color-inventory/`
+2. **Prior robustness fix kept in place**
+   - `workers/api/admin-color-inventory.ts`: strict normalize `fabric/color/in_stock`
+   - `public/super-admin/index.html`: strict numeric parse/render for inventory status
+3. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+
+### Current status
+- ✅ Root cause identified and fixed in source
+- ✅ Runtime bundles rebuilt and lint-verified
+- ⏳ Pending production deployment for live `Not Found` resolution
+
+## Reconciliation Snapshot (2026-08-13) — Super Admin Color Inventory Uncheck Issue
+
+This section is the source of truth for the `/super-admin/` → **Color Inventory** issue where unchecking a color (example: `cloudsoft / sapphire`) sent `in_stock: 0` but UI behavior remained inconsistent.
+
+### Verified symptoms
+- Super Admin sent valid payload:
+  - `{ updates: [{ fabric: "cloudsoft", color: "sapphire", in_stock: 0 }] }`
+- User still observed unreliable unchecked/stock display behavior.
+
+### Root cause (verified)
+- Stock values were not normalized strictly enough across API and UI.
+- Truthy/falsy handling of non-numeric values (e.g. `"0"` vs `0`) could cause rendering/state mismatch after toggles.
+
+### Completed fixes (code + build + verification)
+1. **API normalization hardening**
+   - Updated `workers/api/admin-color-inventory.ts`:
+     - Normalize `fabric` + `color` to lowercase/trimmed values.
+     - Normalize `in_stock` to strict numeric `0/1`.
+     - Return normalized inventory in GET response.
+2. **Super Admin UI normalization hardening**
+   - Updated `public/super-admin/index.html`:
+     - Normalize inventory lookup keys to lowercase.
+     - Parse `in_stock` as numeric before rendering toggle/swatch state.
+3. **D1 verification**
+   - Confirmed production row exists for `cloudsoft / sapphire` with `in_stock = 0`.
+4. **Runtime parity + validation**
+   - Rebuilt functions bundle: `npx wrangler pages functions build --outdir public`
+   - Synced runtime artifact: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validation passed: `npm run lint`
+
+### Current status
+- ✅ Root cause identified and corrected in source
+- ✅ Runtime bundles rebuilt and lint-verified
+- ⏳ Pending production deployment to fully apply UI/API normalization live
+
 ## Reconciliation Snapshot (2026-08-12) — Cliff Checkout Decline + Stripe Item Name Fix
 
 This section is the source of truth for the Cliff incident (`QT-260812-001`): customer card decline concern, duplicate-charge verification, and Stripe checkout line-item naming defect (`undefined`).
