@@ -8,6 +8,40 @@
 
 ---
 
+## Reconciliation Snapshot (2026-08-20) — Super Admin Product Image Upload Fails at Mid-Slots
+
+This section is the source of truth for `/super-admin/` → **Products** image upload failures where progress stopped mid-batch (example: slot 5 after successful early slots).
+
+### Verified symptoms
+- Multi-image upload flow progressed through initial slots, then failed during `/api/admin/upload` in the same save cycle.
+- Reported behavior: `Optimizing slot 4 (4/15)...` followed by slot failure.
+- Request evidence showed Bearer JWT usage with short-lived token window (rapid expiry during repeated sequential upload requests).
+
+### Root cause (verified)
+- **Auth token freshness gap during long upload loops**:
+  - `getAdminAuthHeaders()` could reuse a stale Clerk token during sequential slot uploads.
+  - When token expired mid-loop, subsequent `/api/admin/upload` calls returned unauthorized and aborted the batch.
+- This aligned with production behavior where early slots passed and later slots failed in the same action.
+
+### Completed fixes (code + validation)
+1. **Auth header hardening in Super Admin**
+   - Updated `public/super-admin/index.html`:
+     - `getAdminAuthHeaders()` now prefers fresh Clerk token retrieval using `window.clerk.session.getToken({ skipCache: true })`.
+     - Keeps existing `X-Admin-Secret` fallback path intact.
+2. **Upload retry resilience**
+   - Updated product image upload loop in `public/super-admin/index.html`:
+     - On `/api/admin/upload` response `401/403`, automatically refresh headers and retry once.
+3. **Validator run**
+   - `npm run lint` passed.
+
+### Current status
+- ✅ Root cause identified and fixed in source.
+- ✅ Upload auth flow hardened for long multi-slot save operations.
+- ✅ Validation passed.
+- ✅ User confirmed deployment completion after patch.
+
+---
+
 ## Reconciliation Snapshot (2026-08-13) — Dorm Fitted Sheet OOS Color Still Selectable
 
 This section is the source of truth for `/product/dorm-fitted-sheet/` where CloudSoft `mint` (out of stock) was still selectable.

@@ -1439,13 +1439,14 @@ async function getAdminAuthHeaders(includeJson) {
   var headers = {};
   if (includeJson) headers['Content-Type'] = 'application/json';
   try {
-    if (typeof window.getClerkToken === 'function') {
-      var token = await window.getClerkToken();
-      if (!token && window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') {
-        token = await window.clerk.session.getToken();
-      }
-      if (token) headers['Authorization'] = 'Bearer ' + token;
+    var token = '';
+    if (window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') {
+      token = await window.clerk.session.getToken({ skipCache: true });
     }
+    if (!token && typeof window.getClerkToken === 'function') {
+      token = await window.getClerkToken();
+    }
+    if (token) headers['Authorization'] = 'Bearer ' + token;
   } catch(e) {}
   var secret = localStorage.getItem('admin_secret') || ADMIN_SECRET || '';
   if (secret) ADMIN_SECRET = secret;
@@ -2959,6 +2960,14 @@ async function saveProduct() {
           headers: upHeaders,
           body: form
         });
+        if (upResp.status === 401 || upResp.status === 403) {
+          upHeaders = await getAdminAuthHeaders(false);
+          upResp = await fetch("/api/admin/upload", {
+            method: "POST",
+            headers: upHeaders,
+            body: form
+          });
+        }
         var upData = await upResp.json();
         if (!upData.success) { toast("Upload slot " + (slot + 1) + " failed: " + (upData.error || "unknown")); return; }
         if (_pendingBlobs[slot]) { try { URL.revokeObjectURL(_pendingBlobs[slot]); } catch(e){} delete _pendingBlobs[slot]; }
