@@ -432,6 +432,7 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "pet-owner-fitted-sheet",
   "flat-sheet-standard",
   "flat-sheet-extra-deep-pocket",
+  "co-sleeping-top-sheet",
   "3-sided-duvet",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
@@ -510,17 +511,40 @@ function escapeHtml(value) {
   return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 __name(escapeHtml, "escapeHtml");
+function stripHtml(value) {
+  return String(value || "").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<\/?[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+}
+__name(stripHtml, "stripHtml");
+function truncateForMeta(value, max = 160) {
+  const text = String(value || "").trim();
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}\u2026`;
+}
+__name(truncateForMeta, "truncateForMeta");
+function looksLikeHtml(value) {
+  return /<\/?[a-z][\s\S]*>/i.test(String(value || ""));
+}
+__name(looksLikeHtml, "looksLikeHtml");
+function buildDescriptionHtml(description) {
+  const text = String(description || "").trim();
+  if (!text) return "";
+  if (looksLikeHtml(text)) return text;
+  return `<p>${escapeHtml(text)}</p>`;
+}
+__name(buildDescriptionHtml, "buildDescriptionHtml");
 function applyLocalizedDescriptionFromD1(html, description, isTh) {
   const text = String(description || "").trim();
   if (!text) return html;
-  const escaped = escapeHtml(text);
-  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${escaped}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${escaped}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${escaped}">`);
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(text), 160));
+  const descriptionHtml = buildDescriptionHtml(text);
+  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${metaDescription}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${metaDescription}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${metaDescription}">`);
   if (isTh) {
     html = html.replace(/data-info-tab="description">[\s\S]*?<\/button>/i, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>');
   }
   html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
-    `$1${escaped}$2`
+    /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+    `$1${descriptionHtml}
+        $2`
   );
   return html;
 }
@@ -557,10 +581,10 @@ async function onRequest2(context) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
     const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th, description_en, description_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      "SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
     ).bind(slug);
     const product = await stmt.first();
-    const localizedDescription = isTh ? String(product?.description_th || "") : String(product?.description_en || "");
+    const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
     let images = [];
     if (product && product.images) {
@@ -716,6 +740,26 @@ function r2Product(p) {
   return out;
 }
 __name(r2Product, "r2Product");
+async function ensureProductTaxonomyTables(env) {
+  const db = env.DB;
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS product_niches (
+      product_id INTEGER NOT NULL,
+      niche_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (product_id, niche_type)
+    )
+  `).run();
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS product_collections (
+      product_id INTEGER NOT NULL,
+      collection_type TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (product_id, collection_type)
+    )
+  `).run();
+}
+__name(ensureProductTaxonomyTables, "ensureProductTaxonomyTables");
 var PRODUCT_TYPE_DISPLAY2 = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
@@ -733,6 +777,7 @@ var NICHE_DISPLAY2 = {
 };
 async function listProducts(env, filters) {
   const db = env.DB;
+  await ensureProductTaxonomyTables(env);
   let sql = `SELECT * FROM products WHERE 1=1`;
   const params = [];
   if (filters.product_type) {
@@ -743,8 +788,15 @@ async function listProducts(env, filters) {
     params.push(filters.category, filters.category);
   }
   if (filters.niche) {
-    sql += ` AND (',' || niches || ',' LIKE '%,' || ? || ',%' OR ',' || category || ',' LIKE '%,' || ? || ',%')`;
-    params.push(filters.niche, filters.niche);
+    sql += ` AND (
+      EXISTS (
+        SELECT 1 FROM product_collections pc
+        WHERE pc.product_id = products.id AND pc.collection_type = ?
+      )
+      OR ',' || niches || ',' LIKE '%,' || ? || ',%'
+      OR ',' || category || ',' LIKE '%,' || ? || ',%'
+    )`;
+    params.push(filters.niche, filters.niche, filters.niche);
   }
   if (filters.fabric) {
     sql += ` AND fabric = ?`;
@@ -761,6 +813,7 @@ async function listProducts(env, filters) {
 __name(listProducts, "listProducts");
 async function getProductBySlug(env, slug) {
   const db = env.DB;
+  await ensureProductTaxonomyTables(env);
   const result = await db.prepare(`SELECT * FROM products WHERE slug = ?`).bind(slug).first();
   return result;
 }
@@ -11576,7 +11629,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest10, "onRequest");
 
-// ../.wrangler/tmp/pages-dAUAKK/functionsRoutes-0.9536547961718659.mjs
+// ../.wrangler/tmp/pages-91ruF2/functionsRoutes-0.4114009209187671.mjs
 var routes = [
   {
     routePath: "/th/blogs/:path*",
