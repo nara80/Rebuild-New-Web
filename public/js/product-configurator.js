@@ -10,6 +10,10 @@
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
   var isRVTruckFitted = path.indexOf('/product/rv-truck-fitted-sheet/') !== -1;
+  var isDeepPocketProduct =
+    path.indexOf('deep-pocket-fitted-sheet') !== -1 ||
+    path.indexOf('flat-sheet-extra-deep-pocket') !== -1 ||
+    path.indexOf('mattress-protector-deep-pocket') !== -1;
   var isFlatSheet = path.indexOf('flat-sheet') !== -1;
   var isEncasement = path.indexOf('encasement') !== -1;
   var isPetOwner = path.indexOf('pet-owner') !== -1;
@@ -23,6 +27,7 @@
   var isProtectorDeepPocket = path.indexOf('mattress-protector-deep-pocket') !== -1;
   var isProtectorPetProof = path.indexOf('pet-proof-mattress-protector') !== -1;
   var isPillowcase = path.indexOf('pillowcase') !== -1;
+  var hidePricingUI = isPillowcase;
   var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
   var isMarineTopSheet = path.indexOf('marine-top-sheet') !== -1;
   var isMarineShapeProduct = isMarineFitted || isMarineTopSheet;
@@ -79,6 +84,14 @@
     return pVal(key, fallback) / 100;
   }
 
+  function familyMarginRate() {
+    if (apiParams && apiParams.margins) {
+      if (apiParams.margins.family !== undefined) return apiParams.margins.family / 100;
+      if (apiParams.margins.protector_family !== undefined) return apiParams.margins.protector_family / 100;
+    }
+    return 0.50;
+  }
+
   // -- Pricing constants (from API or hardcoded fallbacks) --
   var SQCM_PER_YARD = pVal('sqcm_per_yard', 23744);
   var PACKING = pVal('packing_cost', 100);
@@ -88,15 +101,16 @@
   var CUSTOM_QUOTE_SURCHARGE = pctVal('custom_quote_surcharge', 15);
   var WASTE_FABRIC = 1 + pVal('waste_factor_fabric', 20) / 100;
   var ACCESSORIES_RATE = pctVal('accessories_rate', 10);
+  var FAMILY_MARGIN_RATE = familyMarginRate();
   var MARGIN_RATE = isMarineShapeProduct ? pctVal('marine', 680)
     : isRVTruck ? pctVal('rv_truck', 45)
-    : isFamily ? pctVal('family', 50)
+    : (isFamily || isCoSleeping) ? FAMILY_MARGIN_RATE
     : isEncasement ? pctVal('encasement', 50)
     : isDuvet ? pctVal('duvet', 30)
     : isPillowcase ? pctVal('pillow', 15)
     : isPillowProtector ? pctVal('pillow_protector', 35)
     : isMattressProtector ? (
-        isProtectorFamily ? pctVal('protector_family', 50)
+        isProtectorFamily ? FAMILY_MARGIN_RATE
         : isProtectorDeepPocket ? pctVal('protector_deep', 25)
         : pctVal('protector_standard', 15)
       )
@@ -181,7 +195,7 @@
   var ENC_SEWING = pVal('encasement_sewing_cost', 300);
   var ZIPPER_RATE = pVal('zipper_rate', 0.4);
   var ENC_OP = OP_RATE;
-  var ENC_MKT = pctVal('encasement_mkt', 25);
+  var ENC_MKT = MKT_RATE;
   var ENC_MARGIN = pctVal('encasement', 50);
   var ENC_MARKUP = 1 + ENC_OP + ENC_MKT + ENC_MARGIN;
 
@@ -386,12 +400,28 @@
   var customPrice = document.getElementById('custom-price');
   var mobileCtaPrice = document.getElementById('mobile-cta-price');
   var desktopStickyPriceBlock = document.querySelector('.desktop-cta-sticky .price-block');
+  var customPriceRow = customPrice ? customPrice.closest('.price-row') : null;
+  var mobilePriceWrap = mobileCtaPrice ? mobileCtaPrice.closest('.cta-price-wrap') : null;
+
+  function applyPricingVisibility() {
+    if (!hidePricingUI) return;
+    var priceSummary = document.getElementById('price-summary');
+    if (priceSummary) priceSummary.style.display = 'none';
+    if (customPriceRow) customPriceRow.style.display = 'none';
+    if (desktopStickyPriceBlock) desktopStickyPriceBlock.style.display = 'none';
+    if (mobilePriceWrap) mobilePriceWrap.style.display = 'none';
+  }
+  applyPricingVisibility();
 
   // Tab switching — Standard Sizes vs Custom Quote
   var configTabs = document.querySelectorAll('.config-tab');
   var tabStandard = document.getElementById('tab-standard');
   var tabCustom = document.getElementById('tab-custom');
   function syncTabAwarePriceUI() {
+    if (hidePricingUI) {
+      applyPricingVisibility();
+      return;
+    }
     var customActive = !!(tabCustom && tabCustom.classList.contains('active'));
     if (desktopStickyPriceBlock) desktopStickyPriceBlock.style.display = customActive ? 'none' : '';
     if (mobileCtaPrice) {
@@ -419,7 +449,7 @@
   });
   function switchToStandard() {
     var priceSummary = document.getElementById('price-summary');
-    if (priceSummary) priceSummary.style.display = '';
+    if (priceSummary) priceSummary.style.display = hidePricingUI ? 'none' : '';
     if (addToCartBtn) {
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
       addToCartBtn.style.background = '';
@@ -631,14 +661,18 @@
       optgroup.setAttribute('data-region', region);
       for (var i = 0; i < items.length; i++) {
         var s = items[i];
-        var depth = (typeof s.d === 'number' && isFinite(s.d)) ? s.d : 30;
+        var depth = isDeepPocketProduct
+          ? 51
+          : ((typeof s.d === 'number' && isFinite(s.d)) ? s.d : 30);
         var option = document.createElement('option');
         option.value = (typeKey === 'fitted-sheet' || typeKey === 'truck-fitted-sheet' || typeKey === 'family')
           ? s.w + 'x' + s.l + 'x' + depth
           : s.w + 'x' + s.l;
-        option.textContent = region === 'us'
-          ? s.label + ' ' + s.inch + '\u2033'
-          : s.label + ' \u2014 ' + s.cm + ' cm';
+        if (region === 'us') {
+          option.textContent = s.label + ' ' + s.inch + '\u2033' + (isDeepPocketProduct ? ' \u2022 20\u2033 pocket' : '');
+        } else {
+          option.textContent = s.label + ' \u2014 ' + s.cm + ' cm' + (isDeepPocketProduct ? ' \u00D7 51 cm pocket' : '');
+        }
         optgroup.appendChild(option);
       }
       sizeSelect.appendChild(optgroup);
