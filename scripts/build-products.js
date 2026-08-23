@@ -303,6 +303,8 @@ function buildCustomizable(slug, p, prod) {
     '{{SIZE_PLACEHOLDER}}': sizePlaceholders[pt] || 'Choose size',
     '{{NEEDS_DEPTH}}': String(p.needsDepth === true),
     '{{DIM_LABEL}}': dimLabels[pt] || 'product',
+    '{{DIM_DIAGRAM_ALT}}': 'Mattress dimension diagram: Width (W), Length (L), Depth (D)',
+    '{{DIM_DIAGRAM_CAPTION}}': 'Measure your mattress at its widest, longest, and deepest points',
     '{{MAX_WIDTH}}': String(dims.width),
     '{{MAX_LENGTH}}': String(dims.length),
     '{{MAX_DEPTH}}': dims.depth !== null ? String(dims.depth) : '0',
@@ -346,15 +348,23 @@ function buildCustomizable(slug, p, prod) {
   // Dim diagram image: per product type
   if (slug === 'marine-fitted-sheet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-VBerth-diagram.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Marine mattress diagram: Head Width (HW), Length (L), Depth (D), and Foot Width (FW)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your boat mattress shape and enter HW, L, D, and FW where shown';
     replacements['{{DIM_INPUTS_CLASS}}'] = ' vberth';
   } else if (pt === 'duvet') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Duvet.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Duvet or blanket dimensions diagram: Width (W) and Length (L)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your duvet or blanket at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else if (pt === 'pillowcase' || pt === 'pillow-protector') {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/Pillowcase.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Pillow dimensions diagram: Width (W) and Length (L)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your pillow at its widest and longest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   } else {
     replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-mattress-diagram-01.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Mattress dimension diagram: Width (W), Length (L), Depth (D)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your mattress at its widest, longest, and deepest points';
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   }
 
