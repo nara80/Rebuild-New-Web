@@ -1,1 +1,1 @@
-export { onRequest } from '../../product/[[path]]';
+export { onRequest } from "../../product/[[path]]";

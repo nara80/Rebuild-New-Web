@@ -412,7 +412,7 @@ async function getChrome(db: any, key: 'header' | 'footer'): Promise<string | nu
     .replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, '');
 }
 
-const SKIP_PREFIXES = ['/admin/', '/super-admin/', '/api/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
+const SKIP_PREFIXES = ['/admin/', '/super-admin/', '/api/', '/v1/', '/r2/', '/images/', '/css/', '/js/', '/fonts/'];
 const SKIP_EXTENSIONS = ['.js', '.css', '.png', '.jpg', '.webp', '.svg', '.ico', '.woff2', '.json', '.xml', '.map'];
 const CANONICAL_PRODUCT_SLUGS = new Set([
   'standard-fitted-sheet',
@@ -828,6 +828,21 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/>Language:</g, '>ภาษา:<')
       // Reviews nav link
       .replace(/>Reviews</g, '>รีวิว<')
+      // Product page UI localization fallback
+      .replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">ราคาเริ่มต้น</span>')
+      .replace(/>Standard Sizes<\/button>/g, '>ขนาดมาตรฐาน</button>')
+      .replace(/>Custom Size<\/button>/g, '>ขนาดสั่งทำ</button>')
+      .replace(/>Select Mattress Size<\/div>/g, '>เลือกขนาดที่นอน</div>')
+      .replace(/>Enter your exact mattress dimensions<\/strong>/g, '>กรอกขนาดที่นอนจริงของคุณ</strong>')
+      .replace(/>Add to Cart<\/button>/g, '>เพิ่มลงตะกร้า</button>')
+      .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, '$1 เพิ่มลงตะกร้า')
+      .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, '$1 เพิ่มลงตะกร้า')
+      .replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">รายละเอียด</button>')
+      .replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">คำถามที่พบบ่อย</button>')
+      .replace(/>Premium Quality<\/span>/g, '>คุณภาพพรีเมียม</span>')
+      .replace(/>Custom Fit<\/div>/g, '>ตัดเย็บตามขนาด</div>')
+      .replace(/>Human Safe<\/div>/g, '>ปลอดภัยต่อการใช้งาน</div>')
+      .replace(/>Pet Resist<\/div>/g, '>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>')
       // Search placeholder
       .replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="ค้นหาเครื่องนอน ผ้า ขนาด..."')
       // Rewrite hrefs to /th/ for pages that have Thai versions

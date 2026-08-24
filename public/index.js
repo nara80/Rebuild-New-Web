@@ -1,6 +1,681 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
+// ../workers/api/sales.ts
+var SALES_SERVICE_NAME = "mildmate-sales-api";
+var SALES_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var SOURCE_MAP = {
+  shopee: "shopee",
+  lazada: "lazada",
+  tiktok: "tiktok",
+  line: "line",
+  tline: "line",
+  twhatsapp: "whatsapp",
+  whatsapp: "whatsapp",
+  etsy: "etsy",
+  ebay: "ebay",
+  facebook: "facebook",
+  mildmate: "website",
+  twebsite: "website",
+  website: "website",
+  manual: "manual"
+};
+var ALLOWED_STATUS = /* @__PURE__ */ new Set([
+  "pending",
+  "paid",
+  "processing",
+  "shipped",
+  "completed",
+  "cancelled",
+  "refunded",
+  "archived"
+]);
+var ALLOWED_MAPPING_STATUS = /* @__PURE__ */ new Set([
+  "Mapped",
+  "Partial",
+  "Review Required",
+  "Unmapped"
+]);
+var ALLOWED_REVENUE_STATUS = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
+var schemaReady = false;
+var schemaPromise = null;
+function response(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response, "response");
+function trimTo(v, max = 255) {
+  if (v === void 0 || v === null) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  return s.slice(0, max);
+}
+__name(trimTo, "trimTo");
+function toNum(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum, "toNum");
+function normalizeSourceSystem(raw) {
+  const key = String(raw || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+  if (!key) return "";
+  if (SOURCE_MAP[key]) return SOURCE_MAP[key];
+  return key.replace(/[^a-z0-9-]/g, "");
+}
+__name(normalizeSourceSystem, "normalizeSourceSystem");
+function normalizeStatus(raw) {
+  const v = trimTo(raw, 40);
+  if (!v) return null;
+  const s = v.toLowerCase();
+  if (!ALLOWED_STATUS.has(s)) return null;
+  return s;
+}
+__name(normalizeStatus, "normalizeStatus");
+function normalizeMappingStatus(raw) {
+  const v = trimTo(raw, 40);
+  if (!v) return null;
+  return ALLOWED_MAPPING_STATUS.has(v) ? v : null;
+}
+__name(normalizeMappingStatus, "normalizeMappingStatus");
+function parseItemStatus(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  return v === "removed" ? "removed" : "active";
+}
+__name(parseItemStatus, "parseItemStatus");
+function same(a, b) {
+  if (a === null || a === void 0 || a === "") return b === null || b === void 0 || b === "";
+  if (b === null || b === void 0 || b === "") return false;
+  return String(a) === String(b);
+}
+__name(same, "same");
+async function ensureSalesSchema(env) {
+  if (schemaReady) return;
+  if (!schemaPromise) {
+    schemaPromise = (async () => {
+      const schemaSql = [
+        `CREATE TABLE IF NOT EXISTS sales_orders (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source_system TEXT NOT NULL,
+          source_order_id TEXT NOT NULL,
+          notion_page_id TEXT,
+          order_date TEXT,
+          channel TEXT,
+          currency TEXT,
+          order_total REAL,
+          status TEXT,
+          destination_country TEXT,
+          mapping_status TEXT,
+          source_created_at TEXT,
+          source_updated_at TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(source_system, source_order_id)
+        )`,
+        `CREATE TABLE IF NOT EXISTS sales_order_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sales_order_id INTEGER NOT NULL,
+          source_item_key TEXT NOT NULL,
+          item_no INTEGER,
+          product_id INTEGER,
+          quantity REAL,
+          raw_item_text TEXT,
+          line_revenue REAL,
+          revenue_status TEXT NOT NULL,
+          mapping_status TEXT,
+          item_status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (sales_order_id) REFERENCES sales_orders(id),
+          FOREIGN KEY (product_id) REFERENCES products(id),
+          UNIQUE(sales_order_id, source_item_key)
+        )`,
+        `CREATE TABLE IF NOT EXISTS sync_runs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source TEXT NOT NULL,
+          scenario TEXT,
+          started_at TEXT NOT NULL,
+          finished_at TEXT,
+          status TEXT NOT NULL,
+          records_received INTEGER DEFAULT 0,
+          records_created INTEGER DEFAULT 0,
+          records_updated INTEGER DEFAULT 0,
+          records_unchanged INTEGER DEFAULT 0,
+          records_rejected INTEGER DEFAULT 0,
+          error_message TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_order_date ON sales_orders(order_date)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_channel ON sales_orders(channel)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_status ON sales_orders(status)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_orders_notion_page ON sales_orders(notion_page_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_order_items_product ON sales_order_items(product_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_sales_order_items_order ON sales_order_items(sales_order_id)`
+      ];
+      for (const sql of schemaSql) {
+        await env.DB.prepare(sql).run();
+      }
+      schemaReady = true;
+    })().finally(() => {
+      if (!schemaReady) schemaPromise = null;
+    });
+  }
+  await schemaPromise;
+}
+__name(ensureSalesSchema, "ensureSalesSchema");
+async function createSyncRun(env, payload) {
+  const startedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const source = trimTo(payload.sync_source, 80) || "notion-orderlist";
+  const scenario = trimTo(payload.scenario, 200);
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', 1)`
+  ).bind(source, scenario, startedAt).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun, "createSyncRun");
+async function finishSyncRun(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun, "finishSyncRun");
+async function requireBearerAuth(request, env) {
+  const configured = trimTo(env[SALES_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${SALES_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth, "requireBearerAuth");
+async function validateProductIds(env, items) {
+  const ids = Array.from(
+    new Set(
+      items.map((i) => i.product_id === null || i.product_id === void 0 ? null : Number(i.product_id)).filter((v) => Number.isInteger(v) && v > 0)
+    )
+  );
+  if (ids.length === 0) return { ok: true };
+  const placeholders = ids.map(() => "?").join(", ");
+  const found = await env.DB.prepare(`SELECT id FROM products WHERE id IN (${placeholders})`).bind(...ids).all();
+  const foundSet = new Set((found.results || []).map((r) => Number(r.id)));
+  const missing = ids.find((id) => !foundSet.has(id));
+  if (missing) {
+    return { ok: false, code: "INVALID_PRODUCT_ID", message: `Product ID ${missing} does not exist.` };
+  }
+  return { ok: true };
+}
+__name(validateProductIds, "validateProductIds");
+function normalizePayload(raw) {
+  const sourceSystem = normalizeSourceSystem(raw.source_system);
+  if (!sourceSystem) return { ok: false, code: "MISSING_SOURCE_SYSTEM", message: "source_system is required." };
+  const sourceOrderId = trimTo(raw.source_order_id, 120);
+  if (!sourceOrderId) return { ok: false, code: "MISSING_SOURCE_ORDER_ID", message: "source_order_id is required." };
+  const currencyRaw = trimTo(raw.currency, 10);
+  const currency = currencyRaw ? currencyRaw.toUpperCase() : null;
+  if (currency && !/^[A-Z]{3}$/.test(currency)) {
+    return { ok: false, code: "INVALID_CURRENCY", message: "currency must be a 3-letter ISO code." };
+  }
+  const normalizedStatus = raw.status === void 0 || raw.status === null || raw.status === "" ? null : normalizeStatus(raw.status);
+  if (raw.status !== void 0 && raw.status !== null && raw.status !== "" && !normalizedStatus) {
+    return { ok: false, code: "INVALID_STATUS", message: "status is invalid." };
+  }
+  const mappingStatus = normalizeMappingStatus(raw.mapping_status);
+  if (raw.mapping_status !== void 0 && raw.mapping_status !== null && raw.mapping_status !== "" && !mappingStatus) {
+    return { ok: false, code: "INVALID_MAPPING_STATUS", message: "mapping_status is invalid." };
+  }
+  const orderTotal = toNum(raw.order_total);
+  if (raw.order_total !== void 0 && raw.order_total !== null && raw.order_total !== "" && orderTotal === null) {
+    return { ok: false, code: "INVALID_ORDER_TOTAL", message: "order_total must be numeric." };
+  }
+  const destinationCountryRaw = trimTo(raw.destination_country, 20);
+  const destinationCountry = destinationCountryRaw ? destinationCountryRaw.toUpperCase() : null;
+  if (destinationCountry && !/^[A-Z]{2,3}$/.test(destinationCountry)) {
+    return { ok: false, code: "INVALID_DESTINATION_COUNTRY", message: "destination_country must be ISO country code." };
+  }
+  const itemsRaw = Array.isArray(raw.items) ? raw.items : [];
+  const seenKeys = /* @__PURE__ */ new Set();
+  const items = itemsRaw.map((it, idx) => {
+    const sourceItemKey = trimTo(it.source_item_key, 120) || `item-${idx + 1}`;
+    if (seenKeys.has(sourceItemKey)) {
+      throw new Error(`DUPLICATE_SOURCE_ITEM_KEY::${sourceItemKey}`);
+    }
+    seenKeys.add(sourceItemKey);
+    const productId = it.product_id === void 0 || it.product_id === null || it.product_id === "" ? null : Number(it.product_id);
+    if (productId !== null && (!Number.isInteger(productId) || productId <= 0)) {
+      throw new Error(`INVALID_PRODUCT_ID::${it.product_id}`);
+    }
+    const quantity = toNum(it.quantity);
+    if (it.quantity !== void 0 && it.quantity !== null && it.quantity !== "" && (quantity === null || quantity <= 0)) {
+      throw new Error(`INVALID_QUANTITY::${it.quantity}`);
+    }
+    const revenueStatus = String(it.revenue_status || "").trim().toUpperCase();
+    if (!ALLOWED_REVENUE_STATUS.has(revenueStatus)) {
+      throw new Error(`INVALID_REVENUE_STATUS::${it.revenue_status}`);
+    }
+    const lineRevenue = toNum(it.line_revenue);
+    if (revenueStatus === "EXACT" && lineRevenue === null) {
+      throw new Error("MISSING_EXACT_REVENUE");
+    }
+    if (revenueStatus === "UNALLOCATED" && lineRevenue !== null) {
+      throw new Error("UNALLOCATED_MUST_BE_NULL");
+    }
+    const itemMapping = normalizeMappingStatus(it.mapping_status);
+    if (it.mapping_status !== void 0 && it.mapping_status !== null && it.mapping_status !== "" && !itemMapping) {
+      throw new Error(`INVALID_ITEM_MAPPING_STATUS::${it.mapping_status}`);
+    }
+    const itemNo = it.item_no === void 0 || it.item_no === null || it.item_no === "" ? null : Number(it.item_no);
+    if (itemNo !== null && (!Number.isInteger(itemNo) || itemNo <= 0)) {
+      throw new Error(`INVALID_ITEM_NO::${it.item_no}`);
+    }
+    return {
+      source_item_key: sourceItemKey,
+      item_no: itemNo,
+      product_id: productId,
+      quantity,
+      raw_item_text: trimTo(it.raw_item_text, 2e3),
+      line_revenue: revenueStatus === "UNALLOCATED" ? null : lineRevenue,
+      revenue_status: revenueStatus,
+      mapping_status: itemMapping,
+      item_status: "active"
+    };
+  });
+  return {
+    ok: true,
+    data: {
+      source_system: sourceSystem,
+      source_order_id: sourceOrderId,
+      notion_page_id: trimTo(raw.notion_page_id, 120),
+      order_date: trimTo(raw.order_date, 40),
+      channel: trimTo(raw.channel, 120),
+      currency,
+      order_total: orderTotal,
+      status: normalizedStatus,
+      destination_country: destinationCountry,
+      mapping_status: mappingStatus,
+      source_created_at: trimTo(raw.source_created_at, 50),
+      source_updated_at: trimTo(raw.source_updated_at, 50),
+      items,
+      sync_source: trimTo(raw.sync_source, 80),
+      scenario: trimTo(raw.scenario, 200)
+    }
+  };
+}
+__name(normalizePayload, "normalizePayload");
+function compareOrder(existing, incoming) {
+  return same(existing.notion_page_id, incoming.notion_page_id) && same(existing.order_date, incoming.order_date) && same(existing.channel, incoming.channel) && same(existing.currency, incoming.currency) && same(existing.order_total, incoming.order_total) && same(existing.status, incoming.status) && same(existing.destination_country, incoming.destination_country) && same(existing.mapping_status, incoming.mapping_status) && same(existing.source_created_at, incoming.source_created_at) && same(existing.source_updated_at, incoming.source_updated_at);
+}
+__name(compareOrder, "compareOrder");
+function compareItem(existing, incoming) {
+  return same(existing.item_no, incoming.item_no) && same(existing.product_id, incoming.product_id) && same(existing.quantity, incoming.quantity) && same(existing.raw_item_text, incoming.raw_item_text) && same(existing.line_revenue, incoming.line_revenue) && same(existing.revenue_status, incoming.revenue_status) && same(existing.mapping_status, incoming.mapping_status) && parseItemStatus(existing.item_status) === parseItemStatus(incoming.item_status);
+}
+__name(compareItem, "compareItem");
+async function handleUpsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: auth.code,
+      message: auth.message
+    }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: "INVALID_JSON",
+      message: "Request body must be valid JSON."
+    }, 400);
+  }
+  const normalized = normalizePayload(body);
+  if (!normalized.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: normalized.code,
+      message: normalized.message
+    }, 400);
+  }
+  const payload = normalized.data;
+  const productCheck = await validateProductIds(env, payload.items || []);
+  if (!productCheck.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: productCheck.code,
+      message: productCheck.message
+    }, 400);
+  }
+  let syncRunId = 0;
+  try {
+    syncRunId = await createSyncRun(env, payload);
+    const existingOrder = await env.DB.prepare(
+      `SELECT id, notion_page_id, order_date, channel, currency, order_total, status,
+              destination_country, mapping_status, source_created_at, source_updated_at
+       FROM sales_orders
+       WHERE source_system = ?1 AND source_order_id = ?2
+       LIMIT 1`
+    ).bind(payload.source_system, payload.source_order_id).first();
+    let salesOrderId = 0;
+    let orderAction = "unchanged";
+    if (!existingOrder) {
+      const inserted = await env.DB.prepare(
+        `INSERT INTO sales_orders (
+          source_system, source_order_id, notion_page_id, order_date, channel, currency, order_total,
+          status, destination_country, mapping_status, source_created_at, source_updated_at
+        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`
+      ).bind(
+        payload.source_system,
+        payload.source_order_id,
+        payload.notion_page_id,
+        payload.order_date,
+        payload.channel,
+        payload.currency,
+        payload.order_total,
+        payload.status,
+        payload.destination_country,
+        payload.mapping_status,
+        payload.source_created_at,
+        payload.source_updated_at
+      ).run();
+      salesOrderId = Number(inserted.meta?.last_row_id || 0);
+      orderAction = "created";
+    } else {
+      salesOrderId = Number(existingOrder.id);
+      const sameOrder = compareOrder(existingOrder, payload);
+      if (!sameOrder) {
+        await env.DB.prepare(
+          `UPDATE sales_orders
+           SET notion_page_id = ?1,
+               order_date = ?2,
+               channel = ?3,
+               currency = ?4,
+               order_total = ?5,
+               status = ?6,
+               destination_country = ?7,
+               mapping_status = ?8,
+               source_created_at = ?9,
+               source_updated_at = ?10,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?11`
+        ).bind(
+          payload.notion_page_id,
+          payload.order_date,
+          payload.channel,
+          payload.currency,
+          payload.order_total,
+          payload.status,
+          payload.destination_country,
+          payload.mapping_status,
+          payload.source_created_at,
+          payload.source_updated_at,
+          salesOrderId
+        ).run();
+        orderAction = "updated";
+      }
+    }
+    const existingItemsRes = await env.DB.prepare(
+      `SELECT id, source_item_key, item_no, product_id, quantity, raw_item_text, line_revenue,
+              revenue_status, mapping_status, item_status
+       FROM sales_order_items
+       WHERE sales_order_id = ?1`
+    ).bind(salesOrderId).all();
+    const existingItems = existingItemsRes.results || [];
+    const existingMap = /* @__PURE__ */ new Map();
+    existingItems.forEach((row) => existingMap.set(String(row.source_item_key), row));
+    const incomingKeys = /* @__PURE__ */ new Set();
+    const itemStats = { created: 0, updated: 0, unchanged: 0, removed: 0 };
+    for (const item of payload.items) {
+      const k = String(item.source_item_key);
+      incomingKeys.add(k);
+      const prev = existingMap.get(k);
+      if (!prev) {
+        await env.DB.prepare(
+          `INSERT INTO sales_order_items (
+            sales_order_id, source_item_key, item_no, product_id, quantity, raw_item_text,
+            line_revenue, revenue_status, mapping_status, item_status
+          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 'active')`
+        ).bind(
+          salesOrderId,
+          item.source_item_key,
+          item.item_no,
+          item.product_id,
+          item.quantity,
+          item.raw_item_text,
+          item.line_revenue,
+          item.revenue_status,
+          item.mapping_status
+        ).run();
+        itemStats.created += 1;
+        continue;
+      }
+      const merged = { ...item, item_status: "active" };
+      const unchanged = compareItem(prev, merged);
+      if (unchanged) {
+        itemStats.unchanged += 1;
+      } else {
+        await env.DB.prepare(
+          `UPDATE sales_order_items
+           SET item_no = ?1,
+               product_id = ?2,
+               quantity = ?3,
+               raw_item_text = ?4,
+               line_revenue = ?5,
+               revenue_status = ?6,
+               mapping_status = ?7,
+               item_status = 'active',
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?8`
+        ).bind(
+          item.item_no,
+          item.product_id,
+          item.quantity,
+          item.raw_item_text,
+          item.line_revenue,
+          item.revenue_status,
+          item.mapping_status,
+          prev.id
+        ).run();
+        itemStats.updated += 1;
+      }
+    }
+    for (const prev of existingItems) {
+      const k = String(prev.source_item_key);
+      if (!incomingKeys.has(k) && parseItemStatus(prev.item_status) !== "removed") {
+        await env.DB.prepare(
+          `UPDATE sales_order_items
+           SET item_status = 'removed', updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?1`
+        ).bind(prev.id).run();
+        itemStats.removed += 1;
+      }
+    }
+    let action = "unchanged";
+    if (orderAction === "created") action = "created";
+    else if (orderAction === "updated" || itemStats.created > 0 || itemStats.updated > 0 || itemStats.removed > 0) action = "updated";
+    await finishSyncRun(env, syncRunId, {
+      status: "success",
+      created: action === "created" ? 1 : 0,
+      updated: action === "updated" ? 1 : 0,
+      unchanged: action === "unchanged" ? 1 : 0,
+      rejected: 0
+    });
+    return response({
+      success: true,
+      action,
+      sales_order_id: salesOrderId,
+      source_system: payload.source_system,
+      source_order_id: payload.source_order_id,
+      items: itemStats
+    });
+  } catch (e) {
+    const msg = String(e?.message || e || "Unexpected error");
+    const upper = msg.toUpperCase();
+    let code = "UPSERT_FAILED";
+    let http = 500;
+    if (upper.startsWith("DUPLICATE_SOURCE_ITEM_KEY::")) {
+      code = "DUPLICATE_SOURCE_ITEM_KEY";
+      http = 400;
+    } else if (upper.startsWith("INVALID_PRODUCT_ID::")) {
+      code = "INVALID_PRODUCT_ID";
+      http = 400;
+    } else if (upper.startsWith("INVALID_QUANTITY::")) {
+      code = "INVALID_QUANTITY";
+      http = 400;
+    } else if (upper.startsWith("INVALID_REVENUE_STATUS::")) {
+      code = "INVALID_REVENUE_STATUS";
+      http = 400;
+    } else if (upper.startsWith("INVALID_ITEM_MAPPING_STATUS::")) {
+      code = "INVALID_MAPPING_STATUS";
+      http = 400;
+    } else if (upper === "MISSING_EXACT_REVENUE") {
+      code = "MISSING_EXACT_REVENUE";
+      http = 400;
+    } else if (upper === "UNALLOCATED_MUST_BE_NULL") {
+      code = "UNALLOCATED_REVENUE_MUST_BE_NULL";
+      http = 400;
+    } else if (upper.startsWith("INVALID_ITEM_NO::")) {
+      code = "INVALID_ITEM_NO";
+      http = 400;
+    }
+    await finishSyncRun(env, syncRunId, {
+      status: "failed",
+      rejected: 1,
+      error: msg
+    });
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: code,
+      message: msg
+    }, http);
+  }
+}
+__name(handleUpsert, "handleUpsert");
+async function handleReadOrder(request, env, sourcePart, orderPart) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: auth.code,
+      message: auth.message
+    }, auth.status);
+  }
+  const source = normalizeSourceSystem(decodeURIComponent(sourcePart || ""));
+  const sourceOrderId = decodeURIComponent(orderPart || "").trim();
+  if (!source || !sourceOrderId) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: "INVALID_PATH_PARAMS",
+      message: "source_system and source_order_id are required."
+    }, 400);
+  }
+  const order = await env.DB.prepare(
+    `SELECT id, source_system, source_order_id, notion_page_id, order_date, channel, currency,
+            order_total, status, destination_country, mapping_status, source_created_at, source_updated_at,
+            created_at, updated_at
+     FROM sales_orders
+     WHERE source_system = ?1 AND source_order_id = ?2
+     LIMIT 1`
+  ).bind(source, sourceOrderId).first();
+  if (!order) {
+    return response({
+      success: false,
+      action: "rejected",
+      error_code: "ORDER_NOT_FOUND",
+      message: "Order not found."
+    }, 404);
+  }
+  const items = await env.DB.prepare(
+    `SELECT id, source_item_key, item_no, product_id, quantity, raw_item_text, line_revenue,
+            revenue_status, mapping_status, item_status, created_at, updated_at
+     FROM sales_order_items
+     WHERE sales_order_id = ?1
+     ORDER BY id`
+  ).bind(order.id).all();
+  return response({
+    success: true,
+    order,
+    items: items.results || []
+  });
+}
+__name(handleReadOrder, "handleReadOrder");
+async function handleSalesApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1") && !path.startsWith("/api/v1")) {
+    return null;
+  }
+  await ensureSalesSchema(env);
+  if (method === "OPTIONS") return response({ ok: true });
+  if (method === "GET" && (path === "/v1/health" || path === "/api/v1/health")) {
+    return response({ ok: true, service: SALES_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/sales/orders/upsert" || path === "/api/v1/sales/orders/upsert")) {
+    return handleUpsert(request, env);
+  }
+  const readMatch = path.match(/^\/(?:api\/)?v1\/sales\/orders\/([^\/]+)\/([^\/]+)$/i);
+  if (method === "GET" && readMatch) {
+    return handleReadOrder(request, env, readMatch[1], readMatch[2]);
+  }
+  return response({ error: "Sales route not found" }, 404);
+}
+__name(handleSalesApi, "handleSalesApi");
+
+// api/v1/[[path]].ts
+var onRequest = /* @__PURE__ */ __name(async (context) => {
+  const res = await handleSalesApi(context.request, context.env);
+  if (res) return res;
+  return new Response(JSON.stringify({ error: "Not Found" }), {
+    status: 404,
+    headers: { "Content-Type": "application/json" }
+  });
+}, "onRequest");
+
 // blog-shared.ts
 function escHtml(str) {
   if (!str) return "";
@@ -379,7 +1054,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
 __name(buildBlogPostHTML, "buildBlogPostHTML");
 
 // th/blogs/[[path]].ts
-async function onRequest(context) {
+async function onRequest2(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -418,7 +1093,7 @@ async function onRequest(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest, "onRequest");
+__name(onRequest2, "onRequest");
 
 // product/[[path]].ts
 var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
@@ -543,13 +1218,37 @@ function applyLocalizedDescriptionFromD1(html, description, isTh) {
   }
   html = html.replace(
     /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
-    `$1${descriptionHtml}
-        $2`
+    (_m, start, end) => `${start}${descriptionHtml}
+        ${end}`
   );
   return html;
 }
 __name(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
-async function onRequest2(context) {
+function applyLocalizedFaqFromD1(html, faq) {
+  const text = String(faq || "").trim();
+  if (!text) return html;
+  const faqHtml = looksLikeHtml(text) ? text : `<p>${escapeHtml(text)}</p>`;
+  return html.replace(
+    /(<div[^>]*id="info-panel-faq"[^>]*>)[\s\S]*?(<\/div>\s*<\/div>\s*<\/div>)/i,
+    (_m, start, end) => `${start}${faqHtml}
+        ${end}`
+  );
+}
+__name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+function applyThaiProductUiLocalization(html, tagline) {
+  const safeTagline = String(tagline || "").trim();
+  const localized = html.replace(
+    /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
+    '<button class="config-tab active" data-tab="standard">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>'
+  ).replace(
+    /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
+    '<button class="config-tab" data-tab="custom">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>'
+  ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>').replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
+  if (!safeTagline) return localized;
+  return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+__name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
+async function onRequest3(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
   if (pathname === "/product" || pathname === "/product/") {
@@ -581,11 +1280,16 @@ async function onRequest2(context) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
     const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
     ).bind(slug);
     const product = await stmt.first();
     const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    const localizedFaq = isTh ? String(product?.faq_th || "") : String(product?.faq_en || "");
+    html = applyLocalizedFaqFromD1(html, localizedFaq);
+    if (isTh) {
+      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""));
+    }
     let images = [];
     if (product && product.images) {
       try {
@@ -707,7 +1411,7 @@ async function onRequest2(context) {
     return context.next();
   }
 }
-__name(onRequest2, "onRequest");
+__name(onRequest3, "onRequest");
 
 // ../workers/api/products.ts
 var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
@@ -1393,7 +2097,7 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response = {
+      const response2 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
@@ -1403,9 +2107,9 @@ async function handlePricing(request, env) {
         formula: formulaType
       };
       if (resultUsd.breakdown) {
-        response.breakdown = resultUsd.breakdown;
+        response2.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response), {
+      return new Response(JSON.stringify(response2), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -9856,10 +10560,14 @@ function r2Product3(p) {
   return out;
 }
 __name(r2Product3, "r2Product");
-var onRequest3 = /* @__PURE__ */ __name(async (context) => {
+var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  if (path.startsWith("/api/v1/") || path === "/api/v1") {
+    const salesRes = await handleSalesApi(request, env);
+    if (salesRes) return salesRes;
+  }
   if (path === "/api/health") {
     return new Response(JSON.stringify({ status: "ok" }), {
       headers: { "Content-Type": "application/json" }
@@ -10054,7 +10762,7 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // blogs/[[path]].ts
-async function onRequest4(context) {
+async function onRequest5(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -10093,7 +10801,7 @@ async function onRequest4(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest4, "onRequest");
+__name(onRequest5, "onRequest");
 
 // products/[[path]].ts
 var FIXED_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
@@ -10236,7 +10944,7 @@ function buildCard(product, isTh) {
           </article>`;
 }
 __name(buildCard, "buildCard");
-async function onRequest5(context) {
+async function onRequest6(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -10298,10 +11006,10 @@ ${cardsHtml}
     return next();
   }
 }
-__name(onRequest5, "onRequest");
+__name(onRequest6, "onRequest");
 
 // quote/[[path]].ts
-var onRequest6 = /* @__PURE__ */ __name(async (context) => {
+var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -10645,7 +11353,7 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // r2/[[path]].ts
-var onRequest7 = /* @__PURE__ */ __name(async (context) => {
+var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -10666,6 +11374,16 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   return Response.redirect(publicUrl, 302);
 }, "onRequest");
 
+// v1/[[path]].ts
+var onRequest9 = /* @__PURE__ */ __name(async (context) => {
+  const res = await handleSalesApi(context.request, context.env);
+  if (res) return res;
+  return new Response(JSON.stringify({ error: "Not Found" }), {
+    status: 404,
+    headers: { "Content-Type": "application/json" }
+  });
+}, "onRequest");
+
 // account/_middleware.ts
 function getClerkSessionToken2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
@@ -10677,7 +11395,7 @@ function getClerkSessionToken2(request) {
   return null;
 }
 __name(getClerkSessionToken2, "getClerkSessionToken");
-var onRequest8 = /* @__PURE__ */ __name(async (context) => {
+var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -10799,7 +11517,7 @@ async function enrichAdminFromClerk(sub, env) {
   }
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
-var onRequest9 = /* @__PURE__ */ __name(async (context) => {
+var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -11261,7 +11979,7 @@ async function getChrome(db, key) {
   return html.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
 }
 __name(getChrome, "getChrome");
-var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
+var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/v1/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
 var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
@@ -11523,7 +12241,7 @@ async function fetchListingProducts(db, config) {
   return result?.results || [];
 }
 __name(fetchListingProducts, "fetchListingProducts");
-async function onRequest10(context) {
+async function onRequest12(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
   for (const prefix of SKIP_PREFIXES) {
@@ -11536,10 +12254,10 @@ async function onRequest10(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response = await context.next();
-  const contentType = response.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response;
-  let html = await response.text();
+  const response2 = await context.next();
+  const contentType = response2.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response2;
+  let html = await response2.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -11598,7 +12316,7 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   if (!html.includes('id="shared-footer-mobile-style"')) {
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
@@ -11625,99 +12343,113 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response.status, headers: response.headers });
+  return new Response(html, { status: response2.status, headers: response2.headers });
 }
-__name(onRequest10, "onRequest");
+__name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-91ruF2/functionsRoutes-0.4114009209187671.mjs
+// ../.wrangler/tmp/pages-jEzN60/functionsRoutes-0.3764089566341099.mjs
 var routes = [
+  {
+    routePath: "/api/v1/:path*",
+    mountPath: "/api/v1",
+    method: "",
+    middlewares: [],
+    modules: [onRequest]
+  },
   {
     routePath: "/th/blogs/:path*",
     mountPath: "/th/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest]
+    modules: [onRequest2]
   },
   {
     routePath: "/th/product/:path*",
     mountPath: "/th/product",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest3]
   },
   {
     routePath: "/api/:path*",
     mountPath: "/api",
     method: "",
     middlewares: [],
-    modules: [onRequest3]
+    modules: [onRequest4]
   },
   {
     routePath: "/blogs/:path*",
     mountPath: "/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest4]
+    modules: [onRequest5]
   },
   {
     routePath: "/product/:path*",
     mountPath: "/product",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest3]
   },
   {
     routePath: "/products/:path*",
     mountPath: "/products",
     method: "",
     middlewares: [],
-    modules: [onRequest5]
+    modules: [onRequest6]
   },
   {
     routePath: "/quote/:path*",
     mountPath: "/quote",
     method: "",
     middlewares: [],
-    modules: [onRequest6]
+    modules: [onRequest7]
   },
   {
     routePath: "/r2/:path*",
     mountPath: "/r2",
     method: "",
     middlewares: [],
-    modules: [onRequest7]
+    modules: [onRequest8]
+  },
+  {
+    routePath: "/v1/:path*",
+    mountPath: "/v1",
+    method: "",
+    middlewares: [],
+    modules: [onRequest9]
   },
   {
     routePath: "/account",
     mountPath: "/account",
     method: "",
-    middlewares: [onRequest8],
+    middlewares: [onRequest10],
     modules: []
   },
   {
     routePath: "/admin",
     mountPath: "/admin",
     method: "",
-    middlewares: [onRequest9],
+    middlewares: [onRequest11],
     modules: []
   },
   {
     routePath: "/super-admin",
     mountPath: "/super-admin",
     method: "",
-    middlewares: [onRequest9],
+    middlewares: [onRequest11],
     modules: []
   },
   {
     routePath: "/",
     mountPath: "/",
     method: "",
-    middlewares: [onRequest10],
+    middlewares: [onRequest12],
     modules: []
   }
 ];
 
-// ../node_modules/path-to-regexp/dist.es2015/index.js
+// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -12043,7 +12775,7 @@ function pathToRegexp(path, keys, options) {
 }
 __name(pathToRegexp, "pathToRegexp");
 
-// ../node_modules/wrangler/templates/pages-template-worker.ts
+// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
@@ -12131,35 +12863,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response = await handler(context);
-        if (!(response instanceof Response)) {
+        const response2 = await handler(context);
+        if (!(response2 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response);
+        return cloneResponse(response2);
       } else if ("ASSETS") {
-        const response = await env["ASSETS"].fetch(request);
-        return cloneResponse(response);
+        const response2 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response2);
       } else {
-        const response = await fetch(request);
-        return cloneResponse(response);
+        const response2 = await fetch(request);
+        return cloneResponse(response2);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response = await env["ASSETS"].fetch(request);
-        return cloneResponse(response);
+        const response2 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response2);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response) => (
+var cloneResponse = /* @__PURE__ */ __name((response2) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response.status) ? null : response.body,
-    response
+    [101, 204, 205, 304].includes(response2.status) ? null : response2.body,
+    response2
   )
 ), "cloneResponse");
 export {

@@ -1,12 +1,15 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// blog-shared.ts
+// _worker.js
+var __defProp2 = Object.defineProperty;
+var __name2 = /* @__PURE__ */ __name((target, value) => __defProp2(target, "name", { value, configurable: true }), "__name");
 function escHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 __name(escHtml, "escHtml");
+__name2(escHtml, "escHtml");
 function formatDate(dateStr) {
   if (!dateStr) return "";
   try {
@@ -20,17 +23,20 @@ function formatDate(dateStr) {
   }
 }
 __name(formatDate, "formatDate");
+__name2(formatDate, "formatDate");
 var R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toPublicR2Url(url) {
   if (!url) return url;
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url, "toPublicR2Url");
+__name2(toPublicR2Url, "toPublicR2Url");
 function normalizeR2InHtml(html) {
   if (!html) return html;
   return html.replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`).replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
 }
 __name(normalizeR2InHtml, "normalizeR2InHtml");
+__name2(normalizeR2InHtml, "normalizeR2InHtml");
 function extractExcerptFromHtml(html, maxLen = 140) {
   if (!html) return "";
   const text = String(html).replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ").trim();
@@ -38,12 +44,13 @@ function extractExcerptFromHtml(html, maxLen = 140) {
   return text.length > maxLen ? text.slice(0, maxLen).trim() : text;
 }
 __name(extractExcerptFromHtml, "extractExcerptFromHtml");
+__name2(extractExcerptFromHtml, "extractExcerptFromHtml");
 async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter = "All") {
   const isThai = lang === "th";
   try {
     const PER_PAGE = 8;
     const selectedCategory = (categoryFilter || "All").trim();
-    const parseCats = /* @__PURE__ */ __name((raw) => {
+    const parseCats = /* @__PURE__ */ __name2((raw) => {
       try {
         const arr = JSON.parse(raw || "[]");
         if (!Array.isArray(arr)) return [];
@@ -82,7 +89,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
     ).bind(PER_PAGE, offset);
     const { results } = await stmt.all();
     const posts = results || [];
-    const esc = /* @__PURE__ */ __name((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
+    const esc = /* @__PURE__ */ __name2((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
     let featuredHtml = "";
     let gridHtml = "";
     const CATEGORY_TH = {
@@ -129,10 +136,10 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
       const nextPage = page < totalPages ? page + 1 : totalPages;
       const prevDisabled = page <= 1;
       const nextDisabled = page >= totalPages;
-      const escAttr = /* @__PURE__ */ __name((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
+      const escAttr = /* @__PURE__ */ __name2((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
       const baseUrl = (isThai ? "/th" : "") + "/blogs/";
       const categoryQs = activeCategory === "All" ? "" : "category=" + encodeURIComponent(activeCategory);
-      const pageUrl = /* @__PURE__ */ __name((p) => {
+      const pageUrl = /* @__PURE__ */ __name2((p) => {
         const params = [];
         if (categoryQs) params.push(categoryQs);
         if (p > 1) params.push("page=" + p);
@@ -153,6 +160,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
   }
 }
 __name(buildBlogListingHTML, "buildBlogListingHTML");
+__name2(buildBlogListingHTML, "buildBlogListingHTML");
 async function buildBlogPostHTML(post, env, lang = "en") {
   const isThai = lang === "th";
   const title = isThai ? escHtml(post.title_th || post.title_en || "MildMate Blog") : escHtml(post.title_en || "MildMate Blog");
@@ -377,8 +385,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
 </head>`);
 }
 __name(buildBlogPostHTML, "buildBlogPostHTML");
-
-// th/blogs/[[path]].ts
+__name2(buildBlogPostHTML, "buildBlogPostHTML");
 async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -419,8 +426,7 @@ async function onRequest(context) {
   }
 }
 __name(onRequest, "onRequest");
-
-// product/[[path]].ts
+__name2(onRequest, "onRequest");
 var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
   "deep-pocket-fitted-sheet",
@@ -471,6 +477,7 @@ function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
 __name(hasToken, "hasToken");
+__name2(hasToken, "hasToken");
 function resolveLegacyProduct(slug) {
   if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
   if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
@@ -506,25 +513,81 @@ function resolveLegacyProduct(slug) {
   return "/products/";
 }
 __name(resolveLegacyProduct, "resolveLegacyProduct");
+__name2(resolveLegacyProduct, "resolveLegacyProduct");
 function escapeHtml(value) {
   return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 __name(escapeHtml, "escapeHtml");
+__name2(escapeHtml, "escapeHtml");
+function stripHtml(value) {
+  return String(value || "").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<\/?[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+}
+__name(stripHtml, "stripHtml");
+__name2(stripHtml, "stripHtml");
+function truncateForMeta(value, max = 160) {
+  const text = String(value || "").trim();
+  if (!text || text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}\u2026`;
+}
+__name(truncateForMeta, "truncateForMeta");
+__name2(truncateForMeta, "truncateForMeta");
+function looksLikeHtml(value) {
+  return /<\/?[a-z][\s\S]*>/i.test(String(value || ""));
+}
+__name(looksLikeHtml, "looksLikeHtml");
+__name2(looksLikeHtml, "looksLikeHtml");
+function buildDescriptionHtml(description) {
+  const text = String(description || "").trim();
+  if (!text) return "";
+  if (looksLikeHtml(text)) return text;
+  return `<p>${escapeHtml(text)}</p>`;
+}
+__name(buildDescriptionHtml, "buildDescriptionHtml");
+__name2(buildDescriptionHtml, "buildDescriptionHtml");
 function applyLocalizedDescriptionFromD1(html, description, isTh) {
   const text = String(description || "").trim();
   if (!text) return html;
-  const escaped = escapeHtml(text);
-  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${escaped}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${escaped}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${escaped}">`);
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(text), 160));
+  const descriptionHtml = buildDescriptionHtml(text);
+  html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${metaDescription}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${metaDescription}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${metaDescription}">`);
   if (isTh) {
     html = html.replace(/data-info-tab="description">[\s\S]*?<\/button>/i, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>');
   }
   html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>[\s\S]*?<p>)[\s\S]*?(<\/p>)/i,
-    `$1${escaped}$2`
+    /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+    (_m, start, end) => `${start}${descriptionHtml}
+        ${end}`
   );
   return html;
 }
 __name(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
+__name2(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
+function applyLocalizedFaqFromD1(html, faq) {
+  const text = String(faq || "").trim();
+  if (!text) return html;
+  const faqHtml = looksLikeHtml(text) ? text : `<p>${escapeHtml(text)}</p>`;
+  return html.replace(
+    /(<div[^>]*id="info-panel-faq"[^>]*>)[\s\S]*?(<\/div>\s*<\/div>\s*<\/div>)/i,
+    (_m, start, end) => `${start}${faqHtml}
+        ${end}`
+  );
+}
+__name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+__name2(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+function applyThaiProductUiLocalization(html, tagline) {
+  const safeTagline = String(tagline || "").trim();
+  const localized = html.replace(
+    /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
+    '<button class="config-tab active" data-tab="standard">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>'
+  ).replace(
+    /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
+    '<button class="config-tab" data-tab="custom">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>'
+  ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>').replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
+  if (!safeTagline) return localized;
+  return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+__name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
+__name2(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
 async function onRequest2(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -557,11 +620,16 @@ async function onRequest2(context) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
     const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th, description_en, description_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
     ).bind(slug);
     const product = await stmt.first();
-    const localizedDescription = isTh ? String(product?.description_th || "") : String(product?.description_en || "");
+    const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    const localizedFaq = isTh ? String(product?.faq_th || "") : String(product?.faq_en || "");
+    html = applyLocalizedFaqFromD1(html, localizedFaq);
+    if (isTh) {
+      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""));
+    }
     let images = [];
     if (product && product.images) {
       try {
@@ -683,9 +751,8 @@ async function onRequest2(context) {
     return context.next();
   }
 }
-__name(onRequest2, "onRequest");
-
-// ../workers/api/products.ts
+__name(onRequest2, "onRequest2");
+__name2(onRequest2, "onRequest");
 var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url(url) {
   if (!url) return url;
@@ -693,12 +760,14 @@ function toR2Url(url) {
   return url;
 }
 __name(toR2Url, "toR2Url");
+__name2(toR2Url, "toR2Url");
 function normalizeMojibake(str) {
   const s = String(str || "").trim();
   if (!s) return "";
   return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "").replace(/≡ƒñì/g, "").replace(/�/g, "");
 }
 __name(normalizeMojibake, "normalizeMojibake");
+__name2(normalizeMojibake, "normalizeMojibake");
 function r2Product(p) {
   const out = { ...p, image_url: toR2Url(p.image_url) };
   if (out.images && typeof out.images === "string") {
@@ -716,6 +785,7 @@ function r2Product(p) {
   return out;
 }
 __name(r2Product, "r2Product");
+__name2(r2Product, "r2Product");
 var PRODUCT_TYPE_DISPLAY2 = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
@@ -759,12 +829,14 @@ async function listProducts(env, filters) {
   return result.results || [];
 }
 __name(listProducts, "listProducts");
+__name2(listProducts, "listProducts");
 async function getProductBySlug(env, slug) {
   const db = env.DB;
   const result = await db.prepare(`SELECT * FROM products WHERE slug = ?`).bind(slug).first();
   return result;
 }
 __name(getProductBySlug, "getProductBySlug");
+__name2(getProductBySlug, "getProductBySlug");
 async function handleProducts(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -817,6 +889,7 @@ async function handleProducts(request, env) {
   });
 }
 __name(handleProducts, "handleProducts");
+__name2(handleProducts, "handleProducts");
 async function handleProductReviews(env, slug) {
   try {
     const product = await getProductBySlug(env, slug);
@@ -876,8 +949,7 @@ async function handleProductReviews(env, slug) {
   }
 }
 __name(handleProductReviews, "handleProductReviews");
-
-// ../workers/api/pricing.ts
+__name2(handleProductReviews, "handleProductReviews");
 var BOLT_WIDTH_CM = 260;
 var SQCM_PER_YARD = 91.44 * BOLT_WIDTH_CM;
 var FABRIC_COST_PER_YARD_THB = {
@@ -918,6 +990,7 @@ function inchToCm(val) {
   return val * 2.54;
 }
 __name(inchToCm, "inchToCm");
+__name2(inchToCm, "inchToCm");
 function getSewingCost(areaSqCm) {
   for (const tier of SEWING_TIERS) {
     if (areaSqCm <= tier.maxArea) return tier.cost;
@@ -925,6 +998,7 @@ function getSewingCost(areaSqCm) {
   return SEWING_TIERS[SEWING_TIERS.length - 1].cost;
 }
 __name(getSewingCost, "getSewingCost");
+__name2(getSewingCost, "getSewingCost");
 function getDuvetSewingCost(areaSqCm) {
   for (const tier of DUVET_SEWING_TIERS) {
     if (areaSqCm <= tier.maxArea) return tier.cost;
@@ -932,6 +1006,7 @@ function getDuvetSewingCost(areaSqCm) {
   return DUVET_SEWING_TIERS[DUVET_SEWING_TIERS.length - 1].cost;
 }
 __name(getDuvetSewingCost, "getDuvetSewingCost");
+__name2(getDuvetSewingCost, "getDuvetSewingCost");
 function calculateFittedSheetPrice(wCm, lCm, dCm, fabric, marginRate = MARGIN_RATE) {
   const fabricW = wCm + 2 * dCm + 14;
   const fabricL = lCm + 2 * dCm + 14;
@@ -969,6 +1044,7 @@ function calculateFittedSheetPrice(wCm, lCm, dCm, fabric, marginRate = MARGIN_RA
   };
 }
 __name(calculateFittedSheetPrice, "calculateFittedSheetPrice");
+__name2(calculateFittedSheetPrice, "calculateFittedSheetPrice");
 function calculateFlatSheetPrice(wCm, lCm, dCm, fabric) {
   const fabricW = wCm + 2 * dCm + 50;
   const fabricL = lCm + 2 * dCm + 50;
@@ -1005,6 +1081,7 @@ function calculateFlatSheetPrice(wCm, lCm, dCm, fabric) {
   };
 }
 __name(calculateFlatSheetPrice, "calculateFlatSheetPrice");
+__name2(calculateFlatSheetPrice, "calculateFlatSheetPrice");
 function calculateDuvetPrice(wCm, lCm, fabric) {
   const rawArea = 2 * (wCm + 5) * (lCm + 5);
   const floorArea = rawArea * 1.2;
@@ -1042,6 +1119,7 @@ function calculateDuvetPrice(wCm, lCm, fabric) {
   };
 }
 __name(calculateDuvetPrice, "calculateDuvetPrice");
+__name2(calculateDuvetPrice, "calculateDuvetPrice");
 function calculatePillowProtectorPrice(wCm, lCm) {
   const TPU_SQCM_PER_LM = 100 * 210;
   const rawArea = 2 * (wCm + 5) * (lCm + 5);
@@ -1079,6 +1157,7 @@ function calculatePillowProtectorPrice(wCm, lCm) {
   };
 }
 __name(calculatePillowProtectorPrice, "calculatePillowProtectorPrice");
+__name2(calculatePillowProtectorPrice, "calculatePillowProtectorPrice");
 function calculatePillowcasePrice(wCm, lCm, fabric, variant) {
   let rawArea = 2 * (wCm + 5) * (lCm + 5);
   if (variant === "sham") rawArea *= 1 + PILLOW_SHAM_FABRIC_EXTRA;
@@ -1116,6 +1195,7 @@ function calculatePillowcasePrice(wCm, lCm, fabric, variant) {
   };
 }
 __name(calculatePillowcasePrice, "calculatePillowcasePrice");
+__name2(calculatePillowcasePrice, "calculatePillowcasePrice");
 function calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) {
   const FABRIC_RATES = {
     breezeplus: { usd: 16e-4, thb: 0.057 },
@@ -1141,6 +1221,7 @@ function calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) {
   return Math.round((base + extra) * 100) / 100;
 }
 __name(calculateLegacyPrice, "calculateLegacyPrice");
+__name2(calculateLegacyPrice, "calculateLegacyPrice");
 function isFittedSheetProduct(product) {
   return [
     "standard-fitted-sheet",
@@ -1152,6 +1233,7 @@ function isFittedSheetProduct(product) {
   ].includes(product);
 }
 __name(isFittedSheetProduct, "isFittedSheetProduct");
+__name2(isFittedSheetProduct, "isFittedSheetProduct");
 function isFlatSheetProduct(product) {
   return [
     "flat-sheet-standard",
@@ -1159,6 +1241,7 @@ function isFlatSheetProduct(product) {
   ].includes(product);
 }
 __name(isFlatSheetProduct, "isFlatSheetProduct");
+__name2(isFlatSheetProduct, "isFlatSheetProduct");
 function isDuvetProduct(product) {
   return [
     "3-sided-duvet",
@@ -1169,10 +1252,12 @@ function isDuvetProduct(product) {
   ].includes(product);
 }
 __name(isDuvetProduct, "isDuvetProduct");
+__name2(isDuvetProduct, "isDuvetProduct");
 function isPillowProtectorProduct(product) {
   return ["pillow-protector-general"].includes(product);
 }
 __name(isPillowProtectorProduct, "isPillowProtectorProduct");
+__name2(isPillowProtectorProduct, "isPillowProtectorProduct");
 function isPillowcaseProduct(product) {
   if (product === "pillowcase-envelope") return { isPillowcase: true, variant: "envelope" };
   if (product === "pillowcase-zipper") return { isPillowcase: true, variant: "zipper" };
@@ -1180,6 +1265,7 @@ function isPillowcaseProduct(product) {
   return { isPillowcase: false };
 }
 __name(isPillowcaseProduct, "isPillowcaseProduct");
+__name2(isPillowcaseProduct, "isPillowcaseProduct");
 function calculatePrice(input, currency = "USD") {
   const product = input.product || "";
   const mode = input.mode || "sheet";
@@ -1297,6 +1383,7 @@ function calculatePrice(input, currency = "USD") {
   return { price: calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) };
 }
 __name(calculatePrice, "calculatePrice");
+__name2(calculatePrice, "calculatePrice");
 async function handlePricing(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -1368,8 +1455,7 @@ async function handlePricing(request, env) {
   });
 }
 __name(handlePricing, "handlePricing");
-
-// ../workers/api/geo-currency.ts
+__name2(handlePricing, "handlePricing");
 var COUNTRY_NAMES = {
   // Asia-Pacific
   TH: "Thailand",
@@ -1455,6 +1541,7 @@ function detectGeo(request) {
   };
 }
 __name(detectGeo, "detectGeo");
+__name2(detectGeo, "detectGeo");
 async function handleGeo(request, env) {
   const result = detectGeo(request);
   return new Response(JSON.stringify(result), {
@@ -1466,8 +1553,7 @@ async function handleGeo(request, env) {
   });
 }
 __name(handleGeo, "handleGeo");
-
-// ../workers/api/countries.ts
+__name2(handleGeo, "handleGeo");
 var MASTER_COUNTRIES = [
   { code: "AF", name: "Afghanistan", phone: "+93" },
   { code: "AL", name: "Albania", phone: "+355" },
@@ -1589,6 +1675,7 @@ function json(body, status = 200) {
   });
 }
 __name(json, "json");
+__name2(json, "json");
 async function ensureCountryMasterSchema(env) {
   if (countryMasterReady) return;
   if (!countryMasterPromise) {
@@ -1620,6 +1707,7 @@ async function ensureCountryMasterSchema(env) {
   await countryMasterPromise;
 }
 __name(ensureCountryMasterSchema, "ensureCountryMasterSchema");
+__name2(ensureCountryMasterSchema, "ensureCountryMasterSchema");
 async function handleCountries(request, env) {
   if (request.method !== "GET") {
     return json({ error: "Method not allowed" }, 405);
@@ -1647,8 +1735,7 @@ async function handleCountries(request, env) {
   }
 }
 __name(handleCountries, "handleCountries");
-
-// ../workers/api/email.ts
+__name2(handleCountries, "handleCountries");
 async function sendEmail(env, options) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
@@ -1683,8 +1770,7 @@ async function sendEmail(env, options) {
   }
 }
 __name(sendEmail, "sendEmail");
-
-// ../workers/api/subscribe.ts
+__name2(sendEmail, "sendEmail");
 function generateDiscountCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
@@ -1692,10 +1778,12 @@ function generateDiscountCode() {
   return "WELCOME-" + code;
 }
 __name(generateDiscountCode, "generateDiscountCode");
+__name2(generateDiscountCode, "generateDiscountCode");
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 __name(isValidEmail, "isValidEmail");
+__name2(isValidEmail, "isValidEmail");
 var SUBSCRIBE_RATE_LIMIT = 2;
 async function handleSubscribe(request, env) {
   const corsHeaders = {
@@ -1812,8 +1900,7 @@ Date: ${(/* @__PURE__ */ new Date()).toISOString()}`
   }
 }
 __name(handleSubscribe, "handleSubscribe");
-
-// ../workers/api/unsubscribe.ts
+__name2(handleSubscribe, "handleSubscribe");
 async function handleUnsubscribe(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ message: "Method not allowed" }), {
@@ -1889,12 +1976,12 @@ async function handleUnsubscribe(request, env) {
   }
 }
 __name(handleUnsubscribe, "handleUnsubscribe");
-
-// ../workers/api/contact.ts
+__name2(handleUnsubscribe, "handleUnsubscribe");
 function isValidEmail2(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-__name(isValidEmail2, "isValidEmail");
+__name(isValidEmail2, "isValidEmail2");
+__name2(isValidEmail2, "isValidEmail");
 async function verifyTurnstile(env, token, ip) {
   if (!env.TURNSTILE_SECRET_KEY) {
     console.error("TURNSTILE_SECRET_KEY is missing");
@@ -1925,6 +2012,7 @@ async function verifyTurnstile(env, token, ip) {
   }
 }
 __name(verifyTurnstile, "verifyTurnstile");
+__name2(verifyTurnstile, "verifyTurnstile");
 async function handleContact(request, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -2015,8 +2103,7 @@ User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
   );
 }
 __name(handleContact, "handleContact");
-
-// ../workers/api/quote.ts
+__name2(handleContact, "handleContact");
 var QUOTE_RATE_LIMIT = 5;
 var QUOTE_RATE_WINDOW = "-1 hour";
 async function checkRateLimit(db, ip, endpoint, max) {
@@ -2026,6 +2113,7 @@ async function checkRateLimit(db, ip, endpoint, max) {
   return (row?.cnt || 0) >= max;
 }
 __name(checkRateLimit, "checkRateLimit");
+__name2(checkRateLimit, "checkRateLimit");
 async function verifyTurnstile2(env, token, ip) {
   if (!env.TURNSTILE_SECRET_KEY) {
     console.error("TURNSTILE_SECRET_KEY is missing");
@@ -2055,7 +2143,8 @@ async function verifyTurnstile2(env, token, ip) {
     return { ok: false, status: 502, error: "Security verification failed. Please try again." };
   }
 }
-__name(verifyTurnstile2, "verifyTurnstile");
+__name(verifyTurnstile2, "verifyTurnstile2");
+__name2(verifyTurnstile2, "verifyTurnstile");
 async function handleQuote(request, env) {
   const url = new URL(request.url);
   if (request.method === "GET") {
@@ -2256,6 +2345,7 @@ async function handleQuote(request, env) {
   }
 }
 __name(handleQuote, "handleQuote");
+__name2(handleQuote, "handleQuote");
 function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, color, quoteId, priceThb, priceUsd) {
   let dimStr = "\u2014";
   let shapeLine = "";
@@ -2324,8 +2414,7 @@ Price: ${priceLine}
 `;
 }
 __name(buildQuoteEmail, "buildQuoteEmail");
-
-// ../workers/api/pricing-params.ts
+__name2(buildQuoteEmail, "buildQuoteEmail");
 async function handlePricingParams(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -2412,8 +2501,7 @@ async function handlePricingParams(request, env) {
   return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
 }
 __name(handlePricingParams, "handlePricingParams");
-
-// ../workers/api/clerk-verify.ts
+__name2(handlePricingParams, "handlePricingParams");
 var jwksCache = null;
 var CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
 var JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
@@ -2433,6 +2521,7 @@ async function checkAuthRateLimit(env, ip) {
   }
 }
 __name(checkAuthRateLimit, "checkAuthRateLimit");
+__name2(checkAuthRateLimit, "checkAuthRateLimit");
 async function recordRateLimit(env, ip) {
   try {
     await env.DB.prepare(
@@ -2442,6 +2531,7 @@ async function recordRateLimit(env, ip) {
   }
 }
 __name(recordRateLimit, "recordRateLimit");
+__name2(recordRateLimit, "recordRateLimit");
 async function getJwks() {
   if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_CACHE_MS) {
     return jwksCache.keys;
@@ -2453,6 +2543,7 @@ async function getJwks() {
   return jwksCache.keys;
 }
 __name(getJwks, "getJwks");
+__name2(getJwks, "getJwks");
 function base64urlToBytes(str) {
   const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
@@ -2462,6 +2553,7 @@ function base64urlToBytes(str) {
   return bytes;
 }
 __name(base64urlToBytes, "base64urlToBytes");
+__name2(base64urlToBytes, "base64urlToBytes");
 async function importRsaKey(jwk) {
   return crypto.subtle.importKey(
     "jwk",
@@ -2478,6 +2570,7 @@ async function importRsaKey(jwk) {
   );
 }
 __name(importRsaKey, "importRsaKey");
+__name2(importRsaKey, "importRsaKey");
 async function verifyClerkJwt(request, env) {
   const origin = request.headers.get("Origin") || "";
   const host = request.headers.get("Host") || "";
@@ -2573,12 +2666,11 @@ async function verifyClerkJwt(request, env) {
   return { valid: true, payload };
 }
 __name(verifyClerkJwt, "verifyClerkJwt");
-
-// ../workers/api/admin-pricing.ts
+__name2(verifyClerkJwt, "verifyClerkJwt");
 function collectRoles(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -2600,6 +2692,7 @@ function collectRoles(raw) {
   return out.filter(Boolean);
 }
 __name(collectRoles, "collectRoles");
+__name2(collectRoles, "collectRoles");
 function hasAdminRole(raw) {
   const roles = collectRoles(raw);
   return roles.some(
@@ -2607,12 +2700,14 @@ function hasAdminRole(raw) {
   );
 }
 __name(hasAdminRole, "hasAdminRole");
+__name2(hasAdminRole, "hasAdminRole");
 function emailAllowed(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed, "emailAllowed");
+__name2(emailAllowed, "emailAllowed");
 function getPrimaryClerkEmail(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -2621,6 +2716,7 @@ function getPrimaryClerkEmail(user) {
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
 __name(getPrimaryClerkEmail, "getPrimaryClerkEmail");
+__name2(getPrimaryClerkEmail, "getPrimaryClerkEmail");
 async function isClerkAdmin(request, env) {
   try {
     const authHeader = request.headers.get("Authorization") || "";
@@ -2654,6 +2750,7 @@ async function isClerkAdmin(request, env) {
   }
 }
 __name(isClerkAdmin, "isClerkAdmin");
+__name2(isClerkAdmin, "isClerkAdmin");
 function isProductionHostPricing(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -2661,6 +2758,7 @@ function isProductionHostPricing(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHostPricing, "isProductionHostPricing");
+__name2(isProductionHostPricing, "isProductionHostPricing");
 async function authorizeAdminPricing(request, env) {
   const clerkOk = await isClerkAdmin(request, env);
   if (clerkOk) return { ok: true };
@@ -2680,6 +2778,7 @@ async function authorizeAdminPricing(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdminPricing, "authorizeAdminPricing");
+__name2(authorizeAdminPricing, "authorizeAdminPricing");
 async function handleAdminPricingParams(request, env) {
   const auth = await authorizeAdminPricing(request, env);
   if (!auth.ok) {
@@ -2753,8 +2852,7 @@ async function handleAdminPricingParams(request, env) {
   });
 }
 __name(handleAdminPricingParams, "handleAdminPricingParams");
-
-// ../workers/api/admin-diy.ts
+__name2(handleAdminPricingParams, "handleAdminPricingParams");
 async function handleAdminDiyPrices(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -2836,16 +2934,17 @@ async function handleAdminDiyPrices(request, env) {
   });
 }
 __name(handleAdminDiyPrices, "handleAdminDiyPrices");
-
-// ../workers/api/admin-exchange.ts
+__name2(handleAdminDiyPrices, "handleAdminDiyPrices");
 function isProductionHost(host) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost, "isProductionHost");
+__name2(isProductionHost, "isProductionHost");
 function isDevHost(host) {
   return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
 }
 __name(isDevHost, "isDevHost");
+__name2(isDevHost, "isDevHost");
 function authorizeAdmin(request, env) {
   const host = new URL(request.url).hostname;
   if (isDevHost(host)) return { ok: true };
@@ -2864,6 +2963,7 @@ function authorizeAdmin(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin, "authorizeAdmin");
+__name2(authorizeAdmin, "authorizeAdmin");
 async function handleAdminExchangeRates(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -2914,15 +3014,15 @@ async function handleAdminExchangeRates(request, env) {
   });
 }
 __name(handleAdminExchangeRates, "handleAdminExchangeRates");
-
-// ../workers/api/admin-products.ts
+__name2(handleAdminExchangeRates, "handleAdminExchangeRates");
 var R2_PUBLIC_BASE3 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url2(url) {
   if (!url) return url;
   if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE3}${url.slice(3)}`;
   return url;
 }
-__name(toR2Url2, "toR2Url");
+__name(toR2Url2, "toR2Url2");
+__name2(toR2Url2, "toR2Url");
 function r2Product2(p) {
   const out = { ...p, image_url: toR2Url2(p.image_url) };
   if (out.images && typeof out.images === "string") {
@@ -2934,7 +3034,8 @@ function r2Product2(p) {
   }
   return out;
 }
-__name(r2Product2, "r2Product");
+__name(r2Product2, "r2Product2");
+__name2(r2Product2, "r2Product");
 function parseCategoryCsv(csv) {
   const parts = csv.split(",").map((s) => s.trim()).filter(Boolean);
   const product_type = parts[0] || "sheets";
@@ -2942,6 +3043,7 @@ function parseCategoryCsv(csv) {
   return { product_type, niches };
 }
 __name(parseCategoryCsv, "parseCategoryCsv");
+__name2(parseCategoryCsv, "parseCategoryCsv");
 function isProductionHost2(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
@@ -2950,7 +3052,8 @@ function isProductionHost2(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost2, "isProductionHost");
+__name(isProductionHost2, "isProductionHost2");
+__name2(isProductionHost2, "isProductionHost");
 var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
 function collectRoles2(raw) {
   if (!raw || typeof raw !== "object") return [];
@@ -2976,20 +3079,23 @@ function collectRoles2(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles2, "collectRoles");
+__name(collectRoles2, "collectRoles2");
+__name2(collectRoles2, "collectRoles");
 function hasAdminRole2(rawClaims) {
   const roles = collectRoles2(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole2, "hasAdminRole");
+__name(hasAdminRole2, "hasAdminRole2");
+__name2(hasAdminRole2, "hasAdminRole");
 function emailAllowed2(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed2, "emailAllowed");
+__name(emailAllowed2, "emailAllowed2");
+__name2(emailAllowed2, "emailAllowed");
 async function authCheck(request, env) {
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
@@ -3025,6 +3131,7 @@ async function authCheck(request, env) {
   return provided === configured;
 }
 __name(authCheck, "authCheck");
+__name2(authCheck, "authCheck");
 async function handleAdminProducts(request, env) {
   if (!await authCheck(request, env)) {
     return new Response(ADMIN_SECRET_ERROR, {
@@ -3183,8 +3290,7 @@ async function handleAdminProducts(request, env) {
   });
 }
 __name(handleAdminProducts, "handleAdminProducts");
-
-// ../workers/api/admin-upload.ts
+__name2(handleAdminProducts, "handleAdminProducts");
 function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -3209,20 +3315,23 @@ function collectRoles3(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles3, "collectRoles");
+__name(collectRoles3, "collectRoles3");
+__name2(collectRoles3, "collectRoles");
 function hasAdminRole3(rawClaims) {
   const roles = collectRoles3(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole3, "hasAdminRole");
+__name(hasAdminRole3, "hasAdminRole3");
+__name2(hasAdminRole3, "hasAdminRole");
 function emailAllowed3(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed3, "emailAllowed");
+__name(emailAllowed3, "emailAllowed3");
+__name2(emailAllowed3, "emailAllowed");
 async function authCheck2(request, env) {
   const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
@@ -3256,7 +3365,8 @@ async function authCheck2(request, env) {
   if (!provided || !configured) return false;
   return provided === configured;
 }
-__name(authCheck2, "authCheck");
+__name(authCheck2, "authCheck2");
+__name2(authCheck2, "authCheck");
 async function handleAdminUpload(request, env) {
   if (!await authCheck2(request, env)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -3350,8 +3460,7 @@ async function handleAdminUpload(request, env) {
   }
 }
 __name(handleAdminUpload, "handleAdminUpload");
-
-// ../workers/api/admin-orders.ts
+__name2(handleAdminUpload, "handleAdminUpload");
 var orderShippingSchemaReady = false;
 var orderShippingSchemaPromise = null;
 var TRACKING_URL_BY_CARRIER = {
@@ -3387,7 +3496,8 @@ function json2(body, status = 200) {
     }
   });
 }
-__name(json2, "json");
+__name(json2, "json2");
+__name2(json2, "json");
 async function ensureOrderShippingSchema(env) {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -3414,6 +3524,7 @@ async function ensureOrderShippingSchema(env) {
   await orderShippingSchemaPromise;
 }
 __name(ensureOrderShippingSchema, "ensureOrderShippingSchema");
+__name2(ensureOrderShippingSchema, "ensureOrderShippingSchema");
 function normalizeCarrier(raw) {
   const v = String(raw || "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
   if (!v) return "";
@@ -3423,12 +3534,14 @@ function normalizeCarrier(raw) {
   return CARRIER_ALIAS[v] || CARRIER_ALIAS[compact] || compact;
 }
 __name(normalizeCarrier, "normalizeCarrier");
+__name2(normalizeCarrier, "normalizeCarrier");
 function buildTrackingUrl(carrierCode, trackingNumber) {
   const tpl = TRACKING_URL_BY_CARRIER[carrierCode];
   if (!tpl) return "";
   return tpl.replace("{TRACKING}", encodeURIComponent(trackingNumber));
 }
 __name(buildTrackingUrl, "buildTrackingUrl");
+__name2(buildTrackingUrl, "buildTrackingUrl");
 function carrierLabel(carrierCode) {
   const labels = {
     thaipost: "Thailand Post",
@@ -3441,17 +3554,19 @@ function carrierLabel(carrierCode) {
   return labels[carrierCode] || carrierCode.toUpperCase();
 }
 __name(carrierLabel, "carrierLabel");
+__name2(carrierLabel, "carrierLabel");
 function isProductionHost3(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost3, "isProductionHost");
+__name(isProductionHost3, "isProductionHost3");
+__name2(isProductionHost3, "isProductionHost");
 function collectRoles4(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -3473,20 +3588,23 @@ function collectRoles4(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles4, "collectRoles");
+__name(collectRoles4, "collectRoles4");
+__name2(collectRoles4, "collectRoles");
 function hasAdminRole4(rawClaims) {
   const roles = collectRoles4(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole4, "hasAdminRole");
+__name(hasAdminRole4, "hasAdminRole4");
+__name2(hasAdminRole4, "hasAdminRole");
 function emailAllowed4(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed4, "emailAllowed");
+__name(emailAllowed4, "emailAllowed4");
+__name2(emailAllowed4, "emailAllowed");
 async function authorizeAdmin2(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3536,7 +3654,8 @@ async function authorizeAdmin2(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin2, "authorizeAdmin");
+__name(authorizeAdmin2, "authorizeAdmin2");
+__name2(authorizeAdmin2, "authorizeAdmin");
 async function handleAdminOrders(request, env) {
   const auth = await authorizeAdmin2(request, env);
   if (!auth.ok) return json2({ error: auth.error }, auth.status);
@@ -3703,8 +3822,7 @@ Thank you for shopping with MildMate.`;
   return json2({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminOrders, "handleAdminOrders");
-
-// ../workers/api/admin-customers.ts
+__name2(handleAdminOrders, "handleAdminOrders");
 function json3(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -3714,18 +3832,20 @@ function json3(body, status = 200) {
     }
   });
 }
-__name(json3, "json");
+__name(json3, "json3");
+__name2(json3, "json");
 function isProductionHost4(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost4, "isProductionHost");
+__name(isProductionHost4, "isProductionHost4");
+__name2(isProductionHost4, "isProductionHost");
 function collectRoles5(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -3746,20 +3866,23 @@ function collectRoles5(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles5, "collectRoles");
+__name(collectRoles5, "collectRoles5");
+__name2(collectRoles5, "collectRoles");
 function hasAdminRole5(rawClaims) {
   const roles = collectRoles5(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole5, "hasAdminRole");
+__name(hasAdminRole5, "hasAdminRole5");
+__name2(hasAdminRole5, "hasAdminRole");
 function emailAllowed5(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed5, "emailAllowed");
+__name(emailAllowed5, "emailAllowed5");
+__name2(emailAllowed5, "emailAllowed");
 async function authorizeAdmin3(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3808,7 +3931,8 @@ async function authorizeAdmin3(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin3, "authorizeAdmin");
+__name(authorizeAdmin3, "authorizeAdmin3");
+__name2(authorizeAdmin3, "authorizeAdmin");
 async function handleAdminCustomers(request, env) {
   const auth = await authorizeAdmin3(request, env);
   if (!auth.ok) return json3({ error: auth.error }, auth.status);
@@ -3886,8 +4010,7 @@ async function handleAdminCustomers(request, env) {
   return json3({ customers: result.results });
 }
 __name(handleAdminCustomers, "handleAdminCustomers");
-
-// ../workers/api/admin-stats.ts
+__name2(handleAdminCustomers, "handleAdminCustomers");
 function json4(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -3897,18 +4020,20 @@ function json4(body, status = 200) {
     }
   });
 }
-__name(json4, "json");
+__name(json4, "json4");
+__name2(json4, "json");
 function isProductionHost5(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost5, "isProductionHost");
+__name(isProductionHost5, "isProductionHost5");
+__name2(isProductionHost5, "isProductionHost");
 function collectRoles6(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -3930,20 +4055,23 @@ function collectRoles6(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles6, "collectRoles");
+__name(collectRoles6, "collectRoles6");
+__name2(collectRoles6, "collectRoles");
 function hasAdminRole6(rawClaims) {
   const roles = collectRoles6(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole6, "hasAdminRole");
+__name(hasAdminRole6, "hasAdminRole6");
+__name2(hasAdminRole6, "hasAdminRole");
 function emailAllowed6(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed6, "emailAllowed");
+__name(emailAllowed6, "emailAllowed6");
+__name2(emailAllowed6, "emailAllowed");
 async function authorizeAdmin4(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -3993,18 +4121,21 @@ async function authorizeAdmin4(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin4, "authorizeAdmin");
+__name(authorizeAdmin4, "authorizeAdmin4");
+__name2(authorizeAdmin4, "authorizeAdmin");
 function isoAtUtcDayStart(date) {
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
   return d.toISOString();
 }
 __name(isoAtUtcDayStart, "isoAtUtcDayStart");
+__name2(isoAtUtcDayStart, "isoAtUtcDayStart");
 function addUtcDays(iso, days) {
   const d = new Date(iso);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString();
 }
 __name(addUtcDays, "addUtcDays");
+__name2(addUtcDays, "addUtcDays");
 function normalizePeriod(raw) {
   const p = String(raw || "").trim().toLowerCase();
   const aliases = {
@@ -4028,6 +4159,7 @@ function normalizePeriod(raw) {
   return aliases[p] || "last-30-days";
 }
 __name(normalizePeriod, "normalizePeriod");
+__name2(normalizePeriod, "normalizePeriod");
 function getPeriodBounds(rawPeriod) {
   const normalized = normalizePeriod(rawPeriod);
   const now = /* @__PURE__ */ new Date();
@@ -4045,6 +4177,7 @@ function getPeriodBounds(rawPeriod) {
   return { normalized, start: addUtcDays(todayStart, -(days - 1)), end: addUtcDays(todayStart, 1) };
 }
 __name(getPeriodBounds, "getPeriodBounds");
+__name2(getPeriodBounds, "getPeriodBounds");
 function getDisplayImage(imageUrl, imagesRaw) {
   const direct = String(imageUrl || "").trim();
   if (direct) return direct;
@@ -4059,11 +4192,13 @@ function getDisplayImage(imageUrl, imagesRaw) {
   return "";
 }
 __name(getDisplayImage, "getDisplayImage");
+__name2(getDisplayImage, "getDisplayImage");
 function toNumber(v) {
   const n = Number(v || 0);
   return Number.isFinite(n) ? n : 0;
 }
 __name(toNumber, "toNumber");
+__name2(toNumber, "toNumber");
 function convertRevenue(revenueThb, revenueUsd, targetCurrency, usdRatePerThb, targetRatePerThb) {
   const target = String(targetCurrency || "USD").toUpperCase();
   if (target === "USD") return revenueUsd + revenueThb * usdRatePerThb;
@@ -4072,6 +4207,7 @@ function convertRevenue(revenueThb, revenueUsd, targetCurrency, usdRatePerThb, t
   return totalThb * targetRatePerThb;
 }
 __name(convertRevenue, "convertRevenue");
+__name2(convertRevenue, "convertRevenue");
 function currencySymbol(currency, ratesMap) {
   const c = String(currency || "USD").toUpperCase();
   if (c === "USD") return "$";
@@ -4079,6 +4215,7 @@ function currencySymbol(currency, ratesMap) {
   return ratesMap[c]?.symbol || c;
 }
 __name(currencySymbol, "currencySymbol");
+__name2(currencySymbol, "currencySymbol");
 async function handleAdminStats(request, env) {
   const auth = await authorizeAdmin4(request, env);
   if (!auth.ok) return json4({ error: auth.error }, auth.status);
@@ -4222,8 +4359,7 @@ async function handleAdminStats(request, env) {
   }
 }
 __name(handleAdminStats, "handleAdminStats");
-
-// ../workers/api/shipping.ts
+__name2(handleAdminStats, "handleAdminStats");
 var shippingSchemaReady = false;
 var shippingSchemaPromise = null;
 function json5(body, status = 200) {
@@ -4235,19 +4371,22 @@ function json5(body, status = 200) {
     }
   });
 }
-__name(json5, "json");
+__name(json5, "json5");
+__name2(json5, "json");
 function toAmount(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.round(n * 100) / 100;
 }
 __name(toAmount, "toAmount");
+__name2(toAmount, "toAmount");
 function toQty(v) {
   const n = Math.floor(Number(v));
   if (!Number.isFinite(n) || n < 0) return 0;
   return n;
 }
 __name(toQty, "toQty");
+__name2(toQty, "toQty");
 function normalizeCountryCode(raw) {
   const code = String(raw || "").trim().toUpperCase();
   if (!code) return "";
@@ -4256,17 +4395,20 @@ function normalizeCountryCode(raw) {
   return "";
 }
 __name(normalizeCountryCode, "normalizeCountryCode");
+__name2(normalizeCountryCode, "normalizeCountryCode");
 function normalizeShippingCurrency(raw) {
   const c = String(raw || "").trim().toUpperCase();
   if (!c) return "USD";
   return c;
 }
 __name(normalizeShippingCurrency, "normalizeShippingCurrency");
+__name2(normalizeShippingCurrency, "normalizeShippingCurrency");
 function normalizeServiceLevel(raw) {
   const s = String(raw || "").trim().toLowerCase();
   return s === "standard" ? "standard" : "express";
 }
 __name(normalizeServiceLevel, "normalizeServiceLevel");
+__name2(normalizeServiceLevel, "normalizeServiceLevel");
 async function ensureShippingRatesSchema(env) {
   if (shippingSchemaReady) return;
   if (!shippingSchemaPromise) {
@@ -4372,6 +4514,7 @@ async function ensureShippingRatesSchema(env) {
   await shippingSchemaPromise;
 }
 __name(ensureShippingRatesSchema, "ensureShippingRatesSchema");
+__name2(ensureShippingRatesSchema, "ensureShippingRatesSchema");
 async function getRatePerThb(env, targetCurrency) {
   const target = String(targetCurrency || "USD").toUpperCase();
   if (target === "THB") return 1;
@@ -4384,6 +4527,7 @@ async function getRatePerThb(env, targetCurrency) {
   return 0;
 }
 __name(getRatePerThb, "getRatePerThb");
+__name2(getRatePerThb, "getRatePerThb");
 async function calculateShippingQuote(env, input) {
   await ensureShippingRatesSchema(env);
   const currency = normalizeShippingCurrency(input.currency);
@@ -4439,7 +4583,7 @@ async function calculateShippingQuote(env, input) {
       blocked_th_only: false
     };
   }
-  const fetchRate = /* @__PURE__ */ __name(async (countryCode) => {
+  const fetchRate = /* @__PURE__ */ __name2(async (countryCode) => {
     const row2 = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
@@ -4565,6 +4709,7 @@ async function calculateShippingQuote(env, input) {
   };
 }
 __name(calculateShippingQuote, "calculateShippingQuote");
+__name2(calculateShippingQuote, "calculateShippingQuote");
 async function handleShippingCalculate(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -4618,8 +4763,7 @@ async function handleShippingCalculate(request, env) {
   }
 }
 __name(handleShippingCalculate, "handleShippingCalculate");
-
-// ../workers/api/admin-shipping.ts
+__name2(handleShippingCalculate, "handleShippingCalculate");
 function json6(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -4629,22 +4773,25 @@ function json6(body, status = 200) {
     }
   });
 }
-__name(json6, "json");
+__name(json6, "json6");
+__name2(json6, "json");
 function toAmount2(v) {
   return toAmount(v);
 }
-__name(toAmount2, "toAmount");
+__name(toAmount2, "toAmount2");
+__name2(toAmount2, "toAmount");
 function isProductionHost6(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost6, "isProductionHost");
+__name(isProductionHost6, "isProductionHost6");
+__name2(isProductionHost6, "isProductionHost");
 function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -4666,20 +4813,23 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles");
+__name(collectRoles7, "collectRoles7");
+__name2(collectRoles7, "collectRoles");
 function hasAdminRole7(rawClaims) {
   const roles = collectRoles7(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole");
+__name(hasAdminRole7, "hasAdminRole7");
+__name2(hasAdminRole7, "hasAdminRole");
 function emailAllowed7(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed");
+__name(emailAllowed7, "emailAllowed7");
+__name2(emailAllowed7, "emailAllowed");
 async function authorizeAdmin5(request, env) {
   const host = new URL(request.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
@@ -4732,7 +4882,8 @@ async function authorizeAdmin5(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin5, "authorizeAdmin");
+__name(authorizeAdmin5, "authorizeAdmin5");
+__name2(authorizeAdmin5, "authorizeAdmin");
 function normalizeCountryName(raw, countryCode) {
   const name = String(raw || "").trim();
   if (name) return name;
@@ -4740,6 +4891,7 @@ function normalizeCountryName(raw, countryCode) {
   return countryCode;
 }
 __name(normalizeCountryName, "normalizeCountryName");
+__name2(normalizeCountryName, "normalizeCountryName");
 async function getUsdRatePerThb(env) {
   const row = await env.DB.prepare(
     "SELECT rate_per_thb FROM exchange_rates WHERE currency = 'USD' LIMIT 1"
@@ -4749,6 +4901,7 @@ async function getUsdRatePerThb(env) {
   return 1 / 30;
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
+__name2(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
   const auth = await authorizeAdmin5(request, env);
   if (!auth.ok) return json6({ error: auth.error }, auth.status);
@@ -4863,6 +5016,7 @@ async function handleAdminShippingRates(request, env) {
   return json6({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
+__name2(handleAdminShippingRates, "handleAdminShippingRates");
 async function handleAdminShippingProductTiers(request, env) {
   const auth = await authorizeAdmin5(request, env);
   if (!auth.ok) return json6({ error: auth.error }, auth.status);
@@ -4914,6 +5068,7 @@ async function handleAdminShippingProductTiers(request, env) {
   return json6({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
+__name2(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
 async function handleAdminShippingAddRates(request, env) {
   const auth = await authorizeAdmin5(request, env);
   if (!auth.ok) return json6({ error: auth.error }, auth.status);
@@ -4967,8 +5122,7 @@ async function handleAdminShippingAddRates(request, env) {
   return json6({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
-
-// ../workers/api/admin-quotes.ts
+__name2(handleAdminShippingAddRates, "handleAdminShippingAddRates");
 var quoteSchemaReady = false;
 var quoteSchemaPromise = null;
 function json7(body, status = 200) {
@@ -4982,23 +5136,26 @@ function json7(body, status = 200) {
     }
   });
 }
-__name(json7, "json");
+__name(json7, "json7");
+__name2(json7, "json");
 function isProductionHost7(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost7, "isProductionHost");
+__name(isProductionHost7, "isProductionHost7");
+__name2(isProductionHost7, "isProductionHost");
 function isPreviewHashHost(hostname) {
   if (!hostname) return false;
   return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
 }
 __name(isPreviewHashHost, "isPreviewHashHost");
+__name2(isPreviewHashHost, "isPreviewHashHost");
 function collectRoles8(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -5020,20 +5177,23 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
+__name(collectRoles8, "collectRoles8");
+__name2(collectRoles8, "collectRoles");
 function hasAdminRole8(raw) {
   const roles = collectRoles8(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
+__name(hasAdminRole8, "hasAdminRole8");
+__name2(hasAdminRole8, "hasAdminRole");
 function emailAllowed8(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
+__name(emailAllowed8, "emailAllowed8");
+__name2(emailAllowed8, "emailAllowed");
 async function authorizeAdmin6(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -5075,7 +5235,8 @@ async function authorizeAdmin6(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin6, "authorizeAdmin");
+__name(authorizeAdmin6, "authorizeAdmin6");
+__name2(authorizeAdmin6, "authorizeAdmin");
 async function ensureQuoteSchema(env) {
   if (quoteSchemaReady) return;
   if (!quoteSchemaPromise) {
@@ -5117,6 +5278,7 @@ async function ensureQuoteSchema(env) {
   await quoteSchemaPromise;
 }
 __name(ensureQuoteSchema, "ensureQuoteSchema");
+__name2(ensureQuoteSchema, "ensureQuoteSchema");
 function normalizeDateInput(input) {
   const raw = String(input || "").trim();
   if (!raw) return null;
@@ -5125,6 +5287,7 @@ function normalizeDateInput(input) {
   return dt.toISOString().replace("T", " ").slice(0, 19);
 }
 __name(normalizeDateInput, "normalizeDateInput");
+__name2(normalizeDateInput, "normalizeDateInput");
 async function generateQuoteId(db) {
   const now = /* @__PURE__ */ new Date();
   const y = String(now.getFullYear()).slice(2);
@@ -5136,11 +5299,13 @@ async function generateQuoteId(db) {
   return `${datePrefix}-${seq}`;
 }
 __name(generateQuoteId, "generateQuoteId");
+__name2(generateQuoteId, "generateQuoteId");
 function buildQuoteLink(request, quoteId) {
   const origin = new URL(request.url).origin;
   return `${origin}/quote/${encodeURIComponent(quoteId)}/`;
 }
 __name(buildQuoteLink, "buildQuoteLink");
+__name2(buildQuoteLink, "buildQuoteLink");
 async function getUsdRate(db) {
   try {
     const row = await db.prepare(
@@ -5155,6 +5320,7 @@ async function getUsdRate(db) {
   return 30;
 }
 __name(getUsdRate, "getUsdRate");
+__name2(getUsdRate, "getUsdRate");
 async function sendMagicLinkEmail(env, request, quote) {
   if (!quote?.email) return { success: false, error: "Missing customer email" };
   if (quote.status !== "approved") return { success: false, error: "Quote is not approved" };
@@ -5241,6 +5407,7 @@ async function sendMagicLinkEmail(env, request, quote) {
   return { success: result.success, error: result.error };
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
+__name2(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
   if (request.method === "OPTIONS") return json7({ ok: true });
   const auth = await authorizeAdmin6(request, env);
@@ -5524,8 +5691,7 @@ async function handleAdminQuotes(request, env) {
   return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminQuotes, "handleAdminQuotes");
-
-// ../workers/api/discount.ts
+__name2(handleAdminQuotes, "handleAdminQuotes");
 async function sha256(text) {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
@@ -5534,6 +5700,7 @@ async function sha256(text) {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 __name(sha256, "sha256");
+__name2(sha256, "sha256");
 function normalizeAddress(addr) {
   if (!addr || typeof addr !== "object") return "";
   return [
@@ -5545,6 +5712,7 @@ function normalizeAddress(addr) {
   ].join("|");
 }
 __name(normalizeAddress, "normalizeAddress");
+__name2(normalizeAddress, "normalizeAddress");
 async function handleDiscountValidate(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -5652,6 +5820,7 @@ async function handleDiscountValidate(request, env) {
   }), { headers });
 }
 __name(handleDiscountValidate, "handleDiscountValidate");
+__name2(handleDiscountValidate, "handleDiscountValidate");
 async function handleDiscountClaim(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -5681,8 +5850,7 @@ async function handleDiscountClaim(request, env) {
   return new Response(JSON.stringify({ success: true }), { headers });
 }
 __name(handleDiscountClaim, "handleDiscountClaim");
-
-// ../workers/api/admin-contacts.ts
+__name2(handleDiscountClaim, "handleDiscountClaim");
 function json8(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -5692,11 +5860,12 @@ function json8(body, status = 200) {
     }
   });
 }
-__name(json8, "json");
+__name(json8, "json8");
+__name2(json8, "json");
 function collectRoles9(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -5718,27 +5887,31 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles");
+__name(collectRoles9, "collectRoles9");
+__name2(collectRoles9, "collectRoles");
 function hasAdminRole9(raw) {
   const roles = collectRoles9(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole");
+__name(hasAdminRole9, "hasAdminRole9");
+__name2(hasAdminRole9, "hasAdminRole");
 function emailAllowed9(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed");
+__name(emailAllowed9, "emailAllowed9");
+__name2(emailAllowed9, "emailAllowed");
 function isProductionHost8(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost8, "isProductionHost");
+__name(isProductionHost8, "isProductionHost8");
+__name2(isProductionHost8, "isProductionHost");
 async function authorizeAdmin7(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -5778,7 +5951,8 @@ async function authorizeAdmin7(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin7, "authorizeAdmin");
+__name(authorizeAdmin7, "authorizeAdmin7");
+__name2(authorizeAdmin7, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
   const auth = await authorizeAdmin7(request, env);
   if (!auth.ok) return json8({ error: auth.error }, auth.status);
@@ -5826,13 +6000,13 @@ async function handleAdminContacts(request, env) {
   return json8({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
-
-// ../workers/api/admin-promo.ts
+__name2(handleAdminContacts, "handleAdminContacts");
 function isProductionHost9(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost9, "isProductionHost");
+__name(isProductionHost9, "isProductionHost9");
+__name2(isProductionHost9, "isProductionHost");
 function hasAdminRole10(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -5853,12 +6027,14 @@ function hasAdminRole10(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole10, "hasAdminRole");
+__name(hasAdminRole10, "hasAdminRole10");
+__name2(hasAdminRole10, "hasAdminRole");
 function emailAllowed10(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed");
+__name(emailAllowed10, "emailAllowed10");
+__name2(emailAllowed10, "emailAllowed");
 async function authorizeAdmin8(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost9(hostname)) return { ok: true };
@@ -5893,7 +6069,8 @@ async function authorizeAdmin8(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin8, "authorizeAdmin");
+__name(authorizeAdmin8, "authorizeAdmin8");
+__name2(authorizeAdmin8, "authorizeAdmin");
 async function handleAdminPromo(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -5999,8 +6176,7 @@ async function handleAdminPromo(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminPromo, "handleAdminPromo");
-
-// ../workers/api/boat-models.ts
+__name2(handleAdminPromo, "handleAdminPromo");
 async function ensureBoatModelsColumn(env, name, def) {
   try {
     await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
@@ -6010,6 +6186,7 @@ async function ensureBoatModelsColumn(env, name, def) {
   }
 }
 __name(ensureBoatModelsColumn, "ensureBoatModelsColumn");
+__name2(ensureBoatModelsColumn, "ensureBoatModelsColumn");
 async function ensureBoatModelsTable(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS boat_models (
@@ -6032,6 +6209,7 @@ async function ensureBoatModelsTable(env) {
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
 __name(ensureBoatModelsTable, "ensureBoatModelsTable");
+__name2(ensureBoatModelsTable, "ensureBoatModelsTable");
 async function handleBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -6082,13 +6260,13 @@ async function handleBoatModels(request, env) {
   }
 }
 __name(handleBoatModels, "handleBoatModels");
-
-// ../workers/api/admin-boat-models.ts
+__name2(handleBoatModels, "handleBoatModels");
 function isProductionHost10(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost10, "isProductionHost");
+__name(isProductionHost10, "isProductionHost10");
+__name2(isProductionHost10, "isProductionHost");
 function hasAdminRole11(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -6109,16 +6287,19 @@ function hasAdminRole11(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole11, "hasAdminRole");
+__name(hasAdminRole11, "hasAdminRole11");
+__name2(hasAdminRole11, "hasAdminRole");
 function emailAllowed11(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed11, "emailAllowed");
+__name(emailAllowed11, "emailAllowed11");
+__name2(emailAllowed11, "emailAllowed");
 function normalizeModelKey(input) {
   return String(input || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 __name(normalizeModelKey, "normalizeModelKey");
+__name2(normalizeModelKey, "normalizeModelKey");
 function sanitizeDimensions(raw) {
   const out = {};
   if (!raw || typeof raw !== "object") return out;
@@ -6132,6 +6313,7 @@ function sanitizeDimensions(raw) {
   return out;
 }
 __name(sanitizeDimensions, "sanitizeDimensions");
+__name2(sanitizeDimensions, "sanitizeDimensions");
 async function ensureBoatModelsColumn2(env, name, def) {
   try {
     await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
@@ -6140,7 +6322,8 @@ async function ensureBoatModelsColumn2(env, name, def) {
     if (!msg.includes("duplicate column")) throw e;
   }
 }
-__name(ensureBoatModelsColumn2, "ensureBoatModelsColumn");
+__name(ensureBoatModelsColumn2, "ensureBoatModelsColumn2");
+__name2(ensureBoatModelsColumn2, "ensureBoatModelsColumn");
 async function ensureBoatModelsTable2(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS boat_models (
@@ -6164,7 +6347,8 @@ async function ensureBoatModelsTable2(env) {
   await ensureBoatModelsColumn2(env, "schematic_key", "TEXT");
   await ensureBoatModelsColumn2(env, "schematic_url", "TEXT");
 }
-__name(ensureBoatModelsTable2, "ensureBoatModelsTable");
+__name(ensureBoatModelsTable2, "ensureBoatModelsTable2");
+__name2(ensureBoatModelsTable2, "ensureBoatModelsTable");
 async function authorizeAdmin9(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost10(hostname)) return { ok: true };
@@ -6182,7 +6366,8 @@ async function authorizeAdmin9(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin9, "authorizeAdmin");
+__name(authorizeAdmin9, "authorizeAdmin9");
+__name2(authorizeAdmin9, "authorizeAdmin");
 async function handleAdminBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -6274,8 +6459,7 @@ async function handleAdminBoatModels(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminBoatModels, "handleAdminBoatModels");
-
-// ../workers/api/admin-blog.ts
+__name2(handleAdminBoatModels, "handleAdminBoatModels");
 var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var BLOG_CATEGORY_OPTIONS = [
   "Marine & Yacht",
@@ -6296,11 +6480,12 @@ function isProductionHost11(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost11, "isProductionHost");
+__name(isProductionHost11, "isProductionHost11");
+__name2(isProductionHost11, "isProductionHost");
 function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -6321,26 +6506,30 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles");
+__name(collectRoles10, "collectRoles10");
+__name2(collectRoles10, "collectRoles");
 function hasAdminRole12(raw) {
   const roles = collectRoles10(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole12, "hasAdminRole");
+__name(hasAdminRole12, "hasAdminRole12");
+__name2(hasAdminRole12, "hasAdminRole");
 function emailAllowed12(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed12, "emailAllowed");
+__name(emailAllowed12, "emailAllowed12");
+__name2(emailAllowed12, "emailAllowed");
 function getClerkSessionTokenFromCookie(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
+__name2(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
 async function authorizeAdmin10(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie(request);
@@ -6394,19 +6583,22 @@ async function authorizeAdmin10(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin10, "authorizeAdmin");
+__name(authorizeAdmin10, "authorizeAdmin10");
+__name2(authorizeAdmin10, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
   const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
   return cleaned.filter((x) => BLOG_CATEGORY_OPTIONS.includes(x));
 }
 __name(normalizeCategories, "normalizeCategories");
+__name2(normalizeCategories, "normalizeCategories");
 function toR2Url3(url) {
   if (!url) return "";
   if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE4}${url.slice(3)}`;
   return url;
 }
-__name(toR2Url3, "toR2Url");
+__name(toR2Url3, "toR2Url3");
+__name2(toR2Url3, "toR2Url");
 async function handleAdminBlog(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -6600,7 +6792,7 @@ async function handleAdminBlog(request, env) {
     const categoriesJson = JSON.stringify(categories);
     const updates = [];
     const vals = [];
-    const add = /* @__PURE__ */ __name((k, v) => {
+    const add = /* @__PURE__ */ __name2((k, v) => {
       updates.push(k + " = ?");
       vals.push(v);
     }, "add");
@@ -6653,14 +6845,14 @@ async function handleAdminBlog(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminBlog, "handleAdminBlog");
-
-// ../workers/api/blog-posts.ts
+__name2(handleAdminBlog, "handleAdminBlog");
 var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toPublicR2Url2(url) {
   if (!url) return url;
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE5}${url.slice(3)}` : url;
 }
-__name(toPublicR2Url2, "toPublicR2Url");
+__name(toPublicR2Url2, "toPublicR2Url2");
+__name2(toPublicR2Url2, "toPublicR2Url");
 async function handleBlogPosts(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -6693,8 +6885,7 @@ async function handleBlogPosts(request, env) {
   }
 }
 __name(handleBlogPosts, "handleBlogPosts");
-
-// ../workers/api/reviews.ts
+__name2(handleBlogPosts, "handleBlogPosts");
 var R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var ALLOWED_PRODUCT_TYPES = [
   "Sheets",
@@ -6728,23 +6919,27 @@ function sanitize(str) {
   return str.trim();
 }
 __name(sanitize, "sanitize");
+__name2(sanitize, "sanitize");
 function normalizeMojibake2(str) {
   const s = sanitize(str);
   if (!s) return "";
   return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "").replace(/≡ƒñì/g, "").replace(/�/g, "");
 }
-__name(normalizeMojibake2, "normalizeMojibake");
+__name(normalizeMojibake2, "normalizeMojibake2");
+__name2(normalizeMojibake2, "normalizeMojibake");
 function toR2Url4(url) {
   if (!url) return "";
   if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE6}${url.slice(3)}`;
   return url;
 }
-__name(toR2Url4, "toR2Url");
+__name(toR2Url4, "toR2Url4");
+__name2(toR2Url4, "toR2Url");
 function sanitizeReviewText(html) {
   if (!html) return "";
   return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/\s+on\w+="[^"]*"/gi, "").replace(/\s+on\w+='[^']*'/gi, "").trim();
 }
 __name(sanitizeReviewText, "sanitizeReviewText");
+__name2(sanitizeReviewText, "sanitizeReviewText");
 function normalizeReviewDate(raw) {
   const val = sanitize(typeof raw === "string" ? raw : String(raw || ""));
   if (!val) return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -6755,6 +6950,7 @@ function normalizeReviewDate(raw) {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
 __name(normalizeReviewDate, "normalizeReviewDate");
+__name2(normalizeReviewDate, "normalizeReviewDate");
 function isProductionHost12(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
@@ -6763,11 +6959,12 @@ function isProductionHost12(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost12, "isProductionHost");
+__name(isProductionHost12, "isProductionHost12");
+__name2(isProductionHost12, "isProductionHost");
 function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -6788,26 +6985,30 @@ function collectRoles11(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles11, "collectRoles");
+__name(collectRoles11, "collectRoles11");
+__name2(collectRoles11, "collectRoles");
 function hasAdminRole13(raw) {
   const roles = collectRoles11(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole13, "hasAdminRole");
+__name(hasAdminRole13, "hasAdminRole13");
+__name2(hasAdminRole13, "hasAdminRole");
 function emailAllowed13(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed13, "emailAllowed");
+__name(emailAllowed13, "emailAllowed13");
+__name2(emailAllowed13, "emailAllowed");
 function getClerkSessionTokenFromCookie2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
-__name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
+__name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie2");
+__name2(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
 async function authorizeAdmin11(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie2(request);
@@ -6861,7 +7062,8 @@ async function authorizeAdmin11(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin11, "authorizeAdmin");
+__name(authorizeAdmin11, "authorizeAdmin11");
+__name2(authorizeAdmin11, "authorizeAdmin");
 async function handleReviews(request, env) {
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
@@ -6948,6 +7150,7 @@ async function handleReviews(request, env) {
   }
 }
 __name(handleReviews, "handleReviews");
+__name2(handleReviews, "handleReviews");
 async function handleAdminReviews(request, env) {
   const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
@@ -6964,14 +7167,17 @@ async function handleAdminReviews(request, env) {
     return v;
   }
   __name(normalizePlatform, "normalizePlatform");
+  __name2(normalizePlatform, "normalizePlatform");
   function badRequest(msg) {
     return new Response(JSON.stringify({ error: msg }), { status: 400, headers });
   }
   __name(badRequest, "badRequest");
+  __name2(badRequest, "badRequest");
   function internalError(msg) {
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers });
   }
   __name(internalError, "internalError");
+  __name2(internalError, "internalError");
   const method = request.method;
   try {
     if (method === "GET") {
@@ -7153,8 +7359,7 @@ async function handleAdminReviews(request, env) {
   }
 }
 __name(handleAdminReviews, "handleAdminReviews");
-
-// ../workers/api/admin-recovery-test.ts
+__name2(handleAdminReviews, "handleAdminReviews");
 async function sendRecoveryEmail(env, to, subject, html) {
   try {
     const resp = await fetch("https://api.resend.com/emails", {
@@ -7176,10 +7381,12 @@ async function sendRecoveryEmail(env, to, subject, html) {
   }
 }
 __name(sendRecoveryEmail, "sendRecoveryEmail");
+__name2(sendRecoveryEmail, "sendRecoveryEmail");
 function escHtml2(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-__name(escHtml2, "escHtml");
+__name(escHtml2, "escHtml2");
+__name2(escHtml2, "escHtml");
 function formatPrice(thb, usd) {
   const parts = [];
   if (thb) parts.push("\u0E3F" + Math.round(thb).toLocaleString());
@@ -7187,6 +7394,7 @@ function formatPrice(thb, usd) {
   return parts.join(" / ") || "\u2014";
 }
 __name(formatPrice, "formatPrice");
+__name2(formatPrice, "formatPrice");
 async function handleAdminRecoveryTest(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -7251,13 +7459,13 @@ async function handleAdminRecoveryTest(request, env) {
   return new Response(JSON.stringify({ sent, total: carts.length, errors: errors.length ? errors : void 0 }), { headers });
 }
 __name(handleAdminRecoveryTest, "handleAdminRecoveryTest");
-
-// ../workers/api/admin-thankyou-dispatch.ts
+__name2(handleAdminRecoveryTest, "handleAdminRecoveryTest");
 function isProductionHost13(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost13, "isProductionHost");
+__name(isProductionHost13, "isProductionHost13");
+__name2(isProductionHost13, "isProductionHost");
 function hasAdminRole14(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -7278,7 +7486,8 @@ function hasAdminRole14(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole14, "hasAdminRole");
+__name(hasAdminRole14, "hasAdminRole14");
+__name2(hasAdminRole14, "hasAdminRole");
 async function authorizeAdmin12(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost13(hostname)) return { ok: true };
@@ -7298,7 +7507,8 @@ async function authorizeAdmin12(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin12, "authorizeAdmin");
+__name(authorizeAdmin12, "authorizeAdmin12");
+__name2(authorizeAdmin12, "authorizeAdmin");
 async function sendThankyouEmail(env, to, discountCode, discountPct) {
   try {
     const resp = await fetch("https://api.resend.com/emails", {
@@ -7324,6 +7534,7 @@ async function sendThankyouEmail(env, to, discountCode, discountPct) {
   }
 }
 __name(sendThankyouEmail, "sendThankyouEmail");
+__name2(sendThankyouEmail, "sendThankyouEmail");
 async function ensureThankyouQueueSchema(env) {
   try {
     const tableInfo = await env.DB.prepare("PRAGMA table_info(thankyou_queue)").all();
@@ -7338,6 +7549,7 @@ async function ensureThankyouQueueSchema(env) {
   }
 }
 __name(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
+__name2(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
 async function handleAdminThankyouDispatch(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -7443,13 +7655,13 @@ async function handleAdminThankyouDispatch(request, env) {
   }), { headers });
 }
 __name(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
-
-// ../workers/api/admin-offers.ts
+__name2(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
 function isProductionHost14(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost14, "isProductionHost");
+__name(isProductionHost14, "isProductionHost14");
+__name2(isProductionHost14, "isProductionHost");
 function hasAdminRole15(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -7470,12 +7682,14 @@ function hasAdminRole15(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole15, "hasAdminRole");
+__name(hasAdminRole15, "hasAdminRole15");
+__name2(hasAdminRole15, "hasAdminRole");
 function emailAllowed14(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed14, "emailAllowed");
+__name(emailAllowed14, "emailAllowed14");
+__name2(emailAllowed14, "emailAllowed");
 async function authorizeAdmin13(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost14(hostname)) return { ok: true };
@@ -7510,7 +7724,8 @@ async function authorizeAdmin13(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin13, "authorizeAdmin");
+__name(authorizeAdmin13, "authorizeAdmin13");
+__name2(authorizeAdmin13, "authorizeAdmin");
 var KEY_MAP = {
   basketThreshold: "basket_threshold_usd",
   stage2Enabled: "stage2_enabled",
@@ -7526,6 +7741,7 @@ function toBoolString(v) {
   return v === true || String(v).toLowerCase() === "true" ? "true" : "false";
 }
 __name(toBoolString, "toBoolString");
+__name2(toBoolString, "toBoolString");
 function normalizeOffersInput(input) {
   const basketThreshold = Math.max(0, Math.min(1e4, Number(input?.basketThreshold || 150)));
   const stage2Enabled = toBoolString(input?.stage2Enabled !== false);
@@ -7549,6 +7765,7 @@ function normalizeOffersInput(input) {
   };
 }
 __name(normalizeOffersInput, "normalizeOffersInput");
+__name2(normalizeOffersInput, "normalizeOffersInput");
 function parseOffersConfig(rows) {
   const map = {};
   for (const row of rows || []) map[String(row.key)] = String(row.value);
@@ -7565,6 +7782,7 @@ function parseOffersConfig(rows) {
   };
 }
 __name(parseOffersConfig, "parseOffersConfig");
+__name2(parseOffersConfig, "parseOffersConfig");
 async function handleAdminOffers(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -7600,13 +7818,13 @@ async function handleAdminOffers(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminOffers, "handleAdminOffers");
-
-// ../workers/api/admin-campaigns.ts
+__name2(handleAdminOffers, "handleAdminOffers");
 function isProductionHost15(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost15, "isProductionHost");
+__name(isProductionHost15, "isProductionHost15");
+__name2(isProductionHost15, "isProductionHost");
 function hasAdminRole16(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -7627,12 +7845,14 @@ function hasAdminRole16(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole16, "hasAdminRole");
+__name(hasAdminRole16, "hasAdminRole16");
+__name2(hasAdminRole16, "hasAdminRole");
 function emailAllowed15(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed15, "emailAllowed");
+__name(emailAllowed15, "emailAllowed15");
+__name2(emailAllowed15, "emailAllowed");
 async function authorizeAdmin14(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost15(hostname)) return { ok: true };
@@ -7667,7 +7887,8 @@ async function authorizeAdmin14(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin14, "authorizeAdmin");
+__name(authorizeAdmin14, "authorizeAdmin14");
+__name2(authorizeAdmin14, "authorizeAdmin");
 async function ensureCampaignsSchema(env) {
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS marketing_campaigns (
@@ -7683,6 +7904,7 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
+__name2(ensureCampaignsSchema, "ensureCampaignsSchema");
 async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -7752,18 +7974,18 @@ async function handleAdminCampaigns(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminCampaigns, "handleAdminCampaigns");
-
-// ../workers/api/admin-accounts.ts
+__name2(handleAdminCampaigns, "handleAdminCampaigns");
 function getClerkSessionToken(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return cookieMatch ? cookieMatch[1] : "";
 }
 __name(getClerkSessionToken, "getClerkSessionToken");
+__name2(getClerkSessionToken, "getClerkSessionToken");
 function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -7784,20 +8006,23 @@ function collectRoles12(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles12, "collectRoles");
+__name(collectRoles12, "collectRoles12");
+__name2(collectRoles12, "collectRoles");
 function hasAdminRole17(raw) {
   const roles = collectRoles12(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole17, "hasAdminRole");
+__name(hasAdminRole17, "hasAdminRole17");
+__name2(hasAdminRole17, "hasAdminRole");
 function emailAllowed16(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed16, "emailAllowed");
+__name(emailAllowed16, "emailAllowed16");
+__name2(emailAllowed16, "emailAllowed");
 function getPrimaryClerkEmail2(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -7805,7 +8030,8 @@ function getPrimaryClerkEmail2(user) {
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail2");
+__name2(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
 async function isClerkAdmin2(request, env) {
   try {
     const authHeader = request.headers.get("Authorization") || "";
@@ -7847,7 +8073,8 @@ async function isClerkAdmin2(request, env) {
     return false;
   }
 }
-__name(isClerkAdmin2, "isClerkAdmin");
+__name(isClerkAdmin2, "isClerkAdmin2");
+__name2(isClerkAdmin2, "isClerkAdmin");
 async function ensureAdminAccountsTable(db) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS admin_accounts (
@@ -7859,6 +8086,7 @@ async function ensureAdminAccountsTable(db) {
   `).run();
 }
 __name(ensureAdminAccountsTable, "ensureAdminAccountsTable");
+__name2(ensureAdminAccountsTable, "ensureAdminAccountsTable");
 async function handleAdminAccounts(request, env) {
   const host = new URL(request.url).hostname;
   const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
@@ -7943,13 +8171,13 @@ async function handleAdminAccounts(request, env) {
   });
 }
 __name(handleAdminAccounts, "handleAdminAccounts");
-
-// ../workers/api/admin-color-inventory.ts
+__name2(handleAdminAccounts, "handleAdminAccounts");
 function isProductionHost16(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost16, "isProductionHost");
+__name(isProductionHost16, "isProductionHost16");
+__name2(isProductionHost16, "isProductionHost");
 async function authorizeAdmin15(request, env) {
   const hostname = request.headers.get("Host") || "";
   const isProd = isProductionHost16(hostname);
@@ -7966,7 +8194,8 @@ async function authorizeAdmin15(request, env) {
   }
   return { ok: true };
 }
-__name(authorizeAdmin15, "authorizeAdmin");
+__name(authorizeAdmin15, "authorizeAdmin15");
+__name2(authorizeAdmin15, "authorizeAdmin");
 async function handleAdminColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8019,8 +8248,7 @@ async function handleAdminColorInventory(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminColorInventory, "handleAdminColorInventory");
-
-// ../workers/api/favorites.ts
+__name2(handleAdminColorInventory, "handleAdminColorInventory");
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
 function json9(body, status = 200) {
@@ -8032,7 +8260,8 @@ function json9(body, status = 200) {
     }
   });
 }
-__name(json9, "json");
+__name(json9, "json9");
+__name2(json9, "json");
 async function ensureFavoritesSchema(env) {
   if (favoritesSchemaReady) return;
   if (!favoritesSchemaPromise) {
@@ -8059,17 +8288,19 @@ async function ensureFavoritesSchema(env) {
   await favoritesSchemaPromise;
 }
 __name(ensureFavoritesSchema, "ensureFavoritesSchema");
+__name2(ensureFavoritesSchema, "ensureFavoritesSchema");
 function isProductionHost17(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost17, "isProductionHost");
+__name(isProductionHost17, "isProductionHost17");
+__name2(isProductionHost17, "isProductionHost");
 function collectRoles13(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -8091,20 +8322,23 @@ function collectRoles13(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles13, "collectRoles");
+__name(collectRoles13, "collectRoles13");
+__name2(collectRoles13, "collectRoles");
 function hasAdminRole18(rawClaims) {
   const roles = collectRoles13(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole18, "hasAdminRole");
+__name(hasAdminRole18, "hasAdminRole18");
+__name2(hasAdminRole18, "hasAdminRole");
 function emailAllowed17(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed17, "emailAllowed");
+__name(emailAllowed17, "emailAllowed17");
+__name2(emailAllowed17, "emailAllowed");
 async function authorizeAdmin16(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -8149,7 +8383,8 @@ async function authorizeAdmin16(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin16, "authorizeAdmin");
+__name(authorizeAdmin16, "authorizeAdmin16");
+__name2(authorizeAdmin16, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -8166,6 +8401,7 @@ async function getUserContext(request, env) {
   return { ok: true, userId, email };
 }
 __name(getUserContext, "getUserContext");
+__name2(getUserContext, "getUserContext");
 async function handleFavorites(request, env) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "");
@@ -8329,12 +8565,12 @@ async function handleFavorites(request, env) {
   return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleFavorites, "handleFavorites");
-
-// ../workers/api/checkout.ts
+__name2(handleFavorites, "handleFavorites");
 function humanizeSlug(slug) {
   return String(slug || "").split("-").filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 __name(humanizeSlug, "humanizeSlug");
+__name2(humanizeSlug, "humanizeSlug");
 function getItemName(item) {
   const raw = String(item.product_name || item.title || "").trim();
   if (raw) return raw;
@@ -8342,6 +8578,7 @@ function getItemName(item) {
   return fromSlug || "Custom Product";
 }
 __name(getItemName, "getItemName");
+__name2(getItemName, "getItemName");
 async function handleCheckout(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -8564,7 +8801,8 @@ async function handleCheckout(request, env) {
     const n = Number(v);
     return Number.isFinite(n) ? n : void 0;
   }
-  __name(toNumber2, "toNumber");
+  __name(toNumber2, "toNumber2");
+  __name2(toNumber2, "toNumber");
   function parseSizeText(sizeText) {
     const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
     const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
@@ -8579,6 +8817,7 @@ async function handleCheckout(request, env) {
     };
   }
   __name(parseSizeText, "parseSizeText");
+  __name2(parseSizeText, "parseSizeText");
   function buildMetadataDims(item) {
     const src = item.dimensions || {};
     const sizeText = String(src.size_text || src.label || "").trim();
@@ -8592,6 +8831,7 @@ async function handleCheckout(request, env) {
     };
   }
   __name(buildMetadataDims, "buildMetadataDims");
+  __name2(buildMetadataDims, "buildMetadataDims");
   const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
@@ -8692,8 +8932,7 @@ async function handleCheckout(request, env) {
   }
 }
 __name(handleCheckout, "handleCheckout");
-
-// ../workers/api/webhook.ts
+__name2(handleCheckout, "handleCheckout");
 async function sha2562(text) {
   const d = new TextEncoder().encode(text);
   const h = await crypto.subtle.digest("SHA-256", d);
@@ -8701,7 +8940,8 @@ async function sha2562(text) {
     return b.toString(16).padStart(2, "0");
   }).join("");
 }
-__name(sha2562, "sha256");
+__name(sha2562, "sha2562");
+__name2(sha2562, "sha256");
 function normalizeAddress2(raw) {
   var addr = raw;
   if (typeof raw === "string") try {
@@ -8712,7 +8952,8 @@ function normalizeAddress2(raw) {
   if (typeof addr !== "object" || !addr) return "";
   return [(addr.street || addr.address || "").trim().toLowerCase(), (addr.city || "").trim().toLowerCase(), (addr.state || addr.province || "").trim().toLowerCase(), (addr.postal_code || addr.zip || addr.postal || "").trim().toLowerCase(), (addr.country || "").trim().toLowerCase()].join("|");
 }
-__name(normalizeAddress2, "normalizeAddress");
+__name(normalizeAddress2, "normalizeAddress2");
+__name2(normalizeAddress2, "normalizeAddress");
 var orderCustomerNoteSchemaReady = false;
 var orderCustomerNoteSchemaPromise = null;
 async function ensureOrderCustomerNoteSchema(env) {
@@ -8741,6 +8982,7 @@ async function ensureOrderCustomerNoteSchema(env) {
   return await orderCustomerNoteSchemaPromise;
 }
 __name(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
+__name2(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
 async function handleStripeWebhook(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -8907,11 +9149,11 @@ async function handleStripeWebhook(request, env) {
   const sessionCurrency = String(session.currency || "usd").toLowerCase();
   const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
   const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
-  const toFiniteNumber = /* @__PURE__ */ __name((v) => {
+  const toFiniteNumber = /* @__PURE__ */ __name2((v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : void 0;
   }, "toFiniteNumber");
-  const parseDimsFromSizeText = /* @__PURE__ */ __name((sizeText) => {
+  const parseDimsFromSizeText = /* @__PURE__ */ __name2((sizeText) => {
     const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
     const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
     if (!m) return {};
@@ -8923,7 +9165,7 @@ async function handleStripeWebhook(request, env) {
       unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
     };
   }, "parseDimsFromSizeText");
-  const formatDimsForEmail = /* @__PURE__ */ __name((dims) => {
+  const formatDimsForEmail = /* @__PURE__ */ __name2((dims) => {
     const w = toFiniteNumber(dims?.w);
     const l = toFiniteNumber(dims?.l);
     const d = toFiniteNumber(dims?.d);
@@ -9170,6 +9412,7 @@ Total: ${total}`
   });
 }
 __name(handleStripeWebhook, "handleStripeWebhook");
+__name2(handleStripeWebhook, "handleStripeWebhook");
 function hexToArrayBuffer(hex) {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
@@ -9178,8 +9421,7 @@ function hexToArrayBuffer(hex) {
   return bytes.buffer;
 }
 __name(hexToArrayBuffer, "hexToArrayBuffer");
-
-// ../workers/api/auth.ts
+__name2(hexToArrayBuffer, "hexToArrayBuffer");
 async function handleAuth(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -9230,8 +9472,7 @@ async function handleAuth(request, env) {
   });
 }
 __name(handleAuth, "handleAuth");
-
-// ../workers/api/customers.ts
+__name2(handleAuth, "handleAuth");
 var orderShippingSchemaReady2 = false;
 var orderShippingSchemaPromise2 = null;
 async function ensureOrderShippingSchema2(env) {
@@ -9256,7 +9497,8 @@ async function ensureOrderShippingSchema2(env) {
   }
   await orderShippingSchemaPromise2;
 }
-__name(ensureOrderShippingSchema2, "ensureOrderShippingSchema");
+__name(ensureOrderShippingSchema2, "ensureOrderShippingSchema2");
+__name2(ensureOrderShippingSchema2, "ensureOrderShippingSchema");
 async function getEmail(request, env) {
   const result = await verifyClerkJwt(request, env);
   if (!result.valid) {
@@ -9275,6 +9517,7 @@ async function getEmail(request, env) {
   return email;
 }
 __name(getEmail, "getEmail");
+__name2(getEmail, "getEmail");
 async function handleCustomers(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -9614,8 +9857,7 @@ async function handleCustomers(request, env) {
   });
 }
 __name(handleCustomers, "handleCustomers");
-
-// ../workers/api/order-confirmed.ts
+__name2(handleCustomers, "handleCustomers");
 async function getOrdersBySession(env, sessionId) {
   const { results } = await env.DB.prepare(
     `SELECT id, stripe_session_id, email, shipping_address, product_title_en, fabric, color,
@@ -9628,6 +9870,7 @@ async function getOrdersBySession(env, sessionId) {
   return results || [];
 }
 __name(getOrdersBySession, "getOrdersBySession");
+__name2(getOrdersBySession, "getOrdersBySession");
 async function reconcilePaidSessionToOrders(sessionId, env) {
   const stripeKey = env.STRIPE_SECRET_KEY;
   if (!stripeKey) return false;
@@ -9712,6 +9955,7 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   return inserted > 0;
 }
 __name(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
+__name2(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
 async function handleOrderConfirmed(request, env) {
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
@@ -9754,8 +9998,7 @@ async function handleOrderConfirmed(request, env) {
   }
 }
 __name(handleOrderConfirmed, "handleOrderConfirmed");
-
-// ../workers/api/color-inventory.ts
+__name2(handleOrderConfirmed, "handleOrderConfirmed");
 async function handleColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -9775,15 +10018,15 @@ async function handleColorInventory(request, env) {
   }
 }
 __name(handleColorInventory, "handleColorInventory");
-
-// api/[[path]].ts
+__name2(handleColorInventory, "handleColorInventory");
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url5(url) {
   if (!url || typeof url !== "string") return url;
   if (!url.startsWith("/r2/")) return url;
   return `${R2_PUBLIC_BASE7}${url.slice(3)}`;
 }
-__name(toR2Url5, "toR2Url");
+__name(toR2Url5, "toR2Url5");
+__name2(toR2Url5, "toR2Url");
 function r2Product3(p) {
   if (!p) return p;
   const imgKey = p.image_url !== void 0 ? "image_url" : "Image_url";
@@ -9802,8 +10045,9 @@ function r2Product3(p) {
   }
   return out;
 }
-__name(r2Product3, "r2Product");
-var onRequest3 = /* @__PURE__ */ __name(async (context) => {
+__name(r2Product3, "r2Product3");
+__name2(r2Product3, "r2Product");
+var onRequest3 = /* @__PURE__ */ __name2(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -9999,8 +10243,6 @@ var onRequest3 = /* @__PURE__ */ __name(async (context) => {
     headers: { "Content-Type": "application/json" }
   });
 }, "onRequest");
-
-// blogs/[[path]].ts
 async function onRequest4(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -10040,9 +10282,8 @@ async function onRequest4(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest4, "onRequest");
-
-// products/[[path]].ts
+__name(onRequest4, "onRequest4");
+__name2(onRequest4, "onRequest");
 var FIXED_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "bedbridge-connector",
   "mattress-lift-helper",
@@ -10089,15 +10330,18 @@ var NICHE_PATHS = {
 function escapeHtml2(value) {
   return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-__name(escapeHtml2, "escapeHtml");
+__name(escapeHtml2, "escapeHtml2");
+__name2(escapeHtml2, "escapeHtml");
 function toTokens(value) {
   return String(value || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
 }
 __name(toTokens, "toTokens");
+__name2(toTokens, "toTokens");
 function titleFromSlug(slug) {
   return slug.split("-").filter(Boolean).map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
 }
 __name(titleFromSlug, "titleFromSlug");
+__name2(titleFromSlug, "titleFromSlug");
 function normalizeImageUrl(url) {
   if (!url) return "";
   if (url.startsWith("/r2/")) {
@@ -10106,6 +10350,7 @@ function normalizeImageUrl(url) {
   return url;
 }
 __name(normalizeImageUrl, "normalizeImageUrl");
+__name2(normalizeImageUrl, "normalizeImageUrl");
 function firstSentence(text, maxLen = 110) {
   const clean = String(text || "").replace(/\s+/g, " ").trim();
   if (!clean) return "";
@@ -10114,6 +10359,7 @@ function firstSentence(text, maxLen = 110) {
   return `${sentence.slice(0, maxLen - 1).trimEnd()}\u2026`;
 }
 __name(firstSentence, "firstSentence");
+__name2(firstSentence, "firstSentence");
 function buildFabricInfo(fabricOptions, isFixed, isTh) {
   if (isFixed) return isTh ? "\u0E2A\u0E40\u0E1B\u0E01\u0E15\u0E32\u0E22\u0E15\u0E31\u0E27" : "Fixed specification";
   const fabrics = toTokens(fabricOptions);
@@ -10122,11 +10368,13 @@ function buildFabricInfo(fabricOptions, isFixed, isTh) {
   return `${fabrics.length} fabrics \xB7 Multiple colors`;
 }
 __name(buildFabricInfo, "buildFabricInfo");
+__name2(buildFabricInfo, "buildFabricInfo");
 function buildButtonLabel(isFixed, isTh) {
   if (isFixed) return isTh ? "\u0E14\u0E39\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14" : "View Details";
   return isTh ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
 }
 __name(buildButtonLabel, "buildButtonLabel");
+__name2(buildButtonLabel, "buildButtonLabel");
 function buildPrice(product, isTh) {
   const usdRaw = Number(product.base_price_usd);
   const thbRaw = Number(product.base_price_thb);
@@ -10136,6 +10384,7 @@ function buildPrice(product, isTh) {
   return { display, usd, thb };
 }
 __name(buildPrice, "buildPrice");
+__name2(buildPrice, "buildPrice");
 function getCategoryTokens(product) {
   const merged = /* @__PURE__ */ new Set();
   toTokens(product.product_type).forEach((t) => merged.add(t));
@@ -10144,6 +10393,7 @@ function getCategoryTokens(product) {
   return Array.from(merged);
 }
 __name(getCategoryTokens, "getCategoryTokens");
+__name2(getCategoryTokens, "getCategoryTokens");
 function buildCard(product, isTh) {
   const slug = String(product.slug || "").trim();
   const title = escapeHtml2(String((isTh ? product.title_th : product.title_en) || product.title_en || slug && titleFromSlug(slug) || "Product"));
@@ -10183,6 +10433,7 @@ function buildCard(product, isTh) {
           </article>`;
 }
 __name(buildCard, "buildCard");
+__name2(buildCard, "buildCard");
 async function onRequest5(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -10245,10 +10496,9 @@ ${cardsHtml}
     return next();
   }
 }
-__name(onRequest5, "onRequest");
-
-// quote/[[path]].ts
-var onRequest6 = /* @__PURE__ */ __name(async (context) => {
+__name(onRequest5, "onRequest5");
+__name2(onRequest5, "onRequest");
+var onRequest6 = /* @__PURE__ */ __name2(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -10305,6 +10555,7 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   __name(esc, "esc");
+  __name2(esc, "esc");
   const productTitle = quote ? quote.product_slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "";
   const fabricLabel = quote?.fabric || "\u2014";
   const colorLabel = quote?.color || "\u2014";
@@ -10590,9 +10841,7 @@ var onRequest6 = /* @__PURE__ */ __name(async (context) => {
     }
   });
 }, "onRequest");
-
-// r2/[[path]].ts
-var onRequest7 = /* @__PURE__ */ __name(async (context) => {
+var onRequest7 = /* @__PURE__ */ __name2(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -10612,8 +10861,6 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   }
   return Response.redirect(publicUrl, 302);
 }, "onRequest");
-
-// account/_middleware.ts
 function getClerkSessionToken2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -10623,8 +10870,9 @@ function getClerkSessionToken2(request) {
   if (qp) return qp;
   return null;
 }
-__name(getClerkSessionToken2, "getClerkSessionToken");
-var onRequest8 = /* @__PURE__ */ __name(async (context) => {
+__name(getClerkSessionToken2, "getClerkSessionToken2");
+__name2(getClerkSessionToken2, "getClerkSessionToken");
+var onRequest8 = /* @__PURE__ */ __name2(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -10655,8 +10903,7 @@ function redirectToSignIn(currentUrl) {
   return Response.redirect(signInUrl.toString(), 302);
 }
 __name(redirectToSignIn, "redirectToSignIn");
-
-// admin/_middleware.ts
+__name2(redirectToSignIn, "redirectToSignIn");
 function getClerkSessionToken3(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -10666,11 +10913,12 @@ function getClerkSessionToken3(request) {
   if (qp) return qp;
   return null;
 }
-__name(getClerkSessionToken3, "getClerkSessionToken");
+__name(getClerkSessionToken3, "getClerkSessionToken3");
+__name2(getClerkSessionToken3, "getClerkSessionToken");
 function collectRoles14(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
+  const add = /* @__PURE__ */ __name2((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -10691,20 +10939,23 @@ function collectRoles14(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles14, "collectRoles");
+__name(collectRoles14, "collectRoles14");
+__name2(collectRoles14, "collectRoles");
 function hasAdminRole19(rawClaims) {
   const roles = collectRoles14(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole19, "hasAdminRole");
+__name(hasAdminRole19, "hasAdminRole19");
+__name2(hasAdminRole19, "hasAdminRole");
 function emailAllowed18(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed18, "emailAllowed");
+__name(emailAllowed18, "emailAllowed18");
+__name2(emailAllowed18, "emailAllowed");
 function emailBlocked(email) {
   if (!email) return false;
   const blocked = [
@@ -10713,6 +10964,7 @@ function emailBlocked(email) {
   return blocked.includes(email.toLowerCase());
 }
 __name(emailBlocked, "emailBlocked");
+__name2(emailBlocked, "emailBlocked");
 function getPrimaryClerkEmail3(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -10720,7 +10972,8 @@ function getPrimaryClerkEmail3(user) {
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail3");
+__name2(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
 async function enrichAdminFromClerk(sub, env) {
   const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
   if (!sub || !clerkKey) return { email: "", hasAdmin: false };
@@ -10746,7 +10999,8 @@ async function enrichAdminFromClerk(sub, env) {
   }
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
-var onRequest9 = /* @__PURE__ */ __name(async (context) => {
+__name2(enrichAdminFromClerk, "enrichAdminFromClerk");
+var onRequest9 = /* @__PURE__ */ __name2(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -10807,13 +11061,13 @@ function redirectToSignIn2(currentUrl) {
   signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
   return Response.redirect(signInUrl.toString(), 302);
 }
-__name(redirectToSignIn2, "redirectToSignIn");
+__name(redirectToSignIn2, "redirectToSignIn2");
+__name2(redirectToSignIn2, "redirectToSignIn");
 function escHtml3(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-__name(escHtml3, "escHtml");
-
-// _middleware.ts
+__name(escHtml3, "escHtml3");
+__name2(escHtml3, "escHtml");
 var CACHE_TTL = 5 * 60 * 1e3;
 var _cache = { fetchedAt: 0 };
 var FALLBACK_HEADER = `<header class="site-header">
@@ -11200,6 +11454,7 @@ async function ensureCache(db) {
   }
 }
 __name(ensureCache, "ensureCache");
+__name2(ensureCache, "ensureCache");
 async function getChrome(db, key) {
   const fallback = key === "header" ? FALLBACK_HEADER : FALLBACK_FOOTER;
   await ensureCache(db);
@@ -11208,6 +11463,7 @@ async function getChrome(db, key) {
   return html.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
 }
 __name(getChrome, "getChrome");
+__name2(getChrome, "getChrome");
 var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
 var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
@@ -11243,7 +11499,8 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
 function hasToken2(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
-__name(hasToken2, "hasToken");
+__name(hasToken2, "hasToken2");
+__name2(hasToken2, "hasToken");
 function resolveLegacyProductPath(pathname) {
   if (pathname === "/product/" || pathname === "/product") return "/products/";
   if (!pathname.startsWith("/product/")) return null;
@@ -11285,6 +11542,7 @@ function resolveLegacyProductPath(pathname) {
   return "/products/";
 }
 __name(resolveLegacyProductPath, "resolveLegacyProductPath");
+__name2(resolveLegacyProductPath, "resolveLegacyProductPath");
 var LISTING_ROUTES = {
   "/products/": { lang: "en", mode: "all" },
   "/sheets/": { lang: "en", mode: "product_type", value: "sheets" },
@@ -11346,15 +11604,18 @@ function normalizeRoutePath(pathname) {
   return pathname.endsWith("/") ? pathname : `${pathname}/`;
 }
 __name(normalizeRoutePath, "normalizeRoutePath");
+__name2(normalizeRoutePath, "normalizeRoutePath");
 function escapeHtml3(value) {
   const str = String(value ?? "");
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-__name(escapeHtml3, "escapeHtml");
+__name(escapeHtml3, "escapeHtml3");
+__name2(escapeHtml3, "escapeHtml");
 function parseCsv(raw) {
   return String(raw || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
 }
 __name(parseCsv, "parseCsv");
+__name2(parseCsv, "parseCsv");
 function pickPrimaryImage(imagesRaw, imageUrl) {
   try {
     const arr = typeof imagesRaw === "string" ? JSON.parse(imagesRaw) : imagesRaw;
@@ -11367,12 +11628,14 @@ function pickPrimaryImage(imagesRaw, imageUrl) {
   return String(imageUrl || "").trim();
 }
 __name(pickPrimaryImage, "pickPrimaryImage");
+__name2(pickPrimaryImage, "pickPrimaryImage");
 function getTagHref(slug, lang) {
   const prefix = lang === "th" ? "/th" : "";
   const valid = ["sheets", "duvet-covers", "pillowcases", "protection", "accessories", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"];
   return valid.includes(slug) ? `${prefix}/${slug}/` : `${prefix}/products/`;
 }
 __name(getTagHref, "getTagHref");
+__name2(getTagHref, "getTagHref");
 function buildTagHtml(productType, niches, lang) {
   const productTypeLabels = lang === "th" ? PRODUCT_TYPE_LABELS_TH : PRODUCT_TYPE_LABELS_EN;
   const nicheLabels = lang === "th" ? NICHE_LABELS_TH2 : NICHE_LABELS_EN2;
@@ -11387,6 +11650,7 @@ function buildTagHtml(productType, niches, lang) {
   return tags.join("");
 }
 __name(buildTagHtml, "buildTagHtml");
+__name2(buildTagHtml, "buildTagHtml");
 function renderListingCards(rows, lang) {
   const priceNote = lang === "th" ? "\u0E44\u0E21\u0E48\u0E23\u0E27\u0E21\u0E04\u0E48\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07 \u0E20\u0E32\u0E29\u0E35 \u0E41\u0E25\u0E30\u0E20\u0E32\u0E29\u0E35\u0E28\u0E38\u0E25\u0E01\u0E32\u0E01\u0E23" : "Excludes shipping, tax & tariff";
   const ctaStandard = lang === "th" ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
@@ -11425,6 +11689,7 @@ function renderListingCards(rows, lang) {
   }).join("\n");
 }
 __name(renderListingCards, "renderListingCards");
+__name2(renderListingCards, "renderListingCards");
 function replaceFirstProductGrid(html, cardMarkup) {
   const start = html.indexOf('<div class="product-grid');
   if (start < 0) return html;
@@ -11452,6 +11717,7 @@ ${cardMarkup}
 ${html.slice(closeStart, closeEnd)}${html.slice(closeEnd)}`;
 }
 __name(replaceFirstProductGrid, "replaceFirstProductGrid");
+__name2(replaceFirstProductGrid, "replaceFirstProductGrid");
 async function fetchListingProducts(db, config) {
   const baseQuery = `SELECT slug, title_en, title_th, card_benefit_en, card_benefit_th, product_type, niches, base_price_usd, base_price_thb, image_url, images, is_custom, sort_order, id
     FROM products
@@ -11470,6 +11736,7 @@ async function fetchListingProducts(db, config) {
   return result?.results || [];
 }
 __name(fetchListingProducts, "fetchListingProducts");
+__name2(fetchListingProducts, "fetchListingProducts");
 async function onRequest10(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
@@ -11545,7 +11812,7 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   if (!html.includes('id="shared-footer-mobile-style"')) {
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
@@ -11574,9 +11841,8 @@ ${JSON_LD_WEBSITE}
   }
   return new Response(html, { status: response.status, headers: response.headers });
 }
-__name(onRequest10, "onRequest");
-
-// ../.wrangler/tmp/pages-dAUAKK/functionsRoutes-0.9536547961718659.mjs
+__name(onRequest10, "onRequest10");
+__name2(onRequest10, "onRequest");
 var routes = [
   {
     routePath: "/th/blogs/:path*",
@@ -11663,8 +11929,6 @@ var routes = [
     modules: []
   }
 ];
-
-// ../node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -11749,6 +12013,7 @@ function lexer(str) {
   return tokens;
 }
 __name(lexer, "lexer");
+__name2(lexer, "lexer");
 function parse(str, options) {
   if (options === void 0) {
     options = {};
@@ -11759,18 +12024,18 @@ function parse(str, options) {
   var key = 0;
   var i = 0;
   var path = "";
-  var tryConsume = /* @__PURE__ */ __name(function(type) {
+  var tryConsume = /* @__PURE__ */ __name2(function(type) {
     if (i < tokens.length && tokens[i].type === type)
       return tokens[i++].value;
   }, "tryConsume");
-  var mustConsume = /* @__PURE__ */ __name(function(type) {
+  var mustConsume = /* @__PURE__ */ __name2(function(type) {
     var value2 = tryConsume(type);
     if (value2 !== void 0)
       return value2;
     var _a2 = tokens[i], nextType = _a2.type, index = _a2.index;
     throw new TypeError("Unexpected ".concat(nextType, " at ").concat(index, ", expected ").concat(type));
   }, "mustConsume");
-  var consumeText = /* @__PURE__ */ __name(function() {
+  var consumeText = /* @__PURE__ */ __name2(function() {
     var result2 = "";
     var value2;
     while (value2 = tryConsume("CHAR") || tryConsume("ESCAPED_CHAR")) {
@@ -11778,7 +12043,7 @@ function parse(str, options) {
     }
     return result2;
   }, "consumeText");
-  var isSafe = /* @__PURE__ */ __name(function(value2) {
+  var isSafe = /* @__PURE__ */ __name2(function(value2) {
     for (var _i = 0, delimiter_1 = delimiter; _i < delimiter_1.length; _i++) {
       var char2 = delimiter_1[_i];
       if (value2.indexOf(char2) > -1)
@@ -11786,7 +12051,7 @@ function parse(str, options) {
     }
     return false;
   }, "isSafe");
-  var safePattern = /* @__PURE__ */ __name(function(prefix2) {
+  var safePattern = /* @__PURE__ */ __name2(function(prefix2) {
     var prev = result[result.length - 1];
     var prevText = prefix2 || (prev && typeof prev === "string" ? prev : "");
     if (prev && !prevText) {
@@ -11849,12 +12114,14 @@ function parse(str, options) {
   return result;
 }
 __name(parse, "parse");
+__name2(parse, "parse");
 function match(str, options) {
   var keys = [];
   var re = pathToRegexp(str, keys, options);
   return regexpToFunction(re, keys, options);
 }
 __name(match, "match");
+__name2(match, "match");
 function regexpToFunction(re, keys, options) {
   if (options === void 0) {
     options = {};
@@ -11868,7 +12135,7 @@ function regexpToFunction(re, keys, options) {
       return false;
     var path = m[0], index = m.index;
     var params = /* @__PURE__ */ Object.create(null);
-    var _loop_1 = /* @__PURE__ */ __name(function(i2) {
+    var _loop_1 = /* @__PURE__ */ __name2(function(i2) {
       if (m[i2] === void 0)
         return "continue";
       var key = keys[i2 - 1];
@@ -11887,14 +12154,17 @@ function regexpToFunction(re, keys, options) {
   };
 }
 __name(regexpToFunction, "regexpToFunction");
+__name2(regexpToFunction, "regexpToFunction");
 function escapeString(str) {
   return str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 }
 __name(escapeString, "escapeString");
+__name2(escapeString, "escapeString");
 function flags(options) {
   return options && options.sensitive ? "" : "i";
 }
 __name(flags, "flags");
+__name2(flags, "flags");
 function regexpToRegexp(path, keys) {
   if (!keys)
     return path;
@@ -11915,6 +12185,7 @@ function regexpToRegexp(path, keys) {
   return path;
 }
 __name(regexpToRegexp, "regexpToRegexp");
+__name2(regexpToRegexp, "regexpToRegexp");
 function arrayToRegexp(paths, keys, options) {
   var parts = paths.map(function(path) {
     return pathToRegexp(path, keys, options).source;
@@ -11922,10 +12193,12 @@ function arrayToRegexp(paths, keys, options) {
   return new RegExp("(?:".concat(parts.join("|"), ")"), flags(options));
 }
 __name(arrayToRegexp, "arrayToRegexp");
+__name2(arrayToRegexp, "arrayToRegexp");
 function stringToRegexp(path, keys, options) {
   return tokensToRegexp(parse(path, options), keys, options);
 }
 __name(stringToRegexp, "stringToRegexp");
+__name2(stringToRegexp, "stringToRegexp");
 function tokensToRegexp(tokens, keys, options) {
   if (options === void 0) {
     options = {};
@@ -11981,6 +12254,7 @@ function tokensToRegexp(tokens, keys, options) {
   return new RegExp(route, flags(options));
 }
 __name(tokensToRegexp, "tokensToRegexp");
+__name2(tokensToRegexp, "tokensToRegexp");
 function pathToRegexp(path, keys, options) {
   if (path instanceof RegExp)
     return regexpToRegexp(path, keys);
@@ -11989,8 +12263,7 @@ function pathToRegexp(path, keys, options) {
   return stringToRegexp(path, keys, options);
 }
 __name(pathToRegexp, "pathToRegexp");
-
-// ../node_modules/wrangler/templates/pages-template-worker.ts
+__name2(pathToRegexp, "pathToRegexp");
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
@@ -12041,13 +12314,14 @@ function* executeRequest(request) {
   }
 }
 __name(executeRequest, "executeRequest");
+__name2(executeRequest, "executeRequest");
 var pages_template_worker_default = {
   async fetch(originalRequest, env, workerContext) {
     let request = originalRequest;
     const handlerIterator = executeRequest(request);
     let data = {};
     let isFailOpen = false;
-    const next = /* @__PURE__ */ __name(async (input, init) => {
+    const next = /* @__PURE__ */ __name2(async (input, init) => {
       if (input !== void 0) {
         let url = input;
         if (typeof input === "string") {
@@ -12074,7 +12348,7 @@ var pages_template_worker_default = {
           },
           env,
           waitUntil: workerContext.waitUntil.bind(workerContext),
-          passThroughOnException: /* @__PURE__ */ __name(() => {
+          passThroughOnException: /* @__PURE__ */ __name2(() => {
             isFailOpen = true;
           }, "passThroughOnException")
         };
@@ -12102,7 +12376,7 @@ var pages_template_worker_default = {
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response) => (
+var cloneResponse = /* @__PURE__ */ __name2((response) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
     [101, 204, 205, 304].includes(response.status) ? null : response.body,

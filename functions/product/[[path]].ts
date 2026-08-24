@@ -148,9 +148,45 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
 
   html = html.replace(
     /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
-    `$1${descriptionHtml}\n        $2`
+    (_m, start, end) => `${start}${descriptionHtml}\n        ${end}`
   );
   return html;
+}
+
+function applyLocalizedFaqFromD1(html: string, faq: string): string {
+  const text = String(faq || '').trim();
+  if (!text) return html;
+  const faqHtml = looksLikeHtml(text) ? text : `<p>${escapeHtml(text)}</p>`;
+  return html.replace(
+    /(<div[^>]*id="info-panel-faq"[^>]*>)[\s\S]*?(<\/div>\s*<\/div>\s*<\/div>)/i,
+    (_m, start, end) => `${start}${faqHtml}\n        ${end}`
+  );
+}
+
+function applyThaiProductUiLocalization(html: string, tagline: string): string {
+  const safeTagline = String(tagline || '').trim();
+  const localized = html
+    .replace(
+      /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
+      '<button class="config-tab active" data-tab="standard">ขนาดมาตรฐาน</button>'
+    )
+    .replace(
+      /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
+      '<button class="config-tab" data-tab="custom">ขนาดสั่งทำ</button>'
+    )
+    .replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">ราคาเริ่มต้น</span>')
+    .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">เลือกขนาดที่นอน</div>')
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">กรอกขนาดที่นอนจริงของคุณ</strong>')
+    .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, '$1 เพิ่มลงตะกร้า')
+    .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, '$1 เพิ่มลงตะกร้า')
+    .replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">รายละเอียด</button>')
+    .replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">คำถามที่พบบ่อย</button>')
+    .replace(/>\s*Premium Quality\s*<\/span>/i, '>คุณภาพพรีเมียม</span>')
+    .replace(/>\s*Custom Fit\s*<\/div>/i, '>ตัดเย็บตามขนาด</div>')
+    .replace(/>\s*Human Safe\s*<\/div>/i, '>ปลอดภัยต่อการใช้งาน</div>')
+    .replace(/>\s*Pet Resist\s*<\/div>/i, '>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>');
+  if (!safeTagline) return localized;
+  return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 
 export async function onRequest(context: any): Promise<Response> {
@@ -200,7 +236,7 @@ export async function onRequest(context: any): Promise<Response> {
 
     // 2. Query D1 for this product's image, title, pricing, and category data
     const stmt = context.env.DB.prepare(
-      'SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+      'SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
     ).bind(slug);
     const product = await stmt.first() as any;
 
@@ -208,6 +244,13 @@ export async function onRequest(context: any): Promise<Response> {
       ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || '')
       : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || '');
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    const localizedFaq = isTh
+      ? String(product?.faq_th || '')
+      : String(product?.faq_en || '');
+    html = applyLocalizedFaqFromD1(html, localizedFaq);
+    if (isTh) {
+      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ''));
+    }
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
     let images: string[] = [];
