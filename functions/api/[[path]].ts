@@ -64,6 +64,7 @@ import { handleAuth } from "../../workers/api/auth";
 import { handleCustomers } from "../../workers/api/customers";
 import { handleOrderConfirmed } from "../../workers/api/order-confirmed";
 import { handleColorInventory } from "../../workers/api/color-inventory";
+import { handleSalesApi } from "../../workers/api/sales";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -74,6 +75,12 @@ export const onRequest: PagesFunction<{
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+
+  // Unified sales API under /api/v1/*
+  if (path.startsWith("/api/v1/") || path === "/api/v1") {
+    const salesRes = await handleSalesApi(request, env);
+    if (salesRes) return salesRes;
+  }
 
   // Health check
   if (path === "/api/health") {

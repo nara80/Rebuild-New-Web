@@ -1248,6 +1248,14 @@ function applyThaiProductUiLocalization(html, tagline) {
   return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 __name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
+function applyFlatSheetExtraDeepPocketGuardrails(html, isTh) {
+  if (isTh) return html;
+  return html.replace(
+    /<p class="product-tagline">[\s\S]*?<\/p>/i,
+    '<p class="product-tagline">Loose, non-elastic deep pocket top sheet for extra-deep mattresses with 20 in / 51 cm default depth and ~10 in / 25 cm tuck allowance.</p>'
+  ).replace(/Full-perimeter elastic\.?/gi, "Loose non-elastic top sheet");
+}
+__name(applyFlatSheetExtraDeepPocketGuardrails, "applyFlatSheetExtraDeepPocketGuardrails");
 async function onRequest3(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -1289,6 +1297,9 @@ async function onRequest3(context) {
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
       html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""));
+    }
+    if (slug === "flat-sheet-extra-deep-pocket") {
+      html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
     }
     let images = [];
     if (product && product.images) {
@@ -12347,7 +12358,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-jEzN60/functionsRoutes-0.3764089566341099.mjs
+// ../.wrangler/tmp/pages-Y6DHMq/functionsRoutes-0.5515034483400099.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

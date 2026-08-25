@@ -189,6 +189,16 @@ function applyThaiProductUiLocalization(html: string, tagline: string): string {
   return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 
+function applyFlatSheetExtraDeepPocketGuardrails(html: string, isTh: boolean): string {
+  if (isTh) return html;
+  return html
+    .replace(
+      /<p class="product-tagline">[\s\S]*?<\/p>/i,
+      '<p class="product-tagline">Loose, non-elastic deep pocket top sheet for extra-deep mattresses with 20 in / 51 cm default depth and ~10 in / 25 cm tuck allowance.</p>'
+    )
+    .replace(/Full-perimeter elastic\.?/gi, 'Loose non-elastic top sheet');
+}
+
 export async function onRequest(context: any): Promise<Response> {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -250,6 +260,9 @@ export async function onRequest(context: any): Promise<Response> {
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
       html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ''));
+    }
+    if (slug === 'flat-sheet-extra-deep-pocket') {
+      html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
     }
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD

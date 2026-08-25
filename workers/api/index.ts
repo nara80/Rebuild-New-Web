@@ -42,6 +42,7 @@ import { handleStripeWebhook } from "./webhook";
 import { handleAuth } from "./auth";
 import { handleCustomers } from "./customers";
 import { handleOrderConfirmed } from "./order-confirmed";
+import { handleSalesApi } from "./sales";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -53,6 +54,12 @@ export default {
       return new Response(JSON.stringify({ status: "ok", project: "mildmate-new" }), {
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Unified sales API (supports /v1/* and /api/v1/*)
+    if (path.startsWith("/v1/") || path === "/v1" || path.startsWith("/api/v1/") || path === "/api/v1") {
+      const salesRes = await handleSalesApi(request, env);
+      if (salesRes) return salesRes;
     }
 
     // Products API
