@@ -1956,7 +1956,6 @@ async function renderQuotes() {
           '<div class="quote-actions">' +
             '<button class="btn btn-sm btn-outline" onclick="copyQuoteLink(\'' + escHtml(q.quote_id) + '\')">Copy</button>' +
             '<button class="btn btn-sm btn-primary" onclick="approveAndSendQuote(\'' + escHtml(q.quote_id) + '\',' + priceThb + ',' + priceUsd + ',\'' + escHtml(isUsd ? 'USD' : 'THB') + '\',\'' + escHtml(expires === '—' ? '' : expires) + '\')">' + (q.status === 'approved' ? 'Resend' : 'Send') + '</button>' +
-            '<button class="btn btn-sm btn-outline" onclick="setQuoteFreeShipping(\'' + escHtml(q.quote_id) + '\',' + (q.free_shipping ? 0 : 1) + ')">' + (q.free_shipping ? 'Unset Free Ship' : 'Set Free Ship') + '</button>' +
             '<button class="btn btn-sm btn-outline" onclick="archiveQuote(\'' + escHtml(q.quote_id) + '\')" style="color:var(--c-red);border-color:var(--c-red)">Delete</button>' +
           '</div>' +
         '</td>' +
@@ -1977,7 +1976,6 @@ async function renderQuotes() {
         '<div class="quote-card-actions">' +
           '<button class="btn btn-sm btn-outline" onclick="copyQuoteLink(\'' + escHtml(q.quote_id) + '\')">Copy</button>' +
           '<button class="btn btn-sm btn-primary" onclick="approveAndSendQuote(\'' + escHtml(q.quote_id) + '\',' + priceThb + ',' + priceUsd + ',\'' + escHtml(isUsd ? 'USD' : 'THB') + '\',\'' + escHtml(expires === '—' ? '' : expires) + '\')">' + (q.status === 'approved' ? 'Resend' : 'Send') + '</button>' +
-          '<button class="btn btn-sm btn-outline" onclick="setQuoteFreeShipping(\'' + escHtml(q.quote_id) + '\',' + (q.free_shipping ? 0 : 1) + ')">' + (q.free_shipping ? 'Unset Free Ship' : 'Set Free Ship') + '</button>' +
           '<button class="btn btn-sm btn-outline" onclick="archiveQuote(\'' + escHtml(q.quote_id) + '\')" style="color:var(--c-red);border-color:var(--c-red)">Delete</button>' +
         '</div>' +
       '</div>';
@@ -2058,28 +2056,6 @@ async function createSalesQuote() {
       result.innerHTML = 'Created <strong>' + escHtml(data.quote_id || '') + '</strong>. Link: <a href="' + escHtml(data.quote_url || '#') + '" target="_blank" rel="noopener">open quote page</a>';
     }
     toast('Quote created: ' + (data.quote_id || ''));
-    showPage('quotes');
-  } catch(e) {
-    toast('Network error: ' + e.message);
-  }
-}
-
-async function setQuoteFreeShipping(quoteId, freeShipping) {
-  try {
-    var resp = await fetch('/api/admin/quotes', {
-      method: 'PUT',
-      headers: await getAdminAuthHeaders(true),
-      body: JSON.stringify({
-        quote_id: quoteId,
-        free_shipping: freeShipping ? 1 : 0
-      })
-    });
-    var data = await resp.json().catch(function(){ return {}; });
-    if (!resp.ok) {
-      toast('Update free shipping failed: ' + (data.error || resp.status));
-      return;
-    }
-    toast('Free shipping updated for ' + quoteId);
     showPage('quotes');
   } catch(e) {
     toast('Network error: ' + e.message);
