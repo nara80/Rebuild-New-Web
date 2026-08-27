@@ -50,7 +50,7 @@ tr:hover td{background:#f8fafc}
 .btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
 .btn-outline{background:transparent;border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
 .btn-sm{padding:4px 10px;font-size:0.75rem}
-.quote-actions-cell{min-width:152px}
+.quote-actions-cell{min-width:132px}
 .quote-actions{display:flex;flex-direction:column;gap:4px}
 .quote-actions .btn{width:auto;justify-content:center;padding:4px 8px}
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
@@ -100,9 +100,20 @@ tr:hover td{background:#f8fafc}
 .slot-move-btn{flex:1;min-height:24px;border:none;border-radius:4px;background:rgba(15,23,42,.82);color:#fff;font-size:0.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .slot-move-btn:disabled{opacity:.4;cursor:not-allowed}
 .image-slot.has-image:hover .slot-move-controls,.image-slot.has-image:focus-within .slot-move-controls{display:flex}
-.table-wrap{overflow-x:auto;max-width:100%;width:100%}
-.quote-table{table-layout:fixed;min-width:1100px}
+.table-wrap{overflow-x:auto;max-width:100%;width:100%;position:relative}
+.quote-table{table-layout:fixed;min-width:1040px}
 .quote-table th,.quote-table td{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.quote-desktop-table .quote-table .quote-actions-cell{
+position:sticky;
+right:0;
+z-index:2;
+background:var(--c-surface);
+box-shadow:-8px 0 10px -10px rgba(15,23,42,.35);
+}
+.quote-desktop-table .quote-table thead .quote-actions-cell{
+z-index:3;
+background:#f8fafc;
+}
 .quote-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .quote-filter{display:flex;align-items:center;gap:8px}
 .quote-filter select{padding:6px 10px;border:1px solid var(--c-border);border-radius:6px;font-size:0.8125rem}
@@ -1891,6 +1902,7 @@ async function renderQuotes() {
     '<div class="form-row"><div class="form-group"><label>Depth (cm)</label><input id="sq-d" type="number" min="0" placeholder="30"></div><div></div></div></div>' +
     '<div id="sq-size-custom" style="display:none"><div class="form-group"><label>Size *</label><textarea id="sq-size-text" placeholder="Example: V-Berth HW 145, FW 70, Centerline 120, Depth 20"></textarea></div></div>' +
     '<div class="form-row"><div class="form-group"><label>Quoted Price</label><div style="display:flex;gap:8px"><select id="sq-currency" style="width:90px;padding:10px 8px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.875rem;font-family:inherit;background:#fff"><option value="THB">THB</option><option value="USD">USD</option></select><input id="sq-price" type="number" min="0" placeholder="Leave blank for later" style="flex:1"></div></div><div></div></div>' +
+    '<div class="form-row"><div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="sq-free-shipping" type="checkbox" style="margin:0"> Free Shipping</label><span style="font-size:0.75rem;color:var(--c-muted);display:block;margin-top:4px">Waive shipping at checkout for this quote</span></div><div></div></div>' +
     '<div style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary" onclick="createSalesQuote()">Create Quote</button>' +
     '<button class="btn btn-outline" onclick="showPage(\'quotes\')">Reset</button></div>' +
     '<p id="sq-result" style="font-size:0.8125rem;color:var(--c-muted);margin-top:10px"></p>' +
@@ -1928,6 +1940,7 @@ async function renderQuotes() {
       var priceDisplay = isUsd
         ? ('$' + Number(priceUsd).toLocaleString() + ' USD')
         : (priceThb ? ('฿' + Number(priceThb).toLocaleString()) : '—');
+      var freeShipBadge = q.free_shipping ? '<span class="badge badge-success">FREE</span>' : '<span style="color:var(--c-muted)">—</span>';
       tableRows += '<tr>' +
         '<td><strong>' + escHtml(q.quote_id) + '</strong><div style="font-size:0.6875rem;color:var(--c-muted)">' + escHtml(q.email || '—') + '</div></td>' +
         '<td>' + escHtml(q.customer_name || '—') + '</td>' +
@@ -1937,11 +1950,13 @@ async function renderQuotes() {
         '<td style="font-size:0.75rem">' + escHtml(formatQuoteDims(q.dimensions)) + '</td>' +
         '<td><span class="badge ' + statusBadge + '">' + escHtml(q.status || 'pending') + '</span></td>' +
         '<td>' + priceDisplay + '</td>' +
+        '<td>' + freeShipBadge + '</td>' +
         '<td>' + escHtml(expires) + '</td>' +
         '<td class="quote-actions-cell" style="vertical-align:top">' +
           '<div class="quote-actions">' +
             '<button class="btn btn-sm btn-outline" onclick="copyQuoteLink(\'' + escHtml(q.quote_id) + '\')">Copy</button>' +
             '<button class="btn btn-sm btn-primary" onclick="approveAndSendQuote(\'' + escHtml(q.quote_id) + '\',' + priceThb + ',' + priceUsd + ',\'' + escHtml(isUsd ? 'USD' : 'THB') + '\',\'' + escHtml(expires === '—' ? '' : expires) + '\')">' + (q.status === 'approved' ? 'Resend' : 'Send') + '</button>' +
+            '<button class="btn btn-sm btn-outline" onclick="setQuoteFreeShipping(\'' + escHtml(q.quote_id) + '\',' + (q.free_shipping ? 0 : 1) + ')">' + (q.free_shipping ? 'Unset Free Ship' : 'Set Free Ship') + '</button>' +
             '<button class="btn btn-sm btn-outline" onclick="archiveQuote(\'' + escHtml(q.quote_id) + '\')" style="color:var(--c-red);border-color:var(--c-red)">Delete</button>' +
           '</div>' +
         '</td>' +
@@ -1956,16 +1971,18 @@ async function renderQuotes() {
           '<div class="quote-card-field"><b>Fabric / Color</b>' + escHtml((q.fabric || '—') + ' / ' + (q.color || '—')) + '</div>' +
           '<div class="quote-card-field"><b>Size</b>' + escHtml(formatQuoteDims(q.dimensions)) + '</div>' +
           '<div class="quote-card-field"><b>Price</b>' + priceDisplay + '</div>' +
+          '<div class="quote-card-field"><b>Free Ship</b>' + (q.free_shipping ? 'YES' : '—') + '</div>' +
           '<div class="quote-card-field"><b>Expires</b>' + escHtml(expires) + '</div>' +
         '</div>' +
         '<div class="quote-card-actions">' +
           '<button class="btn btn-sm btn-outline" onclick="copyQuoteLink(\'' + escHtml(q.quote_id) + '\')">Copy</button>' +
           '<button class="btn btn-sm btn-primary" onclick="approveAndSendQuote(\'' + escHtml(q.quote_id) + '\',' + priceThb + ',' + priceUsd + ',\'' + escHtml(isUsd ? 'USD' : 'THB') + '\',\'' + escHtml(expires === '—' ? '' : expires) + '\')">' + (q.status === 'approved' ? 'Resend' : 'Send') + '</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="setQuoteFreeShipping(\'' + escHtml(q.quote_id) + '\',' + (q.free_shipping ? 0 : 1) + ')">' + (q.free_shipping ? 'Unset Free Ship' : 'Set Free Ship') + '</button>' +
           '<button class="btn btn-sm btn-outline" onclick="archiveQuote(\'' + escHtml(q.quote_id) + '\')" style="color:var(--c-red);border-color:var(--c-red)">Delete</button>' +
         '</div>' +
       '</div>';
     });
-    h += '<div class="table-wrap quote-desktop-table"><table class="quote-table"><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Fabric</th><th>Color</th><th>Size</th><th>Status</th><th>Price</th><th>Expires</th><th class="quote-actions-cell">Actions</th></tr></thead><tbody>' + tableRows + '</tbody></table></div>';
+    h += '<div class="table-wrap quote-desktop-table"><table class="quote-table"><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Fabric</th><th>Color</th><th>Size</th><th>Status</th><th>Price</th><th>Free Ship</th><th>Expires</th><th class="quote-actions-cell">Actions</th></tr></thead><tbody>' + tableRows + '</tbody></table></div>';
     h += '<div class="quote-mobile-cards">' + mobileCards + '</div>';
   }
   h += '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:12px">Tip: Create quote from customer email, then click Approve & Send to email the magic link automatically. Delete moves quote to Archived.</p>';
@@ -1990,6 +2007,7 @@ async function createSalesQuote() {
   var priceRaw = (document.getElementById('sq-price') || {}).value;
   var price = priceRaw !== '' && !isNaN(Number(priceRaw)) ? Math.round(Number(priceRaw)) : null;
   var priceCurrency = (document.getElementById('sq-currency') || {}).value || 'THB';
+  var freeShipping = !!((document.getElementById('sq-free-shipping') || {}).checked);
 
   if (!name.trim()) { toast('Customer name is required'); return; }
   if (!email.trim() || email.indexOf('@') === -1) { toast('Valid email is required'); return; }
@@ -2022,6 +2040,7 @@ async function createSalesQuote() {
         quoted_price_thb: priceCurrency === 'THB' ? price : null,
         quoted_price_usd: priceCurrency === 'USD' ? price : null,
         quoted_price_currency: priceCurrency,
+        free_shipping: freeShipping ? 1 : 0,
         status: 'pending'
       })
     });
@@ -2039,6 +2058,28 @@ async function createSalesQuote() {
       result.innerHTML = 'Created <strong>' + escHtml(data.quote_id || '') + '</strong>. Link: <a href="' + escHtml(data.quote_url || '#') + '" target="_blank" rel="noopener">open quote page</a>';
     }
     toast('Quote created: ' + (data.quote_id || ''));
+    showPage('quotes');
+  } catch(e) {
+    toast('Network error: ' + e.message);
+  }
+}
+
+async function setQuoteFreeShipping(quoteId, freeShipping) {
+  try {
+    var resp = await fetch('/api/admin/quotes', {
+      method: 'PUT',
+      headers: await getAdminAuthHeaders(true),
+      body: JSON.stringify({
+        quote_id: quoteId,
+        free_shipping: freeShipping ? 1 : 0
+      })
+    });
+    var data = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) {
+      toast('Update free shipping failed: ' + (data.error || resp.status));
+      return;
+    }
+    toast('Free shipping updated for ' + quoteId);
     showPage('quotes');
   } catch(e) {
     toast('Network error: ' + e.message);
