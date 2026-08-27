@@ -1109,6 +1109,7 @@ var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "flat-sheet-extra-deep-pocket",
   "co-sleeping-top-sheet",
   "3-sided-duvet",
+  "weighted-duvet-cover",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
   "duvet-cover-rv",
@@ -12018,6 +12019,7 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
   "flat-sheet-standard",
   "flat-sheet-extra-deep-pocket",
   "3-sided-duvet",
+  "weighted-duvet-cover",
   "pet-owner-duvet-cover",
   "duvet-cover-marine",
   "duvet-cover-rv",
@@ -12373,7 +12375,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-n2tblw/functionsRoutes-0.021469696130921867.mjs
+// ../.wrangler/tmp/pages-q65Vbv/functionsRoutes-0.5912191240132384.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

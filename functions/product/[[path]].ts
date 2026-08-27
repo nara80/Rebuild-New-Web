@@ -11,6 +11,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'flat-sheet-extra-deep-pocket',
   'co-sleeping-top-sheet',
   '3-sided-duvet',
+  'weighted-duvet-cover',
   'pet-owner-duvet-cover',
   'duvet-cover-marine',
   'duvet-cover-rv',
