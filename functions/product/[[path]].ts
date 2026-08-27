@@ -164,8 +164,17 @@ function applyLocalizedFaqFromD1(html: string, faq: string): string {
   );
 }
 
-function applyThaiProductUiLocalization(html: string, tagline: string): string {
+function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
   const safeTagline = String(tagline || '').trim();
+  const isWeightedDuvet = slug === 'weighted-duvet-cover';
+  const sizeLabel = isWeightedDuvet ? 'เลือกขนาดผ้าห่มถ่วงน้ำหนัก' : 'เลือกขนาดที่นอน';
+  const customPrompt = isWeightedDuvet
+    ? 'กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ'
+    : 'กรอกขนาดที่นอนจริงของคุณ';
+  const sizeHintText = isWeightedDuvet ? 'ดูวิธีวัดขนาดผ้าห่ม' : 'ดูคู่มือขนาด';
+  const customTabNote = isWeightedDuvet
+    ? 'วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน'
+    : 'วัดจากขนาดที่นอนจริงของคุณ';
   const localized = html
     .replace(
       /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
@@ -176,8 +185,12 @@ function applyThaiProductUiLocalization(html: string, tagline: string): string {
       '<button class="config-tab" data-tab="custom">ขนาดสั่งทำ</button>'
     )
     .replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">ราคาเริ่มต้น</span>')
-    .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">เลือกขนาดที่นอน</div>')
-    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">กรอกขนาดที่นอนจริงของคุณ</strong>')
+    .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`)
+    .replace(/<div class="panel-label">\s*Select Duvet Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`)
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`)
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact duvet dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`)
+    .replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, `<div class="size-hint"><a href="/th/sizeguide/">${sizeHintText}</a></div>`)
+    .replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, `<p class="dim-diagram-caption">${customTabNote}</p>`)
     .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, '$1 เพิ่มลงตะกร้า')
     .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, '$1 เพิ่มลงตะกร้า')
     .replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">รายละเอียด</button>')
@@ -260,7 +273,7 @@ export async function onRequest(context: any): Promise<Response> {
       : String(product?.faq_en || '');
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
-      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ''));
+      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ''), slug);
     }
     if (slug === 'flat-sheet-extra-deep-pocket') {
       html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);

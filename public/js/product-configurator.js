@@ -20,6 +20,7 @@
   var isFamily = path.indexOf('family-fitted-sheet') !== -1;
   var isCoSleeping = path.indexOf('co-sleeping-top-sheet') !== -1;
   var isDuvet = path.indexOf('duvet') !== -1;
+  var isWeightedDuvet = path.indexOf('weighted-duvet-cover') !== -1;
   var isPillowProtector = path.indexOf('pillow-protector') !== -1;
   var isMattressProtector = (path.indexOf('mattress-protector') !== -1 || path.indexOf('pet-proof-mattress-protector') !== -1) && path.indexOf('pillow-protector') === -1;
   var isProtectorStandard = path.indexOf('mattress-protector-standard') !== -1;
@@ -83,6 +84,8 @@
   function pctVal(key, fallback) {
     return pVal(key, fallback) / 100;
   }
+
+  var DERIVED_MARKUP_PCT = isWeightedDuvet ? pVal('derived_markup_weighted-duvet-cover', 10) : 0;
 
   function familyMarginRate() {
     if (apiParams && apiParams.margins) {
@@ -1061,6 +1064,14 @@
     return formatPrice(thb, usd);
   }
 
+  function applyDerivedMarkupToResult(result) {
+    if (!result || !DERIVED_MARKUP_PCT) return result;
+    var factor = 1 + (DERIVED_MARKUP_PCT / 100);
+    result.thb = Math.ceil((result.thb * factor) / 100) * 100;
+    result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
+    return result;
+  }
+
   // -- Update price from standard size --
   function updateStandardPrice() {
     if (!sizeSelect || !priceDisplay) return;
@@ -1119,6 +1130,7 @@
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
+    result = applyDerivedMarkupToResult(result);
     priceDisplay.innerHTML = displayPrice(result.thb, result.usd);
     validateForm();
     // Save for add-to-cart handler
@@ -1181,6 +1193,7 @@
       var sf = 1 + CUSTOM_QUOTE_SURCHARGE;
       result.thb = Math.ceil((result.thb * sf) / 100) * 100;
       result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
+      result = applyDerivedMarkupToResult(result);
       state.quotePriceThb = result.thb;
       state.quotePriceUsd = result.usd;
       customPrice.innerHTML = displayPrice(result.thb, result.usd);
@@ -1223,6 +1236,7 @@
     var sf2 = 1 + CUSTOM_QUOTE_SURCHARGE;
     result.thb = Math.ceil((result.thb * sf2) / 100) * 100;
     result.usd = Math.round((result.thb / THB_TO_USD) * 100) / 100;
+    result = applyDerivedMarkupToResult(result);
     state.quotePriceThb = result.thb;
     state.quotePriceUsd = result.usd;
     customPrice.innerHTML = displayPrice(result.thb, result.usd);

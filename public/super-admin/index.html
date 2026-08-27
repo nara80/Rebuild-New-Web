@@ -580,6 +580,9 @@ function saveParams(ps) {
 
 function deriveParamProductsHint(key) {
   if (!key) return "";
+  if (key.indexOf("derived_markup_") === 0) {
+    return key.replace("derived_markup_", "");
+  }
   var tags = [];
   if (typeof formulaParamKeys === 'object' && formulaParamKeys) {
     Object.keys(formulaParamKeys).forEach(function(typeKey) {
@@ -749,6 +752,7 @@ async function renderPricingParams() {
     protector_depth: { label:"Mattress Protector Depth Surcharges (cm → THB)", badge:"badge-sewing" },
     flat_sewing: { label:"Other Sewing Costs", badge:"badge-sewing" },
     fixed: { label:"Fixed Costs \u0026 Constants", badge:"badge-fixed" },
+    derived_markup: { label:"Derived Product Markups", badge:"badge-margin" },
     operations: { label:"Operations Rate", badge:"badge-ops" },
     marketing: { label:"Marketing Rate", badge:"badge-ops" }
   };
@@ -828,7 +832,7 @@ async function renderPricingParams() {
             productBadges += "<span class=\"prod-pill\" style=\"display:inline-block;font-size:0.625rem;padding:2px 7px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);margin-right:3px;white-space:nowrap\">"+tag+"</span>";
           });
         }
-        var pctCats = ["waste","margin","operations","marketing"];
+        var pctCats = ["waste","margin","operations","marketing","derived_markup"];
         var pctSuffix = pctCats.indexOf(sample[i].category) !== -1 ? "%" : "";
         html += "<tr><td style=\"font-family:monospace;font-size:0.75rem\">"+sample[i].key+"</td><td>"+sample[i].label+"</td><td><strong>"+sample[i].value+pctSuffix+"</strong></td><td>"+productBadges+"</td><td><button class=\"btn btn-outline btn-sm\" onclick=\"editParam("+i+")\">Edit</button></td></tr>";
       }

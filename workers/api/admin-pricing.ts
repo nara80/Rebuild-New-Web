@@ -4,6 +4,25 @@
 
 import { verifyClerkJwt } from "./clerk-verify";
 
+const DEFAULT_DERIVED_MARKUP_PARAMS = [
+  {
+    key: "derived_markup_weighted-duvet-cover",
+    value: 10,
+    label: "Derived Markup — weighted-duvet-cover (%)",
+    category: "derived_markup",
+  },
+];
+
+async function ensureDerivedMarkupDefaults(env: any): Promise<void> {
+  for (const row of DEFAULT_DERIVED_MARKUP_PARAMS) {
+    await env.DB.prepare(
+      `INSERT INTO pricing_params (key, value, label, category)
+       VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT(key) DO NOTHING`
+    ).bind(row.key, row.value, row.label, row.category).run();
+  }
+}
+
 function collectRoles(raw: any): string[] {
   if (!raw || typeof raw !== "object") return [];
   const values: any[] = [];
@@ -136,6 +155,7 @@ export async function handleAdminPricingParams(request: Request, env: any): Prom
 
   if (request.method === "GET") {
     try {
+      await ensureDerivedMarkupDefaults(env);
       const { results } = await env.DB.prepare(
         "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
       ).all();

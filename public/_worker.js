@@ -1236,15 +1236,20 @@ function applyLocalizedFaqFromD1(html, faq) {
   );
 }
 __name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
-function applyThaiProductUiLocalization(html, tagline) {
+function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
+  const isWeightedDuvet = slug === "weighted-duvet-cover";
+  const sizeLabel = isWeightedDuvet ? "เลือกขนาดผ้าห่มถ่วงน้ำหนัก" : "เลือกขนาดที่นอน";
+  const customPrompt = isWeightedDuvet ? "กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ" : "กรอกขนาดที่นอนจริงของคุณ";
+  const sizeHintText = isWeightedDuvet ? "ดูวิธีวัดขนาดผ้าห่ม" : "ดูคู่มือขนาด";
+  const customTabNote = isWeightedDuvet ? "วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน" : "วัดจากขนาดที่นอนจริงของคุณ";
   const localized = html.replace(
     /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
     '<button class="config-tab active" data-tab="standard">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>'
   ).replace(
     /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
     '<button class="config-tab" data-tab="custom">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>'
-  ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>').replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
+  ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<div class="panel-label">\s*Select Duvet Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact duvet dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, `<div class="size-hint"><a href="/th/sizeguide/">${sizeHintText}</a></div>`).replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, `<p class="dim-diagram-caption">${customTabNote}</p>`).replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
   if (!safeTagline) return localized;
   return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
@@ -1297,7 +1302,7 @@ async function onRequest3(context) {
     const localizedFaq = isTh ? String(product?.faq_th || "") : String(product?.faq_en || "");
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
-      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""));
+      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""), slug);
     }
     if (slug === "flat-sheet-extra-deep-pocket") {
       html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
@@ -1683,6 +1688,10 @@ var PILLOW_PROTECTOR_MARGIN_RATE = 0.35;
 var PILLOWCASE_MARGIN_RATE = 0.15;
 var THB_TO_USD = 30;
 var MAX_WIDTH_CM = 220;
+var DERIVED_MARKUP_KEY_PREFIX = "derived_markup_";
+var DEFAULT_DERIVED_MARKUPS = {
+  "weighted-duvet-cover": 10
+};
 function inchToCm(val) {
   return val * 2.54;
 }
@@ -1934,7 +1943,8 @@ function isDuvetProduct(product) {
     "duvet-cover-dorm",
     "duvet-cover-rv",
     "duvet-cover-marine",
-    "pet-owner-duvet-cover"
+    "pet-owner-duvet-cover",
+    "weighted-duvet-cover"
   ].includes(product);
 }
 __name(isDuvetProduct, "isDuvetProduct");
@@ -1949,10 +1959,21 @@ function isPillowcaseProduct(product) {
   return { isPillowcase: false };
 }
 __name(isPillowcaseProduct, "isPillowcaseProduct");
-function calculatePrice(input, currency = "USD") {
+function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
   const product = input.product || "";
   const mode = input.mode || "sheet";
   const fabric = input.fabric || "cloudsoft";
+  const resolveMarkupPct = /* @__PURE__ */ __name(() => {
+    if (!product) return 0;
+    if (derivedMarkups[product] !== void 0) return Number(derivedMarkups[product]) || 0;
+    return DEFAULT_DERIVED_MARKUPS[product] || 0;
+  }, "resolveMarkupPct");
+  const applyDerivedMarkup = /* @__PURE__ */ __name((basePrice) => {
+    const pct = resolveMarkupPct();
+    if (!pct || !Number.isFinite(basePrice) || basePrice <= 0) return basePrice;
+    const marked = basePrice * (1 + pct / 100);
+    return currency === "THB" ? Math.ceil(marked / 100) * 100 : Math.round(marked * 100) / 100;
+  }, "applyDerivedMarkup");
   const pillowcase = isPillowcaseProduct(product);
   if (pillowcase.isPillowcase) {
     let w2 = input.width || 0;
@@ -1967,7 +1988,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0) {
       const result = calculatePillowcasePrice(w2, l2, fabric, pillowcase.variant);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -1986,7 +2007,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0) {
       const result = calculatePillowProtectorPrice(w2, l2);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -2002,7 +2023,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0) {
       const result = calculateDuvetPrice(w2, l2, fabric);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -2020,7 +2041,7 @@ function calculatePrice(input, currency = "USD") {
     if (w2 > 0 && l2 > 0 && d > 0) {
       const result = calculateFlatSheetPrice(w2, l2, d, fabric);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -2039,7 +2060,7 @@ function calculatePrice(input, currency = "USD") {
       if (product !== "family-fitted-sheet" && w2 > MAX_WIDTH_CM) {
         const result2 = calculateFittedSheetPrice(w2, l2, d, fabric);
         return {
-          price: currency === "THB" ? result2.priceThb : result2.priceUsd,
+          price: applyDerivedMarkup(currency === "THB" ? result2.priceThb : result2.priceUsd),
           breakdown: { ...result2.breakdown, roundedThb: -1 }
           // -1 signals "requires family sheet"
         };
@@ -2047,7 +2068,7 @@ function calculatePrice(input, currency = "USD") {
       const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : MARGIN_RATE;
       const result = calculateFittedSheetPrice(w2, l2, d, fabric, marginRate);
       return {
-        price: currency === "THB" ? result.priceThb : result.priceUsd,
+        price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
         breakdown: result.breakdown
       };
     }
@@ -2063,9 +2084,28 @@ function calculatePrice(input, currency = "USD") {
     head = inchToCm(head);
     foot = inchToCm(foot);
   }
-  return { price: calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) };
+  return { price: applyDerivedMarkup(calculateLegacyPrice(mode, w, l, head, foot, fabric, currency)) };
 }
 __name(calculatePrice, "calculatePrice");
+async function loadDerivedMarkupMap(env) {
+  const out = { ...DEFAULT_DERIVED_MARKUPS };
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT key, value FROM pricing_params WHERE key LIKE ?1"
+    ).bind(`${DERIVED_MARKUP_KEY_PREFIX}%`).all();
+    for (const row of results || []) {
+      const key = String(row.key || "");
+      if (!key.startsWith(DERIVED_MARKUP_KEY_PREFIX)) continue;
+      const slug = key.slice(DERIVED_MARKUP_KEY_PREFIX.length).trim();
+      const pct = Number(row.value);
+      if (!slug || !Number.isFinite(pct)) continue;
+      out[slug] = pct;
+    }
+  } catch {
+  }
+  return out;
+}
+__name(loadDerivedMarkupMap, "loadDerivedMarkupMap");
 async function handlePricing(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -2094,8 +2134,9 @@ async function handlePricing(request, env) {
           foot: parseFloat(params.get("foot") || "0") || void 0
         };
       }
-      const resultUsd = calculatePrice(body, "USD");
-      const resultThb = calculatePrice(body, "THB");
+      const derivedMarkupMap = await loadDerivedMarkupMap(env);
+      const resultUsd = calculatePrice(body, "USD", derivedMarkupMap);
+      const resultThb = calculatePrice(body, "THB", derivedMarkupMap);
       let formulaType = "legacy";
       const pc = isPillowcaseProduct(body.product || "");
       if (pc.isPillowcase) {
@@ -2116,7 +2157,8 @@ async function handlePricing(request, env) {
         mode: body.mode || "sheet",
         fabric: body.fabric || "cloudsoft",
         unit: body.unit || "cm",
-        formula: formulaType
+        formula: formulaType,
+        derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
         response2.breakdown = resultUsd.breakdown;
@@ -3345,6 +3387,24 @@ async function verifyClerkJwt(request, env) {
 __name(verifyClerkJwt, "verifyClerkJwt");
 
 // ../workers/api/admin-pricing.ts
+var DEFAULT_DERIVED_MARKUP_PARAMS = [
+  {
+    key: "derived_markup_weighted-duvet-cover",
+    value: 10,
+    label: "Derived Markup — weighted-duvet-cover (%)",
+    category: "derived_markup"
+  }
+];
+async function ensureDerivedMarkupDefaults(env) {
+  for (const row of DEFAULT_DERIVED_MARKUP_PARAMS) {
+    await env.DB.prepare(
+      `INSERT INTO pricing_params (key, value, label, category)
+       VALUES (?1, ?2, ?3, ?4)
+       ON CONFLICT(key) DO NOTHING`
+    ).bind(row.key, row.value, row.label, row.category).run();
+  }
+}
+__name(ensureDerivedMarkupDefaults, "ensureDerivedMarkupDefaults");
 function collectRoles(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -3460,6 +3520,7 @@ async function handleAdminPricingParams(request, env) {
   }
   if (request.method === "GET") {
     try {
+      await ensureDerivedMarkupDefaults(env);
       const { results } = await env.DB.prepare(
         "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
       ).all();
