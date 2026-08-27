@@ -64,7 +64,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     try {
       const row = await env.DB.prepare(
         `SELECT quote_id, customer_name, email, product_slug, dimensions, fabric, color,
-                status, quoted_price, expires_at, created_at
+                status, quoted_price, free_shipping, expires_at, created_at
          FROM custom_quotes
          WHERE quote_id = ?1`
       ).bind(quoteId).first();
@@ -106,6 +106,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
         status: row.status,
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
+        free_shipping: Number((row as any).free_shipping || 0) === 1,
         expires_at: row.expires_at,
         created_at: row.created_at,
         is_expired: row.expires_at ? new Date(row.expires_at + "Z") < new Date() : false,

@@ -637,7 +637,10 @@
       var discountApplied = false;
       var discountCode = '';
       var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
-      var freeShipping = false; // set true when promo code has free_shipping=1
+      var promoFreeShipping = false; // set true when promo code has free_shipping=1
+      var quoteFreeShipping = false; // set true when any approved quote item has free_shipping=1
+      var quoteFreeShippingCache = {};
+      var quoteFreeShippingSeq = 0;
       var shippingState = {
         serviceLevel: 'standard',
         currency: 'USD',
@@ -751,6 +754,9 @@
         var el = document.getElementById(id);
         if (el) el.innerHTML = value;
       }
+      function hasEffectiveFreeShipping() {
+        return !!(promoFreeShipping || quoteFreeShipping);
+      }
 
       var EU_COUNTRIES = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
       var NO_TARIFF_NOTE = ['TH','US','CA','AU'];
@@ -819,11 +825,12 @@
         }, 0);
         var discountedSubtotal = discountApplied ? rawSubtotal * (100 - discountPercent) / 100 : rawSubtotal;
         var discountAmt = discountApplied ? rawSubtotal - discountedSubtotal : 0;
-        var shipping = freeShipping ? 0 : Number(shippingState.amount || 0);
-        var standardAmount = freeShipping ? 0 : (standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping);
+        var effectiveFreeShipping = hasEffectiveFreeShipping();
+        var shipping = effectiveFreeShipping ? 0 : Number(shippingState.amount || 0);
+        var standardAmount = effectiveFreeShipping ? 0 : (standardShippingQuote && !standardShippingQuote.lastError ? Number(standardShippingQuote.amount || 0) : shipping);
         var total = (discountApplied ? discountedSubtotal : rawSubtotal) + shipping;
-        var shippingText = freeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(shipping, currency);
-        var standardShippingText = freeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(standardAmount, currency);
+        var shippingText = effectiveFreeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(shipping, currency);
+        var standardShippingText = effectiveFreeShipping ? '<span style="color:#16a34a;font-weight:700">FREE</span>' : formatMoney(standardAmount, currency);
         var subtotalDisplay = rawSubtotal;
 
         setText('subtotal', formatMoney(subtotalDisplay, currency));
@@ -998,6 +1005,50 @@
           lastShippingQuoteKey = '';
         }
         renderShippingMethodOptions();
+        applyTotalsFromState();
+      }
+
+      async function refreshQuoteFreeShipping() {
+        var items = (cart.items || []);
+        var hasInlineQuoteFreeShipping = false;
+        var quoteIds = [];
+        var quoteSeen = {};
+        items.forEach(function(item) {
+          if (!item) return;
+          if (item.free_shipping === true || item.free_shipping === 1 || item.free_shipping === '1') {
+            hasInlineQuoteFreeShipping = true;
+          }
+          var qid = String(item.quote_id || '').trim();
+          if (!qid) return;
+          if (!quoteSeen[qid]) {
+            quoteSeen[qid] = true;
+            quoteIds.push(qid);
+          }
+        });
+
+        if (!quoteIds.length) {
+          quoteFreeShipping = hasInlineQuoteFreeShipping;
+          applyTotalsFromState();
+          return;
+        }
+
+        var uncached = quoteIds.filter(function(qid) { return quoteFreeShippingCache[qid] === undefined; });
+        var seq = ++quoteFreeShippingSeq;
+        if (uncached.length) {
+          await Promise.all(uncached.map(async function(qid) {
+            try {
+              var resp = await fetch('/api/quote?quote_id=' + encodeURIComponent(qid));
+              var data = await resp.json().catch(function() { return {}; });
+              var approved = data && data.is_approved === true;
+              var free = data && (data.free_shipping === true || data.free_shipping === 1);
+              quoteFreeShippingCache[qid] = !!(approved && free);
+            } catch (e) {
+              quoteFreeShippingCache[qid] = false;
+            }
+          }));
+        }
+        if (seq !== quoteFreeShippingSeq) return;
+        quoteFreeShipping = hasInlineQuoteFreeShipping || quoteIds.some(function(qid) { return quoteFreeShippingCache[qid] === true; });
         applyTotalsFromState();
       }
 
@@ -1543,6 +1594,7 @@
           shippingState.lastError = '';
           shippingMethodQuotes = { standard: null, express: null };
           standardShippingQuote = null;
+          quoteFreeShipping = false;
           renderShippingMethodOptions();
           applyTotalsFromState();
           return;
@@ -1609,6 +1661,7 @@
           if (barBtn) barBtn.disabled = false;
         }
         applyTotalsFromState();
+        refreshQuoteFreeShipping();
       }
 
       window.changeQty = function(idx, delta) {
@@ -1773,9 +1826,9 @@
             discountApplied = true;
             discountCode = code;
             discountPercent = data.discount_percent || 15;
-            freeShipping = data.free_shipping === true;
+            promoFreeShipping = data.free_shipping === true || data.free_shipping === 1;
             var discountLabel = discountPercent > 0 ? discountPercent + '% discount' : '';
-            var shippingLabel = freeShipping ? (discountLabel ? ' + free shipping' : 'Free shipping') : '';
+            var shippingLabel = promoFreeShipping ? (discountLabel ? ' + free shipping' : 'Free shipping') : '';
             msg.style.color = "#16a34a";
             msg.innerHTML = (discountLabel + shippingLabel) + ' applied! <span id="remove-discount-btn" style="cursor:pointer;color:#ef4444;font-size:0.875rem;margin-left:8px;text-decoration:underline">Remove</span> (expires ' + (data.expires_at ? data.expires_at.substring(0,10) : "soon") + ')';
             document.getElementById("btn-apply-discount").disabled = true;
@@ -1796,7 +1849,7 @@
         discountApplied = false;
         discountCode = '';
         discountPercent = 15;
-        freeShipping = false;
+        promoFreeShipping = false;
         var input = document.getElementById('discount-input');
         var msg = document.getElementById('discount-msg');
         var btn = document.getElementById('btn-apply-discount');

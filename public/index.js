@@ -2837,7 +2837,7 @@ async function handleQuote(request, env) {
     try {
       const row = await env.DB.prepare(
         `SELECT quote_id, customer_name, email, product_slug, dimensions, fabric, color,
-                status, quoted_price, expires_at, created_at
+                status, quoted_price, free_shipping, expires_at, created_at
          FROM custom_quotes
          WHERE quote_id = ?1`
       ).bind(quoteId).first();
@@ -2875,6 +2875,7 @@ async function handleQuote(request, env) {
         status: row.status,
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
+        free_shipping: Number(row.free_shipping || 0) === 1,
         expires_at: row.expires_at,
         created_at: row.created_at,
         is_expired: row.expires_at ? /* @__PURE__ */ new Date(row.expires_at + "Z") < /* @__PURE__ */ new Date() : false,
@@ -5863,6 +5864,7 @@ async function ensureQuoteSchema(env) {
       if (!existing.has("status")) alters.push("ALTER TABLE custom_quotes ADD COLUMN status TEXT DEFAULT 'pending'");
       if (!existing.has("quoted_price")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price INTEGER");
       if (!existing.has("quoted_price_usd")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price_usd INTEGER");
+      if (!existing.has("free_shipping")) alters.push("ALTER TABLE custom_quotes ADD COLUMN free_shipping INTEGER DEFAULT 0");
       if (!existing.has("expires_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN expires_at DATETIME");
       if (!existing.has("created_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN created_at DATETIME");
       for (const sql of alters) await env.DB.prepare(sql).run();
@@ -6034,7 +6036,7 @@ async function handleAdminQuotes(request, env) {
     const offset = (page - 1) * limit;
     const rows = await db.prepare(
       `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        ${whereSql}
        ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
@@ -6067,6 +6069,7 @@ async function handleAdminQuotes(request, env) {
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
         quoted_price_currency: hasExplicitUsd ? "USD" : priceThb ? "THB" : null,
+        free_shipping: Number(r.free_shipping || 0) === 1,
         expires_at: r.expires_at || null,
         created_at: r.created_at || null,
         size_text: dims && typeof dims === "object" ? dims.size_text || "" : "",
@@ -6101,6 +6104,7 @@ async function handleAdminQuotes(request, env) {
     const status = String(body.status || "pending").trim().toLowerCase();
     const quoteCurrency = String(body.quoted_price_currency || "").trim().toUpperCase();
     const isUsdQuote = quoteCurrency === "USD";
+    const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
     let quotedPriceThb = null;
     let quotedPriceUsd = null;
     if (isUsdQuote) {
@@ -6133,9 +6137,9 @@ async function handleAdminQuotes(request, env) {
     const quoteId = await generateQuoteId(db);
     await db.prepare(
       `INSERT INTO custom_quotes
-        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, expires_at, created_at)
+        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at)
        VALUES
-        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, datetime('now'))`
+        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, datetime('now'))`
     ).bind(
       quoteId,
       customerName,
@@ -6149,6 +6153,7 @@ async function handleAdminQuotes(request, env) {
       status,
       quotedPriceThb,
       quotedPriceUsd,
+      freeShipping ? 1 : 0,
       expiresAt
     ).run();
     let emailStatus = { success: false, skipped: true };
@@ -6227,6 +6232,11 @@ async function handleAdminQuotes(request, env) {
     if (body.color !== void 0) {
       updates.push("color = ?");
       binds.push(String(body.color || "").trim() || null);
+    }
+    if (body.free_shipping !== void 0) {
+      const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
+      updates.push("free_shipping = ?");
+      binds.push(freeShipping ? 1 : 0);
     }
     if (body.dimensions !== void 0 || body.size_text !== void 0) {
       let dims = {};
@@ -9232,11 +9242,11 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const quoteItems = items.filter((i) => i.type === "custom_quote" && i.quote_id);
+  const quoteItems = items.filter((i) => !!i.quote_id && (i.type === "custom_quote" || !!i.is_quote));
   if (quoteItems.length > 0) {
     for (const qi of quoteItems) {
       const quote = await env.DB.prepare(
-        "SELECT status, quoted_price FROM custom_quotes WHERE quote_id = ?1"
+        "SELECT status, quoted_price, free_shipping FROM custom_quotes WHERE quote_id = ?1"
       ).bind(qi.quote_id).first();
       if (!quote || quote.status !== "approved") {
         return new Response(JSON.stringify({
@@ -9245,6 +9255,9 @@ async function handleCheckout(request, env) {
           status: 400,
           headers: { "Content-Type": "application/json" }
         });
+      }
+      if (Number(quote.free_shipping || 0) === 1) {
+        freeShipping = true;
       }
     }
   }
@@ -11032,7 +11045,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   try {
     quote = await env.DB.prepare(
       `SELECT quote_id, customer_name, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
@@ -11082,7 +11095,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const colorLabel = quote?.color || "\u2014";
   const cartItem = quote ? {
     id: "quote-" + quoteId + "-" + Date.now(),
-    type: quote.product_slug,
+    type: "custom_quote",
     product_slug: quote.product_slug,
     product_name: productTitle,
     title: productTitle,
@@ -11092,6 +11105,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     qty: 1,
     is_quote: true,
     quote_id: quoteId,
+    free_shipping: Number(quote.free_shipping || 0) === 1,
     price_thb: priceThb,
     price_usd: priceUsd
   } : null;
@@ -11274,7 +11288,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
           ` : ""}
           <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
           ${isCheckoutReady ? `
-          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.type===item.type&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions);});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Review &amp; Pay';this.style.background='var(--color-success)';this.onclick=function(){window.location.href='/checkout/';};}catch(e){}}return false;">Add to Cart</button>
+          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.quote_id===item.quote_id||((i.type===item.type)&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions));});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
           ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
@@ -11312,21 +11326,22 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
           var cart = JSON.parse(raw);
           cart.items = Array.isArray(cart.items) ? cart.items : [];
           var existing = cart.items.find(function(i) {
-            return i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
-              JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions);
+            return i.quote_id === _quoteCartItem.quote_id || (i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
+              JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions));
           });
           if (existing) existing.qty = (existing.qty || 1) + 1;
           else cart.items.push(_quoteCartItem);
           localStorage.setItem(key, JSON.stringify(cart));
         }
         _quoteIsAdded = true;
-        showToast('Added to cart');
+        showToast('Added to cart. Redirecting...');
         var btn = document.getElementById('quote-cta');
         if (btn) {
-          btn.textContent = 'Review & Pay';
+          btn.textContent = 'Redirecting...';
           btn.style.background = 'var(--color-success)';
-          btn.onclick = function() { window.location.href = '/checkout/'; };
+          btn.disabled = true;
         }
+        window.location.href = '/checkout/';
       } catch (e) {
         showToast('Could not add to cart');
       }
@@ -12358,7 +12373,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-Y6DHMq/functionsRoutes-0.5515034483400099.mjs
+// ../.wrangler/tmp/pages-n2tblw/functionsRoutes-0.021469696130921867.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

@@ -18,6 +18,7 @@ interface CartItem {
   qty: number;
   image?: string;
   quote_id?: string;      // only for custom_quote type
+  is_quote?: boolean;
 }
 
 function humanizeSlug(slug: string): string {
@@ -160,11 +161,11 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   // Check for custom-quote items that haven't been approved
-  const quoteItems = items.filter((i: CartItem) => i.type === "custom_quote" && i.quote_id);
+  const quoteItems = items.filter((i: CartItem) => !!i.quote_id && (i.type === "custom_quote" || !!i.is_quote));
   if (quoteItems.length > 0) {
     for (const qi of quoteItems) {
       const quote = await env.DB.prepare(
-        "SELECT status, quoted_price FROM custom_quotes WHERE quote_id = ?1"
+        "SELECT status, quoted_price, free_shipping FROM custom_quotes WHERE quote_id = ?1"
       ).bind(qi.quote_id).first();
       if (!quote || quote.status !== "approved") {
         return new Response(JSON.stringify({
@@ -173,6 +174,9 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
           status: 400,
           headers: { "Content-Type": "application/json" },
         });
+      }
+      if (Number((quote as any).free_shipping || 0) === 1) {
+        freeShipping = true;
       }
     }
   }
