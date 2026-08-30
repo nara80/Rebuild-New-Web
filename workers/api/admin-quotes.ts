@@ -135,6 +135,7 @@ async function ensureQuoteSchema(env: any): Promise<void> {
       if (!existing.has("status")) alters.push("ALTER TABLE custom_quotes ADD COLUMN status TEXT DEFAULT 'pending'");
       if (!existing.has("quoted_price")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price INTEGER");
       if (!existing.has("quoted_price_usd")) alters.push("ALTER TABLE custom_quotes ADD COLUMN quoted_price_usd INTEGER");
+      if (!existing.has("free_shipping")) alters.push("ALTER TABLE custom_quotes ADD COLUMN free_shipping INTEGER DEFAULT 0");
       if (!existing.has("expires_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN expires_at DATETIME");
       if (!existing.has("created_at")) alters.push("ALTER TABLE custom_quotes ADD COLUMN created_at DATETIME");
       for (const sql of alters) await env.DB.prepare(sql).run();
@@ -321,7 +322,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
 
     const rows = await db.prepare(
       `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
-              status, quoted_price, quoted_price_usd, expires_at, created_at
+              status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        ${whereSql}
        ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
@@ -355,6 +356,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
         quoted_price_thb: priceThb,
         quoted_price_usd: priceUsd,
         quoted_price_currency: hasExplicitUsd ? "USD" : (priceThb ? "THB" : null),
+        free_shipping: Number(r.free_shipping || 0) === 1,
         expires_at: r.expires_at || null,
         created_at: r.created_at || null,
         size_text: dims && typeof dims === "object" ? (dims.size_text || "") : "",
@@ -388,6 +390,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
     const status = String(body.status || "pending").trim().toLowerCase();
     const quoteCurrency = String(body.quoted_price_currency || "").trim().toUpperCase();
     const isUsdQuote = quoteCurrency === "USD";
+    const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
     let quotedPriceThb: number | null = null;
     let quotedPriceUsd: number | null = null;
 
@@ -427,9 +430,9 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
     const quoteId = await generateQuoteId(db);
     await db.prepare(
       `INSERT INTO custom_quotes
-        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, expires_at, created_at)
+        (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at)
        VALUES
-        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, datetime('now'))`
+        (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, datetime('now'))`
     ).bind(
       quoteId,
       customerName,
@@ -443,6 +446,7 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
       status,
       quotedPriceThb,
       quotedPriceUsd,
+      freeShipping ? 1 : 0,
       expiresAt
     ).run();
 
@@ -526,6 +530,11 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
     if (body.color !== undefined) {
       updates.push("color = ?");
       binds.push(String(body.color || "").trim() || null);
+    }
+    if (body.free_shipping !== undefined) {
+      const freeShipping = body.free_shipping === true || body.free_shipping === 1 || body.free_shipping === "1";
+      updates.push("free_shipping = ?");
+      binds.push(freeShipping ? 1 : 0);
     }
     if (body.dimensions !== undefined || body.size_text !== undefined) {
       let dims: any = {};

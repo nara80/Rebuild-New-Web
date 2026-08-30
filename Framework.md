@@ -699,7 +699,7 @@ mildmate-web/
 â”‚   â”œâ”€â”€ blogs/v-berth-sheets-vs-standard/index.html  â† First real blog post
 â”‚   â”œâ”€â”€ blogs/[slug]/index.html      â† Individual blog post pages (copy from template)
 â”‚   â”‚
-â”‚   â”œâ”€â”€ product/[slug]/index.html    â† 29 product detail pages (standard + custom paths)
+â”‚   â”œâ”€â”€ product/[slug]/index.html    â† 31 product detail pages (30 core catalog + weighted-duvet-cover CMS/runtime extension)
 â”‚   â”œâ”€â”€ quote/[quote-id]/index.html  â† Magic link: locked custom quote → Add to Cart
 â”‚   â”‚
 â”‚   â”œâ”€â”€ th/sizeguide/                â† #1 SEO page (WordPress /mattress-size-th/* → /sizeguide/, /th/mattress-size-th/* → /th/sizeguide/)
@@ -850,7 +850,7 @@ Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no
 
 | Type | Count | Action |
 |---|---|---|
-| Product URLs | 81 | `_redirects` → canonical product pages (28 live product pages; 1:1 where possible, category redirect for size variants) |
+| Product URLs | 81 | `_redirects` → canonical product pages (source catalog 30 core products + weighted-duvet-cover runtime extension; 1:1 where possible, category redirect for size variants) |
 | Static page URLs | ~102 | `_redirects` → existing new site pages, or → `/` for orphaned URLs |
 | Clean EN slugs | ~80 | Redirect or preserve depending on new site match |
 | `/th/` prefixed pages | ~20 | Redirect ? `/th/` pages (? Homepage, About, Contact, Fabric, Size Guide, FAQ, Shipping, Policy, Reviews, Custom Measurement, How to Measure now built) or ? EN equivalent for pages without TH version |
@@ -860,7 +860,8 @@ Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no
 
 ## D1 Database Schema
 
-**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `034_*`, including `031_product_faq_fields.sql` for `faq_en`/`faq_th` and `034_orders_customer_note.sql` for checkout notes). Run migrations in order for the target environment.**
+**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `038_*`).**
+**Operational reconciliation (2026-08):** taxonomy is now split into specialization (`product_niches`) and merchandising visibility (`product_collections`); `products.niches` remains as legacy compatibility fallback for transition safety.
 **Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, and `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent.
 
 ```sql
@@ -873,7 +874,7 @@ CREATE TABLE products (
   faq_en TEXT, faq_th TEXT,
   category TEXT NOT NULL,          -- 'sheets', 'duvet-covers', 'pillowcases', etc.
   product_type TEXT,               -- single value: sheets, duvet-covers, pillowcases, protection, accessories (added by 026)
-  niches TEXT,                    -- comma-separated niche slugs: marine, family, pets, deep-pocket, boarding-dorm, rv-truck (added by 026)
+  niches TEXT,                     -- legacy compatibility CSV fallback (collection matching now uses product_collections first)
   subcategory TEXT,
   fabric_options TEXT DEFAULT 'BreezePlus,CloudSoft,PremaCotton,EcoLuxe',
   base_price_usd REAL NOT NULL DEFAULT 0,
@@ -889,6 +890,22 @@ CREATE TABLE products (
   images TEXT DEFAULT '[]',       -- JSON array of image URLs
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Product Niches (true specialization taxonomy)
+CREATE TABLE product_niches (
+  product_id INTEGER NOT NULL,
+  niche_type TEXT NOT NULL,
+  PRIMARY KEY (product_id, niche_type),
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+-- Product Collections (merchandising visibility taxonomy)
+CREATE TABLE product_collections (
+  product_id INTEGER NOT NULL,
+  collection_type TEXT NOT NULL,
+  PRIMARY KEY (product_id, collection_type),
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
 -- Orders (migration 001 — Phase 5+ checkout saves here)
@@ -931,6 +948,7 @@ CREATE TABLE custom_quotes (
   product_slug TEXT NOT NULL,
   dimensions TEXT NOT NULL,            -- JSON: {"w":183,"l":198,"d":51,"unit":"cm"}
   fabric TEXT, color TEXT,
+  free_shipping INTEGER DEFAULT 0,     -- creation-time flag set in Super Admin
   status TEXT DEFAULT 'pending',       -- pending | approved | rejected | expired
   quoted_price INTEGER,               -- cents, NULL until admin approves
   expires_at DATETIME,
@@ -1053,9 +1071,9 @@ CREATE TABLE blog_posts (
 | Phase | Scope | Key Output |
 |---|---|---|
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
-| **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → current canonical product set (28 deployed baseline pages; 29 in source after marine top sheet addition), ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
+| **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → current canonical product set (30 core products + weighted-duvet-cover runtime extension), ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **product_type + niches columns** added to D1 products table. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-06:** marine top sheet added in source (`/product/marine-top-sheet/`) with marine-shape flow + D1 seed migration; rebuilt and lint-verified locally. | ✅ Complete |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` on `products`; specialization in `product_niches`; niche-page visibility in `product_collections`; legacy `products.niches` retained for fallback compatibility. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-21:** marketing decision exports refreshed as Products/Niches/Collections tabs. | ✅ Complete |
 | **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; optional checkout message type + note saved to orders/team email; checkout success/cancel URL now derived from request origin to keep preview sessions on preview domain; runtime worker artifacts reconciled with source) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. Cron trigger remains configured via Cloudflare Dashboard. | ✅ Built |
 | **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` and `/sandbox/*` routes are retired and blocked (no redirect). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |
@@ -1235,15 +1253,15 @@ Active for 4 products: Standard, Deep Pocket, Family, Pet-Proof Mattress Protect
 All product page size-selects are auto-populated from this data by `product-configurator.js`.
 To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`.
 
-### Configurator Pricing Status (Reconciled 2026-08-06 — 29 Products)
+### Configurator Pricing Status (Reconciled 2026-08-21 — 30 Products)
 
 | Status | Count | Products |
 |---|---|---|
-| Live formula | 26 | 6 fitted + 3 marine (V-Berth family incl. marine top sheet) + 2 flat + 2 encasement + 5 duvet + 3 pillowcase + 1 pillow protector + 4 mattress protectors |
+| Live formula | 27 | Formula-driven configurable products across sheets, marine, duvet, pillowcase, protector, and encasement lines |
 | No configurator needed | 3 | BedBridge Connector, Bed Lifter, Duvet Insert (Thai fixed-size) |
 | Awaiting | 0 | — |
 
-**All 29 products now have live pricing formulas or don't require configurators.**
+**All 30 core catalog products now have live pricing formulas or don't require configurators.**
 
 **V-Berth formula (Marine Fitted Sheet):** `calcVBerthFitted()` — width = max(HW,FW)+2D+14, length = L+2D+14. CloudSoft fabric. Same sewing tiers as fitted sheet. Shape selector supports **14 shapes (01–14)** with per-shape measurement fields/diagrams and geometry-driven pricing. VERTH_MARKUP = 8.15 (680% margin). "Select Mattress Size" hidden — replaced by shape selector.
 
@@ -1513,7 +1531,7 @@ data/products.json
 node scripts/build-products.js
 
 # Output:
-# ✅ regenerates all 29 product pages from templates
+# ✅ regenerates the 30-product core catalog pages from templates
 ```
 
 ### Adding a New Product
@@ -1521,14 +1539,14 @@ node scripts/build-products.js
 1. Add entry to `data/products.json`
 2. Add image to `public/images/products/<slug>/main.jpg`
 3. Run: `node scripts/build-products.js`
-4. All 29 product pages regenerate from templates
+4. The 30-product core catalog pages regenerate from templates
 
 ### Product Dashboard (Phase 7 — Built)
 
 Admin and Super Admin dashboards manage live product data in D1:
 - Title/description EN+TH, FAQ EN+TH, card benefits EN+TH
 - Images (R2 upload + ordered image list), optional YouTube URL
-- Product activation/sorting and taxonomy fields (product_type, niches)
+- Product activation/sorting and taxonomy fields (`product_type`, legacy `niches`, plus split mapping via `product_niches` / `product_collections`)
 - Pricing/shipping-related admin modules and order management in the same control plane
 
 D1 is the runtime source for product content; JSON/template files remain the static generation source.
@@ -1657,12 +1675,15 @@ Unit toggle (cm/inch) converts all input labels.
 - Resend notification sent to `contact@mildmate.com`
 - Confirmation popup shows email, dimensions, fabric, quote ID
 - [OK] dismisses
+- Super Admin sets `free_shipping` at quote creation time only (no post-creation quote-manager toggle)
+- On approved quote page (`/quote/QT-.../`), add-to-cart redirects directly to `/checkout/`
 
-### Add to Cart Flow (Phase 5 stub)
+### Add to Cart Flow (Current)
 
 "Add to Cart" button disabled until size selected.
 On click: button text changes to "Added!" with green background for 2 seconds, then reverts.
 Real cart logic stored in `cart.js` localStorage with product details + dimensions.
+For quote magic links, add-to-cart performs immediate redirect to `/checkout/` after cart write.
 
 ---
 
@@ -1729,7 +1750,7 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
 ### Database Migrations (001-038 in repo)
-Repo currently contains migrations through `038_marine_top_sheet.sql`, including split-number families (`024_*`, `031_*`). Recent additions: product FAQ fields (`031_*`), card benefits (`032_*`), marine protector pricing params (`033_*`), checkout message fields on orders (`034_*`), free_shipping column on promo_codes (`035_*`), fabric_color_inventory table + 24-color seed (`036_*`), boat model registry (`037_*`), and marine top sheet product + shipping tier seed (`038_*`).
+Repo currently contains migrations through `038_marine_top_sheet.sql`, including split-number families (`024_*`, `031_*`). Recent additions: product FAQ fields (`031_*`), card benefits (`032_*`), marine protector pricing params (`033_*`), checkout message fields on orders (`034_*`), free_shipping column on promo_codes (`035_*`), fabric_color_inventory table + 24-color seed (`036_*`), boat model registry (`037_*`), and marine top sheet product + shipping tier seed (`038_*`). Note: `custom_quotes.free_shipping` was added operationally in D1/runtime path and must be preserved in schema reconciliations.
 
 ### Fabric Color Inventory System (implemented 2026-07-12)
 - D1 table `fabric_color_inventory` (migration 036): `id, fabric, color, in_stock, updated_at` with UNIQUE(fabric, color).
@@ -1744,6 +1765,12 @@ Repo currently contains migrations through `038_marine_top_sheet.sql`, including
 - When a promo code with `free_shipping = 1` is applied at checkout, shipping is zeroed.
 - Super Admin Promo Codes table shows a "Free Ship" column.
 - Files to keep in sync: `workers/api/checkout.ts`, `workers/api/discount.ts`, `public/checkout/index.html`, `public/index.js`, `public/_worker.js`.
+
+### Quote-Level Free Shipping (updated 2026-08)
+- `custom_quotes.free_shipping` is the source-of-truth for approved-quote shipping waivers.
+- Flag is set during quote creation and is not toggleable on existing quotes.
+- Checkout must evaluate both promo-code free shipping and quote-level free shipping.
+- Keep parity across `workers/api/checkout.ts`, `workers/api/quote.ts`, `functions/quote/[[path]].ts`, `public/checkout/index.html`, `public/index.js`, and `public/_worker.js`.
 
 ### Shipping Tier 3 Additional Rate (changed 2026-07)
 - `shipping_add_rates.add_thb` for `tier = 3` (pillowcase-type products) reduced from ฿150 → ฿50 (~$1.50/item).
