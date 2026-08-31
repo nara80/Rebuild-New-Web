@@ -1584,13 +1584,22 @@ function mapOrderRow(o) {
     dims.push(o.width_cm + '×' + o.length_cm);
     if (o.depth_cm) dims.push(o.depth_cm + ' cm');
   }
-  var price = o.price_thb ? ('฿' + Number(o.price_thb).toLocaleString()) : (o.price_usd ? ('$' + Number(o.price_usd)) : '—');
+  var qty = Math.max(1, Number(o.quantity || 1));
+  var price = '—';
+  if (o.price_thb != null && o.price_thb !== '') {
+    var lineThb = Number(o.price_thb) * qty;
+    price = '฿' + lineThb.toLocaleString();
+  } else if (o.price_usd != null && o.price_usd !== '') {
+    var lineUsd = Number(o.price_usd) * qty;
+    price = '$' + lineUsd.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
   var orderNo = o.stripe_session_id ? ('#' + String(o.stripe_session_id).slice(-8)) : ('#ORD-' + o.id);
   return {
     id: orderNo,
     date: (o.created_at || '').substring(0, 10),
     customer: o.customer_name || o.email || '',
     product: o.product_title_en || o.product_slug || '',
+    qty: qty,
     dims: dims.join(' × ') || '—',
     fabric: o.fabric || '—',
     status: o.status || 'pending',
@@ -1667,6 +1676,7 @@ async function openOrderDetail(orderId) {
       ['Phone', escHtml(o.phone || '—')],
       ['Shipping Address', escHtml(formatOrderAddress(o.shipping_address))],
       ['Product', escHtml(o.product_title_en || o.product_slug || '—')],
+      ['Quantity', escHtml(String(o.quantity || 1))],
       ['Product Slug', escHtml(o.product_slug || '—')],
       ['Size', escHtml(formatOrderDimensions(o))],
       ['Fabric', escHtml(o.fabric || '—')],
@@ -1728,7 +1738,7 @@ async function rOrders(){
     '<label style="display:flex;align-items:center;gap:8px;font-size:0.8125rem;color:var(--c-muted)"><input type="checkbox" ' + (orderShowArchived ? 'checked' : '') + ' onchange="toggleOrderArchivedView(this.checked)">Show archived cancelled</label>' +
     '<span style="font-size:0.75rem;color:var(--c-muted)">Use Archive on cancelled orders instead of deleting.</span>' +
     '</div>';
-  h += '<div class="table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Total</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  h += '<div class="table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Line Total</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
   orders.forEach(function(o){
     var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
     var trackingCell = '—';

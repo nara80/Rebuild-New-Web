@@ -4389,7 +4389,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
@@ -4399,7 +4399,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
@@ -4421,7 +4421,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
