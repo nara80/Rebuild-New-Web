@@ -850,6 +850,7 @@ export async function onRequest(context: any): Promise<Response> {
       .replace(/href="\/products\/?"/g, 'href="/th/products/"')
       .replace(/href="\/about\/?"/g, 'href="/th/about/"')
       .replace(/href="\/contact\/?"/g, 'href="/th/contact/"')
+      .replace(/href="\/checkout\/?"/g, 'href="/th/checkout/"')
       .replace(/href="\/faq\/?"/g, 'href="/th/faq/"')
       .replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"')
       .replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"')
