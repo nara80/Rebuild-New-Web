@@ -581,7 +581,7 @@ Covers: data collected, usage, cookies, third parties (Stripe, Resend), rights
   Optional: Message Type + Message to MildMate (saved on order and sent in team order email)
   Valid checkmarks on required fields (blue circle âœ“)
   Phone: country code select + number input (auto-detected from geo)
-  [Back to Cart] [Review & Pay]
+  [Back to Cart] [Continue to Payment]
 
 [STEP 3: PAYMENT]  â† 65/35 split
   Order Summary card: items list + grand total
@@ -860,9 +860,9 @@ Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no
 
 ## D1 Database Schema
 
-**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `038_*`).**
+**Actual schema has evolved beyond 001–030 (repo currently includes migrations through `041_*`).**
 **Operational reconciliation (2026-08):** taxonomy is now split into specialization (`product_niches`) and merchandising visibility (`product_collections`); `products.niches` remains as legacy compatibility fallback for transition safety.
-**Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, and `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent.
+**Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent, and sales sync tables (`sales_orders`, `sales_order_items`, `sync_runs`) are provisioned by migration `039_unified_sales_analytics`.
 
 ```sql
 -- Products (migration 001 + 006)
@@ -1055,14 +1055,17 @@ CREATE TABLE blog_posts (
 | POST | /api/admin/campaigns | handleAdminCampaigns | Create/update marketing campaign |
 | DELETE | /api/admin/campaigns?id=N | handleAdminCampaigns | Delete marketing campaign by id |
 | POST | /api/admin/thankyou-dispatch | handleAdminThankyouDispatch | Manually send due thank-you emails and return sent/failed/skipped details |
+| GET | /v1/health (and /api/v1/health) | handleSales | Sales sync API health check |
+| GET | /v1/orders/:order_number (and /api/v1/orders/:order_number) | handleSales | Sales sync order read |
+| POST | /v1/orders (and /api/v1/orders) | handleSales | Sales sync order upsert (Bearer token required) |
 
 ### Frontend Files
 - **Admin:** /admin/blog.html — dedicated blog CMS page with WYSIWYG editor
-- **Listing:** /blogs/ — fetches from D1 via /api/blog/posts, client-side rendering
+- **Listing:** /blogs/ — Pages Function (`functions/blogs/[[path]].ts`) SSR listing from D1
 - **Post:** /blogs/{slug}/ — Pages Function (unctions/blogs/[[path]].ts) SSR from D1
 
 
- 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet
+ 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label
 
 ---
 
@@ -1076,7 +1079,7 @@ CREATE TABLE blog_posts (
 | **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` on `products`; specialization in `product_niches`; niche-page visibility in `product_collections`; legacy `products.niches` retained for fallback compatibility. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-21:** marketing decision exports refreshed as Products/Niches/Collections tabs. | ✅ Complete |
 | **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; optional checkout message type + note saved to orders/team email; checkout success/cancel URL now derived from request origin to keep preview sessions on preview domain; runtime worker artifacts reconciled with source) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. Cron trigger remains configured via Cloudflare Dashboard. | ✅ Built |
-| **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` and `/sandbox/*` routes are retired and blocked (no redirect). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |
+| **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` routes are retired with redirect compatibility in place. Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + order upsert/read) in `workers/api/sales.ts`, secured by `SALES_SYNC_API_TOKEN`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. | ✅ Built |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed) |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ❌ Out of Scope |
 
@@ -1092,6 +1095,7 @@ CREATE TABLE blog_posts (
 - Import tariffs are the customer's responsibility and are NOT included in any displayed price
 - This note appears on every price display: *"Price excludes shipping & import tariff"*
 - **Currency display:** EN pages (`/product/.../`) show USD only; TH pages (`/th/product/.../`) show THB only
+- **Runtime pricing control:** Effective markups/cost constants are driven by D1 `pricing_params` (Super Admin). Formula sections below document structure and baseline defaults, not guaranteed live values.
 
 ### Fitted Sheet Pricing Formula (Implemented 2026-05-19)
 
@@ -1253,7 +1257,7 @@ Active for 4 products: Standard, Deep Pocket, Family, Pet-Proof Mattress Protect
 All product page size-selects are auto-populated from this data by `product-configurator.js`.
 To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`.
 
-### Configurator Pricing Status (Reconciled 2026-08-21 — 30 Products)
+### Configurator Pricing Status (Reconciled 2026-08-30 — 30 Core + 1 Runtime Extension)
 
 | Status | Count | Products |
 |---|---|---|
@@ -1261,7 +1265,7 @@ To update sizes across all pages: edit `/sizeguide/` → sync `product-sizes.js`
 | No configurator needed | 3 | BedBridge Connector, Bed Lifter, Duvet Insert (Thai fixed-size) |
 | Awaiting | 0 | — |
 
-**All 30 core catalog products now have live pricing formulas or don't require configurators.**
+**All 30 core catalog products now have live pricing formulas or don't require configurators. Runtime extension `weighted-duvet-cover` is also formula-driven via duvet logic + derived markup (`derived_markup_weighted-duvet-cover`).**
 
 **V-Berth formula (Marine Fitted Sheet):** `calcVBerthFitted()` — width = max(HW,FW)+2D+14, length = L+2D+14. CloudSoft fabric. Same sewing tiers as fitted sheet. Shape selector supports **14 shapes (01–14)** with per-shape measurement fields/diagrams and geometry-driven pricing. VERTH_MARKUP = 8.15 (680% margin). "Select Mattress Size" hidden — replaced by shape selector.
 
@@ -1749,8 +1753,8 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
-### Database Migrations (001-038 in repo)
-Repo currently contains migrations through `038_marine_top_sheet.sql`, including split-number families (`024_*`, `031_*`). Recent additions: product FAQ fields (`031_*`), card benefits (`032_*`), marine protector pricing params (`033_*`), checkout message fields on orders (`034_*`), free_shipping column on promo_codes (`035_*`), fabric_color_inventory table + 24-color seed (`036_*`), boat model registry (`037_*`), and marine top sheet product + shipping tier seed (`038_*`). Note: `custom_quotes.free_shipping` was added operationally in D1/runtime path and must be preserved in schema reconciliations.
+### Database Migrations (001-041 in repo)
+Repo currently contains migrations through `041_boat_model_label.sql`, including split-number families (`024_*`, `031_*`, `039_*`). Recent additions include: co-sleeping top sheet seed (`039_co_sleeping_top_sheet`), unified sales analytics/sync tables (`039_unified_sales_analytics`), and boat model year/label fields (`040_*`, `041_*`). Note: `custom_quotes.free_shipping` exists in runtime schema and must be preserved in schema reconciliations.
 
 ### Fabric Color Inventory System (implemented 2026-07-12)
 - D1 table `fabric_color_inventory` (migration 036): `id, fabric, color, in_stock, updated_at` with UNIQUE(fabric, color).

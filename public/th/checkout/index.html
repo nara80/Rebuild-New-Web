@@ -612,7 +612,7 @@
       var discountPercent = 15; // actual % from validate API (default 15 for welcome codes)
       var shippingState = {
         serviceLevel: 'standard',
-        currency: 'USD',
+        currency: 'THB',
         requestedCountry: '',
         appliedCountry: '',
         countryName: '',
@@ -687,7 +687,7 @@
       }
 
       function getActiveCurrency() {
-        return (window.MildMateGeo && window.MildMateGeo.currency === 'THB') ? 'THB' : 'USD';
+        return 'THB';
       }
 
       function getSelectedCountryCode() {
