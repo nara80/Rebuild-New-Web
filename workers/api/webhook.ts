@@ -20,6 +20,8 @@ function normalizeAddress(raw: any): string {
 
 let orderCustomerNoteSchemaReady = false;
 let orderCustomerNoteSchemaPromise: Promise<boolean> | null = null;
+let checkoutSnapshotSchemaReady = false;
+let checkoutSnapshotSchemaPromise: Promise<boolean> | null = null;
 
 async function ensureOrderCustomerNoteSchema(env: any): Promise<boolean> {
   if (orderCustomerNoteSchemaReady) return true;
@@ -45,6 +47,33 @@ async function ensureOrderCustomerNoteSchema(env: any): Promise<boolean> {
     });
   }
   return await orderCustomerNoteSchemaPromise;
+}
+
+async function ensureCheckoutSnapshotSchema(env: any): Promise<boolean> {
+  if (checkoutSnapshotSchemaReady) return true;
+  if (!checkoutSnapshotSchemaPromise) {
+    checkoutSnapshotSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        checkoutSnapshotSchemaReady = true;
+        return true;
+      } catch (e: any) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady) checkoutSnapshotSchemaPromise = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise;
 }
 
 export async function handleStripeWebhook(request: Request, env: any): Promise<Response> {
@@ -224,21 +253,52 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
       : "N/A";
   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
 
-  let items: any[] = [];
-  try {
-    const rawItems = JSON.parse(metadata.items || "[]");
-    items = (Array.isArray(rawItems) ? rawItems : []).map((item: any) => ({
+  const mapItems = (rawItems: any): any[] => {
+    return (Array.isArray(rawItems) ? rawItems : []).map((item: any) => ({
       slug: item.slug || item.s || "",
       name: item.name || item.n || item.slug || item.s || "",
       fabric: item.fabric || item.f || null,
       color: item.color || item.c || null,
-      dims: (typeof item.dims === "object" && item.dims) || (typeof item.d === "object" && item.d) || ((typeof item.d === "string" || typeof item.dt === "string") ? { size_text: (typeof item.d === "string" ? item.d : item.dt) } : {}),
+      dims: (typeof item.dims === "object" && item.dims)
+        || (typeof item.d === "object" && item.d)
+        || ((typeof item.d === "string" || typeof item.dt === "string")
+          ? { size_text: (typeof item.d === "string" ? item.d : item.dt) }
+          : {}),
       qty: item.qty || item.q || 1,
       unit_amount: Number(item.u || item.unit_amount || 0), // minor unit (cents/satang)
     }));
-  } catch {
-    // continue without items
+  };
+
+  let items: any[] = [];
+  let itemsSource = "metadata";
+  try {
+    const schemaOk = await ensureCheckoutSnapshotSchema(env);
+    if (schemaOk && session.id) {
+      const snapshot = await env.DB.prepare(
+        "SELECT items_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+      ).bind(String(session.id)).first() as any;
+      if (snapshot?.items_json) {
+        const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
+        const mapped = mapItems(rawSnapshotItems);
+        if (mapped.length > 0) {
+          items = mapped;
+          itemsSource = "d1_snapshot";
+        }
+      }
+    }
+  } catch (e: any) {
+    console.error("checkout snapshot read failed:", e?.message || e);
   }
+  if (items.length === 0) {
+    try {
+      const rawItems = JSON.parse(metadata.items || "[]");
+      items = mapItems(rawItems);
+      itemsSource = "metadata";
+    } catch {
+      // continue without items
+    }
+  }
+  console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
 
   const sessionCurrency = String(session.currency || "usd").toLowerCase();
   const totalQty = items.reduce((sum: number, item: any) => sum + (item.qty || 1), 0);

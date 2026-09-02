@@ -49,6 +49,25 @@ function json(body: any, status = 200): Response {
   });
 }
 
+const FIXED_SIZE_PRODUCT_SLUGS = new Set([
+  "bedbridge-connector",
+  "mattress-lift-helper",
+  "duvet-insert",
+]);
+
+function hasDimensions(o: any): boolean {
+  const hasW = Number.isFinite(Number(o?.width_cm));
+  const hasL = Number.isFinite(Number(o?.length_cm));
+  const hasD = Number.isFinite(Number(o?.depth_cm));
+  return (hasW && hasL) || hasD;
+}
+
+function isConfigurableProductSlug(slugRaw: any): boolean {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (!slug) return true;
+  return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
+}
+
 async function ensureOrderShippingSchema(env: any): Promise<void> {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -266,7 +285,22 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
       sql
     ).all();
 
-    return json({ orders: result.results });
+    const rows = Array.isArray(result.results) ? result.results : [];
+    const missingConfigurable = rows.filter((o: any) =>
+      isConfigurableProductSlug(o?.product_slug) && !hasDimensions(o)
+    );
+    const affectedOrderIds = Array.from(new Set(
+      missingConfigurable
+        .map((o: any) => String(o?.stripe_session_id || "").slice(-8))
+        .filter(Boolean)
+    ));
+    return json({
+      orders: rows,
+      dimension_guardrail: {
+        missing_configurable_rows: missingConfigurable.length,
+        affected_orders: affectedOrderIds,
+      },
+    });
   }
 
   // GET /api/admin/orders/:id — single order detail

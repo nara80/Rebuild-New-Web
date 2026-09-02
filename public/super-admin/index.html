@@ -1486,6 +1486,24 @@ var CARRIER_LABELS = {
   fedex: 'FedEx',
   usps: 'USPS'
 };
+var FIXED_SIZE_PRODUCT_SLUGS = {
+  'bedbridge-connector': true,
+  'mattress-lift-helper': true,
+  'duvet-insert': true
+};
+
+function isConfigurableOrderSlug(slug) {
+  var s = String(slug || '').trim().toLowerCase();
+  if (!s) return true;
+  return !FIXED_SIZE_PRODUCT_SLUGS[s];
+}
+
+function orderHasDimensions(o) {
+  var hasW = (o.width_cm !== null && o.width_cm !== undefined && o.width_cm !== '');
+  var hasL = (o.length_cm !== null && o.length_cm !== undefined && o.length_cm !== '');
+  var hasD = (o.depth_cm !== null && o.depth_cm !== undefined && o.depth_cm !== '');
+  return (hasW && hasL) || hasD;
+}
 
 function getCarrierLabel(code) {
   var k = (code || '').toLowerCase();
@@ -1608,7 +1626,8 @@ function mapOrderRow(o) {
     isArchived: Number(o.is_archived || 0) === 1,
     carrierCode: o.carrier_code || '',
     trackingNumber: o.tracking_number || '',
-    trackingUrl: o.tracking_url || buildTrackingUrl(o.carrier_code || '', o.tracking_number || '')
+    trackingUrl: o.tracking_url || buildTrackingUrl(o.carrier_code || '', o.tracking_number || ''),
+    missingDimsIssue: isConfigurableOrderSlug(o.product_slug) && !orderHasDimensions(o)
   };
 }
 
@@ -1714,12 +1733,14 @@ async function openOrderDetail(orderId) {
 
 async function rOrders(){
   var orders = [];
+  var guardrail = null;
   var fetchError = '';
   try {
     var resp = await fetch('/api/admin/orders?include_archived=' + (orderShowArchived ? '1' : '0'), { headers: await getAdminAuthHeaders(false) });
     if (resp.ok) {
       var data = await resp.json();
       orders = Array.isArray(data.orders) ? data.orders.map(mapOrderRow) : [];
+      guardrail = data.dimension_guardrail || null;
     } else {
       var errData = null;
       try { errData = await resp.json(); } catch(e) {}
@@ -1734,6 +1755,15 @@ async function rOrders(){
   }
 
   var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders (D1)</span></div><div class="card-body">';
+  var uiMissingRows = orders.filter(function(o){ return !!o.missingDimsIssue; }).length;
+  var apiMissingRows = guardrail && typeof guardrail.missing_configurable_rows === 'number'
+    ? guardrail.missing_configurable_rows
+    : uiMissingRows;
+  if (apiMissingRows > 0) {
+    var affectedOrders = guardrail && Array.isArray(guardrail.affected_orders) ? guardrail.affected_orders : [];
+    var affectedText = affectedOrders.length ? (' Affected orders: ' + affectedOrders.map(function(id){ return '#' + id; }).join(', ')) : '';
+    h += '<div style="margin-bottom:12px;padding:10px 12px;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-size:0.8125rem"><strong>Dimension Guardrail:</strong> ' + apiMissingRows + ' configurable order row(s) are missing dimensions.' + escHtml(affectedText) + '</div>';
+  }
   h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">' +
     '<label style="display:flex;align-items:center;gap:8px;font-size:0.8125rem;color:var(--c-muted)"><input type="checkbox" ' + (orderShowArchived ? 'checked' : '') + ' onchange="toggleOrderArchivedView(this.checked)">Show archived cancelled</label>' +
     '<span style="font-size:0.75rem;color:var(--c-muted)">Use Archive on cancelled orders instead of deleting.</span>' +
@@ -1750,7 +1780,11 @@ async function rOrders(){
     var orderIdCell = o.dbId
       ? '<button class="order-detail-link" onclick="openOrderDetail(' + Number(o.dbId) + ')">' + escHtml(o.id) + '</button>'
       : escHtml(o.id);
-    h+='<tr><td>'+orderIdCell+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+escHtml(o.product)+'</td><td><strong>'+o.total+'</strong></td>';
+    var productCell = escHtml(o.product);
+    if (o.missingDimsIssue) {
+      productCell += ' <span style="display:inline-block;margin-left:6px;font-size:0.625rem;padding:2px 6px;border-radius:999px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b">Missing Dims</span>';
+    }
+    h+='<tr><td>'+orderIdCell+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+productCell+'</td><td><strong>'+o.total+'</strong></td>';
     h+='<td style="font-size:0.75rem">'+trackingCell+'</td>';
     if (o.dbId) {
       h+='<td><select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+

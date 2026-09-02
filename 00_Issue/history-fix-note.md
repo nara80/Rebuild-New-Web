@@ -45,11 +45,49 @@ This section is the source of truth for the latest order-notification issue from
    - `npm run lint` ✅
    - `npx wrangler pages functions build` ✅
 
+### Deployment + live verification (2026-09-02)
+- Deployed via `wrangler pages deploy`:
+  - Preview deployment: `https://9df4b2d5.mildmate-new.pages.dev`
+- Runtime marker verification on deployed bundles:
+  - `https://9df4b2d5.mildmate-new.pages.dev/index.js` contains:
+    - `buildCompactDimText`
+    - `const slimmerItems = items.map`
+    - `typeof item.d === "string"`
+    - `metadataItemsStr.length > 500`
+  - `https://www.mildmate.com/index.js` contains the same markers.
+- Production D1 forensic baseline (before fix) remains true:
+  - Order `#LuQpJi23` rows already stored with null `width_cm/length_cm/depth_cm`; historical rows cannot be reconstructed from DB alone.
+
 ### Current status
 - ✅ Root cause identified and fixed in source.
-- ✅ Notification path now preserves dimensions in compact-metadata cases whenever possible.
-- ✅ Worker/runtime parity and local validation passed.
-- ⏳ Pending user-triggered deploy to apply on production.
+- ✅ Notification and order-write path now preserves dimensions in compact-metadata cases whenever possible.
+- ✅ Lint/build and deploy completed.
+- ✅ Deployed runtime markers verified on preview and current production bundle.
+
+### Follow-up hardening + data recovery (2026-09-02, critical)
+1. **Permanent prevention implemented (D1 snapshot source of truth)**
+   - `workers/api/checkout.ts` now writes full checkout items (with dimensions) into new D1 table:
+     - `checkout_session_snapshots(stripe_session_id, email, currency, items_json, created_at)`
+   - `workers/api/webhook.ts` now reads `checkout_session_snapshots.items_json` first when creating order rows.
+   - Existing Stripe metadata parsing remains as fallback only.
+2. **Guardrail visibility for operations**
+   - `workers/api/admin-orders.ts` now returns `dimension_guardrail` summary:
+     - `missing_configurable_rows`
+     - `affected_orders`
+   - `public/super-admin/index.html` Orders now shows:
+     - warning banner when configurable rows are missing dimensions
+     - per-row `Missing Dims` badge in product column
+3. **Manual backfill completed for order `#LuQpJi23`**
+   - Updated production D1 rows from Stripe evidence:
+     - id `25`: `90×198×30`
+     - id `26`: `183×198×30`
+     - id `27`: `273×198×30`
+     - id `29`: `48×74` (no depth shown)
+   - Fixed-size item `bedbridge-connector` kept null dimensions by design.
+4. **Post-backfill verification**
+   - Targeted update query reported `changes = 4`.
+   - Re-query confirmed dimensions now present for recovered rows.
+   - Global guardrail count for missing **configurable** rows reduced to `3` (legacy rows still pending optional recovery).
 
 ---
 

@@ -1239,10 +1239,10 @@ __name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
-  const sizeLabel = isWeightedDuvet ? "เลือกขนาดผ้าห่มถ่วงน้ำหนัก" : "เลือกขนาดที่นอน";
-  const customPrompt = isWeightedDuvet ? "กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ" : "กรอกขนาดที่นอนจริงของคุณ";
-  const sizeHintText = isWeightedDuvet ? "ดูวิธีวัดขนาดผ้าห่ม" : "ดูคู่มือขนาด";
-  const customTabNote = isWeightedDuvet ? "วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน" : "วัดจากขนาดที่นอนจริงของคุณ";
+  const sizeLabel = isWeightedDuvet ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01" : "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19";
+  const customPrompt = isWeightedDuvet ? "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
+  const sizeHintText = isWeightedDuvet ? "\u0E14\u0E39\u0E27\u0E34\u0E18\u0E35\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21" : "\u0E14\u0E39\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14";
+  const customTabNote = isWeightedDuvet ? "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07 (\u0E01\u0E27\u0E49\u0E32\u0E07 \xD7 \u0E22\u0E32\u0E27) \u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19" : "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
   const localized = html.replace(
     /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
     '<button class="config-tab active" data-tab="standard">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>'
@@ -3391,7 +3391,7 @@ var DEFAULT_DERIVED_MARKUP_PARAMS = [
   {
     key: "derived_markup_weighted-duvet-cover",
     value: 10,
-    label: "Derived Markup — weighted-duvet-cover (%)",
+    label: "Derived Markup \u2014 weighted-duvet-cover (%)",
     category: "derived_markup"
   }
 ];
@@ -4219,6 +4219,24 @@ function json2(body, status = 200) {
   });
 }
 __name(json2, "json");
+var FIXED_SIZE_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
+  "bedbridge-connector",
+  "mattress-lift-helper",
+  "duvet-insert"
+]);
+function hasDimensions(o) {
+  const hasW = Number.isFinite(Number(o?.width_cm));
+  const hasL = Number.isFinite(Number(o?.length_cm));
+  const hasD = Number.isFinite(Number(o?.depth_cm));
+  return hasW && hasL || hasD;
+}
+__name(hasDimensions, "hasDimensions");
+function isConfigurableProductSlug(slugRaw) {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (!slug) return true;
+  return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
+}
+__name(isConfigurableProductSlug, "isConfigurableProductSlug");
 async function ensureOrderShippingSchema(env) {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -4409,7 +4427,20 @@ async function handleAdminOrders(request, env) {
     const result = await db.prepare(
       sql
     ).all();
-    return json2({ orders: result.results });
+    const rows = Array.isArray(result.results) ? result.results : [];
+    const missingConfigurable = rows.filter(
+      (o) => isConfigurableProductSlug(o?.product_slug) && !hasDimensions(o)
+    );
+    const affectedOrderIds = Array.from(new Set(
+      missingConfigurable.map((o) => String(o?.stripe_session_id || "").slice(-8)).filter(Boolean)
+    ));
+    return json2({
+      orders: rows,
+      dimension_guardrail: {
+        missing_configurable_rows: missingConfigurable.length,
+        affected_orders: affectedOrderIds
+      }
+    });
   }
   const idMatch = path.match(/^\/api\/admin\/orders\/(\d+)$/);
   if (method === "GET" && idMatch) {
@@ -9182,6 +9213,35 @@ function getItemName(item) {
   return fromSlug || "Custom Product";
 }
 __name(getItemName, "getItemName");
+var checkoutSnapshotSchemaReady = false;
+var checkoutSnapshotSchemaPromise = null;
+async function ensureCheckoutSnapshotSchema(env) {
+  if (checkoutSnapshotSchemaReady) return true;
+  if (!checkoutSnapshotSchemaPromise) {
+    checkoutSnapshotSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        checkoutSnapshotSchemaReady = true;
+        return true;
+      } catch (e) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady) checkoutSnapshotSchemaPromise = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise;
+}
+__name(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
 async function handleCheckout(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -9550,6 +9610,31 @@ async function handleCheckout(request, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
+    try {
+      const schemaOk = await ensureCheckoutSnapshotSchema(env);
+      if (schemaOk && stripeData?.id) {
+        const snapshotItems = items.map((i, idx) => ({
+          slug: i.product_slug,
+          name: getItemName(i),
+          fabric: i.fabric || null,
+          color: i.color || null,
+          dims: buildMetadataDims(i),
+          qty: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        await env.DB.prepare(
+          `INSERT OR REPLACE INTO checkout_session_snapshots (stripe_session_id, email, currency, items_json, created_at)
+           VALUES (?1, ?2, ?3, ?4, datetime('now'))`
+        ).bind(
+          String(stripeData.id),
+          normalizedEmail,
+          String(currency || "").toLowerCase(),
+          JSON.stringify(snapshotItems)
+        ).run();
+      }
+    } catch (e) {
+      console.error("checkout snapshot persist failed:", e?.message || e);
+    }
     return new Response(JSON.stringify({
       url: stripeData.url,
       session_id: stripeData.id
@@ -9588,6 +9673,8 @@ function normalizeAddress2(raw) {
 __name(normalizeAddress2, "normalizeAddress");
 var orderCustomerNoteSchemaReady = false;
 var orderCustomerNoteSchemaPromise = null;
+var checkoutSnapshotSchemaReady2 = false;
+var checkoutSnapshotSchemaPromise2 = null;
 async function ensureOrderCustomerNoteSchema(env) {
   if (orderCustomerNoteSchemaReady) return true;
   if (!orderCustomerNoteSchemaPromise) {
@@ -9614,6 +9701,33 @@ async function ensureOrderCustomerNoteSchema(env) {
   return await orderCustomerNoteSchemaPromise;
 }
 __name(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
+async function ensureCheckoutSnapshotSchema2(env) {
+  if (checkoutSnapshotSchemaReady2) return true;
+  if (!checkoutSnapshotSchemaPromise2) {
+    checkoutSnapshotSchemaPromise2 = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        checkoutSnapshotSchemaReady2 = true;
+        return true;
+      } catch (e) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady2) checkoutSnapshotSchemaPromise2 = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise2;
+}
+__name(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema");
 async function handleStripeWebhook(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -9762,21 +9876,47 @@ async function handleStripeWebhook(request, env) {
   const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
   const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
-  let items = [];
-  try {
-    const rawItems = JSON.parse(metadata.items || "[]");
-    items = (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
+  const mapItems = /* @__PURE__ */ __name((rawItems) => {
+    return (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
       slug: item.slug || item.s || "",
       name: item.name || item.n || item.slug || item.s || "",
       fabric: item.fabric || item.f || null,
       color: item.color || item.c || null,
-      dims: (typeof item.dims === "object" && item.dims) || (typeof item.d === "object" && item.d) || ((typeof item.d === "string" || typeof item.dt === "string") ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
+      dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
       qty: item.qty || item.q || 1,
       unit_amount: Number(item.u || item.unit_amount || 0)
       // minor unit (cents/satang)
     }));
-  } catch {
+  }, "mapItems");
+  let items = [];
+  let itemsSource = "metadata";
+  try {
+    const schemaOk = await ensureCheckoutSnapshotSchema2(env);
+    if (schemaOk && session.id) {
+      const snapshot = await env.DB.prepare(
+        "SELECT items_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+      ).bind(String(session.id)).first();
+      if (snapshot?.items_json) {
+        const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
+        const mapped = mapItems(rawSnapshotItems);
+        if (mapped.length > 0) {
+          items = mapped;
+          itemsSource = "d1_snapshot";
+        }
+      }
+    }
+  } catch (e) {
+    console.error("checkout snapshot read failed:", e?.message || e);
   }
+  if (items.length === 0) {
+    try {
+      const rawItems = JSON.parse(metadata.items || "[]");
+      items = mapItems(rawItems);
+      itemsSource = "metadata";
+    } catch {
+    }
+  }
+  console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
   const sessionCurrency = String(session.currency || "usd").toLowerCase();
   const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
   const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
@@ -12466,7 +12606,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-Y6DHMq/functionsRoutes-0.5515034483400099.mjs
+// ../.wrangler/tmp/pages-cjCAeq/functionsRoutes-0.7242251678605457.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -12568,7 +12708,7 @@ var routes = [
   }
 ];
 
-// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
+// ../node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -12894,7 +13034,7 @@ function pathToRegexp(path, keys, options) {
 }
 __name(pathToRegexp, "pathToRegexp");
 
-// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
+// ../node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;

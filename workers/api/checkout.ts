@@ -36,6 +36,36 @@ function getItemName(item: CartItem): string {
   return fromSlug || "Custom Product";
 }
 
+let checkoutSnapshotSchemaReady = false;
+let checkoutSnapshotSchemaPromise: Promise<boolean> | null = null;
+
+async function ensureCheckoutSnapshotSchema(env: any): Promise<boolean> {
+  if (checkoutSnapshotSchemaReady) return true;
+  if (!checkoutSnapshotSchemaPromise) {
+    checkoutSnapshotSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS checkout_session_snapshots (
+             stripe_session_id TEXT PRIMARY KEY,
+             email TEXT,
+             currency TEXT,
+             items_json TEXT NOT NULL,
+             created_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        checkoutSnapshotSchemaReady = true;
+        return true;
+      } catch (e: any) {
+        console.error("checkout snapshot schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!checkoutSnapshotSchemaReady) checkoutSnapshotSchemaPromise = null;
+    });
+  }
+  return await checkoutSnapshotSchemaPromise;
+}
+
 export async function handleCheckout(request: Request, env: any): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -437,6 +467,34 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Persist full cart snapshot in D1 keyed by Stripe session id (source of truth for webhook order writes)
+    try {
+      const schemaOk = await ensureCheckoutSnapshotSchema(env);
+      if (schemaOk && stripeData?.id) {
+        const snapshotItems = items.map((i: CartItem, idx: number) => ({
+          slug: i.product_slug,
+          name: getItemName(i),
+          fabric: i.fabric || null,
+          color: i.color || null,
+          dims: buildMetadataDims(i),
+          qty: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0,
+        }));
+        await env.DB.prepare(
+          `INSERT OR REPLACE INTO checkout_session_snapshots (stripe_session_id, email, currency, items_json, created_at)
+           VALUES (?1, ?2, ?3, ?4, datetime('now'))`
+        ).bind(
+          String(stripeData.id),
+          normalizedEmail,
+          String(currency || "").toLowerCase(),
+          JSON.stringify(snapshotItems)
+        ).run();
+      }
+    } catch (e: any) {
+      // Non-blocking: preserve checkout conversion; webhook still has metadata fallback path
+      console.error("checkout snapshot persist failed:", e?.message || e);
     }
 
     return new Response(JSON.stringify({
