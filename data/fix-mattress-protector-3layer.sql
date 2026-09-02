@@ -62,16 +62,16 @@ WHERE slug = 'mattress-protector-deep-pocket';
 
 UPDATE products
 SET description_en = '<h3>Built for Life with Pets — 3-Layer Protection</h3>
-<p>Pets bring joy and occasional accidents, fur, and scratches. The Pet-Proof Mattress Protector uses 3-layer top-panel construction, BreezePlus top, polyester filling core, and TPU waterproof backing to protect the sleeping surface. The fitted side skirt supports fit and is not a waterproof side barrier.</p>
+<p>Pets bring joy and occasional accidents, fur, and scratches. The Pet-Proof Mattress Protector uses 3-layer top-panel construction, quilted cotton top, polyester filling core, and TPU waterproof backing to protect the sleeping surface. The fitted side skirt supports fit and is not a waterproof side barrier.</p>
 <ul>
-<li>Top Layer: BreezePlus</li>
+<li>Top Layer: Cotton Quilted</li>
 <li>Layer 2 (Core): Polyester Filling</li>
 <li>Layer 3 (Backing): TPU Waterproof</li>
-<li>BreezePlus helps pet hair slide off and supports scratch resistance</li>
+<li>Low-noise comfort with anti-scratch support</li>
 <li>Custom-made to your mattress dimensions</li>
 </ul>
 <h3>3-Layer Construction Details</h3>
-<p>The top panel combines BreezePlus fabric, polyester filling, and TPU waterproof backing to resist pet hair, scratches, and spills through the sleep surface. Side coverage is fitted and supportive, but not TPU waterproof.</p>
+<p>The top panel combines quilted cotton fabric, polyester filling, and TPU waterproof backing to resist scratches and spills through the sleep surface. Side coverage is fitted and supportive, but not TPU waterproof.</p>
 <ul>
 <li>Top panel waterproof protection</li>
 <li>Cool-to-the-touch comfort and anti-scratch support</li>
@@ -106,5 +106,5 @@ SET fabric_options = 'tpu'
 WHERE slug IN ('mattress-protector-standard', 'mattress-protector-family', 'mattress-protector-deep-pocket', 'marine-mattress-protector');
 
 UPDATE products
-SET fabric_options = 'breezeplus'
+SET fabric_options = 'tpu'
 WHERE slug = 'pet-proof-mattress-protector';

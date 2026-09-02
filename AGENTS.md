@@ -10,7 +10,7 @@ This file is read by Droid at the start of every session. It contains all critic
 - **Current site:** WordPress on `www.mildmate.com` (Flatsome theme)
 - **Goal:** Rebuild to Vanilla HTML + Cloudflare Workers with e-commerce features
 - **Dev URL:** `mildmate-new.pages.dev` (production: `www.mildmate.com` at 100% completion)
-- **Phase 2 SEO URLs deployed:** Deployed 2026-06-14 via public/_redirects (271 rules: 258 WP URLs + 13 navigation) + unctions/product/ middleware redirect worker.
+- **Phase 2 SEO URLs deployed:** Deployed 2026-06-14 via `public/_redirects` (271 rules: 258 WP URLs + 13 navigation) + `functions/product/` middleware redirect worker.
 
 ---
 
@@ -40,7 +40,8 @@ This file is read by Droid at the start of every session. It contains all critic
 
 ## GitHub
 
-- **Account:** `nara80` (email: `- **Repo:** `Rebuild-New-Web` (private)
+- **Account:** `nara80`
+- **Repo:** `Rebuild-New-Web` (private)
 - **Repo URL:** `https://github.com/nara80/Rebuild-New-Web`
 - **Auth method:** HTTPS with Personal Access Token (credential helper cached 1 year)
 
@@ -92,6 +93,16 @@ This file is read by Droid at the start of every session. It contains all critic
 | 7 — Admin Dashboard | ✅ Built | Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized to D1**: abandoned cart config (`recovery_config`), thank-you config, Send Offers config via `/api/admin/offers`, and Run-a-Sale campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes manual button **Send Due Thank-you Now** with per-email sent/failed/skipped output. **Promo Codes:** admin-created codes with optional `free_shipping` flag; Super Admin table shows Free Ship column. **Color Inventory:** Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback (`/api/admin/color-inventory`). **Blog CMS:** dedicated `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), featured image preview, write/preview toggle. Public `/blogs/` SSR listing reads D1 directly (server-side), `/blogs/{slug}/` SSR individual post from D1 via Pages Function (YouTube embed hero, featured image fallback, gradient fallback). `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs use production Clerk + `ADMIN_EMAILS` fallback parity for robust admin auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + sales order upsert/read) backed by `workers/api/sales.ts` with Bearer token auth (`SALES_SYNC_API_TOKEN`). **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` secret ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Planned (Option B):** Cloudflare Access zero-trust for defense-in-depth. |
 | 8 — Launch | ✅ COMPLETE | ✅ Part A DONE: DNS cutover, sitemap (https://www.mildmate.com/sitemap.xml), robots.txt, OG tags, GTM+GA4 (GTM-KLJZZM9 + G-R2DDCBXXXX), mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed. Site is fully live. |
 | 9 — Testing (Vitest) | ❌ Out of Scope | Removed from active roadmap |
+
+---
+
+## Operational Reconciliation Snapshot (2026-09-02)
+
+- **Order dimension durability fix is implemented and deployed:** checkout writes full line-item snapshots to D1 `checkout_session_snapshots`, and webhook now reads snapshots first (metadata fallback second).
+- **Missing dimensions/fabric root cause addressed:** compact Stripe metadata fallback now preserves dimension text tiers instead of dropping critical fields near metadata size limits.
+- **Super Admin guardrail is live:** `/api/admin/orders` returns `missing_configurable_rows` + `affected_orders`, and `/super-admin/` orders view shows warning banner + per-row **Missing Dims** badge.
+- **Production backfill completed for `#LuQpJi23`:** configurable rows were restored from Stripe evidence; fixed-size accessory rows remain intentionally without W/L/D.
+- **Mattress protector reconciliation completed:** 5 target SKUs now use explicit 3-layer copy, and Pet-Proof follows the same TPU-class lock as the other 3-layer protectors (no BreezePlus assignment).
 
 ---
 
@@ -380,6 +391,7 @@ All 30 core catalog products now have live pricing formulas or don't require con
 - `product_niches` — true specialization mapping (product_id ↔ niche_type)
 - `product_collections` — merchandising visibility mapping for niche landing pages (product_id ↔ collection_type)
 - `orders` — customer orders (stripe_session/payment IDs, email, dimensions W/L/D in cm+inch, fabric, color, price, discount_code, shipping tracking fields, status, customer_note_type/customer_note)
+- `checkout_session_snapshots` — Stripe checkout session snapshot store (session_id keyed), used as source-of-truth for webhook line-item reconstruction and dimension durability
 - `custom_quotes` — quote requests (quote_id, name, email, address, telephone, dimensions JSON, fabric, color, free_shipping, status, quoted_price, expires_at)
 - `abandoned_carts` — email + cart JSON for recovery (recovered flag, recovery_stage, recovery_sent_at, discount_code)
 - `subscribers` — email signup list (dedup: quote form also inserts here, language field)
@@ -599,6 +611,7 @@ D:\00_MildMate\Re-Build_Web\
 - **Centralized Product Template System:** The 30-product core catalog is generated from three templates (`templates/product-customizable.html`, `templates/product-fixed.html`, `templates/product-marine.html`) via `scripts/build-products.js`. Data sources: `data/products.json` + `data/product-content.json`. To update product page UI: edit the template and rerun `node scripts/build-products.js`. To update product content (tab text, reviews, tags): edit `data/product-content.json` and rebuild. Never edit individual product pages directly — always use the template system.
 - **Rule of thumb (new product pages):** Always set a **feature-image placeholder** at creation time (`/images/placeholder.jpg`) in both data/migration paths. Replace with final product image later from Super Admin upload/editor.
 - **Fabric Specs Grids (replacing dropdowns):** Products with locked/exclusive fabrics show a material specs grid instead of a fabric dropdown. TPU products (encasements, pillow protector): TPU Waterproof Membrane + Water Spills & Accidents. 3-layer protectors: Cotton Quilted + Polyester Filling + TPU Waterproof. BreezePlus-only (pet products): Pet Hair Resistant + Cool-to-the-Touch + 50/50 Blend. CloudSoft-only (marine/RV): Quick-Dry + Moisture-Wicking + 100% Polyester Microfiber.
+- **Pet-Proof protector lock (reconciled 2026-09):** `pet-proof-mattress-protector` must stay in the 3-layer TPU class in D1 product config and checkout runtime normalization (no BreezePlus assignment).
 - **Fabric Color Selector:** Products with fabric choices show per-fabric color swatches in a 6-column CSS grid. Each fabric has its own color set matching `/fabric/` data (BreezePlus: 9, CloudSoft: 12, PremaCotton: 1, EcoLuxe: 1). Label updates and swatches swap when fabric selection changes. White/light colors are visible via border + inset shadow.
 - **Centralized Blog Template System:** Blog posts are generated from `templates/blog-post.html` via `scripts/build-blogs.js`. Data source: `data/blog-posts.json`. To add a new blog post: add a JSON entry + run `node scripts/build-blogs.js`. To update blog UI: edit the template and rebuild. The blog post template uses the same 4-col footer as product pages.
 - Always check `wrangler.toml` before running `npx wrangler` commands
@@ -614,6 +627,8 @@ D:\00_MildMate\Re-Build_Web\
 - **Product SSR (`functions/product/[[path]].ts`):** Fetches static HTML and applies D1 image overrides (main image + up to 6 thumbnails from `image_url` + `images` JSON column). Also handles legacy product slug redirects.
 - **Checkout origin rule (critical):** Stripe checkout success/cancel URLs must use `new URL(request.url).origin` (localhost exception only). This prevents preview checkout from redirecting users to production.
 - **Runtime parity rule (critical):** After checkout/webhook changes, ensure deployed worker artifacts stay in sync (`workers/api/*` ↔ `public/index.js` ↔ `public/_worker.js`) to avoid stale runtime behavior.
+- **Checkout snapshot rule (critical, 2026-09):** Keep order-dimension durability path intact, `workers/api/checkout.ts` must continue writing full `checkout_session_snapshots`, and `workers/api/webhook.ts` must keep snapshot-first read with metadata fallback only.
+- **Admin orders guardrail rule (critical, 2026-09):** Preserve `missing_configurable_rows` / `affected_orders` output in `workers/api/admin-orders.ts` and corresponding warning + **Missing Dims** badges in `public/super-admin/index.html`.
 - **Contact API parity rule (critical):** `/contact/` submits `{name,email,inquiry_type,message}` (no `subject`). Keep `workers/api/contact.ts`, `public/index.js`, and `public/_worker.js` aligned so backend accepts `inquiry_type` and derives fallback subject (`subject || inquiry_type || "General Inquiry"`); otherwise contact form fails with old "All fields are required..." validation.
 - **Turnstile protection rule (critical):** Contact + quote flows now require Cloudflare Turnstile token verification. Keep these paths in sync: `public/contact/index.html`, `public/th/contact/index.html`, `public/js/product-configurator.js` ↔ `workers/api/contact.ts`, `workers/api/quote.ts` ↔ runtime bundles (`public/index.js`, `public/_worker.js`). Requests must include `turnstile_token` (or `cf-turnstile-response`) and Worker must verify using `TURNSTILE_SECRET_KEY`.
 - **Fabric Color Inventory system (implemented 2026-07-12):** `fabric_color_inventory` table (migration 036) stores `in_stock` per fabric+color. Public GET `/api/color-inventory` (60s cache) is fetched by `product-configurator.js` on page load; OOS swatches get `.out-of-stock` class (opacity 0.3 + diagonal strikethrough), clicks blocked. On fabric switch the inventory is re-applied. Super Admin Color Inventory page (`rColorInventory()`) shows visual swatch grid per fabric with real-time checkbox toggles and toast feedback. Admin API at `/api/admin/color-inventory` (GET/PUT) uses JWT validity check only — no email allowlist (matches existing auth pattern).

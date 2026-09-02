@@ -6,5 +6,5 @@ UPDATE products SET fabric_options = 'tpu' WHERE slug = 'pillow-protector-genera
 -- Standard/Family/Deep Pocket use 3-layer protector construction with locked TPU material class
 UPDATE products SET fabric_options = 'tpu' WHERE slug IN ('mattress-protector-standard','mattress-protector-family','mattress-protector-deep-pocket');
 
--- Pet-Proof uses the same 3-layer protector concept but with BreezePlus top fabric positioning
-UPDATE products SET fabric_options = 'breezeplus' WHERE slug = 'pet-proof-mattress-protector';
+-- Pet-Proof follows the same 3-layer protector class (no BreezePlus assignment)
+UPDATE products SET fabric_options = 'tpu' WHERE slug = 'pet-proof-mattress-protector';

@@ -1712,16 +1712,16 @@
     },
     "pet-proof-mattress-protector": {
       "productType": "protector",
-      "tagline": "Pet-proof 3-layer protector with BreezePlus top, polyester core, and TPU waterproof backing on the top panel.",
-      "metaDescription": "Pet-Proof Mattress Protector by MildMate. 3-layer construction with BreezePlus top, polyester core, and TPU waterproof backing on the top panel only, with fitted side skirt and elastic hold for pet households.",
+      "tagline": "Pet-proof 3-layer protector with quilted cotton top, polyester core, and TPU waterproof backing on the top panel.",
+      "metaDescription": "Pet-Proof Mattress Protector by MildMate. 3-layer construction with quilted cotton top, polyester core, and TPU waterproof backing on the top panel only, with fitted side skirt and elastic hold for pet households.",
       "ratingCount": 64,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
       "breadcrumbName": "Pet-Proof Mattress Protector",
       "fabrics": [
-        "breezeplus"
+        "tpu"
       ],
-      "lockedFabric": "breezeplus",
+      "lockedFabric": "tpu",
       "needsDepth": true,
       "tags": [
         {
@@ -1734,27 +1734,28 @@
         }
       ],
       "relatedSlugs": [
-        "pet-owner-fitted-sheet",
-        "pet-owner-duvet-cover",
+        "mattress-protector-standard",
+        "mattress-protector-family",
+        "mattress-protector-deep-pocket",
         "mattress-encasement-general",
         "pillow-protector-general"
       ],
       "tabDescriptionTitle": "Built for Life with Pets — 3-Layer Protection",
-      "tabDescriptionP": "Pets bring joy and occasional accidents, fur, and scratches. The Pet-Proof Mattress Protector uses 3-layer top-panel construction, BreezePlus top, polyester filling core, and TPU waterproof backing to protect the sleeping surface. The fitted side skirt supports fit and is not a waterproof side barrier.",
+      "tabDescriptionP": "Pets bring joy and occasional accidents, fur, and scratches. The Pet-Proof Mattress Protector uses 3-layer top-panel construction, quilted cotton top, polyester filling core, and TPU waterproof backing to protect the sleeping surface. The fitted side skirt supports fit and is not a waterproof side barrier.",
       "tabDescriptionBullets": [
         "3-layer top panel with TPU waterproof backing",
-        "BreezePlus top layer — pet hair slides off",
+        "Quilted cotton top layer with anti-scratch support",
         "Anti-scratch durable construction",
         "Fitted side skirt (not waterproof)",
         "Custom-made to your mattress dimensions"
       ],
       "tabFabricTitle": "3-Layer Construction Details",
-      "tabFabricP": "The top panel combines BreezePlus fabric, polyester filling, and TPU waterproof backing to resist pet hair, scratches, and spills through the sleep surface. Side coverage is fitted and supportive, but not TPU waterproof.",
+      "tabFabricP": "The top panel combines quilted cotton fabric, polyester filling, and TPU waterproof backing to resist scratches and spills through the sleep surface. Side coverage is fitted and supportive, but not TPU waterproof.",
       "tabFabricBullets": [
-        "Top Layer: BreezePlus",
+        "Top Layer: Cotton Quilted",
         "Layer 2 (Core): Polyester Filling",
         "Layer 3 (Backing): TPU Waterproof",
-        "Cool-to-the-touch comfort and anti-scratch support"
+        "Low-noise comfort and anti-scratch support"
       ],
       "tabCareBullets": [
         "Machine wash warm (60°C / 140°F) — gentle cycle",
@@ -1763,8 +1764,8 @@
         "Do not iron the TPU layer",
         "Remove pet hair before washing — a quick vacuum or lint roll saves a rinse cycle"
       ],
-      "review1Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">N</div><div class=\"review-meta\"><div class=\"review-name\">Nicole F.</div><div class=\"review-country\">Australia</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Two Labradors and a cat — this protector is a lifesaver. No more worrying about accidents ruining our mattress. The BreezePlus outer really does repel fur. Best purchase this year.\"</div><div class=\"review-product\">Verified purchase: Pet-Proof Mattress Protector · Queen / BreezePlus Sand</div></div>",
-      "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">S</div><div class=\"review-meta\"><div class=\"review-name\">Steve K.</div><div class=\"review-country\">United States</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Our elderly dog has occasional accidents and this protector has saved our expensive mattress multiple times. The waterproof layer works perfectly and you can not even tell it is there.\"</div><div class=\"review-product\">Verified purchase: Pet-Proof Mattress Protector · King / BreezePlus Dark Grey</div></div>",
+      "review1Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">N</div><div class=\"review-meta\"><div class=\"review-name\">Nicole F.</div><div class=\"review-country\">Australia</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Two Labradors and a cat — this protector is a lifesaver. No more worrying about accidents ruining our mattress. The quilted top stays comfortable and the waterproof layer works exactly as promised.\"</div><div class=\"review-product\">Verified purchase: Pet-Proof Mattress Protector · Queen / Standard</div></div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">S</div><div class=\"review-meta\"><div class=\"review-name\">Steve K.</div><div class=\"review-country\">United States</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Our elderly dog has occasional accidents and this protector has saved our expensive mattress multiple times. The waterproof layer works perfectly and you can not even tell it is there.\"</div><div class=\"review-product\">Verified purchase: Pet-Proof Mattress Protector · King / Standard</div></div>",
       "fabricMode": "badge"
     },
     "bedbridge-connector": {

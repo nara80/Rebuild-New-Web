@@ -10,6 +10,12 @@
 - **Admin auth:** Clerk (Google / Facebook / Email login)
 - **Order tracking:** Option A — carrier code + tracking number entered by admin on shipped, URL auto-generated from templates (thaipost, flash, dhl, ups, fedex, usps). No external API needed. Tracking shown inline in `/account` Orders panel.
 
+## Operational Reconciliation Snapshot (2026-09-02)
+- Checkout/webhook dimension durability is now snapshot-based: `workers/api/checkout.ts` writes full `checkout_session_snapshots`, `workers/api/webhook.ts` reads snapshot first and metadata second.
+- Super Admin orders now include missing-dimension guardrails: API summary (`missing_configurable_rows`, `affected_orders`) + UI warning and per-row **Missing Dims** badges.
+- Production order repair was completed for `#LuQpJi23` using Stripe evidence for configurable items; fixed-size accessories remain without dimensions by design.
+- Mattress protector reconciliation completed for five SKUs: explicit 3-layer copy aligned, and Pet-Proof now follows the same TPU-class lock as other 3-layer protectors (no BreezePlus assignment).
+
 ---
 
 ## Frontend Design System
@@ -66,10 +72,10 @@
 | Order Tracking | Inline in `/account/` Orders panel | ✅ Built — Option A (carrier code + tracking number, auto-generated carrier URL, no external API needed) |
 | All 258 WP URLs | various | Phase 2 redirect file — deployed (2026-06-14) |
 
-### ### Blog Pages (D1-backed, SSR via Pages Function)
+### Blog Pages (D1-backed, SSR via Pages Function)
 
 **Routing:**
-- unctions/blogs/[[path]].ts catches /blogs/ (SSR listing) and /blogs/{slug}/ (SSR individual post)
+- `functions/blogs/[[path]].ts` catches `/blogs/` (SSR listing) and `/blogs/{slug}/` (SSR individual post)
 - /api/blog/posts JSON API for listing
 - /api/admin/blog for Admin CRUD
 
@@ -77,7 +83,9 @@
 
 **Individual post:** SSR from D1. Hero priority: YouTube embed (16:9 iframe) if youtube_url set, else featured image, else blue gradient fallback. Body, CTA box, share bar.
 
-**Admin:** /admin/blog.html with WYSIWYG editor, YouTube URL field, category dropdown (9 options), write/preview toggle.### Dynamic Pages (data from Cloudflare D1)
+**Admin:** `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), write/preview toggle.
+
+### Dynamic Pages (data from Cloudflare D1)
 
 **Shop by Product — 5 categories (primary navigation, SEO discoverability)**
 | Category | URL | Products | Count |
@@ -188,7 +196,7 @@ The configurator appears on every **Product Detail page** (`/product/[slug]/`). 
 
 ### Shared Configurator Features
 - **Unit toggle:** cm / inch switch (converts values in place)
-- **Fabric selector:** 4 options (BreezePlus, CloudSoft, PremaCotton, EcoLuxe)
+- **Fabric behavior:** selectable options on multi-fabric SKUs; locked/spec-grid material modes on exclusive SKUs (TPU-only encasements, pillow protector, and 3-layer mattress protectors including Pet-Proof, plus CloudSoft-only marine/RV fitted families)
 - **Live price display:** Updates automatically as inputs change
 - **Pricing note on all displays:** *"Price excludes shipping & import tariff"*
 - **Measurement diagram:** Labeled SVG diagram shown beside inputs (rectangle for bed sheet, trapezoid for V-Berth)
@@ -462,7 +470,7 @@ Customer opens link → sees locked quote with "Add to Cart — $89.00"
 ### 7. Contact (`/contact/`)
 
 ```
-[CONTACT FORM]  Name | Email | Subject | Message | Send
+[CONTACT FORM]  Name | Email | Inquiry Type | Message | Turnstile | Send
 
 [CONTACT CHANNELS]
   ðŸ’¬ LINE Official    — [LINE link]
@@ -862,7 +870,7 @@ Phase 2 is deployed (2026-06-14). The approach remains **redirect-first** — no
 
 **Actual schema has evolved beyond 001–030 (repo currently includes migrations through `041_*`).**
 **Operational reconciliation (2026-08):** taxonomy is now split into specialization (`product_niches`) and merchandising visibility (`product_collections`); `products.niches` remains as legacy compatibility fallback for transition safety.
-**Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent, and sales sync tables (`sales_orders`, `sales_order_items`, `sync_runs`) are provisioned by migration `039_unified_sales_analytics`.
+**Operational note:** `marketing_campaigns` is ensured by API at runtime for Super Admin marketing campaigns, `thankyou_queue` operational columns (`sent_at`, `last_error`) are auto-added by dispatch handler if absent, sales sync tables (`sales_orders`, `sales_order_items`, `sync_runs`) are provisioned by migration `039_unified_sales_analytics`, and checkout/webhook now auto-ensure `checkout_session_snapshots` for order line-item durability.
 
 ```sql
 -- Products (migration 001 + 006)
@@ -1062,7 +1070,7 @@ CREATE TABLE blog_posts (
 ### Frontend Files
 - **Admin:** /admin/blog.html — dedicated blog CMS page with WYSIWYG editor
 - **Listing:** /blogs/ — Pages Function (`functions/blogs/[[path]].ts`) SSR listing from D1
-- **Post:** /blogs/{slug}/ — Pages Function (unctions/blogs/[[path]].ts) SSR from D1
+- **Post:** /blogs/{slug}/ — Pages Function (`functions/blogs/[[path]].ts`) SSR from D1
 
 
  001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label
@@ -1789,3 +1797,18 @@ Repo currently contains migrations through `041_boat_model_label.sql`, including
 - `product-configurator.js` `populateSizeSelect()` uses `PRODUCT_SIZES['family']` when product is `family-fitted-sheet` or `mattress-protector-family`.
 - Family size entries lack a depth field; configurator uses `d = s.d ?? 30` as safe default.
 - Standard Size tab on those product pages now shows Family/Co-Sleep combined sizes instead of regular mattress sizes.
+
+### Checkout Session Snapshot Durability (implemented 2026-09)
+- Root cause addressed: compact metadata fallback could drop dimensions/fabric when Stripe metadata payload approached limits.
+- `workers/api/checkout.ts` now writes complete session item snapshots into D1 `checkout_session_snapshots` keyed by Stripe session id.
+- `workers/api/webhook.ts` now reads snapshot data first for order row creation and email rendering, with metadata used only as fallback.
+- Keep runtime parity mandatory for this path: sync `workers/api/checkout.ts` + `workers/api/webhook.ts` with `public/index.js` and `public/_worker.js` after edits.
+
+### Super Admin Missing-Dimension Guardrail (implemented 2026-09)
+- `workers/api/admin-orders.ts` now returns aggregate visibility fields `missing_configurable_rows` and `affected_orders`.
+- `public/super-admin/index.html` orders panel renders a warning banner and per-row **Missing Dims** badge for configurable rows missing W/L/D.
+- Current known residual state after backfill: 3 configurable legacy rows still missing dimensions (requires manual/evidence backfill if available).
+
+### Mattress Protector Fabric + Copy Reconciliation (implemented 2026-09)
+- Five target SKUs (standard, family, deep-pocket, pet-proof, marine mattress protectors) were aligned to explicit 3-layer construction messaging in source content and D1.
+- Pet-Proof protector is locked to the 3-layer TPU class in both client configurator logic and server checkout normalization, preventing CloudSoft/other drift in order rows and email text.
