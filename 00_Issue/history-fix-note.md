@@ -8,6 +8,106 @@
 
 ---
 
+## Reconciliation Snapshot (2026-09-02) — New Product Visibility + Redirect Regression (`custom-waterproof-cushion-protector`)
+
+This section is the source of truth for the new SKU launch issue where the product was added in D1 and product page assets existed, but discovery and routing were inconsistent.
+
+### Verified symptoms
+- `https://www.mildmate.com/products/` initially did not show **Custom Spill-Proof Cushion Protector**.
+- `https://www.mildmate.com/product/custom-waterproof-cushion-protector/` redirected to:
+  - `/product/mattress-protector-standard/`
+- D1 production confirmed the slug existed and active:
+  - `custom-waterproof-cushion-protector` (active row present).
+
+### Root causes (verified)
+1. **Catalog listing gap on `/products/`**
+   - `public/products/index.html` is a static curated grid and did not auto-refresh from `data/products.json`.
+   - New SKU was present in data and generated product detail page, but listing card was missing.
+
+2. **Legacy redirect fallback caught the new slug**
+   - Canonical product slug allowlists were missing `custom-waterproof-cushion-protector` in runtime routing paths.
+   - Because slug contains `protector`, legacy fallback rule (`slug.includes('protector')`) redirected to standard mattress protector.
+   - Affected allowlists were spread across:
+     - `functions/_middleware.ts`
+     - `functions/product/[[path]].ts`
+     - deployed runtime worker sources (`public/index.js`, `public/_worker.js`)
+
+3. **Branch targeting confusion during deploy verification**
+   - Deploying with `--branch main` created Preview environment deployments.
+   - Production traffic (`www.mildmate.com`) follows Production deployments on `master` branch for this project.
+
+### Completed fixes (implemented + deployed)
+1. **Products listing card added**
+   - Updated `public/products/index.html` with:
+     - product card title: `Custom Spill-Proof Cushion Protector`
+     - link: `/product/custom-waterproof-cushion-protector/`
+     - placeholder image reference
+   - Commit: `19ae405`
+
+2. **Canonical slug allowlist patched across routing paths**
+   - Added `custom-waterproof-cushion-protector` to:
+     - `functions/_middleware.ts` (`CANONICAL_PRODUCT_SLUGS`)
+     - `functions/product/[[path]].ts` (`CANONICAL_PRODUCT_SLUGS`)
+     - `public/index.js` + `public/_worker.js` runtime allowlists
+   - Commits:
+     - `b999358`
+     - `2222afa`
+     - `629d3b8`
+
+3. **Production deployment corrected**
+   - Final production deploy performed on `master` branch.
+   - Deployment URL: `https://fba4f76c.mildmate-new.pages.dev`
+
+### Verification evidence
+- Production URL check:
+  - `curl -I https://www.mildmate.com/product/custom-waterproof-cushion-protector/` → `200 OK` (no redirect)
+- Live HTML markers:
+  - `<title>Custom Spill-Proof Cushion Protector — MildMate</title>`
+  - `var productSlug = 'custom-waterproof-cushion-protector';`
+- Products listing check:
+  - `/products/` now contains product card and CTA link to the custom slug.
+
+### Preventive SOP — New Product Launch Checklist (mandatory)
+Use this checklist for every new product to avoid repeat regressions:
+
+1. **Catalog + content source**
+   - Add SKU to `data/products.json`
+   - Add content block to `data/product-content.json`
+   - Ensure placeholder image exists (`/images/placeholder.jpg`) if final image not ready
+
+2. **Pricing + checkout runtime**
+   - Wire slug in `public/js/product-configurator.js` (if special formula/fabric lock)
+   - Wire slug normalization in `workers/api/checkout.ts` if fabric is forced
+   - Wire pricing path/margin key in `workers/api/pricing.ts` and Super Admin parameter mapping
+
+3. **Database**
+   - Add idempotent SQL in `data/*.sql` for product row + taxonomy + shipping tier + pricing params
+   - Execute on **production D1** (`mildmate-db-prod`) and verify row presence
+
+4. **Routing allowlists (critical)**
+   - Add slug to canonical allowlists in:
+     - `functions/_middleware.ts`
+     - `functions/product/[[path]].ts`
+     - runtime parity files (`public/index.js`, `public/_worker.js`) when used by deployment flow
+
+5. **Discovery surfaces**
+   - Add/verify card in `public/products/index.html` (static curated catalog grid)
+   - Verify related category/niche listing behavior
+
+6. **Parity + validation**
+   - Rebuild: `node scripts/build-products.js`
+   - Rebuild functions: `npx wrangler pages functions build`
+   - Sync runtime parity if required: `Copy-Item public/index.js public/_worker.js -Force`
+   - Validate: `npm run lint`
+
+7. **Production-only deploy discipline**
+   - Deploy production branch explicitly (`master` for this project)
+   - Confirm with:
+     - `wrangler pages deployment list --project-name mildmate-new`
+     - live `curl -I` + HTML marker checks on `www.mildmate.com`
+
+---
+
 ## Reconciliation Snapshot (2026-09-02) — New Order Email Missing Dimensions (`?×? cm`)
 
 This section is the source of truth for the latest order-notification issue from `00_Issue/Order_001.png`, where new order emails showed missing dimensions (`?×? cm`).
