@@ -36,6 +36,13 @@ function getItemName(item: CartItem): string {
   return fromSlug || "Custom Product";
 }
 
+function normalizeFabricForSlug(slugRaw: any, fabricRaw: any): string | null {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (slug === "pet-proof-mattress-protector") return "breezeplus";
+  const fabric = String(fabricRaw || "").trim().toLowerCase();
+  return fabric || null;
+}
+
 let checkoutSnapshotSchemaReady = false;
 let checkoutSnapshotSchemaPromise: Promise<boolean> | null = null;
 
@@ -248,13 +255,14 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   // Build Stripe line items
   const lineItems = items.map((item: CartItem) => {
     const itemName = getItemName(item);
+    const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
     const unitAmount = currency === "thb"
       ? Math.round((item.price_thb || 0) * 100)
       : Math.round((item.price_usd || 0) * 100);
 
     const desc = [
       itemName,
-      item.fabric ? `Fabric: ${item.fabric}` : "",
+      normalizedFabric ? `Fabric: ${normalizedFabric}` : "",
       item.color ? `Color: ${item.color}` : "",
       item.dimensions
         ? `${item.dimensions.w}\u00D7${item.dimensions.l}${item.dimensions.d ? `\u00D7${item.dimensions.d}` : ""} ${item.dimensions.unit}`
@@ -386,7 +394,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     const metadataItems = items.map((i: CartItem, idx: number) => ({
       slug: i.product_slug,
       name: getItemName(i),
-      fabric: i.fabric,
+      fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
       color: i.color,
       dims: buildMetadataDims(i),
       qty: i.qty || 1,
@@ -397,7 +405,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i: CartItem, idx: number) => ({
         s: i.product_slug,
-        f: i.fabric,
+        f: normalizeFabricForSlug(i.product_slug, i.fabric),
         c: i.color,
         d: buildCompactDimText(buildMetadataDims(i)) || undefined,
         q: i.qty || 1,
@@ -476,7 +484,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         const snapshotItems = items.map((i: CartItem, idx: number) => ({
           slug: i.product_slug,
           name: getItemName(i),
-          fabric: i.fabric || null,
+          fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
           color: i.color || null,
           dims: buildMetadataDims(i),
           qty: i.qty || 1,

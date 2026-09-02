@@ -9213,6 +9213,13 @@ function getItemName(item) {
   return fromSlug || "Custom Product";
 }
 __name(getItemName, "getItemName");
+function normalizeFabricForSlug(slugRaw, fabricRaw) {
+  const slug = String(slugRaw || "").trim().toLowerCase();
+  if (slug === "pet-proof-mattress-protector") return "breezeplus";
+  const fabric = String(fabricRaw || "").trim().toLowerCase();
+  return fabric || null;
+}
+__name(normalizeFabricForSlug, "normalizeFabricForSlug");
 var checkoutSnapshotSchemaReady = false;
 var checkoutSnapshotSchemaPromise = null;
 async function ensureCheckoutSnapshotSchema(env) {
@@ -9415,10 +9422,11 @@ async function handleCheckout(request, env) {
   }
   const lineItems = items.map((item) => {
     const itemName = getItemName(item);
+    const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
     const unitAmount = currency === "thb" ? Math.round((item.price_thb || 0) * 100) : Math.round((item.price_usd || 0) * 100);
     const desc = [
       itemName,
-      item.fabric ? `Fabric: ${item.fabric}` : "",
+      normalizedFabric ? `Fabric: ${normalizedFabric}` : "",
       item.color ? `Color: ${item.color}` : "",
       item.dimensions ? `${item.dimensions.w}\xD7${item.dimensions.l}${item.dimensions.d ? `\xD7${item.dimensions.d}` : ""} ${item.dimensions.unit}` : ""
     ].filter(Boolean).join(" | ");
@@ -9538,7 +9546,7 @@ async function handleCheckout(request, env) {
     const metadataItems = items.map((i, idx) => ({
       slug: i.product_slug,
       name: getItemName(i),
-      fabric: i.fabric,
+      fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
       color: i.color,
       dims: buildMetadataDims(i),
       qty: i.qty || 1,
@@ -9549,7 +9557,7 @@ async function handleCheckout(request, env) {
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i, idx) => ({
         s: i.product_slug,
-        f: i.fabric,
+        f: normalizeFabricForSlug(i.product_slug, i.fabric),
         c: i.color,
         d: buildCompactDimText(buildMetadataDims(i)) || void 0,
         q: i.qty || 1,
@@ -9616,7 +9624,7 @@ async function handleCheckout(request, env) {
         const snapshotItems = items.map((i, idx) => ({
           slug: i.product_slug,
           name: getItemName(i),
-          fabric: i.fabric || null,
+          fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
           color: i.color || null,
           dims: buildMetadataDims(i),
           qty: i.qty || 1,
@@ -12606,7 +12614,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-cjCAeq/functionsRoutes-0.7242251678605457.mjs
+// ../.wrangler/tmp/pages-bkGERH/functionsRoutes-0.8716962487820559.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

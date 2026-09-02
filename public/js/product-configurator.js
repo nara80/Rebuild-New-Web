@@ -565,7 +565,7 @@
     }
   }
 
-  if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner products: BreezePlus only
+  if (isPetOwner || isProtectorPetProof) state.fabric = 'breezeplus'; // Pet Owner + Pet-Proof protector: BreezePlus only
   if (isMarineShapeProduct) state.fabric = 'cloudsoft'; // Marine shape products: CloudSoft only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only

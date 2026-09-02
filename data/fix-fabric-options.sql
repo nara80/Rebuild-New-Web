@@ -2,6 +2,9 @@
 -- Pillow Protector → TPU (currently wrong: all 4 fabrics)
 UPDATE products SET fabric_options = 'tpu' WHERE slug = 'pillow-protector-general';
 
--- 4 Mattress Protectors → Other (3-Layer: Cotton Quilted + Polyester Filling + TPU Waterproof)
--- Currently: 3 are 'tpu', 1 is 'breezeplus' — all wrong
-UPDATE products SET fabric_options = 'other' WHERE slug IN ('mattress-protector-standard','mattress-protector-family','mattress-protector-deep-pocket','pet-proof-mattress-protector');
+-- Mattress Protectors fabric locks
+-- Standard/Family/Deep Pocket use 3-layer protector construction with locked TPU material class
+UPDATE products SET fabric_options = 'tpu' WHERE slug IN ('mattress-protector-standard','mattress-protector-family','mattress-protector-deep-pocket');
+
+-- Pet-Proof uses the same 3-layer protector concept but with BreezePlus top fabric positioning
+UPDATE products SET fabric_options = 'breezeplus' WHERE slug = 'pet-proof-mattress-protector';

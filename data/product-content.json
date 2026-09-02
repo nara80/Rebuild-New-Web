@@ -1517,10 +1517,10 @@
       "tabDescriptionP": "Use the same 14-shape marine configurator to match your boat mattress layout, then get an instant protector price with no email back-and-forth. This protector uses a 3-layer waterproof build that guards against humidity, spills, and onboard moisture while staying comfortable for everyday sleep.",
       "tabDescriptionBullets": [
         "14 boat-mattress shapes with guided measurement diagrams",
-        "3-layer protector: Cotton Quilted + Polyester Filling + TPU Waterproof backing",
+        "3-layer construction: Cotton Quilted + Polyester Filling + TPU Waterproof backing",
         "Instant online pricing from shape area + mattress depth",
         "Custom-made to your exact marine mattress geometry",
-        ". materials — no toxic chemicals"
+        "Skin-safe materials with low-noise comfort"
       ],
       "tabFabricTitle": "3-Layer Marine Protector Construction",
       "tabFabricP": "Built for marine sleeping environments where humidity and spills are common. The TPU waterproof backing blocks liquids, while the quilted top keeps the sleep surface soft and breathable.",
@@ -1544,8 +1544,8 @@
     },
     "mattress-protector-standard": {
       "productType": "protector",
-      "tagline": "Waterproof-top mattress protector with TPU backing on the top panel and a fitted cotton side skirt.",
-      "metaDescription": "Mattress Protector — Standard by MildMate. Quilted cotton top with TPU waterproof backing on the top panel only, plus fitted cotton side skirt and full-perimeter elastic.",
+      "tagline": "3-layer mattress protector with quilted cotton top, polyester core, and TPU waterproof backing on the top panel.",
+      "metaDescription": "Mattress Protector — Standard by MildMate. 3-layer construction: quilted cotton top, polyester filling core, and TPU waterproof backing on the top panel only, with fitted cotton side skirt and full-perimeter elastic.",
       "ratingCount": 56,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1567,8 +1567,8 @@
         "pillow-protector-general",
         "flat-sheet-standard"
       ],
-      "tabDescriptionTitle": "Waterproof Top Protection — Fitted Sheet Style",
-      "tabDescriptionP": "A fitted-sheet-style mattress protector with a quilted cotton top panel, polyester filling, and TPU waterproof backing on the top panel only. The side skirt is cotton fabric for fit and coverage, and does not provide waterproof side protection.",
+      "tabDescriptionTitle": "3-Layer Waterproof Top Protection — Fitted Sheet Style",
+      "tabDescriptionP": "A fitted-sheet-style mattress protector with 3-layer construction on the top panel: quilted cotton, polyester filling, and TPU waterproof backing. The side skirt is cotton fabric for fit and coverage, and does not provide waterproof side protection.",
       "tabDescriptionBullets": [
         "TPU waterproof backing on top panel only",
         "Fitted cotton side skirt (not waterproof)",
@@ -1576,13 +1576,13 @@
         "Full-perimeter elastic fitted-sheet hold",
         "Quiet and skin-safe — no plastic crinkle"
       ],
-      "tabFabricTitle": "TPU Waterproof Protection",
-      "tabFabricP": "The TPU waterproof backing helps protect the mattress from spills and accidents through the top sleeping surface. The fitted cotton side skirt helps secure fit around the mattress but does not include TPU waterproof protection.",
+      "tabFabricTitle": "3-Layer Construction Details",
+      "tabFabricP": "The top panel combines quilted cotton, polyester filling, and TPU waterproof backing to protect the sleep surface from spills and accidents. The fitted cotton side skirt helps secure fit around the mattress but does not include TPU waterproof side coverage.",
       "tabFabricBullets": [
-        "Top panel waterproof protection",
-        "Quiet — no crinkle",
-        "Cotton side skirt for fit",
-        "Full-perimeter elastic"
+        "Top Layer: Cotton Quilted",
+        "Layer 2 (Core): Polyester Filling",
+        "Layer 3 (Backing): TPU Waterproof",
+        "Cotton side skirt with full-perimeter elastic"
       ],
       "tabCareBullets": [
         "Machine wash warm (60°C / 140°F) — gentle cycle",
@@ -1597,8 +1597,8 @@
     },
     "mattress-protector-family": {
       "productType": "protector",
-      "tagline": "Family-size waterproof-top protector with TPU backing on the top panel and a fitted cotton side skirt.",
-      "metaDescription": "Mattress Protector — Family by MildMate. Quilted cotton top with TPU waterproof backing on the top panel only, plus fitted cotton side skirt and full-perimeter elastic.",
+      "tagline": "Family-size 3-layer protector with quilted cotton top, polyester core, and TPU waterproof backing on the top panel.",
+      "metaDescription": "Mattress Protector — Family by MildMate. 3-layer construction: quilted cotton top, polyester filling core, and TPU waterproof backing on the top panel only, plus fitted cotton side skirt and full-perimeter elastic.",
       "ratingCount": 42,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1624,8 +1624,8 @@
         "bedbridge-connector",
         "pillow-protector-general"
       ],
-      "tabDescriptionTitle": "Family-Size Waterproof Top Protection",
-      "tabDescriptionP": "Designed for family mattresses and co-sleeping setups. The top panel uses quilted cotton, polyester filling, and TPU waterproof backing to help protect from spills through the sleeping surface. The fitted side skirt is cotton fabric and is not waterproof.",
+      "tabDescriptionTitle": "Family-Size 3-Layer Waterproof Top Protection",
+      "tabDescriptionP": "Designed for family mattresses and co-sleeping setups. The top panel uses 3-layer construction, quilted cotton, polyester filling, and TPU waterproof backing to protect from spills through the sleeping surface. The fitted side skirt is cotton fabric and is not waterproof.",
       "tabDescriptionBullets": [
         "TPU waterproof backing on top panel only",
         "Custom-made to family mattress dimensions",
@@ -1633,13 +1633,13 @@
         "Fitted-sheet style — easy to install",
         "Quiet and comfortable — no plastic crinkle"
       ],
-      "tabFabricTitle": "TPU Waterproof Top Panel",
-      "tabFabricP": "TPU waterproof backing is incorporated into the top panel to help reduce liquid penetration through the sleeping surface. The cotton side skirt is for fitted hold and side coverage only, and does not provide TPU waterproof side protection.",
+      "tabFabricTitle": "3-Layer Construction Details",
+      "tabFabricP": "The top panel combines quilted cotton, polyester filling, and TPU waterproof backing to reduce liquid penetration through the sleeping surface. The cotton side skirt is for fitted hold and side coverage only, and does not provide TPU waterproof side protection.",
       "tabFabricBullets": [
-        "Top panel waterproof protection",
-        "Cotton side skirt",
-        "Quiet — no crinkle",
-        "Full-perimeter elastic",
+        "Top Layer: Cotton Quilted",
+        "Layer 2 (Core): Polyester Filling",
+        "Layer 3 (Backing): TPU Waterproof",
+        "Cotton side skirt with full-perimeter elastic",
         "Family-size dimensions"
       ],
       "tabCareBullets": [
@@ -1655,8 +1655,8 @@
     },
     "mattress-protector-deep-pocket": {
       "productType": "protector",
-      "tagline": "Extra-deep waterproof mattress protector for thick mattresses and pillow-tops. TPU inner layer.",
-      "metaDescription": "Mattress Protector — Deep Pocket by MildMate. Extra-deep fitted protector with waterproof TPU layer for thick mattresses and pillow-tops. Custom-made. Ships worldwide.",
+      "tagline": "Extra-deep 3-layer mattress protector for thick mattresses and pillow-tops with TPU waterproof backing on the top panel.",
+      "metaDescription": "Mattress Protector — Deep Pocket by MildMate. Extra-deep fitted protector with 3-layer construction, quilted cotton top, polyester core, and TPU waterproof backing on the top panel for thick mattresses and pillow-tops.",
       "ratingCount": 38,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1682,22 +1682,22 @@
         "flat-sheet-extra-deep-pocket",
         "pillow-protector-general"
       ],
-      "tabDescriptionTitle": "Deep Pocket Waterproof Protection",
-      "tabDescriptionP": "Standard mattress protectors pop off thick pillow-tops and adjustable beds because the pocket is not deep enough. Our Deep Pocket Protector is custom-made with extra depth and waterproof TPU layer — stays secure on even the thickest mattresses.",
+      "tabDescriptionTitle": "Deep Pocket 3-Layer Waterproof Protection",
+      "tabDescriptionP": "Standard mattress protectors pop off thick pillow-tops and adjustable beds because the pocket is not deep enough. Our Deep Pocket Protector is custom-made with extra depth and 3-layer top-panel construction for secure waterproof comfort on thick mattresses.",
       "tabDescriptionBullets": [
         "Extra-deep pocket for thick mattresses",
-        "TPU inner layer — 100% waterproof",
+        "3-layer top panel with TPU waterproof backing",
         "Custom-made to your exact dimensions",
-        ". — no toxic chemicals",
+        "Quiet, low-noise sleep surface",
         "Fits adjustable beds and pillow-tops"
       ],
-      "tabFabricTitle": "TPU — Extra Deep Pocket",
-      "tabFabricP": "The TPU inner layer provides waterproof protection with an extra-deep pocket that fits thick mattresses, pillow-tops, and adjustable beds. Stays secure with full-perimeter elastic.",
+      "tabFabricTitle": "3-Layer Construction Details",
+      "tabFabricP": "The top panel combines quilted cotton, polyester filling, and TPU waterproof backing, while the extra-deep fitted pocket stays secure on thick mattresses, pillow-tops, and adjustable beds.",
       "tabFabricBullets": [
-        "100% waterproof TPU",
-        "Extra-deep pocket",
-        "Full-perimeter elastic",
-        "Quiet and comfortable"
+        "Top Layer: Cotton Quilted",
+        "Layer 2 (Core): Polyester Filling",
+        "Layer 3 (Backing): TPU Waterproof",
+        "Extra-deep pocket with full-perimeter elastic"
       ],
       "tabCareBullets": [
         "Machine wash warm (60°C / 140°F) — gentle cycle",
@@ -1712,8 +1712,8 @@
     },
     "pet-proof-mattress-protector": {
       "productType": "protector",
-      "tagline": "Pet-proof protector with waterproof TPU backing on the top panel and durable BreezePlus outer for fur and scratch resistance.",
-      "metaDescription": "Pet-Proof Mattress Protector by MildMate. BreezePlus outer plus TPU waterproof backing on the top panel only, with fitted side skirt and elastic hold for pet households.",
+      "tagline": "Pet-proof 3-layer protector with BreezePlus top, polyester core, and TPU waterproof backing on the top panel.",
+      "metaDescription": "Pet-Proof Mattress Protector by MildMate. 3-layer construction with BreezePlus top, polyester core, and TPU waterproof backing on the top panel only, with fitted side skirt and elastic hold for pet households.",
       "ratingCount": 64,
       "breadcrumbCategoryUrl": "/protection/",
       "breadcrumbCategoryLabel": "Protection",
@@ -1739,22 +1739,22 @@
         "mattress-encasement-general",
         "pillow-protector-general"
       ],
-      "tabDescriptionTitle": "Built for Life with Pets",
-      "tabDescriptionP": "Pets bring joy — and accidents, fur, and the occasional scratch. The Pet-Proof Mattress Protector combines a BreezePlus outer layer with TPU waterproof backing on the top panel to help protect the sleeping surface. The fitted side skirt is for mattress fit and is not a waterproof side barrier.",
+      "tabDescriptionTitle": "Built for Life with Pets — 3-Layer Protection",
+      "tabDescriptionP": "Pets bring joy and occasional accidents, fur, and scratches. The Pet-Proof Mattress Protector uses 3-layer top-panel construction, BreezePlus top, polyester filling core, and TPU waterproof backing to protect the sleeping surface. The fitted side skirt supports fit and is not a waterproof side barrier.",
       "tabDescriptionBullets": [
-        "TPU waterproof backing on top panel only",
-        "BreezePlus outer — pet hair slides off",
+        "3-layer top panel with TPU waterproof backing",
+        "BreezePlus top layer — pet hair slides off",
         "Anti-scratch durable construction",
         "Fitted side skirt (not waterproof)",
         "Custom-made to your mattress dimensions"
       ],
-      "tabFabricTitle": "BreezePlus + TPU — Double Protection",
-      "tabFabricP": "BreezePlus outer fabric helps resist pet hair and scratches, while TPU backing on the top panel helps protect against spills and pet accidents through the sleeping surface. Side coverage is fitted and supportive, but not TPU waterproof.",
+      "tabFabricTitle": "3-Layer Construction Details",
+      "tabFabricP": "The top panel combines BreezePlus fabric, polyester filling, and TPU waterproof backing to resist pet hair, scratches, and spills through the sleep surface. Side coverage is fitted and supportive, but not TPU waterproof.",
       "tabFabricBullets": [
-        "Hair slides off — no embedding",
-        "Top panel waterproof protection",
-        "Anti-scratch design",
-        "Cool-to-the-touch comfort"
+        "Top Layer: BreezePlus",
+        "Layer 2 (Core): Polyester Filling",
+        "Layer 3 (Backing): TPU Waterproof",
+        "Cool-to-the-touch comfort and anti-scratch support"
       ],
       "tabCareBullets": [
         "Machine wash warm (60°C / 140°F) — gentle cycle",
