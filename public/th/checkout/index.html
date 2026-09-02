@@ -690,6 +690,31 @@
         return 'THB';
       }
 
+      function bindCheckoutLanguageToggle() {
+        var path = window.location.pathname;
+        var isThPage = path === '/th/checkout' || path === '/th/checkout/';
+        var langWrap = document.querySelector('.checkout-lang');
+        if (!langWrap) return;
+        var enEl = langWrap.querySelector('[data-lang="en"]');
+        var thEl = langWrap.querySelector('[data-lang="th"]');
+
+        if (enEl) enEl.className = isThPage ? 'inactive' : 'active';
+        if (thEl) thEl.className = isThPage ? 'active' : 'inactive';
+
+        if (enEl) {
+          enEl.addEventListener('click', function() {
+            if (!isThPage) return;
+            window.location.href = '/checkout/';
+          });
+        }
+        if (thEl) {
+          thEl.addEventListener('click', function() {
+            if (isThPage) return;
+            window.location.href = '/th/checkout/';
+          });
+        }
+      }
+
       function getSelectedCountryCode() {
         var countryEl = document.getElementById('cust-country');
         var selected = countryEl && countryEl.value ? countryEl.value : '';
@@ -1830,6 +1855,8 @@
       function escHtml(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
+
+      bindCheckoutLanguageToggle();
     })();
   </script>
 </body>

@@ -1,9 +1,9 @@
-------formdata-undici-095735440150
+------formdata-undici-096005346802
 Content-Disposition: form-data; name="metadata"
 
-{"main_module":"functionsWorker-0.6826432830174699.js"}
-------formdata-undici-095735440150
-Content-Disposition: form-data; name="functionsWorker-0.6826432830174699.js"; filename="functionsWorker-0.6826432830174699.js"
+{"main_module":"functionsWorker-0.5783780881290416.js"}
+------formdata-undici-096005346802
+Content-Disposition: form-data; name="functionsWorker-0.5783780881290416.js"; filename="functionsWorker-0.5783780881290416.js"
 Content-Type: application/javascript+module
 
 var __defProp = Object.defineProperty;
@@ -4397,7 +4397,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
@@ -4407,7 +4407,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
@@ -4429,7 +4429,7 @@ async function handleAdminOrders(request, env) {
               product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm,
               width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency,
+              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
               status, created_at,
               carrier_code, tracking_number, tracking_url,
               shipping_status, shipped_at, is_archived
@@ -9443,6 +9443,16 @@ async function handleCheckout(request, env) {
     };
   }
   __name(buildMetadataDims, "buildMetadataDims");
+  function buildCompactDimText(dims) {
+    const w = toNumber2(dims?.w);
+    const l = toNumber2(dims?.l);
+    const d = toNumber2(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
+    const sizeText = String(dims?.size_text || "").replace(/^dimensions:\s*/i, "").trim();
+    return sizeText;
+  }
+  __name(buildCompactDimText, "buildCompactDimText");
   const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
@@ -9487,10 +9497,30 @@ async function handleCheckout(request, env) {
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i, idx) => ({
         s: i.product_slug,
+        f: i.fabric,
+        c: i.color,
+        d: buildCompactDimText(buildMetadataDims(i)) || void 0,
         q: i.qty || 1,
         u: lineItems[idx]?.price_data?.unit_amount || 0
       }));
       metadataItemsStr = JSON.stringify(compactItems);
+      if (metadataItemsStr.length > 500) {
+        const slimmerItems = items.map((i, idx) => ({
+          s: i.product_slug,
+          d: buildCompactDimText(buildMetadataDims(i)) || void 0,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        metadataItemsStr = JSON.stringify(slimmerItems);
+      }
+      if (metadataItemsStr.length > 500) {
+        const minimalItems = items.map((i, idx) => ({
+          s: i.product_slug,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        metadataItemsStr = JSON.stringify(minimalItems);
+      }
     }
     params.append("metadata[items]", metadataItemsStr);
     const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();
@@ -9748,7 +9778,7 @@ async function handleStripeWebhook(request, env) {
       name: item.name || item.n || item.slug || item.s || "",
       fabric: item.fabric || item.f || null,
       color: item.color || item.c || null,
-      dims: item.dims || item.d || {},
+      dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
       qty: item.qty || item.q || 1,
       unit_amount: Number(item.u || item.unit_amount || 0)
       // minor unit (cents/satang)
@@ -12413,7 +12443,7 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/checkout\/?"/g, 'href="/th/checkout/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   if (!html.includes('id="shared-footer-mobile-style"')) {
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
@@ -12444,7 +12474,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-aezr0s/functionsRoutes-0.8881787048292228.mjs
+// ../.wrangler/tmp/pages-dtEi3H/functionsRoutes-0.7116844001422143.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -12546,7 +12576,7 @@ var routes = [
   }
 ];
 
-// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
+// ../node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -12872,7 +12902,7 @@ function pathToRegexp(path, keys, options) {
 }
 __name(pathToRegexp, "pathToRegexp");
 
-// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
+// ../node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
@@ -12995,4 +13025,4 @@ export {
   pages_template_worker_default as default
 };
 
-------formdata-undici-095735440150--
+------formdata-undici-096005346802--
