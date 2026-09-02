@@ -22,6 +22,7 @@
   var isDuvet = path.indexOf('duvet') !== -1;
   var isWeightedDuvet = path.indexOf('weighted-duvet-cover') !== -1;
   var isPillowProtector = path.indexOf('pillow-protector') !== -1;
+  var isCushionProtector = path.indexOf('custom-waterproof-cushion-protector') !== -1;
   var isMattressProtector = (path.indexOf('mattress-protector') !== -1 || path.indexOf('pet-proof-mattress-protector') !== -1) && path.indexOf('pillow-protector') === -1;
   var isProtectorStandard = path.indexOf('mattress-protector-standard') !== -1;
   var isProtectorFamily = path.indexOf('mattress-protector-family') !== -1;
@@ -117,6 +118,7 @@
         : isProtectorDeepPocket ? pctVal('protector_deep', 25)
         : pctVal('protector_standard', 15)
       )
+    : isCushionProtector ? pctVal('cushion_protector', 30)
     : pctVal('standard', 30);
   var MARKUP = 1 + OP_RATE + MKT_RATE + MARGIN_RATE;
   var THB_TO_USD = pVal('exchange_usd', 30);   // default: 1/rate_per_thb for USD
@@ -137,7 +139,8 @@
     cloudsoft: pVal('cloudsoft', 100),
     breezeplus: pVal('breezeplus', 180),
     premacotton: pVal('premacotton', 180),
-    ecoluxe: pVal('ecoluxe', 180)
+    ecoluxe: pVal('ecoluxe', 180),
+    tpu: pVal('tpu', 120)
   };
 
   // -- Sewing tiers (from API or fallback) --
@@ -567,6 +570,7 @@
 
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner fitted/duvet: BreezePlus only
   if (isProtectorPetProof) state.fabric = 'tpu'; // Pet-Proof protector follows 3-layer TPU class
+  if (isCushionProtector) state.fabric = 'tpu'; // Custom cushion protector uses TPU cost class
   if (isMarineShapeProduct) state.fabric = 'cloudsoft'; // Marine shape products: CloudSoft only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only

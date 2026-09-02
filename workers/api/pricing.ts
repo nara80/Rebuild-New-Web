@@ -73,6 +73,7 @@ const OPERATING_RATE = 0.15;
 const MARKETING_RATE = 0.20;
 const MARGIN_RATE = 0.30;
 const FAMILY_MARGIN_RATE = 0.50;
+const CUSHION_PROTECTOR_MARGIN_RATE = 0.30;
 const PILLOW_PROTECTOR_MARGIN_RATE = 0.35;
 const PILLOWCASE_MARGIN_RATE = 0.15;      // pillowcases: 15/25/15%
 
@@ -550,6 +551,7 @@ function isFittedSheetProduct(product: string): boolean {
     "rv-truck-fitted-sheet",
     "pet-owner-fitted-sheet",
     "family-fitted-sheet",
+    "custom-waterproof-cushion-protector",
   ].includes(product);
 }
 
@@ -717,7 +719,11 @@ export function calculatePrice(
         };
       }
 
-      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : MARGIN_RATE;
+      const marginRate = product === "family-fitted-sheet"
+        ? FAMILY_MARGIN_RATE
+        : product === "custom-waterproof-cushion-protector"
+          ? CUSHION_PROTECTOR_MARGIN_RATE
+          : MARGIN_RATE;
       const result = calculateFittedSheetPrice(w, l, d, fabric, marginRate);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),

@@ -1910,6 +1910,67 @@
       "fixedSections": [
         "size-fill"
       ]
+    },
+    "custom-waterproof-cushion-protector": {
+      "productType": "fitted-sheet",
+      "tagline": "Made-to-measure spill-proof TPU cushion protector with 360° elastic fitted edge for sofa, ottoman, RV, and boat cushions.",
+      "metaDescription": "Custom spill-proof TPU cushion protector for sofa cushions, ottomans, benches, RV and boat cushions. Made to your exact width × length × thickness with 360° elastic fitted grip.",
+      "ratingCount": 0,
+      "breadcrumbCategoryUrl": "/protection/",
+      "breadcrumbCategoryLabel": "Protection",
+      "breadcrumbName": "Custom Spill-Proof Cushion Protector",
+      "fabrics": [
+        "tpu"
+      ],
+      "lockedFabric": "tpu",
+      "needsDepth": true,
+      "tags": [
+        {
+          "url": "/protection/",
+          "label": "Protection"
+        },
+        {
+          "url": "/marine/",
+          "label": "Marine & Yacht"
+        },
+        {
+          "url": "/rv-truck/",
+          "label": "RV & Truck Cab"
+        }
+      ],
+      "relatedSlugs": [
+        "mattress-protector-standard",
+        "mattress-protector-deep-pocket",
+        "marine-mattress-protector",
+        "pillow-protector-general"
+      ],
+      "tabDescriptionTitle": "Custom Spill-Proof Protection for Specialty Cushions",
+      "tabDescriptionP": "A made-to-measure TPU inner protector designed for sofa cushions, ottomans, bench cushions, RV cushions, boat cushions, and other non-standard shapes. The fitted design covers the top and four sides while leaving most of the underside open for practical daily use.",
+      "tabDescriptionBullets": [
+        "Custom made to your exact Width × Length × Thickness",
+        "Spill-proof TPU barrier for everyday accidents",
+        "360° elastic edge for secure fitted hold",
+        "Open-bottom construction for easier installation",
+        "Designed to sit under your decorative outer cover"
+      ],
+      "tabFabricTitle": "Construction & Fit Notes",
+      "tabFabricP": "This is a protective inner layer, not a decorative outer cover. The fitted 360° elastic edge needs about 2 in / 5 cm underside access to tuck and grip properly, especially on attached ottoman or fixed cushions.",
+      "tabFabricBullets": [
+        "Top + four sides covered, bottom mostly open",
+        "Approx. 2 in / 5 cm tuck-under recommended",
+        "Use as: Cushion → TPU Protector → Outer Cover",
+        "Alternative by request: fully enclosed 3-sided zipper style"
+      ],
+      "tabCareBullets": [
+        "Wipe spills promptly with a soft damp cloth",
+        "Machine wash cold on gentle cycle",
+        "Use mild detergent, no bleach or fabric softener",
+        "Air dry when possible, low heat only if tumble drying",
+        "Avoid prolonged high heat to protect TPU layer life"
+      ],
+      "review1Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">A</div><div class=\"review-meta\"><div class=\"review-name\">Anna M.</div><div class=\"review-country\">Australia</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"We needed a custom protector for our built-in bench cushion and this was exactly right. Easy to fit under our normal outer cover and spills wipe off quickly.\"</div><div class=\"review-product\">Verified purchase: Custom Spill-Proof Cushion Protector</div></div>",
+      "review2Html": "<div class=\"review-card\"><div class=\"review-header\"><div class=\"review-avatar\">J</div><div class=\"review-meta\"><div class=\"review-name\">James R.</div><div class=\"review-country\">United States</div></div><div class=\"review-stars\">★★★★★</div></div><div class=\"review-text\">\"Used for our RV dinette cushions. The 360° elastic keeps it in place and gives peace of mind with kids and drinks in the camper.\"</div><div class=\"review-product\">Verified purchase: Custom Spill-Proof Cushion Protector</div></div>",
+      "fabricMode": "badge"
     }
   }
 }

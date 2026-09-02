@@ -1,31 +1,82 @@
-﻿{
+{
   "_meta": {
     "version": "1.0",
     "lastUpdated": "2026-05-18",
     "description": "Master product data Ã¢â‚¬â€ single source of truth for all pages"
   },
-  "fabrics": ["breezeplus", "cloudsoft", "premacotton", "ecoluxe"],
+  "fabrics": [
+    "breezeplus",
+    "cloudsoft",
+    "premacotton",
+    "ecoluxe"
+  ],
   "niches": {
-    "marine": { "name": "Marine & Yacht", "slug": "marine", "url": "/marine/" },
-    "family": { "name": "Family & Co-Sleep", "slug": "family", "url": "/family/" },
-    "pets": { "name": "Pet Owner", "slug": "pets", "url": "/pets/" },
-    "deep-pocket": { "name": "Deep Pocket", "slug": "deep-pocket", "url": "/deep-pocket/" },
-    "boarding-dorm": { "name": "Boarding Dorm", "slug": "boarding-dorm", "url": "/boarding-dorm/" },
-    "rv-truck": { "name": "RV & Truck Cab", "slug": "rv-truck", "url": "/rv-truck/" }
+    "marine": {
+      "name": "Marine & Yacht",
+      "slug": "marine",
+      "url": "/marine/"
+    },
+    "family": {
+      "name": "Family & Co-Sleep",
+      "slug": "family",
+      "url": "/family/"
+    },
+    "pets": {
+      "name": "Pet Owner",
+      "slug": "pets",
+      "url": "/pets/"
+    },
+    "deep-pocket": {
+      "name": "Deep Pocket",
+      "slug": "deep-pocket",
+      "url": "/deep-pocket/"
+    },
+    "boarding-dorm": {
+      "name": "Boarding Dorm",
+      "slug": "boarding-dorm",
+      "url": "/boarding-dorm/"
+    },
+    "rv-truck": {
+      "name": "RV & Truck Cab",
+      "slug": "rv-truck",
+      "url": "/rv-truck/"
+    }
   },
   "types": {
-    "sheets": { "name": "Sheets", "tag": "SHEETS", "url": "/sheets/" },
-    "duvet-covers": { "name": "Duvet Covers", "tag": "DUVET-COVERS", "url": "/duvet-covers/" },
-    "pillowcases": { "name": "Pillowcases", "tag": "PILLOWCASES", "url": "/pillowcases/" },
-    "protection": { "name": "Protection", "tag": "PROTECTION", "url": "/protection/" },
-    "accessories": { "name": "Accessories", "tag": "ACCESSORIES", "url": "/accessories/" }
+    "sheets": {
+      "name": "Sheets",
+      "tag": "SHEETS",
+      "url": "/sheets/"
+    },
+    "duvet-covers": {
+      "name": "Duvet Covers",
+      "tag": "DUVET-COVERS",
+      "url": "/duvet-covers/"
+    },
+    "pillowcases": {
+      "name": "Pillowcases",
+      "tag": "PILLOWCASES",
+      "url": "/pillowcases/"
+    },
+    "protection": {
+      "name": "Protection",
+      "tag": "PROTECTION",
+      "url": "/protection/"
+    },
+    "accessories": {
+      "name": "Accessories",
+      "tag": "ACCESSORIES",
+      "url": "/accessories/"
+    }
   },
   "products": [
     {
       "slug": "standard-fitted-sheet",
       "name": "Standard Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â£Ã Â¸Â²Ã Â¸Å¡Ã Â¸Â¡Ã Â¸Â²Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂÃ Â¸Â²Ã Â¸â„¢",
-      "categories": ["sheets"],
+      "categories": [
+        "sheets"
+      ],
       "priceUsd": 38,
       "priceThb": 1345,
       "image": "/images/products/standard-fitted-sheet/main.jpg",
@@ -37,7 +88,10 @@
       "slug": "deep-pocket-fitted-sheet",
       "name": "Deep Pocket Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â¥Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â´Ã Â¹â‚¬Ã Â¸Â¨Ã Â¸Â©",
-      "categories": ["sheets", "deep-pocket"],
+      "categories": [
+        "sheets",
+        "deep-pocket"
+      ],
       "priceUsd": 42,
       "priceThb": 1485,
       "image": "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781148534900-lsysxk.jpg",
@@ -49,7 +103,10 @@
       "slug": "marine-fitted-sheet",
       "name": "Marine Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ Marine (V-Berth)",
-      "categories": ["sheets", "marine"],
+      "categories": [
+        "sheets",
+        "marine"
+      ],
       "priceUsd": 52,
       "priceThb": 1835,
       "image": "/images/products/boat-fitted-sheet/main.jpg",
@@ -61,7 +118,10 @@
       "slug": "marine-top-sheet",
       "name": "Marine Top Sheet",
       "nameTh": "ผ้าปูบนเรือทรงสั่งตัด",
-      "categories": ["sheets", "marine"],
+      "categories": [
+        "sheets",
+        "marine"
+      ],
       "priceUsd": 48,
       "priceThb": 1695,
       "image": "/images/products/marine-top-sheet/main.jpg",
@@ -73,7 +133,10 @@
       "slug": "dorm-fitted-sheet",
       "name": "Dorm Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â«Ã Â¸Â­Ã Â¸Å¾Ã Â¸Â±Ã Â¸Â",
-      "categories": ["sheets", "boarding-dorm"],
+      "categories": [
+        "sheets",
+        "boarding-dorm"
+      ],
       "priceUsd": 38,
       "priceThb": 1345,
       "image": "/images/products/dorm-fitted-sheet/main.jpg",
@@ -85,7 +148,10 @@
       "slug": "rv-truck-fitted-sheet",
       "name": "RV & Truck Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ RV & Truck",
-      "categories": ["sheets", "rv-truck"],
+      "categories": [
+        "sheets",
+        "rv-truck"
+      ],
       "priceUsd": 48,
       "priceThb": 1695,
       "image": "/images/products/rv-truck-fitted-sheet/main.jpg",
@@ -97,7 +163,10 @@
       "slug": "family-fitted-sheet",
       "name": "Family Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§ Co-Sleep",
-      "categories": ["sheets", "family"],
+      "categories": [
+        "sheets",
+        "family"
+      ],
       "priceUsd": 45,
       "priceThb": 1590,
       "image": "/images/products/family-fitted-sheet/main.jpg",
@@ -109,7 +178,10 @@
       "slug": "pet-owner-fitted-sheet",
       "name": "Pet Owner Fitted Sheet",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢Ã Â¸ÂªÃ Â¸Â³Ã Â¸Â«Ã Â¸Â£Ã Â¸Â±Ã Â¸Å¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¢Ã Â¸Â§Ã Â¹Å’Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸ÂµÃ Â¹â€°Ã Â¸Â¢Ã Â¸â€¡",
-      "categories": ["sheets", "pets"],
+      "categories": [
+        "sheets",
+        "pets"
+      ],
       "priceUsd": 48,
       "priceThb": 1695,
       "image": "/images/products/pet-owner-fitted-sheet/main.jpg",
@@ -121,7 +193,9 @@
       "slug": "flat-sheet-standard",
       "name": "Flat Sheet Ã¢â‚¬â€ Standard",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â£Ã Â¸Â²Ã Â¸Å¡Ã Â¸Â¡Ã Â¸Â²Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂÃ Â¸Â²Ã Â¸â„¢",
-      "categories": ["sheets"],
+      "categories": [
+        "sheets"
+      ],
       "priceUsd": 38,
       "priceThb": 1345,
       "image": "/images/products/flat-sheet-standard/main.jpg",
@@ -133,7 +207,10 @@
       "slug": "flat-sheet-extra-deep-pocket",
       "name": "Flat Sheet Ã¢â‚¬â€ Extra Deep Pocket",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â£Ã Â¸Â²Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â¥Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â´Ã Â¹â‚¬Ã Â¸Â¨Ã Â¸Â©",
-      "categories": ["sheets", "deep-pocket"],
+      "categories": [
+        "sheets",
+        "deep-pocket"
+      ],
       "priceUsd": 42,
       "priceThb": 1485,
       "image": "/images/products/flat-sheet-extra-deep-pocket/main.jpg",
@@ -145,7 +222,10 @@
       "slug": "co-sleeping-top-sheet",
       "name": "Co-Sleeping Top Sheet",
       "nameTh": "ผ้าปูบน Co-Sleeping สั่งตัด",
-      "categories": ["sheets", "family"],
+      "categories": [
+        "sheets",
+        "family"
+      ],
       "priceUsd": 45,
       "priceThb": 1590,
       "image": "/images/products/co-sleeping-top-sheet/hero.jpg",
@@ -157,7 +237,10 @@
       "slug": "3-sided-duvet",
       "name": "3-Sided Zipper Duvet Cover",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢ 3 Ã Â¸â€Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸â€¹Ã Â¸Â´Ã Â¸â€º",
-      "categories": ["duvet-covers", "family"],
+      "categories": [
+        "duvet-covers",
+        "family"
+      ],
       "priceUsd": 65,
       "priceThb": 2295,
       "image": "/images/products/3-sided-duvet/main.jpg",
@@ -169,7 +252,10 @@
       "slug": "pet-owner-duvet-cover",
       "name": "Pet Owner Duvet Cover",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢Ã Â¸ÂªÃ Â¸Â³Ã Â¸Â«Ã Â¸Â£Ã Â¸Â±Ã Â¸Å¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¢Ã Â¸Â§Ã Â¹Å’Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸ÂµÃ Â¹â€°Ã Â¸Â¢Ã Â¸â€¡",
-      "categories": ["duvet-covers", "pets"],
+      "categories": [
+        "duvet-covers",
+        "pets"
+      ],
       "priceUsd": 68,
       "priceThb": 2400,
       "image": "/images/products/pet-owner-duvet-cover/main.jpg",
@@ -181,7 +267,10 @@
       "slug": "duvet-cover-marine",
       "name": "Duvet Cover Ã¢â‚¬â€ Marine",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢ Marine",
-      "categories": ["duvet-covers", "marine"],
+      "categories": [
+        "duvet-covers",
+        "marine"
+      ],
       "priceUsd": 65,
       "priceThb": 2295,
       "image": "/images/products/duvet-cover-marine/main.jpg",
@@ -193,7 +282,10 @@
       "slug": "duvet-cover-rv",
       "name": "Duvet Cover Ã¢â‚¬â€ RV",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢ RV",
-      "categories": ["duvet-covers", "rv-truck"],
+      "categories": [
+        "duvet-covers",
+        "rv-truck"
+      ],
       "priceUsd": 65,
       "priceThb": 2295,
       "image": "/images/products/duvet-cover-rv/main.jpg",
@@ -205,7 +297,10 @@
       "slug": "duvet-cover-dorm",
       "name": "Duvet Cover Ã¢â‚¬â€ Dorm",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢Ã Â¸Â«Ã Â¸Â­Ã Â¸Å¾Ã Â¸Â±Ã Â¸Â",
-      "categories": ["duvet-covers", "boarding-dorm"],
+      "categories": [
+        "duvet-covers",
+        "boarding-dorm"
+      ],
       "priceUsd": 65,
       "priceThb": 2295,
       "image": "/images/products/duvet-cover-dorm/main.jpg",
@@ -217,7 +312,9 @@
       "slug": "duvet-insert",
       "name": "Duvet Insert",
       "nameTh": "Ã Â¹â€žÃ Â¸ÂªÃ Â¹â€°Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸Â§Ã Â¸Â¡ (Duvet Insert)",
-      "categories": ["duvet-covers"],
+      "categories": [
+        "duvet-covers"
+      ],
       "priceUsd": null,
       "priceThb": 990,
       "image": "/images/products/duvet-insert/main.jpg",
@@ -229,7 +326,15 @@
       "slug": "pillowcase-envelope",
       "name": "Envelope Pillowcase",
       "nameTh": "Ã Â¸â€“Ã Â¸Â¸Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸â€¹Ã Â¸Â­Ã Â¸â€¡",
-      "categories": ["pillowcases", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"],
+      "categories": [
+        "pillowcases",
+        "marine",
+        "family",
+        "pets",
+        "deep-pocket",
+        "boarding-dorm",
+        "rv-truck"
+      ],
       "priceUsd": 16,
       "priceThb": 565,
       "image": "/images/products/pillowcase-envelope/main.jpg",
@@ -241,7 +346,15 @@
       "slug": "pillowcase-zipper",
       "name": "Zipper Pillowcase",
       "nameTh": "Ã Â¸â€“Ã Â¸Â¸Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢Ã Â¸â€¹Ã Â¸Â´Ã Â¸â€º",
-      "categories": ["pillowcases", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"],
+      "categories": [
+        "pillowcases",
+        "marine",
+        "family",
+        "pets",
+        "deep-pocket",
+        "boarding-dorm",
+        "rv-truck"
+      ],
       "priceUsd": 18,
       "priceThb": 635,
       "image": "/images/products/pillowcase-zipper/main.jpg",
@@ -253,7 +366,15 @@
       "slug": "pillowcase-sham",
       "name": "Sham Pillowcase",
       "nameTh": "Ã Â¸â€“Ã Â¸Â¸Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢ Sham",
-      "categories": ["pillowcases", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"],
+      "categories": [
+        "pillowcases",
+        "marine",
+        "family",
+        "pets",
+        "deep-pocket",
+        "boarding-dorm",
+        "rv-truck"
+      ],
       "priceUsd": 20,
       "priceThb": 705,
       "image": "/images/products/pillowcase-sham/main.jpg",
@@ -265,7 +386,10 @@
       "slug": "marine-mattress-protector",
       "name": "Marine Mattress Protector",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢ Marine",
-      "categories": ["protection", "marine"],
+      "categories": [
+        "protection",
+        "marine"
+      ],
       "priceUsd": 49,
       "priceThb": 1730,
       "image": "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev/products/uploads/1781748617971-bdh8v6.jpg",
@@ -277,7 +401,9 @@
       "slug": "mattress-protector-standard",
       "name": "Mattress Protector Ã¢â‚¬â€ Standard",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸Â¡Ã Â¸Â²Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂÃ Â¸Â²Ã Â¸â„¢",
-      "categories": ["protection"],
+      "categories": [
+        "protection"
+      ],
       "priceUsd": 38,
       "priceThb": 1345,
       "image": "/images/products/mattress-protector-standard/main.jpg",
@@ -289,7 +415,10 @@
       "slug": "mattress-protector-family",
       "name": "Mattress Protector Ã¢â‚¬â€ Family",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§",
-      "categories": ["protection", "family"],
+      "categories": [
+        "protection",
+        "family"
+      ],
       "priceUsd": 42,
       "priceThb": 1485,
       "image": "/images/products/mattress-protector-family/main.jpg",
@@ -301,7 +430,10 @@
       "slug": "mattress-protector-deep-pocket",
       "name": "Mattress Protector Ã¢â‚¬â€ Deep Pocket",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â¥Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â´Ã Â¹â‚¬Ã Â¸Â¨Ã Â¸Â©",
-      "categories": ["protection", "deep-pocket"],
+      "categories": [
+        "protection",
+        "deep-pocket"
+      ],
       "priceUsd": 48,
       "priceThb": 1695,
       "image": "/images/products/mattress-protector-deep-pocket/main.jpg",
@@ -313,7 +445,10 @@
       "slug": "pet-proof-mattress-protector",
       "name": "Pet-Proof Mattress Protector",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¢Ã Â¸Â§Ã Â¹Å’Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸ÂµÃ Â¹â€°Ã Â¸Â¢Ã Â¸â€¡",
-      "categories": ["protection", "pets"],
+      "categories": [
+        "protection",
+        "pets"
+      ],
       "priceUsd": 48,
       "priceThb": 1695,
       "image": "/images/products/pet-proof-mattress-protector/main.jpg",
@@ -325,7 +460,11 @@
       "slug": "mattress-encasement-general",
       "name": "6-Sided Mattress Encasement",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ 6 Ã Â¸â€Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢",
-      "categories": ["protection", "marine", "rv-truck"],
+      "categories": [
+        "protection",
+        "marine",
+        "rv-truck"
+      ],
       "priceUsd": 55,
       "priceThb": 1945,
       "image": "/images/products/mattress-encasement-general/main.jpg",
@@ -337,7 +476,10 @@
       "slug": "rv-truck-mattress-encasement",
       "name": "RV & Truck Mattress Encasement",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ RV & Truck",
-      "categories": ["protection", "rv-truck"],
+      "categories": [
+        "protection",
+        "rv-truck"
+      ],
       "priceUsd": 58,
       "priceThb": 2045,
       "image": "/images/products/rv-truck-mattress-encasement/main.jpg",
@@ -349,7 +491,15 @@
       "slug": "pillow-protector-general",
       "name": "Pillow Protector",
       "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢",
-      "categories": ["protection", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"],
+      "categories": [
+        "protection",
+        "marine",
+        "family",
+        "pets",
+        "deep-pocket",
+        "boarding-dorm",
+        "rv-truck"
+      ],
       "priceUsd": 18,
       "priceThb": 635,
       "image": "/images/products/pillow-protector-general/main.jpg",
@@ -361,7 +511,10 @@
       "slug": "bedbridge-connector",
       "name": "BedBridge Connector",
       "nameTh": "BedBridge Connector",
-      "categories": ["accessories", "family"],
+      "categories": [
+        "accessories",
+        "family"
+      ],
       "priceUsd": 45,
       "priceThb": 1590,
       "image": "/images/products/bedbridge-connector/main.jpg",
@@ -373,13 +526,35 @@
       "slug": "mattress-lift-helper",
       "name": "Easy Bed Maker & Mattress Lifter",
       "nameTh": "à¸•à¸±à¸§à¸Šà¹ˆà¸§à¸¢à¸¢à¸à¸—à¸µà¹ˆà¸™à¸­à¸™",
-      "categories": ["accessories"],
+      "categories": [
+        "accessories"
+      ],
       "priceUsd": 22,
       "priceThb": 790,
       "image": "/images/products/mattress-lift-helper/main.jpg",
       "url": "/product/mattress-lift-helper/",
       "urlTh": "/th/product/mattress-lift-helper/",
       "displayOrder": 27
+    },
+    {
+      "slug": "custom-waterproof-cushion-protector",
+      "name": "Custom Spill-Proof Cushion Protector",
+      "nameTh": "Custom Spill-Proof Cushion Protector",
+      "categories": [
+        "protection",
+        "marine",
+        "family",
+        "pets",
+        "deep-pocket",
+        "boarding-dorm",
+        "rv-truck"
+      ],
+      "priceUsd": 38,
+      "priceThb": 1345,
+      "image": "/images/placeholder.jpg",
+      "url": "/product/custom-waterproof-cushion-protector/",
+      "urlTh": "/th/product/custom-waterproof-cushion-protector/",
+      "displayOrder": 28
     }
   ]
 }

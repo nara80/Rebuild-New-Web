@@ -39,6 +39,7 @@ function getItemName(item: CartItem): string {
 function normalizeFabricForSlug(slugRaw: any, fabricRaw: any): string | null {
   const slug = String(slugRaw || "").trim().toLowerCase();
   if (slug === "pet-proof-mattress-protector") return "tpu";
+  if (slug === "custom-waterproof-cushion-protector") return "tpu";
   const fabric = String(fabricRaw || "").trim().toLowerCase();
   return fabric || null;
 }
