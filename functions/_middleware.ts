@@ -439,6 +439,7 @@ const CANONICAL_PRODUCT_SLUGS = new Set([
   'mattress-protector-family',
   'mattress-protector-deep-pocket',
   'pet-proof-mattress-protector',
+  'custom-waterproof-cushion-protector',
   'mattress-encasement-general',
   'rv-truck-mattress-encasement',
   'pillow-protector-general',
