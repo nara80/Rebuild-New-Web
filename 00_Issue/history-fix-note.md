@@ -8,6 +8,51 @@
 
 ---
 
+## Reconciliation Snapshot (2026-09-02) — New Order Email Missing Dimensions (`?×? cm`)
+
+This section is the source of truth for the latest order-notification issue from `00_Issue/Order_001.png`, where new order emails showed missing dimensions (`?×? cm`).
+
+### Verified symptoms
+- Team notification email displayed item lines like:
+  - `pet-proof-mattress-protector | N/A | N/A | ?×? cm | Qty: 2`
+- Same email still showed other order metadata correctly (order id, customer, address, shipping type, total).
+- This confirmed the issue was not a full webhook/email failure, but item-detail degradation.
+
+### Root cause (verified)
+- Checkout stores line items in Stripe `metadata[items]`.
+- When serialized metadata exceeded Stripe size safety threshold, checkout switched to a compact fallback payload.
+- Existing compact payload preserved only `slug/qty/unit_amount`, dropping `dims` (and often fabric/color).
+- Webhook notification formatter reads from `metadata.items`; without `dims`, formatter falls back to `?×? cm`.
+
+### Completed fixes (code + parity + validation)
+1. **Compact metadata now preserves dimension text first**
+   - Updated `workers/api/checkout.ts`:
+     - added `buildCompactDimText(...)` helper.
+     - compact fallback tier now includes dimension text (`d`) and keeps `fabric/color` when space allows.
+     - added tiered fallback strategy:
+       1) compact with `f/c/d/q/u`,
+       2) slimmer with `d/q/u`,
+       3) minimal `s/q/u` only if still oversized.
+2. **Webhook parser compatibility for compact dimension strings**
+   - Updated `workers/api/webhook.ts`:
+     - if compact payload provides `d` or `dt` as a string, parser maps it into `dims.size_text`.
+     - existing email dimension formatter and DB dimension parsing now recover dimensions from compact payload.
+3. **Runtime parity updates**
+   - Synced equivalent logic in:
+     - `public/index.js`
+     - `public/_worker.js`
+4. **Validation run**
+   - `npm run lint` ✅
+   - `npx wrangler pages functions build` ✅
+
+### Current status
+- ✅ Root cause identified and fixed in source.
+- ✅ Notification path now preserves dimensions in compact-metadata cases whenever possible.
+- ✅ Worker/runtime parity and local validation passed.
+- ⏳ Pending user-triggered deploy to apply on production.
+
+---
+
 ## Reconciliation Snapshot (2026-08-20) — Super Admin Product Image Upload Fails at Mid-Slots
 
 This section is the source of truth for `/super-admin/` → **Products** image upload failures where progress stopped mid-batch (example: slot 5 after successful early slots).

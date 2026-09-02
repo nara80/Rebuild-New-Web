@@ -232,7 +232,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
       name: item.name || item.n || item.slug || item.s || "",
       fabric: item.fabric || item.f || null,
       color: item.color || item.c || null,
-      dims: item.dims || item.d || {},
+      dims: (typeof item.dims === "object" && item.dims) || (typeof item.d === "object" && item.d) || ((typeof item.d === "string" || typeof item.dt === "string") ? { size_text: (typeof item.d === "string" ? item.d : item.dt) } : {}),
       qty: item.qty || item.q || 1,
       unit_amount: Number(item.u || item.unit_amount || 0), // minor unit (cents/satang)
     }));

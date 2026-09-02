@@ -307,6 +307,15 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       size_text: sizeText || undefined,
     };
   }
+  function buildCompactDimText(dims: { w?: number; l?: number; d?: number; unit?: string; size_text?: string }): string {
+    const w = toNumber(dims?.w);
+    const l = toNumber(dims?.l);
+    const d = toNumber(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}×${l}${d ? `×${d}` : ""} ${unit}`;
+    const sizeText = String(dims?.size_text || "").replace(/^dimensions:\s*/i, "").trim();
+    return sizeText;
+  }
 
   // Create Stripe Checkout Session
   const reqUrl = new URL(request.url);
@@ -358,10 +367,30 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i: CartItem, idx: number) => ({
         s: i.product_slug,
+        f: i.fabric,
+        c: i.color,
+        d: buildCompactDimText(buildMetadataDims(i)) || undefined,
         q: i.qty || 1,
         u: lineItems[idx]?.price_data?.unit_amount || 0,
       }));
       metadataItemsStr = JSON.stringify(compactItems);
+      if (metadataItemsStr.length > 500) {
+        const slimmerItems = items.map((i: CartItem, idx: number) => ({
+          s: i.product_slug,
+          d: buildCompactDimText(buildMetadataDims(i)) || undefined,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0,
+        }));
+        metadataItemsStr = JSON.stringify(slimmerItems);
+      }
+      if (metadataItemsStr.length > 500) {
+        const minimalItems = items.map((i: CartItem, idx: number) => ({
+          s: i.product_slug,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0,
+        }));
+        metadataItemsStr = JSON.stringify(minimalItems);
+      }
     }
     params.append("metadata[items]", metadataItemsStr);
     const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();

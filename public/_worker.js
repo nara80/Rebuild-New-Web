@@ -9435,6 +9435,16 @@ async function handleCheckout(request, env) {
     };
   }
   __name(buildMetadataDims, "buildMetadataDims");
+  function buildCompactDimText(dims) {
+    const w = toNumber2(dims?.w);
+    const l = toNumber2(dims?.l);
+    const d = toNumber2(dims?.d);
+    const unit = String(dims?.unit || "cm");
+    if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
+    const sizeText = String(dims?.size_text || "").replace(/^dimensions:\s*/i, "").trim();
+    return sizeText;
+  }
+  __name(buildCompactDimText, "buildCompactDimText");
   const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
@@ -9479,10 +9489,30 @@ async function handleCheckout(request, env) {
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i, idx) => ({
         s: i.product_slug,
+        f: i.fabric,
+        c: i.color,
+        d: buildCompactDimText(buildMetadataDims(i)) || void 0,
         q: i.qty || 1,
         u: lineItems[idx]?.price_data?.unit_amount || 0
       }));
       metadataItemsStr = JSON.stringify(compactItems);
+      if (metadataItemsStr.length > 500) {
+        const slimmerItems = items.map((i, idx) => ({
+          s: i.product_slug,
+          d: buildCompactDimText(buildMetadataDims(i)) || void 0,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        metadataItemsStr = JSON.stringify(slimmerItems);
+      }
+      if (metadataItemsStr.length > 500) {
+        const minimalItems = items.map((i, idx) => ({
+          s: i.product_slug,
+          q: i.qty || 1,
+          u: lineItems[idx]?.price_data?.unit_amount || 0
+        }));
+        metadataItemsStr = JSON.stringify(minimalItems);
+      }
     }
     params.append("metadata[items]", metadataItemsStr);
     const appliedShippingCountry = String(shippingQuote?.applied_country || "").toUpperCase();
@@ -9740,7 +9770,7 @@ async function handleStripeWebhook(request, env) {
       name: item.name || item.n || item.slug || item.s || "",
       fabric: item.fabric || item.f || null,
       color: item.color || item.c || null,
-      dims: item.dims || item.d || {},
+      dims: (typeof item.dims === "object" && item.dims) || (typeof item.d === "object" && item.d) || ((typeof item.d === "string" || typeof item.dt === "string") ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
       qty: item.qty || item.q || 1,
       unit_amount: Number(item.u || item.unit_amount || 0)
       // minor unit (cents/satang)
