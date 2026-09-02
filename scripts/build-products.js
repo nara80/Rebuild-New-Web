@@ -158,8 +158,12 @@ function buildFabricHTML(p) {
     grid += '</div>';
     return grid;
   }
-  // TPU encasement / pillow protector â€” single-layer TPU specs
-  if (p.productType === 'encasement' || p.productType === 'pillow-protector') {
+  // TPU encasement / pillow protector / TPU-only cushion protector â€” material specs
+  if (
+    p.productType === 'encasement' ||
+    p.productType === 'pillow-protector' ||
+    (p.productType === 'fitted-sheet' && p.lockedFabric === 'tpu')
+  ) {
     const tpuSpecs = [
       { label: 'Material', value: 'TPU Waterproof Membrane' },
       { label: 'Protects', value: 'Water Spills &amp; Accidents' },
@@ -189,6 +193,9 @@ function buildFabricHTML(p) {
 
 // Generate colors HTML (empty for now)
 function buildColorsHTML(p) {
+  // TPU-only cushion protector follows pillow-protector UX (no color selector)
+  if (p.lockedFabric === 'tpu' && p.productType === 'fitted-sheet') return '';
+
   // Only render color selector for products that have fabric choices
   const colorProductTypes = ['fitted-sheet', 'flat-sheet', 'duvet', 'pillowcase', 'marine'];
   if (!colorProductTypes.includes(p.productType)) return '';

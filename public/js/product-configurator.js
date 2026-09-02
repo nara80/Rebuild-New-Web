@@ -423,6 +423,7 @@
   var configTabs = document.querySelectorAll('.config-tab');
   var tabStandard = document.getElementById('tab-standard');
   var tabCustom = document.getElementById('tab-custom');
+  var isCustomOnlyProduct = isCushionProtector;
   function syncTabAwarePriceUI() {
     if (hidePricingUI) {
       applyPricingVisibility();
@@ -445,6 +446,7 @@
     syncTabAwarePriceUI();
   }
   function switchToTab(name) {
+    if (isCustomOnlyProduct && name === 'standard') name = 'custom';
     configTabs.forEach(function(t) { t.classList.toggle('active', t.dataset.tab === name); });
     document.querySelectorAll('.config-tab-content').forEach(function(c) { c.classList.toggle('active', c.id === 'tab-' + name); });
     if (name === 'standard') switchToStandard();
@@ -475,6 +477,18 @@
     }
     syncTabAwarePriceUI();
     validateForm();
+  }
+
+  function applyCustomOnlyConfiguratorUI() {
+    if (!isCustomOnlyProduct) return;
+    var tabsWrap = document.querySelector('.config-tabs');
+    configTabs.forEach(function(tab) {
+      if (tab.dataset.tab === 'standard') tab.style.display = 'none';
+      if (tab.dataset.tab === 'custom') tab.textContent = 'Custom Size';
+    });
+    if (tabsWrap) tabsWrap.style.display = 'none';
+    if (tabStandard) tabStandard.style.display = 'none';
+    switchToTab('custom');
   }
   // Helper for focusing first dim input after switching to custom tab
   var dimFirstInput = null;
@@ -521,14 +535,15 @@
     var hasColorSwatches = document.querySelectorAll('.color-option').length > 0;
     var activeGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
     var hasSelectedColor = activeGroup ? !!activeGroup.querySelector('.color-option.selected') : false;
-    var isPetOwnerOrMarine = isPetOwner || isMarineShapeProduct;
-    var noColorRequired = isPetOwnerOrMarine || noColorSwatches;
+    var isNoColorProduct = isPetOwner || isMarineShapeProduct || isCushionProtector;
+    var noColorRequired = isNoColorProduct || noColorSwatches;
     // Marine: shape select IS the size/region selector — region always passes
-    var noRegionRequired = isMarineShapeProduct;
+    var noRegionRequired = isMarineShapeProduct || isCustomOnlyProduct;
+    var noSizeRequired = isCustomOnlyProduct;
 
     return {
       region: noRegionRequired || !!state.region,
-      size: !!sizeSelect && sizeSelect.value !== '' && sizeSelect.value !== 'custom',
+      size: noSizeRequired || (!!sizeSelect && sizeSelect.value !== '' && sizeSelect.value !== 'custom'),
       fabric: !!state.fabric,
       color: noColorRequired || (hasColorSwatches && hasSelectedColor)
     };
@@ -574,6 +589,8 @@
   if (isMarineShapeProduct) state.fabric = 'cloudsoft'; // Marine shape products: CloudSoft only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
+
+  applyCustomOnlyConfiguratorUI();
 
   // Duvet covers & pillow protectors only need W—L — hide the depth input
   if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
