@@ -1,6 +1,6 @@
 # Phase 8 — Polish + Launch
 **Status (2026-06-19): ✅ COMPLETE — All Part A and Part B items are fully complete, including Stripe Live Mode keys.**
-**Goal:** Part A complete — all mobile issues fixed, Lighthouse 90+/95+ scores confirmed. Remaining: enter Stripe live mode keys on launch day (Part B).
+**Goal:** Part A and Part B are complete — mobile issues fixed, Lighthouse targets achieved, and Stripe live mode keys deployed.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
 
@@ -622,12 +622,12 @@ When `https://www.mildmate.com` loads your new site with a padlock, Stripe is ac
 **What you have built:**
 - A modern custom bedding e-commerce site on Cloudflare's global edge network
 - 258 SEO-preserved URLs — zero ranking loss from WordPress migration
-- A live price configurator for custom mattress dimensions (27 products, all 24 with live pricing)
+- A live price configurator for the current configurable catalog (including later extensions beyond the original 27-product baseline)
 - Thai PromptPay + international card payments via Stripe (Option A shipping tracking: carrier + tracking number + auto-generated carrier URL)
 - Clerk multi-provider auth (Google / Facebook / Email) — customer account portal at `/account/`
 - Automatic order confirmation emails and team notifications via Resend
 - Abandoned cart email capture (Phase 5 built) — `workers/cron.ts` recovery email cron ✅ Cron trigger configured via Cloudflare Dashboard
-- A private admin dashboard (`/admin/`) for your manufacturing and marketing teams (Phase 7 — code complete, setup pending)
+- A private admin dashboard (`/admin/`) for your manufacturing and marketing teams (Phase 7 complete and operational)
 - Performance score 90+, security headers grade A at securityheaders.com
 - Favorites wishlist (authenticated users) — built + deployed
 - public/robots.txt ✅ built — sitemap.xml ✅ Built + submitted to Search Console (2026-06-14)

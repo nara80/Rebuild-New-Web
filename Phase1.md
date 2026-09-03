@@ -12,7 +12,7 @@ Scaffold built and functional. All folders created, `wrangler.toml` configured w
 ---
 
 # Phase 1 ΓÇö Foundation
-**Status (2026-06-14): ✅ COMPLETE — All migrations 001–023 + 026_product_type_niches applied. Phase 2 SEO URLs deployed (2026-06-14). Phase 8 Launch in progress (DNS cutover complete).**
+**Status (2026-09-03 reconciliation): ✅ COMPLETE — Foundation is complete, later migrations now extend through 041, Phase 2 SEO URLs are deployed (2026-06-14), and Phase 8 launch is complete (site live on `www.mildmate.com`).**
 **Goal:** Set up the complete project scaffold, database schema, and Cloudflare configuration so every future phase has a clean, working base to build on.
 
 **End Result:** A wired-up project folder on your computer, connected to Cloudflare, with an empty but fully structured database ready to receive products and orders.
@@ -150,14 +150,14 @@ Your current project at `D:\00_MildMate\Re-Bulit_Web` already has:
 
 ## Setup — Executed
 
-All Phase 1 setup steps confirmed executed. All migrations through 026 applied against `mildmate-db`. Phase 1 is **complete**. Phase 2 (SEO URL Preservation) **intentionally deferred** — runs pre-launch after Phase 8.
+All Phase 1 setup steps were executed and the foundation is complete. Migration history has expanded beyond this phase (now through 041 in the repository). Phase 2 is no longer deferred, it was deployed on 2026-06-14.
 
-Move to **Phase 3 — Design System + Shared Components**.
+Move to **Phase 3 — Design System + Shared Components** (historical sequence).
 
 ---
 
 ## What Happens Next
 
-Phase 1 is **complete**. Phase 2 (SEO URL Preservation) is **deployed** (2026-06-14). Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
+Phase 1 is complete and preserved for historical build order. Current program status is already beyond this step: Phases 2–8 are complete and live.
 
-Move to **Phase 8 — Polish + Launch** (Phases 3–7 already complete).
+Move to the latest operational docs (AGENTS.md / Framework.md) for current-state execution.

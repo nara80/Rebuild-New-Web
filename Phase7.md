@@ -4,7 +4,7 @@
 
 **End Result:** A clean, Clerk-protected dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can update order status live.
 
-**Time Estimate:** Done (code complete). Setup remaining: assign admin roles in Clerk, set `ADMIN_EMAILS` env var on Cloudflare.
+**Time Estimate:** Done (code complete). Required setup items were completed and verified.
 
 ---
 
@@ -224,7 +224,7 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 | Problem | Solution |
 |---|---|
 | "D1 unavailable" on Orders page (production) | Clerk session missing or user doesn't have admin role. Check `public_metadata.role` in Clerk Dashboard or add email to `ADMIN_EMAILS`. |
-| /admin/ redirects to Clerk sign-in loop | Clerk dev instance (`kind-joey-29`) may have cookie issues on custom domain. Verify Clerk production instance is configured (Option 3). |
+| /admin/ redirects to Clerk sign-in loop | Verify active Clerk session and role claims first (`admin`/`super-admin`). Current live auth runs on Clerk Development instance; Production-instance migration is a separate future task. |
 | "Not Found" on /api/admin/orders | Worker hasn't been deployed yet. Run `npx wrangler pages deploy public`. |
 | Product list won't select | Missing `_pendingUploads`/`_pendingCount` declarations — fixed in super-admin. |
 | Image upload fails | Check R2 bucket binding `MILDMATE_ASSETS` in `wrangler.toml`. |

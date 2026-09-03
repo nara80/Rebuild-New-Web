@@ -1,5 +1,5 @@
 ﻿# Phase 4 — Homepage + Product Pages
-**Status (2026-06-12): ✅ COMPLETE — Homepage, 27 product pages, all category/SEO/niche landing pages, blog, size guides, Workers API, all migrations through 026 applied. Language-driven currency (EN → USD, TH → THB). Shipping rates Option A (THB-only source, geo-country detection, OTHER fallback). Centralized country master list. D1-backed dynamic product reviews on all 27 product pages. product_type + niches columns added to D1 products table. Homepage "Choose Your Application" updated to Deep Pocket + Pet Owner. Thai localization marketing audits applied to TH homepage, about, and contact pages. Thai nav link routing fixed (middleware order + client-side safeguard). See Completion Summary below for full details.**
+**Status (2026-09-03 reconciliation): ✅ COMPLETE — Homepage, product system, category/SEO/niche landing pages, blog, size guides, and Workers API are all built and verified. Catalog now reflects 30 core products plus runtime extension support (`weighted-duvet-cover`), with generated EN product pages aligned to current template output. Language-driven currency (EN → USD, TH → THB), centralized country master list, and D1-backed dynamic product reviews are active. See Completion Summary below for historical build details.**
 
 **Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10, 2026-06-12) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (Deep Pocket + Pet Owner), Thai marketing audit copy applied to TH homepage/about/contact, Thai nav routing fix (middleware order + client-side nav.js safeguard), project documentation reconciliation (AGENTS.md, Framework.md, Phase4–6). This document reflects the final verified state.**
 
@@ -849,9 +849,9 @@ These items do not need to be perfect in Phase 4. You can update them via the Ad
 
 ## What Happens Next
 
-Phase 4 is **complete**. Phases 5, 6, and 7 are also **complete**. Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
+Phase 4 is **complete**. Phases 5, 6, 7, and 8 are also **complete** and live.
 
-Move to **Phase 8 — Polish + Launch** for final pre-launch tasks (mobile QA, Lighthouse audit, Stripe live mode).
+For current-state operations and reconciliation details, use AGENTS.md / Framework.md.
 
 ---
 

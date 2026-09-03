@@ -1,5 +1,5 @@
 # Phase 9 — Testing (Vitest + Worker Testing)
-**Status (2026-06-10): ⏸️ PENDING — Not started. Vitest not installed.**
+**Status (2026-09-03 reconciliation): ❌ OUT OF SCOPE — Not active in the current roadmap unless explicitly re-opened.**
 
 ## Overview
 

@@ -9,7 +9,7 @@ Design system implemented. `main.min.css` (~40KB minified) with brand tokens, Qu
 - CSS `:lang(th) { font-family: 'Sarabun', sans-serif; }` added to `main.min.css` — Thai pages auto-use Sarabun
 
 ### Additional Updates (2026-05-28)
-- Phase 2 remains **deferred** (post-Phase 8). Phase 3 built on existing Phase 1 scaffold, not Phase 2 placeholder pages.
+- Historical note: Phase 2 was originally deferred in planning, then later implemented and deployed (2026-06-14).
 - `public/css/main.min.css` is the production minified stylesheet — source map or dev version may also exist.
 - Cookie consent (`cookie-consent.js`), Clerk auth integration (`clerk.js`), and search overlay are Phase 3 deliverables that evolved through Phases 4–5.
 - Nav items: Home → `/`, Shop → `/products/`, Fabrics → `/fabric/`, Size Guide → `/sizeguide/` (About and Contact removed from header nav — accessible via footer links).
@@ -19,14 +19,14 @@ Design system implemented. `main.min.css` (~40KB minified) with brand tokens, Qu
 ---
 
 # Phase 3 — Design System + Shared Components
-**Status (2026-06-14): ✅ COMPLETE — main.min.css, nav.js, mobile drawer, search overlay, header+footer injection all built and confirmed. Phase 8 Launch in progress.**
+**Status (2026-09-03 reconciliation): ✅ COMPLETE — main.min.css, nav.js, mobile drawer, search overlay, header+footer injection all built and confirmed. Phase 8 launch is complete and site is live.**
 **Goal:** Build the visual identity of the entire website — the brand colors, typography, sticky header, minimal premium footer, and mobile navigation. These components are then injected into all pages.
 
 **End Result:** Every page on the site suddenly looks like a real MildMate website. Open any HTML file in your browser and you will see the blue brand header, navigation, and footer — even though the page content may still be a placeholder.
 
 **Time Estimate:** 30–45 minutes (you provide logo + give feedback; Droid builds everything)
 
-> **Phase 2 note:** SEO URL preservation is deferred to post-Phase 8. The redirect rule set from that phase lives in `public/_redirects` and will be expanded at that time.
+> **Phase 2 note (reconciled):** SEO URL preservation is already implemented and deployed. The redirect rule set lives in `public/_redirects` and `functions/product/`.
 
 ---
 
@@ -40,7 +40,7 @@ Collect all of the following before telling Droid to build. These are the only a
 
 Phase 3 builds the design system (CSS, header, footer, navigation) and injects it into all pages. Phase 1 must be complete first.
 
-> **Note:** Phase 2 (SEO URL Preservation) is **intentionally deferred** — it will run pre-launch after Phase 8. Phase 3 injects components into existing pages in the `public/` scaffold.
+> **Note (reconciled):** Phase 2 (SEO URL Preservation) was later implemented and deployed. Phase 3 still depends on the same `public/` scaffold from Phase 1.
 
 **Confirm before starting:**
 - [ ] `public/` folder exists with `css/`, `js/`, `images/` subfolders
@@ -303,7 +303,7 @@ Go through Requirements 1–7 above and collect every item. Fill in this summary
 ```
 PHASE 3 REQUIREMENTS SUMMARY
 
-Requirement 1 — Phase 1 complete (Phase 2 deferred to post-Phase 8): Yes / No
+Requirement 1 — Phase 1 complete (Phase 2 now deployed): Yes / No
 Requirement 2 — Logo file: placed at public/images/logo.png / [describe format]
 Requirement 3 — LINE link: [your LINE URL]
 Requirement 4 — Contact & Marketplace links:
@@ -539,6 +539,6 @@ Droid makes the changes. Repeat Step 3.5–3.8 until you are happy.
 
 ## What Happens Next
 
-Phase 3 is **complete**. Phases 4, 5, 6, and 7 are also **complete**. Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
+Phase 3 is **complete**. Phases 4, 5, 6, 7, and 8 are also **complete** and live.
 
-Move to **Phase 8 — Polish + Launch** for final pre-launch tasks (mobile QA, Lighthouse audit, Stripe live mode).
+For active operations, continue from AGENTS.md / Framework.md.

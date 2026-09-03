@@ -1,14 +1,14 @@
 ﻿# Phase 2 — SEO URL Preservation
-**Status (2026-05-28): ⏸️ DEFERRED — runs pre-launch after Phase 8 (Launch)**
+**Status (2026-09-03 reconciliation): ✅ DEPLOYED — implemented and live via `public/_redirects` + `functions/product/` redirect handling (deployed 2026-06-14).**
 **Goal:** Redirect every existing WordPress URL so that when you swap domain names and point `www.mildmate.com` to the new Cloudflare Pages site, every old URL either lands on the correct new page or redirects to the nearest equivalent. Google never sees a 404.
 
 **End Result:** A complete `_redirects` file covering:
-- ~81 WordPress product URL redirects → the 27 new product pages
+- ~81 WordPress product URL redirects → canonical product pages in the current catalog (30 core products + runtime extension routes where applicable)
 - ~90 WordPress static-page URL redirects → existing new site pages
 - Thai WordPress URLs (Unicode slug format) → `/th/` prefixed new site pages
 - All existing duplicate/typo redirect rules preserved
 
-When you deploy to Cloudflare Pages and swap DNS, the `_redirects` file handles everything automatically — no changes needed to the old WordPress site.
+This redirect set is already deployed to Cloudflare Pages and active on the live domain.
 
 **Time Estimate:** 15–30 minutes (most of it is Droid building — you only review and approve one list)
 
@@ -395,6 +395,6 @@ These WordPress system URLs do not need HTML pages — they can go directly to r
 
 ## What Happens Next
 
-Phase 2 is **deployed** (2026-06-14). Phases 3, 4, 5, 6, and 7 are **complete**. Phase 8 (Launch) is **in progress** — DNS cutover complete, sitemap/OG/GTM verified.
+Phase 2 is **deployed** (2026-06-14). Phases 3, 4, 5, 6, 7, and 8 are now **complete** and live.
 
-Move to **Phase 8 — Polish + Launch** for final pre-launch tasks (mobile QA, Lighthouse audit, Stripe live mode).
+For current operations, use AGENTS.md / Framework.md as the source of truth.
