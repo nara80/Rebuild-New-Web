@@ -7,6 +7,25 @@ import { sendEmail } from "./email";
 
 const QUOTE_RATE_LIMIT = 5; // max per hour per IP
 const QUOTE_RATE_WINDOW = "-1 hour";
+const FIXED_WHITE_PROTECTOR_SLUGS = new Set([
+  "marine-mattress-protector",
+  "mattress-protector-standard",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector",
+]);
+
+function normalizeQuoteFabric(slug: string, fabric: any): string | null {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "tpu";
+  const clean = typeof fabric === "string" ? fabric.trim().toLowerCase() : "";
+  return clean || null;
+}
+
+function normalizeQuoteColor(slug: string, color: any): string | null {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "white";
+  const clean = typeof color === "string" ? color.trim().toLowerCase() : "";
+  return clean || null;
+}
 
 async function checkRateLimit(db: any, ip: string, endpoint: string, max: number): Promise<boolean> {
   const row = await db.prepare(
@@ -204,9 +223,11 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     const cleanName = customer_name.trim();
     const cleanAddress = address?.trim() || "—";
     const cleanPhone = telephone?.trim() || "—";
-    const cleanFabric = fabric || "—";
-    const cleanColor = color || "—";
-    const cleanSlug = product_slug;
+    const cleanSlug = String(product_slug || "").trim().toLowerCase();
+    const normalizedFabric = normalizeQuoteFabric(cleanSlug, fabric);
+    const normalizedColor = normalizeQuoteColor(cleanSlug, color);
+    const cleanFabric = normalizedFabric || "—";
+    const cleanColor = normalizedColor || "—";
 
     await env.DB.prepare(`
       INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
@@ -214,7 +235,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     `).bind(
       quoteId, cleanName, cleanEmail,
       address?.trim() || null, telephone?.trim() || null,
-      cleanSlug, dimsJson, fabric || null, color || null,
+      cleanSlug, dimsJson, normalizedFabric, normalizedColor,
       quoted_price_thb || null,
       quoted_price_usd || null
     ).run();

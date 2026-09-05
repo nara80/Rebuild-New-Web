@@ -33,6 +33,7 @@
   var isMarineFitted = path.indexOf('marine-fitted-sheet') !== -1;
   var isMarineTopSheet = path.indexOf('marine-top-sheet') !== -1;
   var isMarineShapeProduct = isMarineFitted || isMarineTopSheet;
+  var isAnyMattressProtector = isMattressProtector || path.indexOf('marine-mattress-protector') !== -1;
   var TURNSTILE_SITE_KEY = '0x4AAAAAADts338jUP9D3kg6';
 
   // Non-deep products — depth > 30 cm / 12″ should redirect to deep pocket variants
@@ -1278,6 +1279,14 @@
     return txt.replace(/\b\w/g, function (m) { return m.toUpperCase(); });
   }
 
+  function getFixedProtectorColor() {
+    return isAnyMattressProtector ? 'white' : '';
+  }
+
+  function getFixedProtectorColorLabel() {
+    return isAnyMattressProtector ? 'White' : '';
+  }
+
   function updateSelectedColorName(groupEl) {
     if (!groupEl) return;
     var selected = groupEl.querySelector('.color-option.selected') || groupEl.querySelector('.color-option');
@@ -1469,6 +1478,10 @@
     var activeQuoteColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
     var selectedQuoteColorEl = activeQuoteColorGroup ? activeQuoteColorGroup.querySelector('.color-option.selected') : null;
     var selectedQuoteColor = selectedQuoteColorEl ? selectedQuoteColorEl.getAttribute('data-color') : undefined;
+    if (!selectedQuoteColor) {
+      var fixedQuoteColor = getFixedProtectorColor();
+      if (fixedQuoteColor) selectedQuoteColor = fixedQuoteColor;
+    }
 
     fetch('/api/quote', {
       method: 'POST',
@@ -1507,7 +1520,7 @@
         document.getElementById('confirm-details').innerHTML =
           '<strong>Dimension:</strong> ' + dimDisplay + '<br>' +
           '<strong>Fabric:</strong> ' + fabricName + '<br>' +
-          '<strong>Color:</strong> ' + (selectedQuoteColorEl ? (selectedQuoteColorEl.getAttribute('title') || selectedQuoteColorEl.getAttribute('data-color') || '—') : '—') + '<br>' +
+          '<strong>Color:</strong> ' + (selectedQuoteColorEl ? (selectedQuoteColorEl.getAttribute('title') || selectedQuoteColorEl.getAttribute('data-color') || '—') : (getFixedProtectorColorLabel() || '—')) + '<br>' +
           (state.quotePriceUsd ? '<strong>Price:</strong> $' + state.quotePriceUsd.toFixed(2) + ' USD<br>' : '') +
           '<strong>Quote ID:</strong> ' + data.quote_id;
         confirmOverlay.classList.add('open');
@@ -1568,6 +1581,7 @@
       var activeColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
       var selectedColorEl = activeColorGroup ? activeColorGroup.querySelector('.color-option.selected') : null;
       var colorName = selectedColorEl ? formatColorName(selectedColorEl.getAttribute('title') || selectedColorEl.getAttribute('data-color') || '') : '';
+      if (!colorName) colorName = getFixedProtectorColorLabel();
 
       // Size label: capture the human-readable label (e.g., "US/CA · Twin 68×86″")
       var sizeLabel = '';

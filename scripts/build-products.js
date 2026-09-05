@@ -193,8 +193,8 @@ function buildFabricHTML(p) {
 
 // Generate colors HTML (empty for now)
 function buildColorsHTML(p) {
-  // TPU-only cushion protector follows pillow-protector UX (no color selector)
-  if (p.lockedFabric === 'tpu' && p.productType === 'fitted-sheet') return '';
+  // TPU-only products use a fixed white appearance (no color selector)
+  if (p.lockedFabric === 'tpu' && (p.productType === 'fitted-sheet' || p.productType === 'marine' || p.productType === 'protector')) return '';
 
   // Only render color selector for products that have fabric choices
   const colorProductTypes = ['fitted-sheet', 'flat-sheet', 'duvet', 'pillowcase', 'marine'];
