@@ -257,6 +257,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     return (Array.isArray(rawItems) ? rawItems : []).map((item: any) => ({
       slug: item.slug || item.s || "",
       name: item.name || item.n || item.slug || item.s || "",
+      quote_id: item.quote_id || item.qi || null,
       fabric: item.fabric || item.f || null,
       color: item.color || item.c || null,
       dims: (typeof item.dims === "object" && item.dims)
@@ -321,11 +322,56 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
       unit: (unitRaw === "inch" || unitRaw === "in") ? "inch" : "cm",
     };
   };
+  const hasUsefulDims = (dims: any): boolean => {
+    if (!dims || typeof dims !== "object") return false;
+    if (toFiniteNumber(dims.w) && toFiniteNumber(dims.l)) return true;
+    if (String(dims.size_text || "").trim()) return true;
+    if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
+    if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
+    if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
+    return false;
+  };
   const formatDimsForEmail = (dims: any): string => {
+    const unit = String(dims?.unit || "cm");
+    const boatModelName = String(dims?.boat_model_name || "").trim();
+    if (boatModelName) {
+      const modelKey = String(dims?.boat_model_key || "").trim();
+      return modelKey ? `Model: ${boatModelName} (${modelKey})` : `Model: ${boatModelName}`;
+    }
+    const shapeCode = String(dims?.shape_code || "").trim();
+    const shapeName = String(dims?.shape_name || "").trim();
+    const valuesObj = (dims?.values && typeof dims.values === "object" && !Array.isArray(dims.values))
+      ? dims.values
+      : null;
+    if (shapeCode || shapeName || valuesObj) {
+      const shapeLabel = [shapeCode ? `Shape ${shapeCode}` : "", shapeName].filter(Boolean).join(" — ");
+      const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+      const valuePairs = valuesObj
+        ? Object.keys(valuesObj)
+            .sort((a, b) => {
+              const ai = order.indexOf(String(a).toUpperCase());
+              const bi = order.indexOf(String(b).toUpperCase());
+              if (ai === -1 && bi === -1) return String(a).localeCompare(String(b));
+              if (ai === -1) return 1;
+              if (bi === -1) return -1;
+              return ai - bi;
+            })
+            .map((k) => {
+              const n = toFiniteNumber(valuesObj[k]);
+              return n ? `${String(k).toUpperCase()}:${n}` : null;
+            })
+            .filter(Boolean)
+        : [];
+      const areaCm2 = toFiniteNumber(dims?.area_cm2);
+      const extra = [
+        valuePairs.length ? `${valuePairs.join(", ")} ${unit}` : "",
+        areaCm2 ? `Area:${Math.round(areaCm2).toLocaleString()} cm²` : "",
+      ].filter(Boolean).join(" | ");
+      return [shapeLabel, extra].filter(Boolean).join(" | ") || `?×? ${unit}`;
+    }
     const w = toFiniteNumber(dims?.w);
     const l = toFiniteNumber(dims?.l);
     const d = toFiniteNumber(dims?.d);
-    const unit = String(dims?.unit || "cm");
     if (w && l) return `${w}×${l}${d ? `×${d}` : ""} ${unit}`;
     const sizeText = String(dims?.size_text || "").trim();
     if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
@@ -334,7 +380,25 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
 
   // Save each item as an order row
   for (const item of items) {
-    const dims = item.dims || {};
+    let dims = item.dims || {};
+    if (!hasUsefulDims(dims) && item.quote_id) {
+      try {
+        const quoteRow = await env.DB.prepare(
+          "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
+        ).bind(String(item.quote_id)).first() as any;
+        if (quoteRow?.dimensions) {
+          const fromQuote = typeof quoteRow.dimensions === "string"
+            ? JSON.parse(quoteRow.dimensions)
+            : quoteRow.dimensions;
+          if (fromQuote && typeof fromQuote === "object") {
+            dims = fromQuote;
+            item.dims = dims;
+          }
+        }
+      } catch (e: any) {
+        console.error("quote dims hydrate failed:", item.quote_id, e?.message || e);
+      }
+    }
     const parsedDims = parseDimsFromSizeText(dims?.size_text);
     const widthCm = toFiniteNumber(dims.w) ?? parsedDims.w ?? null;
     const lengthCm = toFiniteNumber(dims.l) ?? parsedDims.l ?? null;

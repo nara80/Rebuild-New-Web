@@ -44,6 +44,18 @@ function normalizeFabricForSlug(slugRaw: any, fabricRaw: any): string | null {
   return fabric || null;
 }
 
+function sanitizeMarineValues(valuesRaw: any): Record<string, number> | undefined {
+  if (!valuesRaw || typeof valuesRaw !== "object" || Array.isArray(valuesRaw)) return undefined;
+  const out: Record<string, number> = {};
+  Object.keys(valuesRaw).forEach((k) => {
+    const key = String(k || "").trim().toUpperCase();
+    if (!key) return;
+    const n = Number((valuesRaw as any)[k]);
+    if (Number.isFinite(n) && n > 0) out[key] = n;
+  });
+  return Object.keys(out).length ? out : undefined;
+}
+
 let checkoutSnapshotSchemaReady = false;
 let checkoutSnapshotSchemaPromise: Promise<boolean> | null = null;
 
@@ -338,12 +350,24 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     const src = item.dimensions || {};
     const sizeText = String((src as any).size_text || (src as any).label || "").trim();
     const parsed = sizeText ? parseSizeText(sizeText) : {};
+    const shapeCode = String((src as any).shape_code || "").trim() || undefined;
+    const shapeName = String((src as any).shape_name || "").trim() || undefined;
+    const boatModelName = String((src as any).boat_model_name || "").trim() || undefined;
+    const boatModelKey = String((src as any).boat_model_key || "").trim() || undefined;
+    const areaCm2 = toNumber((src as any).area_cm2);
+    const values = sanitizeMarineValues((src as any).values);
     return {
       w: toNumber((src as any).w) ?? parsed.w,
       l: toNumber((src as any).l) ?? parsed.l,
       d: toNumber((src as any).d) ?? parsed.d,
       unit: String((src as any).unit || parsed.unit || "cm"),
       size_text: sizeText || undefined,
+      shape_code: shapeCode,
+      shape_name: shapeName,
+      boat_model_name: boatModelName,
+      boat_model_key: boatModelKey,
+      area_cm2: areaCm2,
+      values,
     };
   }
   function buildCompactDimText(dims: { w?: number; l?: number; d?: number; unit?: string; size_text?: string }): string {
@@ -352,6 +376,26 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     const d = toNumber(dims?.d);
     const unit = String(dims?.unit || "cm");
     if (w && l) return `${w}×${l}${d ? `×${d}` : ""} ${unit}`;
+    const boatModelName = String((dims as any)?.boat_model_name || "").trim();
+    if (boatModelName) return `Model: ${boatModelName}`;
+    const shapeCode = String((dims as any)?.shape_code || "").trim();
+    const values = sanitizeMarineValues((dims as any)?.values);
+    if (shapeCode || values) {
+      const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+      const pairs = values
+        ? Object.keys(values)
+            .sort((a, b) => {
+              const ai = order.indexOf(a);
+              const bi = order.indexOf(b);
+              if (ai === -1 && bi === -1) return a.localeCompare(b);
+              if (ai === -1) return 1;
+              if (bi === -1) return -1;
+              return ai - bi;
+            })
+            .map((k) => `${k}:${values[k]}`)
+        : [];
+      return `Shape ${shapeCode || "Custom"}${pairs.length ? ` (${pairs.join(", ")} ${unit})` : ""}`;
+    }
     const sizeText = String(dims?.size_text || "").replace(/^dimensions:\s*/i, "").trim();
     return sizeText;
   }
@@ -395,6 +439,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     const metadataItems = items.map((i: CartItem, idx: number) => ({
       slug: i.product_slug,
       name: getItemName(i),
+      quote_id: i.quote_id || undefined,
       fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
       color: i.color,
       dims: buildMetadataDims(i),
@@ -406,6 +451,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
     if (metadataItemsStr.length > 500) {
       const compactItems = items.map((i: CartItem, idx: number) => ({
         s: i.product_slug,
+        qi: i.quote_id || undefined,
         f: normalizeFabricForSlug(i.product_slug, i.fabric),
         c: i.color,
         d: buildCompactDimText(buildMetadataDims(i)) || undefined,
@@ -416,6 +462,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       if (metadataItemsStr.length > 500) {
         const slimmerItems = items.map((i: CartItem, idx: number) => ({
           s: i.product_slug,
+          qi: i.quote_id || undefined,
           d: buildCompactDimText(buildMetadataDims(i)) || undefined,
           q: i.qty || 1,
           u: lineItems[idx]?.price_data?.unit_amount || 0,
@@ -485,6 +532,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
         const snapshotItems = items.map((i: CartItem, idx: number) => ({
           slug: i.product_slug,
           name: getItemName(i),
+          quote_id: i.quote_id || undefined,
           fabric: normalizeFabricForSlug(i.product_slug, i.fabric),
           color: i.color || null,
           dims: buildMetadataDims(i),
