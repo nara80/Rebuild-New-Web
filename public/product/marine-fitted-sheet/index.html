@@ -1142,6 +1142,7 @@
       var isMarineProtector = productSlug === 'marine-mattress-protector';
       var quoteFabricKey = isMarineProtector ? 'tpu' : 'cloudsoft';
       var quoteFabricLabel = isMarineProtector ? '3-Layer Waterproof Protector' : 'CloudSoft';
+      var quoteColorValue = isMarineProtector ? 'white' : '';
       var shapeSelectLabelEl = document.getElementById('shape-select-label');
       var materialBadgeEl = document.getElementById('material-badge');
       var materialSpecsEl = document.getElementById('material-specs');
@@ -1922,11 +1923,13 @@
         return null;
       }
       function getSelectedMarineColorEl(){
+        if(isMarineProtector) return null;
         var group = getActiveMarineColorGroup();
         if(!group) return null;
         return group.querySelector('.color-option.selected') || group.querySelector('.color-option');
       }
       function getSelectedMarineColor(){
+        if(isMarineProtector) return quoteColorValue;
         var el = getSelectedMarineColorEl();
         return el ? (el.getAttribute('data-color') || el.getAttribute('title') || '') : '';
       }

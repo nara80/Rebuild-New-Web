@@ -2831,6 +2831,25 @@ __name(handleContact, "handleContact");
 // ../workers/api/quote.ts
 var QUOTE_RATE_LIMIT = 5;
 var QUOTE_RATE_WINDOW = "-1 hour";
+var FIXED_WHITE_PROTECTOR_SLUGS = /* @__PURE__ */ new Set([
+  "marine-mattress-protector",
+  "mattress-protector-standard",
+  "mattress-protector-family",
+  "mattress-protector-deep-pocket",
+  "pet-proof-mattress-protector"
+]);
+function normalizeQuoteFabric(slug, fabric) {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "tpu";
+  const clean = typeof fabric === "string" ? fabric.trim().toLowerCase() : "";
+  return clean || null;
+}
+__name(normalizeQuoteFabric, "normalizeQuoteFabric");
+function normalizeQuoteColor(slug, color) {
+  if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "white";
+  const clean = typeof color === "string" ? color.trim().toLowerCase() : "";
+  return clean || null;
+}
+__name(normalizeQuoteColor, "normalizeQuoteColor");
 async function checkRateLimit(db, ip, endpoint, max) {
   const row = await db.prepare(
     `SELECT COUNT(*) as cnt FROM rate_limits WHERE ip_address = ? AND endpoint = ? AND created_at > datetime('now', ?)`
@@ -3008,9 +3027,11 @@ async function handleQuote(request, env) {
     const cleanName = customer_name.trim();
     const cleanAddress = address?.trim() || "\u2014";
     const cleanPhone = telephone?.trim() || "\u2014";
-    const cleanFabric = fabric || "\u2014";
-    const cleanColor = color || "\u2014";
-    const cleanSlug = product_slug;
+    const cleanSlug = String(product_slug || "").trim().toLowerCase();
+    const normalizedFabric = normalizeQuoteFabric(cleanSlug, fabric);
+    const normalizedColor = normalizeQuoteColor(cleanSlug, color);
+    const cleanFabric = normalizedFabric || "\u2014";
+    const cleanColor = normalizedColor || "\u2014";
     await env.DB.prepare(`
       INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -3022,8 +3043,8 @@ async function handleQuote(request, env) {
       telephone?.trim() || null,
       cleanSlug,
       dimsJson,
-      fabric || null,
-      color || null,
+      normalizedFabric,
+      normalizedColor,
       quoted_price_thb || null,
       quoted_price_usd || null
     ).run();
@@ -9216,7 +9237,7 @@ function getItemName(item) {
 __name(getItemName, "getItemName");
 function normalizeFabricForSlug(slugRaw, fabricRaw) {
   const slug = String(slugRaw || "").trim().toLowerCase();
-  if (slug === "pet-proof-mattress-protector") return "breezeplus";
+  if (slug === "pet-proof-mattress-protector") return "tpu";
   const fabric = String(fabricRaw || "").trim().toLowerCase();
   return fabric || null;
 }
