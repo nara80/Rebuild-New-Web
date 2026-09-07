@@ -549,13 +549,21 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     const total = session.amount_total
       ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}`
       : "N/A";
+    const shippingCountryCode = String(
+      metadata.shipping_country_applied || metadata.shipping_country_requested || ""
+    ).trim().toUpperCase();
+    const dutyTaxNotice = (shippingCountryCode === "US" || shippingCountryCode === "CA")
+      ? "Import duties and taxes are included (DDP) for this shipment."
+      : (shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.");
+    const dutyTaxLine = dutyTaxNotice ? `\n\nDuty/Tax: ${dutyTaxNotice}` : "";
+    const dutyTaxTeamLine = dutyTaxNotice ? `\nDuty/Tax: ${dutyTaxNotice}` : "";
 
     // Customer confirmation
     try {
       const customerMail = await sendEmail(env, {
         to: email,
         subject: `Order Confirmed \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `Thank you for your order!\n\nOrder: #${session.id.slice(-8)}\n\nItems:\n${itemList}\n\nTotal: ${total}\n\nWe'll notify you when your order ships.\n\n\u2014 MildMate`,
+        text: `Thank you for your order!\n\nOrder: #${session.id.slice(-8)}\n\nItems:\n${itemList}\n\nTotal: ${total}${dutyTaxLine}\n\nWe'll notify you when your order ships.\n\n\u2014 MildMate`,
       });
       if (!customerMail.success) {
         console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
@@ -573,7 +581,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
       const teamMail = await sendEmail(env, {
         to: teamEmail,
         subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}\nShipping Type: ${shippingServiceType}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}`,
+        text: `New order received!\n\nOrder: #${session.id.slice(-8)}\nCustomer: ${metadata.name || "Guest"} (${email})\nPhone: ${metadata.phone || "N/A"}\nAddress: ${metadata.address || "N/A"}\nShipping Type: ${shippingServiceType}${customerNoteText}\n\nItems:\n${itemList}\n\nTotal: ${total}${dutyTaxTeamLine}`,
       });
       if (!teamMail.success) {
         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);

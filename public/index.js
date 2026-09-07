@@ -10215,6 +10215,12 @@ async function handleStripeWebhook(request, env) {
       return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
     }).join("\n");
     const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
+    const shippingCountryCode = String(
+      metadata.shipping_country_applied || metadata.shipping_country_requested || ""
+    ).trim().toUpperCase();
+    const dutyTaxNotice = shippingCountryCode === "US" || shippingCountryCode === "CA" ? "Import duties and taxes are included (DDP) for this shipment." : shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.";
+    const dutyTaxLine = dutyTaxNotice ? `\n\nDuty/Tax: ${dutyTaxNotice}` : "";
+    const dutyTaxTeamLine = dutyTaxNotice ? `\nDuty/Tax: ${dutyTaxNotice}` : "";
     try {
       const customerMail = await sendEmail(env, {
         to: email,
@@ -10227,6 +10233,7 @@ Items:
 ${itemList}
 
 Total: ${total}
+${dutyTaxLine}
 
 We'll notify you when your order ships.
 
@@ -10257,7 +10264,8 @@ Shipping Type: ${shippingServiceType}${customerNoteText}
 Items:
 ${itemList}
 
-Total: ${total}`
+Total: ${total}
+${dutyTaxTeamLine}`
       });
       if (!teamMail.success) {
         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
