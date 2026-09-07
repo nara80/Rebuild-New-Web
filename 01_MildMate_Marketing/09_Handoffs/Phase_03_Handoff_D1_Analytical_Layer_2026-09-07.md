@@ -1,6 +1,6 @@
 # Phase 03 Handoff — D1 Sales Analytical Layer
 
-**Date:** 2026-09-07 · **Branch:** `feature/marketing-data-analyst` · **Status:** ✅ Built + verified on preview DB. ⏳ NOT applied to production (awaiting explicit approval).
+**Date:** 2026-09-07 · **Branch:** `feature/marketing-data-analyst` · **Status:** ✅ Built + verified on preview DB. ✅ Applied to production by owner (2026-09-07) and verified against live data — all contract §9 checks match.
 
 ## Files changed
 
@@ -23,7 +23,7 @@
 ## Database state
 
 - **Preview `mildmate-db`:** migration 039 applied (tables didn't exist there), migration 042 applied, seeded with a clone of the 8 production sales rows (no PII in these tables) **plus synthetic edge-case rows (order ids 20–25, item ids 20–23)** left in place for Phase 04/05 API+UI testing.
-- **Production `mildmate-db-prod`:** **untouched.** Apply command (after approval): `npx wrangler d1 execute mildmate-db-prod --remote --file migrations/042_marketing_analysis_layer.sql`
+- **Production `mildmate-db-prod`:** migration 042 applied by owner on 2026-09-07 (`npx wrangler d1 execute mildmate-db-prod --remote --file migrations/042_marketing_analysis_layer.sql`). All 10 views present; live verification passed: 7 orders / ฿20,872 / 13 units / AOV 2,981.71, channels shopee 5 · tiktok 1 · facebook 1, co-purchase (2,15) + (6,18), DQ snapshot clean (mapping 100%, 0 EXACT / 9 UNALLOCATED items, last sync 2026-09-07T09:12Z).
 
 ## Tests performed (all passed)
 
