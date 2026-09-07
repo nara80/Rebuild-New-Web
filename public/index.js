@@ -1088,8 +1088,8 @@ async function onRequest2(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err) {
-    console.error("Blog post TH error:", err);
+  } catch (err2) {
+    console.error("Blog post TH error:", err2);
     return new Response("Server error", { status: 500 });
   }
 }
@@ -1315,8 +1315,8 @@ async function onRequest3(context) {
       } catch (e) {
         try {
           images = JSON.parse(product.images.replace(/\\"/g, '"'));
-        } catch (err) {
-          console.error("Failed to parse product.images:", err);
+        } catch (err2) {
+          console.error("Failed to parse product.images:", err2);
         }
       }
     }
@@ -1424,8 +1424,8 @@ async function onRequest3(context) {
         "Cache-Control": "public, max-age=60"
       }
     });
-  } catch (err) {
-    console.error("Product SSR error:", err);
+  } catch (err2) {
+    console.error("Product SSR error:", err2);
     return context.next();
   }
 }
@@ -1685,6 +1685,7 @@ var OPERATING_RATE = 0.15;
 var MARKETING_RATE = 0.2;
 var MARGIN_RATE = 0.3;
 var FAMILY_MARGIN_RATE = 0.5;
+var CUSHION_PROTECTOR_MARGIN_RATE = 0.3;
 var PILLOW_PROTECTOR_MARGIN_RATE = 0.35;
 var PILLOWCASE_MARGIN_RATE = 0.15;
 var THB_TO_USD = 30;
@@ -1927,7 +1928,8 @@ function isFittedSheetProduct(product) {
     "dorm-fitted-sheet",
     "rv-truck-fitted-sheet",
     "pet-owner-fitted-sheet",
-    "family-fitted-sheet"
+    "family-fitted-sheet",
+    "custom-waterproof-cushion-protector"
   ].includes(product);
 }
 __name(isFittedSheetProduct, "isFittedSheetProduct");
@@ -2066,7 +2068,7 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
           // -1 signals "requires family sheet"
         };
       }
-      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : MARGIN_RATE;
+      const marginRate = product === "family-fitted-sheet" ? FAMILY_MARGIN_RATE : product === "custom-waterproof-cushion-protector" ? CUSHION_PROTECTOR_MARGIN_RATE : MARGIN_RATE;
       const result = calculateFittedSheetPrice(w2, l2, d, fabric, marginRate);
       return {
         price: applyDerivedMarkup(currency === "THB" ? result.priceThb : result.priceUsd),
@@ -2489,9 +2491,9 @@ async function sendEmail(env, options) {
       return { success: false, error: body?.message || `HTTP ${resp.status}` };
     }
     return { success: true, id: body?.id };
-  } catch (err) {
-    console.error("Resend fetch failed:", err.message || err);
-    return { success: false, error: err.message || "Network error" };
+  } catch (err2) {
+    console.error("Resend fetch failed:", err2.message || err2);
+    return { success: false, error: err2.message || "Network error" };
   }
 }
 __name(sendEmail, "sendEmail");
@@ -2686,8 +2688,8 @@ async function handleUnsubscribe(request, env) {
         }
       }
     );
-  } catch (err) {
-    console.error("Unsubscribe error:", err);
+  } catch (err2) {
+    console.error("Unsubscribe error:", err2);
     return new Response(
       JSON.stringify({ message: "Database error. Please try again later." }),
       {
@@ -3081,8 +3083,8 @@ async function handleQuote(request, env) {
       status: 201,
       headers: { "Content-Type": "application/json" }
     });
-  } catch (err) {
-    console.error("Quote API error:", err);
+  } catch (err2) {
+    console.error("Quote API error:", err2);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -4258,6 +4260,7 @@ function isConfigurableProductSlug(slugRaw) {
   if (!slug) return true;
   return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
 }
+__name(isConfigurableProductSlug, "isConfigurableProductSlug");
 async function getLatestSalesSyncRun(env) {
   try {
     const row = await env.DB.prepare(
@@ -4274,7 +4277,7 @@ async function getLatestSalesSyncRun(env) {
     return null;
   }
 }
-__name(isConfigurableProductSlug, "isConfigurableProductSlug");
+__name(getLatestSalesSyncRun, "getLatestSalesSyncRun");
 async function ensureOrderShippingSchema(env) {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -5125,9 +5128,7 @@ async function handleAdminStats(request, env) {
 }
 __name(handleAdminStats, "handleAdminStats");
 
-// ../workers/api/shipping.ts
-var shippingSchemaReady = false;
-var shippingSchemaPromise = null;
+// ../workers/api/admin-analysis.ts
 function json5(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -5138,6 +5139,492 @@ function json5(body, status = 200) {
   });
 }
 __name(json5, "json");
+function err(code, message, status = 400) {
+  return json5({ success: false, error_code: code, message }, status);
+}
+__name(err, "err");
+function isProductionHost6(hostname) {
+  if (!hostname) return false;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+  if (hostname.endsWith(".local")) return false;
+  return hostname === "www.mildmate.com" || hostname === "mildmate.com";
+}
+__name(isProductionHost6, "isProductionHost");
+function collectRoles7(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.role);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles7, "collectRoles");
+function hasAdminRole7(rawClaims) {
+  const roles = collectRoles7(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole7, "hasAdminRole");
+function emailAllowed7(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed7, "emailAllowed");
+async function authorizeAdmin5(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const hasBearer = authHeader.startsWith("Bearer ");
+  if (hasBearer) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) {
+    } else {
+      const raw = verified.payload.raw || {};
+      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+        return { ok: true };
+      }
+      const sub = verified.payload.sub;
+      const clerkKey = env.CLERK_SECRET_KEY;
+      if (sub && clerkKey) {
+        try {
+          const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+            headers: { Authorization: "Bearer " + clerkKey }
+          });
+          if (clerkResp.ok) {
+            const user = await clerkResp.json();
+            const email = user.email_addresses?.find(function(e) {
+              return e.id === user.primary_email_address_id;
+            })?.email_address || "";
+            const metadata = user.public_metadata || {};
+            if (emailAllowed7(email, env)) return { ok: true };
+            if (hasAdminRole7(metadata)) return { ok: true };
+          }
+        } catch (e) {
+          console.error("Clerk API lookup failed:", e?.message || e);
+        }
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role required" };
+    }
+  }
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost6(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  if (!configuredSecret) return { ok: true };
+  if (providedSecret === configuredSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin5, "authorizeAdmin");
+var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
+var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
+var REVENUE_STATUSES = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
+var MAX_LIMIT = 200;
+var DEFAULT_LIMIT = 50;
+function parseFilters(url) {
+  const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
+  const start = (url.searchParams.get("start") || "").trim() || null;
+  if (start && !DATE_RE.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
+  const end = (url.searchParams.get("end") || "").trim() || null;
+  if (end && !DATE_RE.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
+  if (start && end && start > end) return bad("INVALID_DATE_RANGE", "start must be on or before end.");
+  const channelRaw = (url.searchParams.get("channel") || "").trim().toLowerCase() || null;
+  if (channelRaw && !CHANNEL_RE.test(channelRaw)) return bad("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  const pidRaw = (url.searchParams.get("product_id") || "").trim();
+  let productId = null;
+  if (pidRaw) {
+    if (!/^\d{1,9}$/.test(pidRaw)) return bad("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
+    productId = Number(pidRaw);
+  }
+  const statusRaw = (url.searchParams.get("status") || "").trim().toLowerCase() || null;
+  if (statusRaw && !COMMERCIAL_STATUSES.has(statusRaw)) {
+    return bad("INVALID_STATUS", "status must be one of: paid, processing, shipped, completed (analysis covers commercial orders only).");
+  }
+  const revRaw = (url.searchParams.get("revenue_status") || "").trim().toUpperCase() || null;
+  if (revRaw && !REVENUE_STATUSES.has(revRaw)) return bad("INVALID_REVENUE_STATUS", "revenue_status must be EXACT or UNALLOCATED.");
+  const limitRaw = (url.searchParams.get("limit") || "").trim();
+  let limit = DEFAULT_LIMIT;
+  if (limitRaw) {
+    if (!/^\d{1,4}$/.test(limitRaw) || Number(limitRaw) < 1) return bad("INVALID_LIMIT", "limit must be a positive integer.");
+    limit = Math.min(Number(limitRaw), MAX_LIMIT);
+  }
+  const offsetRaw = (url.searchParams.get("offset") || "").trim();
+  let offset = 0;
+  if (offsetRaw) {
+    if (!/^\d{1,9}$/.test(offsetRaw)) return bad("INVALID_OFFSET", "offset must be a non-negative integer.");
+    offset = Number(offsetRaw);
+  }
+  return {
+    ok: true,
+    f: { start, end, channel: channelRaw, productId, status: statusRaw, revenueStatus: revRaw, limit, offset }
+  };
+}
+__name(parseFilters, "parseFilters");
+function dayRangeWhere(f, col = "order_day") {
+  const parts = [];
+  const binds = [];
+  if (f.start) {
+    parts.push(`${col} >= ?`);
+    binds.push(f.start);
+  }
+  if (f.end) {
+    parts.push(`${col} <= ?`);
+    binds.push(f.end);
+  }
+  return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
+}
+__name(dayRangeWhere, "dayRangeWhere");
+async function getSummary(env, f) {
+  const range = dayRangeWhere(f);
+  const binds = [...range.binds];
+  let channelSql = "";
+  if (f.channel) {
+    channelSql = " AND channel_norm = ?";
+    binds.push(f.channel);
+  }
+  const row = await env.DB.prepare(
+    `SELECT
+       COALESCE(SUM(orders), 0)            AS orders,
+       SUM(order_revenue)                  AS order_revenue,
+       COALESCE(SUM(units), 0)             AS units,
+       COALESCE(SUM(mapped_orders), 0)     AS mapped_orders,
+       COALESCE(SUM(exact_items), 0)       AS exact_items,
+       COALESCE(SUM(unallocated_items), 0) AS unallocated_items
+     FROM analysis_sales_daily
+     WHERE 1=1${range.sql}${channelSql}`
+  ).bind(...binds).first();
+  const orders = Number(row?.orders || 0);
+  const revenue = row?.order_revenue === null || row?.order_revenue === void 0 ? null : Number(row.order_revenue);
+  const items = Number(row?.exact_items || 0) + Number(row?.unallocated_items || 0);
+  return json5({
+    success: true,
+    filters: { start: f.start, end: f.end, channel: f.channel },
+    summary: {
+      orders,
+      order_revenue: revenue,
+      currency: "THB",
+      units: Number(row?.units || 0),
+      aov: orders > 0 && revenue !== null ? Math.round(revenue / orders * 100) / 100 : null,
+      mapped_orders: Number(row?.mapped_orders || 0),
+      mapped_order_pct: orders > 0 ? Math.round(Number(row?.mapped_orders || 0) / orders * 1e3) / 10 : null,
+      exact_items: Number(row?.exact_items || 0),
+      unallocated_items: Number(row?.unallocated_items || 0),
+      exact_item_pct: items > 0 ? Math.round(Number(row?.exact_items || 0) / items * 1e3) / 10 : null,
+      unallocated_item_pct: items > 0 ? Math.round(Number(row?.unallocated_items || 0) / items * 1e3) / 10 : null
+    }
+  });
+}
+__name(getSummary, "getSummary");
+async function getSales(env, f) {
+  const range = dayRangeWhere(f, "ai.order_day");
+  const conds = [];
+  const binds = [...range.binds];
+  if (f.channel) {
+    conds.push("ai.channel_norm = ?");
+    binds.push(f.channel);
+  }
+  if (f.productId !== null) {
+    conds.push("ai.product_id = ?");
+    binds.push(f.productId);
+  }
+  if (f.revenueStatus) {
+    conds.push("ai.revenue_status = ?");
+    binds.push(f.revenueStatus);
+  }
+  if (f.status) {
+    conds.push("co.status = ?");
+    binds.push(f.status);
+  }
+  const extra = conds.length ? " AND " + conds.join(" AND ") : "";
+  const base = `FROM analysis_active_items ai
+     JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
+     LEFT JOIN analysis_order_mapping om ON om.sales_order_id = ai.sales_order_id
+     LEFT JOIN products p ON p.id = ai.product_id
+     WHERE 1=1${range.sql}${extra}`;
+  const countRow = await env.DB.prepare(`SELECT COUNT(*) AS n ${base}`).bind(...binds).first();
+  const total = Number(countRow?.n || 0);
+  const rows = await env.DB.prepare(
+    `SELECT
+       ai.order_day, ai.channel_norm, co.source_system, co.source_order_id, co.status,
+       co.order_total, co.currency,
+       ai.product_id, COALESCE(p.title_en, '(unmapped)') AS product_title,
+       ai.quantity, ai.raw_item_text,
+       ai.line_revenue, ai.revenue_status,
+       om.derived_mapping_status
+     ${base}
+     ORDER BY ai.order_day DESC, ai.sales_order_id DESC, ai.id
+     LIMIT ? OFFSET ?`
+  ).bind(...binds, f.limit, f.offset).all();
+  return json5({
+    success: true,
+    filters: {
+      start: f.start,
+      end: f.end,
+      channel: f.channel,
+      product_id: f.productId,
+      status: f.status,
+      revenue_status: f.revenueStatus
+    },
+    pagination: { total, limit: f.limit, offset: f.offset },
+    rows: rows.results || []
+  });
+}
+__name(getSales, "getSales");
+async function getProducts(env, f) {
+  const range = dayRangeWhere(f, "ai.order_day");
+  const binds = [...range.binds];
+  let channelSql = "";
+  if (f.channel) {
+    channelSql = " AND ai.channel_norm = ?";
+    binds.push(f.channel);
+  }
+  const rows = await env.DB.prepare(
+    `SELECT
+       ai.product_id,
+       COALESCE(p.title_en, '(unmapped)') AS product_title,
+       p.slug AS product_slug,
+       COUNT(DISTINCT ai.sales_order_id) AS orders_containing_product,
+       SUM(ai.quantity) AS quantity,
+       SUM(CASE WHEN ai.revenue_status = 'EXACT' THEN ai.line_revenue END) AS exact_revenue,
+       SUM(ai.revenue_status = 'EXACT') AS exact_items,
+       COUNT(*) AS total_items,
+       COUNT(DISTINCT ai.channel_norm) AS channel_count
+     FROM analysis_active_items ai
+     LEFT JOIN products p ON p.id = ai.product_id
+     WHERE 1=1${range.sql}${channelSql}
+     GROUP BY ai.product_id, p.title_en, p.slug
+     ORDER BY orders_containing_product DESC, quantity DESC, ai.product_id`
+  ).bind(...binds).all();
+  const trend = await env.DB.prepare(
+    `SELECT product_id, orders_28d, orders_prev_28d, growth_vs_previous FROM analysis_sales_28d`
+  ).all();
+  const trendMap = {};
+  (trend.results || []).forEach((t) => {
+    trendMap[String(t.product_id)] = t;
+  });
+  const topChannel = await env.DB.prepare(
+    `SELECT product_id, channel_norm, orders, units
+     FROM analysis_product_channel
+     ORDER BY orders DESC, units DESC, channel_norm`
+  ).all();
+  const topMap = {};
+  (topChannel.results || []).forEach((t) => {
+    const k = String(t.product_id);
+    if (!(k in topMap)) topMap[k] = t.channel_norm;
+  });
+  const out = (rows.results || []).map((r) => {
+    const k = String(r.product_id);
+    return {
+      ...r,
+      revenue_coverage_pct: Number(r.total_items || 0) > 0 ? Math.round(Number(r.exact_items || 0) / Number(r.total_items) * 1e3) / 10 : null,
+      top_channel: topMap[k] || null,
+      orders_28d: trendMap[k]?.orders_28d ?? 0,
+      growth_vs_previous_28d: trendMap[k]?.growth_vs_previous ?? null
+    };
+  });
+  return json5({
+    success: true,
+    filters: { start: f.start, end: f.end, channel: f.channel },
+    products: out
+  });
+}
+__name(getProducts, "getProducts");
+async function getProductDetail(env, idRaw) {
+  if (!/^\d{1,9}$/.test(idRaw)) return err("INVALID_PRODUCT_ID", "product id must be a positive integer.");
+  const pid = Number(idRaw);
+  const product = await env.DB.prepare(
+    `SELECT id, slug, title_en, product_type, is_active FROM products WHERE id = ?`
+  ).bind(pid).first();
+  if (!product) return err("PRODUCT_NOT_FOUND", "No product with id " + pid + ".", 404);
+  const participation = await env.DB.prepare(
+    `SELECT orders_containing_product, quantity, exact_revenue, exact_items, total_items, channel_count
+     FROM analysis_product_participation WHERE product_id = ?`
+  ).bind(pid).first();
+  const channels = await env.DB.prepare(
+    `SELECT channel_norm, orders, units, exact_revenue
+     FROM analysis_product_channel WHERE product_id = ? ORDER BY orders DESC, units DESC`
+  ).bind(pid).all();
+  const w28 = await env.DB.prepare(`SELECT * FROM analysis_sales_28d WHERE product_id = ?`).bind(pid).first();
+  const w90 = await env.DB.prepare(`SELECT * FROM analysis_sales_90d WHERE product_id = ?`).bind(pid).first();
+  const anchorOrders = Number(participation?.orders_containing_product || 0);
+  const pairs = await env.DB.prepare(
+    `SELECT
+       CASE WHEN cp.product_a = ?1 THEN cp.product_b ELSE cp.product_a END AS partner_product_id,
+       COALESCE(p.title_en, '(unknown)') AS partner_title,
+       cp.co_orders
+     FROM analysis_product_copurchase cp
+     LEFT JOIN products p ON p.id = CASE WHEN cp.product_a = ?1 THEN cp.product_b ELSE cp.product_a END
+     WHERE cp.product_a = ?1 OR cp.product_b = ?1
+     ORDER BY cp.co_orders DESC`
+  ).bind(pid).all();
+  const coPurchase = (pairs.results || []).map((r) => ({
+    ...r,
+    attach_rate_pct: anchorOrders > 0 ? Math.round(Number(r.co_orders) / anchorOrders * 1e3) / 10 : null
+  }));
+  return json5({
+    success: true,
+    product,
+    participation: participation || {
+      orders_containing_product: 0,
+      quantity: 0,
+      exact_revenue: null,
+      exact_items: 0,
+      total_items: 0,
+      channel_count: 0
+    },
+    channels: channels.results || [],
+    window_28d: w28 || null,
+    window_90d: w90 || null,
+    co_purchase: coPurchase
+  });
+}
+__name(getProductDetail, "getProductDetail");
+async function getChannels(env, f) {
+  const range = dayRangeWhere(f);
+  const rows = await env.DB.prepare(
+    `SELECT
+       channel_norm,
+       SUM(orders) AS orders,
+       SUM(order_revenue) AS order_revenue,
+       SUM(units) AS units,
+       CASE WHEN SUM(orders) > 0 THEN ROUND(SUM(order_revenue) * 1.0 / SUM(orders), 2) END AS aov,
+       SUM(mapped_orders) AS mapped_orders,
+       CASE WHEN SUM(orders) > 0 THEN ROUND(SUM(mapped_orders) * 100.0 / SUM(orders), 1) END AS mapped_pct
+     FROM analysis_sales_daily
+     WHERE 1=1${range.sql}
+     GROUP BY channel_norm
+     ORDER BY orders DESC, order_revenue DESC`
+  ).bind(...range.binds).all();
+  return json5({
+    success: true,
+    filters: { start: f.start, end: f.end },
+    channels: rows.results || []
+  });
+}
+__name(getChannels, "getChannels");
+async function getDataQuality(env) {
+  const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
+  if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
+  let freshnessMinutes = null;
+  const rawTs = String(dq.last_success_sync_at || "").trim();
+  if (rawTs) {
+    let d = new Date(rawTs);
+    if (isNaN(d.getTime()) && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(rawTs)) {
+      d = /* @__PURE__ */ new Date(rawTs.replace(" ", "T") + "Z");
+    }
+    if (!isNaN(d.getTime())) {
+      freshnessMinutes = Math.round((Date.now() - d.getTime()) / 6e4);
+    }
+  }
+  const warnings = [];
+  let level = "ok";
+  const lastStatus = String(dq.last_sync_status || "").toLowerCase();
+  if (!rawTs) {
+    level = "critical";
+    warnings.push("No successful sales sync recorded.");
+  }
+  if (["failed", "partial", "error"].includes(lastStatus)) {
+    level = "critical";
+    warnings.push("Latest sync run status: " + lastStatus + ".");
+  }
+  if (Number(dq.invalid_product_refs || 0) > 0) {
+    level = "critical";
+    warnings.push(dq.invalid_product_refs + " item(s) reference a non-existent product id.");
+  }
+  const warn = /* @__PURE__ */ __name((msg) => {
+    if (level !== "critical") level = "warning";
+    warnings.push(msg);
+  }, "warn");
+  if (freshnessMinutes !== null && freshnessMinutes > 30) warn("Last successful sync was " + freshnessMinutes + " minutes ago (threshold 30).");
+  if (Number(dq.sync_errors_7d || 0) > 0) warn(dq.sync_errors_7d + " sync error(s) in the last 7 days.");
+  if (Number(dq.missing_product_id_items || 0) > 0) warn(dq.missing_product_id_items + " active item(s) have no Product_ID.");
+  if (Number(dq.itemless_orders || 0) > 0) warn(dq.itemless_orders + " commercial order(s) have no items.");
+  if (Number(dq.orders_missing_date || 0) > 0) warn(dq.orders_missing_date + " commercial order(s) have a missing/malformed order date.");
+  if (Number(dq.unknown_status_orders || 0) > 0) warn(dq.unknown_status_orders + " order(s) have an unknown status value.");
+  if (Number(dq.unknown_source_labels || 0) > 0) warn(dq.unknown_source_labels + " unknown source label(s) present.");
+  const commercialOrders = Number(dq.commercial_orders || 0);
+  const activeItems = Number(dq.active_items || 0);
+  return json5({
+    success: true,
+    data_quality: {
+      ...dq,
+      freshness_minutes: freshnessMinutes,
+      mapped_order_pct: commercialOrders > 0 ? Math.round(Number(dq.mapped_orders || 0) / commercialOrders * 1e3) / 10 : null,
+      mapped_item_pct: activeItems > 0 ? Math.round((activeItems - Number(dq.missing_product_id_items || 0)) / activeItems * 1e3) / 10 : null,
+      exact_item_pct: activeItems > 0 ? Math.round(Number(dq.exact_items || 0) / activeItems * 1e3) / 10 : null,
+      unallocated_item_pct: activeItems > 0 ? Math.round(Number(dq.unallocated_items || 0) / activeItems * 1e3) / 10 : null,
+      status: level,
+      warnings
+    }
+  });
+}
+__name(getDataQuality, "getDataQuality");
+async function handleAdminAnalysis(request, env) {
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+      }
+    });
+  }
+  if (request.method !== "GET") return err("METHOD_NOT_ALLOWED", "Only GET is supported.", 405);
+  const auth = await authorizeAdmin5(request, env);
+  if (!auth.ok) return err("UNAUTHORIZED", auth.error, auth.status);
+  const url = new URL(request.url);
+  const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/analysis/, "") || "/";
+  const productMatch = sub.match(/^\/product\/(\d+)$/);
+  if (productMatch) return getProductDetail(env, productMatch[1]);
+  if (sub === "/data-quality") return getDataQuality(env);
+  const parsed = parseFilters(url);
+  if (!parsed.ok) return parsed.res;
+  const f = parsed.f;
+  if (sub === "/" || sub === "/summary") return getSummary(env, f);
+  if (sub === "/sales") return getSales(env, f);
+  if (sub === "/products") return getProducts(env, f);
+  if (sub === "/channels") return getChannels(env, f);
+  return err("ROUTE_NOT_FOUND", "Unknown analysis route: " + sub, 404);
+}
+__name(handleAdminAnalysis, "handleAdminAnalysis");
+
+// ../workers/api/shipping.ts
+var shippingSchemaReady = false;
+var shippingSchemaPromise = null;
+function json6(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+__name(json6, "json");
 function toAmount(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -5478,7 +5965,7 @@ async function handleShippingCalculate(request, env) {
     });
   }
   if (request.method !== "GET" && request.method !== "POST") {
-    return json5({ error: "Method not allowed" }, 405);
+    return json6({ error: "Method not allowed" }, 405);
   }
   try {
     let country = "";
@@ -5514,15 +6001,15 @@ async function handleShippingCalculate(request, env) {
       totalQty: qty,
       items
     });
-    return json5({ ok: true, ...quote });
+    return json6({ ok: true, ...quote });
   } catch (e) {
-    return json5({ error: e?.message || "Shipping quote unavailable" }, 500);
+    return json6({ error: e?.message || "Shipping quote unavailable" }, 500);
   }
 }
 __name(handleShippingCalculate, "handleShippingCalculate");
 
 // ../workers/api/admin-shipping.ts
-function json6(body, status = 200) {
+function json7(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -5531,19 +6018,19 @@ function json6(body, status = 200) {
     }
   });
 }
-__name(json6, "json");
+__name(json7, "json");
 function toAmount2(v) {
   return toAmount(v);
 }
 __name(toAmount2, "toAmount");
-function isProductionHost6(hostname) {
+function isProductionHost7(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost6, "isProductionHost");
-function collectRoles7(raw) {
+__name(isProductionHost7, "isProductionHost");
+function collectRoles8(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5568,21 +6055,21 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles");
-function hasAdminRole7(rawClaims) {
-  const roles = collectRoles7(rawClaims);
+__name(collectRoles8, "collectRoles");
+function hasAdminRole8(rawClaims) {
+  const roles = collectRoles8(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole");
-function emailAllowed7(email, env) {
+__name(hasAdminRole8, "hasAdminRole");
+function emailAllowed8(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed");
-async function authorizeAdmin5(request, env) {
+__name(emailAllowed8, "emailAllowed");
+async function authorizeAdmin6(request, env) {
   const host = new URL(request.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
     return { ok: true };
@@ -5594,7 +6081,7 @@ async function authorizeAdmin5(request, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -5610,8 +6097,8 @@ async function authorizeAdmin5(request, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed7(email, env)) return { ok: true };
-            if (hasAdminRole7(metadata)) return { ok: true };
+            if (emailAllowed8(email, env)) return { ok: true };
+            if (hasAdminRole8(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -5625,7 +6112,7 @@ async function authorizeAdmin5(request, env) {
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const prodHost = isProductionHost6(host);
+  const prodHost = isProductionHost7(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -5634,7 +6121,7 @@ async function authorizeAdmin5(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin5, "authorizeAdmin");
+__name(authorizeAdmin6, "authorizeAdmin");
 function normalizeCountryName(raw, countryCode) {
   const name = String(raw || "").trim();
   if (name) return name;
@@ -5652,8 +6139,8 @@ async function getUsdRatePerThb(env) {
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin6(request, env);
+  if (!auth.ok) return json7({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -5697,19 +6184,19 @@ async function handleAdminShippingRates(request, env) {
         updated_at: r.updated_at
       };
     });
-    return json6({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
+    return json7({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json6({ error: "Invalid JSON body" }, 400);
+      return json7({ error: "Invalid JSON body" }, 400);
     }
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
     const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
-      return json6({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
+      return json7({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
     const countryName = normalizeCountryName(body.country_name, countryCode);
     const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
@@ -5737,7 +6224,7 @@ async function handleAdminShippingRates(request, env) {
         is_active = excluded.is_active,
         updated_at = datetime('now')`
     ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
-    return json6({
+    return json7({
       success: true,
       rate: {
         service_level: serviceLevel,
@@ -5757,17 +6244,17 @@ async function handleAdminShippingRates(request, env) {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
     const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
-    if (!countryCode) return json6({ error: "country query param is required" }, 400);
-    if (countryCode === "OTHER") return json6({ error: "OTHER cannot be deleted" }, 400);
+    if (!countryCode) return json7({ error: "country query param is required" }, 400);
+    if (countryCode === "OTHER") return json7({ error: "OTHER cannot be deleted" }, 400);
     await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
-    return json6({ success: true, country_code: countryCode, service_level: serviceLevel });
+    return json7({ success: true, country_code: countryCode, service_level: serviceLevel });
   }
-  return json6({ error: "Method not allowed" }, 405);
+  return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
 async function handleAdminShippingProductTiers(request, env) {
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin6(request, env);
+  if (!auth.ok) return json7({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -5791,19 +6278,19 @@ async function handleAdminShippingProductTiers(request, env) {
       category: String(r.category || ""),
       tier: Number(r.tier || 2)
     }));
-    return json6({ product_tiers: tiers });
+    return json7({ product_tiers: tiers });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json6({ error: "Invalid JSON" }, 400);
+      return json7({ error: "Invalid JSON" }, 400);
     }
     const slug = String(body.product_slug || "").trim();
     const tier = Number(body.tier);
-    if (!slug) return json6({ error: "product_slug required" }, 400);
-    if (![1, 2, 3].includes(tier)) return json6({ error: "tier must be 1, 2, or 3" }, 400);
+    if (!slug) return json7({ error: "product_slug required" }, 400);
+    if (![1, 2, 3].includes(tier)) return json7({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_product_tiers (product_slug, tier, updated_at)
        VALUES (?1, ?2, datetime('now'))
@@ -5811,14 +6298,14 @@ async function handleAdminShippingProductTiers(request, env) {
          tier = excluded.tier,
          updated_at = datetime('now')`
     ).bind(slug, tier).run();
-    return json6({ success: true, product_slug: slug, tier });
+    return json7({ success: true, product_slug: slug, tier });
   }
-  return json6({ error: "Method not allowed" }, 405);
+  return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
 async function handleAdminShippingAddRates(request, env) {
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return json6({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin6(request, env);
+  if (!auth.ok) return json7({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -5846,34 +6333,34 @@ async function handleAdminShippingAddRates(request, env) {
       const thb = toAmount2(r.add_thb);
       addRates[t] = { add_thb: thb, add_usd: toAmount2(thb * usdRate) };
     }
-    return json6({ add_rates: addRates, usd_rate_per_thb: usdRate });
+    return json7({ add_rates: addRates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json6({ error: "Invalid JSON" }, 400);
+      return json7({ error: "Invalid JSON" }, 400);
     }
     const tier = Number(body.tier);
     const addThb = toAmount2(body.add_thb);
-    if (![1, 2, 3].includes(tier)) return json6({ error: "tier must be 1, 2, or 3" }, 400);
+    if (![1, 2, 3].includes(tier)) return json7({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_add_rates (tier, add_thb, updated_at)
        VALUES (?1, ?2, datetime('now'))
        ON CONFLICT(tier) DO UPDATE SET
          add_thb = excluded.add_thb, updated_at = datetime('now')`
     ).bind(tier, addThb).run();
-    return json6({ success: true, tier, add_thb: addThb });
+    return json7({ success: true, tier, add_thb: addThb });
   }
-  return json6({ error: "Method not allowed" }, 405);
+  return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
 
 // ../workers/api/admin-quotes.ts
 var quoteSchemaReady = false;
 var quoteSchemaPromise = null;
-function json7(body, status = 200) {
+function json8(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -5884,20 +6371,20 @@ function json7(body, status = 200) {
     }
   });
 }
-__name(json7, "json");
-function isProductionHost7(hostname) {
+__name(json8, "json");
+function isProductionHost8(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost7, "isProductionHost");
+__name(isProductionHost8, "isProductionHost");
 function isPreviewHashHost(hostname) {
   if (!hostname) return false;
   return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
 }
 __name(isPreviewHashHost, "isPreviewHashHost");
-function collectRoles8(raw) {
+function collectRoles9(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -5922,21 +6409,21 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(raw) {
-  const roles = collectRoles8(raw);
+__name(collectRoles9, "collectRoles");
+function hasAdminRole9(raw) {
+  const roles = collectRoles9(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
+__name(hasAdminRole9, "hasAdminRole");
+function emailAllowed9(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
-async function authorizeAdmin6(request, env) {
+__name(emailAllowed9, "emailAllowed");
+async function authorizeAdmin7(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   const host = new URL(request.url).hostname;
@@ -5944,7 +6431,7 @@ async function authorizeAdmin6(request, env) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -5956,8 +6443,8 @@ async function authorizeAdmin6(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed8(email, env)) return { ok: true };
-            if (hasAdminRole8(metadata)) return { ok: true };
+            if (emailAllowed9(email, env)) return { ok: true };
+            if (hasAdminRole9(metadata)) return { ok: true };
           }
         } catch {
         }
@@ -5970,14 +6457,14 @@ async function authorizeAdmin6(request, env) {
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
-  const prodHost = isProductionHost7(host);
+  const prodHost = isProductionHost8(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   if (!configuredSecret) return { ok: true };
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin6, "authorizeAdmin");
+__name(authorizeAdmin7, "authorizeAdmin");
 async function ensureQuoteSchema(env) {
   if (quoteSchemaReady) return;
   if (!quoteSchemaPromise) {
@@ -6145,9 +6632,9 @@ async function sendMagicLinkEmail(env, request, quote) {
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
-  if (request.method === "OPTIONS") return json7({ ok: true });
-  const auth = await authorizeAdmin6(request, env);
-  if (!auth.ok) return json7({ error: auth.error }, auth.status);
+  if (request.method === "OPTIONS") return json8({ ok: true });
+  const auth = await authorizeAdmin7(request, env);
+  if (!auth.ok) return json8({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
   const url = new URL(request.url);
@@ -6209,7 +6696,7 @@ async function handleAdminQuotes(request, env) {
         quote_url: buildQuoteLink(request, r.quote_id)
       };
     });
-    return json7({
+    return json8({
       quotes,
       page,
       total: totalRow?.cnt || 0,
@@ -6221,7 +6708,7 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json7({ error: "Invalid JSON" }, 400);
+      return json8({ error: "Invalid JSON" }, 400);
     }
     const customerName = String(body.customer_name || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
@@ -6257,15 +6744,15 @@ async function handleAdminQuotes(request, env) {
     }
     const expiresAt = normalizeDateInput(body.expires_at);
     const sendEmailNow = !!body.send_email;
-    if (!customerName) return json7({ error: "customer_name is required" }, 400);
-    if (!email || !email.includes("@")) return json7({ error: "Valid email is required" }, 400);
-    if (!productSlug) return json7({ error: "product_slug is required" }, 400);
-    if (!dimensions) return json7({ error: "dimensions or size_text is required" }, 400);
+    if (!customerName) return json8({ error: "customer_name is required" }, 400);
+    if (!email || !email.includes("@")) return json8({ error: "Valid email is required" }, 400);
+    if (!productSlug) return json8({ error: "product_slug is required" }, 400);
+    if (!dimensions) return json8({ error: "dimensions or size_text is required" }, 400);
     if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) {
-      return json7({ error: "Invalid status" }, 400);
+      return json8({ error: "Invalid status" }, 400);
     }
     if (status === "approved" && (!quotedPriceThb || quotedPriceThb <= 0)) {
-      return json7({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json8({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
     const quoteId = await generateQuoteId(db);
     await db.prepare(
@@ -6302,7 +6789,7 @@ async function handleAdminQuotes(request, env) {
         expires_at: expiresAt
       });
     }
-    return json7({
+    return json8({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
@@ -6315,21 +6802,21 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json7({ error: "Invalid JSON" }, 400);
+      return json8({ error: "Invalid JSON" }, 400);
     }
     const quoteId = String(body.quote_id || "").trim();
-    if (!quoteId) return json7({ error: "quote_id is required" }, 400);
+    if (!quoteId) return json8({ error: "quote_id is required" }, 400);
     const current = await db.prepare(
       `SELECT quote_id, dimensions, status, quoted_price, quoted_price_usd
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!current) return json7({ error: "Quote not found" }, 404);
+    if (!current) return json8({ error: "Quote not found" }, 404);
     const updates = [];
     const binds = [];
     const status = body.status != null ? String(body.status).trim().toLowerCase() : null;
     if (status != null) {
-      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json7({ error: "Invalid status" }, 400);
+      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json8({ error: "Invalid status" }, 400);
       updates.push("status = ?");
       binds.push(status);
     }
@@ -6339,7 +6826,7 @@ async function handleAdminQuotes(request, env) {
     const isUsdUpdate = quoteCurrency === "USD";
     if (isUsdUpdate && body.quoted_price_usd != null && body.quoted_price_usd !== "") {
       priceUsd = Math.round(Number(body.quoted_price_usd));
-      if (!priceUsd || priceUsd <= 0) return json7({ error: "quoted_price_usd must be a positive number" }, 400);
+      if (!priceUsd || priceUsd <= 0) return json8({ error: "quoted_price_usd must be a positive number" }, 400);
       const rate = await getUsdRate(db);
       priceThb = Math.round(priceUsd * rate);
       updates.push("quoted_price = ?");
@@ -6348,7 +6835,7 @@ async function handleAdminQuotes(request, env) {
       binds.push(priceUsd);
     } else if (body.quoted_price_thb != null && body.quoted_price_thb !== "") {
       priceThb = Math.round(Number(body.quoted_price_thb));
-      if (!priceThb || priceThb <= 0) return json7({ error: "quoted_price_thb must be a positive number" }, 400);
+      if (!priceThb || priceThb <= 0) return json8({ error: "quoted_price_thb must be a positive number" }, 400);
       updates.push("quoted_price = ?");
       binds.push(priceThb);
       updates.push("quoted_price_usd = NULL");
@@ -6378,7 +6865,7 @@ async function handleAdminQuotes(request, env) {
           try {
             dims = JSON.parse(body.dimensions);
           } catch {
-            return json7({ error: "Invalid dimensions JSON" }, 400);
+            return json8({ error: "Invalid dimensions JSON" }, 400);
           }
         } else if (body.dimensions && typeof body.dimensions === "object") {
           dims = body.dimensions;
@@ -6403,9 +6890,9 @@ async function handleAdminQuotes(request, env) {
     const targetStatus = status || String(current.status || "pending").toLowerCase();
     const finalPriceThb = priceThb != null ? priceThb : Number(current.quoted_price || 0);
     if (targetStatus === "approved" && (!finalPriceThb || finalPriceThb <= 0)) {
-      return json7({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json8({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
-    if (!updates.length && !body.send_email) return json7({ error: "No update fields provided" }, 400);
+    if (!updates.length && !body.send_email) return json8({ error: "No update fields provided" }, 400);
     if (updates.length) {
       await db.prepare(`UPDATE custom_quotes SET ${updates.join(", ")} WHERE quote_id = ?`).bind(...binds, quoteId).run();
     }
@@ -6414,25 +6901,25 @@ async function handleAdminQuotes(request, env) {
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!row) return json7({ error: "Quote not found" }, 404);
+    if (!row) return json8({ error: "Quote not found" }, 404);
     let emailStatus = { success: false, skipped: true };
     if (body.send_email) {
       emailStatus = await sendMagicLinkEmail(env, request, row);
       if (!emailStatus.success) {
-        return json7({
+        return json8({
           error: emailStatus.error || "Failed to send quote email",
           quote_id: quoteId
         }, 400);
       }
     }
-    return json7({
+    return json8({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
       email_sent: !!emailStatus.success
     });
   }
-  return json7({ error: "Method not allowed" }, 405);
+  return json8({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminQuotes, "handleAdminQuotes");
 
@@ -6594,7 +7081,7 @@ async function handleDiscountClaim(request, env) {
 __name(handleDiscountClaim, "handleDiscountClaim");
 
 // ../workers/api/admin-contacts.ts
-function json8(body, status = 200) {
+function json9(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -6603,8 +7090,8 @@ function json8(body, status = 200) {
     }
   });
 }
-__name(json8, "json");
-function collectRoles9(raw) {
+__name(json9, "json");
+function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -6629,35 +7116,35 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles");
-function hasAdminRole9(raw) {
-  const roles = collectRoles9(raw);
+__name(collectRoles10, "collectRoles");
+function hasAdminRole10(raw) {
+  const roles = collectRoles10(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole");
-function emailAllowed9(email, env) {
+__name(hasAdminRole10, "hasAdminRole");
+function emailAllowed10(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed");
-function isProductionHost8(hostname) {
+__name(emailAllowed10, "emailAllowed");
+function isProductionHost9(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost8, "isProductionHost");
-async function authorizeAdmin7(request, env) {
+__name(isProductionHost9, "isProductionHost");
+async function authorizeAdmin8(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -6669,8 +7156,8 @@ async function authorizeAdmin7(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed9(email, env)) return { ok: true };
-            if (hasAdminRole9(metadata)) return { ok: true };
+            if (emailAllowed10(email, env)) return { ok: true };
+            if (hasAdminRole10(metadata)) return { ok: true };
           }
         } catch (e) {
         }
@@ -6682,17 +7169,17 @@ async function authorizeAdmin7(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost8(host);
+  const prodHost = isProductionHost9(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   if (!configuredSecret) return { ok: true };
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin7, "authorizeAdmin");
+__name(authorizeAdmin8, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
-  const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json8({ error: auth.error }, auth.status);
+  const auth = await authorizeAdmin8(request, env);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   const url = new URL(request.url);
   const method = request.method;
   const db = env.DB;
@@ -6708,7 +7195,7 @@ async function handleAdminContacts(request, env) {
     const totalRow = await db.prepare(
       "SELECT COUNT(*) as cnt FROM contacts" + (onlySubscribed ? " WHERE is_subscribed = 1" : "")
     ).first();
-    return json8({
+    return json9({
       contacts: results,
       total: totalRow?.cnt || 0,
       page,
@@ -6720,31 +7207,31 @@ async function handleAdminContacts(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json8({ error: "Invalid JSON" }, 400);
+      return json9({ error: "Invalid JSON" }, 400);
     }
     const email = (body.email || "").trim().toLowerCase();
-    if (!email) return json8({ error: "Email required" }, 400);
+    if (!email) return json9({ error: "Email required" }, 400);
     if (body.unsubscribe !== void 0 && body.unsubscribe) {
       await db.prepare("UPDATE contacts SET is_subscribed = 0, sources = TRIM(REPLACE(REPLACE(REPLACE(sources, ',subscribe', ''), 'subscribe,', ''), 'subscribe', ''), ','), last_seen = datetime('now') WHERE email = ?").bind(email).run();
-      return json8({ success: true, message: "Unsubscribed" });
+      return json9({ success: true, message: "Unsubscribed" });
     }
     if (body.name) {
       await db.prepare("UPDATE contacts SET name = ?, last_seen = datetime('now') WHERE email = ?").bind(body.name, email).run();
-      return json8({ success: true });
+      return json9({ success: true });
     }
-    return json8({ error: "No valid update field" }, 400);
+    return json9({ error: "No valid update field" }, 400);
   }
-  return json8({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
 
 // ../workers/api/admin-promo.ts
-function isProductionHost9(hostname) {
+function isProductionHost10(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost9, "isProductionHost");
-function hasAdminRole10(raw) {
+__name(isProductionHost10, "isProductionHost");
+function hasAdminRole11(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -6764,23 +7251,23 @@ function hasAdminRole10(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole10, "hasAdminRole");
-function emailAllowed10(email, env) {
+__name(hasAdminRole11, "hasAdminRole");
+function emailAllowed11(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed");
-async function authorizeAdmin8(request, env) {
+__name(emailAllowed11, "emailAllowed");
+async function authorizeAdmin9(request, env) {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost9(hostname)) return { ok: true };
+  if (!isProductionHost10(hostname)) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole10(raw)) return { ok: true };
+    if (hasAdminRole11(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed10(jwtEmail, env)) return { ok: true };
+    if (emailAllowed11(jwtEmail, env)) return { ok: true };
     const sub = String(verified.payload?.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (sub && clerkKey) {
@@ -6792,7 +7279,7 @@ async function authorizeAdmin8(request, env) {
           const user = await clerkResp.json();
           const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
           const metadata = user.public_metadata || {};
-          if (emailAllowed10(email, env) || hasAdminRole10(metadata)) return { ok: true };
+          if (emailAllowed11(email, env) || hasAdminRole11(metadata)) return { ok: true };
         }
       } catch {
       }
@@ -6804,7 +7291,7 @@ async function authorizeAdmin8(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin8, "authorizeAdmin");
+__name(authorizeAdmin9, "authorizeAdmin");
 async function handleAdminPromo(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -6815,7 +7302,7 @@ async function handleAdminPromo(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin8(request, env);
+  const auth = await authorizeAdmin9(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
@@ -6995,12 +7482,12 @@ async function handleBoatModels(request, env) {
 __name(handleBoatModels, "handleBoatModels");
 
 // ../workers/api/admin-boat-models.ts
-function isProductionHost10(hostname) {
+function isProductionHost11(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost10, "isProductionHost");
-function hasAdminRole11(raw) {
+__name(isProductionHost11, "isProductionHost");
+function hasAdminRole12(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -7020,12 +7507,12 @@ function hasAdminRole11(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole11, "hasAdminRole");
-function emailAllowed11(email, env) {
+__name(hasAdminRole12, "hasAdminRole");
+function emailAllowed12(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed11, "emailAllowed");
+__name(emailAllowed12, "emailAllowed");
 function normalizeModelKey(input) {
   return String(input || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
@@ -7076,16 +7563,16 @@ async function ensureBoatModelsTable2(env) {
   await ensureBoatModelsColumn2(env, "schematic_url", "TEXT");
 }
 __name(ensureBoatModelsTable2, "ensureBoatModelsTable");
-async function authorizeAdmin9(request, env) {
+async function authorizeAdmin10(request, env) {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost10(hostname)) return { ok: true };
+  if (!isProductionHost11(hostname)) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (hasAdminRole11(raw) || emailAllowed11(jwtEmail, env)) return { ok: true };
+    if (hasAdminRole12(raw) || emailAllowed12(jwtEmail, env)) return { ok: true };
     return { ok: true };
   }
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
@@ -7093,7 +7580,7 @@ async function authorizeAdmin9(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin9, "authorizeAdmin");
+__name(authorizeAdmin10, "authorizeAdmin");
 async function handleAdminBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -7102,7 +7589,7 @@ async function handleAdminBoatModels(request, env) {
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
   if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin9(request, env);
+  const auth = await authorizeAdmin10(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureBoatModelsTable2(env);
   if (request.method === "GET") {
@@ -7199,7 +7686,7 @@ var BLOG_CATEGORY_OPTIONS = [
   "Product News",
   "Other"
 ];
-function isProductionHost11(hostname) {
+function isProductionHost12(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -7207,8 +7694,8 @@ function isProductionHost11(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost11, "isProductionHost");
-function collectRoles10(raw) {
+__name(isProductionHost12, "isProductionHost");
+function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -7232,27 +7719,27 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles");
-function hasAdminRole12(raw) {
-  const roles = collectRoles10(raw);
+__name(collectRoles11, "collectRoles");
+function hasAdminRole13(raw) {
+  const roles = collectRoles11(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole12, "hasAdminRole");
-function emailAllowed12(email, env) {
+__name(hasAdminRole13, "hasAdminRole");
+function emailAllowed13(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed12, "emailAllowed");
+__name(emailAllowed13, "emailAllowed");
 function getClerkSessionTokenFromCookie(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin10(request, env) {
+async function authorizeAdmin11(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie(request);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
@@ -7268,7 +7755,7 @@ async function authorizeAdmin10(request, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole12(raw) || emailAllowed12(verified.payload.email || "", env)) {
+      if (hasAdminRole13(raw) || emailAllowed13(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -7282,8 +7769,8 @@ async function authorizeAdmin10(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed12(email, env)) return { ok: true };
-            if (hasAdminRole12(metadata)) return { ok: true };
+            if (emailAllowed13(email, env)) return { ok: true };
+            if (hasAdminRole13(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -7296,7 +7783,7 @@ async function authorizeAdmin10(request, env) {
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost11(host);
+  const prodHost = isProductionHost12(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -7305,7 +7792,7 @@ async function authorizeAdmin10(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin10, "authorizeAdmin");
+__name(authorizeAdmin11, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
   const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
@@ -7328,7 +7815,7 @@ async function handleAdminBlog(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin10(request, env);
+  const auth = await authorizeAdmin11(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
@@ -7666,7 +8153,7 @@ function normalizeReviewDate(raw) {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
 __name(normalizeReviewDate, "normalizeReviewDate");
-function isProductionHost12(hostname) {
+function isProductionHost13(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
   if (host === "localhost" || host === "127.0.0.1") return false;
@@ -7674,8 +8161,8 @@ function isProductionHost12(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost12, "isProductionHost");
-function collectRoles11(raw) {
+__name(isProductionHost13, "isProductionHost");
+function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -7699,27 +8186,27 @@ function collectRoles11(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles11, "collectRoles");
-function hasAdminRole13(raw) {
-  const roles = collectRoles11(raw);
+__name(collectRoles12, "collectRoles");
+function hasAdminRole14(raw) {
+  const roles = collectRoles12(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole13, "hasAdminRole");
-function emailAllowed13(email, env) {
+__name(hasAdminRole14, "hasAdminRole");
+function emailAllowed14(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed13, "emailAllowed");
+__name(emailAllowed14, "emailAllowed");
 function getClerkSessionTokenFromCookie2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin11(request, env) {
+async function authorizeAdmin12(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie2(request);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
@@ -7735,7 +8222,7 @@ async function authorizeAdmin11(request, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole13(raw) || emailAllowed13(verified.payload.email || "", env)) {
+      if (hasAdminRole14(raw) || emailAllowed14(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -7749,8 +8236,8 @@ async function authorizeAdmin11(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed13(email, env)) return { ok: true };
-            if (hasAdminRole13(metadata)) return { ok: true };
+            if (emailAllowed14(email, env)) return { ok: true };
+            if (hasAdminRole14(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -7763,7 +8250,7 @@ async function authorizeAdmin11(request, env) {
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost12(host);
+  const prodHost = isProductionHost13(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -7772,7 +8259,7 @@ async function authorizeAdmin11(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin11, "authorizeAdmin");
+__name(authorizeAdmin12, "authorizeAdmin");
 async function handleReviews(request, env) {
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
@@ -7862,7 +8349,7 @@ __name(handleReviews, "handleReviews");
 async function handleAdminReviews(request, env) {
   const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
-  const auth = await authorizeAdmin11(request, env);
+  const auth = await authorizeAdmin12(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
@@ -8164,12 +8651,12 @@ async function handleAdminRecoveryTest(request, env) {
 __name(handleAdminRecoveryTest, "handleAdminRecoveryTest");
 
 // ../workers/api/admin-thankyou-dispatch.ts
-function isProductionHost13(hostname) {
+function isProductionHost14(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost13, "isProductionHost");
-function hasAdminRole14(raw) {
+__name(isProductionHost14, "isProductionHost");
+function hasAdminRole15(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -8189,16 +8676,16 @@ function hasAdminRole14(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole14, "hasAdminRole");
-async function authorizeAdmin12(request, env) {
+__name(hasAdminRole15, "hasAdminRole");
+async function authorizeAdmin13(request, env) {
   const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost13(hostname)) return { ok: true };
+  if (!isProductionHost14(hostname)) return { ok: true };
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole14(raw)) return { ok: true };
+    if (hasAdminRole15(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
     const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
     if (jwtEmail && allow.includes(jwtEmail)) return { ok: true };
@@ -8209,7 +8696,7 @@ async function authorizeAdmin12(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin12, "authorizeAdmin");
+__name(authorizeAdmin13, "authorizeAdmin");
 async function sendThankyouEmail(env, to, discountCode, discountPct) {
   try {
     const resp = await fetch("https://api.resend.com/emails", {
@@ -8258,7 +8745,7 @@ async function handleAdminThankyouDispatch(request, env) {
   };
   if (request.method === "OPTIONS") return new Response(null, { headers });
   if (request.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-  const auth = await authorizeAdmin12(request, env);
+  const auth = await authorizeAdmin13(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   if (!env.RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not configured" }), { status: 500, headers });
   await ensureThankyouQueueSchema(env);
@@ -8331,11 +8818,11 @@ async function handleAdminThankyouDispatch(request, env) {
       if (sentItems.length < 30) sentItems.push({ id: queueId, order_id: orderId, email, code, discount_pct: pct });
     } else {
       failed++;
-      const err = rs.error || "unknown error";
+      const err2 = rs.error || "unknown error";
       failedEmails.push(email);
-      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err.slice(0, 500), queueId).run();
-      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err });
-      if (errors.length < 10) errors.push(`id ${queueId}: ${err}`);
+      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err2.slice(0, 500), queueId).run();
+      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err2 });
+      if (errors.length < 10) errors.push(`id ${queueId}: ${err2}`);
     }
   }
   return new Response(JSON.stringify({
@@ -8356,163 +8843,6 @@ async function handleAdminThankyouDispatch(request, env) {
 __name(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
 
 // ../workers/api/admin-offers.ts
-function isProductionHost14(hostname) {
-  const h = String(hostname || "").toLowerCase();
-  return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
-}
-__name(isProductionHost14, "isProductionHost");
-function hasAdminRole15(raw) {
-  if (!raw) return false;
-  const candidates = [];
-  if (raw.role) candidates.push(raw.role);
-  if (raw.roles) candidates.push(raw.roles);
-  if (raw.public_metadata?.role) candidates.push(raw.public_metadata.role);
-  if (raw.publicMetadata?.role) candidates.push(raw.publicMetadata.role);
-  if (raw.metadata?.role) candidates.push(raw.metadata.role);
-  if (raw.organization_role) candidates.push(raw.organization_role);
-  if (raw.org_role) candidates.push(raw.org_role);
-  const flat = [];
-  for (const c of candidates) {
-    if (Array.isArray(c)) flat.push(...c.map(String));
-    else if (typeof c === "string") flat.push(c);
-  }
-  return flat.some((v) => {
-    const r = String(v).toLowerCase();
-    return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
-  });
-}
-__name(hasAdminRole15, "hasAdminRole");
-function emailAllowed14(email, env) {
-  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  return !!email && allow.includes(email.toLowerCase());
-}
-__name(emailAllowed14, "emailAllowed");
-async function authorizeAdmin13(request, env) {
-  const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost14(hostname)) return { ok: true };
-  const authHeader = request.headers.get("Authorization") || "";
-  if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
-    if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
-    const raw = verified.payload?.raw || {};
-    if (hasAdminRole15(raw)) return { ok: true };
-    const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed14(jwtEmail, env)) return { ok: true };
-    const sub = String(verified.payload?.sub || "").trim();
-    const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
-    if (sub && clerkKey) {
-      try {
-        const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
-          headers: { Authorization: "Bearer " + clerkKey }
-        });
-        if (clerkResp.ok) {
-          const user = await clerkResp.json();
-          const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
-          const metadata = user.public_metadata || {};
-          if (emailAllowed14(email, env) || hasAdminRole15(metadata)) return { ok: true };
-        }
-      } catch {
-      }
-    }
-    return { ok: false, status: 403, error: "Forbidden: admin role required" };
-  }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
-  const expectedSecret = String(env.ADMIN_SECRET || "").trim();
-  if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
-}
-__name(authorizeAdmin13, "authorizeAdmin");
-var KEY_MAP = {
-  basketThreshold: "basket_threshold_usd",
-  stage2Enabled: "stage2_enabled",
-  stage2Discount: "stage2_discount",
-  stage3Enabled: "stage3_enabled",
-  stage3Discount: "stage3_discount",
-  expiryDays: "discount_expiry_days",
-  cronHour: "cron_hour_utc",
-  thankyou: "thankyou_discount",
-  thankyouHours: "thankyou_send_after_hours"
-};
-function toBoolString(v) {
-  return v === true || String(v).toLowerCase() === "true" ? "true" : "false";
-}
-__name(toBoolString, "toBoolString");
-function normalizeOffersInput(input) {
-  const basketThreshold = Math.max(0, Math.min(1e4, Number(input?.basketThreshold || 150)));
-  const stage2Enabled = toBoolString(input?.stage2Enabled !== false);
-  const stage2Discount = Math.max(1, Math.min(95, Number(input?.stage2Discount || 10)));
-  const stage3Enabled = toBoolString(input?.stage3Enabled !== false);
-  const stage3Discount = Math.max(1, Math.min(95, Number(input?.stage3Discount || 10)));
-  const expiryDays = Math.max(1, Math.min(3650, Number(input?.expiryDays || 60)));
-  const cronHour = Math.max(0, Math.min(23, Number(input?.cronHour || 10)));
-  const thankyou = Math.max(1, Math.min(95, Number(input?.thankyou || 20)));
-  const thankyouHours = Math.max(0, Math.min(720, Number(input?.thankyouHours || 1)));
-  return {
-    [KEY_MAP.basketThreshold]: String(Math.round(basketThreshold)),
-    [KEY_MAP.stage2Enabled]: stage2Enabled,
-    [KEY_MAP.stage2Discount]: String(Math.round(stage2Discount)),
-    [KEY_MAP.stage3Enabled]: stage3Enabled,
-    [KEY_MAP.stage3Discount]: String(Math.round(stage3Discount)),
-    [KEY_MAP.expiryDays]: String(Math.round(expiryDays)),
-    [KEY_MAP.cronHour]: String(Math.round(cronHour)),
-    [KEY_MAP.thankyou]: String(Math.round(thankyou)),
-    [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours))
-  };
-}
-__name(normalizeOffersInput, "normalizeOffersInput");
-function parseOffersConfig(rows) {
-  const map = {};
-  for (const row of rows || []) map[String(row.key)] = String(row.value);
-  return {
-    basketThreshold: Number(map[KEY_MAP.basketThreshold] || 150),
-    stage2Enabled: map[KEY_MAP.stage2Enabled] !== "false",
-    stage2Discount: Number(map[KEY_MAP.stage2Discount] || 10),
-    stage3Enabled: map[KEY_MAP.stage3Enabled] !== "false",
-    stage3Discount: Number(map[KEY_MAP.stage3Discount] || 10),
-    expiryDays: Number(map[KEY_MAP.expiryDays] || 60),
-    cronHour: Number(map[KEY_MAP.cronHour] || 10),
-    thankyou: Number(map[KEY_MAP.thankyou] || 20),
-    thankyouHours: Number(map[KEY_MAP.thankyouHours] || 1)
-  };
-}
-__name(parseOffersConfig, "parseOffersConfig");
-async function handleAdminOffers(request, env) {
-  const headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
-  };
-  if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin13(request, env);
-  if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
-  if (request.method === "GET") {
-    const keys = Object.values(KEY_MAP);
-    const placeholders = keys.map((_, i) => `?${i + 1}`).join(",");
-    const { results } = await env.DB.prepare(`SELECT key, value FROM recovery_config WHERE key IN (${placeholders})`).bind(...keys).all();
-    return new Response(JSON.stringify({ offers: parseOffersConfig(results || []) }), { headers });
-  }
-  if (request.method === "POST" || request.method === "PUT") {
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
-    }
-    const normalized = normalizeOffersInput(body || {});
-    for (const [key, value] of Object.entries(normalized)) {
-      await env.DB.prepare("INSERT OR REPLACE INTO recovery_config (key, value) VALUES (?1, ?2)").bind(key, value).run();
-    }
-    const { results } = await env.DB.prepare(
-      `SELECT key, value FROM recovery_config WHERE key IN (${Object.values(KEY_MAP).map((_, i) => `?${i + 1}`).join(",")})`
-    ).bind(...Object.values(KEY_MAP)).all();
-    return new Response(JSON.stringify({ ok: true, offers: parseOffersConfig(results || []) }), { headers });
-  }
-  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-}
-__name(handleAdminOffers, "handleAdminOffers");
-
-// ../workers/api/admin-campaigns.ts
 function isProductionHost15(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
@@ -8579,6 +8909,163 @@ async function authorizeAdmin14(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin14, "authorizeAdmin");
+var KEY_MAP = {
+  basketThreshold: "basket_threshold_usd",
+  stage2Enabled: "stage2_enabled",
+  stage2Discount: "stage2_discount",
+  stage3Enabled: "stage3_enabled",
+  stage3Discount: "stage3_discount",
+  expiryDays: "discount_expiry_days",
+  cronHour: "cron_hour_utc",
+  thankyou: "thankyou_discount",
+  thankyouHours: "thankyou_send_after_hours"
+};
+function toBoolString(v) {
+  return v === true || String(v).toLowerCase() === "true" ? "true" : "false";
+}
+__name(toBoolString, "toBoolString");
+function normalizeOffersInput(input) {
+  const basketThreshold = Math.max(0, Math.min(1e4, Number(input?.basketThreshold || 150)));
+  const stage2Enabled = toBoolString(input?.stage2Enabled !== false);
+  const stage2Discount = Math.max(1, Math.min(95, Number(input?.stage2Discount || 10)));
+  const stage3Enabled = toBoolString(input?.stage3Enabled !== false);
+  const stage3Discount = Math.max(1, Math.min(95, Number(input?.stage3Discount || 10)));
+  const expiryDays = Math.max(1, Math.min(3650, Number(input?.expiryDays || 60)));
+  const cronHour = Math.max(0, Math.min(23, Number(input?.cronHour || 10)));
+  const thankyou = Math.max(1, Math.min(95, Number(input?.thankyou || 20)));
+  const thankyouHours = Math.max(0, Math.min(720, Number(input?.thankyouHours || 1)));
+  return {
+    [KEY_MAP.basketThreshold]: String(Math.round(basketThreshold)),
+    [KEY_MAP.stage2Enabled]: stage2Enabled,
+    [KEY_MAP.stage2Discount]: String(Math.round(stage2Discount)),
+    [KEY_MAP.stage3Enabled]: stage3Enabled,
+    [KEY_MAP.stage3Discount]: String(Math.round(stage3Discount)),
+    [KEY_MAP.expiryDays]: String(Math.round(expiryDays)),
+    [KEY_MAP.cronHour]: String(Math.round(cronHour)),
+    [KEY_MAP.thankyou]: String(Math.round(thankyou)),
+    [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours))
+  };
+}
+__name(normalizeOffersInput, "normalizeOffersInput");
+function parseOffersConfig(rows) {
+  const map = {};
+  for (const row of rows || []) map[String(row.key)] = String(row.value);
+  return {
+    basketThreshold: Number(map[KEY_MAP.basketThreshold] || 150),
+    stage2Enabled: map[KEY_MAP.stage2Enabled] !== "false",
+    stage2Discount: Number(map[KEY_MAP.stage2Discount] || 10),
+    stage3Enabled: map[KEY_MAP.stage3Enabled] !== "false",
+    stage3Discount: Number(map[KEY_MAP.stage3Discount] || 10),
+    expiryDays: Number(map[KEY_MAP.expiryDays] || 60),
+    cronHour: Number(map[KEY_MAP.cronHour] || 10),
+    thankyou: Number(map[KEY_MAP.thankyou] || 20),
+    thankyouHours: Number(map[KEY_MAP.thankyouHours] || 1)
+  };
+}
+__name(parseOffersConfig, "parseOffersConfig");
+async function handleAdminOffers(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+  };
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin14(request, env);
+  if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
+  if (request.method === "GET") {
+    const keys = Object.values(KEY_MAP);
+    const placeholders = keys.map((_, i) => `?${i + 1}`).join(",");
+    const { results } = await env.DB.prepare(`SELECT key, value FROM recovery_config WHERE key IN (${placeholders})`).bind(...keys).all();
+    return new Response(JSON.stringify({ offers: parseOffersConfig(results || []) }), { headers });
+  }
+  if (request.method === "POST" || request.method === "PUT") {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
+    }
+    const normalized = normalizeOffersInput(body || {});
+    for (const [key, value] of Object.entries(normalized)) {
+      await env.DB.prepare("INSERT OR REPLACE INTO recovery_config (key, value) VALUES (?1, ?2)").bind(key, value).run();
+    }
+    const { results } = await env.DB.prepare(
+      `SELECT key, value FROM recovery_config WHERE key IN (${Object.values(KEY_MAP).map((_, i) => `?${i + 1}`).join(",")})`
+    ).bind(...Object.values(KEY_MAP)).all();
+    return new Response(JSON.stringify({ ok: true, offers: parseOffersConfig(results || []) }), { headers });
+  }
+  return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+}
+__name(handleAdminOffers, "handleAdminOffers");
+
+// ../workers/api/admin-campaigns.ts
+function isProductionHost16(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
+}
+__name(isProductionHost16, "isProductionHost");
+function hasAdminRole17(raw) {
+  if (!raw) return false;
+  const candidates = [];
+  if (raw.role) candidates.push(raw.role);
+  if (raw.roles) candidates.push(raw.roles);
+  if (raw.public_metadata?.role) candidates.push(raw.public_metadata.role);
+  if (raw.publicMetadata?.role) candidates.push(raw.publicMetadata.role);
+  if (raw.metadata?.role) candidates.push(raw.metadata.role);
+  if (raw.organization_role) candidates.push(raw.organization_role);
+  if (raw.org_role) candidates.push(raw.org_role);
+  const flat = [];
+  for (const c of candidates) {
+    if (Array.isArray(c)) flat.push(...c.map(String));
+    else if (typeof c === "string") flat.push(c);
+  }
+  return flat.some((v) => {
+    const r = String(v).toLowerCase();
+    return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
+  });
+}
+__name(hasAdminRole17, "hasAdminRole");
+function emailAllowed16(email, env) {
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return !!email && allow.includes(email.toLowerCase());
+}
+__name(emailAllowed16, "emailAllowed");
+async function authorizeAdmin15(request, env) {
+  const hostname = request.headers.get("Host") || "";
+  if (!isProductionHost16(hostname)) return { ok: true };
+  const authHeader = request.headers.get("Authorization") || "";
+  if (authHeader.startsWith("Bearer ")) {
+    const verified = await verifyClerkJwt(request, env);
+    if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
+    const raw = verified.payload?.raw || {};
+    if (hasAdminRole17(raw)) return { ok: true };
+    const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
+    if (emailAllowed16(jwtEmail, env)) return { ok: true };
+    const sub = String(verified.payload?.sub || "").trim();
+    const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+    if (sub && clerkKey) {
+      try {
+        const clerkResp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+          headers: { Authorization: "Bearer " + clerkKey }
+        });
+        if (clerkResp.ok) {
+          const user = await clerkResp.json();
+          const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
+          const metadata = user.public_metadata || {};
+          if (emailAllowed16(email, env) || hasAdminRole17(metadata)) return { ok: true };
+        }
+      } catch {
+      }
+    }
+    return { ok: false, status: 403, error: "Forbidden: admin role required" };
+  }
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const expectedSecret = String(env.ADMIN_SECRET || "").trim();
+  if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin15, "authorizeAdmin");
 async function ensureCampaignsSchema(env) {
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS marketing_campaigns (
@@ -8602,7 +9089,7 @@ async function handleAdminCampaigns(request, env) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
   if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin14(request, env);
+  const auth = await authorizeAdmin15(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureCampaignsSchema(env);
   if (request.method === "GET") {
@@ -8671,7 +9158,7 @@ function getClerkSessionToken(request) {
   return cookieMatch ? cookieMatch[1] : "";
 }
 __name(getClerkSessionToken, "getClerkSessionToken");
-function collectRoles12(raw) {
+function collectRoles13(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -8695,20 +9182,20 @@ function collectRoles12(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles12, "collectRoles");
-function hasAdminRole17(raw) {
-  const roles = collectRoles12(raw);
+__name(collectRoles13, "collectRoles");
+function hasAdminRole18(raw) {
+  const roles = collectRoles13(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole17, "hasAdminRole");
-function emailAllowed16(email, env) {
+__name(hasAdminRole18, "hasAdminRole");
+function emailAllowed17(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed16, "emailAllowed");
+__name(emailAllowed17, "emailAllowed");
 function getPrimaryClerkEmail2(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -8734,7 +9221,7 @@ async function isClerkAdmin2(request, env) {
     if (!verified.valid) return false;
     const raw = verified.payload.raw || {};
     const email = String(verified.payload.email || "").trim().toLowerCase();
-    if (hasAdminRole17(raw) || emailAllowed16(email, env)) return true;
+    if (hasAdminRole18(raw) || emailAllowed17(email, env)) return true;
     const sub = String(verified.payload.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (!sub || !clerkKey) return false;
@@ -8753,7 +9240,7 @@ async function isClerkAdmin2(request, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return emailAllowed16(clerkEmail, env) || hasAdminRole17(metadataRaw);
+    return emailAllowed17(clerkEmail, env) || hasAdminRole18(metadataRaw);
   } catch {
     return false;
   }
@@ -8856,14 +9343,14 @@ async function handleAdminAccounts(request, env) {
 __name(handleAdminAccounts, "handleAdminAccounts");
 
 // ../workers/api/admin-color-inventory.ts
-function isProductionHost16(hostname) {
+function isProductionHost17(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost16, "isProductionHost");
-async function authorizeAdmin15(request, env) {
+__name(isProductionHost17, "isProductionHost");
+async function authorizeAdmin16(request, env) {
   const hostname = request.headers.get("Host") || "";
-  const isProd = isProductionHost16(hostname);
+  const isProd = isProductionHost17(hostname);
   const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
     const verified = await verifyClerkJwt(request, env);
@@ -8877,7 +9364,7 @@ async function authorizeAdmin15(request, env) {
   }
   return { ok: true };
 }
-__name(authorizeAdmin15, "authorizeAdmin");
+__name(authorizeAdmin16, "authorizeAdmin");
 async function handleAdminColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8886,7 +9373,7 @@ async function handleAdminColorInventory(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" } });
   }
-  const auth = await authorizeAdmin15(request, env);
+  const auth = await authorizeAdmin16(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   const db = env.DB;
   if (request.method === "GET") {
@@ -8934,7 +9421,7 @@ __name(handleAdminColorInventory, "handleAdminColorInventory");
 // ../workers/api/favorites.ts
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
-function json9(body, status = 200) {
+function json10(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -8943,7 +9430,7 @@ function json9(body, status = 200) {
     }
   });
 }
-__name(json9, "json");
+__name(json10, "json");
 async function ensureFavoritesSchema(env) {
   if (favoritesSchemaReady) return;
   if (!favoritesSchemaPromise) {
@@ -8970,14 +9457,14 @@ async function ensureFavoritesSchema(env) {
   await favoritesSchemaPromise;
 }
 __name(ensureFavoritesSchema, "ensureFavoritesSchema");
-function isProductionHost17(hostname) {
+function isProductionHost18(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost17, "isProductionHost");
-function collectRoles13(raw) {
+__name(isProductionHost18, "isProductionHost");
+function collectRoles14(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -9002,28 +9489,28 @@ function collectRoles13(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles13, "collectRoles");
-function hasAdminRole18(rawClaims) {
-  const roles = collectRoles13(rawClaims);
+__name(collectRoles14, "collectRoles");
+function hasAdminRole19(rawClaims) {
+  const roles = collectRoles14(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole18, "hasAdminRole");
-function emailAllowed17(email, env) {
+__name(hasAdminRole19, "hasAdminRole");
+function emailAllowed18(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed17, "emailAllowed");
-async function authorizeAdmin16(request, env) {
+__name(emailAllowed18, "emailAllowed");
+async function authorizeAdmin17(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
     const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole18(raw) || emailAllowed17(verified.payload.email || "", env)) {
+      if (hasAdminRole19(raw) || emailAllowed18(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -9037,8 +9524,8 @@ async function authorizeAdmin16(request, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed17(email, env)) return { ok: true };
-            if (hasAdminRole18(metadata)) return { ok: true };
+            if (emailAllowed18(email, env)) return { ok: true };
+            if (hasAdminRole19(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -9051,7 +9538,7 @@ async function authorizeAdmin16(request, env) {
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const host = new URL(request.url).hostname;
-  const prodHost = isProductionHost17(host);
+  const prodHost = isProductionHost18(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -9060,7 +9547,7 @@ async function authorizeAdmin16(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin16, "authorizeAdmin");
+__name(authorizeAdmin17, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -9095,10 +9582,10 @@ async function handleFavorites(request, env) {
       await ensureFavoritesSchema(env);
     } catch (e) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
-      return json9({ error: "Favorites storage unavailable" }, 500);
+      return json10({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin16(request, env);
-    if (!auth.ok) return json9({ error: auth.error }, auth.status);
+    const auth = await authorizeAdmin17(request, env);
+    if (!auth.ok) return json10({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
       `SELECT 
@@ -9132,22 +9619,22 @@ async function handleFavorites(request, env) {
        ORDER BY favorite_count DESC, last_favorited_at DESC
        LIMIT ?1`
     ).bind(limit).all();
-    return json9({
+    return json10({
       totals: totals || { total_favorites: 0, total_users: 0, total_products: 0 },
       topProducts: topProducts.results || [],
       topUsers: topUsers.results || []
     });
   }
   if (path !== "/api/favorites") {
-    return json9({ error: "Not found" }, 404);
+    return json10({ error: "Not found" }, 404);
   }
   const user = await getUserContext(request, env);
-  if (!user.ok) return json9({ error: user.error }, user.status);
+  if (!user.ok) return json10({ error: user.error }, user.status);
   try {
     await ensureFavoritesSchema(env);
   } catch (e) {
     console.error("favorites schema init failed:", e?.message || e);
-    return json9({ error: "Favorites storage unavailable" }, 500);
+    return json10({ error: "Favorites storage unavailable" }, 500);
   }
   if (method === "GET") {
     const rows = await env.DB.prepare(
@@ -9170,31 +9657,31 @@ async function handleFavorites(request, env) {
        ORDER BY MAX(f.created_at) DESC
        LIMIT 100`
     ).bind(user.userId, user.email).all();
-    return json9({ favorites: rows.results || [] });
+    return json10({ favorites: rows.results || [] });
   }
   if (method === "POST") {
     let body = {};
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON body" }, 400);
+      return json10({ error: "Invalid JSON body" }, 400);
     }
     const productSlug = String(body.productSlug || body.slug || "").trim();
-    if (!productSlug) return json9({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json10({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id, slug, title_en, image_url, base_price_usd AS price_usd, base_price_thb AS price_thb
        FROM products
        WHERE slug = ?1
        LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json9({ error: "Product not found" }, 404);
+    if (!product) return json10({ error: "Product not found" }, 404);
     const existing = await env.DB.prepare(
       `SELECT id FROM favorites
        WHERE product_id = ?1 AND (user_id = ?2 OR LOWER(email) = ?3)
        LIMIT 1`
     ).bind(product.id, user.userId, user.email).first();
     if (existing) {
-      return json9({
+      return json10({
         success: true,
         isFavorite: true,
         created: false,
@@ -9205,7 +9692,7 @@ async function handleFavorites(request, env) {
       `INSERT OR IGNORE INTO favorites (user_id, email, product_id, created_at)
        VALUES (?1, ?2, ?3, datetime('now'))`
     ).bind(user.userId, user.email, product.id).run();
-    return json9({
+    return json10({
       success: true,
       isFavorite: true,
       created: Number(result.meta?.changes || 0) > 0,
@@ -9221,23 +9708,23 @@ async function handleFavorites(request, env) {
       } catch {
       }
     }
-    if (!productSlug) return json9({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json10({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id FROM products WHERE slug = ?1 LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json9({ success: true, isFavorite: false, removed: false });
+    if (!product) return json10({ success: true, isFavorite: false, removed: false });
     const result = await env.DB.prepare(
       `DELETE FROM favorites
        WHERE product_id = ?1
          AND (user_id = ?2 OR LOWER(email) = ?3)`
     ).bind(product.id, user.userId, user.email).run();
-    return json9({
+    return json10({
       success: true,
       isFavorite: false,
       removed: Number(result.meta?.changes || 0) > 0
     });
   }
-  return json9({ error: "Method not allowed" }, 405);
+  return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleFavorites, "handleFavorites");
 
@@ -9912,8 +10399,8 @@ async function handleStripeWebhook(request, env) {
       if (!teamMail.success) {
         console.error("Refund alert email failed:", teamMail.error || "unknown error");
       }
-    } catch (err) {
-      console.error("Refund alert exception:", err?.message || err);
+    } catch (err2) {
+      console.error("Refund alert exception:", err2?.message || err2);
     }
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
@@ -9950,8 +10437,8 @@ async function handleStripeWebhook(request, env) {
       if (!teamMail.success) {
         console.error("Dispute alert email failed:", teamMail.error || "unknown error");
       }
-    } catch (err) {
-      console.error("Dispute alert exception:", err?.message || err);
+    } catch (err2) {
+      console.error("Dispute alert exception:", err2?.message || err2);
     }
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
@@ -10064,7 +10551,10 @@ async function handleStripeWebhook(request, env) {
         return n ? `${String(k).toUpperCase()}:${n}` : null;
       }).filter(Boolean) : [];
       const areaCm2 = toFiniteNumber(dims?.area_cm2);
-      const extra = [valuePairs.length ? `${valuePairs.join(", ")} ${unit}` : "", areaCm2 ? `Area:${Math.round(areaCm2).toLocaleString()} cm\xB2` : ""].filter(Boolean).join(" | ");
+      const extra = [
+        valuePairs.length ? `${valuePairs.join(", ")} ${unit}` : "",
+        areaCm2 ? `Area:${Math.round(areaCm2).toLocaleString()} cm\xB2` : ""
+      ].filter(Boolean).join(" | ");
       return [shapeLabel, extra].filter(Boolean).join(" | ") || `?\xD7? ${unit}`;
     }
     const w = toFiniteNumber(dims?.w);
@@ -10187,8 +10677,8 @@ async function handleStripeWebhook(request, env) {
               "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
             ).bind(addrHash, metadata.discount_code).run();
           }
-        } catch (err) {
-          console.error("Discount claim failed:", err?.message || err);
+        } catch (err2) {
+          console.error("Discount claim failed:", err2?.message || err2);
         }
       }
     } catch (e) {
@@ -10237,8 +10727,11 @@ async function handleStripeWebhook(request, env) {
       metadata.shipping_country_applied || metadata.shipping_country_requested || ""
     ).trim().toUpperCase();
     const dutyTaxNotice = shippingCountryCode === "US" || shippingCountryCode === "CA" ? "Import duties and taxes are included (DDP) for this shipment." : shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.";
-    const dutyTaxLine = dutyTaxNotice ? `\n\nDuty/Tax: ${dutyTaxNotice}` : "";
-    const dutyTaxTeamLine = dutyTaxNotice ? `\nDuty/Tax: ${dutyTaxNotice}` : "";
+    const dutyTaxLine = dutyTaxNotice ? `
+
+Duty/Tax: ${dutyTaxNotice}` : "";
+    const dutyTaxTeamLine = dutyTaxNotice ? `
+Duty/Tax: ${dutyTaxNotice}` : "";
     try {
       const customerMail = await sendEmail(env, {
         to: email,
@@ -10250,8 +10743,7 @@ Order: #${session.id.slice(-8)}
 Items:
 ${itemList}
 
-Total: ${total}
-${dutyTaxLine}
+Total: ${total}${dutyTaxLine}
 
 We'll notify you when your order ships.
 
@@ -10260,8 +10752,8 @@ We'll notify you when your order ships.
       if (!customerMail.success) {
         console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
       }
-    } catch (err) {
-      console.error("Customer email exception:", err?.message || err, "to:", email);
+    } catch (err2) {
+      console.error("Customer email exception:", err2?.message || err2, "to:", email);
     }
     const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
     try {
@@ -10282,14 +10774,13 @@ Shipping Type: ${shippingServiceType}${customerNoteText}
 Items:
 ${itemList}
 
-Total: ${total}
-${dutyTaxTeamLine}`
+Total: ${total}${dutyTaxTeamLine}`
       });
       if (!teamMail.success) {
         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
       }
-    } catch (err) {
-      console.error("Team email exception:", err?.message || err, "to:", teamEmail);
+    } catch (err2) {
+      console.error("Team email exception:", err2?.message || err2, "to:", teamEmail);
     }
   }
   if (email) {
@@ -10986,10 +11477,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     const res = await handleProducts(request, env);
     const body = await res.text();
     try {
-      const json10 = JSON.parse(body);
-      if (json10.product) json10.product = r2Product3(json10.product);
-      if (Array.isArray(json10.products)) json10.products = json10.products.map(r2Product3);
-      return new Response(JSON.stringify(json10), {
+      const json11 = JSON.parse(body);
+      if (json11.product) json11.product = r2Product3(json11.product);
+      if (Array.isArray(json11.products)) json11.products = json11.products.map(r2Product3);
+      return new Response(JSON.stringify(json11), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (_) {
@@ -11037,6 +11528,9 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/admin/stats" || path === "/api/admin/stats/") {
     return handleAdminStats(request, env);
+  }
+  if (path.startsWith("/api/admin/analysis")) {
+    return handleAdminAnalysis(request, env);
   }
   if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
     return handleAdminShippingRates(request, env);
@@ -11205,8 +11699,8 @@ async function onRequest5(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err) {
-    console.error("Blog post error:", err);
+  } catch (err2) {
+    console.error("Blog post error:", err2);
     return new Response("Server error", { status: 500 });
   }
 }
@@ -11849,7 +12343,7 @@ function getClerkSessionToken3(request) {
   return null;
 }
 __name(getClerkSessionToken3, "getClerkSessionToken");
-function collectRoles14(raw) {
+function collectRoles15(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -11873,20 +12367,20 @@ function collectRoles14(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles14, "collectRoles");
-function hasAdminRole19(rawClaims) {
-  const roles = collectRoles14(rawClaims);
+__name(collectRoles15, "collectRoles");
+function hasAdminRole20(rawClaims) {
+  const roles = collectRoles15(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole19, "hasAdminRole");
-function emailAllowed18(email, env) {
+__name(hasAdminRole20, "hasAdminRole");
+function emailAllowed19(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed18, "emailAllowed");
+__name(emailAllowed19, "emailAllowed");
 function emailBlocked(email) {
   if (!email) return false;
   const blocked = [
@@ -11922,7 +12416,7 @@ async function enrichAdminFromClerk(sub, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return { email, hasAdmin: hasAdminRole19(metadataRaw) };
+    return { email, hasAdmin: hasAdminRole20(metadataRaw) };
   } catch {
     return { email: "", hasAdmin: false };
   }
@@ -11949,14 +12443,14 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   }
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
-  let hasAdmin = hasAdminRole19(raw);
-  let allowed = emailAllowed18(email, context.env);
+  let hasAdmin = hasAdminRole20(raw);
+  let allowed = emailAllowed19(email, context.env);
   if (!hasAdmin && !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
-    allowed = allowed || emailAllowed18(email, context.env);
+    allowed = allowed || emailAllowed19(email, context.env);
   }
   if (emailBlocked(email)) {
     return new Response(
@@ -12760,7 +13254,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-bkGERH/functionsRoutes-0.8716962487820559.mjs
+// ../.wrangler/tmp/pages-ucKvaA/functionsRoutes-0.682240980070407.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

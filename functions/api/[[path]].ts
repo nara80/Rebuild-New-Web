@@ -40,6 +40,7 @@ import { handleAdminUpload } from "../../workers/api/admin-upload";
 import { handleAdminOrders } from "../../workers/api/admin-orders";
 import { handleAdminCustomers } from "../../workers/api/admin-customers";
 import { handleAdminStats } from "../../workers/api/admin-stats";
+import { handleAdminAnalysis } from "../../workers/api/admin-analysis";
 import { handleAdminShippingRates, handleAdminShippingProductTiers, handleAdminShippingAddRates } from "../../workers/api/admin-shipping";
 import { handleAdminQuotes } from "../../workers/api/admin-quotes";
 import { handleDiscountValidate, handleDiscountClaim } from "../../workers/api/discount";
@@ -174,6 +175,11 @@ export const onRequest: PagesFunction<{
   // Admin listing performance stats
   if (path === "/api/admin/stats" || path === "/api/admin/stats/") {
     return handleAdminStats(request, env);
+  }
+
+  // Admin marketing analysis (read-only, Marketing Decision System)
+  if (path.startsWith("/api/admin/analysis")) {
+    return handleAdminAnalysis(request, env);
   }
 
   // Admin shipping rates
