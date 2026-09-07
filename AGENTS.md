@@ -108,6 +108,31 @@ This file is read by Droid at the start of every session. It contains all critic
 
 ---
 
+## Marketing Decision System Reconciliation Snapshot (2026-09-07)
+
+Reconciled from:
+- `00_Issue/00_MildMate_Marketing_Decision_System_Roadmap_D1_v5_2026-09-07.md`
+- `00_Issue/02_MildMate_Marketing_Decision_System_v5_Reconciliation_2026-09-07.md`
+
+Verified state to preserve in future sessions:
+- **Canonical D1 product identity for Marketing Decision System:** 32 active products (`1–29, 32, 33, 34`; gaps `30, 31` remain intentional and must not be renumbered).
+- **Google Product Master:** 32 rows; remains a human/admin mirror, not canonical product source.
+- **Etsy mapping:** 16 listing IDs are manually confirmed in Product Master (partial); canonical D1 channel-listing persistence + automatic Etsy listing sync are still pending.
+- **Unified sales analytics backend:** production-verified (`sales_orders`, `sales_order_items`, `sync_runs`) via `039_unified_sales_analytics.sql`.
+- **Sales sync API:** production-verified at `/api/v1/health`, `/api/v1/sales/orders/upsert`, `/api/v1/sales/orders/{source_system}/{source_order_id}` with Bearer token `SALES_SYNC_API_TOKEN`.
+- **Make.com flow `MildMate - Notion OrderList to D1 Sales Sync`:** built + end-to-end verified; remaining operational step is activation (`Choose where to start → From now on`) and schedule (`Every 15 minutes`).
+- **Historical product mapping:** partial; resolver automation workflow is design/handoff only and not production-verified.
+- **D1 → Google Product Master auto-sync:** pending; `Last_Synced_At` is not yet a trusted production signal.
+- **External collectors (GSC/GA4/Etsy performance/Google Ads/Meta Ads):** pending Phase 3 work.
+- **Commercial reporting guardrail:** exclude known smoke-test order (`TEST-MAKE-001`) from business KPIs.
+
+Status taxonomy for this workstream:
+- ✅ Built + production/end-to-end verified: unified sales tables/API, OrderList→D1 sales sync scenario logic
+- 🟡 Partial/in progress: historical mapping coverage, manual Etsy mapping
+- ⬜ Pending/not production verified: mapping resolver automation, Product Master auto-sync, external performance collectors, opportunity engine
+
+---
+
 ## Key Decisions Already Made
 
 | Decision | Value |
@@ -265,7 +290,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 | Pet Owner Bedding | `/pets/` | Pet Owner Fitted Sheet, Pet Owner Duvet Cover, Pet-Proof Mattress Protector, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 | RV & Truck Cab | `/rv-truck/` | RV & Truck Fitted Sheet, Duvet Cover — RV, 6-Sided Mattress Encasement, RV & Truck Mattress Encasement, Envelope/Zipper/Sham Pillowcase, Pillow Protector |
 
-### Complete Product Catalog (30 core products + 1 CMS extension)
+### Complete Product Catalog (Web storefront template scope: 30 core products + 1 runtime extension)
 
 | # | Product | URL | Product Type | Niche / Use-Case |
 |---|---|---|---|---|
@@ -303,7 +328,7 @@ Source files in `MildMateDataBase/ExistingWeb/`:
 
 ---
 
-## Configurator Pricing Status
+## Configurator Pricing Status (Web storefront template scope)
 
 **27 of 30 core products** have live pricing formulas (all requiring a configurator). **3 core products** are fixed-price and need no configurator (see section below). Runtime extension `weighted-duvet-cover` is formula-driven via duvet logic + derived markup parameter.
 
@@ -383,6 +408,8 @@ Marine Fitted Sheet uses a **V-Berth-specific configurator** with hybrid pricing
 - Responsive: desktop 4-col, tablet 2×2, mobile 1-col stack
 
 All 30 core catalog products now have live pricing formulas or don't require configurators.
+
+> Note: Marketing Decision System reconciliation tracks canonical D1 identity separately at 32 active products (including IDs 33 and 34).
 
 ---
 

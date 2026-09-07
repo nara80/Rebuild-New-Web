@@ -68,6 +68,23 @@ function isConfigurableProductSlug(slugRaw: any): boolean {
   return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
 }
 
+async function getLatestSalesSyncRun(env: any): Promise<any | null> {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT id, source, scenario, status,
+              records_received, records_created, records_updated, records_unchanged, records_rejected,
+              finished_at, created_at
+       FROM sync_runs
+       ORDER BY COALESCE(finished_at, created_at) DESC
+       LIMIT 1`
+    ).first();
+    return row || null;
+  } catch (e: any) {
+    console.warn("sync_runs lookup skipped:", e?.message || e);
+    return null;
+  }
+}
+
 async function ensureOrderShippingSchema(env: any): Promise<void> {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -294,12 +311,14 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
         .map((o: any) => String(o?.stripe_session_id || "").slice(-8))
         .filter(Boolean)
     ));
+    const latestSalesSync = await getLatestSalesSyncRun(env);
     return json({
       orders: rows,
       dimension_guardrail: {
         missing_configurable_rows: missingConfigurable.length,
         affected_orders: affectedOrderIds,
       },
+      sales_sync: latestSalesSync,
     });
   }
 

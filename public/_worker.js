@@ -4258,6 +4258,22 @@ function isConfigurableProductSlug(slugRaw) {
   if (!slug) return true;
   return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
 }
+async function getLatestSalesSyncRun(env) {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT id, source, scenario, status,
+              records_received, records_created, records_updated, records_unchanged, records_rejected,
+              finished_at, created_at
+       FROM sync_runs
+       ORDER BY COALESCE(finished_at, created_at) DESC
+       LIMIT 1`
+    ).first();
+    return row || null;
+  } catch (e) {
+    console.warn("sync_runs lookup skipped:", e?.message || e);
+    return null;
+  }
+}
 __name(isConfigurableProductSlug, "isConfigurableProductSlug");
 async function ensureOrderShippingSchema(env) {
   if (orderShippingSchemaReady) return;
@@ -4456,12 +4472,14 @@ async function handleAdminOrders(request, env) {
     const affectedOrderIds = Array.from(new Set(
       missingConfigurable.map((o) => String(o?.stripe_session_id || "").slice(-8)).filter(Boolean)
     ));
+    const latestSalesSync = await getLatestSalesSyncRun(env);
     return json2({
       orders: rows,
       dimension_guardrail: {
         missing_configurable_rows: missingConfigurable.length,
         affected_orders: affectedOrderIds
-      }
+      },
+      sales_sync: latestSalesSync
     });
   }
   const idMatch = path.match(/^\/api\/admin\/orders\/(\d+)$/);

@@ -20,6 +20,34 @@
 
 ---
 
+## Marketing Decision System Reconciliation Snapshot (2026-09-07)
+
+Reconciled from:
+- `00_Issue/00_MildMate_Marketing_Decision_System_Roadmap_D1_v5_2026-09-07.md`
+- `00_Issue/02_MildMate_Marketing_Decision_System_v5_Reconciliation_2026-09-07.md`
+
+Verified/confirmed:
+- Canonical D1 product identity for the marketing system is **32 active products** (`1–29, 32, 33, 34`; gaps `30, 31` intentionally preserved).
+- Google Product Master currently has **32 rows** and remains a mirror/admin surface, not canonical source.
+- Etsy mapping is **partial**: 16 listing IDs manually confirmed in Product Master; canonical D1 channel-listing persistence and auto Etsy sync are pending.
+- Unified sales analytics backend is **production-verified**: `sales_orders`, `sales_order_items`, `sync_runs` (migration `039_unified_sales_analytics.sql`).
+- Sales API is **production-verified** at `/api/v1/health`, `/api/v1/sales/orders/upsert`, `/api/v1/sales/orders/{source_system}/{source_order_id}` with Bearer auth (`SALES_SYNC_API_TOKEN`).
+- Make.com scenario `MildMate - Notion OrderList to D1 Sales Sync` is **built + end-to-end verified**. Remaining step is operational activation (`From now on`) with schedule every 15 minutes.
+
+Not yet production-verified:
+- Historical product-mapping resolver automation (design/handoff only).
+- Automatic D1 → Google Product Master synchronization (`Last_Synced_At` not yet trusted).
+- External performance collectors (GSC, GA4, Etsy performance, Google Ads, Meta Ads).
+
+Reporting guardrail:
+- Exclude smoke-test identity `TEST-MAKE-001` from commercial KPI reporting.
+
+Scope clarification:
+- Web storefront template catalog remains **30 core + 1 runtime extension** in this framework section.
+- Marketing Decision System canonical identity is tracked separately at **32 active D1 products**.
+
+---
+
 ## Frontend Design System
 
 ### Brand Tokens (CSS Variables) — Updated 2026-05-21
@@ -1065,8 +1093,8 @@ CREATE TABLE blog_posts (
 | DELETE | /api/admin/campaigns?id=N | handleAdminCampaigns | Delete marketing campaign by id |
 | POST | /api/admin/thankyou-dispatch | handleAdminThankyouDispatch | Manually send due thank-you emails and return sent/failed/skipped details |
 | GET | /v1/health (and /api/v1/health) | handleSales | Sales sync API health check |
-| GET | /v1/orders/:order_number (and /api/v1/orders/:order_number) | handleSales | Sales sync order read |
-| POST | /v1/orders (and /api/v1/orders) | handleSales | Sales sync order upsert (Bearer token required) |
+| GET | /v1/sales/orders/:source_system/:source_order_id (and /api/v1/sales/orders/:source_system/:source_order_id) | handleSales | Sales sync order read |
+| POST | /v1/sales/orders/upsert (and /api/v1/sales/orders/upsert) | handleSales | Sales sync order upsert (Bearer token required) |
 
 ### Frontend Files
 - **Admin:** /admin/blog.html — dedicated blog CMS page with WYSIWYG editor
@@ -1088,7 +1116,7 @@ CREATE TABLE blog_posts (
 | **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` on `products`; specialization in `product_niches`; niche-page visibility in `product_collections`; legacy `products.niches` retained for fallback compatibility. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-21:** marketing decision exports refreshed as Products/Niches/Collections tabs. | ✅ Complete |
 | **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; optional checkout message type + note saved to orders/team email; checkout success/cancel URL now derived from request origin to keep preview sessions on preview domain; runtime worker artifacts reconciled with source) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. Cron trigger remains configured via Cloudflare Dashboard. | ✅ Built |
-| **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` routes are retired with redirect compatibility in place. Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + order upsert/read) in `workers/api/sales.ts`, secured by `SALES_SYNC_API_TOKEN`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com + norrawich.rat@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` updated in Production + Preview ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Cloudflare Access status:** Zero Trust allow policies are configured for `/admin/` and `/super-admin/` (defense-in-depth active). | ✅ Built |
+| **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` routes are retired with redirect compatibility in place. Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + sales order upsert/read) in `workers/api/sales.ts`, secured by `SALES_SYNC_API_TOKEN`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com + norrawich.rat@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` updated in Production + Preview ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Cloudflare Access status:** Zero Trust allow policies are configured for `/admin/` and `/super-admin/` (defense-in-depth active). | ✅ Built |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed) |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ❌ Out of Scope |
 

@@ -1631,6 +1631,59 @@ function mapOrderRow(o) {
   };
 }
 
+function parseSyncTimestamp(raw) {
+  var s = String(raw || '').trim();
+  if (!s) return null;
+  var direct = new Date(s);
+  if (!isNaN(direct.getTime())) return direct;
+  if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/.test(s)) {
+    var utcGuess = new Date(s.replace(' ', 'T') + 'Z');
+    if (!isNaN(utcGuess.getTime())) return utcGuess;
+    var localGuess = new Date(s.replace(' ', 'T'));
+    if (!isNaN(localGuess.getTime())) return localGuess;
+  }
+  return null;
+}
+
+function formatSyncAge(minutes) {
+  if (!isFinite(minutes) || minutes < 0) return 'unknown';
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return Math.round(minutes) + ' min ago';
+  var hours = minutes / 60;
+  if (hours < 24) return Math.round(hours * 10) / 10 + ' hr ago';
+  return Math.round(hours / 24 * 10) / 10 + ' d ago';
+}
+
+function renderSalesSyncBanner(sync) {
+  if (!sync || typeof sync !== 'object') {
+    return '<div style="margin-bottom:12px;padding:10px 12px;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-size:0.8125rem"><strong>Sales Sync:</strong> No sync-run record found. Check `sync_runs` ingestion logging.</div>';
+  }
+  var now = new Date();
+  var syncAt = parseSyncTimestamp(sync.finished_at || sync.created_at);
+  var ageMinutes = syncAt ? ((now.getTime() - syncAt.getTime()) / 60000) : NaN;
+  var statusRaw = String(sync.status || '').toLowerCase();
+  var isFailed = statusRaw === 'failed' || statusRaw === 'partial' || statusRaw === 'error';
+  var isDelayed = !isFailed && (!isFinite(ageMinutes) || ageMinutes > 30);
+  var boxBorder = isFailed ? '#ef4444' : (isDelayed ? '#f59e0b' : '#16a34a');
+  var boxBg = isFailed ? '#fef2f2' : (isDelayed ? '#fffbeb' : '#f0fdf4');
+  var boxText = isFailed ? '#991b1b' : (isDelayed ? '#92400e' : '#166534');
+  var label = isFailed ? 'FAILED' : (isDelayed ? 'DELAYED' : 'HEALTHY');
+  var source = String(sync.source || 'unknown');
+  var syncAtText = syncAt ? syncAt.toLocaleString() : 'Unknown time';
+  var ageText = formatSyncAge(ageMinutes);
+  var counters = [
+    'recv ' + Number(sync.records_received || 0),
+    'new ' + Number(sync.records_created || 0),
+    'upd ' + Number(sync.records_updated || 0),
+    'same ' + Number(sync.records_unchanged || 0),
+    'rej ' + Number(sync.records_rejected || 0)
+  ].join(' · ');
+  return '<div style="margin-bottom:12px;padding:10px 12px;border:1px solid ' + boxBorder + ';background:' + boxBg + ';color:' + boxText + ';border-radius:8px;font-size:0.8125rem">' +
+    '<strong>Sales Sync: ' + label + '</strong> · Run #' + escHtml(String(sync.id || '—')) + ' · source: ' + escHtml(source) + '<br>' +
+    'Last sync: ' + escHtml(syncAtText) + ' (' + escHtml(ageText) + ') · Counters: ' + escHtml(counters) +
+    '</div>';
+}
+
 function formatOrderAddress(addrRaw) {
   var s = String(addrRaw || '').trim();
   if (!s) return '—';
@@ -1734,6 +1787,7 @@ async function openOrderDetail(orderId) {
 async function rOrders(){
   var orders = [];
   var guardrail = null;
+  var salesSync = null;
   var fetchError = '';
   try {
     var resp = await fetch('/api/admin/orders?include_archived=' + (orderShowArchived ? '1' : '0'), { headers: await getAdminAuthHeaders(false) });
@@ -1741,6 +1795,7 @@ async function rOrders(){
       var data = await resp.json();
       orders = Array.isArray(data.orders) ? data.orders.map(mapOrderRow) : [];
       guardrail = data.dimension_guardrail || null;
+      salesSync = data.sales_sync || null;
     } else {
       var errData = null;
       try { errData = await resp.json(); } catch(e) {}
@@ -1755,6 +1810,7 @@ async function rOrders(){
   }
 
   var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders (D1)</span></div><div class="card-body">';
+  h += renderSalesSyncBanner(salesSync);
   var uiMissingRows = orders.filter(function(o){ return !!o.missingDimsIssue; }).length;
   var apiMissingRows = guardrail && typeof guardrail.missing_configurable_rows === 'number'
     ? guardrail.missing_configurable_rows
