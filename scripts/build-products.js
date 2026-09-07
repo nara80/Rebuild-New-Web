@@ -400,6 +400,7 @@ function buildFixed(slug, p, prod) {
     '{{RELATED_PRODUCTS}}': buildRelatedHTML(p.relatedSlugs),
     '{{TAGS_HTML}}': buildTagsHTML(p.tags),
     '{{PRODUCT_SLUG}}': slug,
+    '{{PRICE_DISPLAY}}': p.priceDisplay || (prod.priceUsd ? 'USD ' + prod.priceUsd.toFixed(2) : 'USD 0.00'),
   };
 
   // Build fixed pricing HTML
@@ -523,7 +524,7 @@ function buildFixedPricingHTML(slug, p, prod) {
   } else {
     // BedBridge or Bed Lifter: simple price display
     html += '<div class="one-size-badge">One Size</div>';
-    html += '<div class="price-display">' + (p.priceDisplay || ('USD ' + (p.priceUsd || 0).toFixed(2))) + '</div>';
+    html += '<div class="price-display" id="price-display">' + (p.priceDisplay || ('USD ' + (p.priceUsd || 0).toFixed(2))) + '</div>';
     html += '<div class="price-note">Excludes shipping &amp; import tariff</div>';
 
     // Specs if available
