@@ -16,3 +16,6 @@ node_modules/
 
 # Local backups
 *.backup
+
+# Customer PII — raw order exports must never enter the repo
+01_MildMate_Marketing/07_Historical_Backfill/input/
