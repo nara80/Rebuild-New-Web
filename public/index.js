@@ -5243,6 +5243,7 @@ var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
 var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
 var REVENUE_STATUSES = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
+var MAPPING_STATUSES = /* @__PURE__ */ new Set(["Mapped", "Partial", "Unmapped", "Itemless"]);
 var MAX_LIMIT = 200;
 var DEFAULT_LIMIT = 50;
 function parseFilters(url) {
@@ -5266,6 +5267,9 @@ function parseFilters(url) {
   }
   const revRaw = (url.searchParams.get("revenue_status") || "").trim().toUpperCase() || null;
   if (revRaw && !REVENUE_STATUSES.has(revRaw)) return bad("INVALID_REVENUE_STATUS", "revenue_status must be EXACT or UNALLOCATED.");
+  const mapRaw0 = (url.searchParams.get("mapping") || "").trim();
+  const mapRaw = mapRaw0 ? mapRaw0.charAt(0).toUpperCase() + mapRaw0.slice(1).toLowerCase() : null;
+  if (mapRaw && !MAPPING_STATUSES.has(mapRaw)) return bad("INVALID_MAPPING_STATUS", "mapping must be Mapped, Partial, Unmapped, or Itemless.");
   const limitRaw = (url.searchParams.get("limit") || "").trim();
   let limit = DEFAULT_LIMIT;
   if (limitRaw) {
@@ -5280,7 +5284,7 @@ function parseFilters(url) {
   }
   return {
     ok: true,
-    f: { start, end, channel: channelRaw, productId, status: statusRaw, revenueStatus: revRaw, limit, offset }
+    f: { start, end, channel: channelRaw, productId, status: statusRaw, revenueStatus: revRaw, mapping: mapRaw, limit, offset }
   };
 }
 __name(parseFilters, "parseFilters");
@@ -5359,6 +5363,10 @@ async function getSales(env, f) {
     conds.push("co.status = ?");
     binds.push(f.status);
   }
+  if (f.mapping) {
+    conds.push("om.derived_mapping_status = ?");
+    binds.push(f.mapping);
+  }
   const extra = conds.length ? " AND " + conds.join(" AND ") : "";
   const base = `FROM analysis_active_items ai
      JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
@@ -5387,7 +5395,8 @@ async function getSales(env, f) {
       channel: f.channel,
       product_id: f.productId,
       status: f.status,
-      revenue_status: f.revenueStatus
+      revenue_status: f.revenueStatus,
+      mapping: f.mapping
     },
     pagination: { total, limit: f.limit, offset: f.offset },
     rows: rows.results || []
@@ -13254,7 +13263,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-ucKvaA/functionsRoutes-0.682240980070407.mjs
+// ../.wrangler/tmp/pages-OUoBDR/functionsRoutes-0.547882707002572.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

@@ -2268,6 +2268,7 @@ async function rMarketing(){
     '<a href="#" onclick="marketingSub=\'campaigns\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='campaigns'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🏷 Run a Sale</a>'+
     '<a href="#" onclick="marketingSub=\'offers\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='offers'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">💌 Send Offers</a>'+
     '<a href="#" onclick="marketingSub=\'promo\';rMarketing().then(function(h){document.getElementById(\'page-content\').innerHTML=h;});return false" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;'+(marketingSub==='promo'?'color:var(--c-blue);border-bottom:2px solid var(--c-blue);margin-bottom:-2px':'color:var(--c-muted)')+'">🎟️ Promo Codes</a>'+
+    '<a href="/super-admin/marketing/data-analyst/" style="padding:10px 20px;text-decoration:none;font-weight:600;font-size:0.875rem;color:var(--c-muted)">📊 Data Analyst</a>'+
   '</div>';
   if (marketingSub === 'offers') return tabs + (await rOffers());
   if (marketingSub === 'promo') return tabs + (await rPromoCodes());

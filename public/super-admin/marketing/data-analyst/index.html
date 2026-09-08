@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>MildMate — Marketing Data Analyst</title>
+<script>if(location.search.indexOf('dev=1')>=0){window.__SKIP_CLERK=1;}</script>
+<script src="/js/clerk.js"></script>
+<style>
+:root{--c-blue:#2c96f4;--c-dark:#1E293B;--c-text:#1E293B;--c-surface:#F8FAFC;--c-border:#e2e8f0;--c-muted:#64748b;--c-green:#16a34a;--c-red:#dc2626;--c-amber:#d97706;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.06)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:var(--c-text);line-height:1.5;min-height:100vh}
+.toolbar{background:#fff;border-bottom:1px solid var(--c-border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+.toolbar h1{font-size:1.125rem;font-weight:600;display:flex;align-items:center;gap:10px}
+.toolbar .dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue);flex-shrink:0}
+.toolbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.back-link{color:var(--c-muted);text-decoration:none;font-size:0.8125rem;font-weight:600}
+.back-link:hover{color:var(--c-blue)}
+.content{padding:24px;max-width:1400px;margin:0 auto}
+.card{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);margin-bottom:20px}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--c-border);font-weight:600;font-size:0.9375rem;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.card-body{padding:16px 20px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--c-surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--c-border);padding:16px 20px}
+.stat-label{font-size:0.6875rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.stat-value{font-size:1.5rem;font-weight:700;color:var(--c-dark);word-break:break-word}
+.stat-sub{font-size:0.75rem;color:var(--c-muted);margin-top:4px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.8125rem}
+th{text-align:left;padding:9px 12px;background:var(--c-surface);font-weight:600;color:var(--c-muted);font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--c-border);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--c-border);color:var(--c-text);vertical-align:middle;white-space:nowrap}
+tr:hover td{background:#f8fafc}
+td.num,th.num{text-align:right}
+.btn{padding:8px 16px;border-radius:var(--radius);font-size:0.8125rem;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;background:transparent}
+.btn-primary{background:var(--c-blue);color:#fff}.btn-primary:hover{background:#1a7fd4}
+.btn-outline{border-color:var(--c-border);color:var(--c-text)}.btn-outline:hover{border-color:var(--c-blue);color:var(--c-blue)}
+.btn-sm{padding:4px 10px;font-size:0.75rem}
+.btn:disabled{opacity:0.4;cursor:default}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:0.6875rem;font-weight:600}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-amber{background:#fef3c7;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-grey{background:#e2e8f0;color:#475569}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.filters label{display:block;font-size:0.6875rem;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.filters input,.filters select{width:100%;padding:8px 10px;border:1px solid var(--c-border);border-radius:var(--radius);font-size:0.8125rem;color:var(--c-text);background:#fff;font-family:inherit}
+.filters input:focus,.filters select:focus{outline:none;border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(44,150,244,0.1)}
+.dq-banner{margin-bottom:20px;padding:12px 16px;border-radius:var(--radius);font-size:0.8125rem;border:1px solid}
+.dq-ok{border-color:#16a34a;background:#f0fdf4;color:#166534}
+.dq-warning{border-color:#f59e0b;background:#fffbeb;color:#92400e}
+.dq-critical{border-color:#ef4444;background:#fef2f2;color:#991b1b}
+.dq-banner ul{margin:6px 0 0 18px}
+.state{padding:32px 20px;text-align:center;color:var(--c-muted);font-size:0.875rem}
+.state.error{color:var(--c-red)}
+.pager{display:flex;align-items:center;gap:10px;font-size:0.75rem;color:var(--c-muted)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:0.75rem}
+.muted{color:var(--c-muted)}
+.gate{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;padding:24px;text-align:center}
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.stats-grid{grid-template-columns:1fr}.content{padding:14px}.toolbar{padding:12px 14px}}
+</style>
+</head>
+<body>
+
+<div id="auth-gate" class="gate">
+  <div class="stat-value">Marketing Data Analyst</div>
+  <div class="muted" id="gate-msg">Checking sign-in…</div>
+  <button class="btn btn-primary" id="gate-signin" style="display:none" onclick="location.href='/super-admin/'">Open Super Admin to sign in</button>
+</div>
+
+<div id="app" style="display:none">
+  <div class="toolbar">
+    <h1><span class="dot"></span> Marketing — Data Analyst</h1>
+    <div class="toolbar-actions">
+      <span id="freshness-badge" class="badge badge-grey">sync: …</span>
+      <button class="btn btn-outline btn-sm" onclick="loadAll()">↻ Refresh</button>
+      <a class="back-link" href="/super-admin/">← Super Admin</a>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="dq-banner"></div>
+
+    <div class="stats-grid" id="kpi-grid">
+      <div class="stat-card"><div class="stat-label">Commercial Orders</div><div class="stat-value" id="kpi-orders">…</div><div class="stat-sub" id="kpi-orders-sub"></div></div>
+      <div class="stat-card"><div class="stat-label">Order Revenue</div><div class="stat-value" id="kpi-revenue">…</div><div class="stat-sub">THB · order totals, never estimated</div></div>
+      <div class="stat-card"><div class="stat-label">Units</div><div class="stat-value" id="kpi-units">…</div><div class="stat-sub">active line-item quantities</div></div>
+      <div class="stat-card"><div class="stat-label">Average Order Value</div><div class="stat-value" id="kpi-aov">…</div><div class="stat-sub">THB</div></div>
+      <div class="stat-card"><div class="stat-label">Mapped Orders</div><div class="stat-value" id="kpi-mapped">…</div><div class="stat-sub">derived from item Product_IDs</div></div>
+      <div class="stat-card"><div class="stat-label">Unallocated Items</div><div class="stat-value" id="kpi-unalloc">…</div><div class="stat-sub" id="kpi-unalloc-sub">item revenue unknown ≠ zero</div></div>
+      <div class="stat-card"><div class="stat-label">Last Sales Sync</div><div class="stat-value" id="kpi-sync" style="font-size:1.05rem">…</div><div class="stat-sub" id="kpi-sync-sub"></div></div>
+      <div class="stat-card"><div class="stat-label">Data Quality</div><div class="stat-value" id="kpi-dq">…</div><div class="stat-sub" id="kpi-dq-sub"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>Filters</span><span class="muted" style="font-size:0.75rem;font-weight:400">dates apply to source order date (analytics day)</span></div>
+      <div class="card-body">
+        <div class="filters">
+          <div><label>From</label><input type="date" id="f-start"></div>
+          <div><label>To</label><input type="date" id="f-end"></div>
+          <div><label>Channel</label><select id="f-channel"><option value="">All channels</option></select></div>
+          <div><label>Product</label><select id="f-product"><option value="">All products</option></select></div>
+          <div><label>Order Status</label><select id="f-status"><option value="">All commercial</option><option>paid</option><option>processing</option><option>shipped</option><option>completed</option></select></div>
+          <div><label>Mapping</label><select id="f-mapping"><option value="">All</option><option>Mapped</option><option>Partial</option><option>Unmapped</option></select></div>
+          <div><label>Revenue Status</label><select id="f-revstatus"><option value="">All</option><option>EXACT</option><option>UNALLOCATED</option></select></div>
+          <div><button class="btn btn-primary" style="width:100%" onclick="applyFilters()">Apply</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>Sales Detail <span class="muted" style="font-weight:400">(item level)</span></span>
+        <div class="pager">
+          <span id="sales-count"></span>
+          <button class="btn btn-outline btn-sm" id="sales-prev" onclick="salesPage(-1)">‹ Prev</button>
+          <button class="btn btn-outline btn-sm" id="sales-next" onclick="salesPage(1)">Next ›</button>
+        </div>
+      </div>
+      <div class="table-wrap"><div id="sales-table"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>Product Participation</span><span class="muted" style="font-size:0.75rem;font-weight:400">demand signal — works even when item revenue is UNALLOCATED</span></div>
+      <div class="table-wrap"><div id="products-table"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span>Channel Analysis</span></div>
+      <div class="table-wrap"><div id="channels-table"></div></div>
+    </div>
+
+    <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
+      Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
+      “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
+    </p>
+  </div>
+</div>
+
+<script>
+'use strict';
+var API = '/api/admin/analysis';
+var salesOffset = 0, salesLimit = 25, salesTotal = 0;
+
+function esc(s){ return String(s === null || s === undefined ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtNum(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US'); }
+function fmtBaht(n){ return (n === null || n === undefined) ? '—' : '฿' + Number(n).toLocaleString('en-US', {maximumFractionDigits: 2}); }
+function fmtPct(n){ return (n === null || n === undefined) ? '—' : (Math.round(Number(n) * 10) / 10) + '%'; }
+
+async function authHeaders(){
+  var headers = {};
+  try {
+    var token = '';
+    if (window.clerk && window.clerk.session && typeof window.clerk.session.getToken === 'function') {
+      token = await window.clerk.session.getToken({ skipCache: true });
+    }
+    if (!token && typeof window.getClerkToken === 'function') token = await window.getClerkToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  } catch(e) {}
+  var secret = localStorage.getItem('admin_secret') || '';
+  if (secret) headers['X-Admin-Secret'] = secret;
+  return headers;
+}
+
+async function api(path){
+  var res = await fetch(API + path, { headers: await authHeaders() });
+  var body = null;
+  try { body = await res.json(); } catch(e) {}
+  if (!res.ok || !body || body.success === false) {
+    var msg = (body && (body.message || body.error_code)) || ('HTTP ' + res.status);
+    var err = new Error(msg); err.status = res.status; throw err;
+  }
+  return body;
+}
+
+function filterQS(extra){
+  var p = [];
+  var v;
+  v = document.getElementById('f-start').value; if (v) p.push('start=' + v);
+  v = document.getElementById('f-end').value; if (v) p.push('end=' + v);
+  v = document.getElementById('f-channel').value; if (v) p.push('channel=' + encodeURIComponent(v));
+  if (extra && extra.withProduct) { v = document.getElementById('f-product').value; if (v) p.push('product_id=' + v); }
+  if (extra && extra.withSalesFilters) {
+    v = document.getElementById('f-status').value; if (v) p.push('status=' + v);
+    v = document.getElementById('f-mapping').value; if (v) p.push('mapping=' + v);
+    v = document.getElementById('f-revstatus').value; if (v) p.push('revenue_status=' + v);
+  }
+  return p.length ? '&' + p.join('&') : '';
+}
+
+function setState(id, cls, msg){
+  document.getElementById(id).innerHTML = '<div class="state ' + (cls || '') + '">' + esc(msg) + '</div>';
+}
+
+// ── KPIs + DQ ──
+
+async function loadSummary(){
+  try {
+    var d = await api('/summary?' + filterQS().slice(1));
+    var s = d.summary;
+    document.getElementById('kpi-orders').textContent = fmtNum(s.orders);
+    document.getElementById('kpi-orders-sub').textContent = (d.filters.start || d.filters.end || d.filters.channel) ? 'filtered' : 'all time';
+    document.getElementById('kpi-revenue').textContent = fmtBaht(s.order_revenue);
+    document.getElementById('kpi-units').textContent = fmtNum(s.units);
+    document.getElementById('kpi-aov').textContent = fmtBaht(s.aov);
+    document.getElementById('kpi-mapped').textContent = fmtPct(s.mapped_order_pct);
+    document.getElementById('kpi-unalloc').textContent = fmtPct(s.unallocated_item_pct);
+    document.getElementById('kpi-unalloc-sub').textContent = fmtNum(s.unallocated_items) + ' of ' + fmtNum(s.exact_items + s.unallocated_items) + ' items · unknown ≠ zero';
+  } catch(e) {
+    document.getElementById('kpi-orders').textContent = '!';
+    document.getElementById('kpi-orders-sub').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadDQ(){
+  try {
+    var d = await api('/data-quality');
+    var q = d.data_quality;
+    var badge = document.getElementById('freshness-badge');
+    var mins = q.freshness_minutes;
+    var syncLabel = (mins === null || mins === undefined) ? 'never' : (mins < 60 ? mins + ' min ago' : (Math.round(mins/60*10)/10) + ' hr ago');
+    badge.textContent = 'sync: ' + syncLabel;
+    badge.className = 'badge ' + (q.status === 'ok' ? 'badge-green' : q.status === 'warning' ? 'badge-amber' : 'badge-red');
+
+    document.getElementById('kpi-sync').textContent = q.last_success_sync_at ? new Date(q.last_success_sync_at).toLocaleString() : 'never';
+    document.getElementById('kpi-sync-sub').textContent = syncLabel + ' · last run: ' + (q.last_sync_status || '—');
+    document.getElementById('kpi-dq').textContent = q.status.toUpperCase();
+    document.getElementById('kpi-dq').style.color = q.status === 'ok' ? 'var(--c-green)' : q.status === 'warning' ? 'var(--c-amber)' : 'var(--c-red)';
+    document.getElementById('kpi-dq-sub').textContent = q.warnings.length + ' warning(s)';
+
+    var el = document.getElementById('dq-banner');
+    if (q.status === 'ok') {
+      el.innerHTML = '<div class="dq-banner dq-ok"><strong>Data Quality: OK</strong> · ' + fmtNum(q.commercial_orders) + ' commercial orders · mapped ' + fmtPct(q.mapped_order_pct) + ' · EXACT item revenue ' + fmtPct(q.exact_item_pct) + '</div>';
+    } else {
+      var cls = q.status === 'warning' ? 'dq-warning' : 'dq-critical';
+      el.innerHTML = '<div class="dq-banner ' + cls + '"><strong>Data Quality: ' + q.status.toUpperCase() + '</strong>' +
+        '<ul>' + q.warnings.map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>';
+    }
+  } catch(e) {
+    document.getElementById('dq-banner').innerHTML = '<div class="dq-banner dq-critical"><strong>Data Quality unavailable:</strong> ' + esc(e.message) + '</div>';
+    document.getElementById('kpi-dq').textContent = '!';
+  }
+}
+
+// ── Sales Detail ──
+
+async function loadSales(){
+  setState('sales-table', '', 'Loading…');
+  try {
+    var d = await api('/sales?limit=' + salesLimit + '&offset=' + salesOffset + filterQS({withProduct:true, withSalesFilters:true}));
+    salesTotal = d.pagination.total;
+    document.getElementById('sales-count').textContent = salesTotal === 0 ? '0 rows' :
+      (salesOffset + 1) + '–' + Math.min(salesOffset + salesLimit, salesTotal) + ' of ' + salesTotal;
+    document.getElementById('sales-prev').disabled = salesOffset <= 0;
+    document.getElementById('sales-next').disabled = salesOffset + salesLimit >= salesTotal;
+
+    if (!d.rows.length) { setState('sales-table', '', 'No sales rows for the selected filters.'); return; }
+    var h = '<table><thead><tr><th>Date</th><th>Channel</th><th>Order</th><th>Status</th><th class="num">Order Total</th><th>Product_ID</th><th>Product</th><th class="num">Qty</th><th class="num">Line Revenue</th><th>Revenue</th><th>Mapping</th></tr></thead><tbody>';
+    d.rows.forEach(function(r){
+      var mapBadge = r.derived_mapping_status === 'Mapped' ? 'badge-green' : r.derived_mapping_status === 'Partial' ? 'badge-amber' : 'badge-red';
+      h += '<tr>' +
+        '<td>' + esc(r.order_day) + '</td>' +
+        '<td>' + esc(r.channel_norm) + '</td>' +
+        '<td class="mono">' + esc(r.source_order_id) + '</td>' +
+        '<td>' + esc(r.status) + '</td>' +
+        '<td class="num">' + fmtBaht(r.order_total) + '</td>' +
+        '<td class="mono">' + (r.product_id === null ? '—' : esc(r.product_id)) + '</td>' +
+        '<td>' + esc(r.product_title) + '</td>' +
+        '<td class="num">' + fmtNum(r.quantity) + '</td>' +
+        '<td class="num">' + fmtBaht(r.line_revenue) + '</td>' +
+        '<td><span class="badge ' + (r.revenue_status === 'EXACT' ? 'badge-blue' : 'badge-grey') + '">' + esc(r.revenue_status) + '</span></td>' +
+        '<td><span class="badge ' + mapBadge + '">' + esc(r.derived_mapping_status || '—') + '</span></td>' +
+        '</tr>';
+    });
+    document.getElementById('sales-table').innerHTML = h + '</tbody></table>';
+  } catch(e) {
+    setState('sales-table', 'error', 'Could not load sales: ' + e.message);
+  }
+}
+
+function salesPage(dir){
+  var next = salesOffset + dir * salesLimit;
+  if (next < 0 || next >= salesTotal) return;
+  salesOffset = next;
+  loadSales();
+}
+
+// ── Product Participation ──
+
+async function loadProducts(){
+  setState('products-table', '', 'Loading…');
+  try {
+    var d = await api('/products?' + filterQS().slice(1));
+    if (!d.products.length) { setState('products-table', '', 'No product activity for the selected filters.'); return; }
+    var h = '<table><thead><tr><th>Product_ID</th><th>Product</th><th class="num">Orders</th><th class="num">Units</th><th>Top Channel</th><th class="num">Channels</th><th>28d Trend</th><th class="num">Exact Revenue</th><th class="num">Revenue Coverage</th></tr></thead><tbody>';
+    d.products.forEach(function(p){
+      var g = p.growth_vs_previous_28d;
+      var trend = (g === null || g === undefined)
+        ? '<span class="muted">n/a</span>'
+        : (g >= 0 ? '<span style="color:var(--c-green)">▲ ' : '<span style="color:var(--c-red)">▼ ') + Math.abs(Math.round(g * 100)) + '%</span>';
+      h += '<tr>' +
+        '<td class="mono">' + (p.product_id === null ? '—' : esc(p.product_id)) + '</td>' +
+        '<td>' + esc(p.product_title) + '</td>' +
+        '<td class="num">' + fmtNum(p.orders_containing_product) + '</td>' +
+        '<td class="num">' + fmtNum(p.quantity) + '</td>' +
+        '<td>' + esc(p.top_channel || '—') + '</td>' +
+        '<td class="num">' + fmtNum(p.channel_count) + '</td>' +
+        '<td>' + trend + '</td>' +
+        '<td class="num">' + fmtBaht(p.exact_revenue) + '</td>' +
+        '<td class="num">' + fmtPct(p.revenue_coverage_pct) + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('products-table').innerHTML = h + '</tbody></table>';
+  } catch(e) {
+    setState('products-table', 'error', 'Could not load products: ' + e.message);
+  }
+}
+
+// ── Channel Analysis ──
+
+async function loadChannels(){
+  setState('channels-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    var d = await api('/channels' + (qs.length ? '?' + qs.join('&') : ''));
+    if (!d.channels.length) { setState('channels-table', '', 'No channel activity for the selected period.'); return; }
+    var h = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Units</th><th class="num">AOV</th><th class="num">Mapped %</th></tr></thead><tbody>';
+    d.channels.forEach(function(c){
+      h += '<tr><td>' + esc(c.channel_norm) + '</td><td class="num">' + fmtNum(c.orders) + '</td><td class="num">' + fmtBaht(c.order_revenue) + '</td><td class="num">' + fmtNum(c.units) + '</td><td class="num">' + fmtBaht(c.aov) + '</td><td class="num">' + fmtPct(c.mapped_pct) + '</td></tr>';
+    });
+    document.getElementById('channels-table').innerHTML = h + '</tbody></table>';
+
+    // Populate the channel filter on first load
+    var sel = document.getElementById('f-channel');
+    if (sel.options.length <= 1) {
+      d.channels.forEach(function(c){
+        var o = document.createElement('option'); o.value = c.channel_norm; o.textContent = c.channel_norm;
+        sel.appendChild(o);
+      });
+    }
+  } catch(e) {
+    setState('channels-table', 'error', 'Could not load channels: ' + e.message);
+  }
+}
+
+async function populateProductFilter(){
+  try {
+    var d = await api('/products');
+    var sel = document.getElementById('f-product');
+    if (sel.options.length > 1) return;
+    d.products.forEach(function(p){
+      if (p.product_id === null) return;
+      var o = document.createElement('option');
+      o.value = p.product_id;
+      o.textContent = '#' + p.product_id + ' — ' + p.product_title;
+      sel.appendChild(o);
+    });
+  } catch(e) {}
+}
+
+// ── Orchestration ──
+
+function applyFilters(){
+  salesOffset = 0;
+  loadSummary(); loadSales(); loadProducts(); loadChannels();
+}
+
+function loadAll(){
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); populateProductFilter();
+}
+
+async function boot(){
+  // Server-side middleware gates this page in production; the client gate
+  // mirrors the SPA behavior for pages.dev/localhost where cookies are absent.
+  var skip = !!window.__SKIP_CLERK || !!localStorage.getItem('admin_secret');
+  if (!skip) {
+    var tries = 0;
+    while (tries < 40 && !(window.clerk && window.clerk.session)) {
+      await new Promise(function(r){ setTimeout(r, 250); });
+      tries++;
+    }
+    if (!(window.clerk && window.clerk.session)) {
+      document.getElementById('gate-msg').textContent = 'You are not signed in. Sign in through Super Admin first, then return here.';
+      document.getElementById('gate-signin').style.display = 'inline-flex';
+      return;
+    }
+  }
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadAll();
+}
+
+boot();
+</script>
+</body>
+</html>

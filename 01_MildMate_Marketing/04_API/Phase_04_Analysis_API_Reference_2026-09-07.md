@@ -28,6 +28,7 @@ Codes: `UNAUTHORIZED`, `METHOD_NOT_ALLOWED`, `ROUTE_NOT_FOUND`, `PRODUCT_NOT_FOU
 | `product_id` | positive integer | sales |
 | `status` | `paid|processing|shipped|completed` (commercial only) | sales |
 | `revenue_status` | `EXACT|UNALLOCATED` | sales |
+| `mapping` | `Mapped|Partial|Unmapped|Itemless` (case-insensitive, filters `derived_mapping_status`; added Phase 05) | sales |
 | `limit` / `offset` | 1–200 (default 50) / ≥0 | sales |
 
 ## Endpoints

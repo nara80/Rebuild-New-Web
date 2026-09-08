@@ -141,6 +141,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
 const COMMERCIAL_STATUSES = new Set(["paid", "processing", "shipped", "completed"]);
 const REVENUE_STATUSES = new Set(["EXACT", "UNALLOCATED"]);
+const MAPPING_STATUSES = new Set(["Mapped", "Partial", "Unmapped", "Itemless"]);
 const MAX_LIMIT = 200;
 const DEFAULT_LIMIT = 50;
 
@@ -151,6 +152,7 @@ type Filters = {
   productId: number | null;
   status: string | null;
   revenueStatus: string | null;
+  mapping: string | null;
   limit: number;
   offset: number;
 };
@@ -182,6 +184,10 @@ function parseFilters(url: URL): { ok: true; f: Filters } | { ok: false; res: Re
   const revRaw = (url.searchParams.get("revenue_status") || "").trim().toUpperCase() || null;
   if (revRaw && !REVENUE_STATUSES.has(revRaw)) return bad("INVALID_REVENUE_STATUS", "revenue_status must be EXACT or UNALLOCATED.");
 
+  const mapRaw0 = (url.searchParams.get("mapping") || "").trim();
+  const mapRaw = mapRaw0 ? mapRaw0.charAt(0).toUpperCase() + mapRaw0.slice(1).toLowerCase() : null;
+  if (mapRaw && !MAPPING_STATUSES.has(mapRaw)) return bad("INVALID_MAPPING_STATUS", "mapping must be Mapped, Partial, Unmapped, or Itemless.");
+
   const limitRaw = (url.searchParams.get("limit") || "").trim();
   let limit = DEFAULT_LIMIT;
   if (limitRaw) {
@@ -197,7 +203,7 @@ function parseFilters(url: URL): { ok: true; f: Filters } | { ok: false; res: Re
 
   return {
     ok: true,
-    f: { start, end, channel: channelRaw, productId, status: statusRaw, revenueStatus: revRaw, limit, offset },
+    f: { start, end, channel: channelRaw, productId, status: statusRaw, revenueStatus: revRaw, mapping: mapRaw, limit, offset },
   };
 }
 
@@ -260,6 +266,7 @@ async function getSales(env: any, f: Filters): Promise<Response> {
   if (f.productId !== null) { conds.push("ai.product_id = ?"); binds.push(f.productId); }
   if (f.revenueStatus) { conds.push("ai.revenue_status = ?"); binds.push(f.revenueStatus); }
   if (f.status) { conds.push("co.status = ?"); binds.push(f.status); }
+  if (f.mapping) { conds.push("om.derived_mapping_status = ?"); binds.push(f.mapping); }
   const extra = conds.length ? " AND " + conds.join(" AND ") : "";
 
   const base =
@@ -289,7 +296,7 @@ async function getSales(env: any, f: Filters): Promise<Response> {
     success: true,
     filters: {
       start: f.start, end: f.end, channel: f.channel, product_id: f.productId,
-      status: f.status, revenue_status: f.revenueStatus,
+      status: f.status, revenue_status: f.revenueStatus, mapping: f.mapping,
     },
     pagination: { total, limit: f.limit, offset: f.offset },
     rows: rows.results || [],
