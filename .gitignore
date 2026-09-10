@@ -19,3 +19,7 @@ node_modules/
 
 # Customer PII — raw order exports must never enter the repo
 01_MildMate_Marketing/07_Historical_Backfill/input/
+
+# Notion product mapper local state + run logs (may contain order metadata)
+scripts/.notion-mapper-state.json
+logs/

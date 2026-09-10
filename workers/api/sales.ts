@@ -183,6 +183,22 @@ async function ensureSalesSchema(env: any): Promise<void> {
         `CREATE UNIQUE INDEX IF NOT EXISTS idx_product_mapping_aliases_key
           ON product_mapping_aliases (COALESCE(source_system, ''), COALESCE(listing_id, ''), alias_norm)`,
         `CREATE INDEX IF NOT EXISTS idx_product_mapping_aliases_listing ON product_mapping_aliases(listing_id)`,
+        `CREATE TABLE IF NOT EXISTS product_mapping_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          notion_page_id TEXT,
+          source_order_id TEXT,
+          source_system TEXT,
+          raw_product_text TEXT,
+          previous_product_ids TEXT,
+          resolved_product_ids TEXT,
+          mapping_method TEXT,
+          confidence REAL,
+          result_status TEXT,
+          dry_run INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE INDEX IF NOT EXISTS idx_product_mapping_events_order ON product_mapping_events(source_order_id)`,
+        `CREATE INDEX IF NOT EXISTS idx_product_mapping_events_page ON product_mapping_events(notion_page_id)`,
       ];
       for (const sql of schemaSql) {
         await env.DB.prepare(sql).run();
@@ -992,6 +1008,78 @@ async function handleMappingAliasList(request: Request, env: any): Promise<Respo
   return response({ success: true, count: (rows.results || []).length, aliases: rows.results || [] });
 }
 
+const ALLOWED_MAPPING_METHOD = new Set(["EXACT_VARIATION", "EXACT_ALIAS", "LISTING_VARIATION", "RULE", "AI", "HUMAN"]);
+const ALLOWED_RESULT_STATUS = new Set(["Mapped", "Partial", "Review Required", "Unmapped"]);
+
+async function handleMappingEventInsert(request: Request, env: any): Promise<Response> {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+
+  let body: AnyObj;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+
+  const resultStatus = trimTo(body.result_status, 40);
+  if (!resultStatus || !ALLOWED_RESULT_STATUS.has(resultStatus)) {
+    return response({ success: false, error_code: "INVALID_RESULT_STATUS", message: "result_status must be one of: " + Array.from(ALLOWED_RESULT_STATUS).join(", ") }, 400);
+  }
+  const method = trimTo(body.mapping_method, 40);
+  if (method && !ALLOWED_MAPPING_METHOD.has(method)) {
+    return response({ success: false, error_code: "INVALID_MAPPING_METHOD", message: "mapping_method must be one of: " + Array.from(ALLOWED_MAPPING_METHOD).join(", ") }, 400);
+  }
+  let resolvedIds: string | null = null;
+  if (body.resolved_product_ids !== undefined && body.resolved_product_ids !== null) {
+    if (!Array.isArray(body.resolved_product_ids) || body.resolved_product_ids.some((v: any) => !Number.isInteger(Number(v)) || Number(v) <= 0)) {
+      return response({ success: false, error_code: "INVALID_PRODUCT_IDS", message: "resolved_product_ids must be an array of positive integers." }, 400);
+    }
+    resolvedIds = JSON.stringify(body.resolved_product_ids.map((v: any) => Number(v)));
+  }
+  const confidence = toNum(body.confidence);
+
+  const ins = await env.DB.prepare(
+    `INSERT INTO product_mapping_events
+       (notion_page_id, source_order_id, source_system, raw_product_text, previous_product_ids,
+        resolved_product_ids, mapping_method, confidence, result_status, dry_run)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`
+  ).bind(
+    trimTo(body.notion_page_id, 100),
+    trimTo(body.source_order_id, 120),
+    normalizeSourceSystem(body.source_system) || null,
+    trimTo(body.raw_product_text, 1000),
+    trimTo(body.previous_product_ids, 200),
+    resolvedIds,
+    method,
+    confidence,
+    resultStatus,
+    body.dry_run ? 1 : 0
+  ).run();
+
+  return response({ success: true, action: "created", event_id: Number(ins.meta?.last_row_id || 0) });
+}
+
+async function handleMappingEventList(request: Request, env: any, url: URL): Promise<Response> {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  const limitRaw = Number(url.searchParams.get("limit") || 100);
+  const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 500 ? limitRaw : 100;
+  const orderId = trimTo(url.searchParams.get("source_order_id"), 120);
+  const rows = orderId
+    ? await env.DB.prepare(
+        `SELECT * FROM product_mapping_events WHERE source_order_id = ?1 ORDER BY id DESC LIMIT ?2`
+      ).bind(orderId, limit).all()
+    : await env.DB.prepare(
+        `SELECT * FROM product_mapping_events ORDER BY id DESC LIMIT ?1`
+      ).bind(limit).all();
+  return response({ success: true, count: (rows.results || []).length, events: rows.results || [] });
+}
+
 export async function handleSalesApi(request: Request, env: any): Promise<Response | null> {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
@@ -1018,13 +1106,15 @@ export async function handleSalesApi(request: Request, env: any): Promise<Respon
     return handleReadOrder(request, env, readMatch[1], readMatch[2]);
   }
 
-  const mappingMatch = path.match(/^\/(?:api\/)?v1\/mapping\/(catalog|resolve|aliases)$/i);
+  const mappingMatch = path.match(/^\/(?:api\/)?v1\/mapping\/(catalog|resolve|aliases|events)$/i);
   if (mappingMatch) {
     const sub = mappingMatch[1].toLowerCase();
     if (sub === "catalog" && method === "GET") return handleMappingCatalog(request, env);
     if (sub === "resolve" && method === "POST") return handleMappingResolve(request, env);
     if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request, env);
     if (sub === "aliases" && method === "GET") return handleMappingAliasList(request, env);
+    if (sub === "events" && method === "POST") return handleMappingEventInsert(request, env);
+    if (sub === "events" && method === "GET") return handleMappingEventList(request, env, url);
   }
 
   return response({ error: "Sales route not found" }, 404);
