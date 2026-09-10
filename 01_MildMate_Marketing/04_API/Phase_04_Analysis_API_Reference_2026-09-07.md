@@ -55,7 +55,12 @@ Per channel: `orders, order_revenue, units, aov, mapped_orders, mapped_pct`.
 
 ### GET `/api/admin/analysis/data-quality`
 `analysis_data_quality` row + computed `freshness_minutes` (M22), `mapped_order_pct`, `mapped_item_pct`, `exact_item_pct`, `unallocated_item_pct`, and M30 roll-up `status: ok|warning|critical` with human-readable `warnings[]`.
-Thresholds: critical = no/failed sync or invalid product refs; warning = freshness > 30 min, sync errors 7d, missing Product_IDs, itemless orders, missing dates, unknown status/source labels.
+Thresholds: critical = no/failed sync or invalid product refs; warning = freshness > 30 min, sync errors 7d, missing Product_IDs, itemless orders, missing dates, unknown status/source labels, null/zero order totals.
+**Phase 06 additions:** response also includes `data_quality.zero_total_orders` (computed live), `thresholds` (documented freshness rules), `recent_runs[]` (last 10 `sync_runs` rows, error text truncated to 300 chars), and `channel_freshness[]` (per channel: `last_order_day`, `days_since_last_order`, `orders`).
+
+### GET `/api/admin/analysis/data-quality/exceptions?type=...` (Phase 06)
+PII-free drill-down of affected records, LIMIT 100 (`truncated` flag when capped). Response: `{success, type, description, count, truncated, rows[]}`.
+Valid `type` values: `missing_product_id`, `unmapped_orders`, `itemless_orders`, `zero_totals`, `invalid_product_refs`, `unknown_sources`, `unknown_status`, `sync_errors`. Invalid type → 400 `INVALID_EXCEPTION_TYPE`.
 
 ## Test results (local `wrangler pages dev`, 2026-09-07)
 

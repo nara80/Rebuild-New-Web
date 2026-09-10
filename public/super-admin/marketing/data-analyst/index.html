@@ -131,6 +131,24 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="channels-table"></div></div>
     </div>
 
+    <div class="card">
+      <div class="card-header"><span>Data Quality &amp; Sync Monitor</span><span class="muted" style="font-size:0.75rem;font-weight:400">warning &gt; 30 min since last sync · critical = failed sync / invalid product refs</span></div>
+      <div class="card-body">
+        <div id="dq-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <div id="exception-panel" style="display:none">
+          <div class="card-header" style="padding:10px 0;border-top:1px solid var(--c-border)">
+            <span id="exception-title" style="font-size:0.8125rem"></span>
+            <button class="btn btn-outline btn-sm" onclick="closeException()">✕ Close</button>
+          </div>
+          <div class="table-wrap"><div id="exception-table"></div></div>
+        </div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Recent Sync Runs</span><span class="muted" style="font-size:0.75rem;font-weight:400">last 10</span></div>
+      <div class="table-wrap"><div id="runs-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Source Freshness by Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">latest commercial order per channel</span></div>
+      <div class="table-wrap"><div id="freshness-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
@@ -237,10 +255,100 @@ async function loadDQ(){
       el.innerHTML = '<div class="dq-banner ' + cls + '"><strong>Data Quality: ' + q.status.toUpperCase() + '</strong>' +
         '<ul>' + q.warnings.map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>';
     }
+    renderDQChips(q);
+    renderSyncRuns(d.recent_runs || []);
+    renderFreshness(d.channel_freshness || []);
   } catch(e) {
     document.getElementById('dq-banner').innerHTML = '<div class="dq-banner dq-critical"><strong>Data Quality unavailable:</strong> ' + esc(e.message) + '</div>';
     document.getElementById('kpi-dq').textContent = '!';
+    setState('runs-table', 'error', 'Could not load sync runs: ' + e.message);
+    setState('freshness-table', 'error', 'Could not load channel freshness: ' + e.message);
   }
+}
+
+// ── Data Quality & Sync Monitor (Phase 06) ──
+
+var EXCEPTION_CHIPS = [
+  { type: 'missing_product_id', label: 'Missing Product_ID items', key: 'missing_product_id_items', sev: 'warn' },
+  { type: 'unmapped_orders', label: 'Unmapped orders', key: 'unmapped_orders', sev: 'warn' },
+  { type: 'itemless_orders', label: 'Itemless orders', key: 'itemless_orders', sev: 'warn' },
+  { type: 'zero_totals', label: 'Null/zero totals', key: 'zero_total_orders', sev: 'warn' },
+  { type: 'invalid_product_refs', label: 'Invalid product refs', key: 'invalid_product_refs', sev: 'crit' },
+  { type: 'unknown_sources', label: 'Unknown source labels', key: 'unknown_source_labels', sev: 'warn' },
+  { type: 'unknown_status', label: 'Unknown status orders', key: 'unknown_status_orders', sev: 'warn' },
+  { type: 'sync_errors', label: 'Sync errors (7d)', key: 'sync_errors_7d', sev: 'crit' }
+];
+
+function renderDQChips(q){
+  var h = '';
+  EXCEPTION_CHIPS.forEach(function(c){
+    var n = Number(q[c.key] || 0);
+    var cls = n === 0 ? 'badge-green' : (c.sev === 'crit' ? 'badge-red' : 'badge-amber');
+    h += '<button class="btn btn-outline btn-sm" ' + (n > 0 ? 'onclick="loadException(\'' + c.type + '\')"' : 'disabled') + ' title="' + esc(c.label) + '">' +
+      esc(c.label) + ' <span class="badge ' + cls + '">' + n + '</span></button>';
+  });
+  document.getElementById('dq-chips').innerHTML = h;
+}
+
+async function loadException(type){
+  var panel = document.getElementById('exception-panel');
+  panel.style.display = 'block';
+  setState('exception-table', '', 'Loading…');
+  try {
+    var d = await api('/data-quality/exceptions?type=' + type);
+    document.getElementById('exception-title').textContent = d.description + ' — ' + d.count + ' record(s)' + (d.truncated ? ' (first 100)' : '');
+    if (!d.rows.length) { setState('exception-table', '', 'No affected records.'); return; }
+    var cols = Object.keys(d.rows[0]);
+    var h = '<table><thead><tr>' + cols.map(function(c){ return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    d.rows.forEach(function(r){
+      h += '<tr>' + cols.map(function(c){
+        var v = r[c];
+        return '<td>' + (v === null || v === undefined || v === '' ? '<span class="muted">—</span>' : esc(v)) + '</td>';
+      }).join('') + '</tr>';
+    });
+    document.getElementById('exception-table').innerHTML = h + '</tbody></table>';
+  } catch(e) {
+    setState('exception-table', 'error', 'Could not load records: ' + e.message);
+  }
+}
+
+function closeException(){
+  document.getElementById('exception-panel').style.display = 'none';
+}
+
+function renderSyncRuns(runs){
+  if (!runs.length) { setState('runs-table', '', 'No sync runs recorded yet.'); return; }
+  var h = '<table><thead><tr><th>Started</th><th>Finished</th><th>Source</th><th>Scenario</th><th>Status</th><th class="num">Received</th><th class="num">Created</th><th class="num">Updated</th><th class="num">Unchanged</th><th class="num">Rejected</th><th>Error</th></tr></thead><tbody>';
+  runs.forEach(function(r){
+    var ok = String(r.status).toLowerCase() === 'success';
+    h += '<tr>' +
+      '<td>' + esc(r.started_at) + '</td>' +
+      '<td>' + (r.finished_at ? esc(r.finished_at) : '<span class="muted">—</span>') + '</td>' +
+      '<td>' + esc(r.source) + '</td>' +
+      '<td>' + esc(r.scenario || '—') + '</td>' +
+      '<td><span class="badge ' + (ok ? 'badge-green' : 'badge-red') + '">' + esc(r.status) + '</span></td>' +
+      '<td class="num">' + fmtNum(r.records_received) + '</td>' +
+      '<td class="num">' + fmtNum(r.records_created) + '</td>' +
+      '<td class="num">' + fmtNum(r.records_updated) + '</td>' +
+      '<td class="num">' + fmtNum(r.records_unchanged) + '</td>' +
+      '<td class="num">' + fmtNum(r.records_rejected) + '</td>' +
+      '<td style="white-space:normal;max-width:320px">' + (r.error_message ? esc(r.error_message) : '<span class="muted">—</span>') + '</td>' +
+      '</tr>';
+  });
+  document.getElementById('runs-table').innerHTML = h + '</tbody></table>';
+}
+
+function renderFreshness(rows){
+  if (!rows.length) { setState('freshness-table', '', 'No commercial orders yet.'); return; }
+  var h = '<table><thead><tr><th>Channel</th><th>Last Order Day</th><th class="num">Days Since</th><th class="num">Orders</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var days = r.days_since_last_order;
+    var cls = (days === null || days === undefined) ? 'badge-grey' : days <= 7 ? 'badge-green' : days <= 30 ? 'badge-amber' : 'badge-grey';
+    h += '<tr><td>' + esc(r.channel_norm) + '</td><td>' + esc(r.last_order_day) + '</td>' +
+      '<td class="num"><span class="badge ' + cls + '">' + fmtNum(days) + '</span></td>' +
+      '<td class="num">' + fmtNum(r.orders) + '</td></tr>';
+  });
+  document.getElementById('freshness-table').innerHTML = h + '</tbody></table>';
 }
 
 // ── Sales Detail ──

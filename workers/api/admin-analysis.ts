@@ -447,6 +447,31 @@ async function getDataQuality(env: any): Promise<Response> {
   const dq: any = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
 
+  // Phase 06 additions computed live (the 042 view is frozen; no migration needed for counts)
+  const zeroRow: any = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM analysis_commercial_orders WHERE order_total IS NULL OR order_total <= 0`
+  ).first();
+  const zeroTotalOrders = Number(zeroRow?.n || 0);
+
+  const runs = await env.DB.prepare(
+    `SELECT id, source, scenario, started_at, finished_at, status,
+            records_received, records_created, records_updated, records_unchanged, records_rejected,
+            substr(COALESCE(error_message, ''), 1, 300) AS error_message
+     FROM sync_runs
+     ORDER BY COALESCE(finished_at, created_at) DESC
+     LIMIT 10`
+  ).all();
+
+  const freshness = await env.DB.prepare(
+    `SELECT channel_norm,
+            MAX(order_day) AS last_order_day,
+            COUNT(*) AS orders,
+            CAST(julianday('now') - julianday(MAX(order_day)) AS INTEGER) AS days_since_last_order
+     FROM analysis_commercial_orders
+     GROUP BY channel_norm
+     ORDER BY last_order_day DESC`
+  ).all();
+
   // M22 freshness + M30 roll-up (contract: computed in code, not SQL)
   let freshnessMinutes: number | null = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
@@ -476,6 +501,7 @@ async function getDataQuality(env: any): Promise<Response> {
   if (Number(dq.orders_missing_date || 0) > 0) warn(dq.orders_missing_date + " commercial order(s) have a missing/malformed order date.");
   if (Number(dq.unknown_status_orders || 0) > 0) warn(dq.unknown_status_orders + " order(s) have an unknown status value.");
   if (Number(dq.unknown_source_labels || 0) > 0) warn(dq.unknown_source_labels + " unknown source label(s) present.");
+  if (zeroTotalOrders > 0) warn(zeroTotalOrders + " commercial order(s) have a null/zero order total (business rules require a positive total).");
 
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
@@ -489,9 +515,107 @@ async function getDataQuality(env: any): Promise<Response> {
       mapped_item_pct: activeItems > 0 ? Math.round(((activeItems - Number(dq.missing_product_id_items || 0)) / activeItems) * 1000) / 10 : null,
       exact_item_pct: activeItems > 0 ? Math.round((Number(dq.exact_items || 0) / activeItems) * 1000) / 10 : null,
       unallocated_item_pct: activeItems > 0 ? Math.round((Number(dq.unallocated_items || 0) / activeItems) * 1000) / 10 : null,
+      zero_total_orders: zeroTotalOrders,
       status: level,
       warnings,
     },
+    thresholds: {
+      freshness_warning_minutes: 30,
+      note: "warning: sync older than 30 min (expected Make.com cadence 15 min); critical: no successful sync, failed last run, or invalid product refs",
+    },
+    recent_runs: runs.results || [],
+    channel_freshness: freshness.results || [],
+  });
+}
+
+// ── Data-quality exception drill-downs (Phase 06, PII-free) ───────────────
+
+const EXCEPTION_TYPES: Record<string, { sql: string; description: string }> = {
+  missing_product_id: {
+    description: "Active items on commercial orders without a Product_ID",
+    sql: `SELECT ai.order_day, ai.channel_norm, co.source_system, co.source_order_id, co.status,
+                 ai.raw_item_text, ai.quantity, ai.revenue_status
+          FROM analysis_active_items ai
+          JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
+          WHERE ai.product_id IS NULL
+          ORDER BY ai.order_day DESC, ai.id`,
+  },
+  unmapped_orders: {
+    description: "Commercial orders where no item has a Product_ID",
+    sql: `SELECT co.order_day, co.channel_norm, co.source_system, co.source_order_id, co.status, co.order_total, co.currency
+          FROM analysis_commercial_orders co
+          JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+          WHERE om.derived_mapping_status = 'Unmapped'
+          ORDER BY co.order_day DESC, co.id`,
+  },
+  itemless_orders: {
+    description: "Commercial orders with no active items",
+    sql: `SELECT co.order_day, co.channel_norm, co.source_system, co.source_order_id, co.status, co.order_total, co.currency
+          FROM analysis_commercial_orders co
+          JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+          WHERE om.derived_mapping_status = 'Itemless'
+          ORDER BY co.order_day DESC, co.id`,
+  },
+  zero_totals: {
+    description: "Commercial orders with a null/zero order total",
+    sql: `SELECT order_day, channel_norm, source_system, source_order_id, status, order_total, currency
+          FROM analysis_commercial_orders
+          WHERE order_total IS NULL OR order_total <= 0
+          ORDER BY order_day DESC, id`,
+  },
+  invalid_product_refs: {
+    description: "Active items referencing a non-existent product id",
+    sql: `SELECT ai.order_day, ai.channel_norm, ai.product_id, co.source_system, co.source_order_id,
+                 ai.raw_item_text, ai.quantity
+          FROM analysis_active_items ai
+          JOIN analysis_commercial_orders co ON co.id = ai.sales_order_id
+          LEFT JOIN products p ON p.id = ai.product_id
+          WHERE ai.product_id IS NOT NULL AND p.id IS NULL
+          ORDER BY ai.order_day DESC, ai.id`,
+  },
+  unknown_sources: {
+    description: "Source labels outside the known channel list",
+    sql: `SELECT source_system, COUNT(*) AS orders, MIN(substr(order_date, 1, 10)) AS first_order_day,
+                 MAX(substr(order_date, 1, 10)) AS last_order_day
+          FROM sales_orders
+          WHERE lower(trim(source_system)) NOT IN
+            ('shopee', 'lazada', 'tiktok', 'line', 'whatsapp', 'etsy', 'ebay', 'facebook', 'website', 'manual')
+          GROUP BY source_system
+          ORDER BY orders DESC`,
+  },
+  unknown_status: {
+    description: "Orders whose status is outside the known status taxonomy",
+    sql: `SELECT substr(order_date, 1, 10) AS order_day, source_system, source_order_id, status, order_total, currency
+          FROM sales_orders
+          WHERE status IS NULL OR lower(status) NOT IN
+            ('pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled', 'refunded', 'archived')
+          ORDER BY order_date DESC, id`,
+  },
+  sync_errors: {
+    description: "Sync runs with a failed/partial/error status in the last 7 days",
+    sql: `SELECT id, source, scenario, started_at, finished_at, status,
+                 records_received, records_rejected, substr(COALESCE(error_message, ''), 1, 300) AS error_message
+          FROM sync_runs
+          WHERE status IN ('failed', 'partial', 'error')
+            AND COALESCE(finished_at, created_at) >= datetime('now', '-7 day')
+          ORDER BY COALESCE(finished_at, created_at) DESC`,
+  },
+};
+
+async function getExceptions(env: any, url: URL): Promise<Response> {
+  const type = (url.searchParams.get("type") || "").trim();
+  const def = EXCEPTION_TYPES[type];
+  if (!def) {
+    return err("INVALID_EXCEPTION_TYPE", "type must be one of: " + Object.keys(EXCEPTION_TYPES).join(", "));
+  }
+  const rows = await env.DB.prepare(def.sql + " LIMIT 100").all();
+  return json({
+    success: true,
+    type,
+    description: def.description,
+    count: (rows.results || []).length,
+    truncated: (rows.results || []).length === 100,
+    rows: rows.results || [],
   });
 }
 
@@ -519,6 +643,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   if (productMatch) return getProductDetail(env, productMatch[1]);
 
   if (sub === "/data-quality") return getDataQuality(env);
+  if (sub === "/data-quality/exceptions") return getExceptions(env, url);
 
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;
