@@ -157,7 +157,25 @@ async function ensureSalesSchema(env) {
         `CREATE INDEX IF NOT EXISTS idx_sales_orders_status ON sales_orders(status)`,
         `CREATE INDEX IF NOT EXISTS idx_sales_orders_notion_page ON sales_orders(notion_page_id)`,
         `CREATE INDEX IF NOT EXISTS idx_sales_order_items_product ON sales_order_items(product_id)`,
-        `CREATE INDEX IF NOT EXISTS idx_sales_order_items_order ON sales_order_items(sales_order_id)`
+        `CREATE INDEX IF NOT EXISTS idx_sales_order_items_order ON sales_order_items(sales_order_id)`,
+        `CREATE TABLE IF NOT EXISTS product_mapping_aliases (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          source_system TEXT,
+          listing_id TEXT,
+          alias_text TEXT NOT NULL,
+          alias_norm TEXT NOT NULL,
+          product_ids TEXT NOT NULL,
+          match_scope TEXT NOT NULL DEFAULT 'alias',
+          verified INTEGER NOT NULL DEFAULT 0,
+          hit_count INTEGER NOT NULL DEFAULT 0,
+          last_used_at TEXT,
+          notes TEXT,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_product_mapping_aliases_key
+          ON product_mapping_aliases (COALESCE(source_system, ''), COALESCE(listing_id, ''), alias_norm)`,
+        `CREATE INDEX IF NOT EXISTS idx_product_mapping_aliases_listing ON product_mapping_aliases(listing_id)`
       ];
       for (const sql of schemaSql) {
         await env.DB.prepare(sql).run();
@@ -643,6 +661,216 @@ async function handleReadOrder(request, env, sourcePart, orderPart) {
   });
 }
 __name(handleReadOrder, "handleReadOrder");
+var ALLOWED_MATCH_SCOPE = /* @__PURE__ */ new Set(["variation", "listing", "alias"]);
+function normalizeAliasKey(raw) {
+  return String(raw || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+}
+__name(normalizeAliasKey, "normalizeAliasKey");
+function parseProductIdsJson(raw) {
+  try {
+    const arr = JSON.parse(String(raw));
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson, "parseProductIdsJson");
+async function handleMappingCatalog(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  const rows = await env.DB.prepare(
+    `SELECT id, slug, title_en, product_type, is_active
+     FROM products
+     WHERE is_active = 1
+     ORDER BY id`
+  ).all();
+  return response({
+    success: true,
+    count: (rows.results || []).length,
+    note: "Approved canonical Product_ID catalog. AI fallback must only choose ids from this list; never invent a Product_ID.",
+    products: rows.results || []
+  });
+}
+__name(handleMappingCatalog, "handleMappingCatalog");
+async function recordAliasHit(env, aliasId) {
+  await env.DB.prepare(
+    `UPDATE product_mapping_aliases
+     SET hit_count = hit_count + 1, last_used_at = ?1
+     WHERE id = ?2`
+  ).bind((/* @__PURE__ */ new Date()).toISOString(), aliasId).run();
+}
+__name(recordAliasHit, "recordAliasHit");
+async function handleMappingResolve(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const source = normalizeSourceSystem(body.source_system) || null;
+  const listingId = trimTo(body.listing_id, 120);
+  const variationNorm = normalizeAliasKey(body.variation_text);
+  const itemNorm = normalizeAliasKey(body.item_text);
+  if (!listingId && !variationNorm && !itemNorm) {
+    return response({
+      success: false,
+      error_code: "MISSING_RESOLVE_INPUT",
+      message: "Provide at least one of listing_id, variation_text, item_text."
+    }, 400);
+  }
+  const order = `ORDER BY (source_system IS NULL) ASC, verified DESC, id ASC LIMIT 1`;
+  const sourceCond = `(source_system IS NULL OR source_system = ?1)`;
+  const hit = /* @__PURE__ */ __name(async (sql, ...binds) => env.DB.prepare(sql).bind(...binds).first(), "hit");
+  let row = null;
+  let method = "";
+  if (!row && listingId && variationNorm) {
+    row = await hit(
+      `SELECT * FROM product_mapping_aliases
+       WHERE match_scope = 'variation' AND listing_id = ?2 AND alias_norm = ?3 AND ${sourceCond} ${order}`,
+      source,
+      listingId,
+      variationNorm
+    );
+    if (row) method = "variation_exact";
+  }
+  for (const norm of [variationNorm, itemNorm]) {
+    if (row || !norm) continue;
+    row = await hit(
+      `SELECT * FROM product_mapping_aliases
+       WHERE verified = 1 AND alias_norm = ?2 AND ${sourceCond} ${order}`,
+      source,
+      norm
+    );
+    if (row) method = "verified_alias";
+  }
+  if (!row && listingId) {
+    row = await hit(
+      `SELECT * FROM product_mapping_aliases
+       WHERE match_scope = 'listing'
+         AND (listing_id = ?2 OR alias_norm = ?3)
+         AND ${sourceCond} ${order}`,
+      source,
+      listingId,
+      normalizeAliasKey(listingId)
+    );
+    if (row) method = "listing";
+  }
+  if (!row) {
+    return response({
+      success: true,
+      resolved: false,
+      mapping_status_suggestion: "Review Required",
+      message: "No deterministic mapping found. Do not guess; route to Review Required (AI fallback may only propose ids from /v1/mapping/catalog)."
+    });
+  }
+  const productIds = parseProductIdsJson(row.product_ids);
+  if (productIds.length === 0) {
+    return response({
+      success: true,
+      resolved: false,
+      mapping_status_suggestion: "Review Required",
+      message: `Alias ${row.id} matched but stores no valid product ids; route to Review Required.`
+    });
+  }
+  await recordAliasHit(env, Number(row.id));
+  return response({
+    success: true,
+    resolved: true,
+    method,
+    confidence: method === "listing" ? "medium" : "high",
+    product_ids: productIds,
+    mapping_status_suggestion: "Mapped",
+    alias_id: Number(row.id),
+    verified: Number(row.verified) === 1
+  });
+}
+__name(handleMappingResolve, "handleMappingResolve");
+async function handleMappingAliasUpsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const source = normalizeSourceSystem(body.source_system) || null;
+  const listingId = trimTo(body.listing_id, 120);
+  const aliasText = trimTo(body.alias_text, 500) || listingId;
+  if (!aliasText) {
+    return response({ success: false, error_code: "MISSING_ALIAS_TEXT", message: "alias_text (or listing_id) is required." }, 400);
+  }
+  const aliasNorm = normalizeAliasKey(aliasText);
+  if (!aliasNorm) {
+    return response({ success: false, error_code: "INVALID_ALIAS_TEXT", message: "alias_text normalizes to empty." }, 400);
+  }
+  const rawIds = Array.isArray(body.product_ids) ? body.product_ids : [];
+  const productIds = Array.from(new Set(rawIds.map((v) => Number(v))));
+  if (productIds.length === 0 || productIds.some((v) => !Number.isInteger(v) || v <= 0)) {
+    return response({ success: false, error_code: "INVALID_PRODUCT_IDS", message: "product_ids must be a non-empty array of positive integers." }, 400);
+  }
+  const check = await validateProductIds(env, productIds.map((id) => ({ product_id: id })));
+  if (!check.ok) {
+    return response({ success: false, error_code: check.code, message: check.message }, 400);
+  }
+  const scopeRaw = String(body.match_scope || "alias").toLowerCase();
+  if (!ALLOWED_MATCH_SCOPE.has(scopeRaw)) {
+    return response({ success: false, error_code: "INVALID_MATCH_SCOPE", message: "match_scope must be variation, listing, or alias." }, 400);
+  }
+  if (scopeRaw === "variation" && !listingId) {
+    return response({ success: false, error_code: "MISSING_LISTING_ID", message: "match_scope=variation requires listing_id." }, 400);
+  }
+  const verified = body.verified === false ? 0 : 1;
+  const notes = trimTo(body.notes, 500);
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const idsJson = JSON.stringify(productIds);
+  const existing = await env.DB.prepare(
+    `SELECT id FROM product_mapping_aliases
+     WHERE COALESCE(source_system, '') = COALESCE(?1, '')
+       AND COALESCE(listing_id, '') = COALESCE(?2, '')
+       AND alias_norm = ?3
+     LIMIT 1`
+  ).bind(source, listingId, aliasNorm).first();
+  if (existing) {
+    await env.DB.prepare(
+      `UPDATE product_mapping_aliases
+       SET alias_text = ?1, product_ids = ?2, match_scope = ?3, verified = ?4, notes = COALESCE(?5, notes), updated_at = ?6
+       WHERE id = ?7`
+    ).bind(aliasText, idsJson, scopeRaw, verified, notes, now, existing.id).run();
+    return response({ success: true, action: "updated", alias_id: Number(existing.id), product_ids: productIds });
+  }
+  const ins = await env.DB.prepare(
+    `INSERT INTO product_mapping_aliases
+       (source_system, listing_id, alias_text, alias_norm, product_ids, match_scope, verified, notes, created_at, updated_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
+  ).bind(source, listingId, aliasText, aliasNorm, idsJson, scopeRaw, verified, notes, now).run();
+  return response({ success: true, action: "created", alias_id: Number(ins.meta?.last_row_id || 0), product_ids: productIds });
+}
+__name(handleMappingAliasUpsert, "handleMappingAliasUpsert");
+async function handleMappingAliasList(request, env) {
+  const auth = await requireBearerAuth(request, env);
+  if (!auth.ok) {
+    return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  }
+  const rows = await env.DB.prepare(
+    `SELECT id, source_system, listing_id, alias_text, alias_norm, product_ids, match_scope,
+            verified, hit_count, last_used_at, notes, created_at, updated_at
+     FROM product_mapping_aliases
+     ORDER BY updated_at DESC
+     LIMIT 500`
+  ).all();
+  return response({ success: true, count: (rows.results || []).length, aliases: rows.results || [] });
+}
+__name(handleMappingAliasList, "handleMappingAliasList");
 async function handleSalesApi(request, env) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
@@ -661,6 +889,14 @@ async function handleSalesApi(request, env) {
   const readMatch = path.match(/^\/(?:api\/)?v1\/sales\/orders\/([^\/]+)\/([^\/]+)$/i);
   if (method === "GET" && readMatch) {
     return handleReadOrder(request, env, readMatch[1], readMatch[2]);
+  }
+  const mappingMatch = path.match(/^\/(?:api\/)?v1\/mapping\/(catalog|resolve|aliases)$/i);
+  if (mappingMatch) {
+    const sub = mappingMatch[1].toLowerCase();
+    if (sub === "catalog" && method === "GET") return handleMappingCatalog(request, env);
+    if (sub === "resolve" && method === "POST") return handleMappingResolve(request, env);
+    if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request, env);
+    if (sub === "aliases" && method === "GET") return handleMappingAliasList(request, env);
   }
   return response({ error: "Sales route not found" }, 404);
 }
@@ -13381,7 +13617,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-jqdc9a/functionsRoutes-0.3085758449411736.mjs
+// ../.wrangler/tmp/pages-oJPSFl/functionsRoutes-0.5311575211834523.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
