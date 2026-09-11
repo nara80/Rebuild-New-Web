@@ -334,6 +334,8 @@ export async function onRequest(context: any): Promise<Response> {
       const anchor = '<meta charset="UTF-8">';
       if (html.includes(anchor) && !html.includes('rel="canonical"')) {
         html = html.replace(anchor, anchor + '\n  ' + seoTags);
+        // DEBUG MARKER: visible HTML comment to verify this code path runs
+        html = html.replace('</head>', '<!-- DROID-CANONICAL-INJECTION-RAN slug=' + slug + ' isTh=' + isTh + ' -->\n</head>');
       }
     }
 
