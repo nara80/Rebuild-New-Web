@@ -133,6 +133,49 @@ Status taxonomy for this workstream:
 
 ---
 
+## Custom Quote Email Revision (2026-09-11)
+
+Reconciled from:
+- `00_Issue/MildMate_Magic_Link_Email_Developer_Revision.md`
+
+Verified/built state (commit `1b508ba`, deployed to `master`):
+- **Customer mailer rebuilt as multipart (text + HTML):** `workers/api/admin-quotes.ts` → `sendMagicLinkEmail()` now ships both a plain-text version (for plain-text clients + spam scoring content) and an HTML version (table-based, inline CSS, no remote assets). Source mirrors in `public/index.js` + `public/_worker.js` (runtime parity).
+- **Shared helper upgraded:** `workers/api/email.ts` → `sendEmail()` now accepts an optional `html` parameter. Resend payload only includes `html` when the string is non-empty (preserves plain-text-only behavior for all other callers).
+- **New subject:** `View Quote & Order — your MildMate Quote QT-XXXXX-XXX` (replaces the prior generic "Your MildMate Quote — … Ready for Review").
+- **Plain-text structure:** greeting → "Your custom quote is ready" → order summary → confirmed price + shipping note + lead time → `━━━ Ready to Order? ━━━` heading → `View Quote & Order: <magic-link>` line with URL fallback → "How to Order" 3-step list (Open → Add to Cart → Checkout) → validity date → reply-to footer.
+- **HTML structure:** hidden preheader → eyebrow + heading + greeting + quote ID → order summary card with confirmed price → primary `View Quote & Order` button (brand `#2c96f4`) + URL fallback → numbered "How to Order" 3-step list → validity badge (when expiry set) → reply-to footer. Inline CSS only, Arial/Helvetica fallback fonts (no Google Fonts), Outlook-compatible table layout.
+- **Spam-safety guardrails:** HTML body always paired with non-empty text body so plain-text clients + spam filters see full content; CTA appears as both button and plain URL fallback in both formats; subject and body use neutral transactional phrasing (no clickbait or salesy wording).
+- **Wire-up:** `Admin Quotes` API already accepted `send_email: true` on POST (newly created approved quote) and PUT (existing quote update); behavior unchanged — only the email payload was upgraded. Quote magic-link URL pattern `/quote/<id>/` continues to honor `expires_at`, free-shipping flag, product/dimensions/fabric/color from the `custom_quotes` row.
+- **Acceptance criteria:** `00_Issue/MildMate_Magic_Link_Email_Developer_Revision.md` "Open Quote → Add to Cart → Checkout → Pay" can now be completed by the customer from the email alone without replying for clarification.
+
+Files updated (commit `1b508ba`):
+- `workers/api/email.ts`
+- `workers/api/admin-quotes.ts`
+- `public/index.js`
+- `public/_worker.js`
+
+---
+
+## Super Admin — Sales Sync Health Banner (2026-09-07)
+
+Reconciled from the unified sales analytics workstream:
+- **Endpoint upgrade:** `GET /api/admin/orders` now also returns `sales_sync` — the latest row from D1 `sync_runs` (latest 1 by `COALESCE(finished_at, created_at) DESC`). Worker: `workers/api/admin-orders.ts` → `getLatestSalesSyncRun()`. Runtime mirrored in `public/index.js` + `public/_worker.js`.
+- **UI banner:** `/super-admin/` → Orders page now renders a `renderSalesSyncBanner()` block at the top:
+  - HEALTHY: last success within 30 minutes
+  - DELAYED: last success > 30 minutes old (or unparseable timestamp)
+  - FAILED: latest status is `failed` / `partial` / `error`
+  - Banner surfaces run ID, source, last sync timestamp + relative age (e.g. `2.3 d ago`), and counters (received / created / updated / unchanged / rejected).
+- **Empty-state banner:** if `sync_runs` has no rows yet, banner renders an amber warning telling the operator to check ingestion logging.
+- **Stays clean:** new banner code is additive — existing dimension guardrail (`missing_configurable_rows` / `affected_orders`) and Orders table behavior remain unchanged.
+
+Files updated (commit `d8504d7`):
+- `workers/api/admin-orders.ts`
+- `public/super-admin/index.html`
+- `public/index.js`
+- `public/_worker.js`
+
+---
+
 ## Key Decisions Already Made
 
 | Decision | Value |

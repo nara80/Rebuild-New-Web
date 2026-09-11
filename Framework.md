@@ -1124,6 +1124,88 @@ CREATE TABLE blog_posts (
 
 ---
 
+## Customer Email Communications
+
+All transactional email is sent via the shared Resend helper in `workers/api/email.ts`:
+
+```ts
+sendEmail(env, {
+  to, replyTo?, from?, subject, text, html?   // html is optional; if absent, plain text only
+});
+```
+
+- Resend is the sole transactional provider (free tier 100/day, `RESEND_API_KEY` Pages secret).
+- Domain authentication (SPF / DKIM) is configured for `mildmate.com` so transactional mail passes standard spam filters without further setup.
+- `from` falls back to `env.ORDER_FROM_EMAIL` or `MildMate <noreply@mildmate.com>` when not provided.
+- `html` is only attached to the Resend payload when non-empty, so plain-text-only callers (e.g., quote intake notification, contact form, recovery emails) keep their previous behavior without rewriting.
+
+### Custom Quote Magic-Link Email — Multipart Customer Mailer (Revised 2026-09-11)
+
+The customer-facing email for an approved custom quote (`workers/api/admin-quotes.ts` → `sendMagicLinkEmail`) was upgraded from a passive text-only `>>> link <<<` notice to a fully multipart transactional email. Driven by `00_Issue/MildMate_Magic_Link_Email_Developer_Revision.md`.
+
+**Subject:** `View Quote & Order — your MildMate Quote QT-XXXXX-XXX`
+
+**Plain-text structure (sent alongside HTML for spam scoring + plain-text clients):**
+
+1. Greeting by customer name
+2. `Your custom quote is ready.`
+3. `━━━ Your Order ━━━` — product, dimensions, fabric, color (multi-line boat-shape dims preserved)
+4. `Confirmed Price: <USD|THB>` + shipping note (TH included / others calculated at checkout) + lead time (5–7 business days)
+5. Measurement review reminder
+6. `━━━ Ready to Order? ━━━` heading
+7. `View Quote & Order: <magic-link>` (URL fallback)
+8. Validity date when set
+9. `How to Order:` numbered 3-step list (Open quote → Add to Cart → Checkout)
+10. Reply-to footer
+
+**HTML structure (table-based, inline CSS, no remote assets, Arial/Helvetica fallback fonts):**
+
+- Hidden preheader with `Ready to Order?` text for inbox preview
+- Eyebrow `MildMate Custom Quote` + H1 greeting + Quote ID
+- Order summary card (specs + Confirmed Price + shipping + lead time)
+- `Ready to Order?` heading + primary CTA button `View Quote & Order` (brand `#2c96f4`, 18 px text, 18 px padding, table-cell wrapper for Outlook)
+- Plain-text URL fallback beneath the button (`Or copy this link: …`)
+- Numbered `How to Order` 3-step list (numbered blue dots)
+- Validity badge when expiry is set (only when applicable)
+- Reply-to footer + transactional footnote
+
+**Spam-safety guardrails baked in:**
+
+- HTML always paired with non-empty plain text body
+- Button + URL fallback both present in both formats
+- Subject and body avoid clickbait words; pricing/rates are described factually
+- No remote images, no Google Fonts, no `<style>` blocks (some corporate gateways strip them)
+
+**Wire-up:** The Admin Quotes API (`/api/admin/quotes`) POST `send_email: true` on a new approved quote, and PUT `send_email: true` on an update, both call `sendMagicLinkEmail(env, request, row)`. Behavior is unchanged from the operator's perspective — only the email payload and subject were upgraded.
+
+**Runtime parity:** HTML body and `html?` parameter are mirrored into `public/index.js` + `public/_worker.js` (the Pages functions delegate to the Worker bundle).
+
+---
+
+## Super Admin — Operational Visibility
+
+### Sales Sync Health Banner (Added 2026-09-07)
+
+`/super-admin/` Orders page now renders a Sales Sync health banner at the top of the orders table so the ops team can immediately see whether `sync_runs` is healthy.
+
+- **Data source:** `workers/api/admin-orders.ts` → `getLatestSalesSyncRun()` runs a read-only query against D1 `sync_runs` (latest 1 row by `COALESCE(finished_at, created_at) DESC`). Returned on `GET /api/admin/orders` as `sales_sync`.
+- **Health logic:**
+  - HEALTHY — latest sync status was a success within 30 minutes
+  - DELAYED — last success older than 30 minutes (or timestamp unparseable)
+  - FAILED — latest status is `failed`, `partial`, or `error`
+- **Empty state:** if `sync_runs` has zero rows, banner renders an amber "No sync-run record found — check `sync_runs` ingestion logging" warning.
+- **Surface:** Run ID + source + last sync time + relative age (`15 min ago`, `2.3 d ago`) + counters (received / created / updated / unchanged / rejected).
+- **No regressions:** the existing `dimension_guardrail` (missing-dim banner + **Missing Dims** badge) and orders table remain unchanged.
+
+### Existing Operations (Preserved)
+
+- **Manual thank-you dispatch** — `/api/admin/thankyou-dispatch` button sends due thank-you queue rows on demand with per-email sent / failed / skipped diagnostics.
+- **Order tracking (Option A)** — carrier code + tracking number entered by admin on shipped state; carrier URL auto-generated from `TRACKING_URL_BY_CARRIER` template map; shown inline in customer `/account` Orders panel.
+- **Promo Codes** — admin-created codes with optional `free_shipping` flag; Free Ship column shown in Super Admin table.
+- **Color Inventory** — Super Admin visual swatch grid per fabric with real-time OOS checkbox toggles.
+
+---
+
 ## Pricing Rules
 
 - All product prices displayed on the site are **product price only**
