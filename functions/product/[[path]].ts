@@ -314,6 +314,25 @@ export async function onRequest(context: any): Promise<Response> {
       );
     }
 
+    // Inject canonical + hreflang alternates for bilingual product URLs.
+    // EN canonical points to /product/{slug}/; TH canonical points to /th/product/{slug}/.
+    // Both hreflang alternates link the EN and TH counterparts.
+    if (!html.includes('rel="canonical"') && html.includes('</head>')) {
+      const enPath = `/product/${slug}/`;
+      const thPath = `/th/product/${slug}/`;
+      const canonicalHref = isTh
+        ? `https://www.mildmate.com${thPath}`
+        : `https://www.mildmate.com${enPath}`;
+      const enHref = `https://www.mildmate.com${enPath}`;
+      const thHref = `https://www.mildmate.com${thPath}`;
+      const seoTags =
+        `  <link rel="canonical" href="${canonicalHref}">\n` +
+        `  <link rel="alternate" hreflang="en" href="${enHref}">\n` +
+        `  <link rel="alternate" hreflang="th" href="${thHref}">\n` +
+        `</head>`;
+      html = html.replace('</head>', seoTags);
+    }
+
     if (product && (product.image_url || product.images)) {
       // Build gallery HTML: main image + up to 6 thumbnails
       const THUMB_COUNT = 6;
