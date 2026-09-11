@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}html[lang="th"] body,html[lang="th"] h1,html[lang="th"] h2,html[lang="th"] h3,html[lang="th"] p,html[lang="th"] a,html[lang="th"] li,html[lang="th"] span,html[lang="th"] button,html[lang="th"] label,html[lang="th"] input,html[lang="th"] select,html[lang="th"] textarea{font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="โรงงานผลิตเครื่องนอนขายส่งและ B2B จาก MildMate ประเทศไทย ตัดเย็บตามขนาด ปักลาย และรับผลิต OEM และโปรแกรมขายส่งสำหรับโรงแรม เรือยอชต์ รถบ้าน และแบรนด์เครื่องนอน">
+  <link rel="canonical" href="https://www.mildmate.com/th/wholesale/">
+  <title>ขายส่ง &amp; โรงงานผลิตเครื่องนอน B2B - MildMate | MildMate</title>
+  <link href="/css/fonts.css?v=2" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .wholesale-page { background: #f0f7ff; }
+    .wholesale-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .wholesale-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .wholesale-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .wholesale-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .wholesale-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .wholesale-intro {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 56px 24px 24px;
+      color: var(--color-muted);
+      font-size: 1.0625rem;
+      line-height: 1.7;
+    }
+    .wholesale-intro h2 {
+      color: var(--color-text);
+      font-size: 1.5rem;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+    .b2b-section { background: #f0f7ff; padding: 24px 24px 56px; }
+    .b2b-inner { max-width: 960px; margin: 0 auto; }
+    .b2b-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .b2b-inner h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .b2b-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 28px;
+      font-size: 0.9375rem;
+    }
+    .b2b-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .b2b-card {
+      background: #fff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .b2b-card h3 {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--color-text);
+    }
+    .b2b-card p {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin: 0;
+      line-height: 1.55;
+    }
+    .b2b-accent-bar {
+      width: 32px;
+      height: 3px;
+      background: var(--color-primary);
+      border-radius: 2px;
+      margin-bottom: 14px;
+    }
+    .industries-section { background: #fff; padding: 56px 24px; }
+    .industries-inner { max-width: 960px; margin: 0 auto; }
+    .industries-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .industries-inner h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; text-align: center; }
+    .industries-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 28px;
+      font-size: 0.9375rem;
+      text-align: center;
+    }
+    .industries-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .industries-grid .industry-card {
+      background: var(--color-surface);
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    .industries-grid .industry-card strong {
+      display: block;
+      color: var(--color-text);
+      font-size: 0.9375rem;
+      margin-bottom: 4px;
+    }
+    .industries-grid .industry-card span {
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    .wholesale-cta {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 56px 24px;
+      color: #fff;
+    }
+    .wholesale-cta-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .wholesale-cta h2 { font-size: 1.75rem; font-weight: 700; color: #fff; margin-bottom: 12px; }
+    .wholesale-cta p { opacity: 0.92; margin-bottom: 24px; font-size: 1.0625rem; }
+    .wholesale-cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+    .wholesale-cta-actions a {
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      text-decoration: none;
+    }
+    .wholesale-cta-actions .btn-primary { background: #fff; color: var(--color-primary); }
+    .wholesale-cta-actions .btn-outline {
+      background: transparent;
+      color: #fff;
+      border: 2px solid #fff;
+    }
+    @media (max-width: 768px) {
+      .wholesale-hero { padding: 48px 20px 36px; }
+      .wholesale-hero-inner h1 { font-size: 1.875rem; }
+      .b2b-grid { grid-template-columns: 1fr; }
+      .industries-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="ขายส่ง &amp; โรงงานผลิตเครื่องนอน B2B - MildMate | MildMate">
+  <meta property="og:description" content="โรงงานผลิตเครื่องนอนขายส่งและ B2B จาก MildMate ประเทศไทย ตัดเย็บตามขนาด ปักลาย และรับผลิต OEM">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com/th/wholesale/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ขายส่ง &amp; โรงงานผลิตเครื่องนอน B2B - MildMate | MildMate">
+  <meta name="twitter:description" content="โรงงานผลิตเครื่องนอนขายส่งและ B2B จาก MildMate ประเทศไทย ตัดเย็บตามขนาด ปักลาย และรับผลิต OEM">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+      window.__mildmateLoadAnalytics = loadAnalytics;
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) { loadAnalytics(); return; }
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+      if (document.readyState === 'complete') setTimeout(startOnce, 6000);
+      else window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+    })();
+  </script>
+</head>
+<body class="wholesale-page">
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <!-- __HEADER__ -->
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="wholesale-hero">
+      <div class="wholesale-hero-inner">
+        <h1>ขายส่ง &amp; โรงงานผลิตเครื่องนอน B2B</h1>
+        <p class="hero-sub">ตัดเย็บเครื่องนอนตามขนาด ปักลาย รับผลิต OEM และโปรแกรมขายส่ง ได้รับความไว้วางใจจากแบรนด์โรงแรม เรือยอชต์ รถบ้าน และแบรนด์เครื่องนอนครอบครัวทั่วโลก</p>
+      </div>
+    </section>
+
+    <!-- ===== INTRO ===== -->
+    <section class="wholesale-intro">
+      <h2>ตั้งแต่ออกแบบเฉพาะงานจนถึงผลิตซ้ำเชิงพาณิชย์</h2>
+      <p>MildMate เป็นโรงงานผลิตเครื่องนอนของไทยที่ทำงานร่วมกับลูกค้าเชิงพาณิชย์ทั่วโลก ไม่ว่าคุณจะดูแลโรงแรม ท่าเรือ รพ. กองรถบ้าน หรือต้องการเปิดแบรนด์เครื่องนอนภายใต้ชื่อของคุณเอง ทีมงานของเราพร้อมสนับสนุนการออกแบบ การทำต้นแบบ การตัดเย็บตามขนาด การปักลาย การบรรจุภัณฑ์ และการผลิตซ้ำ</p>
+      <p>โปรแกรม B2B ของเราออกแบบมาสำหรับพันธมิตรที่ต้องการความแม่นยำของขนาด การปรับแบรนด์ และระยะเวลาการจัดส่งที่เชื่อถือได้ โดยไม่ต้องแบกภาระสินค้าคงคลังของการผลิตจำนวนมาก</p>
+    </section>
+
+    <!-- ===== B2B SERVICES GRID ===== -->
+    <section class="b2b-section">
+      <div class="b2b-inner">
+        <div class="b2b-kicker">พันธมิตรการผลิต</div>
+        <h2>โซลูชันสำหรับธุรกิจ</h2>
+        <p>MildMate เป็นพันธมิตรการผลิตที่ได้รับความไว้วางใจจากลูกค้าเชิงพาณิชย์ทั่วโลก ไม่ว่าจะเป็นโรงพยาบาล สปา ท่าเรือ และกลุ่มโรงแรม</p>
+        <div class="b2b-grid">
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>เครื่องนอนสั่งตัดสำหรับความต้องการเฉพาะ</h3>
+            <p>ขนาดที่นอนไม่มาตรฐาน? การจัดเรียงบนรถบ้าน เรือ หรือเตียงครอบครัว? เราออกแบบเครื่องนอนที่พอดีแม่นยำสำหรับทุกรูปทรง</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>ปักลายและสกรีน</h3>
+            <p>เพิ่มชื่อ อักษรย่อ วันที่พิเศษ หรือการออกแบบที่กำหนดเองลงบนผ้าปู ปลอกหมอน และปลอกผ้านวม เพื่อเป็นของขวัญหรือแบรนด์</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>ชุดเครื่องนอนสำหรับธุรกิจ</h3>
+            <p>โรงพยาบาล สปา คลินิกความงาม และศูนย์ดูแล เนื้อผ้าทนทาน สวมใส่สบาย พร้อมบริการปักโลโก้</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>รับผลิต OEM</h3>
+            <p>บริการรับผลิตตามแบบ สั่งผลิตสินค้าตามข้อกำหนด ให้คำปรึกษาเรื่องแบรนด์ของคุณเอง และโปรแกรมพันธมิตร</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== INDUSTRIES WE SERVE ===== -->
+    <section class="industries-section">
+      <div class="industries-inner">
+        <div class="industries-kicker">อุตสาหกรรมที่เราให้บริการ</div>
+        <h2>โปรแกรมเชิงพาณิชย์ในหลายกลุ่มอุตสาหกรรม</h2>
+        <p>สายการผลิตของเรารองรับโปรแกรมเชิงพาณิชย์ทั้งแบบสั่งซ้ำและแบบโครงการ</p>
+        <div class="industries-grid">
+          <div class="industry-card">
+            <strong>โรงแรม</strong>
+            <span>โรงแรม สถานที่พักบูติก รีสอร์ท และอพาร์ตเมนต์ที่ต้องการเครื่องนอนขนาดกำหนดเองพร้อมแบรนด์</span>
+          </div>
+          <div class="industry-card">
+            <strong>เรือ &amp; ยอชต์</strong>
+            <span>ท่าเรือ ผู้ประกอบการเช่าเหมาลำ และผู้ผลิตเรือที่ต้องการความแม่นยำของรูปทรง V-Berth</span>
+          </div>
+          <div class="industry-card">
+            <strong>RV &amp; รถบรรทุก</strong>
+            <span>ผู้ประกอบการกองรถและผู้ติดตั้งอุปกรณ์ที่ระบุขนาดที่นอนรถบรรทุกนอกมาตรฐาน</span>
+          </div>
+          <div class="industry-card">
+            <strong>การดูแลสุขภาพ</strong>
+            <span>คลินิก สปา สถานดูแลผู้สูงอายุที่ใช้การปกป้องกันน้ำในเนื้อผ้าที่ทนทาน</span>
+          </div>
+          <div class="industry-card">
+            <strong>ครอบครัว &amp; Co-Sleep</strong>
+            <span>ร้านค้าปลีกเฉพาะทางและร้านแม่และเด็กที่ขายผ้าปูเตียงครอบครัวแบบไร้รอยต่อ</span>
+          </div>
+          <div class="industry-card">
+            <strong>แบรนด์ของคุณเอง</strong>
+            <span>แบรนด์ที่ต้องการเปิดตัวเครื่องนอนสั่งตัดภายใต้ชื่อของตัวเองด้วยโปรแกรม white-label และ OEM</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="wholesale-cta">
+      <div class="wholesale-cta-inner">
+        <h2>พูดคุยเกี่ยวกับโครงการหรือการสั่งซื้อจำนวนมาก</h2>
+        <p>บอกเราเกี่ยวกับกรณีการใช้งาน จำนวน และระยะเวลาของคุณ ทีมงานของเราจะตอบกลับภายในหนึ่งวันทำการพร้อมข้อมูลความเป็นไปได้ ราคา และระยะเวลาการจัดส่ง</p>
+        <div class="wholesale-cta-actions">
+          <a href="/th/contact/" class="btn-primary">ติดต่อทีมวิศวกรรม</a>
+          <a href="mailto:contact@mildmate.com" class="btn-outline">contact@mildmate.com</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>

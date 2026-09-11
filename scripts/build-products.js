@@ -772,9 +772,106 @@ function buildFixedContentHTML(slug, p) {
   return '';
 }
 
+// ===== Thai variant generation =====
+const TH_PUBLIC_DIR = path.join(ROOT, 'public', 'th', 'product');
+
+// Thai chrome word substitutions (mirrors functions/_middleware.ts Thai locale pass).
+// These are applied to the static HTML so the chrome is Thai even though the file is static.
+const TH_CHROME_REPLACEMENTS = [
+  // Desktop nav
+  ['"nav-link">Shop</a>', '"nav-link">สินค้า</a>'],
+  ['"nav-link">Fabrics</a>', '"nav-link">เนื้อผ้า</a>'],
+  ['"nav-link">Size Guide</a>', '"nav-link">คู่มือขนาด</a>'],
+  ['"nav-link">Blog</a>', '"nav-link">บทความ</a>'],
+  // Mobile drawer nav (no class)
+  ['<a href="/products/?">Shop</a>', '<a href="/products/">สินค้า</a>'],
+  ['<a href="/fabric/?">Fabrics</a>', '<a href="/fabric/">เนื้อผ้า</a>'],
+  ['<a href="/sizeguide/?">Size Guide</a>', '<a href="/sizeguide/">คู่มือขนาด</a>'],
+  ['<a href="/blogs/?">Blog</a>', '<a href="/blogs/">บทความ</a>'],
+  // Sign in / Cart
+  ['>Sign In<', '>เข้าสู่ระบบ<'],
+  // Footer headings
+  ['>Quick Links</h3>', '>ลิงก์ด่วน</h3>'],
+  ['>Customer Service</h3>', '>บริการลูกค้า</h3>'],
+  ['>FAQ</h3>', '>คำถามที่พบบ่อย</h3>'],
+  ['>Size Guide</h3>', '>คู่มือขนาด</h3>'],
+  ['>Blog</h3>', '>บทความ</h3>'],
+  ['>Shop With Us</h3>', '>สั่งซือกับเรา</h3>'],
+  ['>Contact</h3>', '>ติดต่อเรา</h3>'],
+  // Footer links
+  ['>About Us</a>', '>เกี่ยวกับเรา</a>'],
+  ['>Contact Us</a>', '>ติดต่อเรา</a>'],
+  ['>Reviews</a>', '>รีวิว</a>'],
+  ['>FAQ</a>', '>คำถามที่พบบ่อย</a>'],
+  ['>Privacy Policy</a>', '>นโยบายความเป็นส่วนตัว</a>'],
+  ['>Returns &amp; Delivery</a>', '>การคืนสินค้าและการจัดส่ง</a>']
+];
+
+// Pick the best Thai title for a product. Some products.json entries store
+// nameTh as plain Thai text, others store double-mojibake UTF-8 bytes that need
+// a Latin-1 round-trip to recover. If we can't recover readable Thai, fall back
+// to the English name with a "(Thai)" suffix so the page is still distinct.
+function pickThaiTitle(raw, fallbackName) {
+  if (!raw) return fallbackName + ' (Thai)';
+  // Heuristic: a clean Thai string should be dominated by Thai script or ASCII.
+  // Anything containing classic Latin-1-of-UTF-8 markers (Ã Â â € etc.) is
+  // almost certainly mojibake; recover it via Latin-1 round-trip and check
+  // whether the result actually decodes to Thai script. If not, fall back.
+  const looksLikeMojibake = /[\u00c2\u00c3\u00c4\u00c5\u00e2\u20ac]/.test(raw);
+  if (!looksLikeMojibake && /[\u0e00-\u0e7f]/.test(raw)) {
+    return normalizeMojibake(raw);
+  }
+  try {
+    const recovered = Buffer.from(raw, 'latin1').toString('utf8');
+    if (/[\u0e00-\u0e7f]/.test(recovered)) {
+      return normalizeMojibake(recovered);
+    }
+  } catch (_) { /* fall through */ }
+  // Fall back to the English name. Adding "(Thai)" suffix keeps the title
+  // distinguishable from the EN page while preserving SEO routing.
+  return fallbackName + ' (Thai)';
+}
+
+// Apply Thai chrome replacements and tag the document lang=th, plus add canonical hreflang.
+function buildThaiFor(enHtml, slug, prod) {
+  const fallbackName = prod.name || slug;
+  const titleForThai = pickThaiTitle(prod.nameTh, fallbackName);
+
+  let html = enHtml;
+
+  // 1. Set lang="th" on html and inject Sarabun font fallback near head
+  html = html
+    .replace(/<html lang="en">/i, '<html lang="th">')
+    .replace('<link href="/css/fonts.css?v=2" rel="stylesheet">', '<link href="/css/fonts.css?v=2" rel="stylesheet">')
+    .replace(/<link href="\/css\/fonts\.css" rel="stylesheet">/i, '<link href="/css/fonts.css?v=2" rel="stylesheet">');
+
+  // 2. Title: prefer recoverable Thai title; otherwise EN + (Thai)
+  html = html.replace(
+    /<title>[^<]*<\/title>/,
+    '<title>' + titleForThai + ' \u2014 MildMate</title>'
+  );
+
+  // 3. Add canonical + alternate hreflang
+  const canonical = '<link rel="canonical" href="https://www.mildmate.com/th/product/' + slug + '/">';
+  const altEn = '<link rel="alternate" hreflang="en" href="https://www.mildmate.com/product/' + slug + '/">';
+  const altTh = '<link rel="alternate" hreflang="th" href="https://www.mildmate.com/th/product/' + slug + '/">';
+  // Insert canonical before </head> (only if not already present)
+  if (!html.includes('rel="canonical"') && html.indexOf('</head>') !== -1) {
+    html = html.replace('</head>', '  ' + canonical + '\n  ' + altEn + '\n  ' + altTh + '\n</head>');
+  }
+
+  // 4. Apply Thai chrome word substitutions
+  for (const pair of TH_CHROME_REPLACEMENTS) {
+    html = html.split(pair[0]).join(pair[1]);
+  }
+
+  return html;
+}
+
 // ===== MAIN BUILD =====
 console.log('Building product pages...');
 let builtCount = 0;
+let builtThCount = 0;
 
 // Process all products from products.json
 products.products.forEach(prod => {
@@ -797,7 +894,7 @@ products.products.forEach(prod => {
     outHtml = buildCustomizable(slug, p, prod);
   }
 
-  // Write output
+  // Write EN output
   const outDir = path.join(PUBLIC_DIR, slug);
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
@@ -806,6 +903,17 @@ products.products.forEach(prod => {
   fs.writeFileSync(outPath, outHtml, 'utf8');
   console.log('  BUILT: ' + slug + ' â†’ ' + outPath);
   builtCount++;
+
+  // Write TH output (mirror dir under public/th/product/{slug}/)
+  const thHtml = buildThaiFor(outHtml, slug, prod);
+  const thDir = path.join(TH_PUBLIC_DIR, slug);
+  if (!fs.existsSync(thDir)) {
+    fs.mkdirSync(thDir, { recursive: true });
+  }
+  const thPath = path.join(thDir, 'index.html');
+  fs.writeFileSync(thPath, thHtml, 'utf8');
+  console.log('  BUILT (TH): ' + slug + ' â†’ ' + thPath);
+  builtThCount++;
 });
 
-console.log('\nDone! Built ' + builtCount + ' product pages.');
+console.log('\nDone! Built ' + builtCount + ' EN product pages and ' + builtThCount + ' TH product pages.');

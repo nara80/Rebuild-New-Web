@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>:root{--color-primary:#2c96f4;--color-primary-dark:#1a7fd4;--color-text:#333333;--color-bg:#ffffff;--color-surface:#f8f9fa;--color-border:#e5e7eb;--color-muted:#6b7280;--color-line:#00b900;--font-main:'Quicksand',sans-serif;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--header-height:80px;--header-height-scroll:60px;--container-max:1200px;--transition:0.25s ease}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:16px}:lang(th){font-family:'Sarabun',sans-serif}body{font-family:var(--font-main);color:var(--color-text);background:var(--color-bg);line-height:1.6;-webkit-font-smoothing:antialiased;padding-top:var(--header-height)}a{color:var(--color-primary);text-decoration:none;transition:color var(--transition)}a:hover{color:var(--color-primary-dark)}img{max-width:100%;height:auto;display:block}ul,ol{list-style:none}button{font-family:inherit;cursor:pointer;border:none;background:none}h1{font-size:2.5rem;font-weight:700;line-height:1.2}h2{font-size:1.75rem;font-weight:700;line-height:1.3}h3{font-size:1.25rem;font-weight:600;line-height:1.4}p{font-size:1rem;font-weight:400;margin-bottom:1rem}.small{font-size:0.875rem}.container{max-width:var(--container-max);margin:0 auto;padding:0 24px}.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-bg);border-bottom:1px solid var(--color-border);height:var(--header-height);transition:height var(--transition),box-shadow var(--transition)}.site-header.scrolled{height:var(--header-height-scroll);box-shadow:var(--shadow)}.header-inner{display:flex;align-items:center;justify-content:space-between;height:100%;position:relative}.logo-link{display:flex;align-items:center;flex-shrink:0}.logo-link img{max-height:64px;width:auto;transition:max-height var(--transition)}.site-header.scrolled .logo-link img{max-height:50px}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Wholesale &amp; B2B bedding from MildMate Thailand. Custom sizes, embroidery, OEM manufacturing, and bulk programs for hospitality, marine, RV, and family bedding brands.">
+  <link rel="canonical" href="https://www.mildmate.com/wholesale/">
+  <title>Wholesale &amp; B2B Bedding - MildMate Manufacturing Partner | MildMate</title>
+  <link href="/css/fonts.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.min.css">
+  <style>
+    .wholesale-page { background: #f0f7ff; }
+    .wholesale-hero {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 72px 24px 56px;
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+    }
+    .wholesale-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .wholesale-hero-inner {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .wholesale-hero-inner h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .wholesale-hero-inner .hero-sub {
+      font-size: 1.0625rem;
+      color: rgba(255,255,255,0.92);
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .wholesale-intro {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 56px 24px 24px;
+      color: var(--color-muted);
+      font-size: 1.0625rem;
+      line-height: 1.7;
+    }
+    .wholesale-intro h2 {
+      color: var(--color-text);
+      font-size: 1.5rem;
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+    .b2b-section {
+      background: #f0f7ff;
+      padding: 24px 24px 56px;
+    }
+    .b2b-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .b2b-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+    .b2b-inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .b2b-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 28px;
+      font-size: 0.9375rem;
+    }
+    .b2b-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .b2b-card {
+      background: #fff;
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .b2b-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: 0 2px 12px rgba(44,150,244,0.10);
+    }
+    .b2b-card h3 {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--color-text);
+    }
+    .b2b-card p {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin: 0;
+      line-height: 1.55;
+    }
+    .b2b-accent-bar {
+      width: 32px;
+      height: 3px;
+      background: var(--color-primary);
+      border-radius: 2px;
+      margin-bottom: 14px;
+    }
+    .wholesale-cta {
+      background: linear-gradient(135deg, #2c96f4 0%, #1a7fd4 100%);
+      padding: 56px 24px;
+      color: #fff;
+    }
+    .wholesale-cta-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .wholesale-cta h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+    .wholesale-cta p {
+      opacity: 0.92;
+      margin-bottom: 24px;
+      font-size: 1.0625rem;
+    }
+    .wholesale-cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+    .wholesale-cta-actions a {
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      font-weight: 700;
+      font-size: 0.9375rem;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .wholesale-cta-actions .btn-primary {
+      background: #fff;
+      color: var(--color-primary);
+    }
+    .wholesale-cta-actions .btn-primary:hover {
+      background: #f0f7ff;
+    }
+    .wholesale-cta-actions .btn-outline {
+      background: transparent;
+      color: #fff;
+      border: 2px solid #fff;
+    }
+    .wholesale-cta-actions .btn-outline:hover {
+      background: rgba(255,255,255,0.12);
+    }
+    .industries-section {
+      background: #fff;
+      padding: 56px 24px;
+    }
+    .industries-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .industries-kicker {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .industries-inner h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .industries-inner > p {
+      color: var(--color-muted);
+      margin-bottom: 28px;
+      font-size: 0.9375rem;
+      text-align: center;
+    }
+    .industries-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .industries-grid .industry-card {
+      background: var(--color-surface);
+      border: 1px solid #d0e6fa;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+    }
+    .industries-grid .industry-card strong {
+      display: block;
+      color: var(--color-text);
+      font-size: 0.9375rem;
+      margin-bottom: 4px;
+    }
+    .industries-grid .industry-card span {
+      color: var(--color-muted);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+    @media (max-width: 768px) {
+      .wholesale-hero { padding: 48px 20px 36px; }
+      .wholesale-hero-inner h1 { font-size: 1.875rem; }
+      .b2b-grid { grid-template-columns: 1fr; }
+      .industries-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+
+  <!-- Phase 8: Tracking + OG -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MildMate">
+  <meta property="og:title" content="Wholesale &amp; B2B Bedding - MildMate Manufacturing Partner | MildMate">
+  <meta property="og:description" content="Wholesale &amp; B2B bedding from MildMate Thailand. Custom sizes, embroidery, OEM manufacturing, and bulk programs for hospitality, marine, RV, and family bedding brands.">
+  <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <meta property="og:image:alt" content="MildMate custom bedding">
+  <meta property="og:url" content="https://www.mildmate.com/wholesale/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Wholesale &amp; B2B Bedding - MildMate Manufacturing Partner | MildMate">
+  <meta name="twitter:description" content="Wholesale &amp; B2B bedding from MildMate Thailand. Custom sizes, embroidery, OEM manufacturing, and bulk programs for hospitality, marine, RV, and family bedding brands.">
+  <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+    <script>
+    (function () {
+      var GTM_ID = 'GTM-KLJZZM9';
+      var GA4_ID = 'G-ESL161CNBV';
+      function loadScript(src, async) {
+        var s = document.createElement('script');
+        s.src = src;
+        if (async) s.async = true;
+        document.head.appendChild(s);
+      }
+      function loadAnalytics() {
+        if (window.__mildmateAnalyticsLoaded) return;
+        window.__mildmateAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        window.gtag('js', new Date());
+        window.gtag('config', GA4_ID);
+        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
+        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      }
+      window.__mildmateLoadAnalytics = loadAnalytics;
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+      if (!isMobile) { loadAnalytics(); return; }
+      var started = false;
+      var startOnce = function () {
+        if (started) return;
+        started = true;
+        window.removeEventListener('pointerdown', startOnce, true);
+        window.removeEventListener('keydown', startOnce, true);
+        window.removeEventListener('touchstart', startOnce, true);
+        loadAnalytics();
+      };
+      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+      window.addEventListener('keydown', startOnce, { once: true, capture: true });
+      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+      if (document.readyState === 'complete') setTimeout(startOnce, 6000);
+      else window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+    })();
+  </script>
+</head>
+<body class="wholesale-page">
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <!-- __HEADER__ -->
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="wholesale-hero">
+      <div class="wholesale-hero-inner">
+        <h1>Wholesale &amp; B2B Bedding Manufacturing</h1>
+        <p class="hero-sub">Custom-fit bedding, embroidery, OEM manufacturing, and bulk programs. Trusted by hospitality, marine, RV, and family bedding brands worldwide.</p>
+      </div>
+    </section>
+
+    <!-- ===== INTRO ===== -->
+    <section class="wholesale-intro">
+      <h2>From One Custom Design to Repeat Commercial Orders</h2>
+      <p>MildMate is a Thai bedding manufacturer partnering with commercial clients worldwide. Whether you manage a hotel, marina, hospital, RV fleet, or want to launch a private-label bedding line, our team supports fitment design, prototyping, custom sizing, embroidery, packaging, and repeat production runs. We manufacture each order to exact dimensions — no off-the-shelf sizing assumptions.</p>
+      <p>Our B2B programs are designed for partners who need precision fit, brand customization, and reliable lead times without the inventory overhead of mass production.</p>
+    </section>
+
+    <!-- ===== B2B SERVICES GRID ===== -->
+    <section class="b2b-section">
+      <div class="b2b-inner">
+        <div class="b2b-kicker">Manufacturing Partnerships</div>
+        <h2>Business Solutions</h2>
+        <p>MildMate is a trusted manufacturing partner for commercial clients worldwide — hospitals, spas, marinas, and hospitality groups.</p>
+        <div class="b2b-grid">
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>Custom Bedding for Unique Needs</h3>
+            <p>Unusual mattress sizes? RV, boat, or family co-sleeping arrangements? We engineer precision-fit bedding for any shape.</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>Embroidery &amp; Screen Printing</h3>
+            <p>Add names, monograms, special dates, or custom designs to sheets, pillowcases, and duvet covers for gifts or branding.</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>Bedding Sets for Businesses</h3>
+            <p>Hospitals, spas, beauty clinics, and care centers. Durable, comfortable linens with optional logo embroidery.</p>
+          </div>
+          <div class="b2b-card">
+            <div class="b2b-accent-bar"></div>
+            <h3>OEM Manufacturing</h3>
+            <p>Original Equipment Manufacturer services. Custom product orders, private-label consultation, and partnership programs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== INDUSTRIES WE SERVE ===== -->
+    <section class="industries-section">
+      <div class="industries-inner">
+        <div class="industries-kicker">Industries We Serve</div>
+        <h2>Commercial Programs Across Sectors</h2>
+        <p>Our production lines support a range of repeat-order and project-based commercial programs.</p>
+        <div class="industries-grid">
+          <div class="industry-card">
+            <strong>Hospitality</strong>
+            <span>Hotels, boutique stays, resorts, and serviced apartments seeking custom-sized linens with optional branding.</span>
+          </div>
+          <div class="industry-card">
+            <strong>Marine &amp; Yacht</strong>
+            <span>Marinas, charter operators, and boat builders needing V-Berth shapes and hull-fit precision.</span>
+          </div>
+          <div class="industry-card">
+            <strong>RV &amp; Truck</strong>
+            <span>Fleet operators and outfitters specifying non-standard sleeper-cab or RV mattress dimensions.</span>
+          </div>
+          <div class="industry-card">
+            <strong>Healthcare &amp; Care</strong>
+            <span>Clinics, spas, hospices, and care homes using waterproof protection in long-life fabrics.</span>
+          </div>
+          <div class="industry-card">
+            <strong>Family &amp; Co-Sleep</strong>
+            <span>Specialty retailers and family-pediatric stores stocking unified-surface family sheets.</span>
+          </div>
+          <div class="industry-card">
+            <strong>Private Label</strong>
+            <span>Brands launching their own custom-fit bedding line with white-label and OEM programs.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="wholesale-cta">
+      <div class="wholesale-cta-inner">
+        <h2>Discuss a Project or Bulk Order</h2>
+        <p>Share your use case, quantities, and timelines. Our team replies within one business day with feasibility, pricing, and lead times.</p>
+        <div class="wholesale-cta-actions">
+          <a href="/contact/" class="btn-primary">Contact Our Engineering Team</a>
+          <a href="mailto:contact@mildmate.com" class="btn-outline">contact@mildmate.com</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- __FOOTER__ -->
+
+  <script src="/js/nav.js"></script>
+  <script src="/js/clerk.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+</body>
+</html>
