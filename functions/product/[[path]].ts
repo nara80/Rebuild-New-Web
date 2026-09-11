@@ -317,7 +317,9 @@ export async function onRequest(context: any): Promise<Response> {
     // Inject canonical + hreflang alternates for bilingual product URLs.
     // EN canonical points to /product/{slug}/; TH canonical points to /th/product/{slug}/.
     // Both hreflang alternates link the EN and TH counterparts.
-    if (!html.includes('rel="canonical"') && html.includes('</head>')) {
+    // Inject right after <meta charset="UTF-8"> so it sits at the top of <head>
+    // regardless of any subsequent middleware or in-page insertions before </head>.
+    {
       const enPath = `/product/${slug}/`;
       const thPath = `/th/product/${slug}/`;
       const canonicalHref = isTh
@@ -326,11 +328,13 @@ export async function onRequest(context: any): Promise<Response> {
       const enHref = `https://www.mildmate.com${enPath}`;
       const thHref = `https://www.mildmate.com${thPath}`;
       const seoTags =
-        `  <link rel="canonical" href="${canonicalHref}">\n` +
+        `<link rel="canonical" href="${canonicalHref}">\n` +
         `  <link rel="alternate" hreflang="en" href="${enHref}">\n` +
-        `  <link rel="alternate" hreflang="th" href="${thHref}">\n` +
-        `</head>`;
-      html = html.replace('</head>', seoTags);
+        `  <link rel="alternate" hreflang="th" href="${thHref}">`;
+      const anchor = '<meta charset="UTF-8">';
+      if (html.includes(anchor) && !html.includes('rel="canonical"')) {
+        html = html.replace(anchor, anchor + '\n  ' + seoTags);
+      }
     }
 
     if (product && (product.image_url || product.images)) {
