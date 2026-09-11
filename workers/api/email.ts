@@ -9,6 +9,7 @@ export async function sendEmail(env: any, options: {
   from?: string;
   subject: string;
   text: string;
+  html?: string;
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
@@ -18,19 +19,24 @@ export async function sendEmail(env: any, options: {
 
   try {
     const from = options.from || env.ORDER_FROM_EMAIL || "MildMate <noreply@mildmate.com>";
+    const payload: Record<string, any> = {
+      from,
+      to: [options.to],
+      reply_to: options.replyTo,
+      subject: options.subject,
+      text: options.text,
+    };
+    // Only attach HTML when explicitly provided. Resend treats omitted html as plain text only.
+    if (options.html && options.html.trim().length > 0) {
+      payload.html = options.html;
+    }
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        from,
-        to: [options.to],
-        reply_to: options.replyTo,
-        subject: options.subject,
-        text: options.text,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const body = await resp.json() as any;
