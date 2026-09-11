@@ -1,82 +1,80 @@
-# Phase 07 v2 — Historical Mapping Runbook (Direct Notion API Mapper)
+# Phase 07/08 — Confirmed-Mapping Sync Runbook (v3, revised 2026-09-11)
 
 **Utility:** `scripts/notion-product-mapper.mjs` (Node, no dependencies)
-**Decisions locked:** audit table approved (migration 044); Make.com Sales Sync schedule stays OFF until Phase 08.
+**Design (approved 2026-09-11):** Make.com remains the only system that fixes and confirms product mappings in Notion. This tool never resolves or remaps anything — it syncs **confirmed** mappings into D1.
+
+> Previous versions of this runbook described a resolver-based mapper. That flow is superseded; see `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`.
+
+## Eligibility rule (enforced by the tool)
+
+A Notion OrderList record is synced only when:
+1. `Product_Mapping_Status = "Mapped"` (server-side query filter; empty/Unmapped/Review Required/Partial always belong to Make.com), AND
+2. `D1_Current_Signature != D1_Last_Synced_Signature`, or `D1_Last_Synced_Signature` is empty.
+
+After a successful D1 upsert (live mode), the tool writes `D1_Last_Synced_Signature = D1_Current_Signature` — the only Notion field it ever writes.
 
 ## Environment (local session only — never committed, never printed)
 
+Stored in `.dev.vars` (gitignored): `NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, plus `SALES_SYNC_API_TOKEN`. Load into a session:
+
 ```powershell
-$env:NOTION_TOKEN="PRIVATE_TOKEN"                    # dedicated "MildMate OrderList Mapper" (read + update on OrderList)
-$env:NOTION_DATA_SOURCE_ID="REAL_ORDERLIST_DATA_SOURCE_ID"
-$env:SALES_SYNC_API_TOKEN="PRODUCTION_TOKEN"         # same token as the sales sync
-$env:MAPPER_API_BASE="https://www.mildmate.com"      # or http://localhost:8788 for local tests
+Get-Content .dev.vars | Where-Object { $_ -match '^\s*([A-Z_]+)\s*=\s*(.+)$' } | ForEach-Object { Set-Item -Path "env:$($Matches[1])" -Value $Matches[2].Trim() }
+$env:MAPPER_API_BASE="https://www.mildmate.com"   # or http://localhost:8788 for local tests
 ```
-
-## Prerequisites (must all be true before live runs)
-
-1. Migrations **043 + 044** applied to preview and production D1.
-2. Worker bundle with `/api/v1/mapping/*` deployed (ships with Phases 04–07).
-3. Dedicated Notion token created and granted access to OrderList.
-4. Make.com Sales Sync schedule **OFF** (stays off until Phase 08 per decision).
-5. The 16 confirmed Etsy listing mappings loaded via `POST /api/v1/mapping/aliases`.
 
 ## CLI reference
 
 | Flag | Purpose |
 |---|---|
-| `--dry-run` | Resolve + log + audit-event only; **no Notion writes** |
+| `--dry-run` | Read-only: report what would be upserted to D1 and whether the signature would be updated |
 | `--limit N` | Stop after N processed records |
 | `--resume` | Continue from the saved cursor (`scripts/.notion-mapper-state.json`, gitignored) |
-| `--order-id X` | Process only the record whose `Order_Number` = X |
-| `--edited-after ISO` | Notion-side filter on `last_edited_time` |
-| `--input-file f.json` | Offline mock mode (no Notion access; used for testing) |
+| `--order-id N` | Only the record whose Notion `ID` (unique_id) = N, e.g. `1038` |
+| `--edited-after ISO` | Notion-side `last_edited_time` filter |
+| `--input-file f.json` | Offline mock mode (testing only) |
 
-Logs: JSONL per run under `logs/notion-mapper/` (gitignored) + console summary. Audit rows land in D1 `product_mapping_events` (dry runs flagged `dry_run=1`).
+Logs: JSONL per run under `logs/notion-mapper/` (gitignored), token- and PII-free.
 
-## Behavior guarantees
+## What gets written to D1 (`POST /api/v1/sales/orders/upsert`)
 
-- Records already `Mapped` are skipped (verified mappings preserved).
-- Only `D1_Product_IDs`, `D1_Product_Map`, `Product_Mapping_Status` are written; property types are detected from the page itself. `Product_Info`/`ProductJSON` are never modified.
-- `Review Required` writes only the status — existing D1 fields are not cleared.
-- Rollup: all items resolved → `Mapped`; some → `Partial`; none → `Review Required`. No guessing; no AI in the current build (deterministic ladder only via `/api/v1/mapping/resolve`).
-- Multi-product listings expand to one `D1_Product_Map` line per product id (sales-sync parser format).
-- Notion rate limit: 350 ms throttle + retry/backoff on 429/5xx (max 5 retries).
-- Confidence: EXACT_VARIATION 1.0 · EXACT_ALIAS 0.97 · LISTING_VARIATION 0.9. Order confidence = worst item.
+- Identity: `(source_system = Shop, source_order_id = Order_Number)`; `notion_page_id` included.
+- Items parsed from the **confirmed** `D1_Product_Map` (both live formats supported), cross-checked against `D1_Product_IDs`, ids validated against the canonical catalog before any write.
+- `source_item_key = {Order_Number}-{n}` — matches the Make.com convention verified in production, so both systems upsert the same rows.
+- Exact `TotalAmount` as `order_total`; line revenue `UNALLOCATED` (never invented, never equal-split).
+- Thai operational status mapped via an explicit table (e.g. `จัดส่งสินค้า` → `shipped`); unknown statuses are sent without status and flagged, never guessed.
 
-## Recommended live sequence
+## Verified so far (2026-09-11)
+
+- Notion connection + "OrderList" identity + schema + pagination + filters: ✅ read-only verified.
+- Dry-run `--order-id 1038`: ✅ eligible, parsed D1 20 + 26 (matches `D1_Product_IDs`), correct payload, signature update flagged. No writes performed.
+
+## Prerequisites before LIVE runs
+
+1. Approval of the live single-record test.
+2. Bundle with `/api/v1/*` mapping/events routes deployed (ships with Phases 04–07); migrations 043 + 044 applied to preview/prod (043/044 support Make.com + audit paths; the sync itself needs the deployed sales upsert route, already live in prod).
+3. `MAPPER_API_BASE` pointed at the intended target (local → preview → prod ramp).
+4. Make.com Sales Sync schedule remains OFF until the Phase 08 activation decision.
+
+## Live sequence (after approval)
 
 ```powershell
-# 1. Connectivity check + first look at real data shape (no writes)
-node scripts/notion-product-mapper.mjs --dry-run --limit 1
+# 1. Single confirmed record (the verified known case)
+node scripts/notion-product-mapper.mjs --order-id 1038            # live: 1 D1 upsert + signature write-back
+# verify in D1 + Notion, re-run to confirm idempotent skip:
+node scripts/notion-product-mapper.mjs --order-id 1038            # expect skipped_unchanged
 
-# 2. Verify the known case (no writes)
-node scripts/notion-product-mapper.mjs --order-id 1038 --dry-run
-
-# 3. Controlled batches — dry-run first, review the JSONL log, then live
+# 2. Controlled batches (dry-run first, review JSONL, then live)
 node scripts/notion-product-mapper.mjs --dry-run --limit 5
 node scripts/notion-product-mapper.mjs --limit 5
-# verify the 5 records in Notion (only 3 fields changed), then:
 node scripts/notion-product-mapper.mjs --limit 20
 node scripts/notion-product-mapper.mjs --limit 50
-# full backlog with resume support:
+
+# 3. Full historical backlog (Phase 08), resumable
 node scripts/notion-product-mapper.mjs --resume
 ```
 
-After each batch: check `Review Required` counts in the run summary and mapping coverage on the Data Analyst dashboard (after Phase 08 sync activation, D1-side coverage becomes meaningful).
+After each batch: check the run summary (`synced`, `skipped_unchanged`, `skipped_parse_failed`, `skipped_ids_mismatch`, `errors`), spot-check Notion signatures, and reconcile counts in the Data Analyst dashboard.
 
-## Important caveat — parser calibration
+## Weekly automation (Phase 17, not built)
 
-The `ProductJSON` / `Product_Info` parser is **best-effort against assumed shapes** (JSON array of items with `listing_id`/`variation`/`title`/`quantity`-style keys; plain-text fallback one item per line). The first live `--dry-run --limit 5` will reveal the real field shapes; expect one parser adjustment pass before batch runs. Unparseable records safely become `Review Required`, never a guess.
-
-## Human corrections loop
-
-For each `Review Required` record a human resolves, store the correction as reusable memory:
-
-```powershell
-# example
-Invoke-WebRequest -Uri "$env:MAPPER_API_BASE/api/v1/mapping/aliases" -Method POST `
-  -Headers @{ Authorization = "Bearer $env:SALES_SYNC_API_TOKEN"; 'Content-Type'='application/json' } `
-  -Body '{"source_system":"etsy","listing_id":"...","alias_text":"...exact variation text...","product_ids":[3],"match_scope":"variation","notes":"human correction"}'
-```
-
-Then re-run the mapper for that record: `--order-id <Order_Number>`.
+Decided mechanism: dedicated Cloudflare Worker with a Cron Trigger (Pages cannot cron), holding `NOTION_TOKEN`/`SALES_SYNC_API_TOKEN` as Worker secrets, processing only `Mapped` + signature-changed records. Build only after single-record and small-batch live tests are approved.

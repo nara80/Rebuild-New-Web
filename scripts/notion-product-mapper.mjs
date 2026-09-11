@@ -1,29 +1,32 @@
 #!/usr/bin/env node
 /**
- * MildMate — Direct Notion API Product Mapper (Phase 07 v2)
+ * MildMate — Notion Confirmed-Mapping → D1 Sync (Phase 07, revised design 2026-09-11)
  *
- * Resolves unmapped Notion OrderList product lines to canonical D1 Product_IDs
- * via the token-protected Worker mapping endpoints, then writes results back to
- * the SAME Notion record (only D1_Product_IDs, D1_Product_Map, Product_Mapping_Status).
+ * Business rule: Make.com remains the primary system that fixes and confirms
+ * product mappings in Notion. This tool NEVER resolves or remaps anything.
+ * It only syncs records that Make.com has already confirmed:
+ *
+ *   Eligible when:
+ *     Product_Mapping_Status = "Mapped"
+ *     AND (D1_Current_Signature != D1_Last_Synced_Signature OR last is empty)
+ *
+ *   Sync: parse the CONFIRMED D1_Product_Map / D1_Product_IDs from Notion,
+ *   upsert the order into D1 via POST /api/v1/sales/orders/upsert, then (live
+ *   mode only) write D1_Last_Synced_Signature = D1_Current_Signature back to
+ *   the SAME Notion record. No other Notion field is ever written.
+ *
+ * Records with empty / Unmapped / Review Required / Partial status are always
+ * skipped — they belong to Make.com.
  *
  * Environment variables (never committed, never printed):
- *   NOTION_TOKEN            Notion integration token (dedicated "MildMate OrderList Mapper")
- *   NOTION_DATA_SOURCE_ID   OrderList data source id
- *   SALES_SYNC_API_TOKEN    Bearer token for the Worker mapping endpoints
- *   MAPPER_API_BASE         Worker origin (default https://www.mildmate.com; use http://localhost:8788 for tests)
+ *   NOTION_TOKEN, NOTION_DATA_SOURCE_ID, SALES_SYNC_API_TOKEN,
+ *   MAPPER_API_BASE (default https://www.mildmate.com; http://localhost:8788 for tests)
  *
  * Usage:
- *   node scripts/notion-product-mapper.mjs --dry-run --limit 5
  *   node scripts/notion-product-mapper.mjs --order-id 1038 --dry-run
- *   node scripts/notion-product-mapper.mjs --edited-after 2026-09-01T00:00:00Z --limit 20
- *   node scripts/notion-product-mapper.mjs --resume            (continue from saved cursor)
- *   node scripts/notion-product-mapper.mjs --input-file sample.json --dry-run   (offline mock mode, no Notion access)
- *
- * Safety:
- *   - Records already `Mapped` are never re-processed (verified mappings preserved).
- *   - Product ids are validated by the Worker against D1 `products` before any Notion write.
- *   - Only the three mapping fields are ever written; Product_Info/ProductJSON are never modified.
- *   - Logs contain no tokens and no customer PII (only order/product metadata).
+ *   node scripts/notion-product-mapper.mjs --dry-run --limit 5
+ *   node scripts/notion-product-mapper.mjs --limit 20            (live: D1 upsert + signature write-back)
+ *   node scripts/notion-product-mapper.mjs --resume
  */
 
 import fs from "node:fs";
@@ -37,14 +40,21 @@ const NOTION_MIN_INTERVAL_MS = 350; // ~3 req/s Notion limit
 const STATE_FILE = path.join("scripts", ".notion-mapper-state.json");
 const LOG_DIR = path.join("logs", "notion-mapper");
 
-const MAPPING_FIELDS = ["D1_Product_IDs", "D1_Product_Map", "Product_Mapping_Status"];
-const READ_FIELDS = ["Order_Number", "Shop", "Product_Info", "ProductJSON", ...MAPPING_FIELDS];
-const ELIGIBLE_STATUSES = ["Unmapped", "Review Required", ""]; // "" = empty status
+const SIGNATURE_FIELD = "D1_Last_Synced_Signature"; // the ONLY Notion field this tool ever writes
 
-const METHOD_MAP = {
-  variation_exact: { method: "EXACT_VARIATION", confidence: 1.0 },
-  verified_alias: { method: "EXACT_ALIAS", confidence: 0.97 },
-  listing: { method: "LISTING_VARIATION", confidence: 0.9 },
+// Thai operational status → canonical sales status. Unknown values are sent as
+// no status (upsert accepts null) and flagged in the log, never guessed.
+const THAI_STATUS_MAP = {
+  "รอดำเนินการ": "pending",
+  "กำลังดำเนินการ": "processing",
+  "กำลังผลิต": "processing",
+  "จัดส่งสินค้า": "shipped",
+  "จัดส่งแล้ว": "shipped",
+  "ส่งแล้ว": "shipped",
+  "สำเร็จ": "completed",
+  "เสร็จสิ้น": "completed",
+  "ยกเลิก": "cancelled",
+  "คืนเงิน": "refunded",
 };
 
 // ── CLI args ───────────────────────────────────────────────────────────────
@@ -56,7 +66,7 @@ function parseArgs(argv) {
     if (a === "--dry-run") args.dryRun = true;
     else if (a === "--resume") args.resume = true;
     else if (a === "--limit") args.limit = Number(argv[++i]);
-    else if (a === "--order-id") args.orderId = String(argv[++i]);
+    else if (a === "--order-id") args.orderId = Number(argv[++i]);
     else if (a === "--edited-after") args.editedAfter = String(argv[++i]);
     else if (a === "--input-file") args.inputFile = String(argv[++i]);
     else if (a === "--help" || a === "-h") { printHelp(); process.exit(0); }
@@ -65,6 +75,9 @@ function parseArgs(argv) {
   if (args.limit !== null && (!Number.isInteger(args.limit) || args.limit <= 0)) {
     console.error("--limit must be a positive integer"); process.exit(1);
   }
+  if (args.orderId !== null && (!Number.isInteger(args.orderId) || args.orderId <= 0)) {
+    console.error("--order-id must be the numeric Notion ID (unique_id), e.g. 1038"); process.exit(1);
+  }
   if (args.editedAfter && Number.isNaN(Date.parse(args.editedAfter))) {
     console.error("--edited-after must be an ISO datetime"); process.exit(1);
   }
@@ -72,7 +85,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log("Options: --dry-run --limit N --resume --order-id X --edited-after ISO --input-file file.json");
+  console.log("Options: --dry-run --limit N --resume --order-id <NotionID> --edited-after ISO --input-file file.json");
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────
@@ -96,11 +109,7 @@ async function throttledNotionFetch(url, init, attempt = 0) {
 }
 
 function notionHeaders(token) {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Notion-Version": NOTION_VERSION,
-    "Content-Type": "application/json",
-  };
+  return { Authorization: `Bearer ${token}`, "Notion-Version": NOTION_VERSION, "Content-Type": "application/json" };
 }
 
 function propPlainText(prop) {
@@ -110,8 +119,13 @@ function propPlainText(prop) {
   if (prop.select) return prop.select.name || "";
   if (prop.status) return prop.status.name || "";
   if (typeof prop.number === "number") return String(prop.number);
-  if (typeof prop.formula?.string === "string") return prop.formula.string;
-  if (typeof prop.formula?.number === "number") return String(prop.formula.number);
+  if (prop.unique_id) return String(prop.unique_id.number ?? "");
+  if (prop.formula) {
+    if (typeof prop.formula.string === "string") return prop.formula.string;
+    if (typeof prop.formula.number === "number") return String(prop.formula.number);
+    if (prop.formula.date) return prop.formula.date.start || "";
+  }
+  if (prop.date) return prop.date.start || "";
   return "";
 }
 
@@ -120,77 +134,66 @@ function truncate(s, n) {
   return str.length > n ? str.slice(0, n) : str;
 }
 
-// ── Item parsing (best-effort; unparseable -> Review Required) ─────────────
+// ── Confirmed D1_Product_Map parsing (two live formats) ────────────────────
+//
+// Format A (current): "Item 1 | D1 20 | Mattress Protector, Family & Co-Sleep | Qty 1; Item 2 | D1 26 | BedBridge Connector | Qty 1"
+// Format B (older):   "Line 1 | <source title> | MildMate -> 6 | <D1 title> | Mapped" (one per line; qty not present -> 1)
 
-function pick(obj, keys) {
-  for (const k of keys) {
-    for (const cand of [k, k.toLowerCase(), k.toUpperCase()]) {
-      if (obj[cand] !== undefined && obj[cand] !== null && obj[cand] !== "") return obj[cand];
+export function parseConfirmedMap(mapText) {
+  const text = String(mapText || "").trim();
+  if (!text) return { ok: false, reason: "D1_Product_Map is empty", items: [] };
+
+  const items = [];
+  const segments = text.split(/;|\r?\n/).map((s) => s.trim()).filter(Boolean);
+
+  for (const seg of segments) {
+    let m = seg.match(/^Item\s+(\d+)\s*\|\s*D1\s+(\d+)\s*\|\s*(.*?)\s*\|\s*Qty\s+([\d.]+)/i);
+    if (m) {
+      items.push({ item_no: Number(m[1]), product_id: Number(m[2]), title: m[3], quantity: Number(m[4]) || 1, format: "A" });
+      continue;
     }
-  }
-  return null;
-}
-
-export function parseItems(productJson, productInfo) {
-  // 1) Structured ProductJSON preferred
-  if (productJson && String(productJson).trim()) {
-    try {
-      let data = JSON.parse(productJson);
-      if (data && !Array.isArray(data) && Array.isArray(data.items)) data = data.items;
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map((raw, i) => {
-          const obj = typeof raw === "object" && raw !== null ? raw : { title: String(raw) };
-          const variation = pick(obj, ["variation", "variations", "selected_variation", "selectedVariation", "options", "option"]);
-          const title = pick(obj, ["title", "name", "product", "product_name", "listing_title"]);
-          return {
-            item_no: i + 1,
-            listing_id: pick(obj, ["listing_id", "listingId", "listing", "external_listing_id"]) != null
-              ? String(pick(obj, ["listing_id", "listingId", "listing", "external_listing_id"])) : null,
-            variation_text: variation != null ? (typeof variation === "string" ? variation : JSON.stringify(variation)) : null,
-            item_text: title != null ? String(title) : truncate(JSON.stringify(obj), 300),
-            quantity: Number(pick(obj, ["quantity", "qty", "count"])) > 0 ? Number(pick(obj, ["quantity", "qty", "count"])) : 1,
-          };
-        });
-      }
-    } catch {
-      /* fall through to Product_Info */
+    m = seg.match(/^Line\s+(\d+)\s*\|.*?MildMate\s*->\s*(\d+)\s*\|\s*([^|]*)/i);
+    if (m) {
+      items.push({ item_no: Number(m[1]), product_id: Number(m[2]), title: m[3].trim(), quantity: 1, format: "B" });
+      continue;
     }
+    return { ok: false, reason: `Unrecognized D1_Product_Map segment: "${truncate(seg, 120)}"`, items: [] };
   }
-  // 2) Fallback: plain-text Product_Info, one item per non-empty line
-  const lines = String(productInfo || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  return lines.map((line, i) => {
-    const qtyMatch = line.match(/(?:qty|quantity)\s*[:=]?\s*(\d+)/i) || line.match(/\bx\s*(\d+)\b/i);
-    return {
-      item_no: i + 1,
-      listing_id: null,
-      variation_text: null,
-      item_text: line,
-      quantity: qtyMatch ? Number(qtyMatch[1]) : 1,
-    };
-  });
+  if (items.length === 0) return { ok: false, reason: "No items parsed from D1_Product_Map", items: [] };
+  return { ok: true, items };
 }
 
-// ── Worker mapping API ─────────────────────────────────────────────────────
-
-function workerHeaders(token) {
-  return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+export function parseConfirmedIds(idsText) {
+  return String(idsText || "")
+    .split(/[,;]+/)
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n) && n > 0);
 }
+
+// ── Worker API ─────────────────────────────────────────────────────────────
 
 async function workerFetch(base, token, route, init = {}) {
-  const res = await fetch(base + route, { ...init, headers: { ...workerHeaders(token), ...(init.headers || {}) } });
+  const res = await fetch(base + route, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init.headers || {}) },
+  });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok && res.status !== 404) {
-    throw new Error(`Worker API ${route} -> ${res.status}: ${truncate(body.message || "", 200)}`);
-  }
+  if (!res.ok) throw new Error(`Worker API ${route} -> ${res.status}: ${truncate(body.message || "", 200)}`);
   return body;
 }
 
 // ── Notion read / write ────────────────────────────────────────────────────
 
-async function queryNotionPages({ token, dataSourceId, cursor, editedAfter }) {
+async function queryNotionPages({ token, dataSourceId, cursor, editedAfter, orderId }) {
   const body = { page_size: 50 };
   if (cursor) body.start_cursor = cursor;
-  if (editedAfter) body.filter = { timestamp: "last_edited_time", last_edited_time: { after: editedAfter } };
+  const filters = [];
+  // Only Mapped records are ever fetched — everything else belongs to Make.com.
+  filters.push({ property: "Product_Mapping_Status", select: { equals: "Mapped" } });
+  if (orderId !== null && orderId !== undefined) filters.push({ property: "ID", unique_id: { equals: orderId } });
+  if (editedAfter) filters.push({ timestamp: "last_edited_time", last_edited_time: { after: editedAfter } });
+  body.filter = filters.length === 1 ? filters[0] : { and: filters };
+
   const res = await throttledNotionFetch(`${NOTION_API}/v1/data_sources/${dataSourceId}/query`, {
     method: "POST",
     headers: notionHeaders(token),
@@ -205,50 +208,36 @@ async function queryNotionPages({ token, dataSourceId, cursor, editedAfter }) {
 
 function extractRecord(page) {
   const p = page.properties || {};
-  const byName = (name) => p[name];
   return {
     page_id: page.id,
     last_edited_time: page.last_edited_time,
-    order_number: propPlainText(byName("Order_Number")),
-    shop: propPlainText(byName("Shop")),
-    product_info: propPlainText(byName("Product_Info")),
-    product_json: propPlainText(byName("ProductJSON")),
-    d1_product_ids: propPlainText(byName("D1_Product_IDs")),
-    d1_product_map: propPlainText(byName("D1_Product_Map")),
-    mapping_status: propPlainText(byName("Product_Mapping_Status")),
-    // property types needed to build a correct PATCH payload
-    prop_types: Object.fromEntries(
-      MAPPING_FIELDS.map((f) => [f, byName(f) ? byName(f).type : null])
-    ),
+    notion_id: propPlainText(p.ID),
+    order_number: propPlainText(p.Order_Number),
+    shop: propPlainText(p.Shop),
+    op_status: propPlainText(p.Status),
+    order_date: propPlainText(p.Order_Date) || propPlainText(p.Order_date01),
+    total_amount: p.TotalAmount && typeof p.TotalAmount.number === "number" ? p.TotalAmount.number : null,
+    mapping_status: propPlainText(p.Product_Mapping_Status),
+    d1_product_ids: propPlainText(p.D1_Product_IDs),
+    d1_product_map: propPlainText(p.D1_Product_Map),
+    sig_current: propPlainText(p.D1_Current_Signature),
+    sig_last: propPlainText(p[SIGNATURE_FIELD]),
+    sig_prop_type: p[SIGNATURE_FIELD] ? p[SIGNATURE_FIELD].type : null,
   };
 }
 
-function buildWriteProperty(type, value) {
-  if (type === "rich_text") return { rich_text: [{ text: { content: truncate(value, 1900) } }] };
-  if (type === "title") return { title: [{ text: { content: truncate(value, 1900) } }] };
-  if (type === "select") return { select: { name: value } };
-  if (type === "status") return { status: { name: value } };
-  if (type === "number") return { number: Number(value) };
-  return null;
-}
-
-async function updateNotionPage({ token, pageId, propTypes, values }) {
-  const properties = {};
-  for (const field of MAPPING_FIELDS) {
-    if (values[field] === undefined) continue;
-    const type = propTypes[field];
-    const built = buildWriteProperty(type, values[field]);
-    if (!built) throw new Error(`Cannot write field ${field}: unsupported/unknown property type "${type}"`);
-    properties[field] = built;
+async function writeLastSyncedSignature({ token, pageId, propType, value }) {
+  if (propType !== "rich_text") {
+    throw new Error(`Refusing to write ${SIGNATURE_FIELD}: expected rich_text, found "${propType}"`);
   }
   const res = await throttledNotionFetch(`${NOTION_API}/v1/pages/${pageId}`, {
     method: "PATCH",
     headers: notionHeaders(token),
-    body: JSON.stringify({ properties }),
+    body: JSON.stringify({ properties: { [SIGNATURE_FIELD]: { rich_text: [{ text: { content: truncate(value, 1900) } }] } } }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(`Notion page update failed (${res.status}): ${truncate(err.message || "", 300)}`);
+    throw new Error(`Notion signature write failed (${res.status}): ${truncate(err.message || "", 300)}`);
   }
 }
 
@@ -260,7 +249,6 @@ function loadState() {
 function saveState(state) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 }
-
 function openLog() {
   fs.mkdirSync(LOG_DIR, { recursive: true });
   const file = path.join(LOG_DIR, `run-${new Date().toISOString().replace(/[:.]/g, "-")}.jsonl`);
@@ -270,107 +258,102 @@ function openLog() {
 
 // ── Core per-record processing ─────────────────────────────────────────────
 
-async function processRecord(rec, ctx) {
-  const { apiBase, apiToken, catalogTitles, dryRun, log } = ctx;
-  const sourceSystem = rec.shop || null;
-
-  // Preserve verified mappings: never re-process Mapped records.
-  if (rec.mapping_status === "Mapped") {
-    log.write({ t: "skip", order: rec.order_number, reason: "already Mapped" });
-    return { outcome: "skipped_mapped" };
-  }
-
-  const items = parseItems(rec.product_json, rec.product_info);
-  if (items.length === 0) {
-    log.write({ t: "record", order: rec.order_number, result: "Review Required", reason: "no parseable items" });
-    return await finishRecord(rec, ctx, { status: "Review Required", lines: [], allIds: [], method: null, confidence: null, reason: "no parseable items" });
-  }
-
-  const lines = [];
-  const allIds = [];
-  let resolvedCount = 0;
-  let worstConfidence = 1;
-  let firstMethod = null;
-
-  for (const item of items) {
-    const body = {
-      source_system: sourceSystem,
-      listing_id: item.listing_id,
-      variation_text: item.variation_text,
-      item_text: item.item_text,
-    };
-    const r = await workerFetch(apiBase, apiToken, "/api/v1/mapping/resolve", { method: "POST", body: JSON.stringify(body) });
-    if (r.resolved) {
-      const meta = METHOD_MAP[r.method] || { method: "RULE", confidence: 0.85 };
-      resolvedCount++;
-      worstConfidence = Math.min(worstConfidence, meta.confidence);
-      if (!firstMethod) firstMethod = meta.method;
-      for (const pid of r.product_ids) {
-        allIds.push(pid);
-        lines.push(`Item ${lines.length + 1} | D1 ${pid} | ${catalogTitles.get(pid) || "Product " + pid} | Qty ${item.quantity} | Status Mapped`);
-      }
-      log.write({ t: "item", order: rec.order_number, item_no: item.item_no, resolved: true, method: r.method, product_ids: r.product_ids });
-    } else {
-      log.write({ t: "item", order: rec.order_number, item_no: item.item_no, resolved: false, item_text: truncate(item.item_text, 200) });
-    }
-  }
-
-  let status;
-  if (resolvedCount === items.length) status = "Mapped";
-  else if (resolvedCount > 0) status = "Partial";
-  else status = "Review Required";
-
-  return await finishRecord(rec, ctx, {
-    status,
-    lines,
-    allIds: Array.from(new Set(allIds)),
-    method: firstMethod,
-    confidence: resolvedCount > 0 ? worstConfidence : null,
-    reason: null,
-  });
+function buildUpsertPayload(rec, items) {
+  const status = THAI_STATUS_MAP[rec.op_status] || null;
+  return {
+    payload: {
+      source_system: rec.shop,
+      source_order_id: rec.order_number,
+      notion_page_id: rec.page_id,
+      order_date: rec.order_date || null,
+      currency: "THB",
+      order_total: rec.total_amount,
+      ...(status ? { status } : {}),
+      mapping_status: "Mapped",
+      sync_source: "notion-direct-mapper",
+      scenario: "phase07-confirmed-mapping-sync",
+      items: items.map((it, i) => ({
+        // Match the Make.com key convention exactly ({Order_Number}-{n}) so
+        // both systems upsert the same rows instead of duplicating items.
+        source_item_key: `${rec.order_number}-${i + 1}`,
+        item_no: it.item_no,
+        product_id: it.product_id,
+        quantity: it.quantity,
+        raw_item_text: truncate(it.title, 255),
+        revenue_status: "UNALLOCATED",
+      })),
+    },
+    statusMapped: Boolean(status),
+  };
 }
 
-async function finishRecord(rec, ctx, result) {
-  const { apiBase, apiToken, notionToken, dryRun, log, mock } = ctx;
-  const values = {};
-  if (result.status === "Mapped" || result.status === "Partial") {
-    values.D1_Product_IDs = result.allIds.join(", ");
-    values.D1_Product_Map = result.lines.join("\n");
+async function processRecord(rec, ctx) {
+  const { apiBase, apiToken, notionToken, catalogIds, dryRun, log } = ctx;
+
+  // Eligibility rule 1: Mapped only (defense in depth; query already filters).
+  if (rec.mapping_status !== "Mapped") {
+    log.write({ t: "skip", id: rec.notion_id, reason: "not Mapped (belongs to Make.com)" });
+    return "skipped_not_mapped";
   }
-  values.Product_Mapping_Status = result.status;
+  // Eligibility rule 2: signature difference (or never synced).
+  if (rec.sig_last && rec.sig_last === rec.sig_current) {
+    log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: "signature unchanged (already synced)" });
+    return "skipped_unchanged";
+  }
+
+  const parsed = parseConfirmedMap(rec.d1_product_map);
+  if (!parsed.ok) {
+    log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: "map parse failed: " + parsed.reason });
+    return "skipped_parse_failed";
+  }
+
+  // Cross-check parsed ids against the confirmed D1_Product_IDs field.
+  const idsField = parseConfirmedIds(rec.d1_product_ids);
+  const idsParsed = Array.from(new Set(parsed.items.map((i) => i.product_id)));
+  const mismatch = idsField.length > 0 &&
+    (idsField.length !== idsParsed.length || idsField.some((id) => !idsParsed.includes(id)));
+  if (mismatch) {
+    log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: `ids mismatch: field=[${idsField}] map=[${idsParsed}]` });
+    return "skipped_ids_mismatch";
+  }
+
+  // Validate every confirmed id against the canonical D1 catalog before any write.
+  const invalid = idsParsed.filter((id) => !catalogIds.has(id));
+  if (invalid.length > 0) {
+    log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: `invalid product ids: [${invalid}]` });
+    return "skipped_invalid_ids";
+  }
+
+  if (!rec.order_number || !rec.shop) {
+    log.write({ t: "skip", id: rec.notion_id, reason: "missing Order_Number or Shop" });
+    return "skipped_incomplete";
+  }
+
+  const { payload, statusMapped } = buildUpsertPayload(rec, parsed.items);
+  const needsSignatureUpdate = true; // eligibility already implies it
 
   log.write({
-    t: "record", order: rec.order_number, page: rec.page_id, result: result.status,
-    product_ids: result.allIds, method: result.method, confidence: result.confidence,
-    dry_run: dryRun, would_write: values,
+    t: "record", id: rec.notion_id, order: rec.order_number, shop: rec.shop,
+    mapping_status: rec.mapping_status, sig_current: rec.sig_current, sig_last: rec.sig_last || null,
+    parsed_items: parsed.items, confirmed_ids: idsField, dry_run: dryRun,
+    op_status: rec.op_status, op_status_mapped: statusMapped,
+    would_upsert: payload, would_update_signature: needsSignatureUpdate,
   });
 
-  if (!dryRun && !mock) {
-    await updateNotionPage({ token: notionToken, pageId: rec.page_id, propTypes: rec.prop_types, values });
-  }
+  if (dryRun) return "dry_run_eligible";
 
-  // Audit event (recorded for dry runs too, flagged accordingly)
-  try {
-    await workerFetch(apiBase, apiToken, "/api/v1/mapping/events", {
-      method: "POST",
-      body: JSON.stringify({
-        notion_page_id: rec.page_id,
-        source_order_id: rec.order_number || null,
-        source_system: rec.shop || null,
-        raw_product_text: truncate(rec.product_json || rec.product_info || "", 1000),
-        previous_product_ids: rec.d1_product_ids || null,
-        resolved_product_ids: result.allIds,
-        mapping_method: result.method,
-        confidence: result.confidence,
-        result_status: result.status,
-        dry_run: dryRun,
-      }),
-    });
-  } catch (e) {
-    log.write({ t: "warn", order: rec.order_number, message: "audit event failed: " + truncate(e.message, 200) });
-  }
+  const result = await workerFetch(apiBase, apiToken, "/api/v1/sales/orders/upsert", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!result.success) throw new Error(`Upsert rejected: ${result.error_code || "unknown"}`);
+  log.write({ t: "upsert", id: rec.notion_id, order: rec.order_number, action: result.action });
 
-  return { outcome: result.status };
+  // Only after a successful D1 upsert: mark the Notion row as synced.
+  await writeLastSyncedSignature({ token: notionToken, pageId: rec.page_id, propType: rec.sig_prop_type, value: rec.sig_current });
+  log.write({ t: "signature_updated", id: rec.notion_id, order: rec.order_number });
+
+  return "synced";
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
@@ -392,58 +375,41 @@ async function main() {
 
   const log = openLog();
   console.log(`Log: ${log.file}`);
-  console.log(`Mode: ${mock ? "MOCK (input-file)" : "LIVE Notion"} | dry-run: ${args.dryRun} | API: ${apiBase}`);
+  console.log(`Mode: ${mock ? "MOCK (input-file)" : "LIVE Notion (read" + (args.dryRun ? "-only" : "+signature write") + ")"} | dry-run: ${args.dryRun} | API: ${apiBase}`);
 
-  // Load catalog once (titles for D1_Product_Map lines + sanity check).
   const catalog = await workerFetch(apiBase, apiToken, "/api/v1/mapping/catalog");
-  if (!catalog.success) { console.error("Could not load product catalog."); process.exit(1); }
-  const catalogTitles = new Map((catalog.products || []).map((p) => [Number(p.id), p.title_en]));
+  const catalogIds = new Set((catalog.products || []).map((p) => Number(p.id)));
   console.log(`Catalog: ${catalog.count} active products`);
 
-  const ctx = { apiBase, apiToken, notionToken, catalogTitles, dryRun: args.dryRun, log, mock };
-  const counts = { Mapped: 0, Partial: 0, "Review Required": 0, skipped_mapped: 0, skipped_filter: 0, errors: 0 };
+  const ctx = { apiBase, apiToken, notionToken, catalogIds, dryRun: args.dryRun, log };
+  const counts = {};
+  const bump = (k) => { counts[k] = (counts[k] || 0) + 1; };
   let processed = 0;
 
   const state = loadState();
   let cursor = args.resume ? state.cursor || null : null;
 
   const handle = async (rec) => {
-    if (args.orderId && String(rec.order_number) !== String(args.orderId)) { counts.skipped_filter++; return; }
-    if (rec.mapping_status && !ELIGIBLE_STATUSES.includes(rec.mapping_status)) {
-      counts[rec.mapping_status === "Mapped" ? "skipped_mapped" : "skipped_filter"]++;
-      return;
-    }
     try {
-      const r = await processRecord(rec, ctx);
-      counts[r.outcome] = (counts[r.outcome] || 0) + 1;
-      processed++;
+      bump(await processRecord(rec, ctx));
     } catch (e) {
-      counts.errors++;
-      log.write({ t: "error", order: rec.order_number, message: truncate(e.message, 300) });
-      console.error(`Error on ${rec.order_number}: ${e.message}`);
+      bump("errors");
+      log.write({ t: "error", id: rec.notion_id, order: rec.order_number, message: truncate(e.message, 300) });
+      console.error(`Error on ID ${rec.notion_id}: ${e.message}`);
     }
+    processed++;
   };
 
   if (mock) {
     const rows = JSON.parse(fs.readFileSync(args.inputFile, "utf8").replace(/^\uFEFF/, ""));
     for (const raw of rows) {
       if (args.limit !== null && processed >= args.limit) break;
-      await handle({
-        page_id: raw.page_id || "mock-page",
-        order_number: String(raw.order_number ?? ""),
-        shop: raw.shop || null,
-        product_info: raw.product_info || "",
-        product_json: raw.product_json || "",
-        d1_product_ids: raw.d1_product_ids || "",
-        d1_product_map: raw.d1_product_map || "",
-        mapping_status: raw.mapping_status || "",
-        prop_types: {},
-      });
+      await handle({ sig_prop_type: "rich_text", ...raw });
     }
   } else {
     let more = true;
     while (more) {
-      const page = await queryNotionPages({ token: notionToken, dataSourceId, cursor, editedAfter: args.editedAfter });
+      const page = await queryNotionPages({ token: notionToken, dataSourceId, cursor, editedAfter: args.editedAfter, orderId: args.orderId });
       for (const p of page.results || []) {
         if (args.limit !== null && processed >= args.limit) { more = false; break; }
         await handle(extractRecord(p));
@@ -458,7 +424,7 @@ async function main() {
   }
 
   log.close();
-  console.log("\n=== Mapping run summary ===");
+  console.log("\n=== Confirmed-mapping sync summary ===");
   for (const [k, v] of Object.entries(counts)) console.log(`${k}: ${v}`);
   console.log(`Processed: ${processed}`);
   if (counts.errors > 0) process.exitCode = 2;

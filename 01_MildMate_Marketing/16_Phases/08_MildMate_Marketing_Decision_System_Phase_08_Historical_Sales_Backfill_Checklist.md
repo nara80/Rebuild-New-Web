@@ -20,9 +20,11 @@
 
 Populate enough historical unified sales data to support meaningful product/channel trends.
 
+> **Reconciliation note (2026-09-11):** the backfill engine for Notion-confirmed orders is the Phase 07 v3 **confirmed-mapping sync CLI** (`scripts/notion-product-mapper.mjs`). It already satisfies by construction: no live `From now on` watcher for historical replay (reads Notion directly; Make sync stays OFF until this phase decides activation), stable `(source_system, source_order_id)` identity, deterministic Make-compatible `source_item_key = {Order_Number}-{n}`, exact order totals, `UNALLOCATED` line revenue (never equal-split), Mapped-only eligibility preserving verified mappings, controlled batches with `--limit`/`--resume`, and JSONL failure logging with safe UPSERT re-runs. Dry-run of known record ID 1038 verified 2026-09-11. Remaining Phase 08 work: scope/date range, live batch execution, count/revenue reconciliation vs Notion, coverage by period, dashboard historical-coverage view, gaps report. See `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`.
+
 ## Prerequisites / Confirmed Baseline
 
-- [x] Phase 7 mapping workflow sufficiently reliable.
+- [x] Phase 7 mapping workflow sufficiently reliable. *(v3 confirmed-mapping sync built + dry-run verified; live single-record test pending approval)*
 - [x] Sales API idempotency already verified.
 
 ## Task Checklist

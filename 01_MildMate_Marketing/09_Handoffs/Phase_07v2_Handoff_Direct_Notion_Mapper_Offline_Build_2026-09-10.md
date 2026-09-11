@@ -1,3 +1,5 @@
+> **⚠️ HISTORICAL RECORD (2026-09-11).** Migration 044 and the `/api/v1/mapping/events` routes delivered here remain valid. The CLI described here (resolver-based) was reworked into the v3 **confirmed-mapping sync** (`Mapped`-only + signature rule; writes only `D1_Last_Synced_Signature`). See `Phase_07_08_Reconciliation_2026-09-11.md`.
+
 # Phase 07 v2 Handoff — Direct Notion API Product Mapper (Offline Build)
 
 **Date:** 2026-09-10

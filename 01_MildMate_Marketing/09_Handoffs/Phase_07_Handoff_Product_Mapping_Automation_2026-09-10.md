@@ -1,3 +1,5 @@
+> **⚠️ HISTORICAL RECORD (2026-09-11).** The backend delivered here (migration 043, `/api/v1/mapping/*` routes, tests) remains valid and committed. The Make.com mapper plan in this handoff was superseded by the v3 confirmed-mapping sync design. See `Phase_07_08_Reconciliation_2026-09-11.md`.
+
 # Phase 07 Handoff — Product Mapping Automation Completion
 
 **Date:** 2026-09-10

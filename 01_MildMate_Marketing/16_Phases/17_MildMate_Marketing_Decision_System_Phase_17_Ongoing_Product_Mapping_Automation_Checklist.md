@@ -1,3 +1,5 @@
+> **⚠️ REVISION REQUIRED WHEN REACHED (2026-09-11).** Written for the superseded resolver design. Under the approved v3 design, weekly automation runs the **confirmed-mapping sync** (`Mapped` + `D1_Current_Signature != D1_Last_Synced_Signature` only; writes back only `D1_Last_Synced_Signature`; never remaps). Decided mechanism: dedicated Cloudflare Worker + Cron Trigger (Pages cannot cron). See `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`.
+
 # MildMate Marketing Decision System — Phase 17
 ## Ongoing Product Mapping Automation
 

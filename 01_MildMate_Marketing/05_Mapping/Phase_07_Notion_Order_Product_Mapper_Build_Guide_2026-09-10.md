@@ -1,3 +1,5 @@
+> **❌ OBSOLETE AS A MAPPER DESIGN (2026-09-11).** The Make.com mapper scenario described here was never built and will not be built: by approved v3 design, Make.com's existing workflow confirms mappings in Notion and the Droid CLI syncs confirmed `Mapped` records into D1. The **Worker API endpoint reference below remains valid** (`/api/v1/mapping/catalog|resolve|aliases` are live code and may serve Make.com or Phase 17). See `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`.
+
 # Phase 07 — `MildMate - Notion Order Product Mapper` Build Guide
 
 **Date:** 2026-09-10
