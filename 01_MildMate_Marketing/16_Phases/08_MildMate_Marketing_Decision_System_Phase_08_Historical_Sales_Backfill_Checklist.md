@@ -43,7 +43,7 @@ Populate enough historical unified sales data to support meaningful product/chan
 - [x] Keep unknown line revenue `UNALLOCATED`. *(built; no invented line revenue)*
 - [x] Do not equal-split historical totals. *(by construction — line revenue is never split)*
 - [x] Preserve already verified mappings. *(eligibility rule: `Mapped` + signature-difference only; mapping fields never written)*
-- [x] Backfill in controlled batches. *(--limit/--resume built; live execution pending approval)*
+- [x] Backfill in controlled batches. *(--limit/--resume built; live ramp in progress: single record 1038 + live batch of 5 completed and verified 2026-09-12 — 5 orders in prod, 1 record held for a Notion-side ids fix)*
 - [x] Record failed/rejected orders for review. *(built — JSONL logs with skip reasons: parse_failed, ids_mismatch, not Mapped, signature unchanged)*
 - [x] Re-run corrected records safely using UPSERT behavior. *(upsert endpoint is idempotent — previously production-verified; safe re-run built into the engine)*
 - [ ] Reconcile order counts against Notion. *(after live batches)*
