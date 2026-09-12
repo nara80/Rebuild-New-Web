@@ -48,6 +48,7 @@ const THAI_STATUS_MAP = {
   "รอดำเนินการ": "pending",
   "กำลังดำเนินการ": "processing",
   "กำลังผลิต": "processing",
+  "กำลังเย็บ": "processing",
   "จัดส่งสินค้า": "shipped",
   "จัดส่งแล้ว": "shipped",
   "ส่งแล้ว": "shipped",
@@ -134,10 +135,12 @@ function truncate(s, n) {
   return str.length > n ? str.slice(0, n) : str;
 }
 
-// ── Confirmed D1_Product_Map parsing (two live formats) ────────────────────
+// ── Confirmed D1_Product_Map parsing (three live formats) ────────────────────
 //
 // Format A (current): "Item 1 | D1 20 | Mattress Protector, Family & Co-Sleep | Qty 1; Item 2 | D1 26 | BedBridge Connector | Qty 1"
 // Format B (older):   "Line 1 | <source title> | MildMate -> 6 | <D1 title> | Mapped" (one per line; qty not present -> 1)
+// Format C (2026-09-12): "Line 1 | <source title> -> 20 | <D1 title> | Mapped" — the arrow+id sits at the END
+//   of any pipe piece (often a Thai description piece), not in a standalone "MildMate -> id" piece.
 
 export function parseConfirmedMap(mapText) {
   const text = String(mapText || "").trim();
@@ -147,15 +150,38 @@ export function parseConfirmedMap(mapText) {
   const segments = text.split(/;|\r?\n/).map((s) => s.trim()).filter(Boolean);
 
   for (const seg of segments) {
+    // Format A: "Item 1 | D1 20 | <D1 title> | Qty 1"
     let m = seg.match(/^Item\s+(\d+)\s*\|\s*D1\s+(\d+)\s*\|\s*(.*?)\s*\|\s*Qty\s+([\d.]+)/i);
     if (m) {
       items.push({ item_no: Number(m[1]), product_id: Number(m[2]), title: m[3], quantity: Number(m[4]) || 1, format: "A" });
       continue;
     }
-    m = seg.match(/^Line\s+(\d+)\s*\|.*?MildMate\s*->\s*(\d+)\s*\|\s*([^|]*)/i);
+    // Format B/C: "Line N | ... <piece ending with [MildMate] -> <id>> | <D1 title> [| Mapped]"
+    m = seg.match(/^Line\s+(\d+)\s*\|(.*)$/i);
     if (m) {
-      items.push({ item_no: Number(m[1]), product_id: Number(m[2]), title: m[3].trim(), quantity: 1, format: "B" });
-      continue;
+      const item_no = Number(m[1]);
+      const pieces = m[2].split("|").map((p) => p.trim());
+      // The D1 id is introduced by an arrow at the END of a pipe piece:
+      //   "... -> 26"  or  "MildMate -> 6"  (case-insensitive)
+      const arrowRe = /(?:MildMate\s*)?->\s*(\d+(?:\s*[,&+]\s*\d+)*)\s*$/i;
+      let arrowIdx = -1;
+      let idText = null;
+      for (let i = 0; i < pieces.length; i++) {
+        const am = pieces[i].match(arrowRe);
+        if (am) { arrowIdx = i; idText = am[1]; break; }
+      }
+      if (arrowIdx >= 0) {
+        if (/[,&+]/.test(idText)) {
+          return { ok: false, reason: `Multi-id line needs manual handling: "${truncate(seg, 120)}"`, items: [] };
+        }
+        const qtyM = seg.match(/Qty\s+([\d.]+)/i);
+        const next = pieces[arrowIdx + 1] || "";
+        const title = (next && !/^Mapped$/i.test(next))
+          ? next
+          : pieces[0].replace(arrowRe, "").trim();
+        items.push({ item_no, product_id: Number(idText), title, quantity: qtyM ? Number(qtyM[1]) || 1 : 1, format: "B" });
+        continue;
+      }
     }
     return { ok: false, reason: `Unrecognized D1_Product_Map segment: "${truncate(seg, 120)}"`, items: [] };
   }
