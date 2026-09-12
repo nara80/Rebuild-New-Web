@@ -150,10 +150,16 @@ export function parseConfirmedMap(mapText) {
   const segments = text.split(/;|\r?\n/).map((s) => s.trim()).filter(Boolean);
 
   for (const seg of segments) {
-    // Format A: "Item 1 | D1 20 | <D1 title> | Qty 1"
-    let m = seg.match(/^Item\s+(\d+)\s*\|\s*D1\s+(\d+)\s*\|\s*(.*?)\s*\|\s*Qty\s+([\d.]+)/i);
+    // Stray status fragment on its own line (e.g. after a manual map edit):
+    // "| Mapped", "Status Mapped", "Mapped" — carries no data, skip it.
+    if (/^\|?\s*(?:status\s+)?mapped$/i.test(seg)) continue;
+
+    // Format A: "Item 1 | D1 20 | <D1 title> [| extra pieces] [| Qty 1] [| Status Mapped]"
+    let m = seg.match(/^Item\s+(\d+)\s*\|\s*D1\s+(\d+)\s*\|(.*)$/i);
     if (m) {
-      items.push({ item_no: Number(m[1]), product_id: Number(m[2]), title: m[3], quantity: Number(m[4]) || 1, format: "A" });
+      const restPieces = m[3].split("|").map((p) => p.trim());
+      const qtyM = seg.match(/Qty\s+([\d.]+)/i);
+      items.push({ item_no: Number(m[1]), product_id: Number(m[2]), title: restPieces[0] || "", quantity: qtyM ? Number(qtyM[1]) || 1 : 1, format: "A" });
       continue;
     }
     // Format B/C: "Line N | ... <piece ending with [MildMate] -> <id>> | <D1 title> [| Mapped]"
@@ -336,8 +342,12 @@ async function processRecord(rec, ctx) {
   // Cross-check parsed ids against the confirmed D1_Product_IDs field.
   const idsField = parseConfirmedIds(rec.d1_product_ids);
   const idsParsed = Array.from(new Set(parsed.items.map((i) => i.product_id)));
-  const mismatch = idsField.length > 0 &&
-    (idsField.length !== idsParsed.length || idsField.some((id) => !idsParsed.includes(id)));
+  // Live data mixes conventions: some records list one id per map line (duplicates,
+  // e.g. "6, 6, 26"), others list unique ids ("6, 26"). Compare as unique sets on
+  // both sides so both conventions pass while a genuinely missing/extra id fails.
+  const idsFieldUnique = Array.from(new Set(idsField));
+  const mismatch = idsFieldUnique.length > 0 &&
+    (idsFieldUnique.length !== idsParsed.length || idsFieldUnique.some((id) => !idsParsed.includes(id)));
   if (mismatch) {
     log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: `ids mismatch: field=[${idsField}] map=[${idsParsed}]` });
     return "skipped_ids_mismatch";
