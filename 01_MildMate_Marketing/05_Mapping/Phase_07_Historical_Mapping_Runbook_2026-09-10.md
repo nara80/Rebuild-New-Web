@@ -38,6 +38,16 @@ $env:MAPPER_API_BASE="https://www.mildmate.com"   # or http://localhost:8788 for
 
 Logs: JSONL per run under `logs/notion-mapper/` (gitignored), token- and PII-free.
 
+## Run report email (2026-09-12 rule)
+
+**Every LIVE-Notion run (dry-run included) emails its outcome summary to `contact@mildmate.com`** (override with `REPORT_EMAIL_TO`). Mock `--input-file` runs never email. Requires `RESEND_API_KEY` in `.dev.vars` — the real key from https://resend.com/api-keys (Cloudflare Pages secrets cannot be read back).
+
+The email contains: run metadata (mode, `--before` scope, log file), the full counter summary (synced / eligible, each skip reason, errors), the synced/eligible order list (shop, order number, total, items as `id×qty`), skip details with order numbers, and error details. Sent as multipart text + HTML, token- and PII-free.
+
+A report failure never fails the sync run — it logs `email_report: failed` to the JSONL and prints a warning.
+
+**Cron cadence (Phase 17, decided):** manual/batch runs email every time; the future cron Worker will email **only when something happened** (synced > 0 or errors) plus a **daily digest** — a 15-minute cron is 96 runs/day, which would exceed Resend's 100/day free tier if every run emailed.
+
 ## What gets written to D1 (`POST /api/v1/sales/orders/upsert`)
 
 - Identity: `(source_system = Shop, source_order_id = Order_Number)`; `notion_page_id` included.
