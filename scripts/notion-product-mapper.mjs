@@ -9,6 +9,12 @@
  *   Eligible when:
  *     Product_Mapping_Status = "Mapped"
  *     AND (D1_Current_Signature != D1_Last_Synced_Signature OR last is empty)
+ *     AND TotalAmount exists in Notion (> 0)   [2026-09-12 rule: revenue data
+ *         must be corrected first; records without a total are held and will
+ *         sync automatically once the total is filled — signature changes]
+ *     AND (with --before) Order_Date is before the given ISO date and
+ *         parseable — used to hold back months still being corrected (e.g.
+ *         --before 2026-08-01 = July 2026 and earlier)
  *
  *   Sync: parse the CONFIRMED D1_Product_Map / D1_Product_IDs from Notion,
  *   upsert the order into D1 via POST /api/v1/sales/orders/upsert, then (live
@@ -26,6 +32,7 @@
  *   node scripts/notion-product-mapper.mjs --order-id 1038 --dry-run
  *   node scripts/notion-product-mapper.mjs --dry-run --limit 5
  *   node scripts/notion-product-mapper.mjs --limit 20            (live: D1 upsert + signature write-back)
+ *   node scripts/notion-product-mapper.mjs --before 2026-08-01 --limit 50   (July-and-earlier scope)
  *   node scripts/notion-product-mapper.mjs --resume
  */
 
@@ -61,7 +68,7 @@ const THAI_STATUS_MAP = {
 // ── CLI args ───────────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
-  const args = { dryRun: false, limit: null, resume: false, orderId: null, editedAfter: null, inputFile: null };
+  const args = { dryRun: false, limit: null, resume: false, orderId: null, editedAfter: null, before: null, inputFile: null };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--dry-run") args.dryRun = true;
@@ -69,6 +76,7 @@ function parseArgs(argv) {
     else if (a === "--limit") args.limit = Number(argv[++i]);
     else if (a === "--order-id") args.orderId = Number(argv[++i]);
     else if (a === "--edited-after") args.editedAfter = String(argv[++i]);
+    else if (a === "--before") args.before = String(argv[++i]);
     else if (a === "--input-file") args.inputFile = String(argv[++i]);
     else if (a === "--help" || a === "-h") { printHelp(); process.exit(0); }
     else { console.error(`Unknown argument: ${a}`); printHelp(); process.exit(1); }
@@ -82,11 +90,14 @@ function parseArgs(argv) {
   if (args.editedAfter && Number.isNaN(Date.parse(args.editedAfter))) {
     console.error("--edited-after must be an ISO datetime"); process.exit(1);
   }
+  if (args.before !== null && (args.before === undefined || Number.isNaN(Date.parse(args.before)))) {
+    console.error("--before must be an ISO date, e.g. 2026-08-01"); process.exit(1);
+  }
   return args;
 }
 
 function printHelp() {
-  console.log("Options: --dry-run --limit N --resume --order-id <NotionID> --edited-after ISO --input-file file.json");
+  console.log("Options: --dry-run --limit N --resume --order-id <NotionID> --edited-after ISO --before ISO-date --input-file file.json");
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────
@@ -216,7 +227,7 @@ async function workerFetch(base, token, route, init = {}) {
 
 // ── Notion read / write ────────────────────────────────────────────────────
 
-async function queryNotionPages({ token, dataSourceId, cursor, editedAfter, orderId }) {
+async function queryNotionPages({ token, dataSourceId, cursor, editedAfter, orderId, before }) {
   const body = { page_size: 50 };
   if (cursor) body.start_cursor = cursor;
   const filters = [];
@@ -224,6 +235,17 @@ async function queryNotionPages({ token, dataSourceId, cursor, editedAfter, orde
   filters.push({ property: "Product_Mapping_Status", select: { equals: "Mapped" } });
   if (orderId !== null && orderId !== undefined) filters.push({ property: "ID", unique_id: { equals: orderId } });
   if (editedAfter) filters.push({ timestamp: "last_edited_time", last_edited_time: { after: editedAfter } });
+  // Server-side date scope so --limit N counts in-scope records only (the
+  // client-side check in processRecord remains as defense in depth). Records
+  // store the order date in either Order_Date or Order_date01.
+  if (before) {
+    filters.push({
+      or: [
+        { property: "Order_Date", date: { before } },
+        { property: "Order_date01", date: { before } },
+      ],
+    });
+  }
   body.filter = filters.length === 1 ? filters[0] : { and: filters };
 
   const res = await throttledNotionFetch(`${NOTION_API}/v1/data_sources/${dataSourceId}/query`, {
@@ -320,7 +342,7 @@ function buildUpsertPayload(rec, items) {
 }
 
 async function processRecord(rec, ctx) {
-  const { apiBase, apiToken, notionToken, catalogIds, dryRun, log } = ctx;
+  const { apiBase, apiToken, notionToken, catalogIds, dryRun, log, before } = ctx;
 
   // Eligibility rule 1: Mapped only (defense in depth; query already filters).
   if (rec.mapping_status !== "Mapped") {
@@ -331,6 +353,29 @@ async function processRecord(rec, ctx) {
   if (rec.sig_last && rec.sig_last === rec.sig_current) {
     log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: "signature unchanged (already synced)" });
     return "skipped_unchanged";
+  }
+  // Eligibility rule 3 (date scope, optional): with --before, hold back records
+  // from months still being corrected in Notion (e.g. --before 2026-08-01 =
+  // July 2026 and earlier). Unparseable dates cannot be scoped safely, so they
+  // are held too and show in the log for review.
+  if (before) {
+    const ts = Date.parse(rec.order_date || "");
+    if (Number.isNaN(ts)) {
+      log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: `no/invalid Order_Date (cannot apply --before ${before}): "${rec.order_date}"` });
+      return "skipped_no_order_date";
+    }
+    if (ts >= Date.parse(before)) {
+      log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: `Order_Date ${rec.order_date} not before ${before} (month held back for correction)` });
+      return "skipped_after_cutoff";
+    }
+  }
+  // Eligibility rule 4 (data quality, permanent rule 2026-09-12): only sync
+  // records whose TotalAmount exists in Notion. Revenue data is corrected
+  // monthly; a missing total means the record is not yet final. Held records
+  // re-sync automatically once the total is filled (signature changes).
+  if (rec.total_amount === null || rec.total_amount <= 0) {
+    log.write({ t: "skip", id: rec.notion_id, order: rec.order_number, reason: "no TotalAmount in Notion (held until total is corrected)" });
+    return "skipped_no_total";
   }
 
   const parsed = parseConfirmedMap(rec.d1_product_map);
@@ -411,13 +456,13 @@ async function main() {
 
   const log = openLog();
   console.log(`Log: ${log.file}`);
-  console.log(`Mode: ${mock ? "MOCK (input-file)" : "LIVE Notion (read" + (args.dryRun ? "-only" : "+signature write") + ")"} | dry-run: ${args.dryRun} | API: ${apiBase}`);
+  console.log(`Mode: ${mock ? "MOCK (input-file)" : "LIVE Notion (read" + (args.dryRun ? "-only" : "+signature write") + ")"} | dry-run: ${args.dryRun} | API: ${apiBase}${args.before ? ` | scope: Order_Date before ${args.before}` : ""}`);
 
   const catalog = await workerFetch(apiBase, apiToken, "/api/v1/mapping/catalog");
   const catalogIds = new Set((catalog.products || []).map((p) => Number(p.id)));
   console.log(`Catalog: ${catalog.count} active products`);
 
-  const ctx = { apiBase, apiToken, notionToken, catalogIds, dryRun: args.dryRun, log };
+  const ctx = { apiBase, apiToken, notionToken, catalogIds, dryRun: args.dryRun, before: args.before, log };
   const counts = {};
   const bump = (k) => { counts[k] = (counts[k] || 0) + 1; };
   let processed = 0;
@@ -445,7 +490,7 @@ async function main() {
   } else {
     let more = true;
     while (more) {
-      const page = await queryNotionPages({ token: notionToken, dataSourceId, cursor, editedAfter: args.editedAfter, orderId: args.orderId });
+      const page = await queryNotionPages({ token: notionToken, dataSourceId, cursor, editedAfter: args.editedAfter, orderId: args.orderId, before: args.before });
       for (const p of page.results || []) {
         if (args.limit !== null && processed >= args.limit) { more = false; break; }
         await handle(extractRecord(p));
