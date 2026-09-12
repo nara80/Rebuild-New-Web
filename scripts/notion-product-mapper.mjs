@@ -27,6 +27,15 @@
  * Environment variables (never committed, never printed):
  *   NOTION_TOKEN, NOTION_DATA_SOURCE_ID, SALES_SYNC_API_TOKEN,
  *   MAPPER_API_BASE (default https://www.mildmate.com; http://localhost:8788 for tests)
+ *   RESEND_API_KEY — sends the run report email
+ *   REPORT_EMAIL_TO — report recipient (default contact@mildmate.com)
+ *
+ * Run report (2026-09-12 rule): EVERY LIVE-Notion run (dry-run included)
+ * emails its outcome summary to contact@mildmate.com — synced/eligible count,
+ * skips by reason, errors, and the synced order list. Mock (--input-file)
+ * runs never email. A report failure never fails the sync run itself.
+ * For cron automation (Phase 17) the cadence will be tightened to
+ * only-when-changed plus a daily digest (Resend free tier is 100/day).
  *
  * Usage:
  *   node scripts/notion-product-mapper.mjs --order-id 1038 --dry-run
@@ -310,6 +319,128 @@ function openLog() {
   return { file, write: (obj) => stream.write(JSON.stringify(obj) + "\n"), close: () => stream.end() };
 }
 
+// ── Run report email ───────────────────────────────────────────────────────
+
+const REPORT_EMAIL_TO_DEFAULT = "contact@mildmate.com";
+const REPORT_FROM = "MildMate <noreply@mildmate.com>";
+
+const SKIP_LABELS = {
+  skipped_not_mapped: "not Mapped (belongs to Make.com)",
+  skipped_unchanged: "already synced (signature unchanged)",
+  skipped_no_order_date: "no/invalid Order_Date (cannot apply --before)",
+  skipped_after_cutoff: "Order_Date after --before cutoff (month held back)",
+  skipped_no_total: "no TotalAmount in Notion (held until corrected)",
+  skipped_parse_failed: "D1_Product_Map parse failed",
+  skipped_ids_mismatch: "D1_Product_IDs vs map mismatch",
+  skipped_invalid_ids: "invalid product ids",
+  skipped_incomplete: "missing Order_Number or Shop",
+};
+
+function newReportCollector() {
+  return { synced: [], skips: {}, errors: [] };
+}
+
+function recordSkip(report, category, rec) {
+  (report.skips[category] = report.skips[category] || []).push(rec.order_number || `ID ${rec.notion_id}`);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function buildReportEmail({ args, counts, processed, report, logFile }) {
+  const ranAt = new Date();
+  const dry = Boolean(args.dryRun);
+  const syncedCount = counts.synced || 0;
+  const eligibleCount = counts.dry_run_eligible || 0;
+  const errCount = counts.errors || 0;
+  const skipEntries = Object.entries(counts).filter(([k]) => k.startsWith("skipped"));
+  const skippedTotal = skipEntries.reduce((a, [, v]) => a + v, 0);
+  const headline = `${dry ? eligibleCount : syncedCount} ${dry ? "eligible" : "synced"}, ${skippedTotal} skipped, ${errCount} error${errCount === 1 ? "" : "s"}`;
+  const subject = `MildMate Sales Sync${dry ? " (DRY RUN)" : ""} — ${headline} — ${ranAt.toISOString().slice(0, 16).replace("T", " ")}Z`;
+
+  const mode = dry ? "DRY RUN (no writes)" : "LIVE (D1 upsert + signature write-back)";
+  const info = [
+    `Run: ${ranAt.toISOString()}`,
+    `Mode: ${mode}`,
+    ...(args.before ? [`Scope: Order_Date before ${args.before}`] : []),
+    ...(args.orderId ? [`Single record: Notion ID ${args.orderId}`] : []),
+    `Log: ${logFile}`,
+    `Processed: ${processed}`,
+  ];
+
+  const lines = ["MildMate — Notion confirmed-mapping sync report", "", ...info, "", "=== Summary ==="];
+  for (const [k, v] of Object.entries(counts)) lines.push(`- ${k}: ${v}`);
+
+  if (report.synced.length > 0) {
+    lines.push("", `=== ${dry ? "Eligible (would sync)" : "Synced orders"} (${report.synced.length}) ===`);
+    for (const r of report.synced) {
+      lines.push(`- [${r.shop}] ${r.order} — THB ${r.total} — ${r.items.length} item(s): ${r.items.map((i) => `${i.product_id}x${i.quantity}`).join(", ")}`);
+    }
+  }
+  if (skipEntries.length > 0) {
+    lines.push("", `=== Skipped (${skippedTotal}) ===`);
+    for (const [k, v] of skipEntries) {
+      const orders = report.skips[k] || [];
+      const shown = orders.slice(0, 12);
+      const more = orders.length - shown.length;
+      lines.push(`- ${SKIP_LABELS[k] || k} (${v}): ${shown.join(", ")}${more > 0 ? ` … +${more} more` : ""}`);
+    }
+  }
+  if (report.errors.length > 0) {
+    lines.push("", `=== Errors (${report.errors.length}) ===`);
+    for (const e of report.errors) lines.push(`- ${e.order || `ID ${e.id}`}: ${e.message}`);
+  }
+  const text = lines.join("\n");
+
+  const html = [
+    `<div style="font-family:Arial,Helvetica,sans-serif;color:#1E293B;max-width:640px">`,
+    `<h2 style="color:#0F172A;margin-bottom:4px">MildMate Sales Sync Report</h2>`,
+    `<p style="color:#64748b;font-size:13px;margin:0 0 16px">${esc(mode)}${args.before ? ` &middot; Order_Date before ${esc(args.before)}` : ""} &middot; ${ranAt.toISOString().slice(0, 16).replace("T", " ")}Z</p>`,
+    `<table style="border-collapse:collapse;font-size:13px;margin-bottom:16px">`,
+    ...Object.entries(counts).map(([k, v]) =>
+      `<tr><td style="padding:2px 12px 2px 0;color:#64748b">${esc(k)}</td><td style="padding:2px 0;font-weight:bold">${v}</td></tr>`),
+    `</table>`,
+  ];
+  if (report.synced.length > 0) {
+    html.push(`<h3 style="color:#0F172A;font-size:14px">${dry ? "Eligible (would sync)" : "Synced orders"} (${report.synced.length})</h3>`,
+      `<table style="border-collapse:collapse;font-size:13px;margin-bottom:16px">`,
+      `<tr style="color:#64748b;text-align:left"><th style="padding:2px 12px 2px 0">Shop</th><th style="padding:2px 12px 2px 0">Order</th><th style="padding:2px 12px 2px 0">Total (THB)</th><th style="padding:2px 12px 2px 0">Items</th></tr>`,
+      ...report.synced.map((r) => `<tr><td style="padding:2px 12px 2px 0">${esc(r.shop)}</td><td style="padding:2px 12px 2px 0">${esc(r.order)}</td><td style="padding:2px 12px 2px 0">${r.total}</td><td style="padding:2px 12px 2px 0">${esc(r.items.map((i) => `${i.product_id}x${i.quantity}`).join(", "))}</td></tr>`),
+      `</table>`);
+  }
+  if (skipEntries.length > 0) {
+    html.push(`<h3 style="color:#0F172A;font-size:14px">Skipped (${skippedTotal})</h3><ul style="font-size:13px;margin:0 0 16px;padding-left:20px">`);
+    for (const [k, v] of skipEntries) {
+      const orders = (report.skips[k] || []).slice(0, 12);
+      const more = (report.skips[k] || []).length - orders.length;
+      html.push(`<li style="margin-bottom:4px">${esc(SKIP_LABELS[k] || k)} <b>(${v})</b>: ${esc(orders.join(", "))}${more > 0 ? ` … +${more} more` : ""}</li>`);
+    }
+    html.push(`</ul>`);
+  }
+  if (report.errors.length > 0) {
+    html.push(`<h3 style="color:#B91C1C;font-size:14px">Errors (${report.errors.length})</h3><ul style="font-size:13px;color:#B91C1C;padding-left:20px">`,
+      ...report.errors.map((e) => `<li style="margin-bottom:4px">${esc(e.order || `ID ${e.id}`)}: ${esc(e.message)}</li>`),
+      `</ul>`);
+  }
+  html.push(`<p style="color:#64748b;font-size:12px;margin-top:24px">Full JSONL log: ${esc(logFile)}</p></div>`);
+  return { subject, text, html: html.join("\n") };
+}
+
+async function sendReportEmail({ subject, text, html }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = process.env.REPORT_EMAIL_TO || REPORT_EMAIL_TO_DEFAULT;
+  if (!apiKey) return { success: false, error: "RESEND_API_KEY not set (report skipped)" };
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: REPORT_FROM, to: [to], subject, text, html }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) return { success: false, error: `Resend ${res.status}: ${truncate(body.message || "", 200)}` };
+  return { success: true, id: body.id };
+}
+
 // ── Core per-record processing ─────────────────────────────────────────────
 
 function buildUpsertPayload(rec, items) {
@@ -342,7 +473,7 @@ function buildUpsertPayload(rec, items) {
 }
 
 async function processRecord(rec, ctx) {
-  const { apiBase, apiToken, notionToken, catalogIds, dryRun, log, before } = ctx;
+  const { apiBase, apiToken, notionToken, catalogIds, dryRun, log, before, report } = ctx;
 
   // Eligibility rule 1: Mapped only (defense in depth; query already filters).
   if (rec.mapping_status !== "Mapped") {
@@ -421,7 +552,11 @@ async function processRecord(rec, ctx) {
     would_upsert: payload, would_update_signature: needsSignatureUpdate,
   });
 
-  if (dryRun) return "dry_run_eligible";
+  if (dryRun) {
+    report.synced.push({ id: rec.notion_id, order: rec.order_number, shop: rec.shop, total: rec.total_amount,
+      items: parsed.items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })) });
+    return "dry_run_eligible";
+  }
 
   const result = await workerFetch(apiBase, apiToken, "/api/v1/sales/orders/upsert", {
     method: "POST",
@@ -433,6 +568,8 @@ async function processRecord(rec, ctx) {
   // Only after a successful D1 upsert: mark the Notion row as synced.
   await writeLastSyncedSignature({ token: notionToken, pageId: rec.page_id, propType: rec.sig_prop_type, value: rec.sig_current });
   log.write({ t: "signature_updated", id: rec.notion_id, order: rec.order_number });
+  report.synced.push({ id: rec.notion_id, order: rec.order_number, shop: rec.shop, total: rec.total_amount,
+    items: parsed.items.map((i) => ({ product_id: i.product_id, quantity: i.quantity })) });
 
   return "synced";
 }
@@ -462,7 +599,8 @@ async function main() {
   const catalogIds = new Set((catalog.products || []).map((p) => Number(p.id)));
   console.log(`Catalog: ${catalog.count} active products`);
 
-  const ctx = { apiBase, apiToken, notionToken, catalogIds, dryRun: args.dryRun, before: args.before, log };
+  const report = newReportCollector();
+  const ctx = { apiBase, apiToken, notionToken, catalogIds, dryRun: args.dryRun, before: args.before, report, log };
   const counts = {};
   const bump = (k) => { counts[k] = (counts[k] || 0) + 1; };
   let processed = 0;
@@ -472,9 +610,12 @@ async function main() {
 
   const handle = async (rec) => {
     try {
-      bump(await processRecord(rec, ctx));
+      const result = await processRecord(rec, ctx);
+      bump(result);
+      if (result.startsWith("skipped")) recordSkip(report, result, rec);
     } catch (e) {
       bump("errors");
+      report.errors.push({ order: rec.order_number || "", id: rec.notion_id, message: truncate(e.message, 300) });
       log.write({ t: "error", id: rec.notion_id, order: rec.order_number, message: truncate(e.message, 300) });
       console.error(`Error on ID ${rec.notion_id}: ${e.message}`);
     }
@@ -501,6 +642,26 @@ async function main() {
       }
       saveState({ ...state, cursor, updated_at: new Date().toISOString() });
       if (args.limit !== null && processed >= args.limit) break;
+    }
+  }
+
+  // Run report email (2026-09-12 rule): every LIVE-Notion run (dry-run included)
+  // reports its outcome to contact@mildmate.com. Mock (--input-file) runs never
+  // email. A report failure never fails the sync run itself.
+  if (!mock) {
+    try {
+      const email = buildReportEmail({ args, counts, processed, report, logFile: log.file });
+      const sent = await sendReportEmail(email);
+      if (sent.success) {
+        console.log(`Report email sent to ${process.env.REPORT_EMAIL_TO || REPORT_EMAIL_TO_DEFAULT}${sent.id ? ` (Resend id ${sent.id})` : ""}`);
+        log.write({ t: "email_report", status: "sent", id: sent.id || null });
+      } else {
+        console.warn(`Report email NOT sent: ${sent.error}`);
+        log.write({ t: "email_report", status: "failed", error: truncate(sent.error, 200) });
+      }
+    } catch (e) {
+      console.warn(`Report email failed: ${e.message}`);
+      log.write({ t: "email_report", status: "failed", error: truncate(e.message, 200) });
     }
   }
 
