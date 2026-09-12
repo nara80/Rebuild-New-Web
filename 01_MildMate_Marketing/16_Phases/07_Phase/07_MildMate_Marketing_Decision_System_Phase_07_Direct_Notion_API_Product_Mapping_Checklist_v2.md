@@ -112,7 +112,7 @@ Sales Sync       = Existing Make.com workflow
 - [x] `NOTION_TOKEN` can be stored in a local environment variable.
 - [x] Replace placeholder `NOTION_DATA_SOURCE_ID` with the real OrderList data source ID. *(verified 2026-09-11: resolves to data source titled "OrderList")*
 - [x] Verify a one-record read-only Notion API query. *(verified 2026-09-11: 1 record retrieved, pagination + filters confirmed)*
-- [ ] Create/confirm a dedicated Notion credential suitable for **read + update** access to OrderList.
+- [ ] Create/confirm a dedicated Notion credential suitable for **read + update** access to OrderList. *(still pending — under v3 the only Notion write is `D1_Last_Synced_Signature`; confirm write capability before the first live run)*
 
 ---
 
@@ -397,41 +397,45 @@ Do not create this if an equivalent already exists.
 
 # 14. Historical Mapping Checklist
 
-- [ ] Verify live Notion API connectivity.
-- [ ] Verify real `NOTION_DATA_SOURCE_ID`.
-- [ ] Verify mapping credential can read OrderList.
-- [ ] Verify mapping credential can update intended fields.
-- [ ] Inspect current D1 product catalog.
-- [ ] Confirm IDs 33 and 34.
-- [ ] Inspect existing mapping alias/history tables.
-- [ ] Build Notion API client.
-- [ ] Build paginated OrderList reader.
-- [ ] Build source normalization.
-- [ ] Build product/variation parser.
-- [ ] Implement exact variation resolver.
-- [ ] Implement exact alias resolver.
-- [ ] Implement listing + variation resolver.
-- [ ] Implement approved deterministic rules.
-- [ ] Implement bounded AI fallback only if needed.
-- [ ] Implement confidence scoring.
-- [ ] Implement `Review Required`.
-- [ ] Implement Notion mapping-field updater.
-- [ ] Preserve verified mappings.
-- [ ] Add dry-run mode.
-- [ ] Add batch limit.
-- [ ] Add resume/cursor behavior.
-- [ ] Add machine-readable logs.
-- [ ] Add human-readable summary.
-- [ ] Test 5-record batch.
+> **Reconciliation (2026-09-12):** statuses reflect the v3 confirmed-mapping sync build. Items marked **(superseded)** belonged to the resolver design; that logic remains available server-side in `/api/v1/mapping/resolve|aliases` for Make.com or future use, but the CLI no longer maps anything.
+
+- [x] Verify live Notion API connectivity. *(2026-09-11)*
+- [x] Verify real `NOTION_DATA_SOURCE_ID`. *(2026-09-11 — resolves to data source "OrderList", 45 properties)*
+- [x] Verify mapping credential can read OrderList. *(read-only verified; PII fields excluded from reads/logs)*
+- [ ] Verify mapping credential can update intended fields. *(superseded scope — the only Notion write under v3 is `D1_Last_Synced_Signature`; live write-back not yet exercised)*
+- [x] Inspect current D1 product catalog. *(32 active products; 30/31 gaps preserved)*
+- [x] Confirm IDs 33 and 34. *(present and active)*
+- [x] Inspect existing mapping alias/history tables. *(migrations 043 + 044 built in repo, local-tested; NOT yet applied to preview/prod D1)*
+- [x] Build Notion API client. *(CLI `scripts/notion-product-mapper.mjs`, v3)*
+- [x] Build paginated OrderList reader. *(server-side `Mapped` filter + pagination verified)*
+- [x] Build source normalization. *(em-dash/case normalization + parser for both live `D1_Product_Map` formats)*
+- [x] Build product/variation parser. *(parses confirmed map formats A + B; cross-checks `D1_Product_IDs`)*
+- [ ] Implement exact variation resolver. *(superseded — resolver ladder lives only in the Worker API; Make.com confirms mappings under v3)*
+- [ ] Implement exact alias resolver. *(superseded — `/api/v1/mapping/aliases` remains for Make.com/human corrections)*
+- [ ] Implement listing + variation resolver. *(superseded — server-side only)*
+- [ ] Implement approved deterministic rules. *(superseded — server-side only)*
+- [ ] Implement bounded AI fallback only if needed. *(superseded — v3 forbids AI in the sync path)*
+- [ ] Implement confidence scoring. *(superseded — not part of confirmed-mapping sync)*
+- [ ] Implement `Review Required`. *(superseded — Make.com owns Review Required; the CLI never fetches non-Mapped records)*
+- [ ] Implement Notion mapping-field updater. *(superseded — v3 CLI writes back ONLY `D1_Last_Synced_Signature`; built, live write-back pending)*
+- [x] Preserve verified mappings. *(by eligibility design: Mapped + signature-difference only; never writes mapping fields)*
+- [x] Add dry-run mode. *(verified on ID 1038 — correct payload, zero writes)*
+- [x] Add batch limit. *(--limit)*
+- [x] Add resume/cursor behavior. *(--resume with persisted cursor; live resume not yet exercised)*
+- [x] Add machine-readable logs. *(JSONL, token/PII-free — verified)*
+- [x] Add human-readable summary. *(run summary with synced/skipped/error counts)*
+- [ ] Test 5-record batch. *(live batches pending approval; offline mock test + single-record dry-run passed)*
 - [ ] Test 20-record batch.
 - [ ] Test 50-record batch.
-- [ ] Verify Notion after each batch.
-- [ ] Measure mapping coverage.
-- [ ] Surface mapping coverage later in Data Analyst dashboard.
+- [ ] Verify Notion after each batch. *(pending live runs)*
+- [ ] Measure mapping coverage. *(Phase 08 work)*
+- [ ] Surface mapping coverage later in Data Analyst dashboard. *(Phase 08 work; Phase 06 DQ Monitor already shows mapping/order health)*
 
 ---
 
 # 15. Ongoing Mapping Checklist
+
+> **Reconciliation (2026-09-12):** this section is superseded. Under v3, ongoing *automation* is planned in the rewritten Phase 17 checklist (scheduled confirmed-mapping **sync**, not mapping), and ongoing *mapping* itself belongs to Make.com by approved design.
 
 Only after historical mapping is verified:
 
@@ -478,57 +482,63 @@ If not, document the issue before redesigning the architecture.
 
 # 17. Verification Checklist
 
-- [ ] Read one live OrderList record through Notion API.
-- [ ] Dry-run one record without writing.
-- [ ] Known OrderList ID 1038 resolves to D1 20 + 26.
-- [ ] Single-item order maps correctly.
-- [ ] Multi-item order maps correctly.
-- [ ] Clear selected variation outranks ambiguous parent listing.
-- [ ] Unknown variation becomes `Review Required`.
-- [ ] Verified mapping remains unchanged.
-- [ ] IDs 33/34 resolve where applicable.
-- [ ] Wrong Product_ID is rejected before Notion update.
-- [ ] Only approved Notion mapping fields change.
-- [ ] Rerun is idempotent.
-- [ ] Batch resume works.
-- [ ] Notion rate-limit handling works.
-- [ ] No secret appears in logs.
-- [ ] No unnecessary PII appears in logs.
-- [ ] Existing Make Sales Sync accepts newly mapped orders.
+> **Reconciliation (2026-09-12):** items marked **(superseded)** describe resolver behavior that no longer applies to the CLI.
+
+- [x] Read one live OrderList record through Notion API. *(ID 1038, 2026-09-11)*
+- [x] Dry-run one record without writing. *(1038 — correct D1 upsert payload built, zero writes)*
+- [x] Known OrderList ID 1038 resolves to D1 20 + 26. *(v3 semantics: confirmed map parsed → 20 + 26, cross-checked against `D1_Product_IDs` — exact match)*
+- [ ] Single-item order maps correctly. *(superseded as a mapping test — single-item confirmed orders will be validated during Phase 08 live batches)*
+- [ ] Multi-item order maps correctly. *(2-item payload for 1038 verified in dry-run; live batch validation pending)*
+- [ ] Clear selected variation outranks ambiguous parent listing. *(superseded — CLI never maps; rule remains server-side only)*
+- [ ] Unknown variation becomes `Review Required`. *(superseded — Make.com owns Review Required)*
+- [x] Verified mapping remains unchanged. *(by design the CLI never writes mapping fields; live idempotent re-run still to be confirmed)*
+- [x] IDs 33/34 resolve where applicable. *(catalog validation includes 33/34; local `/api/v1/mapping/catalog` test confirmed)*
+- [x] Wrong Product_ID is rejected before Notion update. *(catalog validation + `D1_Product_IDs` cross-check; mismatches skipped and logged — locally tested)*
+- [x] Only approved Notion mapping fields change. *(v3 writes ONLY `D1_Last_Synced_Signature`; code-verified + dry-run; live confirmation pending)*
+- [ ] Rerun is idempotent. *(built; live re-run of 1038 pending)*
+- [ ] Batch resume works. *(built; not live-exercised)*
+- [ ] Notion rate-limit handling works. *(350 ms throttle + 429/5xx backoff built; no live 429 encountered yet)*
+- [x] No secret appears in logs. *(verified in dry-run logs)*
+- [x] No unnecessary PII appears in logs. *(verified — logs carry order number + ids only)*
+- [ ] Existing Make Sales Sync accepts newly mapped orders. *(n/a as phrased: under v3 the CLI upserts via the Sales API directly and Make sync is an independent pipeline — re-verify after the Phase 08 activation decision)*
 
 ---
 
 # 18. Deliverables
 
-- [ ] Direct Notion API product mapper.
-- [ ] Notion read/update client.
-- [ ] Current D1 product catalog resolver.
-- [ ] Mapping memory integration where available.
-- [ ] Dry-run mode.
-- [ ] Batch/resume mode.
-- [ ] Logs/reports.
-- [ ] Review Required handling.
-- [ ] Historical mapping runbook.
-- [ ] Ongoing mapping deployment recommendation.
-- [ ] Mapping coverage metrics.
-- [ ] Phase implementation summary.
+> **Reconciliation (2026-09-12):** status against the actual v3 build (commit `b43c02d`, merged to `master`).
+
+- [x] Direct Notion API product mapper. *(delivered as the v3 confirmed-mapping **sync** CLI — mapping itself stays with Make.com by approved design)*
+- [x] Notion read/update client. *(read verified live; update limited to signature write-back, live test pending)*
+- [x] Current D1 product catalog resolver. *(catalog validation in CLI + `/api/v1/mapping/catalog` endpoint)*
+- [x] Mapping memory integration where available. *(migration 043 + `/api/v1/mapping/aliases`, local-tested)*
+- [x] Dry-run mode. *(verified on ID 1038)*
+- [x] Batch/resume mode. *(built; live batches pending)*
+- [x] Logs/reports. *(JSONL logs + run summary, token/PII-free)*
+- [ ] Review Required handling. *(superseded — Make.com owns Review Required; count reporting planned in Phase 17)*
+- [x] Historical mapping runbook. *(rewritten for v3 sync: `05_Mapping/Phase_07_Historical_Mapping_Runbook_2026-09-10.md`)*
+- [x] Ongoing mapping deployment recommendation. *(decided: dedicated Cloudflare Worker + Cron Trigger; Phase 17 checklist rewritten accordingly)*
+- [ ] Mapping coverage metrics. *(Phase 08 work)*
+- [x] Phase implementation summary. *(this annotated checklist + `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`)*
 
 ---
 
 # 19. Definition of Done
 
-- [ ] Code can read eligible OrderList records directly via Notion API.
-- [ ] Resolver uses current canonical D1 Product_ID catalog.
-- [ ] Strong-evidence records auto-map safely.
-- [ ] Ambiguous records become `Review Required`.
-- [ ] Mapping results write back to the same Notion record.
-- [ ] Verified mappings are preserved.
-- [ ] Historical batches run without Make.com mapping operations.
-- [ ] Existing Make Sales Sync continues downstream.
-- [ ] Process is idempotent and resumable.
-- [ ] Mapping coverage is measurable.
-- [ ] Credentials and PII are protected.
-- [ ] Ready for Phase 08 historical sales backfill.
+> **Reconciliation (2026-09-12):** several DoD items were redefined by the approved v3 design.
+
+- [x] Code can read eligible OrderList records directly via Notion API. *(eligible = `Mapped` + signature-difference; enforced server-side)*
+- [x] Resolver uses current canonical D1 Product_ID catalog. *(every parsed id validated against the 32-product catalog incl. 33/34)*
+- [ ] Strong-evidence records auto-map safely. *(superseded — no auto-mapping under v3; Make.com confirms mappings)*
+- [ ] Ambiguous records become `Review Required`. *(superseded — Make.com owns Review Required)*
+- [ ] Mapping results write back to the same Notion record. *(superseded — the CLI writes back only `D1_Last_Synced_Signature` after a successful D1 upsert)*
+- [x] Verified mappings are preserved. *(by design; live confirmation pending)*
+- [ ] Historical batches run without Make.com mapping operations. *(engine built + dry-run verified; live batches pending approval — Phase 08)*
+- [x] Existing Make Sales Sync continues downstream. *(untouched; stays OFF until the Phase 08 activation decision)*
+- [x] Process is idempotent and resumable. *(built; live idempotency/resume confirmation pending)*
+- [ ] Mapping coverage is measurable. *(analysis layer + DQ Monitor in place; per-period coverage report is Phase 08 work)*
+- [x] Credentials and PII are protected. *(verified: no token/PII in logs; `.dev.vars` gitignored)*
+- [ ] Ready for Phase 08 historical sales backfill. *(code-ready; blocked only on approvals + deploy/prod-migration steps — see reconciliation §6)*
 
 ---
 

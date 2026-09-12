@@ -1,18 +1,18 @@
-> **⚠️ REVISION REQUIRED WHEN REACHED (2026-09-11).** Written for the superseded resolver design. Under the approved v3 design, weekly automation runs the **confirmed-mapping sync** (`Mapped` + `D1_Current_Signature != D1_Last_Synced_Signature` only; writes back only `D1_Last_Synced_Signature`; never remaps). Decided mechanism: dedicated Cloudflare Worker + Cron Trigger (Pages cannot cron). See `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`.
-
 # MildMate Marketing Decision System — Phase 17
-## Ongoing Product Mapping Automation
+## Ongoing Confirmed-Mapping Sync Automation (v3)
 
-**Project root:** `D:/00_Mildmate/Re-build_web/`  
-**Planning / handoff folder:** `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`  
-**Git branch:** `feature/marketing-data-analyst`  
+> **Revised 2026-09-12** to match the approved v3 design (`09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`). The original version of this checklist was written for the superseded resolver design. Under v3, **nothing maps products automatically** — Make.com remains the mapping authority in Notion. This phase only automates the *sync* of confirmed `Mapped` records into D1.
+
+**Project root:** `D:/00_mildmate/Re-build_web/`  
+**Planning / handoff folder:** `D:/00_mildmate/Re-build_web/01_MildMate_Marketing/`  
+**Git branch:** `master` (Marketing Decision System phases 04–07 merged)  
 **UI feature area:** `super-admin/marketing`  
 **Analysis API area:** `api/analysis`  
 **Database:** Existing Cloudflare D1  
-**Deployment:** Existing Cloudflare Pages project  
+**Deployment:** Dedicated Cloudflare Worker (this phase) — Pages cannot host cron triggers  
 **Order system:** Notion `OrderList`  
-**Product mapping integration:** Direct Notion API (built in Phase 07)  
-**Ongoing sales sync:** Existing Make.com `Notion OrderList → D1 Sales Sync`
+**Mapping authority:** Make.com (confirms `Product_Mapping_Status = Mapped` + `D1_Product_Map`/`D1_Product_IDs`)  
+**Sync engine to automate:** `scripts/notion-product-mapper.mjs` (Phase 07 v3 confirmed-mapping sync CLI)
 
 ## Status Legend
 
@@ -22,110 +22,125 @@
 
 ## Phase Goal
 
-Turn the Phase 07 direct Notion product mapper from a manually executed batch utility into a safe, scheduled, incremental automation so new `OrderList` records are mapped continuously without human triggering.
+Turn the Phase 07 v3 confirmed-mapping sync CLI into a safe, scheduled, incremental automation so newly confirmed `Mapped` OrderList records flow into D1 continuously without a human running the CLI. The automation never maps, never remaps, and never touches empty/`Unmapped`/`Review Required`/`Partial` records — those remain Make.com's responsibility.
+
+## Approved Design Baseline (inherited from Phase 07 v3)
+
+- Eligibility: `Product_Mapping_Status = "Mapped"` AND (`D1_Current_Signature != D1_Last_Synced_Signature` OR last synced empty).
+- After a successful D1 upsert, write back **only** `D1_Last_Synced_Signature`. No other Notion field is ever written.
+- `source_item_key = {Order_Number}-{n}` (Make.com-compatible, verified against prod D1).
+- Exact order totals; line revenue `UNALLOCATED` (never invented, never equal-split).
+- Explicit Thai→canonical status mapping; unknown statuses are sent without status and flagged, never guessed.
+- All parsed ids validated against the canonical 32-product catalog; mismatches are skipped and logged.
 
 ## Prerequisites / Confirmed Baseline
 
-- [x] Phase 07 direct Notion API product mapper built and historically verified (batch mode, dry-run, resume).
-- [x] `product_mapping_aliases` mapping memory live in production D1 (migration 043).
-- [x] `product_mapping_events` audit table live in production D1 (migration 044).
-- [x] Dedicated Notion credential (`MildMate OrderList Mapper`) with read + update access to OrderList.
-- [x] Phase 08 historical sales backfill completed; Make.com Sales Sync activated (`From now on`, every 15 minutes).
-- [x] Mapping coverage visible in the Data Analyst dashboard (Phases 05–06).
+- [x] Phase 07 v3 sync CLI built; single-record dry-run verified (ID 1038, 2026-09-11).
+- [x] Mechanism decided: dedicated Cloudflare Worker + Cron Trigger (Pages cannot cron; repo has a `cron-worker/` precedent).
+- [ ] Phase 07 live single-record sync (ID 1038) + idempotent re-run verified.
+- [ ] Phase 08 historical backfill executed in controlled batches and reconciled.
+- [ ] Migrations 043 + 044 applied to preview and production D1 (044 required if the Worker writes audit events).
+- [ ] Dedicated Notion credential confirmed for read + signature write-back (not the read-only historical token).
+- [ ] Make.com Sales Sync activation timing decided (stays OFF until that decision).
+- [ ] Wrangler/Cloudflare credentials valid for the account (a 2026-09-12 remote-D1 check failed with auth error 7403 — re-authenticate before relying on remote operations).
 
 ## Architecture Decision
 
-Recommended long-term execution (from Phase 07 plan):
-
 ```text
-Cloudflare Worker Cron (scheduled)
+Dedicated Cloudflare Worker (e.g. mildmate-marketing-sync) + Cron Trigger
       ↓
-Query Notion OrderList (last_edited_time cursor, eligible statuses only)
+Query Notion OrderList server-side:
+  Product_Mapping_Status = "Mapped"
+  AND (D1_Last_Synced_Signature != D1_Current_Signature OR empty)
       ↓
-Product Mapping Resolver (existing /api/v1/mapping/* engine)
+Parse confirmed D1_Product_Map (both live formats)
+Cross-check D1_Product_IDs; validate ids vs canonical catalog
       ↓
-Update Notion mapping fields
+POST /api/v1/sales/orders/upsert   (Bearer SALES_SYNC_API_TOKEN)
       ↓
-Log run + audit events
+Write back only D1_Last_Synced_Signature
       ↓
-Mapped records flow into existing Make.com Sales Sync
+Audit rows → product_mapping_events (migration 044)
+Run telemetry → sync_runs (distinct source, e.g. notion-mapping-sync)
 ```
 
-Fallback option if Cron is not approved: manual Super Admin action or a scheduled local utility. Decide explicitly in this phase.
+Fallback if the cron schedule is not approved: manual Super Admin trigger or a scheduled local run of the existing CLI. Decide explicitly in this phase.
 
 ## Task Checklist
 
 ### Execution model
-- [ ] Decide execution model: Cloudflare Cron (recommended) vs manual admin action vs scheduled local utility.
-- [ ] Decide run frequency (recommended: every 15–30 minutes, aligned with the Make.com Sales Sync cadence).
-- [ ] Store `NOTION_TOKEN` and `NOTION_DATA_SOURCE_ID` as Cloudflare secrets (Pages project) — never in code or repo.
+- [ ] Decide run frequency (recommended daily at first; tighten only after stability).
+- [ ] Create the dedicated Worker with a `scheduled` handler that reuses the CLI's sync logic (port or import the core from `scripts/notion-product-mapper.mjs` — do not fork the logic).
+- [ ] Store `NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN` as Worker secrets — never in code or repo.
+- [ ] Point the upsert target at `https://www.mildmate.com` (`/api/v1/sales/orders/upsert`).
 
 ### Incremental processing
-- [ ] Query only new/changed records needing mapping (`Product_Mapping_Status` ∈ empty/`Unmapped`/`Review Required`).
-- [ ] Use `last_edited_time` / persisted cursor strategy (cursor stored in D1, not in memory).
-- [ ] Never re-process records already `Mapped` (preserve verified mappings).
-- [ ] Skip records currently pending human review unless explicitly included by configuration.
+- [ ] Server-side `Mapped` filter + signature-difference check (same eligibility as the CLI).
+- [ ] Persisted cursor (D1 table or KV) — never in-memory only.
+- [ ] Never re-process signature-unchanged records.
+- [ ] Never fetch or write non-Mapped statuses (they belong to Make.com).
 
 ### Safety and reliability
-- [ ] Handle Notion API rate limits (~3 req/s): throttle + 429 retry with backoff.
-- [ ] Handle transient errors safely (retry bounded, then log and continue; never partial-write a record's mapping fields).
-- [ ] Prevent concurrent duplicate processing (run lock in D1; skip run if previous run still active).
-- [ ] Validate all resolved Product_IDs against the canonical catalog before any Notion write.
-- [ ] Keep confidence rules from Phase 07: deterministic evidence auto-maps; below threshold → `Review Required`; AI never invents Product_ID.
+- [ ] Run lock (D1 row) — skip the run if the previous run is still active.
+- [ ] Throttle ~350 ms per Notion call + 429/5xx backoff.
+- [ ] Bound records/duration per invocation (carry over via cursor).
+- [ ] Catalog validation before any upsert; skip + log mismatches (never guess).
+- [ ] Signature write-back only after confirmed upsert success (never partial-write a record).
 
 ### Observability
-- [ ] Record every scheduled run in a run log (reuse `sync_runs` with a distinct `source`, e.g. `notion-product-mapper`, or equivalent).
-- [ ] Write per-record audit rows to `product_mapping_events`.
-- [ ] Add a `Review Required` report/alert path (at minimum: count surfaced in the Data Quality & Sync Monitor; optionally an email/notification).
-- [ ] Surface mapper run freshness in the Data Analyst dashboard Data Quality section.
+- [ ] Record every scheduled run in `sync_runs` with a distinct source (e.g. `notion-mapping-sync`).
+- [ ] Write per-record audit rows to `product_mapping_events` (migration 044).
+- [ ] Surface `Review Required`/`Unmapped` counts in the Phase 06 Data Quality & Sync Monitor (owned by Make.com; visible for ops — this phase only reports, never processes).
+- [ ] Surface sync freshness in the Data Analyst dashboard Data Quality section.
 
 ### Rollout
-- [ ] Production-test with a controlled set (schedule OFF, manual trigger of the scheduled handler first).
-- [ ] Enable the schedule only after the controlled test passes.
-- [ ] Document rollback: how to pause the schedule and fall back to manual batch mode.
+- [ ] Controlled test: invoke the scheduled handler manually with the schedule OFF.
+- [ ] Enable the cron schedule only after the controlled test passes.
+- [ ] Document rollback: pause the schedule; fall back to manual CLI runs (runbook already covers this).
 
 ## Deliverables
 
-- [ ] Scheduled (or approved alternative) ongoing mapping execution.
-- [ ] Cursor/incremental query implementation with persisted state.
-- [ ] Run lock + rate-limit + retry handling.
+- [ ] Scheduled (or approved alternative) ongoing confirmed-mapping sync.
+- [ ] Cursor/incremental query with persisted state.
+- [ ] Run lock + throttle/backoff + bounded runs.
 - [ ] Run logs + `product_mapping_events` audit integration.
-- [ ] Review Required alert/report.
-- [ ] Dashboard visibility for mapper freshness/coverage.
-- [ ] Rollback/pause runbook.
+- [ ] Review Required / Unmapped count reporting (report only).
+- [ ] Dashboard visibility for sync freshness.
+- [ ] Pause/rollback runbook.
 
 ## Verification / Test Checklist
 
-- [ ] New unmapped Notion record is mapped automatically within one scheduled cycle.
-- [ ] Already-`Mapped` record is never re-processed.
-- [ ] `Review Required` record stays untouched by normal runs and appears in the report.
+- [ ] Newly confirmed `Mapped` record (with signature difference) syncs into D1 within one scheduled cycle, and its `D1_Last_Synced_Signature` is updated.
+- [ ] Signature-unchanged record is never re-processed.
+- [ ] Empty/`Unmapped`/`Review Required`/`Partial` records are never fetched or written.
 - [ ] Cursor resumes correctly after an interrupted run.
 - [ ] Two overlapping runs cannot process the same records (lock verified).
 - [ ] Simulated 429 → retry/backoff works; run completes.
-- [ ] Run rows appear in the run log; audit rows appear in `product_mapping_events`.
+- [ ] Run rows appear in `sync_runs`; audit rows appear in `product_mapping_events`.
 - [ ] No secret and no unnecessary PII appears in any log.
-- [ ] Newly mapped records flow into the existing Make.com Sales Sync unchanged.
+- [ ] Duplicate cycle re-run is idempotent (upsert returns unchanged/updated, never duplicates).
 - [ ] Pausing the schedule stops processing cleanly (rollback verified).
 
 ## Definition of Done
 
-- [ ] New eligible OrderList records reach `Mapped` automatically with strong evidence, with no human trigger.
-- [ ] Ambiguous records are never silently guessed and are visibly reported.
+- [ ] Confirmed `Mapped` orders reach D1 automatically with no human trigger.
+- [ ] The automation never maps, never remaps, and never guesses.
 - [ ] Runs are observable, idempotent, resumable, and safely pausable.
-- [ ] The existing Make.com Sales Sync continues downstream unchanged.
+- [ ] Make.com's mapping workflow and (future) Sales Sync pipeline remain untouched and independent.
 
 ## Global Guardrails
 
 - [!] Do not expose `NOTION_TOKEN`, `SALES_SYNC_API_TOKEN`, or any production secret.
 - [!] Do not hard-code credentials.
 - [!] Do not renumber permanent D1 `products.id`.
-- [!] Do not let AI invent Product_ID.
-- [!] Do not use parent listing title when selected variation conflicts.
-- [!] Do not overwrite verified mappings during normal processing.
-- [!] Do not overwrite `Product_Info` or `ProductJSON`.
-- [!] Do not modify unrelated OrderList properties (customer, shipping, totals, dates, notes, operational status).
+- [!] Do not write any Notion field other than `D1_Last_Synced_Signature`.
+- [!] Do not auto-map or remap anything — Make.com is the mapping authority.
+- [!] Do not fetch or process empty/`Unmapped`/`Review Required`/`Partial` records.
+- [!] Do not overwrite `Product_Info`, `ProductJSON`, `D1_Product_Map`, or `D1_Product_IDs`.
+- [!] Do not invent historical line-item revenue; keep unknown revenue `UNALLOCATED`.
+- [!] Do not equal-split multi-item order totals.
 - [!] Do not modify or replace the existing operational website `orders` system.
-- [!] Do not remove or alter the existing Make.com Sales Sync in this phase.
+- [!] Do not alter the existing Make.com workflows in this phase.
 - [!] Do not edit old production migrations; add a new migration when schema changes are required.
 - [!] Do not enable the production schedule before the controlled verification passes.
 - [!] Do not deploy to production until the phase has been reviewed and explicitly approved.
@@ -134,19 +149,19 @@ Fallback option if Cron is not approved: manual Super Admin action or a schedule
 ## Phase Handoff Rule
 
 - [ ] Record files changed.
-- [ ] Record migrations/API routes/cron triggers created or changed.
+- [ ] Record migrations/Worker/cron triggers created or changed.
 - [ ] Record Notion fields read/written.
 - [ ] Record tests performed and results.
 - [ ] Record schedule configuration and rollback procedure.
 - [ ] Record unresolved issues and risks.
-- [ ] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
+- [ ] Save implementation summary under `D:/00_mildmate/re-build_web/01_MildMate_Marketing/`.
 - [ ] Commit only phase-scoped changes with a clear Git commit message.
 - [ ] Stop after this phase is implemented, tested, documented, and ready for review.
 
 ## Recommended Droid Session Name
 
-`MildMate Marketing Decision System — Phase 17 — Ongoing Product Mapping Automation`
+`MildMate Marketing Decision System — Phase 17 — Ongoing Confirmed-Mapping Sync Automation`
 
 ## Droid Working Instruction
 
-> Work on **Phase 17 only**. Inspect existing code before changing it. Reuse the Phase 07 mapper and resolver — do not fork the mapping logic. Do not build later phases early. Stop after this phase is implemented, tested, documented, and ready for review.
+> Work on **Phase 17 only**. Reuse the Phase 07 v3 sync engine — do not fork or re-design the mapping/sync logic. Confirm all prerequisites above are met before building. Do not build later phases early. Stop after this phase is implemented, tested, documented, and ready for review.

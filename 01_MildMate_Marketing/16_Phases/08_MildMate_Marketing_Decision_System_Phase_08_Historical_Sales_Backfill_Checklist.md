@@ -29,24 +29,26 @@ Populate enough historical unified sales data to support meaningful product/chan
 
 ## Task Checklist
 
-- [ ] Define historical backfill date range and scope.
-- [ ] Define controlled batch size.
-- [ ] Do not use the live `From now on` watcher for historical replay.
-- [ ] Map historical orders before/while backfilling according to approved process.
-- [ ] Use stable `(source_system, source_order_id)` identity.
-- [ ] Use deterministic `source_item_key` values.
-- [ ] Preserve exact order totals.
-- [ ] Keep unknown line revenue `UNALLOCATED`.
-- [ ] Do not equal-split historical totals.
-- [ ] Preserve already verified mappings.
-- [ ] Backfill in controlled batches.
-- [ ] Record failed/rejected orders for review.
-- [ ] Re-run corrected records safely using UPSERT behavior.
-- [ ] Reconcile order counts against Notion.
-- [ ] Reconcile total order revenue by channel/date where source data allows.
-- [ ] Measure mapping coverage by period.
-- [ ] Document remaining data gaps.
-- [ ] Update Data Analyst dashboard to show historical coverage.
+> **Reconciliation (2026-09-12):** items marked ✅ built are satisfied by construction by the Phase 07 v3 sync CLI (`scripts/notion-product-mapper.mjs`, the approved backfill engine). Unticked items require the live run or a user decision.
+
+- [ ] Define historical backfill date range and scope. *(user decision pending)*
+- [x] Define controlled batch size. *(5 → 20 → 50 ramp defined in the v3 runbook)*
+- [x] Do not use the live `From now on` watcher for historical replay. *(CLI reads Notion directly; Make.com sync stays OFF until the activation decision)*
+- [x] Map historical orders before/while backfilling according to approved process. *(v3 approved process: Make.com is the mapping authority; the CLI syncs only `Mapped` records)*
+- [x] Use stable `(source_system, source_order_id)` identity. *(built; verified in the ID 1038 dry-run payload)*
+- [x] Use deterministic `source_item_key` values. *(built — Make-compatible `{Order_Number}-{n}`, verified against prod D1 convention)*
+- [x] Preserve exact order totals. *(built; exact total 3480 THB confirmed in the 1038 dry-run payload)*
+- [x] Keep unknown line revenue `UNALLOCATED`. *(built; no invented line revenue)*
+- [x] Do not equal-split historical totals. *(by construction — line revenue is never split)*
+- [x] Preserve already verified mappings. *(eligibility rule: `Mapped` + signature-difference only; mapping fields never written)*
+- [x] Backfill in controlled batches. *(--limit/--resume built; live execution pending approval)*
+- [x] Record failed/rejected orders for review. *(built — JSONL logs with skip reasons: parse_failed, ids_mismatch, not Mapped, signature unchanged)*
+- [x] Re-run corrected records safely using UPSERT behavior. *(upsert endpoint is idempotent — previously production-verified; safe re-run built into the engine)*
+- [ ] Reconcile order counts against Notion. *(after live batches)*
+- [ ] Reconcile total order revenue by channel/date where source data allows. *(after live batches)*
+- [ ] Measure mapping coverage by period. *(after live batches)*
+- [ ] Document remaining data gaps. *(after live batches)*
+- [ ] Update Data Analyst dashboard to show historical coverage. *(Phase 08 UI work)*
 
 ## Deliverables
 

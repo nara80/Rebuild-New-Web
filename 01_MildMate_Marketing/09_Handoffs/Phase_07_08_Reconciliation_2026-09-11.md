@@ -2,6 +2,8 @@
 
 Source of truth for what was actually built, verified, superseded, and still pending in the product-mapping and historical-backfill workstream. Supersedes conflicting statements in earlier Phase 07 documents.
 
+> **Updated 2026-09-12:** Phase 07 v2, Phase 08, and Phase 17 checklists now carry per-item reconciled statuses (this pass). Repo state: all Marketing Decision System commits (Phases 03–07, through `b43c02d`) are merged into `master`; `master` additionally carries unrelated site work (SEO/canonical, mailer revisions) owned by other sessions.
+
 ## 1. Design evolution (three iterations)
 
 | Version | Design | Status |
@@ -24,7 +26,7 @@ Approved business rules (v3):
 | `migrations/044_product_mapping_events.sql` (audit table) | `00e805a` | Applied to local D1 only; **not applied to preview/prod** |
 | Worker routes `/api/v1/mapping/catalog\|resolve\|aliases\|events` in `workers/api/sales.ts` | `2301d45`, `00e805a` | 10/10 + 4/4 local API tests passed (1038→[20,26], variation-over-listing, normalization, 400/401, idempotent upsert, events audit) |
 | Runtime bundles `public/_worker.js` / `public/index.js` (633,696 bytes) | `00e805a` | Compiled + locally exercised |
-| `scripts/notion-product-mapper.mjs` **v3 confirmed-mapping sync CLI** | committed with this reconciliation | See §3 |
+| `scripts/notion-product-mapper.mjs` **v3 confirmed-mapping sync CLI** | `b43c02d` (merged to `master`) | See §3 |
 | Notion read-only verification | n/a | Connection OK; data source confirmed "OrderList" (45 properties); pagination + server-side filters verified; PII fields identified and excluded from reads/logs |
 | Dry-run of OrderList ID 1038 | n/a | Eligible (`Mapped`, last-synced empty); map parsed → D1 20 + 26 matching `D1_Product_IDs`; correct upsert payload built (keys `260804DW6XA3NA-1/-2`, `UNALLOCATED`, `shipped`); would update signature after success. No writes performed |
 
@@ -48,13 +50,13 @@ Removed from the CLI in v3 (still available server-side for Make.com/Phase 17): 
 | Document | Status |
 |---|---|
 | `16_Phases/07_...Product_Mapping_Automation_Checklist.md` (v1) | ❌ Superseded (banner added) |
-| `16_Phases/07_Phase/07_..._Direct_Notion_API_Product_Mapping_Checklist_v2.md` | ⚠️ Partially superseded (banner added): connectivity/read/inspection items done; resolver-based mapping flow replaced by v3 sync |
+| `16_Phases/07_Phase/07_..._Direct_Notion_API_Product_Mapping_Checklist_v2.md` | ⚠️ Partially superseded (banner + per-item statuses added 2026-09-12): connectivity/read/inspection/dry-run items ticked as verified; resolver items marked superseded |
 | `05_Mapping/Phase_07_Notion_Order_Product_Mapper_Build_Guide_2026-09-10.md` | ❌ Obsolete as a mapper design (banner added); §API endpoint reference remains valid |
 | `05_Mapping/Phase_07_Historical_Mapping_Runbook_2026-09-10.md` | ✅ Rewritten for v3 confirmed-mapping sync |
 | `09_Handoffs/Phase_07_Handoff_Product_Mapping_Automation_2026-09-10.md` | ⚠️ Historical record (banner added): backend endpoints/migration remain valid; Make.com mapper plan superseded |
 | `09_Handoffs/Phase_07v2_Handoff_Direct_Notion_Mapper_Offline_Build_2026-09-10.md` | ⚠️ Historical record (banner added): CLI has since been reworked to v3 |
-| `16_Phases/08_..._Phase_08_Historical_Sales_Backfill_Checklist.md` | ✅ Still the active Phase 08 plan; reconciliation note added mapping tasks to the v3 sync tool |
-| `16_Phases/17_..._Phase_17_Ongoing_Product_Mapping_Automation_Checklist.md` | ⚠️ Needs revision when reached: reuse v3 sync (Mapped+signature), not the resolver flow; cron host = dedicated Worker |
+| `16_Phases/08_..._Phase_08_Historical_Sales_Backfill_Checklist.md` | ✅ Still the active Phase 08 plan; task checklist reconciled 2026-09-12 (10 items satisfied by construction by the v3 engine; live-run/reconciliation items remain open) |
+| `16_Phases/17_..._Phase_17_Ongoing_Product_Mapping_Automation_Checklist.md` | ✅ **Rewritten 2026-09-12** for v3: scheduled confirmed-mapping **sync** via dedicated Cloudflare Worker + Cron Trigger; no mapping, signature write-back only |
 
 ## 5. Phase 08 implication (how backfill will actually run)
 
@@ -69,5 +71,11 @@ The v3 sync CLI **is** the Phase 08 backfill engine for Notion-confirmed orders:
 
 1. Approve + run live single-record test (ID 1038): D1 upsert (local/preview first, then prod after deploy) + signature write-back.
 2. Apply migrations 043 + 044 to preview and production D1 (043 optional for v3 sync itself but required for `/resolve`/alias memory used by Make.com or Phase 17; 044 required if audit events are wired into the sync CLI — currently the v3 CLI logs to JSONL only).
-3. Push branch + deploy pending bundle (Phases 04–07) — user-triggered.
+3. Deploy the sales/mapping API bundle to production (the `/api/v1/sales/orders/upsert` endpoint is already production-verified; the newer `/api/v1/mapping/*` routes ship with the next deploy) — user-triggered.
 4. Decide Make.com Sales Sync activation timing (per decision: during/after Phase 08).
+5. Re-verify remote D1 access: on 2026-09-12 `wrangler d1 execute --remote` failed with Cloudflare auth error 7403 (cached credentials no longer authorized). Run `npx wrangler login` / check the account before any remote D1 operation (migration apply, live-sync verification, prod reconciliation).
+
+## 7. Verification log
+
+- 2026-09-11: Notion read-only verification + ID 1038 dry-run (details §2–§3). Prod D1 product catalog + absence of mapping tables verified read-only.
+- 2026-09-12: Repo re-verification — v3 CLI flags/eligibility/signature write-back confirmed in `scripts/notion-product-mapper.mjs`; all 7 mapping routes confirmed in `workers/api/sales.ts` (`catalog` GET, `resolve` POST, `aliases` POST/GET, `events` POST/GET) plus health/upsert/read; migrations `042_marketing_analysis_layer.sql`, `043_product_mapping_aliases.sql`, `044_product_mapping_events.sql` present in `migrations/`. Prod D1 re-check blocked by wrangler auth error 7403 (see §6.5), so prod facts above stand as of 2026-09-11.
