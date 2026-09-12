@@ -39,10 +39,10 @@ Turn the Phase 07 v3 confirmed-mapping sync CLI into a safe, scheduled, incremen
 - [x] Mechanism decided: dedicated Cloudflare Worker + Cron Trigger (Pages cannot cron; repo has a `cron-worker/` precedent).
 - [ ] Phase 07 live single-record sync (ID 1038) + idempotent re-run verified.
 - [ ] Phase 08 historical backfill executed in controlled batches and reconciled.
-- [ ] Migrations 043 + 044 applied to preview and production D1 (044 required if the Worker writes audit events).
+- [x] Migrations 043 + 044 applied to production D1. *(verified 2026-09-12: alias seed 1038→[20,26] present; events table live, 0 rows; preview optional)*
 - [ ] Dedicated Notion credential confirmed for read + signature write-back (not the read-only historical token).
-- [ ] Make.com Sales Sync activation timing decided (stays OFF until that decision).
-- [ ] Wrangler/Cloudflare credentials valid for the account (a 2026-09-12 remote-D1 check failed with auth error 7403 — re-authenticate before relying on remote operations).
+- [ ] Make.com Sales Sync activation timing decided (stays OFF until that decision; last prod run 2026-09-07, confirmed OFF).
+- [x] Wrangler/Cloudflare credentials valid for the account. *(re-authenticated 2026-09-12; read-only prod verification passed)*
 
 ## Architecture Decision
 

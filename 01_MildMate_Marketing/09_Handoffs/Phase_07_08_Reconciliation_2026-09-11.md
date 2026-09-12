@@ -22,8 +22,8 @@ Approved business rules (v3):
 
 | Artifact | Commit | Verification |
 |---|---|---|
-| `migrations/043_product_mapping_aliases.sql` (mapping memory + seed 1038→[20,26]) | `2301d45` | Applied to local D1 only; **not applied to preview/prod** |
-| `migrations/044_product_mapping_events.sql` (audit table) | `00e805a` | Applied to local D1 only; **not applied to preview/prod** |
+| `migrations/043_product_mapping_aliases.sql` (mapping memory + seed 1038→[20,26]) | `2301d45` | **Applied to production D1** (verified 2026-09-12: table live, seed row present — `listing_id 1038 → [20,26]`, `verified=1`) |
+| `migrations/044_product_mapping_events.sql` (audit table) | `00e805a` | **Applied to production D1** (verified 2026-09-12: table live, 0 rows — no mapping events written yet) |
 | Worker routes `/api/v1/mapping/catalog\|resolve\|aliases\|events` in `workers/api/sales.ts` | `2301d45`, `00e805a` | 10/10 + 4/4 local API tests passed (1038→[20,26], variation-over-listing, normalization, 400/401, idempotent upsert, events audit) |
 | Runtime bundles `public/_worker.js` / `public/index.js` (633,696 bytes) | `00e805a` | Compiled + locally exercised |
 | `scripts/notion-product-mapper.mjs` **v3 confirmed-mapping sync CLI** | `b43c02d` (merged to `master`) | See §3 |
@@ -31,7 +31,7 @@ Approved business rules (v3):
 | Dry-run of OrderList ID 1038 | n/a | Eligible (`Mapped`, last-synced empty); map parsed → D1 20 + 26 matching `D1_Product_IDs`; correct upsert payload built (keys `260804DW6XA3NA-1/-2`, `UNALLOCATED`, `shipped`); would update signature after success. No writes performed |
 
 Facts confirmed against live systems:
-- Prod D1: 32 active products; IDs 33/34 active; 30/31 gaps; no mapping tables in prod yet.
+- Prod D1: 32 active products; IDs 33/34 active; 30/31 gaps. Mapping tables `product_mapping_aliases` + `product_mapping_events` now live in prod (applied 2026-09-12 after re-auth; absent on 2026-09-11).
 - "Known ID 1038" = Notion `ID` (unique_id) property, not `Order_Number` (which is `260804DW6XA3NA`).
 - Live `D1_Product_Map` has two formats — current `Item N | D1 <id> | <title> | Qty <q>` (`;`-separated) and older `Line N | <src title> | MildMate -> <id> | <D1 title> | …`; CLI parses both.
 - `ProductJSON` is not always JSON (ID 1038 holds plain text); CLI does not depend on it in v3.
@@ -69,13 +69,14 @@ The v3 sync CLI **is** the Phase 08 backfill engine for Notion-confirmed orders:
 
 ## 6. Outstanding before live sync runs
 
-1. Approve + run live single-record test (ID 1038): D1 upsert (local/preview first, then prod after deploy) + signature write-back.
-2. Apply migrations 043 + 044 to preview and production D1 (043 optional for v3 sync itself but required for `/resolve`/alias memory used by Make.com or Phase 17; 044 required if audit events are wired into the sync CLI — currently the v3 CLI logs to JSONL only).
-3. Deploy the sales/mapping API bundle to production (the `/api/v1/sales/orders/upsert` endpoint is already production-verified; the newer `/api/v1/mapping/*` routes ship with the next deploy) — user-triggered.
-4. Decide Make.com Sales Sync activation timing (per decision: during/after Phase 08).
-5. Re-verify remote D1 access: on 2026-09-12 `wrangler d1 execute --remote` failed with Cloudflare auth error 7403 (cached credentials no longer authorized). Run `npx wrangler login` / check the account before any remote D1 operation (migration apply, live-sync verification, prod reconciliation).
+1. Approve + run live single-record test (ID 1038): D1 upsert into **prod** + signature write-back. Prod is ready: 043/044 applied, `/api/v1/sales/orders/upsert` live, order `260804DW6XA3NA` verified not yet present (2026-09-12). CLI payload fields `sync_source`/`scenario` are telemetry-only (stored on `sync_runs`, never `sales_orders`) — safe against the current prod schema (verified in `workers/api/sales.ts` INSERT).
+2. ~~Apply migrations 043 + 044~~ ✅ DONE — applied to production D1, verified 2026-09-12 (alias seed present; events table empty).
+3. Deploy the current `master` bundle so the newer `/api/v1/mapping/*` routes and dashboard work reach production — user-triggered.
+4. Decide Make.com Sales Sync activation timing (per decision: during/after Phase 08). Confirmed still OFF: last `sync_runs` entry is 2026-09-07.
+5. ~~Re-verify remote D1 access~~ ✅ DONE — `wrangler login` re-authenticated 2026-09-12; read-only prod verification passed.
 
 ## 7. Verification log
 
 - 2026-09-11: Notion read-only verification + ID 1038 dry-run (details §2–§3). Prod D1 product catalog + absence of mapping tables verified read-only.
-- 2026-09-12: Repo re-verification — v3 CLI flags/eligibility/signature write-back confirmed in `scripts/notion-product-mapper.mjs`; all 7 mapping routes confirmed in `workers/api/sales.ts` (`catalog` GET, `resolve` POST, `aliases` POST/GET, `events` POST/GET) plus health/upsert/read; migrations `042_marketing_analysis_layer.sql`, `043_product_mapping_aliases.sql`, `044_product_mapping_events.sql` present in `migrations/`. Prod D1 re-check blocked by wrangler auth error 7403 (see §6.5), so prod facts above stand as of 2026-09-11.
+- 2026-09-12 (repo): v3 CLI flags/eligibility/signature write-back confirmed in `scripts/notion-product-mapper.mjs`; all 7 mapping routes confirmed in `workers/api/sales.ts` (`catalog` GET, `resolve` POST, `aliases` POST/GET, `events` POST/GET) plus health/upsert/read; migrations `042_marketing_analysis_layer.sql`, `043_product_mapping_aliases.sql`, `044_product_mapping_events.sql` present in `migrations/`.
+- 2026-09-12 (prod, after `wrangler login` re-auth + migration apply): read-only verification passed — `product_mapping_aliases` live with 1 seed row (1038→[20,26], verified=1); `product_mapping_events` live, 0 rows; all 11 analysis views (042) present; `sales_orders` 8 / `sales_order_items` 10 / `sync_runs` 12; channels: shopee 5 (฿11,622), facebook 1 (฿7,960), tiktok 1 (฿1,290), line 1 (฿100 — smoke test `TEST-MAKE-001`); last `sync_runs` entry 2026-09-07 → Make.com Sales Sync confirmed OFF; order `260804DW6XA3NA` (Notion ID 1038) verified NOT yet in prod → live sync still pending. Note: 6 of 8 existing orders carry `mapping_status = NULL` (pre-Mapped-era Make syncs) — they can be re-upserted with status during Phase 08 or via Make.com mapping confirmation.

@@ -26,6 +26,8 @@ Populate enough historical unified sales data to support meaningful product/chan
 
 - [x] Phase 7 mapping workflow sufficiently reliable. *(v3 confirmed-mapping sync built + dry-run verified; live single-record test pending approval)*
 - [x] Sales API idempotency already verified.
+- [x] Production D1 ready: migrations 043/044 applied (alias seed 1038→[20,26] present; events table empty) + all 11 analysis views live. *(read-only verified 2026-09-12)*
+- [x] Order `260804DW6XA3NA` (Notion ID 1038) confirmed not yet in prod — clean target for the first live sync. *(verified 2026-09-12)*
 
 ## Task Checklist
 
