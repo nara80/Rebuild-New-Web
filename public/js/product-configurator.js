@@ -695,7 +695,7 @@
     if (!sizes) return;
 
     var regionLabels = { us: '\uD83C\uDDFA\uD83C\uDDF8 US / CA', uk: '\uD83C\uDDEC\uD83C\uDDE7 UK', eu: '\uD83C\uDDEA\uD83C\uDDFA EU', th: '\uD83C\uDDF9\uD83C\uDDED TH', au: '\uD83C\uDDE6\uD83C\uDDFA AU', my: '\uD83C\uDDF2\uD83C\uDDFE MY / SG', jp: '\uD83C\uDDEF\uD83C\uDDF5 JP', in: '\uD83C\uDDEE\uD83C\uDDF3 IN' };
-    sizeSelect.innerHTML = '<option value="">\u2014 Choose size \u2014</option>';
+    sizeSelect.innerHTML = '<option value="">\u2014 ' + t('Choose size', 'เลือกขนาด') + ' \u2014</option>';
 
     for (var region in sizes) {
       if (!sizes.hasOwnProperty(region)) continue;

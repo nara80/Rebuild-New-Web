@@ -235,8 +235,18 @@ const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
   [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">ความกว้าง (W)</label>'],
   [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">ความยาว (L)</label>'],
   [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">ความลึก (D)</label>'],
-  // Price label
+  // Price labels
   [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">ราคาประมาณการ</span>'],
+  [/<span class="price-label">Price<\/span>/g, '<span class="price-label">ราคา</span>'],
+  [/<span class="price-sub" id="price-top-sub">Starting from<\/span>/g, '<span class="price-sub" id="price-top-sub">ราคาเริ่มต้น</span>'],
+  // Color picker label (preserves fabric name in English — fabric names stay EN)
+  [/<div class="panel-label">Color — /g, '<div class="panel-label">สี — '],
+  // Payment badges
+  [/<\/svg> Secure checkout<\/span>/g, '</svg> ชำระเงินอย่างปลอดภัย</span>'],
+  // Trust badges (OEKO label fallback) — Premium Quality (no space and with space)
+  [/<\/svg>Premium Quality<\/div>/g, '</svg>คุณภาพระดับพรีเมียม</div>'],
+  [/<\/svg> Premium Quality<\/div>/g, '</svg> คุณภาพระดับพรีเมียม</div>'],
+  [/<\/svg>Premium Quality<\/span>/g, '</svg>คุณภาพระดับพรีเมียม</span>'],
   // Trust badges (mobile, customizable template)
   [/<\/svg>Custom Fit<\/div>/g, '</svg>ตัดเย็บตามขนาด</div>'],
   [/<\/svg>Human Safe<\/div>/g, '</svg>ปลอดภัยต่อการใช้งาน</div>'],

@@ -1608,8 +1608,18 @@ var TH_STATIC_HTML_REPLACEMENTS = [
   [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">\u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W)</label>'],
   [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L)</label>'],
   [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E25\u0E36\u0E01 (D)</label>'],
-  // Price label
+  // Price labels
   [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13\u0E01\u0E32\u0E23</span>'],
+  [/<span class="price-label">Price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32</span>'],
+  [/<span class="price-sub" id="price-top-sub">Starting from<\/span>/g, '<span class="price-sub" id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>'],
+  // Color picker label (preserves fabric name in English — fabric names stay EN)
+  [/<div class="panel-label">Color — /g, '<div class="panel-label">\u0E2A\u0E35 \u2014 '],
+  // Payment badges
+  [/<\/svg> Secure checkout<\/span>/g, "</svg> \u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22</span>"],
+  // Trust badges (OEKO label fallback) — Premium Quality (no space and with space)
+  [/<\/svg>Premium Quality<\/div>/g, "</svg>\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</div>"],
+  [/<\/svg> Premium Quality<\/div>/g, "</svg> \u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</div>"],
+  [/<\/svg>Premium Quality<\/span>/g, "</svg>\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>"],
   // Trust badges (mobile, customizable template)
   [/<\/svg>Custom Fit<\/div>/g, "</svg>\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>"],
   [/<\/svg>Human Safe<\/div>/g, "</svg>\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>"],
@@ -13896,7 +13906,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-0EAMo8/functionsRoutes-0.061063553290405914.mjs
+// ../.wrangler/tmp/pages-a3wx9r/functionsRoutes-0.08504653659410877.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
