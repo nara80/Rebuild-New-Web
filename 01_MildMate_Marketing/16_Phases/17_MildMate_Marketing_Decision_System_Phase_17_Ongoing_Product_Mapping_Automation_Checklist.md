@@ -37,7 +37,7 @@ Turn the Phase 07 v3 confirmed-mapping sync CLI into a safe, scheduled, incremen
 
 - [x] Phase 07 v3 sync CLI built; single-record dry-run verified (ID 1038, 2026-09-11).
 - [x] Mechanism decided: dedicated Cloudflare Worker + Cron Trigger (Pages cannot cron; repo has a `cron-worker/` precedent).
-- [ ] Phase 07 live single-record sync (ID 1038) + idempotent re-run verified.
+- [x] Phase 07 live single-record sync (ID 1038) + idempotent re-run verified. *(2026-09-12: prod upsert `sales_orders` id 9 + signature write-back; re-run returned `skipped_unchanged` with zero writes)*
 - [ ] Phase 08 historical backfill executed in controlled batches and reconciled.
 - [x] Migrations 043 + 044 applied to production D1. *(verified 2026-09-12: alias seed 1038→[20,26] present; events table live, 0 rows; preview optional)*
 - [ ] Dedicated Notion credential confirmed for read + signature write-back (not the read-only historical token).
