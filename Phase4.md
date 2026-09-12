@@ -1,11 +1,15 @@
 ﻿# Phase 4 — Homepage + Product Pages
-**Status (2026-09-03 reconciliation): ✅ COMPLETE — Homepage, product system, category/SEO/niche landing pages, blog, size guides, and Workers API are all built and verified. Catalog now reflects 30 core products plus runtime extension support (`weighted-duvet-cover`), with generated EN product pages aligned to current template output. Language-driven currency (EN → USD, TH → THB), centralized country master list, and D1-backed dynamic product reviews are active. See Completion Summary below for historical build details.**
+**Status (2026-09-12 reconciliation): ✅ COMPLETE — Homepage, product system, category/SEO/niche landing pages, blog, size guides, and Workers API are all built and verified. Catalog now reflects 30 core products plus runtime extension support (`weighted-duvet-cover`), with generated EN product pages aligned to current template output. Language-driven currency (EN → USD, TH → THB), centralized country master list, and D1-backed dynamic product reviews are active. **TH product pages (2026-09-12):** full bilingual parity achieved via Pages Function server-side patches (`TH_BREADCRUMB_CATEGORY_LABELS`, `TH_MARINE_SHAPE_LABELS`, `TH_STATIC_HTML_REPLACEMENTS`, `applyThaiProductUiLocalization`) + JS-side `isThaiPage()/t()` helper. EN pages verified unchanged. See "TH Product Pages Localization (2026-09-12)" section below for the full data model.**
 
-**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10, 2026-06-12) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (Deep Pocket + Pet Owner), Thai marketing audit copy applied to TH homepage/about/contact, Thai nav routing fix (middleware order + client-side nav.js safeguard), project documentation reconciliation (AGENTS.md, Framework.md, Phase4–6). This document reflects the final verified state.**
+**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10, 2026-06-12, 2026-08-21, 2026-09-12) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (4 → 6 cards including Boarding Dorm + RV & Truck), Thai marketing audit copy applied to TH homepage/about/contact, Thai nav routing fix (middleware order + client-side nav.js safeguard), project documentation reconciliation (AGENTS.md, Framework.md, Phase4–6), weighted-duvet-cover runtime extension, TH product pages bilingual parity (Phase 4 TH FAQ + Phase A breadcrumb chrome + Phase B JS-injected strings + Phase C customer-facing static HTML strings + Round 3 Loading reviews closing-tag fix). This document reflects the final verified state.
 
 > **Reconciliation note (2026-06-10):** Migrations now extend through 026: 024_reviews (reviews table), 024_blog_categories_json (blog categories), 025_reviews_review_date (review_date index), 026_product_type_niches (product_type + niches columns on products). Homepage "Choose Your Application" cards changed from (Marine & Yacht, Family & Co-Sleep, Specialized Protection, Duvet Covers) to (Marine & Yacht, Family & Co-Sleep, Deep Pocket, Pet Owner). Product reviews are now D1-backed (GET /api/products/:slug/reviews with 4-tier sort, LIMIT 10) instead of static HTML.
 >
 > **Reconciliation note (2026-06-12):** Thai marketing audits applied to TH homepage (hero, trust bar, product section, fabric table, most popular), TH contact (hero, form, channels, marketplace, B2B, trust bar), TH about (hero, story, timeline, fabric cards, video, shipping). Thai nav routing fixed — middleware rewrite order corrected to run after header/footer injection; client-side nav.js `normalizeThaiNavLinks()` added as bidirectional safeguard for 12+ bilingual routes. All three Phase docs reconciled to reflect completed Thai localization.
+>
+> **Reconciliation note (2026-08-21):** Homepage taxonomy reconciled to 6 niche cards (Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner / Boarding Dorm / RV & Truck) and 6 product-type cards (Sheets / Duvet Covers / Pillowcases / Protection / Accessories / All Products). Taxonomy split: `product_type` on `products`; specialization in `product_niches`; merchandising visibility in `product_collections`; legacy `products.niches` retained as fallback. Catalog expanded to 30 core products + `weighted-duvet-cover` runtime extension via CMS.
+>
+> **Reconciliation note (2026-09-12):** TH product pages now have full bilingual parity. `functions/product/[[path]].ts` applies TH_BREADCRUMB_CATEGORY_LABELS (Phase A), TH_MARINE_SHAPE_LABELS + JS-side `isThaiPage()/t()` helper (Phase B), and TH_STATIC_HTML_REPLACEMENTS + `applyThaiProductUiLocalization` (Phase C) on every `/th/product/{slug}/` request. Loading reviews closing-tag fix (Phase C Round 3) prevents `</div>` corruption. TH static files at `/th/product/*/index.html` are dead code (never served) — Pages Function loads EN static and patches fields. EN pages verified unchanged. See "TH Product Pages Localization (2026-09-12)" section for the full data model. Mirrors: AGENTS.md / Framework.md already updated.
 **Goal:** Build all real content pages — the homepage with every section filled, the product listing grid, individual product detail pages, and the size guide SEO hub pages.
 
 **End Result:** A fully functional shopping experience. Visitors can land on the homepage, browse products by category, enter their mattress dimensions, and see a live price update — all before Phase 5 adds the actual payment step.
@@ -405,22 +409,26 @@ Blog posts are static HTML files written manually. Droid builds the **templates 
 
 ---
 
-## Homepage Sections (verified 2026-05-28)
+## Homepage Sections (verified 2026-09-12)
 
 The homepage has **no configurator section** — the live price calculator is on individual product detail pages (`/product/[slug]/`), not on the homepage.
 
 ```
 1. HERO            — Full-bleed CI blue gradient + "Bedding Made Easy Again / Custom Sizes, Perfect Fits." + "Shop All Products" CTA
 2. TRUST BAR       — 4 icons: Precision Fit / Global Delivery / Top-Rated Etsy / Sensitive Skin Friendly
-3. SHOP BY PRODUCT — 5 cards: Sheets / Duvet Covers / Pillowcases / Protection / Accessories → `/[type]/`
-4. CHOOSE YOUR APPLICATION — 4 niche cards: Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner → `/[niche]/`
+3. SHOP BY PRODUCT — 6 cards: Sheets / Duvet Covers / Pillowcases / Protection / Accessories / All Products → `/[type]/` (or `/products/`)
+4. CHOOSE YOUR APPLICATION — 6 niche cards: Marine & Yacht / Family & Co-Sleep / Deep Pocket / Pet Owner / Boarding Dorm / RV & Truck → `/[niche]/`
 5. MATERIAL INTELLIGENCE — Side-by-side comparison grid (desktop) + accordion (mobile) + "Explore Full Fabric Details" CTA → `/fabric/`
 6. MOST POPULAR    — Horizontal-scroll carousel: 5 product cards with "View Options" button
 7. WHAT CUSTOMERS SAY — D1-backed reviews carousel (20 cards on homepage, loaded from D1 via /api/products?reviews=true), product page reviews (10 cards via GET /api/products/:slug/reviews with 4-tier sort). Conditional photo display (1:1 square), "Show more" toggle (shown when text > 280 chars). Summary: "1,000+ verified buyers"
 8. GET 15% OFF YOUR FIRST ORDER — Blue gradient email signup with AJAX
 ```
 
-**Niche cards (Choose Your Application):** 4 cards — `/marine/`, `/family/`, `/deep-pocket/`, `/pets/`. Not 6. Boarding Dorm and RV Truck accessible via `/protection/` and `/sheets/` respectively.
+**Niche cards (Choose Your Application):** 6 cards — `/marine/`, `/family/`, `/deep-pocket/`, `/pets/`, `/boarding-dorm/`, `/rv-truck/`. Reconciled 2026-08-21 (was previously 4 cards; Boarding Dorm and RV & Truck added for full niche coverage).
+
+**Product-type cards (Shop by Product):** 6 cards — `/sheets/`, `/duvet-covers/`, `/pillowcases/`, `/protection/`, `/accessories/`, `/products/` (All Products). Reconciled 2026-08-21 (added "All Products" 6th card).
+
+**TH homepage parity:** All 8 sections have full Thai localization (`/th/`); Thai marketing audit copy applied for hero, trust bar, product section, fabric table, and most popular.
 
 ---
 
@@ -861,8 +869,9 @@ For current-state operations and reconciliation details, use AGENTS.md / Framewo
 
 | Item | Status | Notes |
 |---|---|---|
-| Homepage EN (`/`) | ✅ | 8 sections: Hero, Trust, Categories, Top Products, Configurator, Fabric Tabs, Reviews, Email Signup |
+| Homepage EN (`/`) | ✅ | 8 sections: Hero, Trust, Categories (6 product-type cards), Top Products, Configurator, Fabric Tabs, Reviews, Email Signup |
 | Homepage TH (`/th/`) | ✅ | Full Thai translation of all 8 sections |
+| TH product pages (`/th/product/{slug}/`) | ✅ Built (2026-09-12) | Full bilingual parity: Pages Function patches (`TH_BREADCRUMB_CATEGORY_LABELS` + `TH_MARINE_SHAPE_LABELS` + `TH_STATIC_HTML_REPLACEMENTS` + `applyThaiProductUiLocalization`) + JS-side `isThaiPage()/t()` helper in `public/js/product-configurator.js`. Hand-curated D1 `description_th` / `faq_th` preserved where present; generic + marine TH FAQ blocks serve as fallback. `weighted-duvet-cover` slug gets weighted-blanket-specific Thai copy. TH static files at `/th/product/*/index.html` are dead code (never served). |
 | About Us (`/about/`) | ✅ | Engineering Authority 5-section rebuild: Technical Hero + Blueprint Grid, Engineering Genesis (2019 Mattress Gap Paradox), Authority Timeline (2019/2022/2024/2026), Material Standards (PremaCotton/BreezePlus/CloudSoft/EcoLuxe with spec tags), YouTube video, Global Reach 3-column city grid. 8 real images deployed. |
 | Contact (`/contact/`) | ✅ | Form + LINE/WhatsApp/Facebook + marketplace icons |
 | Fabric Collections (`/fabric/`) | ✅ | 4-tab showcase + comparison table, content from `01_Fabric_Intelligence_Guide_V2.md` |
@@ -929,6 +938,104 @@ For current-state operations and reconciliation details, use AGENTS.md / Framewo
 ### Next Step
 Move to **Phase 5 — Checkout + Stripe Payments** when ready.
 
+---
+
+## TH Product Pages Localization (2026-09-12)
+
+Reconciled from: Phase 4 TH FAQ + Phase A (breadcrumb chrome) + Phase B (JS-injected strings + marine shape selector) + Phase C (customer-facing static HTML strings). All work landed on `master` and is live at `https://<preview>.mildmate-new.pages.dev/th/product/{slug}/`.
+
+### Architectural rule (critical, preserves future work)
+- **TH static files at `/th/product/*/index.html` are dead code.** The Pages Function at `functions/product/[[path]].ts` always loads `/product/{slug}/index.html` (EN) via the assets binding and patches fields. All TH product-page localization must happen server-side in the Pages Function OR client-side in `public/js/product-configurator.js`.
+- **Do not** add TH static HTML to product pages and rely on `_redirects` to serve them — the function intercepts every `/th/product/{slug}/` request and serves the EN template.
+- The `TH_CHROME_REPLACEMENTS` table in `scripts/build-products.js` does rebuild `/th/product/*/index.html`, but those files are never served. Treat them as dead code unless the routing model changes.
+
+### TH localization layers (in priority order)
+
+#### 1. Pages Function server-side patches (`functions/product/[[path]].ts`)
+All patches run only when `isTh === true` (i.e., request starts with `/th/`).
+
+| Constant / Function | Purpose |
+|---|---|
+| `TH_GENERIC_FAQ_INNER` | Generic 4-question Thai FAQ block used as fallback for products without hand-curated `faq_th` |
+| `TH_MARINE_FAQ_INNER` | Marine-specific 4-question Thai FAQ block (CloudSoft care + V-Berth measurement) |
+| `MARINE_FAQ_SLUGS` | Set: `marine-fitted-sheet`, `marine-top-sheet`, `marine-mattress-protector` — selects marine FAQ fallback |
+| `TH_BREADCRUMB_CATEGORY_LABELS` | Map of category URL → Thai label (`/sheets/` → ผ้าปูที่นอน, `/duvet-covers/` → ปลอกผ้าห่ม, `/pillowcases/` → ปลอกหมอน, `/protection/` → ผลิตภัณฑ์ปกป้อง, `/accessories/` → อุปกรณ์เสริม). Patch swaps category link text + `Home` → `หน้าแรก` inside `<nav class="product-breadcrumb">`. |
+| `TH_MARINE_SHAPE_LABELS` | 3-entry regex table for `templates/product-marine.html` shape selector strings |
+| `TH_STATIC_HTML_REPLACEMENTS` | 26-entry regex table for static HTML customer-facing strings (each anchored on specific HTML context to avoid false matches) |
+| `applyThaiProductUiLocalization(html, tagline, slug)` | Function-level regex substitutions for template structures regex tables can't anchor reliably: config tabs (Standard Sizes + Custom Size), price sub-label, size-panel labels, dimension prompts, size-hint link rewrite (`/sizeguide/` → `/th/sizeguide/`), diagram caption, Add to Cart (×2 sites: `#add-to-cart` + `#mobile-add-to-cart`), info tabs (Description/FAQ), trust-badge variants, product tagline |
+| Weighted-blanket specialization | `applyThaiProductUiLocalization` detects `slug === 'weighted-duvet-cover'` and substitutes weighted-blanket-specific copy: size label = `เลือกขนาดผ้าห่มถ่วงน้ำหนัก`, dimension prompt = `กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ`, hint text = `ดูวิธีวัดขนาดผ้าห่ม`, diagram caption = `วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน` |
+| `applyLocalizedFaqFromD1(html, faqText)` | Uses hand-curated D1 `faq_th` if present; falls back to language-specific block (generic or marine). EN pages always use D1 `faq_en`. |
+| `applyLocalizedDescriptionFromD1(html, desc, isTh)` | Uses hand-curated D1 `description_th`/`description_en` (with `card_benefit_*` fallback chain) |
+
+#### 2. Client-side patches (`public/js/product-configurator.js`)
+- `isThaiPage()` — reads `<html lang>` and `window.location.pathname`, returns true when either signals TH
+- `t(en, th)` — returns Thai when `isThaiPage()`, else English
+- Wrapped strings: Add to Cart (3 sites), Custom Size tab, Custom Quote (priceDisplay + popup title), Request Custom Quote, Head Width (HW), Foot Width (FW), "— Choose size —" placeholder, Standard Sizes + Custom Size tab labels (startup block)
+- Note: `product-configurator.js` already had `isThaiPage()` helper for reviews-carousel translations (Read full review / Show less / No reviews yet) — Phase B reused the same pattern
+
+### DOM-verified final state (TH `/product/standard-fitted-sheet/`)
+| Element | Thai text | Source |
+|---|---|---|
+| Breadcrumb | `หน้าแรก › ผ้าปูที่นอน › ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน` | TH_BREADCRUMB_CATEGORY_LABELS + D1 `title_th` |
+| H1 | `ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน` | D1 `title_th` |
+| Configurator tabs | `ขนาดมาตรฐาน`, `ขนาดสั่งทำ` | `applyThaiProductUiLocalization` |
+| Fabric label | `เนื้อผ้า` | TH_STATIC_HTML_REPLACEMENTS |
+| Color labels | `สี — BreezePlus`, `สี — CloudSoft`, `สี — PremaCotton`, `สี — EcoLuxe` | TH_STATIC_HTML_REPLACEMENTS |
+| Size label | `เลือกขนาดที่นอน` | `applyThaiProductUiLocalization` |
+| Size selector placeholder | `— เลือกขนาด —` | `t('Choose size', 'เลือกขนาด')` |
+| Dimension labels | `ความกว้าง (W)`, `ความยาว (L)`, `ความลึก (D)` | TH_STATIC_HTML_REPLACEMENTS |
+| Prices | `ราคา`, `ราคาประมาณการ`, `ราคาเริ่มต้น` | TH_STATIC_HTML_REPLACEMENTS |
+| Add to Cart | `เพิ่มลงตะกร้า` | `applyThaiProductUiLocalization` (×2) + JS `t()` (×1) |
+| Trust badges | `คุณภาพระดับพรีเมียม`, `ตัดเย็บตามขนาด`, `ปลอดภัยต่อการใช้งาน`, `เหมาะกับบ้านที่มีสัตว์เลี้ยง`, `ร้าน Etsy ที่ได้รับคะแนนสูง`, `จัดส่งจากประเทศไทย` | TH_STATIC_HTML_REPLACEMENTS |
+| Customer Reviews | `รีวิวจากลูกค้า` | TH_STATIC_HTML_REPLACEMENTS |
+| Loading reviews… | `กำลังโหลดรีวิว...</div>` | TH_STATIC_HTML_REPLACEMENTS (atomic — Phase C Round 3 fix) |
+| You might also like | `สินค้าที่คุณอาจสนใจ` | TH_STATIC_HTML_REPLACEMENTS |
+| Tags | `หมวดหมู่:` | TH_STATIC_HTML_REPLACEMENTS |
+| Unit warning | `หน่วยเริ่มต้น: ซม. ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น นิ้ว ก่อน` | TH_STATIC_HTML_REPLACEMENTS |
+| FAQ | D1 `faq_th` (hand-curated) or generic/marine TH fallback block | Pages Function |
+| Description | D1 `description_th` (hand-curated) or `card_benefit_th`/`title_th` fallback | Pages Function |
+| Secure checkout | `ชำระเงินอย่างปลอดภัย` | TH_STATIC_HTML_REPLACEMENTS |
+| Marine shape selector | `เลือกรูปทรงที่นอนเรือของคุณ`, `— เลือกรูปทรง —`, `เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด` | TH_MARINE_SHAPE_LABELS |
+
+### Intentionally preserved EN content (per "no brand names" / "no user-entered content" rules)
+- Fabric names: `CloudSoft`, `BreezePlus`, `PremaCotton`, `EcoLuxe` (kept inside Color labels too: `สี — BreezePlus`)
+- Numeric dimensions (W/L/D, HW/FW), currency (USD/THB), star ratings, phone numbers
+- `Visa / MC` payment badge (brand)
+- D1 hand-curated English fields not yet translated
+
+### EN pages verified unchanged
+Browser read of `/en/product/standard-fitted-sheet/` showed full EN chrome intact: nav (Shop/Fabrics/Size Guide/Sign In), `Language: EN`, breadcrumb with EN copy, "Custom-Fit Bedding for Any Size, Shape, or Space" hero, "Top-Rated Etsy Boutique" badge, EN Add to Cart + tabs.
+
+### Wrangler Pages Functions bundle workflow
+The project deploys with `--no-bundle`, so editing `functions/**/*.ts` requires a manual bundle rebuild:
+
+1. Edit `functions/product/[[path]].ts` (or any function file).
+2. Build: `npx wrangler pages functions build --outfile 'public\_worker.js'`
+3. Extract the actual JS from wrangler's formdata-multipart output. The bundled `extract-worker.ps1` at repo root does this — skip `Content-Type: application/javascript+module` marker + empty line, cut at next `------formdata-undici-` boundary, write back via `Out-File -Encoding UTF8 -NoNewline`.
+4. Deploy: `npx wrangler pages deploy ./public --project-name=mildmate-new --commit-dirty=true --branch=master --no-bundle`
+   - **Without `--no-bundle`, wrangler re-runs the build and overwrites the extracted `_worker.js` with formdata.**
+
+Re-run steps 1–4 after every `functions/**/*.ts` change — the bundle is the runtime artifact, not the source files.
+
+### Files added/modified in this thread
+- `functions/product/[[path]].ts` — added TH_GENERIC_FAQ_INNER, TH_MARINE_FAQ_INNER, MARINE_FAQ_SLUGS, TH_BREADCRUMB_CATEGORY_LABELS, TH_MARINE_SHAPE_LABELS, TH_STATIC_HTML_REPLACEMENTS, applyThaiProductUiLocalization, weighted-duvet-cover specialization
+- `public/js/product-configurator.js` — added isThaiPage()/t() helper, wrapped 9 EN strings, added startup tab-translation block
+- `public/_worker.js` — bundle rebuilt after each function edit
+- `scripts/build-products.js` — added 5 breadcrumb category entries to TH_CHROME_REPLACEMENTS (effectively dead code per architectural rule above; kept for parity)
+- `extract-worker.ps1` — new PowerShell extraction helper for formdata → valid JS
+
+### Phase commits (referenced for audit)
+- `60dcfbc` — Phase A (breadcrumb category labels in build-products.js — dead code)
+- `96a558e` — Phase A extension (Pages Function breadcrumb category patch + Home → หน้าแรก)
+- `5d96d0f` — Phase B (isThaiPage()/t() in product-configurator.js + TH_MARINE_SHAPE_LABELS)
+- `8642bdf` — Phase C Round 1 (TH_STATIC_HTML_REPLACEMENTS initial 17 entries)
+- `42fc1eb` — Phase C Round 2 (Color/Price/Starting from/Secure checkout/Premium Quality/Choose size)
+- `2ba5c5e` — Phase C Round 3 (Loading reviews closing-tag fix)
+
+### Open items
+- **3 uncommitted marine TH product files** (`/th/product/marine-fitted-sheet/`, `marine-top-sheet/`, `marine-mattress-protector/`) — Droid-Shield false positive on Turnstile site key (same key ships in 3 EN marine pages for months, no production risk). Manual push needed outside Droid.
+- Future weighted-blanket UI copy changes must update both the regular TH strings AND the `weighted-duvet-cover` specialization branch.
+
 ### Additional Updates (2026-05-14)
 
 **Header consistency (blue-gradient CI Blue hero):**
@@ -987,7 +1094,7 @@ Move to **Phase 5 — Checkout + Stripe Payments** when ready.
 
 ---
 
-### Thai Version — Missing Pages (2026-05-15)
+### Thai Version — Missing Pages (2026-05-15, reconciled 2026-09-12)
 
 After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Priority below:
 
@@ -1011,25 +1118,28 @@ After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Prior
 | Duvet Covers | `/duvet-covers/` | `/th/duvet-covers/` | ✅ Built |
 | Pillowcases | `/pillowcases/` | `/th/pillowcases/` | ✅ Built |
 | Protection | `/protection/` | `/th/protection/` | ✅ Built |
+| Accessories | `/accessories/` | `/th/accessories/` | ✅ Built |
 | Marine & Yacht | `/marine/` | `/th/marine/` | ✅ Built |
 | Family & Co-Sleep | `/family/` | `/th/family/` | ✅ Built |
 | Pet Owner | `/pets/` | `/th/pets/` | ✅ Built |
-| Easy-Change Duvet | `/duvet/` | `/th/duvet/` | ✅ Built |
-| Protection | `/protection/` | `/th/protection/` | ✅ Built |
+| Deep Pocket | `/deep-pocket/` | `/th/deep-pocket/` | ✅ Built |
+| Boarding Dorm | `/boarding-dorm/` | `/th/boarding-dorm/` | ✅ Built |
 | RV & Truck Cab | `/rv-truck/` | `/th/rv-truck/` | ✅ Built |
+| Easy-Change Duvet | `/duvet/` | `/th/duvet/` | ✅ Built |
+| Product detail pages (30 core + 1 runtime extension) | `/product/{slug}/` | `/th/product/{slug}/` | ✅ Built (2026-09-12) — see TH Product Pages Localization section below |
+| Blog Index | `/blogs/` | `/th/blogs/` | ✅ Built — D1-backed SSR listing + pagination + admin CMS at `/admin/blog.html` |
 
-**Still missing — Thai versions not built:**
-| Page | EN URL | Priority | Notes |
+**Still missing — Thai versions not built (reconciled 2026-09-12):**
+| Page | EN URL | Priority | Status |
 |---|---|---|---|
 | ~~Bed Sheet Size Guide~~ | ~~`/bed-sheets-size/`~~ | — | **Redirects to `/sizeguide/`** (301) — no separate TH page needed |
 | ~~Mattress Size (EN)~~ | ~~`/mattress-size/`~~ | — | **Redirects to `/sizeguide/`** (301) — no separate TH page needed |
 | ~~Thai Mattress Sizes~~ | ~~`/mattress-size-th/`~~ | — | **Redirects to `/sizeguide/th/`** (301) — no separate TH page needed |
 | ~~Pillow Protectors~~ | ~~`/pillow-protectors/`~~ | — | **Redirects to `/mattress-protectors/`** (301) — no separate TH page needed |
-| Unsubscribe | `/unsubscribe/` | Low | User-specific; TH policy links to EN version ✅ |
+| Unsubscribe | `/unsubscribe/` | Low | User-specific; TH policy links to EN version (acceptable) |
 | My Account | `/account/` | Low | Phase 5 gated; redirect logged-out users |
 | Checkout | `/checkout/` | Low | Phase 5 payment flow; not SEO-critical |
 | Order Confirmed | `/order-confirmed/` | Low | Phase 5 post-payment page |
-| ~~Blog Index~~ | ~~`/blogs/`~~ | — | **Blog built** — D1-backed SSR listing + pagination + admin CMS at `/admin/blog.html` |
 
 **WordPress redirects — no separate TH pages needed:**
 The `_redirects` file handles ALL old WordPress URLs with 301 redirects to the new bilingual structure:
