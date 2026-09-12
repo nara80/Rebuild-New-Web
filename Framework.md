@@ -102,6 +102,25 @@ Scope clarification:
 | Order Tracking | Inline in `/account/` Orders panel | ✅ Built — Option A (carrier code + tracking number, auto-generated carrier URL, no external API needed) |
 | All 258 WP URLs | various | Phase 2 redirect file — deployed (2026-06-14) |
 
+### Product Pages (TH localization — 2026-09-12)
+| Page | URL pattern | Status | Localization source |
+|---|---|---|---|
+| Product pages EN | `/product/{slug}/` | ✅ Built | Static HTML + D1 image overrides + reviews carousel |
+| Product pages TH | `/th/product/{slug}/` | ✅ Built (2026-09-12) | Pages Function patches EN static HTML → TH fields. TH static files at `/th/product/*/index.html` are dead code (never served). |
+
+**TH localization layers** (in priority order):
+1. **D1 fields** — `title_th`, `description_th`, `faq_th` injected by `applyLocalizedFaqFromD1` / `applyLocalizedDescriptionFromD1`
+2. **Language-specific FAQ fallback** — `TH_GENERIC_FAQ_INNER` (generic 4-question) or `TH_MARINE_FAQ_INNER` (marine 4-question), selected by `MARINE_FAQ_SLUGS.has(slug)`
+3. **TH_BREADCRUMB_CATEGORY_LABELS** — breadcrumb category link text + "Home" → "หน้าแรก"
+4. **TH_MARINE_SHAPE_LABELS** — V-Berth shape selector strings (marine template only)
+5. **TH_STATIC_HTML_REPLACEMENTS** — 26-entry regex table for static HTML customer-facing strings (each anchored to specific HTML context)
+6. **`applyThaiProductUiLocalization`** — template-level replacements that regex tables can't anchor reliably: config tabs, price sub-labels, size-panel labels, dimension prompts, size-hint link rewrites (`/sizeguide/` → `/th/sizeguide/`), diagram caption, Add to Cart (×2), info tabs, trust-badge variants, product tagline. `weighted-duvet-cover` slug gets weighted-blanket-specific copy.
+7. **JS-side `isThaiPage()/t()` helper** in `public/js/product-configurator.js` for JS-rendered strings: Add to Cart (×3 sites including standard configurator), Custom Size tab, Custom Quote (priceDisplay + popup title), Request Custom Quote, Head Width (HW), Foot Width (FW), "— Choose size —" placeholder, Standard Sizes + Custom Size tab labels (startup block)
+
+**Intentionally preserved EN content on TH pages** (per "no brand names / no user-entered content" rules): fabric names (CloudSoft, BreezePlus, PremaCotton, EcoLuxe), numeric dimensions (W/L/D, HW/FW), currency (USD/THB), star ratings, phone numbers, `Visa / MC` payment badge, D1 hand-curated English fields not yet translated.
+
+**Workflow rule:** TH static files at `/th/product/*/index.html` are dead code — Pages Function always loads EN static and patches fields. All future TH product-page localization must be Pages Function patches or JS-side `t()` helpers.
+
 ### Blog Pages (D1-backed, SSR via Pages Function)
 
 **Routing:**
@@ -1113,7 +1132,7 @@ CREATE TABLE blog_posts (
 | **1** | Foundation | `AGENTS.md`, `wrangler.toml`, D1 schema (incl. V-Berth fields), folder scaffold | ✅ Complete |
 | **2** | SEO URL Preservation | Unified `_redirects` covering all WordPress URLs: ~81 product redirects → current canonical product set (30 core products + weighted-duvet-cover runtime extension), ~90 page redirects → existing pages, Thai WP URLs → `/th/` pages. No HTML shells created.   ✅ Deployed — 271 rules (258 WP URLs + 13 navigation) via _redirects + functions/product/ middleware (2026-06-14) |
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
-| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` on `products`; specialization in `product_niches`; niche-page visibility in `product_collections`; legacy `products.niches` retained for fallback compatibility. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-21:** marketing decision exports refreshed as Products/Niches/Collections tabs. | ✅ Complete |
+| **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` on `products`; specialization in `product_niches`; niche-page visibility in `product_collections`; legacy `products.niches` retained for fallback compatibility. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-21:** marketing decision exports refreshed as Products/Niches/Collections tabs. **TH product pages (2026-09-12):** Full bilingual parity achieved via `functions/product/[[path]].ts` server-side patches (TH_BREADCRUMB_CATEGORY_LABELS, TH_MARINE_SHAPE_LABELS, TH_STATIC_HTML_REPLACEMENTS, `applyThaiProductUiLocalization`) + `public/js/product-configurator.js` `isThaiPage()/t()` helper for JS-rendered strings. EN pages verified unchanged. See "TH Product Pages Localization (2026-09-12)" section for the full data model. | ✅ Complete |
 | **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; optional checkout message type + note saved to orders/team email; checkout success/cancel URL now derived from request origin to keep preview sessions on preview domain; runtime worker artifacts reconciled with source) |
 | **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. Cron trigger remains configured via Cloudflare Dashboard. | ✅ Built |
 | **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` routes are retired with redirect compatibility in place. Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + sales order upsert/read) in `workers/api/sales.ts`, secured by `SALES_SYNC_API_TOKEN`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com + norrawich.rat@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` updated in Production + Preview ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Cloudflare Access status:** Zero Trust allow policies are configured for `/admin/` and `/super-admin/` (defense-in-depth active). | ✅ Built |
@@ -1121,6 +1140,96 @@ CREATE TABLE blog_posts (
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ❌ Out of Scope |
 
 > **Note:** Phase 2 (SEO URLs) is already deployed (271 rules via `_redirects` + product middleware, 2026-06-14). Phase 5 (Checkout/Stripe/Auth) is ✅ Built and now reconciled for preview-safe request-origin redirects. Phase 6 (Abandoned Cart) is ✅ Built with cron + manual due-send endpoint. Phase 7 (Admin Dashboard) is ✅ Built with D1-backed marketing offers/campaigns and manual thank-you dispatch visibility. Phase 8 (Polish + Launch) is ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM+GA4, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. Part B DONE: Stripe live mode keys deployed).
+
+---
+
+## TH Product Pages Localization (2026-09-12)
+
+Reconciled from: Phase 4 TH FAQ + Phase A (breadcrumb chrome) + Phase B (JS-injected strings + marine shape selector) + Phase C (customer-facing static HTML strings). All work landed on `master` and is live at `https://<preview>.mildmate-new.pages.dev/th/product/{slug}/`.
+
+### Architectural rule
+- **TH static files at `/th/product/*/index.html` are dead code.** The Pages Function at `functions/product/[[path]].ts` always loads `/product/{slug}/index.html` (EN) via the assets binding and patches fields. All TH product-page localization must happen server-side in the Pages Function OR client-side in `public/js/product-configurator.js`.
+- The `TH_CHROME_REPLACEMENTS` table in `scripts/build-products.js` rebuilds `/th/product/*/index.html`, but those files are never served. Keep them in sync with the EN template only if the routing model ever changes.
+
+### TH localization layers (in priority order)
+
+#### 1. Pages Function server-side patches (`functions/product/[[path]].ts`)
+All patches run only when `isTh === true` (i.e., request starts with `/th/`).
+
+| Constant / Function | Purpose |
+|---|---|
+| `TH_GENERIC_FAQ_INNER` | Generic 4-question Thai FAQ block used as fallback for products without hand-curated `faq_th` |
+| `TH_MARINE_FAQ_INNER` | Marine-specific 4-question Thai FAQ block (CloudSoft care + V-Berth measurement) |
+| `MARINE_FAQ_SLUGS` | Set: `marine-fitted-sheet`, `marine-top-sheet`, `marine-mattress-protector` — selects marine FAQ fallback |
+| `TH_BREADCRUMB_CATEGORY_LABELS` | Map of category URL → Thai label (`/sheets/` → ผ้าปูที่นอน, `/duvet-covers/` → ปลอกผ้าห่ม, `/pillowcases/` → ปลอกหมอน, `/protection/` → ผลิตภัณฑ์ปกป้อง, `/accessories/` → อุปกรณ์เสริม). Patch swaps category link text + `Home` → `หน้าแรก` inside `<nav class="product-breadcrumb">`. |
+| `TH_MARINE_SHAPE_LABELS` | 3-entry regex table for `templates/product-marine.html` shape selector strings |
+| `TH_STATIC_HTML_REPLACEMENTS` | 26-entry regex table for static HTML customer-facing strings (each anchored on specific HTML context to avoid false matches) |
+| `applyThaiProductUiLocalization(html, tagline, slug)` | Function-level regex substitutions for template structures regex tables can't anchor reliably: config tabs (Standard Sizes + Custom Size), price sub-label, size-panel labels, dimension prompts, size-hint link rewrite (`/sizeguide/` → `/th/sizeguide/`), diagram caption, Add to Cart (×2 sites: `#add-to-cart` + `#mobile-add-to-cart`), info tabs (Description/FAQ), trust-badge variants, product tagline |
+| Weighted-blanket specialization | `applyThaiProductUiLocalization` detects `slug === 'weighted-duvet-cover'` and substitutes weighted-blanket-specific copy: size label = `เลือกขนาดผ้าห่มถ่วงน้ำหนัก`, dimension prompt = `กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ`, hint text = `ดูวิธีวัดขนาดผ้าห่ม`, diagram caption = `วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน` |
+| `applyLocalizedFaqFromD1(html, faqText)` | Uses hand-curated D1 `faq_th` if present; falls back to language-specific block (generic or marine). EN pages always use D1 `faq_en`. |
+| `applyLocalizedDescriptionFromD1(html, desc, isTh)` | Uses hand-curated D1 `description_th`/`description_en` (with `card_benefit_*` fallback chain) |
+
+#### 2. Client-side patches (`public/js/product-configurator.js`)
+- `isThaiPage()` — reads `<html lang>` and `window.location.pathname`, returns true when either signals TH
+- `t(en, th)` — returns Thai when `isThaiPage()`, else English
+- Wrapped strings: Add to Cart (3 sites), Custom Size tab, Custom Quote (priceDisplay + popup title), Request Custom Quote, Head Width (HW), Foot Width (FW), "— Choose size —" placeholder, Standard Sizes + Custom Size tab labels (startup block)
+- Note: `product-configurator.js` already had `isThaiPage()` helper for reviews-carousel translations (Read full review / Show less / No reviews yet) — Phase B reused the same pattern
+
+### DOM-verified final state (TH `/product/standard-fitted-sheet/`)
+| Element | Thai text | Source |
+|---|---|---|
+| Breadcrumb | `หน้าแรก › ผ้าปูที่นอน › ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน` | TH_BREADCRUMB_CATEGORY_LABELS + D1 `title_th` |
+| H1 | `ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน` | D1 `title_th` |
+| Configurator tabs | `ขนาดมาตรฐาน`, `ขนาดสั่งทำ` | `applyThaiProductUiLocalization` |
+| Fabric label | `เนื้อผ้า` | TH_STATIC_HTML_REPLACEMENTS |
+| Color labels | `สี — BreezePlus`, `สี — CloudSoft`, `สี — PremaCotton`, `สี — EcoLuxe` | TH_STATIC_HTML_REPLACEMENTS |
+| Size label | `เลือกขนาดที่นอน` | `applyThaiProductUiLocalization` |
+| Size selector placeholder | `— เลือกขนาด —` | `t('Choose size', 'เลือกขนาด')` |
+| Dimension labels | `ความกว้าง (W)`, `ความยาว (L)`, `ความลึก (D)` | TH_STATIC_HTML_REPLACEMENTS |
+| Prices | `ราคา`, `ราคาประมาณการ`, `ราคาเริ่มต้น` | TH_STATIC_HTML_REPLACEMENTS |
+| Add to Cart | `เพิ่มลงตะกร้า` | `applyThaiProductUiLocalization` (×2) + JS `t()` (×1) |
+| Trust badges | `คุณภาพระดับพรีเมียม`, `ตัดเย็บตามขนาด`, `ปลอดภัยต่อการใช้งาน`, `เหมาะกับบ้านที่มีสัตว์เลี้ยง`, `ร้าน Etsy ที่ได้รับคะแนนสูง`, `จัดส่งจากประเทศไทย` | TH_STATIC_HTML_REPLACEMENTS |
+| Customer Reviews | `รีวิวจากลูกค้า` | TH_STATIC_HTML_REPLACEMENTS |
+| Loading reviews… | `กำลังโหลดรีวิว...</div>` | TH_STATIC_HTML_REPLACEMENTS (atomic — Phase C Round 3 fix) |
+| You might also like | `สินค้าที่คุณอาจสนใจ` | TH_STATIC_HTML_REPLACEMENTS |
+| Tags | `หมวดหมู่:` | TH_STATIC_HTML_REPLACEMENTS |
+| Unit warning | `หน่วยเริ่มต้น: ซม. ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น นิ้ว ก่อน` | TH_STATIC_HTML_REPLACEMENTS |
+| FAQ | D1 `faq_th` (hand-curated) or generic/marine TH fallback block | Pages Function |
+| Description | D1 `description_th` (hand-curated) or `card_benefit_th`/`title_th` fallback | Pages Function |
+| Secure checkout | `ชำระเงินอย่างปลอดภัย` | TH_STATIC_HTML_REPLACEMENTS |
+| Marine shape selector | `เลือกรูปทรงที่นอนเรือของคุณ`, `— เลือกรูปทรง —`, `เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด` | TH_MARINE_SHAPE_LABELS |
+
+### Intentionally preserved EN content
+- Fabric names: `CloudSoft`, `BreezePlus`, `PremaCotton`, `EcoLuxe` (also inside Color labels: `สี — BreezePlus`)
+- Numeric dimensions (W/L/D, HW/FW), currency (USD/THB), star ratings, phone numbers
+- `Visa / MC` payment badge (brand)
+- D1 hand-curated English fields not yet translated
+
+### EN pages verified unchanged
+Browser read of `/en/product/standard-fitted-sheet/` showed full EN chrome intact: nav (Shop/Fabrics/Size Guide/Sign In), `Language: EN`, breadcrumb with EN copy, "Custom-Fit Bedding for Any Size, Shape, or Space" hero, "Top-Rated Etsy Boutique" badge, EN Add to Cart + tabs.
+
+### Wrangler Pages Functions bundle workflow
+The project deploys with `--no-bundle`, so editing `functions/**/*.ts` requires a manual bundle rebuild:
+
+1. Edit `functions/product/[[path]].ts` (or any function file).
+2. Build: `npx wrangler pages functions build --outfile 'public\_worker.js'`
+3. Extract the actual JS from wrangler's formdata-multipart output. The bundled `extract-worker.ps1` at repo root does this — skip `Content-Type: application/javascript+module` marker + empty line, cut at next `------formdata-undici-` boundary, write back via `Out-File -Encoding UTF8 -NoNewline`.
+4. Deploy: `npx wrangler pages deploy ./public --project-name=mildmate-new --commit-dirty=true --branch=master --no-bundle`
+   - **Without `--no-bundle`, wrangler re-runs the build and overwrites the extracted `_worker.js` with formdata.**
+
+Re-run steps 1–4 after every `functions/**/*.ts` change — the bundle is the runtime artifact, not the source files.
+
+### Files added/modified in this thread
+- `functions/product/[[path]].ts` — added TH_GENERIC_FAQ_INNER, TH_MARINE_FAQ_INNER, MARINE_FAQ_SLUGS, TH_BREADCRUMB_CATEGORY_LABELS, TH_MARINE_SHAPE_LABELS, TH_STATIC_HTML_REPLACEMENTS, applyThaiProductUiLocalization, weighted-duvet-cover specialization
+- `public/js/product-configurator.js` — added isThaiPage()/t() helper, wrapped 9 EN strings, added startup tab-translation block
+- `public/_worker.js` — bundle rebuilt after each function edit
+- `scripts/build-products.js` — added 5 breadcrumb category entries to TH_CHROME_REPLACEMENTS (effectively dead code per architectural rule above; kept for parity)
+- `extract-worker.ps1` — new PowerShell extraction helper for formdata → valid JS
+- `scripts/audit-*`, `scripts/inspect-*`, `scripts/verify-*`, `scripts/debug-*`, `scripts/dump-tabs.js`, `scripts/list-panels.js`, `scripts/find-loading.js` (≈ 20 audit/debug/verify helpers) — diagnostic tools for this work
+
+### Open items
+- **3 uncommitted marine TH product files** (`/th/product/marine-fitted-sheet/`, `marine-top-sheet/`, `marine-mattress-protector/`) — Droid-Shield false positive on Turnstile site key (same key ships in 3 EN marine pages for months, no production risk). Manual push needed outside Droid.
+- Future weighted-blanket UI copy changes must update both the regular TH strings AND the `weighted-duvet-cover` specialization branch.
 
 ---
 
