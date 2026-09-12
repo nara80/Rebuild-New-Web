@@ -1,10 +1,4 @@
-------formdata-undici-058978172705
-Content-Disposition: form-data; name="metadata"
-
-{"main_module":"functionsWorker-0.042110196893703766.js"}
-------formdata-undici-058978172705
-Content-Disposition: form-data; name="functionsWorker-0.042110196893703766.js"; filename="functionsWorker-0.042110196893703766.js"
-Content-Type: application/javascript+module
+﻿
 
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
@@ -1597,6 +1591,13 @@ var TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
             <p>\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E43\u0E01\u0E25\u0E49\u0E40\u0E04\u0E35\u0E22\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14\u0E41\u0E25\u0E30\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32 \u2014 \u0E40\u0E23\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E15\u0E32\u0E21\u0E41\u0E1A\u0E1A\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E2B\u0E23\u0E37\u0E2D<a href="/th/contact/">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32</a>\u0E42\u0E14\u0E22\u0E15\u0E23\u0E07\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E41\u0E19\u0E1A\u0E20\u0E32\u0E1E\u0E27\u0E32\u0E14\u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
           </details>`;
 var MARINE_FAQ_SLUGS = /* @__PURE__ */ new Set(["marine-fitted-sheet", "marine-top-sheet", "marine-mattress-protector"]);
+var TH_BREADCRUMB_CATEGORY_LABELS = {
+  "/sheets/": "\u0E1C\u0E49\u0E32\u0E1B\u0E39\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19",
+  "/duvet-covers/": "\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21",
+  "/pillowcases/": "\u0E1B\u0E25\u0E2D\u0E01\u0E2B\u0E21\u0E2D\u0E19",
+  "/protection/": "\u0E1C\u0E25\u0E34\u0E15\u0E20\u0E31\u0E13\u0E11\u0E4C\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07",
+  "/accessories/": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
+};
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
@@ -1694,6 +1695,26 @@ async function onRequest3(context) {
       html = html.replace(
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
         `$1${title}$2`
+      );
+    }
+    if (isTh) {
+      html = html.replace(
+        /<nav class="product-breadcrumb"[\s\S]*?<\/nav>/i,
+        (navBlock) => {
+          let patched = navBlock;
+          for (const [catUrl, thLabel] of Object.entries(TH_BREADCRUMB_CATEGORY_LABELS)) {
+            const re = new RegExp(
+              '(<a href="' + catUrl.replace(/\//g, "\\/") + '"[^>]*>)([\\s\\S]*?)(<\\/a>)',
+              "g"
+            );
+            patched = patched.replace(re, (_m, open, _text, close) => `${open}${thLabel}${close}`);
+          }
+          patched = patched.replace(
+            /(<a href="\/"[^>]*>)Home(<\/a>)/,
+            "$1\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01$2"
+          );
+          return patched;
+        }
       );
     }
     {
@@ -13836,7 +13857,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-6tTH5S/functionsRoutes-0.24608311660030113.mjs
+// ../.wrangler/tmp/pages-AGqGKB/functionsRoutes-0.2589337957450881.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -14386,5 +14407,3 @@ var cloneResponse = /* @__PURE__ */ __name((response2) => (
 export {
   pages_template_worker_default as default
 };
-
-------formdata-undici-058978172705--

@@ -205,6 +205,18 @@ const TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
 
 const MARINE_FAQ_SLUGS = new Set(['marine-fitted-sheet', 'marine-top-sheet', 'marine-mattress-protector']);
 
+// TH labels for the breadcrumb category link text. Mirrors the EN labels that
+// ship in the static product templates' breadcrumb ("Fitted Sheets",
+// "Duvet Covers", etc). Indexed by URL path so the Pages Function can swap the
+// EN label for its TH counterpart regardless of which EN static file was loaded.
+const TH_BREADCRUMB_CATEGORY_LABELS: Record<string, string> = {
+  '/sheets/': 'ผ้าปูที่นอน',
+  '/duvet-covers/': 'ปลอกผ้าห่ม',
+  '/pillowcases/': 'ปลอกหมอน',
+  '/protection/': 'ผลิตภัณฑ์ปกป้อง',
+  '/accessories/': 'อุปกรณ์เสริม',
+};
+
 function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
   const safeTagline = String(tagline || '').trim();
   const isWeightedDuvet = slug === 'weighted-duvet-cover';
@@ -352,6 +364,34 @@ export async function onRequest(context: any): Promise<Response> {
       html = html.replace(
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
         `$1${title}$2`
+      );
+    }
+
+    // For TH pages, also swap the breadcrumb category link text to its TH
+    // counterpart. The EN static templates ship EN labels (e.g. "Fitted Sheets",
+    // "Duvet Covers"); TH_CHROME_REPLACEMENTS in build-products.js only fixes
+    // the TH static files, which the Pages Function doesn't serve — so we
+    // patch here too. Look up by category URL.
+    if (isTh) {
+      html = html.replace(
+        /<nav class="product-breadcrumb"[\s\S]*?<\/nav>/i,
+        (navBlock) => {
+          let patched = navBlock;
+          for (const [catUrl, thLabel] of Object.entries(TH_BREADCRUMB_CATEGORY_LABELS)) {
+            // Replace only the link text inside <a href="{catUrl}">...</a>
+            const re = new RegExp(
+              '(<a href="' + catUrl.replace(/\//g, '\\/') + '"[^>]*>)([\\s\\S]*?)(<\\/a>)',
+              'g'
+            );
+            patched = patched.replace(re, (_m, open, _text, close) => `${open}${thLabel}${close}`);
+          }
+          // Also swap the home link text "Home" → "หน้าแรก"
+          patched = patched.replace(
+            /(<a href="\/"[^>]*>)Home(<\/a>)/,
+            '$1หน้าแรก$2'
+          );
+          return patched;
+        }
       );
     }
 
