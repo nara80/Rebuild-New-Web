@@ -1603,6 +1603,34 @@ var TH_MARINE_SHAPE_LABELS = [
   [/— Select a shape —/g, "\u2014 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07 \u2014"],
   [/Select a shape above to see the measurement diagram/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E39\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14"]
 ];
+var TH_STATIC_HTML_REPLACEMENTS = [
+  // Configurator dimension labels
+  [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">\u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W)</label>'],
+  [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L)</label>'],
+  [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E25\u0E36\u0E01 (D)</label>'],
+  // Price label
+  [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13\u0E01\u0E32\u0E23</span>'],
+  // Trust badges (mobile, customizable template)
+  [/<\/svg>Custom Fit<\/div>/g, "</svg>\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>"],
+  [/<\/svg>Human Safe<\/div>/g, "</svg>\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>"],
+  [/<\/svg>Pet Resist<\/div>/g, "</svg>\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>"],
+  // Trust badges (desktop, all templates)
+  [/<\/svg> Top-Rated Etsy Boutique/g, "</svg> \u0E23\u0E49\u0E32\u0E19 Etsy \u0E17\u0E35\u0E48\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E04\u0E30\u0E41\u0E19\u0E19\u0E2A\u0E39\u0E07"],
+  [/<\/svg> Ships from Thailand/g, "</svg> \u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E08\u0E32\u0E01\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22"],
+  // Reviews section
+  [/<div class="reviews-header"><h2>Customer Reviews<\/h2><\/div>/g, '<div class="reviews-header"><h2>\u0E23\u0E35\u0E27\u0E34\u0E27\u0E08\u0E32\u0E01\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32</h2></div>'],
+  [/id="product-review-count">Loading reviews\.\.\.</g, 'id="product-review-count">\u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E23\u0E35\u0E27\u0E34\u0E27...'],
+  [/<h2>You might also like<\/h2>/g, "<h2>\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E38\u0E13\u0E2D\u0E32\u0E08\u0E2A\u0E19\u0E43\u0E08</h2>"],
+  // Tags label (anchored on class context to avoid false matches)
+  [/text-transform:uppercase; letter-spacing:0\.08em; margin-right:4px;">Tags:<\/span>/g, 'text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48:</span>'],
+  // Marine template — fabric spec label + boat model prompt
+  [/<div class="spec-label">Fabric<\/div>/g, '<div class="spec-label">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</div>'],
+  // Configurator inline JS — single-fabric Fabric badge label
+  [/<div class="panel-label">Fabric<\/div>/g, '<div class="panel-label">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</div>'],
+  [/Know your boat model\? Choose fixed-price option/g, "\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13? \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E32\u0E04\u0E32\u0E04\u0E07\u0E17\u0E35\u0E48"],
+  // Unit warning (configurator) — preserves <strong> markup
+  [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, "\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19: <strong>\u0E0B\u0E21.</strong> \u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E19\u0E34\u0E49\u0E27? \u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E40\u0E1B\u0E47\u0E19 <strong>\u0E19\u0E34\u0E49\u0E27</strong> \u0E01\u0E48\u0E2D\u0E19"]
+];
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
@@ -1722,6 +1750,9 @@ async function onRequest3(context) {
         }
       );
       for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
+      for (const [re, thLabel] of TH_STATIC_HTML_REPLACEMENTS) {
         html = html.replace(re, thLabel);
       }
     }
@@ -13865,7 +13896,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-tQHjQS/functionsRoutes-0.84666659459627.mjs
+// ../.wrangler/tmp/pages-0EAMo8/functionsRoutes-0.061063553290405914.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

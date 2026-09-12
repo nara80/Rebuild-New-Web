@@ -226,6 +226,39 @@ const TH_MARINE_SHAPE_LABELS: Array<[RegExp, string]> = [
   [/Select a shape above to see the measurement diagram/g, 'เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด'],
 ];
 
+// Static HTML customer-facing strings to translate on TH product pages.
+// Each entry targets a specific HTML anchor (label, header, badge) to avoid
+// false matches elsewhere in the document. Applied by the Pages Function
+// when isTh=true (the TH static files at /th/product/* are never served).
+const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
+  // Configurator dimension labels
+  [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">ความกว้าง (W)</label>'],
+  [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">ความยาว (L)</label>'],
+  [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">ความลึก (D)</label>'],
+  // Price label
+  [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">ราคาประมาณการ</span>'],
+  // Trust badges (mobile, customizable template)
+  [/<\/svg>Custom Fit<\/div>/g, '</svg>ตัดเย็บตามขนาด</div>'],
+  [/<\/svg>Human Safe<\/div>/g, '</svg>ปลอดภัยต่อการใช้งาน</div>'],
+  [/<\/svg>Pet Resist<\/div>/g, '</svg>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>'],
+  // Trust badges (desktop, all templates)
+  [/<\/svg> Top-Rated Etsy Boutique/g, '</svg> ร้าน Etsy ที่ได้รับคะแนนสูง'],
+  [/<\/svg> Ships from Thailand/g, '</svg> จัดส่งจากประเทศไทย'],
+  // Reviews section
+  [/<div class="reviews-header"><h2>Customer Reviews<\/h2><\/div>/g, '<div class="reviews-header"><h2>รีวิวจากลูกค้า</h2></div>'],
+  [/id="product-review-count">Loading reviews\.\.\.</g, 'id="product-review-count">กำลังโหลดรีวิว...'],
+  [/<h2>You might also like<\/h2>/g, '<h2>สินค้าที่คุณอาจสนใจ</h2>'],
+  // Tags label (anchored on class context to avoid false matches)
+  [/text-transform:uppercase; letter-spacing:0\.08em; margin-right:4px;">Tags:<\/span>/g, 'text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">หมวดหมู่:</span>'],
+  // Marine template — fabric spec label + boat model prompt
+  [/<div class="spec-label">Fabric<\/div>/g, '<div class="spec-label">เนื้อผ้า</div>'],
+  // Configurator inline JS — single-fabric Fabric badge label
+  [/<div class="panel-label">Fabric<\/div>/g, '<div class="panel-label">เนื้อผ้า</div>'],
+  [/Know your boat model\? Choose fixed-price option/g, 'ทราบรุ่นเรือของคุณ? เลือกตัวเลือกราคาคงที่'],
+  // Unit warning (configurator) — preserves <strong> markup
+  [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, 'หน่วยเริ่มต้น: <strong>ซม.</strong> ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น <strong>นิ้ว</strong> ก่อน'],
+];
+
 function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
   const safeTagline = String(tagline || '').trim();
   const isWeightedDuvet = slug === 'weighted-duvet-cover';
@@ -407,6 +440,13 @@ export async function onRequest(context: any): Promise<Response> {
       // are static HTML labels inside the configurator panel; we replace them
       // for TH pages.
       for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
+
+      // Static HTML customer-facing strings (dimensions, estimated price,
+      // trust badges, reviews header, recommendations, tags, unit warning).
+      // Each pattern is anchored to specific HTML context to avoid false matches.
+      for (const [re, thLabel] of TH_STATIC_HTML_REPLACEMENTS) {
         html = html.replace(re, thLabel);
       }
     }
