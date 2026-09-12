@@ -1,7 +1,7 @@
 ﻿# Phase 4 — Homepage + Product Pages
-**Status (2026-09-12 reconciliation): ✅ COMPLETE — Homepage, product system, category/SEO/niche landing pages, blog, size guides, and Workers API are all built and verified. Catalog now reflects 30 core products plus runtime extension support (`weighted-duvet-cover`), with generated EN product pages aligned to current template output. Language-driven currency (EN → USD, TH → THB), centralized country master list, and D1-backed dynamic product reviews are active. **TH product pages (2026-09-12):** full bilingual parity achieved via Pages Function server-side patches (`TH_BREADCRUMB_CATEGORY_LABELS`, `TH_MARINE_SHAPE_LABELS`, `TH_STATIC_HTML_REPLACEMENTS`, `applyThaiProductUiLocalization`) + JS-side `isThaiPage()/t()` helper. EN pages verified unchanged. See "TH Product Pages Localization (2026-09-12)" section below for the full data model.**
+**Status (2026-09-12 reconciliation): ✅ COMPLETE — Homepage, product system, category/SEO/niche landing pages, blog, size guides, and Workers API are all built and verified. Catalog now reflects 30 core products plus runtime extension support (`weighted-duvet-cover`), with generated EN product pages aligned to current template output. Language-driven currency (EN → USD, TH → THB), centralized country master list, and D1-backed dynamic product reviews are active. **TH product pages (2026-09-12):** full bilingual parity achieved via Pages Function server-side patches (`TH_BREADCRUMB_CATEGORY_LABELS`, `TH_MARINE_SHAPE_LABELS`, `TH_STATIC_HTML_REPLACEMENTS`, `applyThaiProductUiLocalization`) + JS-side `isThaiPage()/t()` helper. **TH blog SSR (2026-09-12):** `/th/blogs/` + `/th/blogs/{slug}/` rendered by `functions/th/blogs/[[path]].ts` → `functions/blog-shared.ts` from D1 `blog_posts`; 8 published posts all have Thai counterparts (3,000–5,800 Thai chars each); listing pages now ship canonical + hreflang tags. EN pages verified unchanged. See "TH Product Pages Localization (2026-09-12)" + "TH Blog SSR (2026-09-12)" sections below for the full data models.**
 
-**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10, 2026-06-12, 2026-08-21, 2026-09-12) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (4 → 6 cards including Boarding Dorm + RV & Truck), Thai marketing audit copy applied to TH homepage/about/contact, Thai nav routing fix (middleware order + client-side nav.js safeguard), project documentation reconciliation (AGENTS.md, Framework.md, Phase4–6), weighted-duvet-cover runtime extension, TH product pages bilingual parity (Phase 4 TH FAQ + Phase A breadcrumb chrome + Phase B JS-injected strings + Phase C customer-facing static HTML strings + Round 3 Loading reviews closing-tag fix). This document reflects the final verified state.
+**Supersedes:** Phase 4 was initially completed on 2026-05-09. Multiple additional sessions (2026-05-11, 2026-05-14, 2026-05-15, 2026-05-18, 2026-05-20, 2026-05-30, 2026-05-31, 2026-06-10, 2026-06-12, 2026-08-21, 2026-09-12) added: full Thai page translations (22 pages), WebP image optimization, CSS performance, JSON-driven product catalog system, V-Berth hybrid configurator, custom quote popup flow, all 23 pricing formulas, Phase 5 shipping/countries infrastructure (migrations 015–016), D1-backed reviews API (migrations 024–025), product_type+niches columns (migration 026), homepage niche card update (4 → 6 cards including Boarding Dorm + RV & Truck), Thai marketing audit copy applied to TH homepage/about/contact, Thai nav routing fix (middleware order + client-side nav.js safeguard), project documentation reconciliation (AGENTS.md, Framework.md, Phase4–6), weighted-duvet-cover runtime extension, TH product pages bilingual parity (Phase 4 TH FAQ + Phase A breadcrumb chrome + Phase B JS-injected strings + Phase C customer-facing static HTML strings + Round 3 Loading reviews closing-tag fix), TH blog SSR bilingual parity (commit `8634a42` — listing pages now ship canonical + hreflang tags). This document reflects the final verified state.
 
 > **Reconciliation note (2026-06-10):** Migrations now extend through 026: 024_reviews (reviews table), 024_blog_categories_json (blog categories), 025_reviews_review_date (review_date index), 026_product_type_niches (product_type + niches columns on products). Homepage "Choose Your Application" cards changed from (Marine & Yacht, Family & Co-Sleep, Specialized Protection, Duvet Covers) to (Marine & Yacht, Family & Co-Sleep, Deep Pocket, Pet Owner). Product reviews are now D1-backed (GET /api/products/:slug/reviews with 4-tier sort, LIMIT 10) instead of static HTML.
 >
@@ -1036,6 +1036,35 @@ Re-run steps 1–4 after every `functions/**/*.ts` change — the bundle is the 
 - **3 uncommitted marine TH product files** (`/th/product/marine-fitted-sheet/`, `marine-top-sheet/`, `marine-mattress-protector/`) — Droid-Shield false positive on Turnstile site key (same key ships in 3 EN marine pages for months, no production risk). Manual push needed outside Droid.
 - Future weighted-blanket UI copy changes must update both the regular TH strings AND the `weighted-duvet-cover` specialization branch.
 
+## TH Blog SSR (2026-09-12)
+
+Reconciled from: blog SSR audit (8 published posts in D1, all 8 with hand-curated Thai content; individual post pages already had canonical + hreflang; listing pages lacked SEO tags). Landed on `master` (commit `8634a42`) and verified live at `https://www.mildmate.com/th/blogs/` + `https://www.mildmate.com/blogs/`.
+
+### Architectural rule (critical, preserves future work)
+- **Blog pages are 100% SSR.** `/blogs/`, `/th/blogs/`, `/blogs/{slug}/`, `/th/blogs/{slug}/` are all rendered by `functions/blog-shared.ts` → `buildBlogListingHTML(env, page, lang)` / `buildBlogPostHTML(post, lang)` from D1 `blog_posts`. There are no static HTML files in `public/blogs/` or `public/th/blogs/` for listing/posts.
+- `functions/blogs/[[path]].ts` and `functions/th/blogs/[[path]].ts` are thin route handlers that call the shared builder with `lang="en"` or `lang="th"`.
+- Single source of truth for blog UI is `functions/blog-shared.ts`. Edit `buildBlogListingHTML` and `buildBlogPostHTML` in lock-step (or share templating helpers) — never edit one without the other.
+- Hand-curated Thai fields (`title_th`, `body_th`, `meta_description_th`, `featured_image_alt_th`, `read_time_th`) flow through to TH pages when present, falling back to EN. Editors can localize posts in `/admin/blog.html` without code changes.
+
+### SEO i18n parity (commit `8634a42`)
+- **Listing pages** (`/blogs/`, `/th/blogs/`): self-referencing canonical including `?page=N` parameter + 2 hreflang tags (en → `/blogs/[?page=N]`, th → `/th/blogs/[?page=N]`).
+- **Individual post pages** (`/blogs/{slug}/`, `/th/blogs/{slug}/`): canonical + 2 hreflang tags (long-standing, kept in sync).
+- All canonical + hreflang URLs use the absolute `https://www.mildmate.com` prefix.
+- Live verified: `/blogs/` and `/th/blogs/` both render the SEO tags correctly; post pages unchanged.
+
+### Content scope
+- 8 published blog posts in D1, all 8 with hand-curated Thai content (3,000–5,800 Thai chars per post).
+- Featured image, YouTube hero, category filter, author + read time, pagination (8 per page), newsletter CTA, and 4-col footer all localized for TH.
+- Categories: 9 options in admin dropdown; TH SSR uses same `categories_json` array as EN.
+
+### Files added/modified in this thread
+- `functions/blog-shared.ts` — added canonical + hreflang to `buildBlogListingHTML`
+- `public/_worker.js` — bundle rebuilt (657,022 chars) with the new SEO tags
+- (No client-side JS changes; SSR-only changes are sufficient.)
+
+### Open items
+- If the blog ever expands past 8 posts, the `?page=N` pagination URL parameter is already handled in canonical + hreflang. Just confirm D1 has more posts; the SSR renderer reads `LIMIT/OFFSET` dynamically.
+
 ### Additional Updates (2026-05-14)
 
 **Header consistency (blue-gradient CI Blue hero):**
@@ -1127,7 +1156,7 @@ After building 22 Thai pages, 10 EN pages remain without Thai equivalents. Prior
 | RV & Truck Cab | `/rv-truck/` | `/th/rv-truck/` | ✅ Built |
 | Easy-Change Duvet | `/duvet/` | `/th/duvet/` | ✅ Built |
 | Product detail pages (30 core + 1 runtime extension) | `/product/{slug}/` | `/th/product/{slug}/` | ✅ Built (2026-09-12) — see TH Product Pages Localization section below |
-| Blog Index | `/blogs/` | `/th/blogs/` | ✅ Built — D1-backed SSR listing + pagination + admin CMS at `/admin/blog.html` |
+| Blog Index | `/blogs/` | `/th/blogs/` | ✅ Built (2026-09-12) — D1-backed SSR listing + pagination + admin CMS at `/admin/blog.html`; both listing and post pages ship canonical + hreflang tags; 8 published posts all have Thai counterparts |
 
 **Still missing — Thai versions not built (reconciled 2026-09-12):**
 | Page | EN URL | Priority | Status |

@@ -125,14 +125,16 @@ Scope clarification:
 
 **Routing:**
 - `functions/blogs/[[path]].ts` catches `/blogs/` (SSR listing) and `/blogs/{slug}/` (SSR individual post)
+- `functions/th/blogs/[[path]].ts` catches `/th/blogs/` (SSR listing) and `/th/blogs/{slug}/` (SSR individual post) — bilingual parity (TH pages added 2026-09-12)
+- Both routes share the same renderer in `functions/blog-shared.ts` → `buildBlogListingHTML(env, page, lang)` / `buildBlogPostHTML(post, lang)`, called with `lang="en"` or `lang="th"`
 - /api/blog/posts JSON API for listing
 - /api/admin/blog for Admin CRUD
 
-**Listing page:** SSR reads D1 directly, no fetch loop. Featured post + card grid + category filter tabs + pagination. Subscribe form posts to /api/subscribe.
+**Listing page:** SSR reads D1 directly, no fetch loop. Featured post + card grid + category filter tabs + pagination. Subscribe form posts to /api/subscribe. **SEO (2026-09-12):** both `/blogs/` and `/th/blogs/` ship self-referencing canonical (including `?page=N`) + 2 hreflang tags (en, th).
 
-**Individual post:** SSR from D1. Hero priority: YouTube embed (16:9 iframe) if youtube_url set, else featured image, else blue gradient fallback. Body, CTA box, share bar.
+**Individual post:** SSR from D1. Hero priority: YouTube embed (16:9 iframe) if youtube_url set, else featured image, else blue gradient fallback. Body, CTA box, share bar. **SEO:** both `/blogs/{slug}/` and `/th/blogs/{slug}/` ship canonical + 2 hreflang tags.
 
-**Admin:** `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), write/preview toggle.
+**Admin:** `/admin/blog.html` with WYSIWYG editor, YouTube URL field, category dropdown (9 options), write/preview toggle. Hand-curated `title_th`, `body_th`, `meta_description_th`, `featured_image_alt_th`, `read_time_th` fields flow through to TH SSR pages when present.
 
 ### Dynamic Pages (data from Cloudflare D1)
 
