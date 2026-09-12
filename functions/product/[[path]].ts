@@ -256,7 +256,7 @@ const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
   [/<\/svg> Ships from Thailand/g, '</svg> จัดส่งจากประเทศไทย'],
   // Reviews section
   [/<div class="reviews-header"><h2>Customer Reviews<\/h2><\/div>/g, '<div class="reviews-header"><h2>รีวิวจากลูกค้า</h2></div>'],
-  [/id="product-review-count">Loading reviews\.\.\.</g, 'id="product-review-count">กำลังโหลดรีวิว...'],
+  [/id="product-review-count">Loading reviews\.\.\.<\/div>/g, 'id="product-review-count">กำลังโหลดรีวิว...</div>'],
   [/<h2>You might also like<\/h2>/g, '<h2>สินค้าที่คุณอาจสนใจ</h2>'],
   // Tags label (anchored on class context to avoid false matches)
   [/text-transform:uppercase; letter-spacing:0\.08em; margin-right:4px;">Tags:<\/span>/g, 'text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">หมวดหมู่:</span>'],
