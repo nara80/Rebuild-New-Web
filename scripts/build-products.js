@@ -775,6 +775,46 @@ function buildFixedContentHTML(slug, p) {
 // ===== Thai variant generation =====
 const TH_PUBLIC_DIR = path.join(ROOT, 'public', 'th', 'product');
 
+// Generic Thai FAQ block for non-marine customizable products.
+// 4 standard questions matching the EN template; links rewritten to /th/...
+const TH_FAQ_BLOCK = `<details class="faq-item" open>
+            <summary>จะเลือกขนาดที่นอนได้อย่างไร?</summary>
+            <p>ดู<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราสำหรับขนาดมาตรฐาน หรือกรอกขนาดจริงของคุณในแบบฟอร์มสั่งตัดตามออเดอร์</p>
+          </details>
+          <details class="faq-item">
+            <summary>สามารถสั่งตัดตามขนาดพิเศษได้หรือไม่?</summary>
+            <p>ได้ คลิก <strong>ขนาดที่นอนแบบกำหนดเอง</strong> กรอกขนาดของคุณ แล้วส่งคำขอใบเสนอราคาสั่งตัด</p>
+          </details>
+          <details class="faq-item">
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้าทุกชนิดของ MildMate ซักเครื่องได้ที่อุณหภูมิปานกลาง (40°C / 104°F) ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ที่โรงงานในประเทศไทย ระยะเวลาจัดส่งขึ้นอยู่กับปลายทางและจะแจ้งให้ทราบในอีเมลใบเสนอราคาหรือคำสั่งซื้อของคุณ</p>
+          </details>`;
+
+// Thai FAQ block for marine products (V-Berth sheets + marine mattress protector).
+const TH_MARINE_FAQ_BLOCK = `<details class="faq-item" open>
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้า CloudSoft ของเราซักเครื่องได้ แห้งเร็ว ทนทานต่อสภาพแวดล้อมทางทะเล ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>วัดขนาดที่นอนเรืออย่างไร?</summary>
+            <p>ใช้<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราเป็นข้อมูลอ้างอิง เลือกรูปทรงเตียงเรือของคุณด้านบน แล้วกรอกความยาวของแต่ละด้านให้ตรงตามที่วัดได้จริง ระบุความหนาของที่นอนเพื่อให้ตัดเย็บพอดีแบบกำหนดเอง</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาผลิตและจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ตามรูปทรงและขนาดจริงของคุณ ใช้เวลาผลิต 5–7 วันทำการ ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง คุณจะได้รับหมายเลขพัสดุเมื่อจัดส่งแล้ว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ถ้ารูปทรงไม่อยู่ในลิสต์ล่ะ?</summary>
+            <p>เลือกรูปทรงที่ใกล้เคียงที่สุดและเพิ่มหมายเหตุในแบบฟอร์มขอใบเสนอราคา — เราผลิตตามแบบจริงของคุณ หรือ<a href="/th/contact/">ติดต่อเรา</a>โดยตรงพร้อมแนบภาพวาดหรือรูปถ่ายที่นอนเรือของคุณ</p>
+          </details>`;
+
+// Marine product slugs that should receive the marine-specific FAQ block.
+const MARINE_SLUGS = new Set(['marine-fitted-sheet', 'marine-top-sheet', 'marine-mattress-protector']);
+
 // Thai chrome word substitutions (mirrors functions/_middleware.ts Thai locale pass).
 // These are applied to the static HTML so the chrome is Thai even though the file is static.
 const TH_CHROME_REPLACEMENTS = [
@@ -864,6 +904,24 @@ function buildThaiFor(enHtml, slug, prod) {
   for (const pair of TH_CHROME_REPLACEMENTS) {
     html = html.split(pair[0]).join(pair[1]);
   }
+
+  // 5. Inject Thai FAQ block. The Pages Function will override this with D1's
+  // faq_th when one is set, so this acts as the default for any product that
+  // doesn't have a hand-curated Thai FAQ in D1.
+  const faqBlock = MARINE_SLUGS.has(slug) ? TH_MARINE_FAQ_BLOCK : TH_FAQ_BLOCK;
+  // Match the entire <div class="info-panel" id="info-panel-faq">...</div> block.
+  // Captures: opening div tag (group 1), inner contents (group 2), closing div tags (group 3).
+  const faqPanelRe = /(<div\s+class="info-panel"\s+id="info-panel-faq"[^>]*>)([\s\S]*?)(<\/div>\s*<\/div>)/i;
+  if (faqPanelRe.test(html)) {
+    html = html.replace(faqPanelRe, (_m, open, _inner, close) => open + '\n          ' + faqBlock + '\n        ' + close);
+  }
+
+  // 6. Rewrite FAQ internal links to /th/ paths for TH variant.
+  // (Other internal links in nav/footer are already handled by middleware + chrome rewrites.)
+  html = html
+    .replace(/href="\/sizeguide\/(?![a-z])/g, 'href="/th/sizeguide/')
+    .replace(/href="\/contact\/(?![a-z])/g, 'href="/th/contact/')
+    .replace(/href="\/products\/(?![a-z])/g, 'href="/th/products/');
 
   return html;
 }

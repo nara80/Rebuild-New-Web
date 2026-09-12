@@ -355,7 +355,7 @@
           <div id="bf-note" style="display:none; font-size:0.75rem; color:#64748b; margin-bottom:8px; font-style:italic;">Cut corner fields (B, F) are for measurement verification only — they do not affect pricing.</div>
           <div class="area-warning" id="area-warning" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#b91c1c; font-size:0.875rem; font-weight:600; line-height:1.5;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
+            This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/th/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
           </div>
           <div class="price-row" style="margin-bottom:12px;">
             <span class="price-label">Estimated Price</span>
@@ -406,7 +406,22 @@
           <ul><li>Top Layer: Cotton Quilted</li><li>Layer 2: Polyester Filling</li><li>Layer 3: TPU Waterproof backing</li><li>Water-spill and accident protection</li><li>Machine washable and quick-dry care routine</li></ul>
         </div>
         <div class="info-panel" id="info-panel-faq">
-          <details class="faq-item" open><summary>What fabric and care details should I know?</summary><ul><li>Machine wash warm (60°C / 140°F) — gentle cycle</li><li>Do not bleach — mild detergent only</li><li>Tumble dry low or hang dry</li><li>Do not iron TPU-backed layer</li><li>Remove promptly after drying to prevent wrinkles</li></ul></details><details class="faq-item"><summary>How do I measure my boat mattress?</summary><p>Use our <a href="/sizeguide/">size guide</a> for reference. Select your shape above and enter each side length exactly as measured. Include mattress thickness for an accurate custom fit.</p></details><details class="faq-item"><summary>How long does production and shipping take?</summary><p>Each protector is custom-made to your exact shape and dimensions. Production takes 5–7 business days. Shipping times vary by destination — you'll receive a tracking number once dispatched.</p></details><details class="faq-item"><summary>What if my shape isn't listed?</summary><p>Choose the closest shape and add notes in the quote form — we manufacture to your exact template. You can also <a href="/contact/">contact us</a> directly with a drawing or photo of your mattress.</p></details>
+          <details class="faq-item" open>
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้า CloudSoft ของเราซักเครื่องได้ แห้งเร็ว ทนทานต่อสภาพแวดล้อมทางทะเล ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>วัดขนาดที่นอนเรืออย่างไร?</summary>
+            <p>ใช้<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราเป็นข้อมูลอ้างอิง เลือกรูปทรงเตียงเรือของคุณด้านบน แล้วกรอกความยาวของแต่ละด้านให้ตรงตามที่วัดได้จริง ระบุความหนาของที่นอนเพื่อให้ตัดเย็บพอดีแบบกำหนดเอง</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาผลิตและจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ตามรูปทรงและขนาดจริงของคุณ ใช้เวลาผลิต 5–7 วันทำการ ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง คุณจะได้รับหมายเลขพัสดุเมื่อจัดส่งแล้ว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ถ้ารูปทรงไม่อยู่ในลิสต์ล่ะ?</summary>
+            <p>เลือกรูปทรงที่ใกล้เคียงที่สุดและเพิ่มหมายเหตุในแบบฟอร์มขอใบเสนอราคา — เราผลิตตามแบบจริงของคุณ หรือ<a href="/th/contact/">ติดต่อเรา</a>โดยตรงพร้อมแนบภาพวาดหรือรูปถ่ายที่นอนเรือของคุณ</p>
+          </details>
         </div>
       </div>
     </div>
@@ -1438,7 +1453,7 @@
         var topArea = getTopArea(code);
         if(topArea > MAX_TOP_AREA_CM){
           if(warningEl) warningEl.style.display = 'block';
-          if(warningEl) warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.';
+          if(warningEl) warningEl.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/th/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.';
           customPrice.textContent = ' — ';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
