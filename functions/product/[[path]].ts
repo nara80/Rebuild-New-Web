@@ -217,6 +217,15 @@ const TH_BREADCRUMB_CATEGORY_LABELS: Record<string, string> = {
   '/accessories/': 'อุปกรณ์เสริม',
 };
 
+// Marine shape selector strings (templates/product-marine.html). These appear
+// in static HTML so they need to be patched by the Pages Function (TH static
+// files are never served — Pages Function loads EN static and patches fields).
+const TH_MARINE_SHAPE_LABELS: Array<[RegExp, string]> = [
+  [/Choose Your Boat Mattress Shape/g, 'เลือกรูปทรงที่นอนเรือของคุณ'],
+  [/— Select a shape —/g, '— เลือกรูปทรง —'],
+  [/Select a shape above to see the measurement diagram/g, 'เลือกรูปทรงด้านบนเพื่อดูแผนภาพการวัด'],
+];
+
 function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
   const safeTagline = String(tagline || '').trim();
   const isWeightedDuvet = slug === 'weighted-duvet-cover';
@@ -393,6 +402,13 @@ export async function onRequest(context: any): Promise<Response> {
           return patched;
         }
       );
+
+      // Marine shape selector strings (templates/product-marine.html). These
+      // are static HTML labels inside the configurator panel; we replace them
+      // for TH pages.
+      for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
     }
 
     // Inject canonical + hreflang alternates for bilingual product URLs.

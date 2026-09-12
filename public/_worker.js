@@ -1598,6 +1598,11 @@ var TH_BREADCRUMB_CATEGORY_LABELS = {
   "/protection/": "\u0E1C\u0E25\u0E34\u0E15\u0E20\u0E31\u0E13\u0E11\u0E4C\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07",
   "/accessories/": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
 };
+var TH_MARINE_SHAPE_LABELS = [
+  [/Choose Your Boat Mattress Shape/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13"],
+  [/— Select a shape —/g, "\u2014 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07 \u2014"],
+  [/Select a shape above to see the measurement diagram/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E39\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14"]
+];
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
@@ -1716,6 +1721,9 @@ async function onRequest3(context) {
           return patched;
         }
       );
+      for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
     }
     {
       const enPath = `/product/${slug}/`;
@@ -13857,7 +13865,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-AGqGKB/functionsRoutes-0.2589337957450881.mjs
+// ../.wrangler/tmp/pages-tQHjQS/functionsRoutes-0.84666659459627.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

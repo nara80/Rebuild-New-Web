@@ -6,6 +6,17 @@
    ============================================ */
 
 (async function () {
+  // -- Locale helper for TH/EN UI strings --
+  function isThaiPage() {
+    var html = document.documentElement;
+    var lang = (html && html.lang) ? html.lang.toLowerCase() : 'en';
+    var path = (window.location && window.location.pathname) || '';
+    return lang === 'th' || path.indexOf('/th/') === 0;
+  }
+  function t(en, th) {
+    return isThaiPage() ? th : en;
+  }
+
   // -- Detect product variant --
   var path = window.location.pathname;
   var isRVTruck = path.indexOf('rv-truck') !== -1;
@@ -425,6 +436,14 @@
   var tabStandard = document.getElementById('tab-standard');
   var tabCustom = document.getElementById('tab-custom');
   var isCustomOnlyProduct = isCushionProtector;
+
+  // Translate static tab labels (Standard Sizes / Custom Size) on TH pages
+  if (isThaiPage()) {
+    configTabs.forEach(function(tab) {
+      if (tab.dataset && tab.dataset.tab === 'standard') tab.textContent = 'ขนาดมาตรฐาน';
+      if (tab.dataset && tab.dataset.tab === 'custom') tab.textContent = 'ขนาดกำหนดเอง';
+    });
+  }
   function syncTabAwarePriceUI() {
     if (hidePricingUI) {
       applyPricingVisibility();
@@ -460,7 +479,7 @@
     var priceSummary = document.getElementById('price-summary');
     if (priceSummary) priceSummary.style.display = hidePricingUI ? 'none' : '';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
+      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + t('Add to Cart', 'เพิ่มลงตะกร้า');
       addToCartBtn.style.background = '';
       addToCartBtn.style.color = '';
     }
@@ -471,7 +490,7 @@
     var priceSummary = document.getElementById('price-summary');
     if (priceSummary) priceSummary.style.display = 'none';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = 'Request Custom Quote';
+      addToCartBtn.innerHTML = t('Request Custom Quote', 'ขอใบเสนอราคาแบบกำหนดเอง');
       addToCartBtn.disabled = false;
       addToCartBtn.style.background = '#f59e0b';
       addToCartBtn.style.color = '#fff';
@@ -485,7 +504,7 @@
     var tabsWrap = document.querySelector('.config-tabs');
     configTabs.forEach(function(tab) {
       if (tab.dataset.tab === 'standard') tab.style.display = 'none';
-      if (tab.dataset.tab === 'custom') tab.textContent = 'Custom Size';
+      if (tab.dataset.tab === 'custom') tab.textContent = t('Custom Size', 'ขนาดกำหนดเอง');
     });
     if (tabsWrap) tabsWrap.style.display = 'none';
     if (tabStandard) tabStandard.style.display = 'none';
@@ -610,7 +629,7 @@
     var shapeSelect = document.getElementById('marine-shape-select');
     var shapeHint = document.getElementById('shape-dims-hint');
 
-    if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = 'Head Width (HW)'; }
+    if (dimW) { var dimWLabel = dimW.parentElement.querySelector('label'); if (dimWLabel) dimWLabel.textContent = t('Head Width (HW)', 'ความกว้างหัวเตียง (HW)'); }
     if (dimL) {
       var dimLLabel = dimL.parentElement.querySelector('label');
       if (dimLLabel) {
@@ -635,7 +654,7 @@
 
         // Price display
         if (quoteOnly) {
-          priceDisplay.textContent = 'Custom Quote';
+          priceDisplay.textContent = t('Custom Quote', 'ใบเสนอราคา');
           if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
           state._dims = null;
           state._price = null;
@@ -643,7 +662,7 @@
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
           priceDisplay.innerHTML = displayPrice(thb, price);
-          if (addToCartBtn) { addToCartBtn.textContent = 'Add to Cart'; addToCartBtn.style.background = ''; }
+          if (addToCartBtn) { addToCartBtn.textContent = t('Add to Cart', 'เพิ่มลงตะกร้า'); addToCartBtn.style.background = ''; }
           state._dims = { w: parseFloat(opt.dataset.headMin) || 0, l: parseFloat(opt.dataset.lengthMin) || 0, d: 30 };
           state._price = { thb: thb, usd: price };
           state.region = 'marine';  // Marine uses shape selector — mark region as set
@@ -965,7 +984,7 @@
     '<div class="quote-overlay" id="quote-overlay">' +
       '<div class="quote-popup">' +
         '<button class="quote-close" id="quote-close">&times;</button>' +
-        '<h3 class="quote-popup-title">Custom Quote</h3>' +
+        '<h3 class="quote-popup-title">' + t('Custom Quote', 'ใบเสนอราคา') + '</h3>' +
         '<form id="quote-form" novalidate>' +
           '<label class="quote-field">Name <span class="quote-req">*</span>' +
             '<input type="text" id="qf-name" required placeholder="Your full name">' +
@@ -1206,7 +1225,7 @@
       var dimFootW = document.getElementById('dim-foot-width');
       var fw = parseFloat(dimFootW && dimFootW.value) || 0;
       if (state.unit === 'in') fw = inchToCm(fw);
-      if (fw <= 0) { customPrice.textContent = 'Enter Foot Width (FW)'; customPrice.style.fontSize = '0.85rem'; if (addToCartBtn) addToCartBtn.disabled = true; return; }
+      if (fw <= 0) { customPrice.textContent = t('Enter Foot Width (FW)', 'กรอกความกว้างปลายเตียง (FW)'); customPrice.style.fontSize = '0.85rem'; if (addToCartBtn) addToCartBtn.disabled = true; return; }
       if (!dCm) {
         dCm = isMarineTopSheet ? (state.unit === 'in' ? 5 : 12.7) : (state.unit === 'in' ? 7 : 17.78);
       }
@@ -1626,7 +1645,7 @@
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
       addToCartBtn.style.background = '#16a34a';
       setTimeout(function () {
-        addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart';
+        addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + t('Add to Cart', 'เพิ่มลงตะกร้า');
         addToCartBtn.style.background = '';
         addToCartBtn.disabled = false;
       }, 2000);
