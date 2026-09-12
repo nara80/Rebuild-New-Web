@@ -1654,6 +1654,20 @@ async function onRequest3(context) {
         `$1${title}$2`
       );
     }
+    {
+      const enPath = `/product/${slug}/`;
+      const thPath = `/th/product/${slug}/`;
+      const canonicalHref = isTh ? `https://www.mildmate.com${thPath}` : `https://www.mildmate.com${enPath}`;
+      const enHref = `https://www.mildmate.com${enPath}`;
+      const thHref = `https://www.mildmate.com${thPath}`;
+      const seoTags = `<link rel="canonical" href="${canonicalHref}">
+  <link rel="alternate" hreflang="en" href="${enHref}">
+  <link rel="alternate" hreflang="th" href="${thHref}">`;
+      const anchor = '<meta charset="UTF-8">';
+      if (html.includes(anchor) && !html.includes('rel="canonical"')) {
+        html = html.replace(anchor, anchor + "\n  " + seoTags);
+      }
+    }
     if (product && (product.image_url || product.images)) {
       const THUMB_COUNT = 6;
       const thumbs = images.slice(0, THUMB_COUNT);
@@ -7044,21 +7058,14 @@ async function sendMagicLinkEmail(env, request, quote) {
   if (quote.fabric) specsLines.push(`Fabric: ${quote.fabric}`);
   if (quote.color) specsLines.push(`Colour: ${quote.color}`);
   const priceLine = hasUsdPrice ? `$${priceUsd.toLocaleString()} USD` : `\u0E3F${priceThb.toLocaleString()} THB`;
-
-  const esc = (s) =>
-    String(s == null ? "" : s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-
+  const esc = /* @__PURE__ */ __name((s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), "esc");
   const customerName = String(quote.customer_name || "there").trim() || "there";
   const headingText = "Ready to Order?";
   const ctaText = "View Quote & Order";
   const specsText = specsLines.join("\n");
-  const expiryLineText = expiryText ? `\nThis quote is valid until ${expiryText}.\n` : "";
-
+  const expiryLineText = expiryText ? `
+This quote is valid until ${expiryText}.
+` : "";
   const textBody = [
     `Hi ${customerName},`,
     "",
@@ -7087,17 +7094,15 @@ async function sendMagicLinkEmail(env, request, quote) {
     "",
     "\u2014 The MildMate Team"
   ].filter(Boolean).join("\n");
-
   const ctaUrl = esc(quoteLink);
-  const htmlBody =
-`<!DOCTYPE html>
+  const htmlBody = `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="x-apple-disable-message-reformatting">
 <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no">
-<title>${esc(ctaText)} — MildMate Quote ${esc(String(quote.quote_id || ""))}</title>
+<title>${esc(ctaText)} \u2014 MildMate Quote ${esc(String(quote.quote_id || ""))}</title>
 </head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#1e293b;-webkit-text-size-adjust:100%">
 <span style="display:none;visibility:hidden;mso-hide:all;font-size:1px;color:#f8fafc;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden">${esc(headingText)} Open your MildMate quote, review your custom details, and complete your order in three quick steps.</span>
@@ -7113,18 +7118,11 @@ async function sendMagicLinkEmail(env, request, quote) {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px">
 <tr><td style="padding:16px 18px">
 <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Your Order</div>
-${specsLines
-  .map(
-    (l) =>
-      `<div style="font-size:14px;color:#1e293b;line-height:1.55;margin:0"><strong style="color:#0f172a">${
-        l.split(":")[0]
-      }</strong>:${
-        l.indexOf(":") >= 0 ? esc(l.slice(l.indexOf(":") + 1)) : ""
-      }</div>`
-  )
-  .join("")}
+${specsLines.map(
+    (l) => `<div style="font-size:14px;color:#1e293b;line-height:1.55;margin:0"><strong style="color:#0f172a">${l.split(":")[0]}</strong>:${l.indexOf(":") >= 0 ? esc(l.slice(l.indexOf(":") + 1)) : ""}</div>`
+  ).join("")}
 <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:16px;font-weight:700;color:#0f172a">Confirmed Price: ${esc(priceLine)}</div>
-<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:6px">Shipping: Included for Thailand orders · Calculated at checkout (all other destinations).</div>
+<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:6px">Shipping: Included for Thailand orders \xB7 Calculated at checkout (all other destinations).</div>
 <div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:4px">Made to order within 5\u20137 business days before dispatch.</div>
 </td></tr>
 </table>
@@ -7142,22 +7140,17 @@ ${specsLines
 <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:10px">How to Order</div>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
 ${[
-  { n: "1", label: "Open your custom quote using the button above." },
-  { n: "2", label: "Click <strong>Add to Cart</strong> on the quote page." },
-  { n: "3", label: "Proceed to <strong>Checkout</strong> and complete payment." },
-].map(
-  (s) =>
-    `<tr><td width="32" valign="top" style="padding:6px 0"><div style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:12px;background:#2c96f4;color:#ffffff;font-size:13px;font-weight:700;text-align:center">${s.n}</div></td><td style="padding:6px 0 6px 10px;font-size:14px;color:#1e293b;line-height:1.5">${s.label}</td></tr>`
-).join("")}
+    { n: "1", label: "Open your custom quote using the button above." },
+    { n: "2", label: "Click <strong>Add to Cart</strong> on the quote page." },
+    { n: "3", label: "Proceed to <strong>Checkout</strong> and complete payment." }
+  ].map(
+    (s) => `<tr><td width="32" valign="top" style="padding:6px 0"><div style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:12px;background:#2c96f4;color:#ffffff;font-size:13px;font-weight:700;text-align:center">${s.n}</div></td><td style="padding:6px 0 6px 10px;font-size:14px;color:#1e293b;line-height:1.5">${s.label}</td></tr>`
+  ).join("")}
 </table>
 </td></tr>
-${
-  expiryText
-    ? `<tr><td style="padding:8px 24px 24px 24px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px"><tr><td style="padding:12px 16px;font-size:13px;color:#1e3a8a;line-height:1.45">This quote is valid until <strong>${esc(expiryText)}</strong>. After that, please request a fresh quote.</td></tr></table></td></tr>`
-    : ""
-}
+${expiryText ? `<tr><td style="padding:8px 24px 24px 24px"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px"><tr><td style="padding:12px 16px;font-size:13px;color:#1e3a8a;line-height:1.45">This quote is valid until <strong>${esc(expiryText)}</strong>. After that, please request a fresh quote.</td></tr></table></td></tr>` : ""}
 <tr><td style="padding:8px 24px 24px 24px;font-size:12px;color:#64748b;line-height:1.5;text-align:center">
-Need help or have a measurement question? Simply reply to this email — we're here to help.<br><br>
+Need help or have a measurement question? Simply reply to this email \u2014 we're here to help.<br><br>
 <strong style="color:#0f172a">The MildMate Team</strong><br>
 <a href="${esc(quoteLink)}" target="_blank" rel="noopener" style="color:#1a7fd4;text-decoration:underline">${esc(quoteLink)}</a>
 </td></tr>
@@ -7167,7 +7160,6 @@ Need help or have a measurement question? Simply reply to this email — we're h
 </table>
 </body>
 </html>`;
-
   const result = await sendEmail(env, {
     to: String(quote.email).trim().toLowerCase(),
     from: env.QUOTE_FROM_EMAIL || "MildMate <orders@mildmate.com>",
@@ -13771,7 +13763,7 @@ ${header}`);
     </div>`
   );
   if (isThPage) {
-    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/checkout\/?"/g, 'href="/th/checkout/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
+    html = html.replace(/"nav-link">Shop<\/a>/g, '"nav-link">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/"nav-link">Fabrics<\/a>/g, '"nav-link">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/"nav-link">Size Guide<\/a>/g, '"nav-link">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/"nav-link">Blog<\/a>/g, '"nav-link">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/<a href="\/products\/?">Shop<\/a>/g, '<a href="/products/">\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32</a>').replace(/<a href="\/fabric\/?">Fabrics<\/a>/g, '<a href="/fabric/">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</a>').replace(/<a href="\/sizeguide\/?">Size Guide<\/a>/g, '<a href="/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>').replace(/<a href="\/blogs\/?">Blog<\/a>/g, '<a href="/blogs/">\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21</a>').replace(/>Sign In</g, ">\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A<").replace(/>Customer Service</g, ">\u0E1A\u0E23\u0E34\u0E01\u0E32\u0E23\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32<").replace(/>FAQ</g, ">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22<").replace(/>Shop on Marketplaces</g, ">\u0E0A\u0E48\u0E2D\u0E07\u0E17\u0E32\u0E07\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D<").replace(/>Shop With Us</g, ">\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/\+66 87 236 2364/g, "087 236 2364").replace(/>Privacy Policy</g, ">\u0E19\u0E42\u0E22\u0E1A\u0E32\u0E22\u0E04\u0E27\u0E32\u0E21\u0E40\u0E1B\u0E47\u0E19\u0E2A\u0E48\u0E27\u0E19\u0E15\u0E31\u0E27<").replace(/>Returns &amp; Delivery</g, ">\u0E01\u0E32\u0E23\u0E04\u0E37\u0E19\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07<").replace(/>About Us</g, ">\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E23\u0E32<").replace(/>Contact Us</g, ">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32<").replace(/>QUICK LINKS</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Quick Links</g, ">\u0E25\u0E34\u0E07\u0E01\u0E4C\u0E14\u0E48\u0E27\u0E19<").replace(/>Home</g, ">\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01<").replace(/>Language:</g, ">\u0E20\u0E32\u0E29\u0E32:<").replace(/>Reviews</g, ">\u0E23\u0E35\u0E27\u0E34\u0E27<").replace(/id="price-top-sub">Starting from<\/span>/g, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/>Standard Sizes<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>").replace(/>Custom Size<\/button>/g, ">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>").replace(/>Select Mattress Size<\/div>/g, ">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19</div>").replace(/>Enter your exact mattress dimensions<\/strong>/g, ">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>").replace(/>Add to Cart<\/button>/g, ">\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32</button>").replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/gi, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/data-info-tab="description">Description<\/button>/g, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">FAQs<\/button>/g, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>Premium Quality<\/span>/g, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>Custom Fit<\/div>/g, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>Human Safe<\/div>/g, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>Pet Resist<\/div>/g, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>").replace('placeholder="Search bedding, fabrics, sizes..."', 'placeholder="\u0E04\u0E49\u0E19\u0E2B\u0E32\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19 \u0E1C\u0E49\u0E32 \u0E02\u0E19\u0E32\u0E14..."').replace(/href="\/products\/?"/g, 'href="/th/products/"').replace(/href="\/about\/?"/g, 'href="/th/about/"').replace(/href="\/contact\/?"/g, 'href="/th/contact/"').replace(/href="\/wholesale\/?"/g, 'href="/th/wholesale/"').replace(/href="\/checkout\/?"/g, 'href="/th/checkout/"').replace(/href="\/faq\/?"/g, 'href="/th/faq/"').replace(/href="\/fabric\/?"/g, 'href="/th/fabric/"').replace(/href="\/sizeguide\/?"/g, 'href="/th/sizeguide/"').replace(/href="\/blogs\/?"/g, 'href="/th/blogs/"').replace(/href="\/policy\/?"/g, 'href="/th/policy/"').replace(/href="\/shipping\/?"/g, 'href="/th/shipping/"').replace(/href="\/reviews\/?"/g, 'href="/th/reviews/"').replace(/href="\/how-to-measure-mattress-size\/?"/g, 'href="/th/how-to-measure-mattress-size/"').replace(/href="\/custom-measurement\/?"/g, 'href="/th/custom-measurement/"').replace(/href="\/pillowcases\/?"/g, 'href="/th/pillowcases/"').replace(/href="\/pets\/?"/g, 'href="/th/pets/"').replace(/href="\/deep-pocket\/?"/g, 'href="/th/deep-pocket/"').replace(/href="\/family\/?"/g, 'href="/th/family/"').replace(/href="\/marine\/?"/g, 'href="/th/marine/"').replace(/href="\/accessories\/?"/g, 'href="/th/accessories/"').replace(/href="\/protection\/?"/g, 'href="/th/protection/"').replace(/href="\/duvet-covers\/?"/g, 'href="/th/duvet-covers/"').replace(/href="\/sheets\/?"/g, 'href="/th/sheets/"').replace(/href="\/boarding-dorm\/?"/g, 'href="/th/boarding-dorm/"').replace(/href="\/rv-truck\/?"/g, 'href="/th/rv-truck/"').replace(/href="\/" class="logo-link/g, 'href="/th/" class="logo-link');
   }
   if (!html.includes('id="shared-footer-mobile-style"')) {
     html = html.replace(/<\/head>/i, `${SHARED_FOOTER_MOBILE_STYLE}
@@ -13802,7 +13794,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-ow5Oqb/functionsRoutes-0.4823991824946481.mjs
+// ../.wrangler/tmp/pages-HASSdo/functionsRoutes-0.6255173493488387.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

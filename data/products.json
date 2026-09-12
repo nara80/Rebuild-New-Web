@@ -73,7 +73,7 @@
     {
       "slug": "standard-fitted-sheet",
       "name": "Standard Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â£Ã Â¸Â²Ã Â¸Å¡Ã Â¸Â¡Ã Â¸Â²Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂÃ Â¸Â²Ã Â¸â„¢",
+      "nameTh": "ผ้าปูที่นอนรัดมุมขนาดมาตรฐาน",
       "categories": [
         "sheets"
       ],
@@ -87,7 +87,7 @@
     {
       "slug": "deep-pocket-fitted-sheet",
       "name": "Deep Pocket Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â¥Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â´Ã Â¹â‚¬Ã Â¸Â¨Ã Â¸Â©",
+      "nameTh": "ผ้าปูที่นอนรัดมุมสำหรับที่นอนหนาพิเศษ",
       "categories": [
         "sheets",
         "deep-pocket"
@@ -102,7 +102,7 @@
     {
       "slug": "marine-fitted-sheet",
       "name": "Marine Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ Marine (V-Berth)",
+      "nameTh": "ผ้าปูที่นอน Marine (V-Berth)",
       "categories": [
         "sheets",
         "marine"
@@ -132,7 +132,7 @@
     {
       "slug": "dorm-fitted-sheet",
       "name": "Dorm Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â«Ã Â¸Â­Ã Â¸Å¾Ã Â¸Â±Ã Â¸Â",
+      "nameTh": "ผ้าปูหอพัก",
       "categories": [
         "sheets",
         "boarding-dorm"
@@ -147,7 +147,7 @@
     {
       "slug": "rv-truck-fitted-sheet",
       "name": "RV & Truck Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ RV & Truck",
+      "nameTh": "ผ้าปูที่นอน RV & Truck",
       "categories": [
         "sheets",
         "rv-truck"
@@ -162,7 +162,7 @@
     {
       "slug": "family-fitted-sheet",
       "name": "Family Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§ Co-Sleep",
+      "nameTh": "ผ้าปูที��นอนสำหรับเตียงครอบครัวและ Co-Sleeping",
       "categories": [
         "sheets",
         "family"
@@ -177,7 +177,7 @@
     {
       "slug": "pet-owner-fitted-sheet",
       "name": "Pet Owner Fitted Sheet",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢Ã Â¸ÂªÃ Â¸Â³Ã Â¸Â«Ã Â¸Â£Ã Â¸Â±Ã Â¸Å¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¢Ã Â¸Â§Ã Â¹Å’Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸ÂµÃ Â¹â€°Ã Â¸Â¢Ã Â¸â€¡",
+      "nameTh": "ผ้าปูที่นอนสำหรับสัตว์เลี้ยง",
       "categories": [
         "sheets",
         "pets"
@@ -192,7 +192,7 @@
     {
       "slug": "flat-sheet-standard",
       "name": "Flat Sheet Ã¢â‚¬â€ Standard",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â£Ã Â¸Â²Ã Â¸Å¡Ã Â¸Â¡Ã Â¸Â²Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂÃ Â¸Â²Ã Â¸â„¢",
+      "nameTh": "ผ้าปูราบมาตรฐาน",
       "categories": [
         "sheets"
       ],
@@ -206,7 +206,7 @@
     {
       "slug": "flat-sheet-extra-deep-pocket",
       "name": "Flat Sheet Ã¢â‚¬â€ Extra Deep Pocket",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸Â£Ã Â¸Â²Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â¥Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â´Ã Â¹â‚¬Ã Â¸Â¨Ã Â¸Â©",
+      "nameTh": "ผ้าปูที่นอนแบบไม่รัดมุม สำหรับที่นอนหนาพิเศษ",
       "categories": [
         "sheets",
         "deep-pocket"
@@ -236,7 +236,7 @@
     {
       "slug": "3-sided-duvet",
       "name": "3-Sided Zipper Duvet Cover",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢ 3 Ã Â¸â€Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸â€¹Ã Â¸Â´Ã Â¸â€º",
+      "nameTh": "ปลอกผ้านวมซิป 3 ด้าน ถอด-ใส่ สะดวก",
       "categories": [
         "duvet-covers",
         "family"
@@ -251,7 +251,7 @@
     {
       "slug": "pet-owner-duvet-cover",
       "name": "Pet Owner Duvet Cover",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢Ã Â¸ÂªÃ Â¸Â³Ã Â¸Â«Ã Â¸Â£Ã Â¸Â±Ã Â¸Å¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¢Ã Â¸Â§Ã Â¹Å’Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸ÂµÃ Â¹â€°Ã Â¸Â¢Ã Â¸â€¡",
+      "nameTh": "ปลอกผ้านวมสำหรับเจ้าของสัตว์เลี้ยง",
       "categories": [
         "duvet-covers",
         "pets"
@@ -266,7 +266,7 @@
     {
       "slug": "duvet-cover-marine",
       "name": "Duvet Cover Ã¢â‚¬â€ Marine",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢ Marine",
+      "nameTh": "ปลอกผ้านวมสำหรับเรือ",
       "categories": [
         "duvet-covers",
         "marine"
@@ -281,7 +281,7 @@
     {
       "slug": "duvet-cover-rv",
       "name": "Duvet Cover Ã¢â‚¬â€ RV",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢ RV",
+      "nameTh": "ปลอกผ้านวมสำหรับรถบ้าน",
       "categories": [
         "duvet-covers",
         "rv-truck"
@@ -296,7 +296,7 @@
     {
       "slug": "duvet-cover-dorm",
       "name": "Duvet Cover Ã¢â‚¬â€ Dorm",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€žÃ Â¸Â¥Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â§Ã Â¸Â¢Ã Â¸Â«Ã Â¸Â­Ã Â¸Å¾Ã Â¸Â±Ã Â¸Â",
+      "nameTh": "ปลอกผ้านวมซิป 3 ด้าน สำหรับหอพัก",
       "categories": [
         "duvet-covers",
         "boarding-dorm"
@@ -311,7 +311,7 @@
     {
       "slug": "duvet-insert",
       "name": "Duvet Insert",
-      "nameTh": "Ã Â¹â€žÃ Â¸ÂªÃ Â¹â€°Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸Â§Ã Â¸Â¡ (Duvet Insert)",
+      "nameTh": "ไส้ผ้านวมไมโครไฟเบอร์",
       "categories": [
         "duvet-covers"
       ],
@@ -325,7 +325,7 @@
     {
       "slug": "pillowcase-envelope",
       "name": "Envelope Pillowcase",
-      "nameTh": "Ã Â¸â€“Ã Â¸Â¸Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸â€¹Ã Â¸Â­Ã Â¸â€¡",
+      "nameTh": "ปลอกหมอนรุ่นทั่วไป",
       "categories": [
         "pillowcases",
         "marine",
@@ -345,7 +345,7 @@
     {
       "slug": "pillowcase-zipper",
       "name": "Zipper Pillowcase",
-      "nameTh": "Ã Â¸â€“Ã Â¸Â¸Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢Ã Â¸â€¹Ã Â¸Â´Ã Â¸â€º",
+      "nameTh": "ปลอกหมอนติดซิป",
       "categories": [
         "pillowcases",
         "marine",
@@ -365,7 +365,7 @@
     {
       "slug": "pillowcase-sham",
       "name": "Sham Pillowcase",
-      "nameTh": "Ã Â¸â€“Ã Â¸Â¸Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢ Sham",
+      "nameTh": "ปลอกหมอนมีขอบระบาย",
       "categories": [
         "pillowcases",
         "marine",
@@ -385,7 +385,7 @@
     {
       "slug": "marine-mattress-protector",
       "name": "Marine Mattress Protector",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢ Marine",
+      "nameTh": "ผ้ารองกันเปื้อนที่นอนเรือ",
       "categories": [
         "protection",
         "marine"
@@ -400,7 +400,7 @@
     {
       "slug": "mattress-protector-standard",
       "name": "Mattress Protector Ã¢â‚¬â€ Standard",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸Â¡Ã Â¸Â²Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂÃ Â¸Â²Ã Â¸â„¢",
+      "nameTh": "ผ้าปูกันเปื้อนมาตรฐาน",
       "categories": [
         "protection"
       ],
@@ -414,7 +414,7 @@
     {
       "slug": "mattress-protector-family",
       "name": "Mattress Protector Ã¢â‚¬â€ Family",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§",
+      "nameTh": "ผ้าปูกันเปื้อนครอบครัว",
       "categories": [
         "protection",
         "family"
@@ -429,7 +429,7 @@
     {
       "slug": "mattress-protector-deep-pocket",
       "name": "Mattress Protector Ã¢â‚¬â€ Deep Pocket",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â¥Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â´Ã Â¹â‚¬Ã Â¸Â¨Ã Â¸Â©",
+      "nameTh": "ผ้าปูกันเปื้อนความลึกพิเศษ",
       "categories": [
         "protection",
         "deep-pocket"
@@ -444,7 +444,7 @@
     {
       "slug": "pet-proof-mattress-protector",
       "name": "Pet-Proof Mattress Protector",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸â€ºÃ Â¸Â¹Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¢Ã Â¸Â§Ã Â¹Å’Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸ÂµÃ Â¹â€°Ã Â¸Â¢Ã Â¸â€¡",
+      "nameTh": "ผ้ากันเปื้อนสำหรับสัตว์เลี้ยง",
       "categories": [
         "protection",
         "pets"
@@ -459,7 +459,7 @@
     {
       "slug": "mattress-encasement-general",
       "name": "6-Sided Mattress Encasement",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ 6 Ã Â¸â€Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢",
+      "nameTh": "ปลอกกันเปื้อนที่นอน 6 ด้าน รุ่นกันน้ำ",
       "categories": [
         "protection",
         "marine",
@@ -475,7 +475,7 @@
     {
       "slug": "rv-truck-mattress-encasement",
       "name": "RV & Truck Mattress Encasement",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â„¢Ã Â¸Â­Ã Â¸â„¢ RV & Truck",
+      "nameTh": "ปลอกกันเปื้อนที่นอนรถบ้าน รุ่นกันน้ำ",
       "categories": [
         "protection",
         "rv-truck"
@@ -490,7 +490,7 @@
     {
       "slug": "pillow-protector-general",
       "name": "Pillow Protector",
-      "nameTh": "Ã Â¸Å“Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂÃ Â¸Â±Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸Â«Ã Â¸Â¡Ã Â¸Â­Ã Â¸â„¢",
+      "nameTh": "ปลอกกันเปื้อนหมอน",
       "categories": [
         "protection",
         "marine",
@@ -510,7 +510,7 @@
     {
       "slug": "bedbridge-connector",
       "name": "BedBridge Connector",
-      "nameTh": "BedBridge Connector",
+      "nameTh": "ตัวเชื่อมเตียงคู่รัก BedBridge",
       "categories": [
         "accessories",
         "family"
@@ -525,7 +525,7 @@
     {
       "slug": "mattress-lift-helper",
       "name": "Easy Bed Maker & Mattress Lifter",
-      "nameTh": "à¸•à¸±à¸§à¸Šà¹ˆà¸§à¸¢à¸¢à¸à¸—à¸µà¹ˆà¸™à¸­à¸™",
+      "nameTh": "�\"ัว�`��วยยก�\u0014ี���\"อ�\"",
       "categories": [
         "accessories"
       ],
