@@ -9,7 +9,9 @@
 
 A Notion OrderList record is synced only when:
 1. `Product_Mapping_Status = "Mapped"` (server-side query filter; empty/Unmapped/Review Required/Partial always belong to Make.com), AND
-2. `D1_Current_Signature != D1_Last_Synced_Signature`, or `D1_Last_Synced_Signature` is empty.
+2. `D1_Current_Signature != D1_Last_Synced_Signature`, or `D1_Last_Synced_Signature` is empty, AND
+3. `TotalAmount` exists in Notion (> 0). **Permanent rule (2026-09-12):** revenue data is corrected monthly; records without a total are held (`skipped_no_total`) and re-sync automatically once the total is filled (the signature changes), AND
+4. With `--before ISO`: `Order_Date` is before the cutoff and parseable (server-side filter on `Order_Date`/`Order_date01` + client-side defense). Used to hold back months still being corrected — e.g. `--before 2026-08-01` = July 2026 and earlier, since August is being corrected until end of September 2026.
 
 After a successful D1 upsert (live mode), the tool writes `D1_Last_Synced_Signature = D1_Current_Signature` — the only Notion field it ever writes.
 
@@ -31,6 +33,7 @@ $env:MAPPER_API_BASE="https://www.mildmate.com"   # or http://localhost:8788 for
 | `--resume` | Continue from the saved cursor (`scripts/.notion-mapper-state.json`, gitignored) |
 | `--order-id N` | Only the record whose Notion `ID` (unique_id) = N, e.g. `1038` |
 | `--edited-after ISO` | Notion-side `last_edited_time` filter |
+| `--before ISO-date` | Scope to records with `Order_Date` before the date (e.g. `2026-08-01` = July-and-earlier); server-side + client-side |
 | `--input-file f.json` | Offline mock mode (testing only) |
 
 Logs: JSONL per run under `logs/notion-mapper/` (gitignored), token- and PII-free.
@@ -67,10 +70,13 @@ node scripts/notion-product-mapper.mjs --order-id 1038            # expect skipp
 node scripts/notion-product-mapper.mjs --dry-run --limit 5
 node scripts/notion-product-mapper.mjs --limit 5
 node scripts/notion-product-mapper.mjs --limit 20
-node scripts/notion-product-mapper.mjs --limit 50
+node scripts/notion-product-mapper.mjs --limit 20
 
-# 3. Full historical backlog (Phase 08), resumable
-node scripts/notion-product-mapper.mjs --resume
+# 3. Historical backfill scoped to corrected months (2026-09-12 rule set:
+#    July 2026 and earlier, TotalAmount required)
+node scripts/notion-product-mapper.mjs --dry-run --limit 50 --before 2026-08-01
+node scripts/notion-product-mapper.mjs --limit 50 --before 2026-08-01
+node scripts/notion-product-mapper.mjs --resume --before 2026-08-01   # full July-and-earlier backlog
 ```
 
 After each batch: check the run summary (`synced`, `skipped_unchanged`, `skipped_parse_failed`, `skipped_ids_mismatch`, `errors`), spot-check Notion signatures, and reconcile counts in the Data Analyst dashboard.
