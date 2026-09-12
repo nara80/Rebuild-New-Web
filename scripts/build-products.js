@@ -839,12 +839,18 @@ const TH_CHROME_REPLACEMENTS = [
   ['>Shop With Us</h3>', '>สั่งซือกับเรา</h3>'],
   ['>Contact</h3>', '>ติดต่อเรา</h3>'],
   // Footer links
-  ['>About Us</a>', '>เกี่ยวกับเรา</a>'],
+  ['>About Us</a>', '>เกี่ยอบกับเรา</a>'],
   ['>Contact Us</a>', '>ติดต่อเรา</a>'],
   ['>Reviews</a>', '>รีวิว</a>'],
   ['>FAQ</a>', '>คำถามที่พบบ่อย</a>'],
   ['>Privacy Policy</a>', '>นโยบายความเป็นส่วนตัว</a>'],
-  ['>Returns &amp; Delivery</a>', '>การคืนสินค้าและการจัดส่ง</a>']
+  ['>Returns &amp; Delivery</a>', '>การคืนสินค้าและการจัดส่ง</a>'],
+  // Breadcrumb category labels (matches {{BREADCRUMB_CATEGORY_LABEL}} substitution)
+  ['>Fitted Sheets<', '>ผ้าปูที่นอนรัดมุม<'],
+  ['>Pillowcases<', '>ปลอกหมอน<'],
+  ['>Protection<', '>ผลิตภัณฑ์ปกป้อง<'],
+  ['>Duvet Covers<', '>ปลอกผ้าห่ม<'],
+  ['>Sheets<', '>ผ้าปูที่นอน<']
 ];
 
 // Pick the best Thai title for a product. Some products.json entries store
