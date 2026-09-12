@@ -1,11 +1,15 @@
-﻿var __defProp = Object.defineProperty;
+------formdata-undici-058978172705
+Content-Disposition: form-data; name="metadata"
+
+{"main_module":"functionsWorker-0.042110196893703766.js"}
+------formdata-undici-058978172705
+Content-Disposition: form-data; name="functionsWorker-0.042110196893703766.js"; filename="functionsWorker-0.042110196893703766.js"
+Content-Type: application/javascript+module
+
+var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// _worker.js
-var __defProp2 = Object.defineProperty;
-var __name2 = /* @__PURE__ */ __name((target, value) => __defProp2(target, "name", { value, configurable: true }), "__name");
-var __defProp22 = Object.defineProperty;
-var __name22 = /* @__PURE__ */ __name2((target, value) => __defProp22(target, "name", { value, configurable: true }), "__name");
+// ../workers/api/sales.ts
 var SALES_SERVICE_NAME = "mildmate-sales-api";
 var SALES_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
 var SOURCE_MAP = {
@@ -55,8 +59,6 @@ function response(body, status = 200) {
   });
 }
 __name(response, "response");
-__name2(response, "response");
-__name22(response, "response");
 function trimTo(v, max = 255) {
   if (v === void 0 || v === null) return null;
   const s = String(v).trim();
@@ -64,16 +66,12 @@ function trimTo(v, max = 255) {
   return s.slice(0, max);
 }
 __name(trimTo, "trimTo");
-__name2(trimTo, "trimTo");
-__name22(trimTo, "trimTo");
 function toNum(v) {
   if (v === void 0 || v === null || v === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
 __name(toNum, "toNum");
-__name2(toNum, "toNum");
-__name22(toNum, "toNum");
 function normalizeSourceSystem(raw) {
   const key = String(raw || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
   if (!key) return "";
@@ -81,8 +79,6 @@ function normalizeSourceSystem(raw) {
   return key.replace(/[^a-z0-9-]/g, "");
 }
 __name(normalizeSourceSystem, "normalizeSourceSystem");
-__name2(normalizeSourceSystem, "normalizeSourceSystem");
-__name22(normalizeSourceSystem, "normalizeSourceSystem");
 function normalizeStatus(raw) {
   const v = trimTo(raw, 40);
   if (!v) return null;
@@ -91,31 +87,23 @@ function normalizeStatus(raw) {
   return s;
 }
 __name(normalizeStatus, "normalizeStatus");
-__name2(normalizeStatus, "normalizeStatus");
-__name22(normalizeStatus, "normalizeStatus");
 function normalizeMappingStatus(raw) {
   const v = trimTo(raw, 40);
   if (!v) return null;
   return ALLOWED_MAPPING_STATUS.has(v) ? v : null;
 }
 __name(normalizeMappingStatus, "normalizeMappingStatus");
-__name2(normalizeMappingStatus, "normalizeMappingStatus");
-__name22(normalizeMappingStatus, "normalizeMappingStatus");
 function parseItemStatus(raw) {
   const v = String(raw || "").trim().toLowerCase();
   return v === "removed" ? "removed" : "active";
 }
 __name(parseItemStatus, "parseItemStatus");
-__name2(parseItemStatus, "parseItemStatus");
-__name22(parseItemStatus, "parseItemStatus");
 function same(a, b) {
   if (a === null || a === void 0 || a === "") return b === null || b === void 0 || b === "";
   if (b === null || b === void 0 || b === "") return false;
   return String(a) === String(b);
 }
 __name(same, "same");
-__name2(same, "same");
-__name22(same, "same");
 async function ensureSalesSchema(env) {
   if (schemaReady) return;
   if (!schemaPromise) {
@@ -224,8 +212,6 @@ async function ensureSalesSchema(env) {
   await schemaPromise;
 }
 __name(ensureSalesSchema, "ensureSalesSchema");
-__name2(ensureSalesSchema, "ensureSalesSchema");
-__name22(ensureSalesSchema, "ensureSalesSchema");
 async function createSyncRun(env, payload) {
   const startedAt = (/* @__PURE__ */ new Date()).toISOString();
   const source = trimTo(payload.sync_source, 80) || "notion-orderlist";
@@ -237,8 +223,6 @@ async function createSyncRun(env, payload) {
   return Number(ins.meta?.last_row_id || 0);
 }
 __name(createSyncRun, "createSyncRun");
-__name2(createSyncRun, "createSyncRun");
-__name22(createSyncRun, "createSyncRun");
 async function finishSyncRun(env, runId, data) {
   if (!runId) return;
   await env.DB.prepare(
@@ -263,8 +247,6 @@ async function finishSyncRun(env, runId, data) {
   ).run();
 }
 __name(finishSyncRun, "finishSyncRun");
-__name2(finishSyncRun, "finishSyncRun");
-__name22(finishSyncRun, "finishSyncRun");
 async function requireBearerAuth(request, env) {
   const configured = trimTo(env[SALES_TOKEN_SECRET_NAME], 500);
   if (!configured) {
@@ -286,8 +268,6 @@ async function requireBearerAuth(request, env) {
   return { ok: true };
 }
 __name(requireBearerAuth, "requireBearerAuth");
-__name2(requireBearerAuth, "requireBearerAuth");
-__name22(requireBearerAuth, "requireBearerAuth");
 async function validateProductIds(env, items) {
   const ids = Array.from(
     new Set(
@@ -305,8 +285,6 @@ async function validateProductIds(env, items) {
   return { ok: true };
 }
 __name(validateProductIds, "validateProductIds");
-__name2(validateProductIds, "validateProductIds");
-__name22(validateProductIds, "validateProductIds");
 function normalizePayload(raw) {
   const sourceSystem = normalizeSourceSystem(raw.source_system);
   if (!sourceSystem) return { ok: false, code: "MISSING_SOURCE_SYSTEM", message: "source_system is required." };
@@ -403,20 +381,14 @@ function normalizePayload(raw) {
   };
 }
 __name(normalizePayload, "normalizePayload");
-__name2(normalizePayload, "normalizePayload");
-__name22(normalizePayload, "normalizePayload");
 function compareOrder(existing, incoming) {
   return same(existing.notion_page_id, incoming.notion_page_id) && same(existing.order_date, incoming.order_date) && same(existing.channel, incoming.channel) && same(existing.currency, incoming.currency) && same(existing.order_total, incoming.order_total) && same(existing.status, incoming.status) && same(existing.destination_country, incoming.destination_country) && same(existing.mapping_status, incoming.mapping_status) && same(existing.source_created_at, incoming.source_created_at) && same(existing.source_updated_at, incoming.source_updated_at);
 }
 __name(compareOrder, "compareOrder");
-__name2(compareOrder, "compareOrder");
-__name22(compareOrder, "compareOrder");
 function compareItem(existing, incoming) {
   return same(existing.item_no, incoming.item_no) && same(existing.product_id, incoming.product_id) && same(existing.quantity, incoming.quantity) && same(existing.raw_item_text, incoming.raw_item_text) && same(existing.line_revenue, incoming.line_revenue) && same(existing.revenue_status, incoming.revenue_status) && same(existing.mapping_status, incoming.mapping_status) && parseItemStatus(existing.item_status) === parseItemStatus(incoming.item_status);
 }
 __name(compareItem, "compareItem");
-__name2(compareItem, "compareItem");
-__name22(compareItem, "compareItem");
 async function handleUpsert(request, env) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -663,8 +635,6 @@ async function handleUpsert(request, env) {
   }
 }
 __name(handleUpsert, "handleUpsert");
-__name2(handleUpsert, "handleUpsert");
-__name22(handleUpsert, "handleUpsert");
 async function handleReadOrder(request, env, sourcePart, orderPart) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -715,15 +685,11 @@ async function handleReadOrder(request, env, sourcePart, orderPart) {
   });
 }
 __name(handleReadOrder, "handleReadOrder");
-__name2(handleReadOrder, "handleReadOrder");
-__name22(handleReadOrder, "handleReadOrder");
 var ALLOWED_MATCH_SCOPE = /* @__PURE__ */ new Set(["variation", "listing", "alias"]);
 function normalizeAliasKey(raw) {
   return String(raw || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 }
 __name(normalizeAliasKey, "normalizeAliasKey");
-__name2(normalizeAliasKey, "normalizeAliasKey");
-__name22(normalizeAliasKey, "normalizeAliasKey");
 function parseProductIdsJson(raw) {
   try {
     const arr = JSON.parse(String(raw));
@@ -734,8 +700,6 @@ function parseProductIdsJson(raw) {
   }
 }
 __name(parseProductIdsJson, "parseProductIdsJson");
-__name2(parseProductIdsJson, "parseProductIdsJson");
-__name22(parseProductIdsJson, "parseProductIdsJson");
 async function handleMappingCatalog(request, env) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -755,8 +719,6 @@ async function handleMappingCatalog(request, env) {
   });
 }
 __name(handleMappingCatalog, "handleMappingCatalog");
-__name2(handleMappingCatalog, "handleMappingCatalog");
-__name22(handleMappingCatalog, "handleMappingCatalog");
 async function recordAliasHit(env, aliasId) {
   await env.DB.prepare(
     `UPDATE product_mapping_aliases
@@ -765,8 +727,6 @@ async function recordAliasHit(env, aliasId) {
   ).bind((/* @__PURE__ */ new Date()).toISOString(), aliasId).run();
 }
 __name(recordAliasHit, "recordAliasHit");
-__name2(recordAliasHit, "recordAliasHit");
-__name22(recordAliasHit, "recordAliasHit");
 async function handleMappingResolve(request, env) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -791,7 +751,7 @@ async function handleMappingResolve(request, env) {
   }
   const order = `ORDER BY (source_system IS NULL) ASC, verified DESC, id ASC LIMIT 1`;
   const sourceCond = `(source_system IS NULL OR source_system = ?1)`;
-  const hit = /* @__PURE__ */ __name22(async (sql, ...binds) => env.DB.prepare(sql).bind(...binds).first(), "hit");
+  const hit = /* @__PURE__ */ __name(async (sql, ...binds) => env.DB.prepare(sql).bind(...binds).first(), "hit");
   let row = null;
   let method = "";
   if (!row && listingId && variationNorm) {
@@ -856,8 +816,6 @@ async function handleMappingResolve(request, env) {
   });
 }
 __name(handleMappingResolve, "handleMappingResolve");
-__name2(handleMappingResolve, "handleMappingResolve");
-__name22(handleMappingResolve, "handleMappingResolve");
 async function handleMappingAliasUpsert(request, env) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -922,8 +880,6 @@ async function handleMappingAliasUpsert(request, env) {
   return response({ success: true, action: "created", alias_id: Number(ins.meta?.last_row_id || 0), product_ids: productIds });
 }
 __name(handleMappingAliasUpsert, "handleMappingAliasUpsert");
-__name2(handleMappingAliasUpsert, "handleMappingAliasUpsert");
-__name22(handleMappingAliasUpsert, "handleMappingAliasUpsert");
 async function handleMappingAliasList(request, env) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -939,8 +895,6 @@ async function handleMappingAliasList(request, env) {
   return response({ success: true, count: (rows.results || []).length, aliases: rows.results || [] });
 }
 __name(handleMappingAliasList, "handleMappingAliasList");
-__name2(handleMappingAliasList, "handleMappingAliasList");
-__name22(handleMappingAliasList, "handleMappingAliasList");
 var ALLOWED_MAPPING_METHOD = /* @__PURE__ */ new Set(["EXACT_VARIATION", "EXACT_ALIAS", "LISTING_VARIATION", "RULE", "AI", "HUMAN"]);
 var ALLOWED_RESULT_STATUS = /* @__PURE__ */ new Set(["Mapped", "Partial", "Review Required", "Unmapped"]);
 async function handleMappingEventInsert(request, env) {
@@ -990,8 +944,6 @@ async function handleMappingEventInsert(request, env) {
   return response({ success: true, action: "created", event_id: Number(ins.meta?.last_row_id || 0) });
 }
 __name(handleMappingEventInsert, "handleMappingEventInsert");
-__name2(handleMappingEventInsert, "handleMappingEventInsert");
-__name22(handleMappingEventInsert, "handleMappingEventInsert");
 async function handleMappingEventList(request, env, url) {
   const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
@@ -1008,8 +960,6 @@ async function handleMappingEventList(request, env, url) {
   return response({ success: true, count: (rows.results || []).length, events: rows.results || [] });
 }
 __name(handleMappingEventList, "handleMappingEventList");
-__name2(handleMappingEventList, "handleMappingEventList");
-__name22(handleMappingEventList, "handleMappingEventList");
 async function handleSalesApi(request, env) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
@@ -1042,9 +992,9 @@ async function handleSalesApi(request, env) {
   return response({ error: "Sales route not found" }, 404);
 }
 __name(handleSalesApi, "handleSalesApi");
-__name2(handleSalesApi, "handleSalesApi");
-__name22(handleSalesApi, "handleSalesApi");
-var onRequest = /* @__PURE__ */ __name22(async (context) => {
+
+// api/v1/[[path]].ts
+var onRequest = /* @__PURE__ */ __name(async (context) => {
   const res = await handleSalesApi(context.request, context.env);
   if (res) return res;
   return new Response(JSON.stringify({ error: "Not Found" }), {
@@ -1052,13 +1002,13 @@ var onRequest = /* @__PURE__ */ __name22(async (context) => {
     headers: { "Content-Type": "application/json" }
   });
 }, "onRequest");
+
+// blog-shared.ts
 function escHtml(str) {
   if (!str) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 __name(escHtml, "escHtml");
-__name2(escHtml, "escHtml");
-__name22(escHtml, "escHtml");
 function formatDate(dateStr) {
   if (!dateStr) return "";
   try {
@@ -1072,23 +1022,17 @@ function formatDate(dateStr) {
   }
 }
 __name(formatDate, "formatDate");
-__name2(formatDate, "formatDate");
-__name22(formatDate, "formatDate");
 var R2_PUBLIC_BASE = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toPublicR2Url(url) {
   if (!url) return url;
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url, "toPublicR2Url");
-__name2(toPublicR2Url, "toPublicR2Url");
-__name22(toPublicR2Url, "toPublicR2Url");
 function normalizeR2InHtml(html) {
   if (!html) return html;
   return html.replace(/(["'])\/r2\//g, `$1${R2_PUBLIC_BASE}/`).replace(/\\\/r2\\\//g, `${R2_PUBLIC_BASE.replace(/\//g, "\\/")}\\/`);
 }
 __name(normalizeR2InHtml, "normalizeR2InHtml");
-__name2(normalizeR2InHtml, "normalizeR2InHtml");
-__name22(normalizeR2InHtml, "normalizeR2InHtml");
 function extractExcerptFromHtml(html, maxLen = 140) {
   if (!html) return "";
   const text = String(html).replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/\s+/g, " ").trim();
@@ -1096,14 +1040,12 @@ function extractExcerptFromHtml(html, maxLen = 140) {
   return text.length > maxLen ? text.slice(0, maxLen).trim() : text;
 }
 __name(extractExcerptFromHtml, "extractExcerptFromHtml");
-__name2(extractExcerptFromHtml, "extractExcerptFromHtml");
-__name22(extractExcerptFromHtml, "extractExcerptFromHtml");
 async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter = "All") {
   const isThai = lang === "th";
   try {
     const PER_PAGE = 8;
     const selectedCategory = (categoryFilter || "All").trim();
-    const parseCats = /* @__PURE__ */ __name22((raw) => {
+    const parseCats = /* @__PURE__ */ __name((raw) => {
       try {
         const arr = JSON.parse(raw || "[]");
         if (!Array.isArray(arr)) return [];
@@ -1142,7 +1084,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
     ).bind(PER_PAGE, offset);
     const { results } = await stmt.all();
     const posts = results || [];
-    const esc = /* @__PURE__ */ __name22((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
+    const esc = /* @__PURE__ */ __name((s) => s ? s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "", "esc");
     let featuredHtml = "";
     let gridHtml = "";
     const CATEGORY_TH = {
@@ -1189,10 +1131,10 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
       const nextPage = page < totalPages ? page + 1 : totalPages;
       const prevDisabled = page <= 1;
       const nextDisabled = page >= totalPages;
-      const escAttr = /* @__PURE__ */ __name22((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
+      const escAttr = /* @__PURE__ */ __name((s) => String(s).replace(/"/g, "&quot;").replace(/&/g, "&amp;"), "escAttr");
       const baseUrl = (isThai ? "/th" : "") + "/blogs/";
       const categoryQs = activeCategory === "All" ? "" : "category=" + encodeURIComponent(activeCategory);
-      const pageUrl = /* @__PURE__ */ __name22((p) => {
+      const pageUrl = /* @__PURE__ */ __name((p) => {
         const params = [];
         if (categoryQs) params.push(categoryQs);
         if (p > 1) params.push("page=" + p);
@@ -1213,8 +1155,6 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
   }
 }
 __name(buildBlogListingHTML, "buildBlogListingHTML");
-__name2(buildBlogListingHTML, "buildBlogListingHTML");
-__name22(buildBlogListingHTML, "buildBlogListingHTML");
 async function buildBlogPostHTML(post, env, lang = "en") {
   const isThai = lang === "th";
   const title = isThai ? escHtml(post.title_th || post.title_en || "MildMate Blog") : escHtml(post.title_en || "MildMate Blog");
@@ -1439,8 +1379,8 @@ async function buildBlogPostHTML(post, env, lang = "en") {
 </head>`);
 }
 __name(buildBlogPostHTML, "buildBlogPostHTML");
-__name2(buildBlogPostHTML, "buildBlogPostHTML");
-__name22(buildBlogPostHTML, "buildBlogPostHTML");
+
+// th/blogs/[[path]].ts
 async function onRequest2(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -1480,9 +1420,9 @@ async function onRequest2(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest2, "onRequest2");
-__name2(onRequest2, "onRequest2");
-__name22(onRequest2, "onRequest");
+__name(onRequest2, "onRequest");
+
+// product/[[path]].ts
 var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "standard-fitted-sheet",
   "deep-pocket-fitted-sheet",
@@ -1536,8 +1476,6 @@ function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
 __name(hasToken, "hasToken");
-__name2(hasToken, "hasToken");
-__name22(hasToken, "hasToken");
 function resolveLegacyProduct(slug) {
   if (slug === "%e0%b9%84%e0%b8%aa%e0%b9%89%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%99%e0%b8%a7%e0%b8%a1") return "/product/duvet-insert/";
   if (slug.startsWith("%e0%b8%9c%e0%b9%89%e0%b8%b2%e0%b8%9b%e0%b8%b9")) return "/product/family-fitted-sheet/";
@@ -1573,34 +1511,24 @@ function resolveLegacyProduct(slug) {
   return "/products/";
 }
 __name(resolveLegacyProduct, "resolveLegacyProduct");
-__name2(resolveLegacyProduct, "resolveLegacyProduct");
-__name22(resolveLegacyProduct, "resolveLegacyProduct");
 function escapeHtml(value) {
   return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 __name(escapeHtml, "escapeHtml");
-__name2(escapeHtml, "escapeHtml");
-__name22(escapeHtml, "escapeHtml");
 function stripHtml(value) {
   return String(value || "").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<\/?[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
 }
 __name(stripHtml, "stripHtml");
-__name2(stripHtml, "stripHtml");
-__name22(stripHtml, "stripHtml");
 function truncateForMeta(value, max = 160) {
   const text = String(value || "").trim();
   if (!text || text.length <= max) return text;
   return `${text.slice(0, max - 1).trimEnd()}\u2026`;
 }
 __name(truncateForMeta, "truncateForMeta");
-__name2(truncateForMeta, "truncateForMeta");
-__name22(truncateForMeta, "truncateForMeta");
 function looksLikeHtml(value) {
   return /<\/?[a-z][\s\S]*>/i.test(String(value || ""));
 }
 __name(looksLikeHtml, "looksLikeHtml");
-__name2(looksLikeHtml, "looksLikeHtml");
-__name22(looksLikeHtml, "looksLikeHtml");
 function buildDescriptionHtml(description) {
   const text = String(description || "").trim();
   if (!text) return "";
@@ -1608,8 +1536,6 @@ function buildDescriptionHtml(description) {
   return `<p>${escapeHtml(text)}</p>`;
 }
 __name(buildDescriptionHtml, "buildDescriptionHtml");
-__name2(buildDescriptionHtml, "buildDescriptionHtml");
-__name22(buildDescriptionHtml, "buildDescriptionHtml");
 function applyLocalizedDescriptionFromD1(html, description, isTh) {
   const text = String(description || "").trim();
   if (!text) return html;
@@ -1627,8 +1553,6 @@ function applyLocalizedDescriptionFromD1(html, description, isTh) {
   return html;
 }
 __name(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
-__name2(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
-__name22(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
 function applyLocalizedFaqFromD1(html, faq) {
   const text = String(faq || "").trim();
   if (!text) return html;
@@ -1640,8 +1564,39 @@ function applyLocalizedFaqFromD1(html, faq) {
   );
 }
 __name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
-__name2(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
-__name22(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+var TH_GENERIC_FAQ_INNER = `<details class="faq-item" open>
+            <summary>\u0E08\u0E30\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E14\u0E39<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19 \u0E2B\u0E23\u0E37\u0E2D\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29\u0E44\u0E14\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48?</summary>
+            <p>\u0E44\u0E14\u0E49 \u0E04\u0E25\u0E34\u0E01 <strong>\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E41\u0E1A\u0E1A\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E40\u0E2D\u0E07</strong> \u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E41\u0E25\u0E49\u0E27\u0E2A\u0E48\u0E07\u0E04\u0E33\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E04\u0E27\u0E23\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E14\u0E39\u0E41\u0E25\u0E23\u0E31\u0E01\u0E29\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E1C\u0E49\u0E32\u0E17\u0E38\u0E01\u0E0A\u0E19\u0E34\u0E14\u0E02\u0E2D\u0E07 MildMate \u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49\u0E17\u0E35\u0E48\u0E2D\u0E38\u0E13\u0E2B\u0E20\u0E39\u0E21\u0E34\u0E1B\u0E32\u0E19\u0E01\u0E25\u0E32\u0E07 (40\xB0C / 104\xB0F) \u0E2B\u0E49\u0E32\u0E21\u0E43\u0E0A\u0E49\u0E19\u0E49\u0E33\u0E22\u0E32\u0E1F\u0E2D\u0E01\u0E02\u0E32\u0E27 \u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E15\u0E32\u0E01\u0E41\u0E2B\u0E49\u0E07\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E48\u0E21\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E40\u0E2A\u0E49\u0E19\u0E43\u0E22\u0E23\u0E30\u0E22\u0E30\u0E22\u0E32\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E19\u0E32\u0E19\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48?</summary>
+            <p>\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E42\u0E23\u0E07\u0E07\u0E32\u0E19\u0E43\u0E19\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22 \u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E02\u0E36\u0E49\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E01\u0E31\u0E1A\u0E1B\u0E25\u0E32\u0E22\u0E17\u0E32\u0E07\u0E41\u0E25\u0E30\u0E08\u0E30\u0E41\u0E08\u0E49\u0E07\u0E43\u0E2B\u0E49\u0E17\u0E23\u0E32\u0E1A\u0E43\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E2B\u0E23\u0E37\u0E2D\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
+          </details>`;
+var TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
+            <summary>\u0E04\u0E27\u0E23\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E14\u0E39\u0E41\u0E25\u0E23\u0E31\u0E01\u0E29\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E1C\u0E49\u0E32 CloudSoft \u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49 \u0E41\u0E2B\u0E49\u0E07\u0E40\u0E23\u0E47\u0E27 \u0E17\u0E19\u0E17\u0E32\u0E19\u0E15\u0E48\u0E2D\u0E2A\u0E20\u0E32\u0E1E\u0E41\u0E27\u0E14\u0E25\u0E49\u0E2D\u0E21\u0E17\u0E32\u0E07\u0E17\u0E30\u0E40\u0E25 \u0E2B\u0E49\u0E32\u0E21\u0E43\u0E0A\u0E49\u0E19\u0E49\u0E33\u0E22\u0E32\u0E1F\u0E2D\u0E01\u0E02\u0E32\u0E27 \u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E15\u0E32\u0E01\u0E41\u0E2B\u0E49\u0E07\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E48\u0E21\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E40\u0E2A\u0E49\u0E19\u0E43\u0E22\u0E23\u0E30\u0E22\u0E30\u0E22\u0E32\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E43\u0E0A\u0E49<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2D\u0E49\u0E32\u0E07\u0E2D\u0E34\u0E07 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E40\u0E15\u0E35\u0E22\u0E07\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19 \u0E41\u0E25\u0E49\u0E27\u0E01\u0E23\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E02\u0E2D\u0E07\u0E41\u0E15\u0E48\u0E25\u0E30\u0E14\u0E49\u0E32\u0E19\u0E43\u0E2B\u0E49\u0E15\u0E23\u0E07\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E27\u0E31\u0E14\u0E44\u0E14\u0E49\u0E08\u0E23\u0E34\u0E07 \u0E23\u0E30\u0E1A\u0E38\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E19\u0E32\u0E02\u0E2D\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E49\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E1E\u0E2D\u0E14\u0E35\u0E41\u0E1A\u0E1A\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E40\u0E2D\u0E07</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E25\u0E30\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E19\u0E32\u0E19\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48?</summary>
+            <p>\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E15\u0E32\u0E21\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E41\u0E25\u0E30\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E1C\u0E25\u0E34\u0E15 5\u20137 \u0E27\u0E31\u0E19\u0E17\u0E33\u0E01\u0E32\u0E23 \u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E02\u0E36\u0E49\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E01\u0E31\u0E1A\u0E1B\u0E25\u0E32\u0E22\u0E17\u0E32\u0E07 \u0E04\u0E38\u0E13\u0E08\u0E30\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E1E\u0E31\u0E2A\u0E14\u0E38\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E41\u0E25\u0E49\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E16\u0E49\u0E32\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E25\u0E34\u0E2A\u0E15\u0E4C\u0E25\u0E48\u0E30?</summary>
+            <p>\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E43\u0E01\u0E25\u0E49\u0E40\u0E04\u0E35\u0E22\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14\u0E41\u0E25\u0E30\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32 \u2014 \u0E40\u0E23\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E15\u0E32\u0E21\u0E41\u0E1A\u0E1A\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E2B\u0E23\u0E37\u0E2D<a href="/th/contact/">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32</a>\u0E42\u0E14\u0E22\u0E15\u0E23\u0E07\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E41\u0E19\u0E1A\u0E20\u0E32\u0E1E\u0E27\u0E32\u0E14\u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
+          </details>`;
+var MARINE_FAQ_SLUGS = /* @__PURE__ */ new Set(["marine-fitted-sheet", "marine-top-sheet", "marine-mattress-protector"]);
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
@@ -1660,8 +1615,6 @@ function applyThaiProductUiLocalization(html, tagline, slug) {
   return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 __name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
-__name2(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
-__name22(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
 function applyFlatSheetExtraDeepPocketGuardrails(html, isTh) {
   if (isTh) return html;
   return html.replace(
@@ -1670,8 +1623,6 @@ function applyFlatSheetExtraDeepPocketGuardrails(html, isTh) {
   ).replace(/Full-perimeter elastic\.?/gi, "Loose non-elastic top sheet");
 }
 __name(applyFlatSheetExtraDeepPocketGuardrails, "applyFlatSheetExtraDeepPocketGuardrails");
-__name2(applyFlatSheetExtraDeepPocketGuardrails, "applyFlatSheetExtraDeepPocketGuardrails");
-__name22(applyFlatSheetExtraDeepPocketGuardrails, "applyFlatSheetExtraDeepPocketGuardrails");
 async function onRequest3(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -1709,7 +1660,8 @@ async function onRequest3(context) {
     const product = await stmt.first();
     const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
-    const localizedFaq = isTh ? String(product?.faq_th || "") : String(product?.faq_en || "");
+    const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
+    const localizedFaq = isTh ? String(product?.faq_th || thFaqFallback) : String(product?.faq_en || "");
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
       html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""), slug);
@@ -1852,9 +1804,9 @@ async function onRequest3(context) {
     return context.next();
   }
 }
-__name(onRequest3, "onRequest3");
-__name2(onRequest3, "onRequest3");
-__name22(onRequest3, "onRequest");
+__name(onRequest3, "onRequest");
+
+// ../workers/api/products.ts
 var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url(url) {
   if (!url) return url;
@@ -1862,16 +1814,12 @@ function toR2Url(url) {
   return url;
 }
 __name(toR2Url, "toR2Url");
-__name2(toR2Url, "toR2Url");
-__name22(toR2Url, "toR2Url");
 function normalizeMojibake(str) {
   const s = String(str || "").trim();
   if (!s) return "";
-  return s.replace(/ÃŽâ€œÃƒâ€¡Ãƒâ€“/g, "\u2019").replace(/ÃŽâ€œÃƒâ€¡Ã‚Â£/g, "\u201C").replace(/ÃŽâ€œÃƒâ€¡Ã‚Â¥/g, "\u201D").replace(/ÃŽâ€œÃƒâ€¡ÃƒÂ¶/g, "\u2014").replace(/ÃŽâ€œÃƒâ€¡ÃƒÂ´/g, "\u2013").replace(/ÃŽâ€œÃƒâ€¡Ã‚Âª/g, "\u2026").replace(/ÃŽâ€œÃƒâ€¡Ã‚Â¢/g, "\u2022").replace(/Ã¢â€Å“ÃƒÂ¹/g, "\xD7").replace(/Ã¢â€°Â¡Ã†â€™[^\s.,!?;:)"'Ã¢â‚¬â„¢Ã¢â‚¬Â\]]+/g, "").replace(/Ã¢â€°Â¡Ã†â€™ÃƒÂ±ÃƒÂ¬/g, "").replace(/Ã¯Â¿Â½/g, "");
+  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "").replace(/≡ƒñì/g, "").replace(/�/g, "");
 }
 __name(normalizeMojibake, "normalizeMojibake");
-__name2(normalizeMojibake, "normalizeMojibake");
-__name22(normalizeMojibake, "normalizeMojibake");
 function r2Product(p) {
   const out = { ...p, image_url: toR2Url(p.image_url) };
   if (out.images && typeof out.images === "string") {
@@ -1889,8 +1837,6 @@ function r2Product(p) {
   return out;
 }
 __name(r2Product, "r2Product");
-__name2(r2Product, "r2Product");
-__name22(r2Product, "r2Product");
 async function ensureProductTaxonomyTables(env) {
   const db = env.DB;
   await db.prepare(`
@@ -1911,8 +1857,6 @@ async function ensureProductTaxonomyTables(env) {
   `).run();
 }
 __name(ensureProductTaxonomyTables, "ensureProductTaxonomyTables");
-__name2(ensureProductTaxonomyTables, "ensureProductTaxonomyTables");
-__name22(ensureProductTaxonomyTables, "ensureProductTaxonomyTables");
 var PRODUCT_TYPE_DISPLAY2 = {
   "sheets": "Sheets",
   "duvet-covers": "Duvet Covers",
@@ -1964,8 +1908,6 @@ async function listProducts(env, filters) {
   return result.results || [];
 }
 __name(listProducts, "listProducts");
-__name2(listProducts, "listProducts");
-__name22(listProducts, "listProducts");
 async function getProductBySlug(env, slug) {
   const db = env.DB;
   await ensureProductTaxonomyTables(env);
@@ -1973,8 +1915,6 @@ async function getProductBySlug(env, slug) {
   return result;
 }
 __name(getProductBySlug, "getProductBySlug");
-__name2(getProductBySlug, "getProductBySlug");
-__name22(getProductBySlug, "getProductBySlug");
 async function handleProducts(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -2027,8 +1967,6 @@ async function handleProducts(request, env) {
   });
 }
 __name(handleProducts, "handleProducts");
-__name2(handleProducts, "handleProducts");
-__name22(handleProducts, "handleProducts");
 async function handleProductReviews(env, slug) {
   try {
     const product = await getProductBySlug(env, slug);
@@ -2088,8 +2026,8 @@ async function handleProductReviews(env, slug) {
   }
 }
 __name(handleProductReviews, "handleProductReviews");
-__name2(handleProductReviews, "handleProductReviews");
-__name22(handleProductReviews, "handleProductReviews");
+
+// ../workers/api/pricing.ts
 var BOLT_WIDTH_CM = 260;
 var SQCM_PER_YARD = 91.44 * BOLT_WIDTH_CM;
 var FABRIC_COST_PER_YARD_THB = {
@@ -2135,8 +2073,6 @@ function inchToCm(val) {
   return val * 2.54;
 }
 __name(inchToCm, "inchToCm");
-__name2(inchToCm, "inchToCm");
-__name22(inchToCm, "inchToCm");
 function getSewingCost(areaSqCm) {
   for (const tier of SEWING_TIERS) {
     if (areaSqCm <= tier.maxArea) return tier.cost;
@@ -2144,8 +2080,6 @@ function getSewingCost(areaSqCm) {
   return SEWING_TIERS[SEWING_TIERS.length - 1].cost;
 }
 __name(getSewingCost, "getSewingCost");
-__name2(getSewingCost, "getSewingCost");
-__name22(getSewingCost, "getSewingCost");
 function getDuvetSewingCost(areaSqCm) {
   for (const tier of DUVET_SEWING_TIERS) {
     if (areaSqCm <= tier.maxArea) return tier.cost;
@@ -2153,8 +2087,6 @@ function getDuvetSewingCost(areaSqCm) {
   return DUVET_SEWING_TIERS[DUVET_SEWING_TIERS.length - 1].cost;
 }
 __name(getDuvetSewingCost, "getDuvetSewingCost");
-__name2(getDuvetSewingCost, "getDuvetSewingCost");
-__name22(getDuvetSewingCost, "getDuvetSewingCost");
 function calculateFittedSheetPrice(wCm, lCm, dCm, fabric, marginRate = MARGIN_RATE) {
   const fabricW = wCm + 2 * dCm + 14;
   const fabricL = lCm + 2 * dCm + 14;
@@ -2192,8 +2124,6 @@ function calculateFittedSheetPrice(wCm, lCm, dCm, fabric, marginRate = MARGIN_RA
   };
 }
 __name(calculateFittedSheetPrice, "calculateFittedSheetPrice");
-__name2(calculateFittedSheetPrice, "calculateFittedSheetPrice");
-__name22(calculateFittedSheetPrice, "calculateFittedSheetPrice");
 function calculateFlatSheetPrice(wCm, lCm, dCm, fabric) {
   const fabricW = wCm + 2 * dCm + 50;
   const fabricL = lCm + 2 * dCm + 50;
@@ -2230,8 +2160,6 @@ function calculateFlatSheetPrice(wCm, lCm, dCm, fabric) {
   };
 }
 __name(calculateFlatSheetPrice, "calculateFlatSheetPrice");
-__name2(calculateFlatSheetPrice, "calculateFlatSheetPrice");
-__name22(calculateFlatSheetPrice, "calculateFlatSheetPrice");
 function calculateDuvetPrice(wCm, lCm, fabric) {
   const rawArea = 2 * (wCm + 5) * (lCm + 5);
   const floorArea = rawArea * 1.2;
@@ -2269,8 +2197,6 @@ function calculateDuvetPrice(wCm, lCm, fabric) {
   };
 }
 __name(calculateDuvetPrice, "calculateDuvetPrice");
-__name2(calculateDuvetPrice, "calculateDuvetPrice");
-__name22(calculateDuvetPrice, "calculateDuvetPrice");
 function calculatePillowProtectorPrice(wCm, lCm) {
   const TPU_SQCM_PER_LM = 100 * 210;
   const rawArea = 2 * (wCm + 5) * (lCm + 5);
@@ -2308,8 +2234,6 @@ function calculatePillowProtectorPrice(wCm, lCm) {
   };
 }
 __name(calculatePillowProtectorPrice, "calculatePillowProtectorPrice");
-__name2(calculatePillowProtectorPrice, "calculatePillowProtectorPrice");
-__name22(calculatePillowProtectorPrice, "calculatePillowProtectorPrice");
 function calculatePillowcasePrice(wCm, lCm, fabric, variant) {
   let rawArea = 2 * (wCm + 5) * (lCm + 5);
   if (variant === "sham") rawArea *= 1 + PILLOW_SHAM_FABRIC_EXTRA;
@@ -2347,8 +2271,6 @@ function calculatePillowcasePrice(wCm, lCm, fabric, variant) {
   };
 }
 __name(calculatePillowcasePrice, "calculatePillowcasePrice");
-__name2(calculatePillowcasePrice, "calculatePillowcasePrice");
-__name22(calculatePillowcasePrice, "calculatePillowcasePrice");
 function calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) {
   const FABRIC_RATES = {
     breezeplus: { usd: 16e-4, thb: 0.057 },
@@ -2374,8 +2296,6 @@ function calculateLegacyPrice(mode, w, l, head, foot, fabric, currency) {
   return Math.round((base + extra) * 100) / 100;
 }
 __name(calculateLegacyPrice, "calculateLegacyPrice");
-__name2(calculateLegacyPrice, "calculateLegacyPrice");
-__name22(calculateLegacyPrice, "calculateLegacyPrice");
 function isFittedSheetProduct(product) {
   return [
     "standard-fitted-sheet",
@@ -2388,8 +2308,6 @@ function isFittedSheetProduct(product) {
   ].includes(product);
 }
 __name(isFittedSheetProduct, "isFittedSheetProduct");
-__name2(isFittedSheetProduct, "isFittedSheetProduct");
-__name22(isFittedSheetProduct, "isFittedSheetProduct");
 function isFlatSheetProduct(product) {
   return [
     "flat-sheet-standard",
@@ -2397,8 +2315,6 @@ function isFlatSheetProduct(product) {
   ].includes(product);
 }
 __name(isFlatSheetProduct, "isFlatSheetProduct");
-__name2(isFlatSheetProduct, "isFlatSheetProduct");
-__name22(isFlatSheetProduct, "isFlatSheetProduct");
 function isDuvetProduct(product) {
   return [
     "3-sided-duvet",
@@ -2410,14 +2326,10 @@ function isDuvetProduct(product) {
   ].includes(product);
 }
 __name(isDuvetProduct, "isDuvetProduct");
-__name2(isDuvetProduct, "isDuvetProduct");
-__name22(isDuvetProduct, "isDuvetProduct");
 function isPillowProtectorProduct(product) {
   return ["pillow-protector-general"].includes(product);
 }
 __name(isPillowProtectorProduct, "isPillowProtectorProduct");
-__name2(isPillowProtectorProduct, "isPillowProtectorProduct");
-__name22(isPillowProtectorProduct, "isPillowProtectorProduct");
 function isPillowcaseProduct(product) {
   if (product === "pillowcase-envelope") return { isPillowcase: true, variant: "envelope" };
   if (product === "pillowcase-zipper") return { isPillowcase: true, variant: "zipper" };
@@ -2425,18 +2337,16 @@ function isPillowcaseProduct(product) {
   return { isPillowcase: false };
 }
 __name(isPillowcaseProduct, "isPillowcaseProduct");
-__name2(isPillowcaseProduct, "isPillowcaseProduct");
-__name22(isPillowcaseProduct, "isPillowcaseProduct");
 function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
   const product = input.product || "";
   const mode = input.mode || "sheet";
   const fabric = input.fabric || "cloudsoft";
-  const resolveMarkupPct = /* @__PURE__ */ __name22(() => {
+  const resolveMarkupPct = /* @__PURE__ */ __name(() => {
     if (!product) return 0;
     if (derivedMarkups[product] !== void 0) return Number(derivedMarkups[product]) || 0;
     return DEFAULT_DERIVED_MARKUPS[product] || 0;
   }, "resolveMarkupPct");
-  const applyDerivedMarkup = /* @__PURE__ */ __name22((basePrice) => {
+  const applyDerivedMarkup = /* @__PURE__ */ __name((basePrice) => {
     const pct = resolveMarkupPct();
     if (!pct || !Number.isFinite(basePrice) || basePrice <= 0) return basePrice;
     const marked = basePrice * (1 + pct / 100);
@@ -2555,8 +2465,6 @@ function calculatePrice(input, currency = "USD", derivedMarkups = {}) {
   return { price: applyDerivedMarkup(calculateLegacyPrice(mode, w, l, head, foot, fabric, currency)) };
 }
 __name(calculatePrice, "calculatePrice");
-__name2(calculatePrice, "calculatePrice");
-__name22(calculatePrice, "calculatePrice");
 async function loadDerivedMarkupMap(env) {
   const out = { ...DEFAULT_DERIVED_MARKUPS };
   try {
@@ -2576,8 +2484,6 @@ async function loadDerivedMarkupMap(env) {
   return out;
 }
 __name(loadDerivedMarkupMap, "loadDerivedMarkupMap");
-__name2(loadDerivedMarkupMap, "loadDerivedMarkupMap");
-__name22(loadDerivedMarkupMap, "loadDerivedMarkupMap");
 async function handlePricing(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -2651,8 +2557,8 @@ async function handlePricing(request, env) {
   });
 }
 __name(handlePricing, "handlePricing");
-__name2(handlePricing, "handlePricing");
-__name22(handlePricing, "handlePricing");
+
+// ../workers/api/geo-currency.ts
 var COUNTRY_NAMES = {
   // Asia-Pacific
   TH: "Thailand",
@@ -2738,8 +2644,6 @@ function detectGeo(request) {
   };
 }
 __name(detectGeo, "detectGeo");
-__name2(detectGeo, "detectGeo");
-__name22(detectGeo, "detectGeo");
 async function handleGeo(request, env) {
   const result = detectGeo(request);
   return new Response(JSON.stringify(result), {
@@ -2751,8 +2655,8 @@ async function handleGeo(request, env) {
   });
 }
 __name(handleGeo, "handleGeo");
-__name2(handleGeo, "handleGeo");
-__name22(handleGeo, "handleGeo");
+
+// ../workers/api/countries.ts
 var MASTER_COUNTRIES = [
   { code: "AF", name: "Afghanistan", phone: "+93" },
   { code: "AL", name: "Albania", phone: "+355" },
@@ -2874,8 +2778,6 @@ function json(body, status = 200) {
   });
 }
 __name(json, "json");
-__name2(json, "json");
-__name22(json, "json");
 async function ensureCountryMasterSchema(env) {
   if (countryMasterReady) return;
   if (!countryMasterPromise) {
@@ -2907,8 +2809,6 @@ async function ensureCountryMasterSchema(env) {
   await countryMasterPromise;
 }
 __name(ensureCountryMasterSchema, "ensureCountryMasterSchema");
-__name2(ensureCountryMasterSchema, "ensureCountryMasterSchema");
-__name22(ensureCountryMasterSchema, "ensureCountryMasterSchema");
 async function handleCountries(request, env) {
   if (request.method !== "GET") {
     return json({ error: "Method not allowed" }, 405);
@@ -2936,8 +2836,8 @@ async function handleCountries(request, env) {
   }
 }
 __name(handleCountries, "handleCountries");
-__name2(handleCountries, "handleCountries");
-__name22(handleCountries, "handleCountries");
+
+// ../workers/api/email.ts
 async function sendEmail(env, options) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
@@ -2976,8 +2876,8 @@ async function sendEmail(env, options) {
   }
 }
 __name(sendEmail, "sendEmail");
-__name2(sendEmail, "sendEmail");
-__name22(sendEmail, "sendEmail");
+
+// ../workers/api/subscribe.ts
 function generateDiscountCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
@@ -2985,14 +2885,10 @@ function generateDiscountCode() {
   return "WELCOME-" + code;
 }
 __name(generateDiscountCode, "generateDiscountCode");
-__name2(generateDiscountCode, "generateDiscountCode");
-__name22(generateDiscountCode, "generateDiscountCode");
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 __name(isValidEmail, "isValidEmail");
-__name2(isValidEmail, "isValidEmail");
-__name22(isValidEmail, "isValidEmail");
 var SUBSCRIBE_RATE_LIMIT = 2;
 async function handleSubscribe(request, env) {
   const corsHeaders = {
@@ -3109,8 +3005,8 @@ Date: ${(/* @__PURE__ */ new Date()).toISOString()}`
   }
 }
 __name(handleSubscribe, "handleSubscribe");
-__name2(handleSubscribe, "handleSubscribe");
-__name22(handleSubscribe, "handleSubscribe");
+
+// ../workers/api/unsubscribe.ts
 async function handleUnsubscribe(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ message: "Method not allowed" }), {
@@ -3186,14 +3082,12 @@ async function handleUnsubscribe(request, env) {
   }
 }
 __name(handleUnsubscribe, "handleUnsubscribe");
-__name2(handleUnsubscribe, "handleUnsubscribe");
-__name22(handleUnsubscribe, "handleUnsubscribe");
+
+// ../workers/api/contact.ts
 function isValidEmail2(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-__name(isValidEmail2, "isValidEmail2");
-__name2(isValidEmail2, "isValidEmail2");
-__name22(isValidEmail2, "isValidEmail");
+__name(isValidEmail2, "isValidEmail");
 async function verifyTurnstile(env, token, ip) {
   if (!env.TURNSTILE_SECRET_KEY) {
     console.error("TURNSTILE_SECRET_KEY is missing");
@@ -3224,8 +3118,6 @@ async function verifyTurnstile(env, token, ip) {
   }
 }
 __name(verifyTurnstile, "verifyTurnstile");
-__name2(verifyTurnstile, "verifyTurnstile");
-__name22(verifyTurnstile, "verifyTurnstile");
 async function handleContact(request, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -3316,8 +3208,8 @@ User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
   );
 }
 __name(handleContact, "handleContact");
-__name2(handleContact, "handleContact");
-__name22(handleContact, "handleContact");
+
+// ../workers/api/quote.ts
 var QUOTE_RATE_LIMIT = 5;
 var QUOTE_RATE_WINDOW = "-1 hour";
 var FIXED_WHITE_PROTECTOR_SLUGS = /* @__PURE__ */ new Set([
@@ -3333,16 +3225,12 @@ function normalizeQuoteFabric(slug, fabric) {
   return clean || null;
 }
 __name(normalizeQuoteFabric, "normalizeQuoteFabric");
-__name2(normalizeQuoteFabric, "normalizeQuoteFabric");
-__name22(normalizeQuoteFabric, "normalizeQuoteFabric");
 function normalizeQuoteColor(slug, color) {
   if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "white";
   const clean = typeof color === "string" ? color.trim().toLowerCase() : "";
   return clean || null;
 }
 __name(normalizeQuoteColor, "normalizeQuoteColor");
-__name2(normalizeQuoteColor, "normalizeQuoteColor");
-__name22(normalizeQuoteColor, "normalizeQuoteColor");
 async function checkRateLimit(db, ip, endpoint, max) {
   const row = await db.prepare(
     `SELECT COUNT(*) as cnt FROM rate_limits WHERE ip_address = ? AND endpoint = ? AND created_at > datetime('now', ?)`
@@ -3350,8 +3238,6 @@ async function checkRateLimit(db, ip, endpoint, max) {
   return (row?.cnt || 0) >= max;
 }
 __name(checkRateLimit, "checkRateLimit");
-__name2(checkRateLimit, "checkRateLimit");
-__name22(checkRateLimit, "checkRateLimit");
 async function verifyTurnstile2(env, token, ip) {
   if (!env.TURNSTILE_SECRET_KEY) {
     console.error("TURNSTILE_SECRET_KEY is missing");
@@ -3381,9 +3267,7 @@ async function verifyTurnstile2(env, token, ip) {
     return { ok: false, status: 502, error: "Security verification failed. Please try again." };
   }
 }
-__name(verifyTurnstile2, "verifyTurnstile2");
-__name2(verifyTurnstile2, "verifyTurnstile2");
-__name22(verifyTurnstile2, "verifyTurnstile");
+__name(verifyTurnstile2, "verifyTurnstile");
 async function handleQuote(request, env) {
   const url = new URL(request.url);
   if (request.method === "GET") {
@@ -3587,8 +3471,6 @@ async function handleQuote(request, env) {
   }
 }
 __name(handleQuote, "handleQuote");
-__name2(handleQuote, "handleQuote");
-__name22(handleQuote, "handleQuote");
 function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, color, quoteId, priceThb, priceUsd) {
   let dimStr = "\u2014";
   let shapeLine = "";
@@ -3657,8 +3539,8 @@ Price: ${priceLine}
 `;
 }
 __name(buildQuoteEmail, "buildQuoteEmail");
-__name2(buildQuoteEmail, "buildQuoteEmail");
-__name22(buildQuoteEmail, "buildQuoteEmail");
+
+// ../workers/api/pricing-params.ts
 async function handlePricingParams(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -3745,8 +3627,8 @@ async function handlePricingParams(request, env) {
   return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
 }
 __name(handlePricingParams, "handlePricingParams");
-__name2(handlePricingParams, "handlePricingParams");
-__name22(handlePricingParams, "handlePricingParams");
+
+// ../workers/api/clerk-verify.ts
 var jwksCache = null;
 var CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
 var JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
@@ -3766,8 +3648,6 @@ async function checkAuthRateLimit(env, ip) {
   }
 }
 __name(checkAuthRateLimit, "checkAuthRateLimit");
-__name2(checkAuthRateLimit, "checkAuthRateLimit");
-__name22(checkAuthRateLimit, "checkAuthRateLimit");
 async function recordRateLimit(env, ip) {
   try {
     await env.DB.prepare(
@@ -3777,8 +3657,6 @@ async function recordRateLimit(env, ip) {
   }
 }
 __name(recordRateLimit, "recordRateLimit");
-__name2(recordRateLimit, "recordRateLimit");
-__name22(recordRateLimit, "recordRateLimit");
 async function getJwks() {
   if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_CACHE_MS) {
     return jwksCache.keys;
@@ -3790,8 +3668,6 @@ async function getJwks() {
   return jwksCache.keys;
 }
 __name(getJwks, "getJwks");
-__name2(getJwks, "getJwks");
-__name22(getJwks, "getJwks");
 function base64urlToBytes(str) {
   const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
@@ -3801,8 +3677,6 @@ function base64urlToBytes(str) {
   return bytes;
 }
 __name(base64urlToBytes, "base64urlToBytes");
-__name2(base64urlToBytes, "base64urlToBytes");
-__name22(base64urlToBytes, "base64urlToBytes");
 async function importRsaKey(jwk) {
   return crypto.subtle.importKey(
     "jwk",
@@ -3819,8 +3693,6 @@ async function importRsaKey(jwk) {
   );
 }
 __name(importRsaKey, "importRsaKey");
-__name2(importRsaKey, "importRsaKey");
-__name22(importRsaKey, "importRsaKey");
 async function verifyClerkJwt(request, env) {
   const origin = request.headers.get("Origin") || "";
   const host = request.headers.get("Host") || "";
@@ -3916,8 +3788,8 @@ async function verifyClerkJwt(request, env) {
   return { valid: true, payload };
 }
 __name(verifyClerkJwt, "verifyClerkJwt");
-__name2(verifyClerkJwt, "verifyClerkJwt");
-__name22(verifyClerkJwt, "verifyClerkJwt");
+
+// ../workers/api/admin-pricing.ts
 var DEFAULT_DERIVED_MARKUP_PARAMS = [
   {
     key: "derived_markup_weighted-duvet-cover",
@@ -3936,12 +3808,10 @@ async function ensureDerivedMarkupDefaults(env) {
   }
 }
 __name(ensureDerivedMarkupDefaults, "ensureDerivedMarkupDefaults");
-__name2(ensureDerivedMarkupDefaults, "ensureDerivedMarkupDefaults");
-__name22(ensureDerivedMarkupDefaults, "ensureDerivedMarkupDefaults");
 function collectRoles(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -3963,8 +3833,6 @@ function collectRoles(raw) {
   return out.filter(Boolean);
 }
 __name(collectRoles, "collectRoles");
-__name2(collectRoles, "collectRoles");
-__name22(collectRoles, "collectRoles");
 function hasAdminRole(raw) {
   const roles = collectRoles(raw);
   return roles.some(
@@ -3972,16 +3840,12 @@ function hasAdminRole(raw) {
   );
 }
 __name(hasAdminRole, "hasAdminRole");
-__name2(hasAdminRole, "hasAdminRole");
-__name22(hasAdminRole, "hasAdminRole");
 function emailAllowed(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed, "emailAllowed");
-__name2(emailAllowed, "emailAllowed");
-__name22(emailAllowed, "emailAllowed");
 function getPrimaryClerkEmail(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -3990,8 +3854,6 @@ function getPrimaryClerkEmail(user) {
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
 __name(getPrimaryClerkEmail, "getPrimaryClerkEmail");
-__name2(getPrimaryClerkEmail, "getPrimaryClerkEmail");
-__name22(getPrimaryClerkEmail, "getPrimaryClerkEmail");
 async function isClerkAdmin(request, env) {
   try {
     const authHeader = request.headers.get("Authorization") || "";
@@ -4025,8 +3887,6 @@ async function isClerkAdmin(request, env) {
   }
 }
 __name(isClerkAdmin, "isClerkAdmin");
-__name2(isClerkAdmin, "isClerkAdmin");
-__name22(isClerkAdmin, "isClerkAdmin");
 function isProductionHostPricing(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -4034,8 +3894,6 @@ function isProductionHostPricing(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHostPricing, "isProductionHostPricing");
-__name2(isProductionHostPricing, "isProductionHostPricing");
-__name22(isProductionHostPricing, "isProductionHostPricing");
 async function authorizeAdminPricing(request, env) {
   const clerkOk = await isClerkAdmin(request, env);
   if (clerkOk) return { ok: true };
@@ -4055,8 +3913,6 @@ async function authorizeAdminPricing(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdminPricing, "authorizeAdminPricing");
-__name2(authorizeAdminPricing, "authorizeAdminPricing");
-__name22(authorizeAdminPricing, "authorizeAdminPricing");
 async function handleAdminPricingParams(request, env) {
   const auth = await authorizeAdminPricing(request, env);
   if (!auth.ok) {
@@ -4131,8 +3987,8 @@ async function handleAdminPricingParams(request, env) {
   });
 }
 __name(handleAdminPricingParams, "handleAdminPricingParams");
-__name2(handleAdminPricingParams, "handleAdminPricingParams");
-__name22(handleAdminPricingParams, "handleAdminPricingParams");
+
+// ../workers/api/admin-diy.ts
 async function handleAdminDiyPrices(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -4214,20 +4070,16 @@ async function handleAdminDiyPrices(request, env) {
   });
 }
 __name(handleAdminDiyPrices, "handleAdminDiyPrices");
-__name2(handleAdminDiyPrices, "handleAdminDiyPrices");
-__name22(handleAdminDiyPrices, "handleAdminDiyPrices");
+
+// ../workers/api/admin-exchange.ts
 function isProductionHost(host) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost, "isProductionHost");
-__name2(isProductionHost, "isProductionHost");
-__name22(isProductionHost, "isProductionHost");
 function isDevHost(host) {
   return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
 }
 __name(isDevHost, "isDevHost");
-__name2(isDevHost, "isDevHost");
-__name22(isDevHost, "isDevHost");
 function authorizeAdmin(request, env) {
   const host = new URL(request.url).hostname;
   if (isDevHost(host)) return { ok: true };
@@ -4246,8 +4098,6 @@ function authorizeAdmin(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin, "authorizeAdmin");
-__name2(authorizeAdmin, "authorizeAdmin");
-__name22(authorizeAdmin, "authorizeAdmin");
 async function handleAdminExchangeRates(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -4298,17 +4148,15 @@ async function handleAdminExchangeRates(request, env) {
   });
 }
 __name(handleAdminExchangeRates, "handleAdminExchangeRates");
-__name2(handleAdminExchangeRates, "handleAdminExchangeRates");
-__name22(handleAdminExchangeRates, "handleAdminExchangeRates");
+
+// ../workers/api/admin-products.ts
 var R2_PUBLIC_BASE3 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url2(url) {
   if (!url) return url;
   if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE3}${url.slice(3)}`;
   return url;
 }
-__name(toR2Url2, "toR2Url2");
-__name2(toR2Url2, "toR2Url2");
-__name22(toR2Url2, "toR2Url");
+__name(toR2Url2, "toR2Url");
 function r2Product2(p) {
   const out = { ...p, image_url: toR2Url2(p.image_url) };
   if (out.images && typeof out.images === "string") {
@@ -4320,9 +4168,7 @@ function r2Product2(p) {
   }
   return out;
 }
-__name(r2Product2, "r2Product2");
-__name2(r2Product2, "r2Product2");
-__name22(r2Product2, "r2Product");
+__name(r2Product2, "r2Product");
 function parseCategoryCsv(csv) {
   const parts = csv.split(",").map((s) => s.trim()).filter(Boolean);
   const product_type = parts[0] || "sheets";
@@ -4330,8 +4176,6 @@ function parseCategoryCsv(csv) {
   return { product_type, niches };
 }
 __name(parseCategoryCsv, "parseCategoryCsv");
-__name2(parseCategoryCsv, "parseCategoryCsv");
-__name22(parseCategoryCsv, "parseCategoryCsv");
 function isProductionHost2(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
@@ -4340,9 +4184,7 @@ function isProductionHost2(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost2, "isProductionHost2");
-__name2(isProductionHost2, "isProductionHost2");
-__name22(isProductionHost2, "isProductionHost");
+__name(isProductionHost2, "isProductionHost");
 var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
 function collectRoles2(raw) {
   if (!raw || typeof raw !== "object") return [];
@@ -4368,26 +4210,20 @@ function collectRoles2(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles2, "collectRoles2");
-__name2(collectRoles2, "collectRoles2");
-__name22(collectRoles2, "collectRoles");
+__name(collectRoles2, "collectRoles");
 function hasAdminRole2(rawClaims) {
   const roles = collectRoles2(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole2, "hasAdminRole2");
-__name2(hasAdminRole2, "hasAdminRole2");
-__name22(hasAdminRole2, "hasAdminRole");
+__name(hasAdminRole2, "hasAdminRole");
 function emailAllowed2(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed2, "emailAllowed2");
-__name2(emailAllowed2, "emailAllowed2");
-__name22(emailAllowed2, "emailAllowed");
+__name(emailAllowed2, "emailAllowed");
 async function authCheck(request, env) {
   const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
@@ -4423,8 +4259,6 @@ async function authCheck(request, env) {
   return provided === configured;
 }
 __name(authCheck, "authCheck");
-__name2(authCheck, "authCheck");
-__name22(authCheck, "authCheck");
 async function handleAdminProducts(request, env) {
   if (!await authCheck(request, env)) {
     return new Response(ADMIN_SECRET_ERROR, {
@@ -4583,8 +4417,8 @@ async function handleAdminProducts(request, env) {
   });
 }
 __name(handleAdminProducts, "handleAdminProducts");
-__name2(handleAdminProducts, "handleAdminProducts");
-__name22(handleAdminProducts, "handleAdminProducts");
+
+// ../workers/api/admin-upload.ts
 function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -4609,26 +4443,20 @@ function collectRoles3(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles3, "collectRoles3");
-__name2(collectRoles3, "collectRoles3");
-__name22(collectRoles3, "collectRoles");
+__name(collectRoles3, "collectRoles");
 function hasAdminRole3(rawClaims) {
   const roles = collectRoles3(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole3, "hasAdminRole3");
-__name2(hasAdminRole3, "hasAdminRole3");
-__name22(hasAdminRole3, "hasAdminRole");
+__name(hasAdminRole3, "hasAdminRole");
 function emailAllowed3(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed3, "emailAllowed3");
-__name2(emailAllowed3, "emailAllowed3");
-__name22(emailAllowed3, "emailAllowed");
+__name(emailAllowed3, "emailAllowed");
 async function authCheck2(request, env) {
   const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
@@ -4662,9 +4490,7 @@ async function authCheck2(request, env) {
   if (!provided || !configured) return false;
   return provided === configured;
 }
-__name(authCheck2, "authCheck2");
-__name2(authCheck2, "authCheck2");
-__name22(authCheck2, "authCheck");
+__name(authCheck2, "authCheck");
 async function handleAdminUpload(request, env) {
   if (!await authCheck2(request, env)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -4758,8 +4584,8 @@ async function handleAdminUpload(request, env) {
   }
 }
 __name(handleAdminUpload, "handleAdminUpload");
-__name2(handleAdminUpload, "handleAdminUpload");
-__name22(handleAdminUpload, "handleAdminUpload");
+
+// ../workers/api/admin-orders.ts
 var orderShippingSchemaReady = false;
 var orderShippingSchemaPromise = null;
 var TRACKING_URL_BY_CARRIER = {
@@ -4795,9 +4621,7 @@ function json2(body, status = 200) {
     }
   });
 }
-__name(json2, "json2");
-__name2(json2, "json2");
-__name22(json2, "json");
+__name(json2, "json");
 var FIXED_SIZE_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "bedbridge-connector",
   "mattress-lift-helper",
@@ -4810,16 +4634,12 @@ function hasDimensions(o) {
   return hasW && hasL || hasD;
 }
 __name(hasDimensions, "hasDimensions");
-__name2(hasDimensions, "hasDimensions");
-__name22(hasDimensions, "hasDimensions");
 function isConfigurableProductSlug(slugRaw) {
   const slug = String(slugRaw || "").trim().toLowerCase();
   if (!slug) return true;
   return !FIXED_SIZE_PRODUCT_SLUGS.has(slug);
 }
 __name(isConfigurableProductSlug, "isConfigurableProductSlug");
-__name2(isConfigurableProductSlug, "isConfigurableProductSlug");
-__name22(isConfigurableProductSlug, "isConfigurableProductSlug");
 async function getLatestSalesSyncRun(env) {
   try {
     const row = await env.DB.prepare(
@@ -4837,8 +4657,6 @@ async function getLatestSalesSyncRun(env) {
   }
 }
 __name(getLatestSalesSyncRun, "getLatestSalesSyncRun");
-__name2(getLatestSalesSyncRun, "getLatestSalesSyncRun");
-__name22(getLatestSalesSyncRun, "getLatestSalesSyncRun");
 async function ensureOrderShippingSchema(env) {
   if (orderShippingSchemaReady) return;
   if (!orderShippingSchemaPromise) {
@@ -4865,8 +4683,6 @@ async function ensureOrderShippingSchema(env) {
   await orderShippingSchemaPromise;
 }
 __name(ensureOrderShippingSchema, "ensureOrderShippingSchema");
-__name2(ensureOrderShippingSchema, "ensureOrderShippingSchema");
-__name22(ensureOrderShippingSchema, "ensureOrderShippingSchema");
 function normalizeCarrier(raw) {
   const v = String(raw || "").trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
   if (!v) return "";
@@ -4876,16 +4692,12 @@ function normalizeCarrier(raw) {
   return CARRIER_ALIAS[v] || CARRIER_ALIAS[compact] || compact;
 }
 __name(normalizeCarrier, "normalizeCarrier");
-__name2(normalizeCarrier, "normalizeCarrier");
-__name22(normalizeCarrier, "normalizeCarrier");
 function buildTrackingUrl(carrierCode, trackingNumber) {
   const tpl = TRACKING_URL_BY_CARRIER[carrierCode];
   if (!tpl) return "";
   return tpl.replace("{TRACKING}", encodeURIComponent(trackingNumber));
 }
 __name(buildTrackingUrl, "buildTrackingUrl");
-__name2(buildTrackingUrl, "buildTrackingUrl");
-__name22(buildTrackingUrl, "buildTrackingUrl");
 function carrierLabel(carrierCode) {
   const labels = {
     thaipost: "Thailand Post",
@@ -4898,21 +4710,17 @@ function carrierLabel(carrierCode) {
   return labels[carrierCode] || carrierCode.toUpperCase();
 }
 __name(carrierLabel, "carrierLabel");
-__name2(carrierLabel, "carrierLabel");
-__name22(carrierLabel, "carrierLabel");
 function isProductionHost3(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost3, "isProductionHost3");
-__name2(isProductionHost3, "isProductionHost3");
-__name22(isProductionHost3, "isProductionHost");
+__name(isProductionHost3, "isProductionHost");
 function collectRoles4(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -4934,26 +4742,20 @@ function collectRoles4(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles4, "collectRoles4");
-__name2(collectRoles4, "collectRoles4");
-__name22(collectRoles4, "collectRoles");
+__name(collectRoles4, "collectRoles");
 function hasAdminRole4(rawClaims) {
   const roles = collectRoles4(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole4, "hasAdminRole4");
-__name2(hasAdminRole4, "hasAdminRole4");
-__name22(hasAdminRole4, "hasAdminRole");
+__name(hasAdminRole4, "hasAdminRole");
 function emailAllowed4(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed4, "emailAllowed4");
-__name2(emailAllowed4, "emailAllowed4");
-__name22(emailAllowed4, "emailAllowed");
+__name(emailAllowed4, "emailAllowed");
 async function authorizeAdmin2(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -5003,9 +4805,7 @@ async function authorizeAdmin2(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin2, "authorizeAdmin2");
-__name2(authorizeAdmin2, "authorizeAdmin2");
-__name22(authorizeAdmin2, "authorizeAdmin");
+__name(authorizeAdmin2, "authorizeAdmin");
 async function handleAdminOrders(request, env) {
   const auth = await authorizeAdmin2(request, env);
   if (!auth.ok) return json2({ error: auth.error }, auth.status);
@@ -5187,8 +4987,8 @@ Thank you for shopping with MildMate.`;
   return json2({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminOrders, "handleAdminOrders");
-__name2(handleAdminOrders, "handleAdminOrders");
-__name22(handleAdminOrders, "handleAdminOrders");
+
+// ../workers/api/admin-customers.ts
 function json3(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -5198,22 +4998,18 @@ function json3(body, status = 200) {
     }
   });
 }
-__name(json3, "json3");
-__name2(json3, "json3");
-__name22(json3, "json");
+__name(json3, "json");
 function isProductionHost4(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost4, "isProductionHost4");
-__name2(isProductionHost4, "isProductionHost4");
-__name22(isProductionHost4, "isProductionHost");
+__name(isProductionHost4, "isProductionHost");
 function collectRoles5(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -5234,26 +5030,20 @@ function collectRoles5(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles5, "collectRoles5");
-__name2(collectRoles5, "collectRoles5");
-__name22(collectRoles5, "collectRoles");
+__name(collectRoles5, "collectRoles");
 function hasAdminRole5(rawClaims) {
   const roles = collectRoles5(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole5, "hasAdminRole5");
-__name2(hasAdminRole5, "hasAdminRole5");
-__name22(hasAdminRole5, "hasAdminRole");
+__name(hasAdminRole5, "hasAdminRole");
 function emailAllowed5(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed5, "emailAllowed5");
-__name2(emailAllowed5, "emailAllowed5");
-__name22(emailAllowed5, "emailAllowed");
+__name(emailAllowed5, "emailAllowed");
 async function authorizeAdmin3(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -5302,9 +5092,7 @@ async function authorizeAdmin3(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin3, "authorizeAdmin3");
-__name2(authorizeAdmin3, "authorizeAdmin3");
-__name22(authorizeAdmin3, "authorizeAdmin");
+__name(authorizeAdmin3, "authorizeAdmin");
 async function handleAdminCustomers(request, env) {
   const auth = await authorizeAdmin3(request, env);
   if (!auth.ok) return json3({ error: auth.error }, auth.status);
@@ -5382,8 +5170,8 @@ async function handleAdminCustomers(request, env) {
   return json3({ customers: result.results });
 }
 __name(handleAdminCustomers, "handleAdminCustomers");
-__name2(handleAdminCustomers, "handleAdminCustomers");
-__name22(handleAdminCustomers, "handleAdminCustomers");
+
+// ../workers/api/admin-stats.ts
 function json4(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -5393,22 +5181,18 @@ function json4(body, status = 200) {
     }
   });
 }
-__name(json4, "json4");
-__name2(json4, "json4");
-__name22(json4, "json");
+__name(json4, "json");
 function isProductionHost5(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost5, "isProductionHost5");
-__name2(isProductionHost5, "isProductionHost5");
-__name22(isProductionHost5, "isProductionHost");
+__name(isProductionHost5, "isProductionHost");
 function collectRoles6(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -5430,26 +5214,20 @@ function collectRoles6(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles6, "collectRoles6");
-__name2(collectRoles6, "collectRoles6");
-__name22(collectRoles6, "collectRoles");
+__name(collectRoles6, "collectRoles");
 function hasAdminRole6(rawClaims) {
   const roles = collectRoles6(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole6, "hasAdminRole6");
-__name2(hasAdminRole6, "hasAdminRole6");
-__name22(hasAdminRole6, "hasAdminRole");
+__name(hasAdminRole6, "hasAdminRole");
 function emailAllowed6(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed6, "emailAllowed6");
-__name2(emailAllowed6, "emailAllowed6");
-__name22(emailAllowed6, "emailAllowed");
+__name(emailAllowed6, "emailAllowed");
 async function authorizeAdmin4(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -5499,24 +5277,18 @@ async function authorizeAdmin4(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin4, "authorizeAdmin4");
-__name2(authorizeAdmin4, "authorizeAdmin4");
-__name22(authorizeAdmin4, "authorizeAdmin");
+__name(authorizeAdmin4, "authorizeAdmin");
 function isoAtUtcDayStart(date) {
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
   return d.toISOString();
 }
 __name(isoAtUtcDayStart, "isoAtUtcDayStart");
-__name2(isoAtUtcDayStart, "isoAtUtcDayStart");
-__name22(isoAtUtcDayStart, "isoAtUtcDayStart");
 function addUtcDays(iso, days) {
   const d = new Date(iso);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString();
 }
 __name(addUtcDays, "addUtcDays");
-__name2(addUtcDays, "addUtcDays");
-__name22(addUtcDays, "addUtcDays");
 function normalizePeriod(raw) {
   const p = String(raw || "").trim().toLowerCase();
   const aliases = {
@@ -5540,8 +5312,6 @@ function normalizePeriod(raw) {
   return aliases[p] || "last-30-days";
 }
 __name(normalizePeriod, "normalizePeriod");
-__name2(normalizePeriod, "normalizePeriod");
-__name22(normalizePeriod, "normalizePeriod");
 function getPeriodBounds(rawPeriod) {
   const normalized = normalizePeriod(rawPeriod);
   const now = /* @__PURE__ */ new Date();
@@ -5559,8 +5329,6 @@ function getPeriodBounds(rawPeriod) {
   return { normalized, start: addUtcDays(todayStart, -(days - 1)), end: addUtcDays(todayStart, 1) };
 }
 __name(getPeriodBounds, "getPeriodBounds");
-__name2(getPeriodBounds, "getPeriodBounds");
-__name22(getPeriodBounds, "getPeriodBounds");
 function getDisplayImage(imageUrl, imagesRaw) {
   const direct = String(imageUrl || "").trim();
   if (direct) return direct;
@@ -5575,15 +5343,11 @@ function getDisplayImage(imageUrl, imagesRaw) {
   return "";
 }
 __name(getDisplayImage, "getDisplayImage");
-__name2(getDisplayImage, "getDisplayImage");
-__name22(getDisplayImage, "getDisplayImage");
 function toNumber(v) {
   const n = Number(v || 0);
   return Number.isFinite(n) ? n : 0;
 }
 __name(toNumber, "toNumber");
-__name2(toNumber, "toNumber");
-__name22(toNumber, "toNumber");
 function convertRevenue(revenueThb, revenueUsd, targetCurrency, usdRatePerThb, targetRatePerThb) {
   const target = String(targetCurrency || "USD").toUpperCase();
   if (target === "USD") return revenueUsd + revenueThb * usdRatePerThb;
@@ -5592,8 +5356,6 @@ function convertRevenue(revenueThb, revenueUsd, targetCurrency, usdRatePerThb, t
   return totalThb * targetRatePerThb;
 }
 __name(convertRevenue, "convertRevenue");
-__name2(convertRevenue, "convertRevenue");
-__name22(convertRevenue, "convertRevenue");
 function currencySymbol(currency, ratesMap) {
   const c = String(currency || "USD").toUpperCase();
   if (c === "USD") return "$";
@@ -5601,8 +5363,6 @@ function currencySymbol(currency, ratesMap) {
   return ratesMap[c]?.symbol || c;
 }
 __name(currencySymbol, "currencySymbol");
-__name2(currencySymbol, "currencySymbol");
-__name22(currencySymbol, "currencySymbol");
 async function handleAdminStats(request, env) {
   const auth = await authorizeAdmin4(request, env);
   if (!auth.ok) return json4({ error: auth.error }, auth.status);
@@ -5746,8 +5506,8 @@ async function handleAdminStats(request, env) {
   }
 }
 __name(handleAdminStats, "handleAdminStats");
-__name2(handleAdminStats, "handleAdminStats");
-__name22(handleAdminStats, "handleAdminStats");
+
+// ../workers/api/admin-analysis.ts
 function json5(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -5757,28 +5517,22 @@ function json5(body, status = 200) {
     }
   });
 }
-__name(json5, "json5");
-__name2(json5, "json5");
-__name22(json5, "json");
+__name(json5, "json");
 function err(code, message, status = 400) {
   return json5({ success: false, error_code: code, message }, status);
 }
 __name(err, "err");
-__name2(err, "err");
-__name22(err, "err");
 function isProductionHost6(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost6, "isProductionHost6");
-__name2(isProductionHost6, "isProductionHost6");
-__name22(isProductionHost6, "isProductionHost");
+__name(isProductionHost6, "isProductionHost");
 function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -5800,26 +5554,20 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles7");
-__name2(collectRoles7, "collectRoles7");
-__name22(collectRoles7, "collectRoles");
+__name(collectRoles7, "collectRoles");
 function hasAdminRole7(rawClaims) {
   const roles = collectRoles7(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole7");
-__name2(hasAdminRole7, "hasAdminRole7");
-__name22(hasAdminRole7, "hasAdminRole");
+__name(hasAdminRole7, "hasAdminRole");
 function emailAllowed7(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed7");
-__name2(emailAllowed7, "emailAllowed7");
-__name22(emailAllowed7, "emailAllowed");
+__name(emailAllowed7, "emailAllowed");
 async function authorizeAdmin5(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -5869,9 +5617,7 @@ async function authorizeAdmin5(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin5, "authorizeAdmin5");
-__name2(authorizeAdmin5, "authorizeAdmin5");
-__name22(authorizeAdmin5, "authorizeAdmin");
+__name(authorizeAdmin5, "authorizeAdmin");
 var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
 var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
@@ -5880,7 +5626,7 @@ var MAPPING_STATUSES = /* @__PURE__ */ new Set(["Mapped", "Partial", "Unmapped",
 var MAX_LIMIT = 200;
 var DEFAULT_LIMIT = 50;
 function parseFilters(url) {
-  const bad = /* @__PURE__ */ __name22((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
+  const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
   const start = (url.searchParams.get("start") || "").trim() || null;
   if (start && !DATE_RE.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
   const end = (url.searchParams.get("end") || "").trim() || null;
@@ -5921,8 +5667,6 @@ function parseFilters(url) {
   };
 }
 __name(parseFilters, "parseFilters");
-__name2(parseFilters, "parseFilters");
-__name22(parseFilters, "parseFilters");
 function dayRangeWhere(f, col = "order_day") {
   const parts = [];
   const binds = [];
@@ -5937,8 +5681,6 @@ function dayRangeWhere(f, col = "order_day") {
   return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
 }
 __name(dayRangeWhere, "dayRangeWhere");
-__name2(dayRangeWhere, "dayRangeWhere");
-__name22(dayRangeWhere, "dayRangeWhere");
 async function getSummary(env, f) {
   const range = dayRangeWhere(f);
   const binds = [...range.binds];
@@ -5980,8 +5722,6 @@ async function getSummary(env, f) {
   });
 }
 __name(getSummary, "getSummary");
-__name2(getSummary, "getSummary");
-__name22(getSummary, "getSummary");
 async function getSales(env, f) {
   const range = dayRangeWhere(f, "ai.order_day");
   const conds = [];
@@ -6042,8 +5782,6 @@ async function getSales(env, f) {
   });
 }
 __name(getSales, "getSales");
-__name2(getSales, "getSales");
-__name22(getSales, "getSales");
 async function getProducts(env, f) {
   const range = dayRangeWhere(f, "ai.order_day");
   const binds = [...range.binds];
@@ -6103,8 +5841,6 @@ async function getProducts(env, f) {
   });
 }
 __name(getProducts, "getProducts");
-__name2(getProducts, "getProducts");
-__name22(getProducts, "getProducts");
 async function getProductDetail(env, idRaw) {
   if (!/^\d{1,9}$/.test(idRaw)) return err("INVALID_PRODUCT_ID", "product id must be a positive integer.");
   const pid = Number(idRaw);
@@ -6155,8 +5891,6 @@ async function getProductDetail(env, idRaw) {
   });
 }
 __name(getProductDetail, "getProductDetail");
-__name2(getProductDetail, "getProductDetail");
-__name22(getProductDetail, "getProductDetail");
 async function getChannels(env, f) {
   const range = dayRangeWhere(f);
   const rows = await env.DB.prepare(
@@ -6180,8 +5914,6 @@ async function getChannels(env, f) {
   });
 }
 __name(getChannels, "getChannels");
-__name2(getChannels, "getChannels");
-__name22(getChannels, "getChannels");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -6232,7 +5964,7 @@ async function getDataQuality(env) {
     level = "critical";
     warnings.push(dq.invalid_product_refs + " item(s) reference a non-existent product id.");
   }
-  const warn = /* @__PURE__ */ __name22((msg) => {
+  const warn = /* @__PURE__ */ __name((msg) => {
     if (level !== "critical") level = "warning";
     warnings.push(msg);
   }, "warn");
@@ -6268,8 +6000,6 @@ async function getDataQuality(env) {
   });
 }
 __name(getDataQuality, "getDataQuality");
-__name2(getDataQuality, "getDataQuality");
-__name22(getDataQuality, "getDataQuality");
 var EXCEPTION_TYPES = {
   missing_product_id: {
     description: "Active items on commercial orders without a Product_ID",
@@ -6358,8 +6088,6 @@ async function getExceptions(env, url) {
   });
 }
 __name(getExceptions, "getExceptions");
-__name2(getExceptions, "getExceptions");
-__name22(getExceptions, "getExceptions");
 async function handleAdminAnalysis(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -6389,8 +6117,8 @@ async function handleAdminAnalysis(request, env) {
   return err("ROUTE_NOT_FOUND", "Unknown analysis route: " + sub, 404);
 }
 __name(handleAdminAnalysis, "handleAdminAnalysis");
-__name2(handleAdminAnalysis, "handleAdminAnalysis");
-__name22(handleAdminAnalysis, "handleAdminAnalysis");
+
+// ../workers/api/shipping.ts
 var shippingSchemaReady = false;
 var shippingSchemaPromise = null;
 function json6(body, status = 200) {
@@ -6402,25 +6130,19 @@ function json6(body, status = 200) {
     }
   });
 }
-__name(json6, "json6");
-__name2(json6, "json6");
-__name22(json6, "json");
+__name(json6, "json");
 function toAmount(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return 0;
   return Math.round(n * 100) / 100;
 }
 __name(toAmount, "toAmount");
-__name2(toAmount, "toAmount");
-__name22(toAmount, "toAmount");
 function toQty(v) {
   const n = Math.floor(Number(v));
   if (!Number.isFinite(n) || n < 0) return 0;
   return n;
 }
 __name(toQty, "toQty");
-__name2(toQty, "toQty");
-__name22(toQty, "toQty");
 function normalizeCountryCode(raw) {
   const code = String(raw || "").trim().toUpperCase();
   if (!code) return "";
@@ -6429,23 +6151,17 @@ function normalizeCountryCode(raw) {
   return "";
 }
 __name(normalizeCountryCode, "normalizeCountryCode");
-__name2(normalizeCountryCode, "normalizeCountryCode");
-__name22(normalizeCountryCode, "normalizeCountryCode");
 function normalizeShippingCurrency(raw) {
   const c = String(raw || "").trim().toUpperCase();
   if (!c) return "USD";
   return c;
 }
 __name(normalizeShippingCurrency, "normalizeShippingCurrency");
-__name2(normalizeShippingCurrency, "normalizeShippingCurrency");
-__name22(normalizeShippingCurrency, "normalizeShippingCurrency");
 function normalizeServiceLevel(raw) {
   const s = String(raw || "").trim().toLowerCase();
   return s === "standard" ? "standard" : "express";
 }
 __name(normalizeServiceLevel, "normalizeServiceLevel");
-__name2(normalizeServiceLevel, "normalizeServiceLevel");
-__name22(normalizeServiceLevel, "normalizeServiceLevel");
 async function ensureShippingRatesSchema(env) {
   if (shippingSchemaReady) return;
   if (!shippingSchemaPromise) {
@@ -6551,8 +6267,6 @@ async function ensureShippingRatesSchema(env) {
   await shippingSchemaPromise;
 }
 __name(ensureShippingRatesSchema, "ensureShippingRatesSchema");
-__name2(ensureShippingRatesSchema, "ensureShippingRatesSchema");
-__name22(ensureShippingRatesSchema, "ensureShippingRatesSchema");
 async function getRatePerThb(env, targetCurrency) {
   const target = String(targetCurrency || "USD").toUpperCase();
   if (target === "THB") return 1;
@@ -6565,8 +6279,6 @@ async function getRatePerThb(env, targetCurrency) {
   return 0;
 }
 __name(getRatePerThb, "getRatePerThb");
-__name2(getRatePerThb, "getRatePerThb");
-__name22(getRatePerThb, "getRatePerThb");
 async function calculateShippingQuote(env, input) {
   await ensureShippingRatesSchema(env);
   const currency = normalizeShippingCurrency(input.currency);
@@ -6622,7 +6334,7 @@ async function calculateShippingQuote(env, input) {
       blocked_th_only: false
     };
   }
-  const fetchRate = /* @__PURE__ */ __name22(async (countryCode) => {
+  const fetchRate = /* @__PURE__ */ __name(async (countryCode) => {
     const row2 = await env.DB.prepare(
       `SELECT country_code, country_name,
         tier1_first_thb, tier2_first_thb, tier3_first_thb,
@@ -6748,8 +6460,6 @@ async function calculateShippingQuote(env, input) {
   };
 }
 __name(calculateShippingQuote, "calculateShippingQuote");
-__name2(calculateShippingQuote, "calculateShippingQuote");
-__name22(calculateShippingQuote, "calculateShippingQuote");
 async function handleShippingCalculate(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -6803,8 +6513,8 @@ async function handleShippingCalculate(request, env) {
   }
 }
 __name(handleShippingCalculate, "handleShippingCalculate");
-__name2(handleShippingCalculate, "handleShippingCalculate");
-__name22(handleShippingCalculate, "handleShippingCalculate");
+
+// ../workers/api/admin-shipping.ts
 function json7(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -6814,28 +6524,22 @@ function json7(body, status = 200) {
     }
   });
 }
-__name(json7, "json7");
-__name2(json7, "json7");
-__name22(json7, "json");
+__name(json7, "json");
 function toAmount2(v) {
   return toAmount(v);
 }
-__name(toAmount2, "toAmount2");
-__name2(toAmount2, "toAmount2");
-__name22(toAmount2, "toAmount");
+__name(toAmount2, "toAmount");
 function isProductionHost7(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost7, "isProductionHost7");
-__name2(isProductionHost7, "isProductionHost7");
-__name22(isProductionHost7, "isProductionHost");
+__name(isProductionHost7, "isProductionHost");
 function collectRoles8(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -6857,26 +6561,20 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles8");
-__name2(collectRoles8, "collectRoles8");
-__name22(collectRoles8, "collectRoles");
+__name(collectRoles8, "collectRoles");
 function hasAdminRole8(rawClaims) {
   const roles = collectRoles8(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole8");
-__name2(hasAdminRole8, "hasAdminRole8");
-__name22(hasAdminRole8, "hasAdminRole");
+__name(hasAdminRole8, "hasAdminRole");
 function emailAllowed8(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed8");
-__name2(emailAllowed8, "emailAllowed8");
-__name22(emailAllowed8, "emailAllowed");
+__name(emailAllowed8, "emailAllowed");
 async function authorizeAdmin6(request, env) {
   const host = new URL(request.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
@@ -6929,9 +6627,7 @@ async function authorizeAdmin6(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin6, "authorizeAdmin6");
-__name2(authorizeAdmin6, "authorizeAdmin6");
-__name22(authorizeAdmin6, "authorizeAdmin");
+__name(authorizeAdmin6, "authorizeAdmin");
 function normalizeCountryName(raw, countryCode) {
   const name = String(raw || "").trim();
   if (name) return name;
@@ -6939,8 +6635,6 @@ function normalizeCountryName(raw, countryCode) {
   return countryCode;
 }
 __name(normalizeCountryName, "normalizeCountryName");
-__name2(normalizeCountryName, "normalizeCountryName");
-__name22(normalizeCountryName, "normalizeCountryName");
 async function getUsdRatePerThb(env) {
   const row = await env.DB.prepare(
     "SELECT rate_per_thb FROM exchange_rates WHERE currency = 'USD' LIMIT 1"
@@ -6950,8 +6644,6 @@ async function getUsdRatePerThb(env) {
   return 1 / 30;
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
-__name2(getUsdRatePerThb, "getUsdRatePerThb");
-__name22(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
   const auth = await authorizeAdmin6(request, env);
   if (!auth.ok) return json7({ error: auth.error }, auth.status);
@@ -7066,8 +6758,6 @@ async function handleAdminShippingRates(request, env) {
   return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
-__name2(handleAdminShippingRates, "handleAdminShippingRates");
-__name22(handleAdminShippingRates, "handleAdminShippingRates");
 async function handleAdminShippingProductTiers(request, env) {
   const auth = await authorizeAdmin6(request, env);
   if (!auth.ok) return json7({ error: auth.error }, auth.status);
@@ -7119,8 +6809,6 @@ async function handleAdminShippingProductTiers(request, env) {
   return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
-__name2(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
-__name22(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
 async function handleAdminShippingAddRates(request, env) {
   const auth = await authorizeAdmin6(request, env);
   if (!auth.ok) return json7({ error: auth.error }, auth.status);
@@ -7174,8 +6862,8 @@ async function handleAdminShippingAddRates(request, env) {
   return json7({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
-__name2(handleAdminShippingAddRates, "handleAdminShippingAddRates");
-__name22(handleAdminShippingAddRates, "handleAdminShippingAddRates");
+
+// ../workers/api/admin-quotes.ts
 var quoteSchemaReady = false;
 var quoteSchemaPromise = null;
 function json8(body, status = 200) {
@@ -7189,29 +6877,23 @@ function json8(body, status = 200) {
     }
   });
 }
-__name(json8, "json8");
-__name2(json8, "json8");
-__name22(json8, "json");
+__name(json8, "json");
 function isProductionHost8(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost8, "isProductionHost8");
-__name2(isProductionHost8, "isProductionHost8");
-__name22(isProductionHost8, "isProductionHost");
+__name(isProductionHost8, "isProductionHost");
 function isPreviewHashHost(hostname) {
   if (!hostname) return false;
   return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
 }
 __name(isPreviewHashHost, "isPreviewHashHost");
-__name2(isPreviewHashHost, "isPreviewHashHost");
-__name22(isPreviewHashHost, "isPreviewHashHost");
 function collectRoles9(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -7233,26 +6915,20 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles9");
-__name2(collectRoles9, "collectRoles9");
-__name22(collectRoles9, "collectRoles");
+__name(collectRoles9, "collectRoles");
 function hasAdminRole9(raw) {
   const roles = collectRoles9(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole9");
-__name2(hasAdminRole9, "hasAdminRole9");
-__name22(hasAdminRole9, "hasAdminRole");
+__name(hasAdminRole9, "hasAdminRole");
 function emailAllowed9(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed9");
-__name2(emailAllowed9, "emailAllowed9");
-__name22(emailAllowed9, "emailAllowed");
+__name(emailAllowed9, "emailAllowed");
 async function authorizeAdmin7(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -7294,9 +6970,7 @@ async function authorizeAdmin7(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin7, "authorizeAdmin7");
-__name2(authorizeAdmin7, "authorizeAdmin7");
-__name22(authorizeAdmin7, "authorizeAdmin");
+__name(authorizeAdmin7, "authorizeAdmin");
 async function ensureQuoteSchema(env) {
   if (quoteSchemaReady) return;
   if (!quoteSchemaPromise) {
@@ -7339,8 +7013,6 @@ async function ensureQuoteSchema(env) {
   await quoteSchemaPromise;
 }
 __name(ensureQuoteSchema, "ensureQuoteSchema");
-__name2(ensureQuoteSchema, "ensureQuoteSchema");
-__name22(ensureQuoteSchema, "ensureQuoteSchema");
 function normalizeDateInput(input) {
   const raw = String(input || "").trim();
   if (!raw) return null;
@@ -7349,8 +7021,6 @@ function normalizeDateInput(input) {
   return dt.toISOString().replace("T", " ").slice(0, 19);
 }
 __name(normalizeDateInput, "normalizeDateInput");
-__name2(normalizeDateInput, "normalizeDateInput");
-__name22(normalizeDateInput, "normalizeDateInput");
 async function generateQuoteId(db) {
   const now = /* @__PURE__ */ new Date();
   const y = String(now.getFullYear()).slice(2);
@@ -7362,15 +7032,11 @@ async function generateQuoteId(db) {
   return `${datePrefix}-${seq}`;
 }
 __name(generateQuoteId, "generateQuoteId");
-__name2(generateQuoteId, "generateQuoteId");
-__name22(generateQuoteId, "generateQuoteId");
 function buildQuoteLink(request, quoteId) {
   const origin = new URL(request.url).origin;
   return `${origin}/quote/${encodeURIComponent(quoteId)}/`;
 }
 __name(buildQuoteLink, "buildQuoteLink");
-__name2(buildQuoteLink, "buildQuoteLink");
-__name22(buildQuoteLink, "buildQuoteLink");
 async function getUsdRate(db) {
   try {
     const row = await db.prepare(
@@ -7385,8 +7051,6 @@ async function getUsdRate(db) {
   return 30;
 }
 __name(getUsdRate, "getUsdRate");
-__name2(getUsdRate, "getUsdRate");
-__name22(getUsdRate, "getUsdRate");
 async function sendMagicLinkEmail(env, request, quote) {
   if (!quote?.email) return { success: false, error: "Missing customer email" };
   if (quote.status !== "approved") return { success: false, error: "Quote is not approved" };
@@ -7436,7 +7100,7 @@ async function sendMagicLinkEmail(env, request, quote) {
   if (quote.fabric) specsLines.push(`Fabric: ${quote.fabric}`);
   if (quote.color) specsLines.push(`Colour: ${quote.color}`);
   const priceLine = hasUsdPrice ? `$${priceUsd.toLocaleString()} USD` : `\u0E3F${priceThb.toLocaleString()} THB`;
-  const esc = /* @__PURE__ */ __name22((s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), "esc");
+  const esc = /* @__PURE__ */ __name((s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), "esc");
   const customerName = String(quote.customer_name || "there").trim() || "there";
   const headingText = "Ready to Order?";
   const ctaText = "View Quote & Order";
@@ -7549,8 +7213,6 @@ Need help or have a measurement question? Simply reply to this email \u2014 we'r
   return { success: result.success, error: result.error };
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
-__name2(sendMagicLinkEmail, "sendMagicLinkEmail");
-__name22(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
   if (request.method === "OPTIONS") return json8({ ok: true });
   const auth = await authorizeAdmin7(request, env);
@@ -7842,8 +7504,8 @@ async function handleAdminQuotes(request, env) {
   return json8({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminQuotes, "handleAdminQuotes");
-__name2(handleAdminQuotes, "handleAdminQuotes");
-__name22(handleAdminQuotes, "handleAdminQuotes");
+
+// ../workers/api/discount.ts
 async function sha256(text) {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
@@ -7852,8 +7514,6 @@ async function sha256(text) {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 __name(sha256, "sha256");
-__name2(sha256, "sha256");
-__name22(sha256, "sha256");
 function normalizeAddress(addr) {
   if (!addr || typeof addr !== "object") return "";
   return [
@@ -7865,8 +7525,6 @@ function normalizeAddress(addr) {
   ].join("|");
 }
 __name(normalizeAddress, "normalizeAddress");
-__name2(normalizeAddress, "normalizeAddress");
-__name22(normalizeAddress, "normalizeAddress");
 async function handleDiscountValidate(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -7974,8 +7632,6 @@ async function handleDiscountValidate(request, env) {
   }), { headers });
 }
 __name(handleDiscountValidate, "handleDiscountValidate");
-__name2(handleDiscountValidate, "handleDiscountValidate");
-__name22(handleDiscountValidate, "handleDiscountValidate");
 async function handleDiscountClaim(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8005,8 +7661,8 @@ async function handleDiscountClaim(request, env) {
   return new Response(JSON.stringify({ success: true }), { headers });
 }
 __name(handleDiscountClaim, "handleDiscountClaim");
-__name2(handleDiscountClaim, "handleDiscountClaim");
-__name22(handleDiscountClaim, "handleDiscountClaim");
+
+// ../workers/api/admin-contacts.ts
 function json9(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -8016,13 +7672,11 @@ function json9(body, status = 200) {
     }
   });
 }
-__name(json9, "json9");
-__name2(json9, "json9");
-__name22(json9, "json");
+__name(json9, "json");
 function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -8044,35 +7698,27 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles10");
-__name2(collectRoles10, "collectRoles10");
-__name22(collectRoles10, "collectRoles");
+__name(collectRoles10, "collectRoles");
 function hasAdminRole10(raw) {
   const roles = collectRoles10(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole10, "hasAdminRole10");
-__name2(hasAdminRole10, "hasAdminRole10");
-__name22(hasAdminRole10, "hasAdminRole");
+__name(hasAdminRole10, "hasAdminRole");
 function emailAllowed10(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed10");
-__name2(emailAllowed10, "emailAllowed10");
-__name22(emailAllowed10, "emailAllowed");
+__name(emailAllowed10, "emailAllowed");
 function isProductionHost9(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost9, "isProductionHost9");
-__name2(isProductionHost9, "isProductionHost9");
-__name22(isProductionHost9, "isProductionHost");
+__name(isProductionHost9, "isProductionHost");
 async function authorizeAdmin8(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -8112,9 +7758,7 @@ async function authorizeAdmin8(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin8, "authorizeAdmin8");
-__name2(authorizeAdmin8, "authorizeAdmin8");
-__name22(authorizeAdmin8, "authorizeAdmin");
+__name(authorizeAdmin8, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
   const auth = await authorizeAdmin8(request, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
@@ -8162,15 +7806,13 @@ async function handleAdminContacts(request, env) {
   return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
-__name2(handleAdminContacts, "handleAdminContacts");
-__name22(handleAdminContacts, "handleAdminContacts");
+
+// ../workers/api/admin-promo.ts
 function isProductionHost10(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost10, "isProductionHost10");
-__name2(isProductionHost10, "isProductionHost10");
-__name22(isProductionHost10, "isProductionHost");
+__name(isProductionHost10, "isProductionHost");
 function hasAdminRole11(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -8191,16 +7833,12 @@ function hasAdminRole11(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole11, "hasAdminRole11");
-__name2(hasAdminRole11, "hasAdminRole11");
-__name22(hasAdminRole11, "hasAdminRole");
+__name(hasAdminRole11, "hasAdminRole");
 function emailAllowed11(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed11, "emailAllowed11");
-__name2(emailAllowed11, "emailAllowed11");
-__name22(emailAllowed11, "emailAllowed");
+__name(emailAllowed11, "emailAllowed");
 async function authorizeAdmin9(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost10(hostname)) return { ok: true };
@@ -8235,9 +7873,7 @@ async function authorizeAdmin9(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin9, "authorizeAdmin9");
-__name2(authorizeAdmin9, "authorizeAdmin9");
-__name22(authorizeAdmin9, "authorizeAdmin");
+__name(authorizeAdmin9, "authorizeAdmin");
 async function handleAdminPromo(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8343,8 +7979,8 @@ async function handleAdminPromo(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminPromo, "handleAdminPromo");
-__name2(handleAdminPromo, "handleAdminPromo");
-__name22(handleAdminPromo, "handleAdminPromo");
+
+// ../workers/api/boat-models.ts
 async function ensureBoatModelsColumn(env, name, def) {
   try {
     await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
@@ -8354,8 +7990,6 @@ async function ensureBoatModelsColumn(env, name, def) {
   }
 }
 __name(ensureBoatModelsColumn, "ensureBoatModelsColumn");
-__name2(ensureBoatModelsColumn, "ensureBoatModelsColumn");
-__name22(ensureBoatModelsColumn, "ensureBoatModelsColumn");
 async function ensureBoatModelsTable(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS boat_models (
@@ -8378,8 +8012,6 @@ async function ensureBoatModelsTable(env) {
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
 __name(ensureBoatModelsTable, "ensureBoatModelsTable");
-__name2(ensureBoatModelsTable, "ensureBoatModelsTable");
-__name22(ensureBoatModelsTable, "ensureBoatModelsTable");
 async function handleBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8430,15 +8062,13 @@ async function handleBoatModels(request, env) {
   }
 }
 __name(handleBoatModels, "handleBoatModels");
-__name2(handleBoatModels, "handleBoatModels");
-__name22(handleBoatModels, "handleBoatModels");
+
+// ../workers/api/admin-boat-models.ts
 function isProductionHost11(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost11, "isProductionHost11");
-__name2(isProductionHost11, "isProductionHost11");
-__name22(isProductionHost11, "isProductionHost");
+__name(isProductionHost11, "isProductionHost");
 function hasAdminRole12(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -8459,22 +8089,16 @@ function hasAdminRole12(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole12, "hasAdminRole12");
-__name2(hasAdminRole12, "hasAdminRole12");
-__name22(hasAdminRole12, "hasAdminRole");
+__name(hasAdminRole12, "hasAdminRole");
 function emailAllowed12(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed12, "emailAllowed12");
-__name2(emailAllowed12, "emailAllowed12");
-__name22(emailAllowed12, "emailAllowed");
+__name(emailAllowed12, "emailAllowed");
 function normalizeModelKey(input) {
   return String(input || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 __name(normalizeModelKey, "normalizeModelKey");
-__name2(normalizeModelKey, "normalizeModelKey");
-__name22(normalizeModelKey, "normalizeModelKey");
 function sanitizeDimensions(raw) {
   const out = {};
   if (!raw || typeof raw !== "object") return out;
@@ -8488,8 +8112,6 @@ function sanitizeDimensions(raw) {
   return out;
 }
 __name(sanitizeDimensions, "sanitizeDimensions");
-__name2(sanitizeDimensions, "sanitizeDimensions");
-__name22(sanitizeDimensions, "sanitizeDimensions");
 async function ensureBoatModelsColumn2(env, name, def) {
   try {
     await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
@@ -8498,9 +8120,7 @@ async function ensureBoatModelsColumn2(env, name, def) {
     if (!msg.includes("duplicate column")) throw e;
   }
 }
-__name(ensureBoatModelsColumn2, "ensureBoatModelsColumn2");
-__name2(ensureBoatModelsColumn2, "ensureBoatModelsColumn2");
-__name22(ensureBoatModelsColumn2, "ensureBoatModelsColumn");
+__name(ensureBoatModelsColumn2, "ensureBoatModelsColumn");
 async function ensureBoatModelsTable2(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS boat_models (
@@ -8524,9 +8144,7 @@ async function ensureBoatModelsTable2(env) {
   await ensureBoatModelsColumn2(env, "schematic_key", "TEXT");
   await ensureBoatModelsColumn2(env, "schematic_url", "TEXT");
 }
-__name(ensureBoatModelsTable2, "ensureBoatModelsTable2");
-__name2(ensureBoatModelsTable2, "ensureBoatModelsTable2");
-__name22(ensureBoatModelsTable2, "ensureBoatModelsTable");
+__name(ensureBoatModelsTable2, "ensureBoatModelsTable");
 async function authorizeAdmin10(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost11(hostname)) return { ok: true };
@@ -8544,9 +8162,7 @@ async function authorizeAdmin10(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin10, "authorizeAdmin10");
-__name2(authorizeAdmin10, "authorizeAdmin10");
-__name22(authorizeAdmin10, "authorizeAdmin");
+__name(authorizeAdmin10, "authorizeAdmin");
 async function handleAdminBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8638,8 +8254,8 @@ async function handleAdminBoatModels(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminBoatModels, "handleAdminBoatModels");
-__name2(handleAdminBoatModels, "handleAdminBoatModels");
-__name22(handleAdminBoatModels, "handleAdminBoatModels");
+
+// ../workers/api/admin-blog.ts
 var R2_PUBLIC_BASE4 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var BLOG_CATEGORY_OPTIONS = [
   "Marine & Yacht",
@@ -8660,13 +8276,11 @@ function isProductionHost12(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost12, "isProductionHost12");
-__name2(isProductionHost12, "isProductionHost12");
-__name22(isProductionHost12, "isProductionHost");
+__name(isProductionHost12, "isProductionHost");
 function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -8687,34 +8301,26 @@ function collectRoles11(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles11, "collectRoles11");
-__name2(collectRoles11, "collectRoles11");
-__name22(collectRoles11, "collectRoles");
+__name(collectRoles11, "collectRoles");
 function hasAdminRole13(raw) {
   const roles = collectRoles11(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole13, "hasAdminRole13");
-__name2(hasAdminRole13, "hasAdminRole13");
-__name22(hasAdminRole13, "hasAdminRole");
+__name(hasAdminRole13, "hasAdminRole");
 function emailAllowed13(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed13, "emailAllowed13");
-__name2(emailAllowed13, "emailAllowed13");
-__name22(emailAllowed13, "emailAllowed");
+__name(emailAllowed13, "emailAllowed");
 function getClerkSessionTokenFromCookie(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-__name2(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-__name22(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
 async function authorizeAdmin11(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie(request);
@@ -8768,25 +8374,19 @@ async function authorizeAdmin11(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin11, "authorizeAdmin11");
-__name2(authorizeAdmin11, "authorizeAdmin11");
-__name22(authorizeAdmin11, "authorizeAdmin");
+__name(authorizeAdmin11, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
   const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
   return cleaned.filter((x) => BLOG_CATEGORY_OPTIONS.includes(x));
 }
 __name(normalizeCategories, "normalizeCategories");
-__name2(normalizeCategories, "normalizeCategories");
-__name22(normalizeCategories, "normalizeCategories");
 function toR2Url3(url) {
   if (!url) return "";
   if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE4}${url.slice(3)}`;
   return url;
 }
-__name(toR2Url3, "toR2Url3");
-__name2(toR2Url3, "toR2Url3");
-__name22(toR2Url3, "toR2Url");
+__name(toR2Url3, "toR2Url");
 async function handleAdminBlog(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -8980,7 +8580,7 @@ async function handleAdminBlog(request, env) {
     const categoriesJson = JSON.stringify(categories);
     const updates = [];
     const vals = [];
-    const add = /* @__PURE__ */ __name22((k, v) => {
+    const add = /* @__PURE__ */ __name((k, v) => {
       updates.push(k + " = ?");
       vals.push(v);
     }, "add");
@@ -9033,16 +8633,14 @@ async function handleAdminBlog(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminBlog, "handleAdminBlog");
-__name2(handleAdminBlog, "handleAdminBlog");
-__name22(handleAdminBlog, "handleAdminBlog");
+
+// ../workers/api/blog-posts.ts
 var R2_PUBLIC_BASE5 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toPublicR2Url2(url) {
   if (!url) return url;
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE5}${url.slice(3)}` : url;
 }
-__name(toPublicR2Url2, "toPublicR2Url2");
-__name2(toPublicR2Url2, "toPublicR2Url2");
-__name22(toPublicR2Url2, "toPublicR2Url");
+__name(toPublicR2Url2, "toPublicR2Url");
 async function handleBlogPosts(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -9075,8 +8673,8 @@ async function handleBlogPosts(request, env) {
   }
 }
 __name(handleBlogPosts, "handleBlogPosts");
-__name2(handleBlogPosts, "handleBlogPosts");
-__name22(handleBlogPosts, "handleBlogPosts");
+
+// ../workers/api/reviews.ts
 var R2_PUBLIC_BASE6 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 var ALLOWED_PRODUCT_TYPES = [
   "Sheets",
@@ -9110,31 +8708,23 @@ function sanitize(str) {
   return str.trim();
 }
 __name(sanitize, "sanitize");
-__name2(sanitize, "sanitize");
-__name22(sanitize, "sanitize");
 function normalizeMojibake2(str) {
   const s = sanitize(str);
   if (!s) return "";
-  return s.replace(/ÃŽâ€œÃƒâ€¡Ãƒâ€“/g, "\u2019").replace(/ÃŽâ€œÃƒâ€¡Ã‚Â£/g, "\u201C").replace(/ÃŽâ€œÃƒâ€¡Ã‚Â¥/g, "\u201D").replace(/ÃŽâ€œÃƒâ€¡ÃƒÂ¶/g, "\u2014").replace(/ÃŽâ€œÃƒâ€¡ÃƒÂ´/g, "\u2013").replace(/ÃŽâ€œÃƒâ€¡Ã‚Âª/g, "\u2026").replace(/ÃŽâ€œÃƒâ€¡Ã‚Â¢/g, "\u2022").replace(/Ã¢â€Å“ÃƒÂ¹/g, "\xD7").replace(/Ã¢â€°Â¡Ã†â€™[^\s.,!?;:)"'Ã¢â‚¬â„¢Ã¢â‚¬Â\]]+/g, "").replace(/Ã¢â€°Â¡Ã†â€™ÃƒÂ±ÃƒÂ¬/g, "").replace(/Ã¯Â¿Â½/g, "");
+  return s.replace(/ΓÇÖ/g, "\u2019").replace(/ΓÇ£/g, "\u201C").replace(/ΓÇ¥/g, "\u201D").replace(/ΓÇö/g, "\u2014").replace(/ΓÇô/g, "\u2013").replace(/ΓÇª/g, "\u2026").replace(/ΓÇ¢/g, "\u2022").replace(/├ù/g, "\xD7").replace(/≡ƒ[^\s.,!?;:)"'’”\]]+/g, "").replace(/≡ƒñì/g, "").replace(/�/g, "");
 }
-__name(normalizeMojibake2, "normalizeMojibake2");
-__name2(normalizeMojibake2, "normalizeMojibake2");
-__name22(normalizeMojibake2, "normalizeMojibake");
+__name(normalizeMojibake2, "normalizeMojibake");
 function toR2Url4(url) {
   if (!url) return "";
   if (url.startsWith("/r2/")) return `${R2_PUBLIC_BASE6}${url.slice(3)}`;
   return url;
 }
-__name(toR2Url4, "toR2Url4");
-__name2(toR2Url4, "toR2Url4");
-__name22(toR2Url4, "toR2Url");
+__name(toR2Url4, "toR2Url");
 function sanitizeReviewText(html) {
   if (!html) return "";
   return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "").replace(/\s+on\w+="[^"]*"/gi, "").replace(/\s+on\w+='[^']*'/gi, "").trim();
 }
 __name(sanitizeReviewText, "sanitizeReviewText");
-__name2(sanitizeReviewText, "sanitizeReviewText");
-__name22(sanitizeReviewText, "sanitizeReviewText");
 function normalizeReviewDate(raw) {
   const val = sanitize(typeof raw === "string" ? raw : String(raw || ""));
   if (!val) return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -9145,8 +8735,6 @@ function normalizeReviewDate(raw) {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
 __name(normalizeReviewDate, "normalizeReviewDate");
-__name2(normalizeReviewDate, "normalizeReviewDate");
-__name22(normalizeReviewDate, "normalizeReviewDate");
 function isProductionHost13(hostname) {
   if (!hostname) return false;
   const host = hostname.toLowerCase().split(":")[0];
@@ -9155,13 +8743,11 @@ function isProductionHost13(hostname) {
   if (host.endsWith(".local")) return false;
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
-__name(isProductionHost13, "isProductionHost13");
-__name2(isProductionHost13, "isProductionHost13");
-__name22(isProductionHost13, "isProductionHost");
+__name(isProductionHost13, "isProductionHost");
 function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -9182,34 +8768,26 @@ function collectRoles12(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles12, "collectRoles12");
-__name2(collectRoles12, "collectRoles12");
-__name22(collectRoles12, "collectRoles");
+__name(collectRoles12, "collectRoles");
 function hasAdminRole14(raw) {
   const roles = collectRoles12(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole14, "hasAdminRole14");
-__name2(hasAdminRole14, "hasAdminRole14");
-__name22(hasAdminRole14, "hasAdminRole");
+__name(hasAdminRole14, "hasAdminRole");
 function emailAllowed14(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed14, "emailAllowed14");
-__name2(emailAllowed14, "emailAllowed14");
-__name22(emailAllowed14, "emailAllowed");
+__name(emailAllowed14, "emailAllowed");
 function getClerkSessionTokenFromCookie2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
-__name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie2");
-__name2(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie2");
-__name22(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
+__name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
 async function authorizeAdmin12(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const cookieToken = getClerkSessionTokenFromCookie2(request);
@@ -9263,9 +8841,7 @@ async function authorizeAdmin12(request, env) {
   if (provided === configured) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin12, "authorizeAdmin12");
-__name2(authorizeAdmin12, "authorizeAdmin12");
-__name22(authorizeAdmin12, "authorizeAdmin");
+__name(authorizeAdmin12, "authorizeAdmin");
 async function handleReviews(request, env) {
   const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
@@ -9352,8 +8928,6 @@ async function handleReviews(request, env) {
   }
 }
 __name(handleReviews, "handleReviews");
-__name2(handleReviews, "handleReviews");
-__name22(handleReviews, "handleReviews");
 async function handleAdminReviews(request, env) {
   const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
@@ -9370,20 +8944,14 @@ async function handleAdminReviews(request, env) {
     return v;
   }
   __name(normalizePlatform, "normalizePlatform");
-  __name2(normalizePlatform, "normalizePlatform");
-  __name22(normalizePlatform, "normalizePlatform");
   function badRequest(msg) {
     return new Response(JSON.stringify({ error: msg }), { status: 400, headers });
   }
   __name(badRequest, "badRequest");
-  __name2(badRequest, "badRequest");
-  __name22(badRequest, "badRequest");
   function internalError(msg) {
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers });
   }
   __name(internalError, "internalError");
-  __name2(internalError, "internalError");
-  __name22(internalError, "internalError");
   const method = request.method;
   try {
     if (method === "GET") {
@@ -9565,8 +9133,8 @@ async function handleAdminReviews(request, env) {
   }
 }
 __name(handleAdminReviews, "handleAdminReviews");
-__name2(handleAdminReviews, "handleAdminReviews");
-__name22(handleAdminReviews, "handleAdminReviews");
+
+// ../workers/api/admin-recovery-test.ts
 async function sendRecoveryEmail(env, to, subject, html) {
   try {
     const resp = await fetch("https://api.resend.com/emails", {
@@ -9588,14 +9156,10 @@ async function sendRecoveryEmail(env, to, subject, html) {
   }
 }
 __name(sendRecoveryEmail, "sendRecoveryEmail");
-__name2(sendRecoveryEmail, "sendRecoveryEmail");
-__name22(sendRecoveryEmail, "sendRecoveryEmail");
 function escHtml2(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-__name(escHtml2, "escHtml2");
-__name2(escHtml2, "escHtml2");
-__name22(escHtml2, "escHtml");
+__name(escHtml2, "escHtml");
 function formatPrice(thb, usd) {
   const parts = [];
   if (thb) parts.push("\u0E3F" + Math.round(thb).toLocaleString());
@@ -9603,8 +9167,6 @@ function formatPrice(thb, usd) {
   return parts.join(" / ") || "\u2014";
 }
 __name(formatPrice, "formatPrice");
-__name2(formatPrice, "formatPrice");
-__name22(formatPrice, "formatPrice");
 async function handleAdminRecoveryTest(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -9669,15 +9231,13 @@ async function handleAdminRecoveryTest(request, env) {
   return new Response(JSON.stringify({ sent, total: carts.length, errors: errors.length ? errors : void 0 }), { headers });
 }
 __name(handleAdminRecoveryTest, "handleAdminRecoveryTest");
-__name2(handleAdminRecoveryTest, "handleAdminRecoveryTest");
-__name22(handleAdminRecoveryTest, "handleAdminRecoveryTest");
+
+// ../workers/api/admin-thankyou-dispatch.ts
 function isProductionHost14(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost14, "isProductionHost14");
-__name2(isProductionHost14, "isProductionHost14");
-__name22(isProductionHost14, "isProductionHost");
+__name(isProductionHost14, "isProductionHost");
 function hasAdminRole15(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -9698,9 +9258,7 @@ function hasAdminRole15(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole15, "hasAdminRole15");
-__name2(hasAdminRole15, "hasAdminRole15");
-__name22(hasAdminRole15, "hasAdminRole");
+__name(hasAdminRole15, "hasAdminRole");
 async function authorizeAdmin13(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost14(hostname)) return { ok: true };
@@ -9720,9 +9278,7 @@ async function authorizeAdmin13(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin13, "authorizeAdmin13");
-__name2(authorizeAdmin13, "authorizeAdmin13");
-__name22(authorizeAdmin13, "authorizeAdmin");
+__name(authorizeAdmin13, "authorizeAdmin");
 async function sendThankyouEmail(env, to, discountCode, discountPct) {
   try {
     const resp = await fetch("https://api.resend.com/emails", {
@@ -9748,8 +9304,6 @@ async function sendThankyouEmail(env, to, discountCode, discountPct) {
   }
 }
 __name(sendThankyouEmail, "sendThankyouEmail");
-__name2(sendThankyouEmail, "sendThankyouEmail");
-__name22(sendThankyouEmail, "sendThankyouEmail");
 async function ensureThankyouQueueSchema(env) {
   try {
     const tableInfo = await env.DB.prepare("PRAGMA table_info(thankyou_queue)").all();
@@ -9764,8 +9318,6 @@ async function ensureThankyouQueueSchema(env) {
   }
 }
 __name(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
-__name2(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
-__name22(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
 async function handleAdminThankyouDispatch(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -9871,15 +9423,13 @@ async function handleAdminThankyouDispatch(request, env) {
   }), { headers });
 }
 __name(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
-__name2(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
-__name22(handleAdminThankyouDispatch, "handleAdminThankyouDispatch");
+
+// ../workers/api/admin-offers.ts
 function isProductionHost15(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost15, "isProductionHost15");
-__name2(isProductionHost15, "isProductionHost15");
-__name22(isProductionHost15, "isProductionHost");
+__name(isProductionHost15, "isProductionHost");
 function hasAdminRole16(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -9900,16 +9450,12 @@ function hasAdminRole16(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole16, "hasAdminRole16");
-__name2(hasAdminRole16, "hasAdminRole16");
-__name22(hasAdminRole16, "hasAdminRole");
+__name(hasAdminRole16, "hasAdminRole");
 function emailAllowed15(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed15, "emailAllowed15");
-__name2(emailAllowed15, "emailAllowed15");
-__name22(emailAllowed15, "emailAllowed");
+__name(emailAllowed15, "emailAllowed");
 async function authorizeAdmin14(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost15(hostname)) return { ok: true };
@@ -9944,9 +9490,7 @@ async function authorizeAdmin14(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin14, "authorizeAdmin14");
-__name2(authorizeAdmin14, "authorizeAdmin14");
-__name22(authorizeAdmin14, "authorizeAdmin");
+__name(authorizeAdmin14, "authorizeAdmin");
 var KEY_MAP = {
   basketThreshold: "basket_threshold_usd",
   stage2Enabled: "stage2_enabled",
@@ -9962,8 +9506,6 @@ function toBoolString(v) {
   return v === true || String(v).toLowerCase() === "true" ? "true" : "false";
 }
 __name(toBoolString, "toBoolString");
-__name2(toBoolString, "toBoolString");
-__name22(toBoolString, "toBoolString");
 function normalizeOffersInput(input) {
   const basketThreshold = Math.max(0, Math.min(1e4, Number(input?.basketThreshold || 150)));
   const stage2Enabled = toBoolString(input?.stage2Enabled !== false);
@@ -9987,8 +9529,6 @@ function normalizeOffersInput(input) {
   };
 }
 __name(normalizeOffersInput, "normalizeOffersInput");
-__name2(normalizeOffersInput, "normalizeOffersInput");
-__name22(normalizeOffersInput, "normalizeOffersInput");
 function parseOffersConfig(rows) {
   const map = {};
   for (const row of rows || []) map[String(row.key)] = String(row.value);
@@ -10005,8 +9545,6 @@ function parseOffersConfig(rows) {
   };
 }
 __name(parseOffersConfig, "parseOffersConfig");
-__name2(parseOffersConfig, "parseOffersConfig");
-__name22(parseOffersConfig, "parseOffersConfig");
 async function handleAdminOffers(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -10042,15 +9580,13 @@ async function handleAdminOffers(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminOffers, "handleAdminOffers");
-__name2(handleAdminOffers, "handleAdminOffers");
-__name22(handleAdminOffers, "handleAdminOffers");
+
+// ../workers/api/admin-campaigns.ts
 function isProductionHost16(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost16, "isProductionHost16");
-__name2(isProductionHost16, "isProductionHost16");
-__name22(isProductionHost16, "isProductionHost");
+__name(isProductionHost16, "isProductionHost");
 function hasAdminRole17(raw) {
   if (!raw) return false;
   const candidates = [];
@@ -10071,16 +9607,12 @@ function hasAdminRole17(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole17, "hasAdminRole17");
-__name2(hasAdminRole17, "hasAdminRole17");
-__name22(hasAdminRole17, "hasAdminRole");
+__name(hasAdminRole17, "hasAdminRole");
 function emailAllowed16(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed16, "emailAllowed16");
-__name2(emailAllowed16, "emailAllowed16");
-__name22(emailAllowed16, "emailAllowed");
+__name(emailAllowed16, "emailAllowed");
 async function authorizeAdmin15(request, env) {
   const hostname = request.headers.get("Host") || "";
   if (!isProductionHost16(hostname)) return { ok: true };
@@ -10115,9 +9647,7 @@ async function authorizeAdmin15(request, env) {
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin15, "authorizeAdmin15");
-__name2(authorizeAdmin15, "authorizeAdmin15");
-__name22(authorizeAdmin15, "authorizeAdmin");
+__name(authorizeAdmin15, "authorizeAdmin");
 async function ensureCampaignsSchema(env) {
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS marketing_campaigns (
@@ -10133,8 +9663,6 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
-__name2(ensureCampaignsSchema, "ensureCampaignsSchema");
-__name22(ensureCampaignsSchema, "ensureCampaignsSchema");
 async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -10204,20 +9732,18 @@ async function handleAdminCampaigns(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminCampaigns, "handleAdminCampaigns");
-__name2(handleAdminCampaigns, "handleAdminCampaigns");
-__name22(handleAdminCampaigns, "handleAdminCampaigns");
+
+// ../workers/api/admin-accounts.ts
 function getClerkSessionToken(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return cookieMatch ? cookieMatch[1] : "";
 }
 __name(getClerkSessionToken, "getClerkSessionToken");
-__name2(getClerkSessionToken, "getClerkSessionToken");
-__name22(getClerkSessionToken, "getClerkSessionToken");
 function collectRoles13(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -10238,26 +9764,20 @@ function collectRoles13(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles13, "collectRoles13");
-__name2(collectRoles13, "collectRoles13");
-__name22(collectRoles13, "collectRoles");
+__name(collectRoles13, "collectRoles");
 function hasAdminRole18(raw) {
   const roles = collectRoles13(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole18, "hasAdminRole18");
-__name2(hasAdminRole18, "hasAdminRole18");
-__name22(hasAdminRole18, "hasAdminRole");
+__name(hasAdminRole18, "hasAdminRole");
 function emailAllowed17(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed17, "emailAllowed17");
-__name2(emailAllowed17, "emailAllowed17");
-__name22(emailAllowed17, "emailAllowed");
+__name(emailAllowed17, "emailAllowed");
 function getPrimaryClerkEmail2(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -10265,9 +9785,7 @@ function getPrimaryClerkEmail2(user) {
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail2");
-__name2(getPrimaryClerkEmail2, "getPrimaryClerkEmail2");
-__name22(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
 async function isClerkAdmin2(request, env) {
   try {
     const authHeader = request.headers.get("Authorization") || "";
@@ -10309,9 +9827,7 @@ async function isClerkAdmin2(request, env) {
     return false;
   }
 }
-__name(isClerkAdmin2, "isClerkAdmin2");
-__name2(isClerkAdmin2, "isClerkAdmin2");
-__name22(isClerkAdmin2, "isClerkAdmin");
+__name(isClerkAdmin2, "isClerkAdmin");
 async function ensureAdminAccountsTable(db) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS admin_accounts (
@@ -10323,8 +9839,6 @@ async function ensureAdminAccountsTable(db) {
   `).run();
 }
 __name(ensureAdminAccountsTable, "ensureAdminAccountsTable");
-__name2(ensureAdminAccountsTable, "ensureAdminAccountsTable");
-__name22(ensureAdminAccountsTable, "ensureAdminAccountsTable");
 async function handleAdminAccounts(request, env) {
   const host = new URL(request.url).hostname;
   const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
@@ -10409,15 +9923,13 @@ async function handleAdminAccounts(request, env) {
   });
 }
 __name(handleAdminAccounts, "handleAdminAccounts");
-__name2(handleAdminAccounts, "handleAdminAccounts");
-__name22(handleAdminAccounts, "handleAdminAccounts");
+
+// ../workers/api/admin-color-inventory.ts
 function isProductionHost17(hostname) {
   const h = String(hostname || "").toLowerCase();
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
-__name(isProductionHost17, "isProductionHost17");
-__name2(isProductionHost17, "isProductionHost17");
-__name22(isProductionHost17, "isProductionHost");
+__name(isProductionHost17, "isProductionHost");
 async function authorizeAdmin16(request, env) {
   const hostname = request.headers.get("Host") || "";
   const isProd = isProductionHost17(hostname);
@@ -10434,9 +9946,7 @@ async function authorizeAdmin16(request, env) {
   }
   return { ok: true };
 }
-__name(authorizeAdmin16, "authorizeAdmin16");
-__name2(authorizeAdmin16, "authorizeAdmin16");
-__name22(authorizeAdmin16, "authorizeAdmin");
+__name(authorizeAdmin16, "authorizeAdmin");
 async function handleAdminColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -10489,8 +9999,8 @@ async function handleAdminColorInventory(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminColorInventory, "handleAdminColorInventory");
-__name2(handleAdminColorInventory, "handleAdminColorInventory");
-__name22(handleAdminColorInventory, "handleAdminColorInventory");
+
+// ../workers/api/favorites.ts
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
 function json10(body, status = 200) {
@@ -10502,9 +10012,7 @@ function json10(body, status = 200) {
     }
   });
 }
-__name(json10, "json10");
-__name2(json10, "json10");
-__name22(json10, "json");
+__name(json10, "json");
 async function ensureFavoritesSchema(env) {
   if (favoritesSchemaReady) return;
   if (!favoritesSchemaPromise) {
@@ -10531,21 +10039,17 @@ async function ensureFavoritesSchema(env) {
   await favoritesSchemaPromise;
 }
 __name(ensureFavoritesSchema, "ensureFavoritesSchema");
-__name2(ensureFavoritesSchema, "ensureFavoritesSchema");
-__name22(ensureFavoritesSchema, "ensureFavoritesSchema");
 function isProductionHost18(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
-__name(isProductionHost18, "isProductionHost18");
-__name2(isProductionHost18, "isProductionHost18");
-__name22(isProductionHost18, "isProductionHost");
+__name(isProductionHost18, "isProductionHost");
 function collectRoles14(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -10567,26 +10071,20 @@ function collectRoles14(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles14, "collectRoles14");
-__name2(collectRoles14, "collectRoles14");
-__name22(collectRoles14, "collectRoles");
+__name(collectRoles14, "collectRoles");
 function hasAdminRole19(rawClaims) {
   const roles = collectRoles14(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole19, "hasAdminRole19");
-__name2(hasAdminRole19, "hasAdminRole19");
-__name22(hasAdminRole19, "hasAdminRole");
+__name(hasAdminRole19, "hasAdminRole");
 function emailAllowed18(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed18, "emailAllowed18");
-__name2(emailAllowed18, "emailAllowed18");
-__name22(emailAllowed18, "emailAllowed");
+__name(emailAllowed18, "emailAllowed");
 async function authorizeAdmin17(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -10631,9 +10129,7 @@ async function authorizeAdmin17(request, env) {
   if (providedSecret === configuredSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
-__name(authorizeAdmin17, "authorizeAdmin17");
-__name2(authorizeAdmin17, "authorizeAdmin17");
-__name22(authorizeAdmin17, "authorizeAdmin");
+__name(authorizeAdmin17, "authorizeAdmin");
 async function getUserContext(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
@@ -10650,8 +10146,6 @@ async function getUserContext(request, env) {
   return { ok: true, userId, email };
 }
 __name(getUserContext, "getUserContext");
-__name2(getUserContext, "getUserContext");
-__name22(getUserContext, "getUserContext");
 async function handleFavorites(request, env) {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "");
@@ -10815,14 +10309,12 @@ async function handleFavorites(request, env) {
   return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleFavorites, "handleFavorites");
-__name2(handleFavorites, "handleFavorites");
-__name22(handleFavorites, "handleFavorites");
+
+// ../workers/api/checkout.ts
 function humanizeSlug(slug) {
   return String(slug || "").split("-").filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 __name(humanizeSlug, "humanizeSlug");
-__name2(humanizeSlug, "humanizeSlug");
-__name22(humanizeSlug, "humanizeSlug");
 function getItemName(item) {
   const raw = String(item.product_name || item.title || "").trim();
   if (raw) return raw;
@@ -10830,8 +10322,6 @@ function getItemName(item) {
   return fromSlug || "Custom Product";
 }
 __name(getItemName, "getItemName");
-__name2(getItemName, "getItemName");
-__name22(getItemName, "getItemName");
 function normalizeFabricForSlug(slugRaw, fabricRaw) {
   const slug = String(slugRaw || "").trim().toLowerCase();
   if (slug === "pet-proof-mattress-protector") return "tpu";
@@ -10840,8 +10330,6 @@ function normalizeFabricForSlug(slugRaw, fabricRaw) {
   return fabric || null;
 }
 __name(normalizeFabricForSlug, "normalizeFabricForSlug");
-__name2(normalizeFabricForSlug, "normalizeFabricForSlug");
-__name22(normalizeFabricForSlug, "normalizeFabricForSlug");
 function sanitizeMarineValues(valuesRaw) {
   if (!valuesRaw || typeof valuesRaw !== "object" || Array.isArray(valuesRaw)) return void 0;
   const out = {};
@@ -10854,8 +10342,6 @@ function sanitizeMarineValues(valuesRaw) {
   return Object.keys(out).length ? out : void 0;
 }
 __name(sanitizeMarineValues, "sanitizeMarineValues");
-__name2(sanitizeMarineValues, "sanitizeMarineValues");
-__name22(sanitizeMarineValues, "sanitizeMarineValues");
 var checkoutSnapshotSchemaReady = false;
 var checkoutSnapshotSchemaPromise = null;
 async function ensureCheckoutSnapshotSchema(env) {
@@ -10885,8 +10371,6 @@ async function ensureCheckoutSnapshotSchema(env) {
   return await checkoutSnapshotSchemaPromise;
 }
 __name(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
-__name2(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
-__name22(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
 async function handleCheckout(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -11113,12 +10597,10 @@ async function handleCheckout(request, env) {
     const n = Number(v);
     return Number.isFinite(n) ? n : void 0;
   }
-  __name(toNumber2, "toNumber2");
-  __name2(toNumber2, "toNumber2");
-  __name22(toNumber2, "toNumber");
+  __name(toNumber2, "toNumber");
   function parseSizeText(sizeText) {
     const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
-    const m = clean.match(/(\d+(?:\.\d+)?)\s*[xÃƒâ€”]\s*(\d+(?:\.\d+)?)(?:\s*[xÃƒâ€”]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
     if (!m) return {};
     const unitRaw = String(m[4] || "").toLowerCase();
     const unit = unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm";
@@ -11130,8 +10612,6 @@ async function handleCheckout(request, env) {
     };
   }
   __name(parseSizeText, "parseSizeText");
-  __name2(parseSizeText, "parseSizeText");
-  __name22(parseSizeText, "parseSizeText");
   function buildMetadataDims(item) {
     const src = item.dimensions || {};
     const sizeText = String(src.size_text || src.label || "").trim();
@@ -11157,8 +10637,6 @@ async function handleCheckout(request, env) {
     };
   }
   __name(buildMetadataDims, "buildMetadataDims");
-  __name2(buildMetadataDims, "buildMetadataDims");
-  __name22(buildMetadataDims, "buildMetadataDims");
   function buildCompactDimText(dims) {
     const w = toNumber2(dims?.w);
     const l = toNumber2(dims?.l);
@@ -11185,8 +10663,6 @@ async function handleCheckout(request, env) {
     return sizeText;
   }
   __name(buildCompactDimText, "buildCompactDimText");
-  __name2(buildCompactDimText, "buildCompactDimText");
-  __name22(buildCompactDimText, "buildCompactDimText");
   const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
@@ -11336,8 +10812,8 @@ async function handleCheckout(request, env) {
   }
 }
 __name(handleCheckout, "handleCheckout");
-__name2(handleCheckout, "handleCheckout");
-__name22(handleCheckout, "handleCheckout");
+
+// ../workers/api/webhook.ts
 async function sha2562(text) {
   const d = new TextEncoder().encode(text);
   const h = await crypto.subtle.digest("SHA-256", d);
@@ -11345,9 +10821,7 @@ async function sha2562(text) {
     return b.toString(16).padStart(2, "0");
   }).join("");
 }
-__name(sha2562, "sha2562");
-__name2(sha2562, "sha2562");
-__name22(sha2562, "sha256");
+__name(sha2562, "sha256");
 function normalizeAddress2(raw) {
   var addr = raw;
   if (typeof raw === "string") try {
@@ -11358,9 +10832,7 @@ function normalizeAddress2(raw) {
   if (typeof addr !== "object" || !addr) return "";
   return [(addr.street || addr.address || "").trim().toLowerCase(), (addr.city || "").trim().toLowerCase(), (addr.state || addr.province || "").trim().toLowerCase(), (addr.postal_code || addr.zip || addr.postal || "").trim().toLowerCase(), (addr.country || "").trim().toLowerCase()].join("|");
 }
-__name(normalizeAddress2, "normalizeAddress2");
-__name2(normalizeAddress2, "normalizeAddress2");
-__name22(normalizeAddress2, "normalizeAddress");
+__name(normalizeAddress2, "normalizeAddress");
 var orderCustomerNoteSchemaReady = false;
 var orderCustomerNoteSchemaPromise = null;
 var checkoutSnapshotSchemaReady2 = false;
@@ -11391,8 +10863,6 @@ async function ensureOrderCustomerNoteSchema(env) {
   return await orderCustomerNoteSchemaPromise;
 }
 __name(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
-__name2(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
-__name22(ensureOrderCustomerNoteSchema, "ensureOrderCustomerNoteSchema");
 async function ensureCheckoutSnapshotSchema2(env) {
   if (checkoutSnapshotSchemaReady2) return true;
   if (!checkoutSnapshotSchemaPromise2) {
@@ -11419,9 +10889,7 @@ async function ensureCheckoutSnapshotSchema2(env) {
   }
   return await checkoutSnapshotSchemaPromise2;
 }
-__name(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema2");
-__name2(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema2");
-__name22(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema");
+__name(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema");
 async function handleStripeWebhook(request, env) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -11570,7 +11038,7 @@ async function handleStripeWebhook(request, env) {
   const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
   const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
   const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
-  const mapItems = /* @__PURE__ */ __name22((rawItems) => {
+  const mapItems = /* @__PURE__ */ __name((rawItems) => {
     return (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
       slug: item.slug || item.s || "",
       name: item.name || item.n || item.slug || item.s || "",
@@ -11615,13 +11083,13 @@ async function handleStripeWebhook(request, env) {
   const sessionCurrency = String(session.currency || "usd").toLowerCase();
   const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
   const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
-  const toFiniteNumber = /* @__PURE__ */ __name22((v) => {
+  const toFiniteNumber = /* @__PURE__ */ __name((v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : void 0;
   }, "toFiniteNumber");
-  const parseDimsFromSizeText = /* @__PURE__ */ __name22((sizeText) => {
+  const parseDimsFromSizeText = /* @__PURE__ */ __name((sizeText) => {
     const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
-    const m = clean.match(/(\d+(?:\.\d+)?)\s*[xÃƒâ€”]\s*(\d+(?:\.\d+)?)(?:\s*[xÃƒâ€”]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
     if (!m) return {};
     const unitRaw = String(m[4] || "").toLowerCase();
     return {
@@ -11631,7 +11099,7 @@ async function handleStripeWebhook(request, env) {
       unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
     };
   }, "parseDimsFromSizeText");
-  const hasUsefulDims = /* @__PURE__ */ __name22((dims) => {
+  const hasUsefulDims = /* @__PURE__ */ __name((dims) => {
     if (!dims || typeof dims !== "object") return false;
     if (toFiniteNumber(dims.w) && toFiniteNumber(dims.l)) return true;
     if (String(dims.size_text || "").trim()) return true;
@@ -11640,7 +11108,7 @@ async function handleStripeWebhook(request, env) {
     if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
     return false;
   }, "hasUsefulDims");
-  const formatDimsForEmail = /* @__PURE__ */ __name22((dims) => {
+  const formatDimsForEmail = /* @__PURE__ */ __name((dims) => {
     const unit = String(dims?.unit || "cm");
     const boatModelName = String(dims?.boat_model_name || "").trim();
     if (boatModelName) {
@@ -11941,8 +11409,6 @@ Total: ${total}${dutyTaxTeamLine}`
   });
 }
 __name(handleStripeWebhook, "handleStripeWebhook");
-__name2(handleStripeWebhook, "handleStripeWebhook");
-__name22(handleStripeWebhook, "handleStripeWebhook");
 function hexToArrayBuffer(hex) {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
@@ -11951,8 +11417,8 @@ function hexToArrayBuffer(hex) {
   return bytes.buffer;
 }
 __name(hexToArrayBuffer, "hexToArrayBuffer");
-__name2(hexToArrayBuffer, "hexToArrayBuffer");
-__name22(hexToArrayBuffer, "hexToArrayBuffer");
+
+// ../workers/api/auth.ts
 async function handleAuth(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -12003,8 +11469,8 @@ async function handleAuth(request, env) {
   });
 }
 __name(handleAuth, "handleAuth");
-__name2(handleAuth, "handleAuth");
-__name22(handleAuth, "handleAuth");
+
+// ../workers/api/customers.ts
 var orderShippingSchemaReady2 = false;
 var orderShippingSchemaPromise2 = null;
 async function ensureOrderShippingSchema2(env) {
@@ -12029,9 +11495,7 @@ async function ensureOrderShippingSchema2(env) {
   }
   await orderShippingSchemaPromise2;
 }
-__name(ensureOrderShippingSchema2, "ensureOrderShippingSchema2");
-__name2(ensureOrderShippingSchema2, "ensureOrderShippingSchema2");
-__name22(ensureOrderShippingSchema2, "ensureOrderShippingSchema");
+__name(ensureOrderShippingSchema2, "ensureOrderShippingSchema");
 async function getEmail(request, env) {
   const result = await verifyClerkJwt(request, env);
   if (!result.valid) {
@@ -12050,8 +11514,6 @@ async function getEmail(request, env) {
   return email;
 }
 __name(getEmail, "getEmail");
-__name2(getEmail, "getEmail");
-__name22(getEmail, "getEmail");
 async function handleCustomers(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -12391,8 +11853,8 @@ async function handleCustomers(request, env) {
   });
 }
 __name(handleCustomers, "handleCustomers");
-__name2(handleCustomers, "handleCustomers");
-__name22(handleCustomers, "handleCustomers");
+
+// ../workers/api/order-confirmed.ts
 async function getOrdersBySession(env, sessionId) {
   const { results } = await env.DB.prepare(
     `SELECT id, stripe_session_id, email, shipping_address, product_title_en, fabric, color,
@@ -12405,8 +11867,6 @@ async function getOrdersBySession(env, sessionId) {
   return results || [];
 }
 __name(getOrdersBySession, "getOrdersBySession");
-__name2(getOrdersBySession, "getOrdersBySession");
-__name22(getOrdersBySession, "getOrdersBySession");
 async function reconcilePaidSessionToOrders(sessionId, env) {
   const stripeKey = env.STRIPE_SECRET_KEY;
   if (!stripeKey) return false;
@@ -12491,8 +11951,6 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   return inserted > 0;
 }
 __name(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
-__name2(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
-__name22(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
 async function handleOrderConfirmed(request, env) {
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
@@ -12535,8 +11993,8 @@ async function handleOrderConfirmed(request, env) {
   }
 }
 __name(handleOrderConfirmed, "handleOrderConfirmed");
-__name2(handleOrderConfirmed, "handleOrderConfirmed");
-__name22(handleOrderConfirmed, "handleOrderConfirmed");
+
+// ../workers/api/color-inventory.ts
 async function handleColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -12556,17 +12014,15 @@ async function handleColorInventory(request, env) {
   }
 }
 __name(handleColorInventory, "handleColorInventory");
-__name2(handleColorInventory, "handleColorInventory");
-__name22(handleColorInventory, "handleColorInventory");
+
+// api/[[path]].ts
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url5(url) {
   if (!url || typeof url !== "string") return url;
   if (!url.startsWith("/r2/")) return url;
   return `${R2_PUBLIC_BASE7}${url.slice(3)}`;
 }
-__name(toR2Url5, "toR2Url5");
-__name2(toR2Url5, "toR2Url5");
-__name22(toR2Url5, "toR2Url");
+__name(toR2Url5, "toR2Url");
 function r2Product3(p) {
   if (!p) return p;
   const imgKey = p.image_url !== void 0 ? "image_url" : "Image_url";
@@ -12585,10 +12041,8 @@ function r2Product3(p) {
   }
   return out;
 }
-__name(r2Product3, "r2Product3");
-__name2(r2Product3, "r2Product3");
-__name22(r2Product3, "r2Product");
-var onRequest4 = /* @__PURE__ */ __name22(async (context) => {
+__name(r2Product3, "r2Product");
+var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
@@ -12791,6 +12245,8 @@ var onRequest4 = /* @__PURE__ */ __name22(async (context) => {
     headers: { "Content-Type": "application/json" }
   });
 }, "onRequest");
+
+// blogs/[[path]].ts
 async function onRequest5(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -12830,9 +12286,9 @@ async function onRequest5(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest5, "onRequest5");
-__name2(onRequest5, "onRequest5");
-__name22(onRequest5, "onRequest");
+__name(onRequest5, "onRequest");
+
+// products/[[path]].ts
 var FIXED_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
   "bedbridge-connector",
   "mattress-lift-helper",
@@ -12879,21 +12335,15 @@ var NICHE_PATHS = {
 function escapeHtml2(value) {
   return String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-__name(escapeHtml2, "escapeHtml2");
-__name2(escapeHtml2, "escapeHtml2");
-__name22(escapeHtml2, "escapeHtml");
+__name(escapeHtml2, "escapeHtml");
 function toTokens(value) {
   return String(value || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
 }
 __name(toTokens, "toTokens");
-__name2(toTokens, "toTokens");
-__name22(toTokens, "toTokens");
 function titleFromSlug(slug) {
   return slug.split("-").filter(Boolean).map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
 }
 __name(titleFromSlug, "titleFromSlug");
-__name2(titleFromSlug, "titleFromSlug");
-__name22(titleFromSlug, "titleFromSlug");
 function normalizeImageUrl(url) {
   if (!url) return "";
   if (url.startsWith("/r2/")) {
@@ -12902,8 +12352,6 @@ function normalizeImageUrl(url) {
   return url;
 }
 __name(normalizeImageUrl, "normalizeImageUrl");
-__name2(normalizeImageUrl, "normalizeImageUrl");
-__name22(normalizeImageUrl, "normalizeImageUrl");
 function firstSentence(text, maxLen = 110) {
   const clean = String(text || "").replace(/\s+/g, " ").trim();
   if (!clean) return "";
@@ -12912,8 +12360,6 @@ function firstSentence(text, maxLen = 110) {
   return `${sentence.slice(0, maxLen - 1).trimEnd()}\u2026`;
 }
 __name(firstSentence, "firstSentence");
-__name2(firstSentence, "firstSentence");
-__name22(firstSentence, "firstSentence");
 function buildFabricInfo(fabricOptions, isFixed, isTh) {
   if (isFixed) return isTh ? "\u0E2A\u0E40\u0E1B\u0E01\u0E15\u0E32\u0E22\u0E15\u0E31\u0E27" : "Fixed specification";
   const fabrics = toTokens(fabricOptions);
@@ -12922,15 +12368,11 @@ function buildFabricInfo(fabricOptions, isFixed, isTh) {
   return `${fabrics.length} fabrics \xB7 Multiple colors`;
 }
 __name(buildFabricInfo, "buildFabricInfo");
-__name2(buildFabricInfo, "buildFabricInfo");
-__name22(buildFabricInfo, "buildFabricInfo");
 function buildButtonLabel(isFixed, isTh) {
   if (isFixed) return isTh ? "\u0E14\u0E39\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14" : "View Details";
   return isTh ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
 }
 __name(buildButtonLabel, "buildButtonLabel");
-__name2(buildButtonLabel, "buildButtonLabel");
-__name22(buildButtonLabel, "buildButtonLabel");
 function buildPrice(product, isTh) {
   const usdRaw = Number(product.base_price_usd);
   const thbRaw = Number(product.base_price_thb);
@@ -12940,8 +12382,6 @@ function buildPrice(product, isTh) {
   return { display, usd, thb };
 }
 __name(buildPrice, "buildPrice");
-__name2(buildPrice, "buildPrice");
-__name22(buildPrice, "buildPrice");
 function getCategoryTokens(product) {
   const merged = /* @__PURE__ */ new Set();
   toTokens(product.product_type).forEach((t) => merged.add(t));
@@ -12950,8 +12390,6 @@ function getCategoryTokens(product) {
   return Array.from(merged);
 }
 __name(getCategoryTokens, "getCategoryTokens");
-__name2(getCategoryTokens, "getCategoryTokens");
-__name22(getCategoryTokens, "getCategoryTokens");
 function buildCard(product, isTh) {
   const slug = String(product.slug || "").trim();
   const title = escapeHtml2(String((isTh ? product.title_th : product.title_en) || product.title_en || slug && titleFromSlug(slug) || "Product"));
@@ -12991,8 +12429,6 @@ function buildCard(product, isTh) {
           </article>`;
 }
 __name(buildCard, "buildCard");
-__name2(buildCard, "buildCard");
-__name22(buildCard, "buildCard");
 async function onRequest6(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -13055,10 +12491,10 @@ ${cardsHtml}
     return next();
   }
 }
-__name(onRequest6, "onRequest6");
-__name2(onRequest6, "onRequest6");
-__name22(onRequest6, "onRequest");
-var onRequest7 = /* @__PURE__ */ __name22(async (context) => {
+__name(onRequest6, "onRequest");
+
+// quote/[[path]].ts
+var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -13115,8 +12551,6 @@ var onRequest7 = /* @__PURE__ */ __name22(async (context) => {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   __name(esc, "esc");
-  __name2(esc, "esc");
-  __name22(esc, "esc");
   const productTitle = quote ? quote.product_slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "";
   const fabricLabel = quote?.fabric || "\u2014";
   const colorLabel = quote?.color || "\u2014";
@@ -13404,7 +12838,9 @@ var onRequest7 = /* @__PURE__ */ __name22(async (context) => {
     }
   });
 }, "onRequest");
-var onRequest8 = /* @__PURE__ */ __name22(async (context) => {
+
+// r2/[[path]].ts
+var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
@@ -13424,7 +12860,9 @@ var onRequest8 = /* @__PURE__ */ __name22(async (context) => {
   }
   return Response.redirect(publicUrl, 302);
 }, "onRequest");
-var onRequest9 = /* @__PURE__ */ __name22(async (context) => {
+
+// v1/[[path]].ts
+var onRequest9 = /* @__PURE__ */ __name(async (context) => {
   const res = await handleSalesApi(context.request, context.env);
   if (res) return res;
   return new Response(JSON.stringify({ error: "Not Found" }), {
@@ -13432,6 +12870,8 @@ var onRequest9 = /* @__PURE__ */ __name22(async (context) => {
     headers: { "Content-Type": "application/json" }
   });
 }, "onRequest");
+
+// account/_middleware.ts
 function getClerkSessionToken2(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -13441,10 +12881,8 @@ function getClerkSessionToken2(request) {
   if (qp) return qp;
   return null;
 }
-__name(getClerkSessionToken2, "getClerkSessionToken2");
-__name2(getClerkSessionToken2, "getClerkSessionToken2");
-__name22(getClerkSessionToken2, "getClerkSessionToken");
-var onRequest10 = /* @__PURE__ */ __name22(async (context) => {
+__name(getClerkSessionToken2, "getClerkSessionToken");
+var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -13475,8 +12913,8 @@ function redirectToSignIn(currentUrl) {
   return Response.redirect(signInUrl.toString(), 302);
 }
 __name(redirectToSignIn, "redirectToSignIn");
-__name2(redirectToSignIn, "redirectToSignIn");
-__name22(redirectToSignIn, "redirectToSignIn");
+
+// admin/_middleware.ts
 function getClerkSessionToken3(request) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -13486,13 +12924,11 @@ function getClerkSessionToken3(request) {
   if (qp) return qp;
   return null;
 }
-__name(getClerkSessionToken3, "getClerkSessionToken3");
-__name2(getClerkSessionToken3, "getClerkSessionToken3");
-__name22(getClerkSessionToken3, "getClerkSessionToken");
+__name(getClerkSessionToken3, "getClerkSessionToken");
 function collectRoles15(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
-  const add = /* @__PURE__ */ __name22((v) => {
+  const add = /* @__PURE__ */ __name((v) => {
     if (v !== void 0 && v !== null) values.push(v);
   }, "add");
   add(raw.role);
@@ -13513,26 +12949,20 @@ function collectRoles15(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles15, "collectRoles15");
-__name2(collectRoles15, "collectRoles15");
-__name22(collectRoles15, "collectRoles");
+__name(collectRoles15, "collectRoles");
 function hasAdminRole20(rawClaims) {
   const roles = collectRoles15(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole20, "hasAdminRole20");
-__name2(hasAdminRole20, "hasAdminRole20");
-__name22(hasAdminRole20, "hasAdminRole");
+__name(hasAdminRole20, "hasAdminRole");
 function emailAllowed19(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed19, "emailAllowed19");
-__name2(emailAllowed19, "emailAllowed19");
-__name22(emailAllowed19, "emailAllowed");
+__name(emailAllowed19, "emailAllowed");
 function emailBlocked(email) {
   if (!email) return false;
   const blocked = [
@@ -13541,8 +12971,6 @@ function emailBlocked(email) {
   return blocked.includes(email.toLowerCase());
 }
 __name(emailBlocked, "emailBlocked");
-__name2(emailBlocked, "emailBlocked");
-__name22(emailBlocked, "emailBlocked");
 function getPrimaryClerkEmail3(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -13550,9 +12978,7 @@ function getPrimaryClerkEmail3(user) {
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail3");
-__name2(getPrimaryClerkEmail3, "getPrimaryClerkEmail3");
-__name22(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
 async function enrichAdminFromClerk(sub, env) {
   const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
   if (!sub || !clerkKey) return { email: "", hasAdmin: false };
@@ -13578,9 +13004,7 @@ async function enrichAdminFromClerk(sub, env) {
   }
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
-__name2(enrichAdminFromClerk, "enrichAdminFromClerk");
-__name22(enrichAdminFromClerk, "enrichAdminFromClerk");
-var onRequest11 = /* @__PURE__ */ __name22(async (context) => {
+var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   const host = new URL(context.request.url).host;
   if (host.includes("pages.dev") || host.includes("localhost")) {
     return context.next();
@@ -13641,15 +13065,13 @@ function redirectToSignIn2(currentUrl) {
   signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
   return Response.redirect(signInUrl.toString(), 302);
 }
-__name(redirectToSignIn2, "redirectToSignIn2");
-__name2(redirectToSignIn2, "redirectToSignIn2");
-__name22(redirectToSignIn2, "redirectToSignIn");
+__name(redirectToSignIn2, "redirectToSignIn");
 function escHtml3(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-__name(escHtml3, "escHtml3");
-__name2(escHtml3, "escHtml3");
-__name22(escHtml3, "escHtml");
+__name(escHtml3, "escHtml");
+
+// _middleware.ts
 var CACHE_TTL = 5 * 60 * 1e3;
 var _cache = { fetchedAt: 0 };
 var FALLBACK_HEADER = `<header class="site-header">
@@ -14036,8 +13458,6 @@ async function ensureCache(db) {
   }
 }
 __name(ensureCache, "ensureCache");
-__name2(ensureCache, "ensureCache");
-__name22(ensureCache, "ensureCache");
 async function getChrome(db, key) {
   const fallback = key === "header" ? FALLBACK_HEADER : FALLBACK_FOOTER;
   await ensureCache(db);
@@ -14046,8 +13466,6 @@ async function getChrome(db, key) {
   return html.replace(/<li class="nav-item">\s*<a href="\/blogs\/" class="nav-link">Blog<\/a>\s*<\/li>/g, "").replace(/<li>\s*<a href="\/blogs\/">Blog<\/a>\s*<\/li>/g, "");
 }
 __name(getChrome, "getChrome");
-__name2(getChrome, "getChrome");
-__name22(getChrome, "getChrome");
 var SKIP_PREFIXES = ["/admin/", "/super-admin/", "/api/", "/v1/", "/r2/", "/images/", "/css/", "/js/", "/fonts/"];
 var SKIP_EXTENSIONS = [".js", ".css", ".png", ".jpg", ".webp", ".svg", ".ico", ".woff2", ".json", ".xml", ".map"];
 var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
@@ -14085,9 +13503,7 @@ var CANONICAL_PRODUCT_SLUGS2 = /* @__PURE__ */ new Set([
 function hasToken2(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
-__name(hasToken2, "hasToken2");
-__name2(hasToken2, "hasToken2");
-__name22(hasToken2, "hasToken");
+__name(hasToken2, "hasToken");
 function resolveLegacyProductPath(pathname) {
   if (pathname === "/product/" || pathname === "/product") return "/products/";
   if (!pathname.startsWith("/product/")) return null;
@@ -14129,8 +13545,6 @@ function resolveLegacyProductPath(pathname) {
   return "/products/";
 }
 __name(resolveLegacyProductPath, "resolveLegacyProductPath");
-__name2(resolveLegacyProductPath, "resolveLegacyProductPath");
-__name22(resolveLegacyProductPath, "resolveLegacyProductPath");
 var LISTING_ROUTES = {
   "/products/": { lang: "en", mode: "all" },
   "/sheets/": { lang: "en", mode: "product_type", value: "sheets" },
@@ -14192,21 +13606,15 @@ function normalizeRoutePath(pathname) {
   return pathname.endsWith("/") ? pathname : `${pathname}/`;
 }
 __name(normalizeRoutePath, "normalizeRoutePath");
-__name2(normalizeRoutePath, "normalizeRoutePath");
-__name22(normalizeRoutePath, "normalizeRoutePath");
 function escapeHtml3(value) {
   const str = String(value ?? "");
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-__name(escapeHtml3, "escapeHtml3");
-__name2(escapeHtml3, "escapeHtml3");
-__name22(escapeHtml3, "escapeHtml");
+__name(escapeHtml3, "escapeHtml");
 function parseCsv(raw) {
   return String(raw || "").split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
 }
 __name(parseCsv, "parseCsv");
-__name2(parseCsv, "parseCsv");
-__name22(parseCsv, "parseCsv");
 function pickPrimaryImage(imagesRaw, imageUrl) {
   try {
     const arr = typeof imagesRaw === "string" ? JSON.parse(imagesRaw) : imagesRaw;
@@ -14219,16 +13627,12 @@ function pickPrimaryImage(imagesRaw, imageUrl) {
   return String(imageUrl || "").trim();
 }
 __name(pickPrimaryImage, "pickPrimaryImage");
-__name2(pickPrimaryImage, "pickPrimaryImage");
-__name22(pickPrimaryImage, "pickPrimaryImage");
 function getTagHref(slug, lang) {
   const prefix = lang === "th" ? "/th" : "";
   const valid = ["sheets", "duvet-covers", "pillowcases", "protection", "accessories", "marine", "family", "pets", "deep-pocket", "boarding-dorm", "rv-truck"];
   return valid.includes(slug) ? `${prefix}/${slug}/` : `${prefix}/products/`;
 }
 __name(getTagHref, "getTagHref");
-__name2(getTagHref, "getTagHref");
-__name22(getTagHref, "getTagHref");
 function buildTagHtml(productType, niches, lang) {
   const productTypeLabels = lang === "th" ? PRODUCT_TYPE_LABELS_TH : PRODUCT_TYPE_LABELS_EN;
   const nicheLabels = lang === "th" ? NICHE_LABELS_TH2 : NICHE_LABELS_EN2;
@@ -14243,8 +13647,6 @@ function buildTagHtml(productType, niches, lang) {
   return tags.join("");
 }
 __name(buildTagHtml, "buildTagHtml");
-__name2(buildTagHtml, "buildTagHtml");
-__name22(buildTagHtml, "buildTagHtml");
 function renderListingCards(rows, lang) {
   const priceNote = lang === "th" ? "\u0E44\u0E21\u0E48\u0E23\u0E27\u0E21\u0E04\u0E48\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07 \u0E20\u0E32\u0E29\u0E35 \u0E41\u0E25\u0E30\u0E20\u0E32\u0E29\u0E35\u0E28\u0E38\u0E25\u0E01\u0E32\u0E01\u0E23" : "Excludes shipping, tax & tariff";
   const ctaStandard = lang === "th" ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E41\u0E25\u0E30\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32" : "Choose Size & Fabric";
@@ -14283,8 +13685,6 @@ function renderListingCards(rows, lang) {
   }).join("\n");
 }
 __name(renderListingCards, "renderListingCards");
-__name2(renderListingCards, "renderListingCards");
-__name22(renderListingCards, "renderListingCards");
 function replaceFirstProductGrid(html, cardMarkup) {
   const start = html.indexOf('<div class="product-grid');
   if (start < 0) return html;
@@ -14312,8 +13712,6 @@ ${cardMarkup}
 ${html.slice(closeStart, closeEnd)}${html.slice(closeEnd)}`;
 }
 __name(replaceFirstProductGrid, "replaceFirstProductGrid");
-__name2(replaceFirstProductGrid, "replaceFirstProductGrid");
-__name22(replaceFirstProductGrid, "replaceFirstProductGrid");
 async function fetchListingProducts(db, config) {
   const baseQuery = `SELECT slug, title_en, title_th, card_benefit_en, card_benefit_th, product_type, niches, base_price_usd, base_price_thb, image_url, images, is_custom, sort_order, id
     FROM products
@@ -14332,8 +13730,6 @@ async function fetchListingProducts(db, config) {
   return result?.results || [];
 }
 __name(fetchListingProducts, "fetchListingProducts");
-__name2(fetchListingProducts, "fetchListingProducts");
-__name22(fetchListingProducts, "fetchListingProducts");
 async function onRequest12(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
@@ -14438,9 +13834,9 @@ ${JSON_LD_WEBSITE}
   }
   return new Response(html, { status: response2.status, headers: response2.headers });
 }
-__name(onRequest12, "onRequest12");
-__name2(onRequest12, "onRequest12");
-__name22(onRequest12, "onRequest");
+__name(onRequest12, "onRequest");
+
+// ../.wrangler/tmp/pages-6tTH5S/functionsRoutes-0.24608311660030113.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -14541,6 +13937,8 @@ var routes = [
     modules: []
   }
 ];
+
+// ../node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -14625,8 +14023,6 @@ function lexer(str) {
   return tokens;
 }
 __name(lexer, "lexer");
-__name2(lexer, "lexer");
-__name22(lexer, "lexer");
 function parse(str, options) {
   if (options === void 0) {
     options = {};
@@ -14637,18 +14033,18 @@ function parse(str, options) {
   var key = 0;
   var i = 0;
   var path = "";
-  var tryConsume = /* @__PURE__ */ __name22(function(type) {
+  var tryConsume = /* @__PURE__ */ __name(function(type) {
     if (i < tokens.length && tokens[i].type === type)
       return tokens[i++].value;
   }, "tryConsume");
-  var mustConsume = /* @__PURE__ */ __name22(function(type) {
+  var mustConsume = /* @__PURE__ */ __name(function(type) {
     var value2 = tryConsume(type);
     if (value2 !== void 0)
       return value2;
     var _a2 = tokens[i], nextType = _a2.type, index = _a2.index;
     throw new TypeError("Unexpected ".concat(nextType, " at ").concat(index, ", expected ").concat(type));
   }, "mustConsume");
-  var consumeText = /* @__PURE__ */ __name22(function() {
+  var consumeText = /* @__PURE__ */ __name(function() {
     var result2 = "";
     var value2;
     while (value2 = tryConsume("CHAR") || tryConsume("ESCAPED_CHAR")) {
@@ -14656,7 +14052,7 @@ function parse(str, options) {
     }
     return result2;
   }, "consumeText");
-  var isSafe = /* @__PURE__ */ __name22(function(value2) {
+  var isSafe = /* @__PURE__ */ __name(function(value2) {
     for (var _i = 0, delimiter_1 = delimiter; _i < delimiter_1.length; _i++) {
       var char2 = delimiter_1[_i];
       if (value2.indexOf(char2) > -1)
@@ -14664,7 +14060,7 @@ function parse(str, options) {
     }
     return false;
   }, "isSafe");
-  var safePattern = /* @__PURE__ */ __name22(function(prefix2) {
+  var safePattern = /* @__PURE__ */ __name(function(prefix2) {
     var prev = result[result.length - 1];
     var prevText = prefix2 || (prev && typeof prev === "string" ? prev : "");
     if (prev && !prevText) {
@@ -14727,16 +14123,12 @@ function parse(str, options) {
   return result;
 }
 __name(parse, "parse");
-__name2(parse, "parse");
-__name22(parse, "parse");
 function match(str, options) {
   var keys = [];
   var re = pathToRegexp(str, keys, options);
   return regexpToFunction(re, keys, options);
 }
 __name(match, "match");
-__name2(match, "match");
-__name22(match, "match");
 function regexpToFunction(re, keys, options) {
   if (options === void 0) {
     options = {};
@@ -14750,7 +14142,7 @@ function regexpToFunction(re, keys, options) {
       return false;
     var path = m[0], index = m.index;
     var params = /* @__PURE__ */ Object.create(null);
-    var _loop_1 = /* @__PURE__ */ __name22(function(i2) {
+    var _loop_1 = /* @__PURE__ */ __name(function(i2) {
       if (m[i2] === void 0)
         return "continue";
       var key = keys[i2 - 1];
@@ -14769,20 +14161,14 @@ function regexpToFunction(re, keys, options) {
   };
 }
 __name(regexpToFunction, "regexpToFunction");
-__name2(regexpToFunction, "regexpToFunction");
-__name22(regexpToFunction, "regexpToFunction");
 function escapeString(str) {
   return str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 }
 __name(escapeString, "escapeString");
-__name2(escapeString, "escapeString");
-__name22(escapeString, "escapeString");
 function flags(options) {
   return options && options.sensitive ? "" : "i";
 }
 __name(flags, "flags");
-__name2(flags, "flags");
-__name22(flags, "flags");
 function regexpToRegexp(path, keys) {
   if (!keys)
     return path;
@@ -14803,8 +14189,6 @@ function regexpToRegexp(path, keys) {
   return path;
 }
 __name(regexpToRegexp, "regexpToRegexp");
-__name2(regexpToRegexp, "regexpToRegexp");
-__name22(regexpToRegexp, "regexpToRegexp");
 function arrayToRegexp(paths, keys, options) {
   var parts = paths.map(function(path) {
     return pathToRegexp(path, keys, options).source;
@@ -14812,14 +14196,10 @@ function arrayToRegexp(paths, keys, options) {
   return new RegExp("(?:".concat(parts.join("|"), ")"), flags(options));
 }
 __name(arrayToRegexp, "arrayToRegexp");
-__name2(arrayToRegexp, "arrayToRegexp");
-__name22(arrayToRegexp, "arrayToRegexp");
 function stringToRegexp(path, keys, options) {
   return tokensToRegexp(parse(path, options), keys, options);
 }
 __name(stringToRegexp, "stringToRegexp");
-__name2(stringToRegexp, "stringToRegexp");
-__name22(stringToRegexp, "stringToRegexp");
 function tokensToRegexp(tokens, keys, options) {
   if (options === void 0) {
     options = {};
@@ -14875,8 +14255,6 @@ function tokensToRegexp(tokens, keys, options) {
   return new RegExp(route, flags(options));
 }
 __name(tokensToRegexp, "tokensToRegexp");
-__name2(tokensToRegexp, "tokensToRegexp");
-__name22(tokensToRegexp, "tokensToRegexp");
 function pathToRegexp(path, keys, options) {
   if (path instanceof RegExp)
     return regexpToRegexp(path, keys);
@@ -14885,8 +14263,8 @@ function pathToRegexp(path, keys, options) {
   return stringToRegexp(path, keys, options);
 }
 __name(pathToRegexp, "pathToRegexp");
-__name2(pathToRegexp, "pathToRegexp");
-__name22(pathToRegexp, "pathToRegexp");
+
+// ../node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
@@ -14937,15 +14315,13 @@ function* executeRequest(request) {
   }
 }
 __name(executeRequest, "executeRequest");
-__name2(executeRequest, "executeRequest");
-__name22(executeRequest, "executeRequest");
 var pages_template_worker_default = {
   async fetch(originalRequest, env, workerContext) {
     let request = originalRequest;
     const handlerIterator = executeRequest(request);
     let data = {};
     let isFailOpen = false;
-    const next = /* @__PURE__ */ __name22(async (input, init) => {
+    const next = /* @__PURE__ */ __name(async (input, init) => {
       if (input !== void 0) {
         let url = input;
         if (typeof input === "string") {
@@ -14972,7 +14348,7 @@ var pages_template_worker_default = {
           },
           env,
           waitUntil: workerContext.waitUntil.bind(workerContext),
-          passThroughOnException: /* @__PURE__ */ __name22(() => {
+          passThroughOnException: /* @__PURE__ */ __name(() => {
             isFailOpen = true;
           }, "passThroughOnException")
         };
@@ -15000,7 +14376,7 @@ var pages_template_worker_default = {
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name22((response2) => (
+var cloneResponse = /* @__PURE__ */ __name((response2) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
     [101, 204, 205, 304].includes(response2.status) ? null : response2.body,
@@ -15010,3 +14386,5 @@ var cloneResponse = /* @__PURE__ */ __name22((response2) => (
 export {
   pages_template_worker_default as default
 };
+
+------formdata-undici-058978172705--

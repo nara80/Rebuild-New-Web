@@ -165,6 +165,46 @@ function applyLocalizedFaqFromD1(html: string, faq: string): string {
   );
 }
 
+// Generic Thai FAQ block used as a fallback for products that don't have a
+// hand-curated faq_th in D1. Mirrors the four standard questions in the EN
+// customizable template, with internal links rewritten to /th/... paths.
+const TH_GENERIC_FAQ_INNER = `<details class="faq-item" open>
+            <summary>จะเลือกขนาดที่นอนได้อย่างไร?</summary>
+            <p>ดู<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราสำหรับขนาดมาตรฐาน หรือกรอกขนาดจริงของคุณในแบบฟอร์มสั่งตัดตามออเดอร์</p>
+          </details>
+          <details class="faq-item">
+            <summary>สามารถสั่งตัดตามขนาดพิเศษได้หรือไม่?</summary>
+            <p>ได้ คลิก <strong>ขนาดที่นอนแบบกำหนดเอง</strong> กรอกขนาดของคุณ แล้วส่งคำขอใบเสนอราคาสั่งตัด</p>
+          </details>
+          <details class="faq-item">
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้าทุกชนิดของ MildMate ซักเครื่องได้ที่อุณหภูมิปานกลาง (40°C / 104°F) ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ที่โรงงานในประเทศไทย ระยะเวลาจัดส่งขึ้นอยู่กับปลายทางและจะแจ้งให้ทราบในอีเมลใบเสนอราคาหรือคำสั่งซื้อของคุณ</p>
+          </details>`;
+
+// Marine-specific Thai FAQ block (V-Berth sheets + marine mattress protector).
+const TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
+            <summary>ควรทราบรายละเอียดเกี่ยวกับเนื้อผ้าและการดูแลรักษาอย่างไร?</summary>
+            <p>ผ้า CloudSoft ของเราซักเครื่องได้ แห้งเร็ว ทนทานต่อสภาพแวดล้อมทางทะเล ห้ามใช้น้ำยาฟอกขาว แนะนำให้ตากแห้งในที่ร่มเพื่อรักษาคุณภาพเส้นใยระยะยาว</p>
+          </details>
+          <details class="faq-item">
+            <summary>วัดขนาดที่นอนเรืออย่างไร?</summary>
+            <p>ใช้<a href="/th/sizeguide/">คู่มือขนาด</a>ของเราเป็นข้อมูลอ้างอิง เลือกรูปทรงเตียงเรือของคุณด้านบน แล้วกรอกความยาวของแต่ละด้านให้ตรงตามที่วัดได้จริง ระบุความหนาของที่นอนเพื่อให้ตัดเย็บพอดีแบบกำหนดเอง</p>
+          </details>
+          <details class="faq-item">
+            <summary>ใช้เวลาผลิตและจัดส่งนานเท่าไหร่?</summary>
+            <p>ผลิตแบบสั่งตัดตามออเดอร์ตามรูปทรงและขนาดจริงของคุณ ใช้เวลาผลิต 5–7 วันทำการ ระยะเวลาจัดส่งขึ้นอยู่กับปลายทาง คุณจะได้รับหมายเลขพัสดุเมื่อจัดส่งแล้ว</p>
+          </details>
+          <details class="faq-item">
+            <summary>ถ้ารูปทรงไม่อยู่ในลิสต์ล่ะ?</summary>
+            <p>เลือกรูปทรงที่ใกล้เคียงที่สุดและเพิ่มหมายเหตุในแบบฟอร์มขอใบเสนอราคา — เราผลิตตามแบบจริงของคุณ หรือ<a href="/th/contact/">ติดต่อเรา</a>โดยตรงพร้อมแนบภาพวาดหรือรูปถ่ายที่นอนเรือของคุณ</p>
+          </details>`;
+
+const MARINE_FAQ_SLUGS = new Set(['marine-fitted-sheet', 'marine-top-sheet', 'marine-mattress-protector']);
+
 function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
   const safeTagline = String(tagline || '').trim();
   const isWeightedDuvet = slug === 'weighted-duvet-cover';
@@ -269,8 +309,9 @@ export async function onRequest(context: any): Promise<Response> {
       ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || '')
       : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || '');
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
     const localizedFaq = isTh
-      ? String(product?.faq_th || '')
+      ? String(product?.faq_th || thFaqFallback)
       : String(product?.faq_en || '');
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
