@@ -30,12 +30,13 @@
  *   RESEND_API_KEY — sends the run report email
  *   REPORT_EMAIL_TO — report recipient (default contact@mildmate.com)
  *
- * Run report (2026-09-12 rule): EVERY LIVE-Notion run (dry-run included)
- * emails its outcome summary to contact@mildmate.com — synced/eligible count,
- * skips by reason, errors, and the synced order list. Mock (--input-file)
- * runs never email. A report failure never fails the sync run itself.
- * For cron automation (Phase 17) the cadence will be tightened to
- * only-when-changed plus a daily digest (Resend free tier is 100/day).
+ * Run report (2026-09-12 rule): EVERY non-dry-run LIVE-Notion run emails its
+ * outcome summary to contact@mildmate.com — synced count, skips by reason,
+ * errors, and the synced order list. **Dry runs never email** (preview only —
+ * not an outcome; saves Resend quota). Mock (--input-file) runs never email.
+ * A report failure never fails the sync run itself. For cron automation
+ * (Phase 17) the cadence will be tightened to only-when-changed plus a daily
+ * digest (Resend free tier is 100/day).
  *
  * Usage:
  *   node scripts/notion-product-mapper.mjs --order-id 1038 --dry-run
@@ -645,10 +646,16 @@ async function main() {
     }
   }
 
-  // Run report email (2026-09-12 rule): every LIVE-Notion run (dry-run included)
-  // reports its outcome to contact@mildmate.com. Mock (--input-file) runs never
-  // email. A report failure never fails the sync run itself.
-  if (!mock) {
+  // Run report email (2026-09-12 rule): every non-dry-run LIVE-Notion run
+  // reports its outcome to contact@mildmate.com. Dry runs and mock
+  // (--input-file) runs never email (preview only; saves Resend quota).
+  // A report failure never fails the sync run itself.
+  if (mock) {
+    // no email
+  } else if (args.dryRun) {
+    console.log("Report email skipped (dry-run does not consume Resend quota)");
+    log.write({ t: "email_report", status: "skipped_dry_run" });
+  } else {
     try {
       const email = buildReportEmail({ args, counts, processed, report, logFile: log.file });
       const sent = await sendReportEmail(email);
