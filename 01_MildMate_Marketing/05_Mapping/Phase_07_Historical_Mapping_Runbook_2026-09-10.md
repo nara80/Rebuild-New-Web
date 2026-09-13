@@ -40,7 +40,7 @@ Logs: JSONL per run under `logs/notion-mapper/` (gitignored), token- and PII-fre
 
 ## Run report email (2026-09-12 rule)
 
-**Every LIVE-Notion run (dry-run included) emails its outcome summary to `contact@mildmate.com`** (override with `REPORT_EMAIL_TO`). Mock `--input-file` runs never email. Requires `RESEND_API_KEY` in `.dev.vars` — the real key from https://resend.com/api-keys (Cloudflare Pages secrets cannot be read back).
+**Every non-dry-run LIVE-Notion run emails its outcome summary to `contact@mildmate.com`** (override with `REPORT_EMAIL_TO`). **Dry runs never email** — they are previews, not real outcomes, and the rule conserves the Resend free-tier quota. Mock `--input-file` runs also never email. Requires `RESEND_API_KEY` in `.dev.vars` — the real key from https://resend.com/api-keys (Cloudflare Pages secrets cannot be read back).
 
 The email contains: run metadata (mode, `--before` scope, log file), the full counter summary (synced / eligible, each skip reason, errors), the synced/eligible order list (shop, order number, total, items as `id×qty`), skip details with order numbers, and error details. Sent as multipart text + HTML, token- and PII-free.
 
