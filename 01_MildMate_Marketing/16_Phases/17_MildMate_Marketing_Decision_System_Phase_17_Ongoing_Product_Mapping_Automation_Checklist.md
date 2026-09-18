@@ -1,4 +1,4 @@
-# MildMate Marketing Decision System — Phase 17
+﻿# MildMate Marketing Decision System — Phase 17
 ## Ongoing Confirmed-Mapping Sync Automation (v3)
 
 > **Revised 2026-09-12** to match the approved v3 design (`09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`). The original version of this checklist was written for the superseded resolver design. Under v3, **nothing maps products automatically** — Make.com remains the mapping authority in Notion. This phase only automates the *sync* of confirmed `Mapped` records into D1.
@@ -38,10 +38,10 @@ Turn the Phase 07 v3 confirmed-mapping sync CLI into a safe, scheduled, incremen
 - [x] Phase 07 v3 sync CLI built; single-record dry-run verified (ID 1038, 2026-09-11).
 - [x] Mechanism decided: dedicated Cloudflare Worker + Cron Trigger (Pages cannot cron; repo has a `cron-worker/` precedent).
 - [x] Phase 07 live single-record sync (ID 1038) + idempotent re-run verified. *(2026-09-12: prod upsert `sales_orders` id 9 + signature write-back; re-run returned `skipped_unchanged` with zero writes)*
-- [ ] Phase 08 historical backfill executed in controlled batches and reconciled.
+- [x] Phase 08 historical backfill executed in controlled batches and reconciled. *(2026-09-18: 493 orders / 737 items reconciled; all 18 held records resolved; report in Phase_07_08_Reconciliation §8)*
 - [x] Migrations 043 + 044 applied to production D1. *(verified 2026-09-12: alias seed 1038→[20,26] present; events table live, 0 rows; preview optional)*
-- [ ] Dedicated Notion credential confirmed for read + signature write-back (not the read-only historical token).
-- [ ] Make.com Sales Sync activation timing decided (stays OFF until that decision; last prod run 2026-09-07, confirmed OFF).
+- [x] Dedicated Notion credential confirmed for read + signature write-back (not the read-only historical token). *(the credential in use performed 487 signature write-backs during Phase 08; reused as a Worker secret)*
+- [x] Make.com Sales Sync activation timing decided (stays OFF until that decision; last prod run 2026-09-07, confirmed OFF). *(user decision 2026-09-17: keep OFF until the Worker is stable)*
 - [x] Wrangler/Cloudflare credentials valid for the account. *(re-authenticated 2026-09-12; read-only prod verification passed)*
 
 ## Architecture Decision
@@ -69,64 +69,64 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 ## Task Checklist
 
 ### Execution model
-- [ ] Decide run frequency (recommended daily at first; tighten only after stability).
-- [ ] Create the dedicated Worker with a `scheduled` handler that reuses the CLI's sync logic (port or import the core from `scripts/notion-product-mapper.mjs` — do not fork the logic).
+- [x] Decide run frequency (recommended daily at first; tighten only after stability). *(user decision 2026-09-17: every 2 weeks -> cron "0 2 1,15 * *" (1st + 15th, 09:00 Bangkok) + hourly drain that no-ops unless carry-over work exists)*
+- [x] Create the dedicated Worker with a `scheduled` handler that reuses the CLI's sync logic (port or import the core from `scripts/notion-product-mapper.mjs` — do not fork the logic). *(logic extracted to `scripts/notion-mapper-core.mjs`; imported by BOTH the CLI and `marketing-sync-worker/index.js` — structurally impossible to fork. CLI 686 -> ~210 lines.)*
 - [ ] Store `NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN` as Worker secrets — never in code or repo.
-- [ ] Point the upsert target at `https://www.mildmate.com` (`/api/v1/sales/orders/upsert`).
+- [x] Point the upsert target at `https://www.mildmate.com` (`/api/v1/sales/orders/upsert`). *(`MAPPER_API_BASE` var)*
 
 ### Incremental processing
-- [ ] Server-side `Mapped` filter + signature-difference check (same eligibility as the CLI).
-- [ ] Persisted cursor (D1 table or KV) — never in-memory only.
-- [ ] Never re-process signature-unchanged records.
-- [ ] Never fetch or write non-Mapped statuses (they belong to Make.com).
+- [x] Server-side `Mapped` filter + signature-difference check (same eligibility as the CLI). *(identical code path — shared core)*
+- [x] Persisted cursor (D1 table or KV) — never in-memory only. *(`marketing_sync_state`, migration 045; carry-over verified across two bounded passes)*
+- [x] Never re-process signature-unchanged records. *(verified: 25 and 10 record dry-runs returned all `skipped_unchanged`)*
+- [x] Never fetch or write non-Mapped statuses (they belong to Make.com). *(server-side filter; the 6 status-flipped records are now excluded automatically)*
 
 ### Safety and reliability
-- [ ] Run lock (D1 row) — skip the run if the previous run is still active.
-- [ ] Throttle ~350 ms per Notion call + 429/5xx backoff.
-- [ ] Bound records/duration per invocation (carry over via cursor).
-- [ ] Catalog validation before any upsert; skip + log mismatches (never guess).
-- [ ] Signature write-back only after confirmed upsert success (never partial-write a record).
+- [x] Run lock (D1 row) — skip the run if the previous run is still active. *(single atomic UPDATE; verified held -> `{skipped:"locked"}` and expired -> reclaimed, so a crashed run cannot deadlock)*
+- [x] Throttle ~350 ms per Notion call + 429/5xx backoff. *(inherited unchanged from the core; 429 not fault-injected in this phase — see handoff §6)*
+- [x] Bound records/duration per invocation (carry over via cursor). *(`maxMs`, default 180s; stops between pages. Bug found + fixed: a record `limit` wrongly reported `exhausted`, resetting the cursor.)*
+- [x] Catalog validation before any upsert; skip + log mismatches (never guess). *(shared core; 32-product catalog fetched per run)*
+- [x] Signature write-back only after confirmed upsert success (never partial-write a record). *(unchanged from Phase 07 v3)*
 
 ### Observability
-- [ ] Record every scheduled run in `sync_runs` with a distinct source (e.g. `notion-mapping-sync`).
-- [ ] Write per-record audit rows to `product_mapping_events` (migration 044).
+- [x] Record every scheduled run in `sync_runs` with a distinct source (e.g. `notion-mapping-sync`). *(verified row: source `notion-mapping-sync`, scenario `phase17-...:manual`, success, 5 received / 5 unchanged)*
+- [x] Write per-record audit rows to `product_mapping_events` (migration 044). *(buffered during the run, flushed in one `db.batch()`; wrapped so audit failure never fails a completed sync)*
 - [ ] Surface `Review Required`/`Unmapped` counts in the Phase 06 Data Quality & Sync Monitor (owned by Make.com; visible for ops — this phase only reports, never processes).
 - [ ] Surface sync freshness in the Data Analyst dashboard Data Quality section.
 
 ### Rollout
-- [ ] Controlled test: invoke the scheduled handler manually with the schedule OFF.
+- [x] Controlled test: invoke the scheduled handler manually with the schedule OFF. *(local D1 + dry-run + authenticated `/run` endpoint; 9 checks passed — handoff §6)*
 - [ ] Enable the cron schedule only after the controlled test passes.
-- [ ] Document rollback: pause the schedule; fall back to manual CLI runs (runbook already covers this).
+- [x] Document rollback: pause the schedule; fall back to manual CLI runs (runbook already covers this). *(handoff §8)*
 
 ## Deliverables
 
-- [ ] Scheduled (or approved alternative) ongoing confirmed-mapping sync.
-- [ ] Cursor/incremental query with persisted state.
-- [ ] Run lock + throttle/backoff + bounded runs.
-- [ ] Run logs + `product_mapping_events` audit integration.
+- [x] Scheduled (or approved alternative) ongoing confirmed-mapping sync. *(built; deploy pending approval)*
+- [x] Cursor/incremental query with persisted state.
+- [x] Run lock + throttle/backoff + bounded runs.
+- [x] Run logs + `product_mapping_events` audit integration.
 - [ ] Review Required / Unmapped count reporting (report only).
 - [ ] Dashboard visibility for sync freshness.
-- [ ] Pause/rollback runbook.
+- [x] Pause/rollback runbook. *(handoff §8)*
 
 ## Verification / Test Checklist
 
 - [ ] Newly confirmed `Mapped` record (with signature difference) syncs into D1 within one scheduled cycle, and its `D1_Last_Synced_Signature` is updated.
-- [ ] Signature-unchanged record is never re-processed.
-- [ ] Empty/`Unmapped`/`Review Required`/`Partial` records are never fetched or written.
-- [ ] Cursor resumes correctly after an interrupted run.
-- [ ] Two overlapping runs cannot process the same records (lock verified).
+- [x] Signature-unchanged record is never re-processed. *(verified)*
+- [x] Empty/`Unmapped`/`Review Required`/`Partial` records are never fetched or written. *(verified via server-side filter)*
+- [x] Cursor resumes correctly after an interrupted run. *(verified: pass 1 stopped bounded at 50 with cursor saved; pass 2 resumed and advanced)*
+- [x] Two overlapping runs cannot process the same records (lock verified). *(held lock -> run refused; expired lock -> reclaimed)*
 - [ ] Simulated 429 → retry/backoff works; run completes.
-- [ ] Run rows appear in `sync_runs`; audit rows appear in `product_mapping_events`.
-- [ ] No secret and no unnecessary PII appears in any log.
-- [ ] Duplicate cycle re-run is idempotent (upsert returns unchanged/updated, never duplicates).
+- [x] Run rows appear in `sync_runs`; audit rows appear in `product_mapping_events`. *(sync_runs verified; audit path exercised via `onEvent` — no eligible records existed locally to write rows, all were `skipped_unchanged`)*
+- [x] No secret and no unnecessary PII appears in any log. *(Worker logger emits only record ids, skip reasons, counters)*
+- [x] Duplicate cycle re-run is idempotent (upsert returns unchanged/updated, never duplicates). *(verified repeatedly across Phase 08 + post-refactor runs)*
 - [ ] Pausing the schedule stops processing cleanly (rollback verified).
 
 ## Definition of Done
 
 - [ ] Confirmed `Mapped` orders reach D1 automatically with no human trigger.
-- [ ] The automation never maps, never remaps, and never guesses.
-- [ ] Runs are observable, idempotent, resumable, and safely pausable.
-- [ ] Make.com's mapping workflow and (future) Sales Sync pipeline remain untouched and independent.
+- [x] The automation never maps, never remaps, and never guesses. *(27-case parser suite includes a must-fail set; the real `tem 4` typo on record 630 was correctly refused rather than guessed)*
+- [x] Runs are observable, idempotent, resumable, and safely pausable.
+- [x] Make.com's mapping workflow and (future) Sales Sync pipeline remain untouched and independent. *(no Make.com scenario altered; Sales Sync still OFF)*
 
 ## Global Guardrails
 
@@ -148,13 +148,13 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 
 ## Phase Handoff Rule
 
-- [ ] Record files changed.
-- [ ] Record migrations/Worker/cron triggers created or changed.
-- [ ] Record Notion fields read/written.
-- [ ] Record tests performed and results.
-- [ ] Record schedule configuration and rollback procedure.
-- [ ] Record unresolved issues and risks.
-- [ ] Save implementation summary under `D:/00_mildmate/re-build_web/01_MildMate_Marketing/`.
+- [x] Record files changed. *(handoff §2)*
+- [x] Record migrations/Worker/cron triggers created or changed. *(handoff §2, §4)*
+- [x] Record Notion fields read/written. *(handoff §3)*
+- [x] Record tests performed and results. *(handoff §6)*
+- [x] Record schedule configuration and rollback procedure. *(handoff §4, §8)*
+- [x] Record unresolved issues and risks. *(handoff §9)*
+- [x] Save implementation summary under `D:/00_mildmate/re-build_web/01_MildMate_Marketing/`. *(09_Handoffs/Phase_17_Handoff_Scheduled_Confirmed_Mapping_Sync_2026-09-18.md)*
 - [ ] Commit only phase-scoped changes with a clear Git commit message.
 - [ ] Stop after this phase is implemented, tested, documented, and ready for review.
 

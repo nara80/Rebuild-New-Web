@@ -97,3 +97,68 @@ The v3 sync CLI **is** the Phase 08 backfill engine for Notion-confirmed orders:
     - `ids mismatch` (6): 932 / 80718738Li `[2,6]→[2,16]`; 892 / 4058881811 `[3]→[0]`; 868 / 77607156Li `[6]→[0,6]`; 799 / 4012450987 `[6]→[0]`; 794 / 74156363Li `[1]→[4,0]`; 787 / 73646724Li `[1]→[0]`
     - `map parse failed` (7): IDs 810 / —; 742 / 260221AYTEQT99; 707 / 70179753Li; 631 / 37954119Li; 629 / 37961486Li; 611 / 38662066Li; 609 / 38732335Li — all reason `Unrecognized D1_Product_Map segment: "Review Required | No Parsed Item"` (their maps still contain the literal "Review Required" string and have no parsed line)
   - All held records have `Product_Mapping_Status = Mapped` in Notion — these are the records Make.com has confirmed as Mapped but where the operator (or Make.com scenario) never wrote a usable map. Manual fix in Notion required.
+- 2026-09-13/14 (HELD-RECORD CLEARANCE — all 18 resolved, user-driven): the held list from the full backfill is now empty. Resolution split:
+  - **Deleted in Notion** (canceled / duplicate records the operator chose to remove): 775 (first copy), 792, 793, 794.
+  - **`Product_Mapping_Status` flipped off `Mapped`** (Droid-applied at user instruction, via a temporary `tmp-flip-status.mjs`; property type is `select`): 611, 629, 631, 707, 742, 810 — the seven group-C records whose maps were the literal `"Review Required | No Parsed Item"`. Flipping the status returns them to Make.com's queue, so the scheduled sync's server-side `Mapped` filter excludes them permanently. The original Notion rows are retained as audit history. **No D1 removal was required — none of the 18 held records was ever written to D1**, so there was nothing to roll back.
+  - **Corrected in Notion by the user, then synced** (3): 609 / `38732335Li` (฿7,523, 2025-02-05, `[1×1]`); 630 / `37954914Li` (฿7,150, 2025-01-27, `[1×1, 1×1, 16×2, 16×2]` — the fix was a one-character typo, `tem 4` → `Item 4`, which the parser correctly refused to guess at); 775 / `38386573Li` (฿2,900, 2023-07-19, `[1×1]` — re-created by the operator, then completed in two rounds: `TotalAmount` first, `Order_Number` second).
+  - Each of the three was verified the same way: dry-run → eligible; live → `synced: 1`; API read-back; idempotency re-run → `skipped_unchanged`, zero writes.
+  - Operational note worth carrying forward: several user edits did not persist on the first attempt (verified via `last_edited_time` not advancing). Always confirm a Notion edit landed by re-reading the record before concluding a fix failed.
+
+## 8. Phase 08 closure — reconciliation report (measured 2026-09-18, production D1, read-only)
+
+Authoritative figures from production `sales_orders` / `sales_order_items`:
+
+| Metric | Value |
+|---|---|
+| Orders | **493** |
+| Order items | **737** |
+| Date span | 2023-07-19 → 2026-09-11 |
+| Total order revenue | **฿1,552,277.63** |
+| Orders with ≥1 item | 493 / 493 (no orphan headers) |
+| Items with a resolved `product_id` | 737 / 737 (zero unmapped) |
+| Lines with `revenue_status = UNALLOCATED` | 737 / 737 (100% — correct by design) |
+
+Coverage by channel:
+
+| Channel | Orders | Revenue (THB) |
+|---|---|---|
+| shopee | 353 | 895,020 |
+| line | 55 | 338,511.80 |
+| etsy | 34 | 156,388 |
+| lazada | 33 | 80,079.83 |
+| tiktok | 11 | 22,410 |
+| website | 4 | 42,657.99 |
+| facebook | 2 | 12,630 |
+| whatsapp | 1 | 4,580 |
+
+Coverage by year (sufficient for 28-day / 90-day trend and participation analysis):
+
+| Year | Orders | Revenue (THB) |
+|---|---|---|
+| 2023 | 1 | 2,900 |
+| 2024 | 2 | 10,250 |
+| 2025 | 137 | 395,376.73 |
+| 2026 | 353 | 1,143,750.90 |
+
+### Known gaps / exceptions (carry into reporting)
+
+1. **Prices recorded as quantities on two Line orders** — newly found during this reconciliation, still open:
+   - `44423079Li` (2025-04-12, total ฿10,980): 3 lines of product 16 with quantities **5000, 3780, 2200**, summing to **exactly the order total**. The `Qty` position in Notion holds line prices, not counts.
+   - `38507565Li` (2025-02-02, total ฿5,000): 4 lines with quantities summing to 4,760 — same pattern.
+   - Effect: **unit counts are inflated** (16,682 recorded units vs ~940 plausible). **Revenue is unaffected** — order totals are exact and line revenue is `UNALLOCATED`, so the corruption cannot leak into money metrics.
+   - Guardrail until fixed: treat `SUM(quantity)` as unreliable; prefer order counts and revenue. Fix by correcting `Qty` in the two Notion maps, after which both re-sync automatically (signature changes).
+   - `71333567Li` (2026-02-17, ฿33,660, qty 36) also exceeds the >20 threshold but is plausible as a genuine bulk order (≈฿935/unit) — left as-is, flagged for operator confirmation.
+2. **Smoke-test order `TEST-MAKE-001`** must stay excluded from business KPIs (pre-existing guardrail).
+3. **Pre-Mapped-era Make.com rows** — 6 of the original 8 orders carry `mapping_status = NULL`; they predate the Mapped convention and can be re-upserted if that field becomes reportable.
+4. **August 2026 and newer are intentionally absent.** The backfill scope was `--before 2026-08-01` because Notion totals are corrected a month in arrears. The scheduled sync (Phase 17) now derives this cutoff automatically.
+
+### Acceptance checks
+
+- Duplicate re-run returns `skipped_unchanged` rather than duplicating: verified twice (458 unchanged, then 25/10 unchanged post-refactor), zero writes.
+- Multi-item historical orders remain a single order header: verified (493 orders / 737 items, `orders_with_items` = 493).
+- `UNALLOCATED` logic preserved: 737/737.
+- Failed records recoverable: all 18 held records were recovered or explicitly retired without data loss.
+
+## 9. Phase 17 — scheduled sync build (2026-09-18)
+
+See `Phase_17_Handoff_Scheduled_Confirmed_Mapping_Sync_2026-09-18.md` for the full record.

@@ -1,0 +1,35 @@
+name = "mildmate-marketing-sync"
+main = "index.js"
+# Pinned to the newest date the installed wrangler (4.100.0) runtime supports.
+# Raise this only together with a wrangler upgrade, or `wrangler dev` fails to start.
+compatibility_date = "2026-06-18"
+
+# Bi-weekly main pass + hourly drain for carry-over work.
+# Cron cannot express a true 14-day interval; the 1st and 15th at 02:00 UTC
+# (09:00 Bangkok) is deterministic and needs no extra state. The hourly entry
+# returns immediately unless the previous run stopped bounded with work left.
+[triggers]
+crons = ["0 2 1,15 * *", "0 * * * *"]
+
+# PRODUCTION D1 — this Worker reads/writes live sales tables (sales_orders,
+# sales_order_items, sync_runs, product_mapping_events, marketing_sync_*).
+# Note: cron-worker/ points at the preview database; this one must not.
+[[d1_databases]]
+binding = "DB"
+database_name = "mildmate-db-prod"
+database_id = "854f206a-b240-491c-bb91-7e064736d487"
+
+[vars]
+MAPPER_API_BASE = "https://www.mildmate.com"
+# Date scope for ongoing runs. "rolling-prev-month" (default when unset) holds
+# back the current and previous month, matching the operator's correction
+# cadence (month M is finalised during M+1). Set SYNC_BEFORE_MODE = "none" to
+# rely only on the TotalAmount rule, or SYNC_BEFORE_FIXED = "YYYY-MM-DD" to pin.
+SYNC_BEFORE_MODE = "rolling-prev-month"
+
+# Secrets — set with `npx wrangler secret put <NAME>` inside this directory.
+# NEVER put these in this file:
+#   NOTION_TOKEN
+#   NOTION_DATA_SOURCE_ID
+#   SALES_SYNC_API_TOKEN
+#   RESEND_API_KEY

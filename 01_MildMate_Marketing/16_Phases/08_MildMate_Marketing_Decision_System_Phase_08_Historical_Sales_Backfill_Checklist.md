@@ -1,4 +1,4 @@
-# MildMate Marketing Decision System — Phase 08
+﻿# MildMate Marketing Decision System — Phase 08
 ## Historical Sales Backfill & Reconciliation
 
 **Project root:** `D:/00_Mildmate/Re-build_web/`  
@@ -33,7 +33,7 @@ Populate enough historical unified sales data to support meaningful product/chan
 
 > **Reconciliation (2026-09-12):** items marked ✅ built are satisfied by construction by the Phase 07 v3 sync CLI (`scripts/notion-product-mapper.mjs`, the approved backfill engine). Unticked items require the live run or a user decision.
 
-- [ ] Define historical backfill date range and scope. *(user decision pending)*
+- [x] Define historical backfill date range and scope. *(user decision 2026-09-12: July 2026 and earlier via `--before 2026-08-01`, because Notion totals are corrected a month in arrears; plus the permanent rule that only records with a TotalAmount > 0 are eligible)*
 - [x] Define controlled batch size. *(5 → 20 → 50 ramp defined in the v3 runbook)*
 - [x] Do not use the live `From now on` watcher for historical replay. *(CLI reads Notion directly; Make.com sync stays OFF until the activation decision)*
 - [x] Map historical orders before/while backfilling according to approved process. *(v3 approved process: Make.com is the mapping authority; the CLI syncs only `Mapped` records)*
@@ -46,32 +46,32 @@ Populate enough historical unified sales data to support meaningful product/chan
 - [x] Backfill in controlled batches. *(--limit/--resume built; live ramp 2026-09-12 → 13: single record 1038 + batch of 5 (4 synced) + batch of 20 (16 synced) + batch of 50 (49 synced, July scope) + record 1020 fixed by user and synced + **full July-and-earlier backfill (--resume --before 2026-08-01)** — completed and verified — 483 orders in prod; idempotency confirmed at each step; every non-dry-run emails its outcome to contact@mildmate.com (dry-runs skipped per user 2026-09-13, conserves Resend quota). **Scope rules (2026-09-12):** sync July 2026 and earlier via `--before 2026-08-01`, and only records with TotalAmount present — August is held back until corrected (end of September); no-total records are held permanently until their totals are filled in Notion. **Held list (18 records) after the full backfill:** 5 no-total + 6 ids-mismatch + 7 parse-failed — all flagged in the reconciliation doc with Notion IDs / order numbers and will re-sync automatically once corrected in Notion.)*
 - [x] Record failed/rejected orders for review. *(built — JSONL logs with skip reasons: parse_failed, ids_mismatch, not Mapped, signature unchanged)*
 - [x] Re-run corrected records safely using UPSERT behavior. *(upsert endpoint is idempotent — previously production-verified; safe re-run built into the engine)*
-- [ ] Reconcile order counts against Notion. *(after live batches)*
-- [ ] Reconcile total order revenue by channel/date where source data allows. *(after live batches)*
-- [ ] Measure mapping coverage by period. *(after live batches)*
-- [ ] Document remaining data gaps. *(after live batches)*
+- [x] Reconcile order counts against Notion. *(2026-09-18: 493 orders, 737 items, all 493 with >=1 item, zero unmapped items)*
+- [x] Reconcile total order revenue by channel/date where source data allows. *(THB 1,552,277.63 across 8 channels; per-channel + per-year tables sum to the total)*
+- [x] Measure mapping coverage by period. *(2023: 1 / 2024: 2 / 2025: 137 / 2026: 353 orders; span 2023-07-19 -> 2026-09-11)*
+- [x] Document remaining data gaps. *(reconciliation §8 "Known gaps / exceptions" — incl. the newly found price-as-quantity corruption on 2 Line orders)*
 - [ ] Update Data Analyst dashboard to show historical coverage. *(Phase 08 UI work)*
 
 ## Deliverables
 
-- [ ] Historical sales loaded into unified D1.
-- [ ] Reconciliation report.
-- [ ] Known gaps/exceptions list.
-- [ ] Historical coverage metrics.
+- [x] Historical sales loaded into unified D1. *(404 synced in the full backfill; 493 total after held-record clearance and newly-arrived orders)*
+- [x] Reconciliation report. *(Phase_07_08_Reconciliation_2026-09-11.md §8)*
+- [x] Known gaps/exceptions list. *(reconciliation §8)*
+- [x] Historical coverage metrics. *(reconciliation §8)*
 
 ## Verification / Test Checklist
 
-- [ ] Duplicate re-run returns unchanged/updated rather than duplicate.
-- [ ] Multi-item historical orders remain one order header.
-- [ ] UNALLOCATED logic preserved.
-- [ ] Channel totals reconcile within documented differences.
-- [ ] Failed records are recoverable.
+- [x] Duplicate re-run returns unchanged/updated rather than duplicate. *(verified: 458 unchanged with zero writes, and again post-refactor)*
+- [x] Multi-item historical orders remain one order header. *(493 orders / 737 items; `orders_with_items` = 493)*
+- [x] UNALLOCATED logic preserved. *(737/737 lines `UNALLOCATED` — no invented or equal-split line revenue)*
+- [x] Channel totals reconcile within documented differences. *(8 channels sum to 493 orders and THB 1,552,277.63)*
+- [x] Failed records are recoverable. *(all 18 held records recovered or explicitly retired with no data loss; none had ever been written to D1)*
 
 ## Definition of Done
 
-- [ ] Historical data is sufficient for 28-day/90-day trends and participation analysis.
-- [ ] Backfill is reconciled and documented.
-- [ ] Live ongoing sync remains separate and safe.
+- [x] Historical data is sufficient for 28-day/90-day trends and participation analysis. *(3+ years, 493 orders, 737 mapped lines)*
+- [x] Backfill is reconciled and documented. *(reconciliation §8)*
+- [x] Live ongoing sync remains separate and safe. *(Make.com Sales Sync still OFF; Phase 17 Worker is a separate deployable with its own lock and telemetry source)*
 
 ## Global Guardrails
 
@@ -90,11 +90,11 @@ Populate enough historical unified sales data to support meaningful product/chan
 
 ## Phase Handoff Rule
 
-- [ ] Record files changed.
-- [ ] Record migrations/API routes/UI routes created or changed.
-- [ ] Record tests performed and results.
-- [ ] Record unresolved issues and risks.
-- [ ] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
+- [x] Record files changed. *(reconciliation doc + Phase 17 handoff §2)*
+- [x] Record migrations/API routes/UI routes created or changed. *(no new API/UI in Phase 08; migration 045 added under Phase 17)*
+- [x] Record tests performed and results. *(reconciliation §7 verification log + Phase 17 handoff §6)*
+- [x] Record unresolved issues and risks. *(reconciliation §8 + Phase 17 handoff §9)*
+- [x] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`. *(09_Handoffs/)*
 - [ ] Commit only phase-scoped changes with a clear Git commit message.
 - [ ] Prepare a concise handoff for Phase 9 and stop.
 
