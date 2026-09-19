@@ -176,11 +176,31 @@ Deploying registers the cron triggers, so step 4 should follow promptly. To hold
 
 ## 9. Unresolved issues and risks
 
-1. **Deploy + schedule activation still pending user approval** (Phase 17 guardrail). Nothing has touched production.
-2. **Migration 045 not yet applied to production.**
-3. **Make.com Sales Sync remains OFF** (user decision 2026-09-17: keep OFF until the Worker is stable). Both systems write the same tables using the same `source_item_key` convention, so they would converge rather than duplicate — but this has never been exercised concurrently, and the lock protects only this Worker against itself, not against Make.com.
+1. ~~Deploy + schedule activation pending~~ — **resolved 2026-09-19**: deployed (version `957956a5`), migration 045 applied, controlled test passed (`sync_runs` id 503).
+2. ~~Migration 045 not yet applied~~ — **resolved 2026-09-19** (applied via `--command`; the file-import endpoint is auth-blocked on this account).
+3. ~~Make.com Sales Sync OFF until the Worker is stable~~ — **superseded by final decision 2026-09-19**: permanently retired, never to be activated (see §10). The concurrent-write concern is therefore moot.
 4. **Price-as-quantity corruption on 2 Line orders** (§8 of the reconciliation doc) — inflates unit counts, does not affect revenue. Needs a Notion-side fix; will re-sync automatically.
 5. **Wrangler OAuth has dropped intermittently** in past sessions. The authenticated sales read API is the wrangler-free verification fallback.
 6. **`compatibility_date` pinned to `2026-06-18`**, the newest date the installed wrangler 4.100.0 runtime supports. Raise it only alongside a wrangler upgrade or `wrangler dev` will refuse to start.
 7. **Deferred checklist items** (not built, by scope): surfacing `Review Required` / `Unmapped` counts in the Phase 06 Data Quality monitor, and sync freshness in the Data Analyst dashboard. Both are report-only UI additions on top of data this phase already writes (`sync_runs`, `marketing_sync_state`).
 8. **`cron-worker/` points at the preview D1** (`mildmate-db`) while this Worker points at production. Pre-existing and out of scope, but worth knowing when comparing the two configs.
+
+---
+
+## 10. Final architecture decision (2026-09-19)
+
+Confirmed by the operator after the go-live: **Make.com is not used for Notion→D1 sync — this Worker reads Notion directly.**
+
+```
+Sales channels (Shopee/Line/TikTok/FB/Etsy...)
+    │  ① Make.com — channel→Notion order ingestion (ongoing + backfill)
+    ▼
+Notion OrderList ←— ② Human confirms mapping (Mapped status; never guessed)
+    │  ③ Worker mildmate-marketing-sync — direct Notion API → D1 (scheduled)
+    ▼
+D1 sales_orders / sales_order_items
+```
+
+- **Make.com scenario `MildMate - Notion OrderList to D1 Sales Sync`: permanently retired.** It stays OFF and is safe to archive or delete in Make.com. It was built and verified (Sep 2026) but was never activated for ongoing use; the Worker replaces it entirely.
+- **Make.com's remaining role is exclusively channel→Notion order ingestion** (ongoing imports + any historical backfill). The Worker only reads what is in Notion and never creates OrderList records — if the channel-import scenarios were switched off, the Worker would keep running but find nothing new to sync. Those import scenarios must stay active.
+- **Human mapping confirmation remains the never-guess gate:** only `Product_Mapping_Status = Mapped` records are synced; everything else is held and reported.

@@ -48,9 +48,26 @@ Phases 01–07 were genuinely built and documented (a handoff exists in `09_Hand
 
 ## 5. Known open issues (carried forward)
 
-1. Migration 045 not applied to prod (blocks Phase 17 go-live).
-2. Controlled production test of the Worker not yet run (needs Worker URL + bearer token).
+1. ~~Migration 045 not applied to prod~~ — **resolved 2026-09-19**: applied via `d1 execute --remote --command` (file-import endpoint is auth-blocked on this account); both tables + seed rows verified.
+2. ~~Controlled production test not run~~ — **resolved 2026-09-19**: `POST /run?dry=1&limit=5` passed, `sync_runs` id 503 (see §3).
 3. Phase 08 open UI item: historical-coverage view in the Data Analyst dashboard.
 4. Data quality: prices recorded as quantities on Line orders `44423079Li` (qty 5000/3780/2200) and `38507565Li`; `71333567Li` (qty 36) needs operator confirmation — corrections belong in Notion.
 5. 429 backoff path never fault-injected; `cron-worker/` (legacy) still points at preview D1.
 6. `product_mapping_events` audit table live but unused until the Worker runs.
+
+## 6. Final pipeline architecture (user decision, 2026-09-19)
+
+Make.com is **not** used for Notion→D1 sync — the Worker reads Notion directly.
+
+```
+Sales channels (Shopee/Line/TikTok/FB/Etsy...)
+    │  ① Make.com — channel→Notion order ingestion (ongoing + backfill; must stay active)
+    ▼
+Notion OrderList ←— ② Human confirms mapping (Product_Mapping_Status = Mapped; never guessed)
+    │  ③ Worker mildmate-marketing-sync — direct Notion API → D1 (scheduled)
+    ▼
+D1 sales_orders / sales_order_items
+```
+
+- The Make.com scenario `MildMate - Notion OrderList to D1 Sales Sync` is **permanently retired** (stays OFF; safe to archive/delete in Make.com).
+- Make.com's remaining role is exclusively **channel→Notion** ingestion — the Worker never creates OrderList records, so those import scenarios must remain active or the Worker will find nothing new to sync.

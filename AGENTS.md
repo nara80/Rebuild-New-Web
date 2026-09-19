@@ -120,7 +120,7 @@ Verified state to preserve in future sessions:
 - **Etsy mapping:** 16 listing IDs are manually confirmed in Product Master (partial); canonical D1 channel-listing persistence + automatic Etsy listing sync are still pending.
 - **Unified sales analytics backend:** production-verified (`sales_orders`, `sales_order_items`, `sync_runs`) via `039_unified_sales_analytics.sql`.
 - **Sales sync API:** production-verified at `/api/v1/health`, `/api/v1/sales/orders/upsert`, `/api/v1/sales/orders/{source_system}/{source_order_id}` with Bearer token `SALES_SYNC_API_TOKEN`.
-- **Make.com flow `MildMate - Notion OrderList to D1 Sales Sync`:** built + end-to-end verified; remaining operational step is activation (`Choose where to start → From now on`) and schedule (`Every 15 minutes`).
+- **Make.com flow `MildMate - Notion OrderList to D1 Sales Sync`:** built + end-to-end verified in Sep 2026, then **permanently retired without activation** — superseded by the Phase 17 Worker, which reads Notion directly (final decision 2026-09-19; see Update below).
 - **Historical product mapping:** partial; resolver automation workflow is design/handoff only and not production-verified.
 - **D1 → Google Product Master auto-sync:** pending; `Last_Synced_At` is not yet a trusted production signal.
 - **External collectors (GSC/GA4/Etsy performance/Google Ads/Meta Ads):** pending Phase 3 work.
@@ -138,7 +138,7 @@ Full evidence-based reconciliation of all 17 phase checklists: `01_MildMate_Mark
 - **Phase 08: ✅ complete** — historical backfill done: 493 orders / 737 items / ฿1,552,277.63 in prod `sales_orders`; all 18 held records resolved. Open: dashboard historical-coverage UI.
 - **Phase 17: ✅ deployed and OPERATIONAL (go-live 2026-09-19)** — Worker `mildmate-marketing-sync` at `https://mildmate-marketing-sync.nara19080.workers.dev`, all 4 secrets set; migration 045 applied to prod (initially missed after deploy, fixed same day); controlled test passed (`sync_runs` id 503, success, 5/5 `skipped_unchanged`). Schedule: main run 1st/15th 02:00 UTC + hourly drain. Note: `wrangler d1 execute --remote --file` fails with auth code 10000 on this account (file-import endpoint); run migration SQL via `--command` instead.
 - **Phases 09–16: ⬜ not started** (verified: no artifacts in repo or prod D1).
-- Make.com Sales Sync remains OFF by decision until the Worker is stable.
+- **Final pipeline architecture (user decision 2026-09-19):** Make.com is **not** used for Notion→D1 sync — the Worker reads Notion directly. Division of labor: (1) **Make.com = channel→Notion** order ingestion only (ongoing imports + any historical backfill; these scenarios must stay active, since the Worker never creates OrderList records); (2) **Human = mapping confirmation** in Notion (`Product_Mapping_Status = Mapped`; the system never maps or guesses); (3) **Worker = Notion→D1** (direct, scheduled, replaces the Make.com sales-sync scenario entirely — that scenario stays OFF permanently and is safe to archive/delete in Make.com).
 
 ---
 
