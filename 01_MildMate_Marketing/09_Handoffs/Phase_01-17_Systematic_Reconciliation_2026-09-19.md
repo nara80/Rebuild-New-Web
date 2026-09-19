@@ -26,9 +26,13 @@ Phases 01–07 were genuinely built and documented (a handoff exists in `09_Hand
 | 14 Opportunity engine | ⬜ Not started | No artifacts |
 | 15 Command center | ⬜ Not started | No artifacts |
 | 16 AI analyst | ⬜ Not started | No artifacts |
-| 17 Scheduled mapping sync | 🟡 Deployed, NOT operational | See §3 |
+| 17 Scheduled mapping sync | ✅ Deployed + operational (go-live 2026-09-19) | See §3 |
 
-## 3. Phase 17 deployment state (critical)
+## 3. Phase 17 deployment state — RESOLVED same day
+
+**Go-live completed 2026-09-19 (after the findings below):** migration 045 applied to prod (tables + seed rows verified); worker URL `https://mildmate-marketing-sync.nara19080.workers.dev`; controlled test passed (`/status` OK; dry-run 5 → 5/5 `skipped_unchanged`; prod `sync_runs` id 503 success; lock released, state saved). Remaining to observe: first live scheduled cycle syncing a newly confirmed `Mapped` record.
+
+### Original findings (pre-fix)
 
 - Worker `mildmate-marketing-sync` deployed 2026-09-19T00:24Z (version `957956a5`); all 4 secrets set (`NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN`, `RESEND_API_KEY`).
 - **`migrations/045_marketing_sync_state.sql` was never applied to production.** `marketing_sync_state` and `marketing_sync_lock` do not exist in `mildmate-db-prod`, so every scheduled/drain invocation fails at `loadState()`. Failure mode is safe (caught error, zero writes), but the Worker does nothing.

@@ -95,7 +95,7 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 
 ### Rollout
 - [x] Controlled test: invoke the scheduled handler manually with the schedule OFF. *(local D1 + dry-run + authenticated `/run` endpoint; 9 checks passed — handoff §6)*
-- [ ] Enable the cron schedule only after the controlled test passes. *(GAP 2026-09-19: crons went live with the deploy, but the controlled production test has NOT passed — migration 045 is missing in prod, so every invocation currently fails safe at `loadState()`)*
+- [x] Enable the cron schedule only after the controlled test passes. *(Resolved 2026-09-19: migration 045 applied to prod; controlled test `POST /run?dry=1&limit=5` passed — `sync_runs` id 503, success, 5/5 skipped_unchanged, lock released. Crons had gone live with the deploy before the test — sequencing gap noted, but every invocation failed safe with zero writes until 045 landed)*
 - [x] Document rollback: pause the schedule; fall back to manual CLI runs (runbook already covers this). *(handoff §8)*
 
 ## Deliverables
@@ -170,7 +170,9 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 
 ## Deployment Reconciliation Note (2026-09-19)
 
-**Worker deployed but NOT yet operational.** Verified against Cloudflare + production D1 on 2026-09-19:
+**Update (2026-09-19, later same day): worker is now OPERATIONAL** — migration 045 applied to prod via `d1 execute --remote` (file-import endpoint rejected the OAuth token, statements run via `--command` instead; identical SQL), both tables verified with seed rows; controlled test against `https://mildmate-marketing-sync.nara19080.workers.dev` passed: `/status` OK (`resolved_before: 2026-08-01`), `POST /run?dry=1&limit=5` → 5/5 `skipped_unchanged`, `exhausted: false`, no email; prod `sync_runs` id 503 (`notion-mapping-sync`, success); state saved, lock released. Hourly drain will now complete the remaining cursor pass live (all-unchanged expected), then no-op; next main run 2026-10-01 02:00 UTC. Original findings below kept for the record.
+
+Original findings (pre-fix): Verified against Cloudflare + production D1 on 2026-09-19:
 
 - Deployed 2026-09-19T00:24Z, version `957956a5` (`mildmate-marketing-sync`); all 4 secrets set (`NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN`, `RESEND_API_KEY`).
 - **`migrations/045_marketing_sync_state.sql` was never applied to production** — `marketing_sync_state` and `marketing_sync_lock` do not exist in `mildmate-db-prod`. Every scheduled/drain invocation therefore throws at `loadState()`. Failure mode is safe (error is caught, no writes occur), but the Worker does nothing.
