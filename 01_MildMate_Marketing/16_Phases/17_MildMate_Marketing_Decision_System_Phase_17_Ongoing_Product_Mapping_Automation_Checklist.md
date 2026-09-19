@@ -1,4 +1,4 @@
-﻿# MildMate Marketing Decision System — Phase 17
+# MildMate Marketing Decision System — Phase 17
 ## Ongoing Confirmed-Mapping Sync Automation (v3)
 
 > **Revised 2026-09-12** to match the approved v3 design (`09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`). The original version of this checklist was written for the superseded resolver design. Under v3, **nothing maps products automatically** — Make.com remains the mapping authority in Notion. This phase only automates the *sync* of confirmed `Mapped` records into D1.
@@ -71,7 +71,7 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 ### Execution model
 - [x] Decide run frequency (recommended daily at first; tighten only after stability). *(user decision 2026-09-17: every 2 weeks -> cron "0 2 1,15 * *" (1st + 15th, 09:00 Bangkok) + hourly drain that no-ops unless carry-over work exists)*
 - [x] Create the dedicated Worker with a `scheduled` handler that reuses the CLI's sync logic (port or import the core from `scripts/notion-product-mapper.mjs` — do not fork the logic). *(logic extracted to `scripts/notion-mapper-core.mjs`; imported by BOTH the CLI and `marketing-sync-worker/index.js` — structurally impossible to fork. CLI 686 -> ~210 lines.)*
-- [ ] Store `NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN` as Worker secrets — never in code or repo.
+- [x] Store `NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN` as Worker secrets — never in code or repo. *(Verified 2026-09-19 via `wrangler secret list`: all 4 secrets set incl. `RESEND_API_KEY`)*
 - [x] Point the upsert target at `https://www.mildmate.com` (`/api/v1/sales/orders/upsert`). *(`MAPPER_API_BASE` var)*
 
 ### Incremental processing
@@ -91,11 +91,11 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 - [x] Record every scheduled run in `sync_runs` with a distinct source (e.g. `notion-mapping-sync`). *(verified row: source `notion-mapping-sync`, scenario `phase17-...:manual`, success, 5 received / 5 unchanged)*
 - [x] Write per-record audit rows to `product_mapping_events` (migration 044). *(buffered during the run, flushed in one `db.batch()`; wrapped so audit failure never fails a completed sync)*
 - [ ] Surface `Review Required`/`Unmapped` counts in the Phase 06 Data Quality & Sync Monitor (owned by Make.com; visible for ops — this phase only reports, never processes).
-- [ ] Surface sync freshness in the Data Analyst dashboard Data Quality section.
+- [ ] Surface sync freshness in the Data Analyst dashboard Data Quality section. *(Source Freshness table already exists (Phase 06); it will show `notion-mapping-sync` automatically once the Worker writes its first `sync_runs` row — verify after first successful run)*
 
 ### Rollout
 - [x] Controlled test: invoke the scheduled handler manually with the schedule OFF. *(local D1 + dry-run + authenticated `/run` endpoint; 9 checks passed — handoff §6)*
-- [ ] Enable the cron schedule only after the controlled test passes.
+- [ ] Enable the cron schedule only after the controlled test passes. *(GAP 2026-09-19: crons went live with the deploy, but the controlled production test has NOT passed — migration 045 is missing in prod, so every invocation currently fails safe at `loadState()`)*
 - [x] Document rollback: pause the schedule; fall back to manual CLI runs (runbook already covers this). *(handoff §8)*
 
 ## Deliverables
@@ -155,7 +155,7 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 - [x] Record schedule configuration and rollback procedure. *(handoff §4, §8)*
 - [x] Record unresolved issues and risks. *(handoff §9)*
 - [x] Save implementation summary under `D:/00_mildmate/re-build_web/01_MildMate_Marketing/`. *(09_Handoffs/Phase_17_Handoff_Scheduled_Confirmed_Mapping_Sync_2026-09-18.md)*
-- [ ] Commit only phase-scoped changes with a clear Git commit message.
+- [x] Commit only phase-scoped changes with a clear Git commit message. *(`b2537c2`, 2026-09-18: worker + core + tests + migration 045 + docs)*
 - [ ] Stop after this phase is implemented, tested, documented, and ready for review.
 
 ## Recommended Droid Session Name
@@ -165,3 +165,14 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 ## Droid Working Instruction
 
 > Work on **Phase 17 only**. Reuse the Phase 07 v3 sync engine — do not fork or re-design the mapping/sync logic. Confirm all prerequisites above are met before building. Do not build later phases early. Stop after this phase is implemented, tested, documented, and ready for review.
+
+---
+
+## Deployment Reconciliation Note (2026-09-19)
+
+**Worker deployed but NOT yet operational.** Verified against Cloudflare + production D1 on 2026-09-19:
+
+- Deployed 2026-09-19T00:24Z, version `957956a5` (`mildmate-marketing-sync`); all 4 secrets set (`NOTION_TOKEN`, `NOTION_DATA_SOURCE_ID`, `SALES_SYNC_API_TOKEN`, `RESEND_API_KEY`).
+- **`migrations/045_marketing_sync_state.sql` was never applied to production** — `marketing_sync_state` and `marketing_sync_lock` do not exist in `mildmate-db-prod`. Every scheduled/drain invocation therefore throws at `loadState()`. Failure mode is safe (error is caught, no writes occur), but the Worker does nothing.
+- Confirmed impact: **zero `notion-mapping-sync` rows** in prod `sync_runs` (only `notion-direct-mapper` ×490, latest 2026-09-14; `notion-orderlist` ×12, latest 2026-09-07 — Make.com Sales Sync remains OFF as decided).
+- **Required to go live:** (1) `npx wrangler d1 execute mildmate-db-prod --remote --file migrations\045_marketing_sync_state.sql` (additive: 2 tables + 2 seed rows); (2) controlled test `POST /run?dry=1&limit=5` with bearer `SALES_SYNC_API_TOKEN`; (3) confirm a `notion-mapping-sync` row lands in `sync_runs`; (4) then allow the next scheduled cycle (1st/15th 02:00 UTC main, hourly drain) to run live.

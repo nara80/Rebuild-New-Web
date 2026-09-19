@@ -1,4 +1,4 @@
-﻿# MildMate Marketing Decision System — Phase 08
+# MildMate Marketing Decision System — Phase 08
 ## Historical Sales Backfill & Reconciliation
 
 **Project root:** `D:/00_Mildmate/Re-build_web/`  
@@ -26,7 +26,7 @@ Populate enough historical unified sales data to support meaningful product/chan
 
 - [x] Phase 7 mapping workflow sufficiently reliable. *(v3 confirmed-mapping sync live-verified 2026-09-12: ID 1038 synced to prod + `D1_Last_Synced_Signature` write-back + idempotent re-run skipped unchanged)*
 - [x] Sales API idempotency already verified.
-- [x] Production D1 ready: migrations 043/044 applied (alias seed 1038→[20,26] present; events table empty) + all 11 analysis views live. *(read-only verified 2026-09-12)*
+- [x] Production D1 ready: migrations 043/044 applied (alias seed 1038→[20,26] present; events table empty) + all 10 analysis views live *(count corrected 2026-09-19: migration 042 defines 10 views)*. *(read-only verified 2026-09-12)*
 - [x] Order `260804DW6XA3NA` (Notion ID 1038) confirmed not yet in prod — clean target for the first live sync. *(verified 2026-09-12; live sync completed the same day — order now in prod as `sales_orders` id 9)*
 
 ## Task Checklist
@@ -50,7 +50,7 @@ Populate enough historical unified sales data to support meaningful product/chan
 - [x] Reconcile total order revenue by channel/date where source data allows. *(THB 1,552,277.63 across 8 channels; per-channel + per-year tables sum to the total)*
 - [x] Measure mapping coverage by period. *(2023: 1 / 2024: 2 / 2025: 137 / 2026: 353 orders; span 2023-07-19 -> 2026-09-11)*
 - [x] Document remaining data gaps. *(reconciliation §8 "Known gaps / exceptions" — incl. the newly found price-as-quantity corruption on 2 Line orders)*
-- [ ] Update Data Analyst dashboard to show historical coverage. *(Phase 08 UI work)*
+- [ ] Update Data Analyst dashboard to show historical coverage. *(Phase 08 UI work — still open as of 2026-09-19 reconciliation)*
 
 ## Deliverables
 
@@ -95,8 +95,8 @@ Populate enough historical unified sales data to support meaningful product/chan
 - [x] Record tests performed and results. *(reconciliation §7 verification log + Phase 17 handoff §6)*
 - [x] Record unresolved issues and risks. *(reconciliation §8 + Phase 17 handoff §9)*
 - [x] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`. *(09_Handoffs/)*
-- [ ] Commit only phase-scoped changes with a clear Git commit message.
-- [ ] Prepare a concise handoff for Phase 9 and stop.
+- [x] Commit only phase-scoped changes with a clear Git commit message. *(Phase 08 closure docs committed in `b2537c2`, 2026-09-18)*
+- [x] Prepare a concise handoff for Phase 9 and stop. *(Satisfied by `09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md` §8 Phase 08 closure + §9 pointer; next phase chosen by operator was 17, not 09)*
 
 ## Recommended Droid Session Name
 

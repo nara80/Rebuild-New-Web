@@ -131,6 +131,15 @@ Status taxonomy for this workstream:
 - 🟡 Partial/in progress: historical mapping coverage, manual Etsy mapping
 - ⬜ Pending/not production verified: mapping resolver automation, Product Master auto-sync, external performance collectors, opportunity engine
 
+### Update — Systematic Phase Reconciliation (2026-09-19)
+
+Full evidence-based reconciliation of all 17 phase checklists: `01_MildMate_Marketing/09_Handoffs/Phase_01-17_Systematic_Reconciliation_2026-09-19.md`.
+- **Phases 01–07: ✅ complete and production-verified** (audit report, metric dictionary, 10 analysis views in migration 042 — earlier "11 views" claims were a miscount — 6 analysis API routes, Data Analyst dashboard at `/super-admin/marketing/data-analyst/`, data-quality/sync monitor, direct Notion mapper). Phase 07's v1 Make.com auto-mapper design was superseded by the v2 direct mapper (syncs only human-confirmed `Mapped` records; never maps or guesses).
+- **Phase 08: ✅ complete** — historical backfill done: 493 orders / 737 items / ฿1,552,277.63 in prod `sales_orders`; all 18 held records resolved. Open: dashboard historical-coverage UI.
+- **Phase 17: 🟡 deployed but NOT operational** — Worker `mildmate-marketing-sync` deployed 2026-09-19 with all 4 secrets, but `migrations/045_marketing_sync_state.sql` was not applied to prod, so `marketing_sync_state`/`marketing_sync_lock` are missing and every cron invocation fails safe at `loadState()` (zero `notion-mapping-sync` rows in `sync_runs`). Go-live: apply 045 remotely → `POST /run?dry=1&limit=5` controlled test → confirm `sync_runs` row.
+- **Phases 09–16: ⬜ not started** (verified: no artifacts in repo or prod D1).
+- Make.com Sales Sync remains OFF by decision until the Worker is stable.
+
 ---
 
 ## Custom Quote Email Revision (2026-09-11)
