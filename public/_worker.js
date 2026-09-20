@@ -1,6 +1,4 @@
-﻿
-
-var __defProp = Object.defineProperty;
+﻿var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // ../workers/api/sales.ts
@@ -13948,7 +13946,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-e2j7lj/functionsRoutes-0.47962927324482185.mjs
+// ../.wrangler/tmp/pages-nBUxhM/functionsRoutes-0.029787022756127324.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

@@ -261,11 +261,11 @@ Browser read of `/en/product/standard-fitted-sheet/` showed full EN chrome intac
 ### Wrangler Pages bundle workflow (critical, governs deploy)
 Editing `functions/**/*.ts` requires a manual bundle rebuild because Pages Functions are normally compiled at deploy time by wrangler — but the project's deploy uses `--no-bundle`, so the locally built bundle becomes the runtime artifact.
 
-1. Edit `functions/product/[[path]].ts` (or any function file).
-2. Build: `npx wrangler pages functions build --outfile 'public\_worker.js'`
-3. Extract the actual JS from wrangler's formdata-multipart output (it wraps the bundle in `------formdata-undici-` boundaries with a `Content-Type: application/javascript+module` marker). The bundled `extract-worker.ps1` at repo root does this:
-   - Reads formdata, jumps past the marker line, skips the empty line, finds the next `------formdata-undici-` boundary, trims, writes back via `Out-File -Encoding UTF8 -NoNewline`.
-4. Deploy: `npx wrangler pages deploy ./public --project-name=mildmate-new --commit-dirty=true --branch=master --no-bundle`
+1. Edit `functions/product/[[path]].ts` (or any function file). Workers API (`workers/api/*.ts`) changes must ALSO be hand-mirrored into `public/index.js` + `public/_worker.js` (runtime-parity convention; verified 2026-09-20 that the pipeline build output is byte-equivalent to a careful hand-mirror).
+2. Run `powershell -File .\extract-worker.ps1` — the script runs the wrangler build itself and is ATOMIC (fixed 2026-09-20 after a failure loop):
+   - It builds to a TEMP file first (never writes raw formdata into `public/_worker.js`), deletes any leftover `------formdata-undici-` junk from `public/_worker.js` before building (junk in that file makes every later build fail — wrangler parses it as an entry point: `Expected ";" but found ":"` at the `Content-Disposition` line), then extracts the valid JS from the formdata-multipart output (jumps past the `Content-Type: application/javascript+module` marker line, skips the empty line, stops at the next `------formdata-undici-` boundary) and writes it back.
+   - **Never deploy a `public/_worker.js` that starts with `------formdata-undici-`** — with `--no-bundle` that junk ships as the Worker and breaks the entire site API.
+3. Deploy: `npx wrangler pages deploy ./public --project-name=mildmate-new --commit-dirty=true --branch=master --no-bundle`
    - **Without `--no-bundle`, wrangler re-runs the build and overwrites the extracted `_worker.js` with formdata again.** Always pass `--no-bundle` on the deploy step.
 
 ### Files added/modified in this thread
