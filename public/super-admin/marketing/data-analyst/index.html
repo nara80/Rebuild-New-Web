@@ -149,6 +149,17 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="freshness-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="coverage-card">
+      <div class="card-header"><span>Historical Coverage</span><span class="muted" style="font-size:0.75rem;font-weight:400">order history span &amp; density — read early-period trends against order counts, not revenue alone</span></div>
+      <div class="card-body">
+        <div id="cov-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Coverage by Year</span><span class="muted" style="font-size:0.75rem;font-weight:400">commercial orders with a valid order date · thin = &lt;10 orders · partial = orders in &lt;6 months</span></div>
+      <div class="table-wrap"><div id="cov-year-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Coverage by Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">history start differs per channel — a channel's early months may not exist</span></div>
+      <div class="table-wrap"><div id="cov-channel-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
@@ -258,11 +269,14 @@ async function loadDQ(){
     renderDQChips(q);
     renderSyncRuns(d.recent_runs || []);
     renderFreshness(d.channel_freshness || []);
+    renderCoverage(d.coverage);
   } catch(e) {
     document.getElementById('dq-banner').innerHTML = '<div class="dq-banner dq-critical"><strong>Data Quality unavailable:</strong> ' + esc(e.message) + '</div>';
     document.getElementById('kpi-dq').textContent = '!';
     setState('runs-table', 'error', 'Could not load sync runs: ' + e.message);
     setState('freshness-table', 'error', 'Could not load channel freshness: ' + e.message);
+    var covCard = document.getElementById('coverage-card');
+    if (covCard) covCard.style.display = 'none';
   }
 }
 
@@ -349,6 +363,66 @@ function renderFreshness(rows){
       '<td class="num">' + fmtNum(r.orders) + '</td></tr>';
   });
   document.getElementById('freshness-table').innerHTML = h + '</tbody></table>';
+}
+
+// ── Historical Coverage (Phase 08) ──
+
+function renderCoverage(cov){
+  var card = document.getElementById('coverage-card');
+  if (!card) return;
+  if (!cov || !cov.by_year) { card.style.display = 'none'; return; }
+
+  document.getElementById('cov-summary').innerHTML =
+    '<span class="badge badge-grey">First order: ' + esc(cov.first_order_day || '—') + '</span>' +
+    '<span class="badge badge-grey">Last order: ' + esc(cov.last_order_day || '—') + '</span>' +
+    '<span class="badge badge-blue">' + fmtNum(cov.total_orders) + ' commercial orders</span>' +
+    '<span class="badge badge-blue">' + fmtNum(cov.channels) + ' channels</span>';
+
+  var y = cov.by_year || [];
+  if (!y.length) {
+    setState('cov-year-table', '', 'No commercial orders with a valid order date.');
+  } else {
+    var h = '<table><thead><tr><th>Year</th><th class="num">Orders</th><th class="num">Mapped</th><th class="num">Mapped %</th><th class="num">Months with Orders</th><th>Coverage</th><th>First Order</th><th>Last Order</th></tr></thead><tbody>';
+    y.forEach(function(r){
+      var orders = Number(r.orders || 0);
+      var months = Number(r.months_with_orders || 0);
+      var pct = orders > 0 ? (Math.round(Number(r.mapped_orders || 0) * 1000 / orders) / 10) : null;
+      var badge = orders < 10 ? '<span class="badge badge-amber">thin</span>'
+        : months < 6 ? '<span class="badge badge-amber">partial</span>'
+        : '<span class="badge badge-green">ok</span>';
+      h += '<tr>' +
+        '<td>' + esc(r.year) + '</td>' +
+        '<td class="num">' + fmtNum(r.orders) + '</td>' +
+        '<td class="num">' + fmtNum(r.mapped_orders) + '</td>' +
+        '<td class="num">' + fmtPct(pct) + '</td>' +
+        '<td class="num">' + fmtNum(r.months_with_orders) + '</td>' +
+        '<td>' + badge + '</td>' +
+        '<td>' + esc(r.first_day || '—') + '</td>' +
+        '<td>' + esc(r.last_day || '—') + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('cov-year-table').innerHTML = h + '</tbody></table>';
+  }
+
+  var c = cov.by_channel || [];
+  if (!c.length) {
+    setState('cov-channel-table', '', 'No commercial orders yet.');
+  } else {
+    var total = cov.total_orders || 0;
+    var h2 = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Share</th><th class="num">Mapped</th><th>First Order</th><th>Last Order</th></tr></thead><tbody>';
+    c.forEach(function(r){
+      var share = total > 0 ? (Math.round(Number(r.orders || 0) * 1000 / total) / 10) : null;
+      h2 += '<tr>' +
+        '<td>' + esc(r.channel_norm) + '</td>' +
+        '<td class="num">' + fmtNum(r.orders) + '</td>' +
+        '<td class="num">' + fmtPct(share) + '</td>' +
+        '<td class="num">' + fmtNum(r.mapped_orders) + '</td>' +
+        '<td>' + esc(r.first_day || '—') + '</td>' +
+        '<td>' + esc(r.last_day || '—') + '</td>' +
+        '</tr>';
+    });
+    document.getElementById('cov-channel-table').innerHTML = h2 + '</tbody></table>';
+  }
 }
 
 // ── Sales Detail ──

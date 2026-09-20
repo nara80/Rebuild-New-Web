@@ -472,6 +472,41 @@ async function getDataQuality(env: any): Promise<Response> {
      ORDER BY last_order_day DESC`
   ).all();
 
+  // Phase 08 addition: historical coverage (the 042 view is frozen; computed live)
+  const spanRow: any = await env.DB.prepare(
+    `SELECT MIN(order_day) AS first_order_day,
+            MAX(order_day) AS last_order_day,
+            COUNT(*) AS total_orders,
+            COUNT(DISTINCT channel_norm) AS channels
+     FROM analysis_commercial_orders`
+  ).first();
+
+  const coverageYear = await env.DB.prepare(
+    `SELECT COALESCE(substr(co.order_day, 1, 4), 'unknown') AS year,
+            COUNT(*) AS orders,
+            COUNT(DISTINCT substr(co.order_day, 1, 7)) AS months_with_orders,
+            COUNT(DISTINCT co.channel_norm) AS channels,
+            MIN(co.order_day) AS first_day,
+            MAX(co.order_day) AS last_day,
+            SUM(CASE WHEN om.derived_mapping_status = 'Mapped' THEN 1 ELSE 0 END) AS mapped_orders
+     FROM analysis_commercial_orders co
+     LEFT JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+     GROUP BY COALESCE(substr(co.order_day, 1, 4), 'unknown')
+     ORDER BY year`
+  ).all();
+
+  const coverageChannel = await env.DB.prepare(
+    `SELECT co.channel_norm,
+            COUNT(*) AS orders,
+            MIN(co.order_day) AS first_day,
+            MAX(co.order_day) AS last_day,
+            SUM(CASE WHEN om.derived_mapping_status = 'Mapped' THEN 1 ELSE 0 END) AS mapped_orders
+     FROM analysis_commercial_orders co
+     LEFT JOIN analysis_order_mapping om ON om.sales_order_id = co.id
+     GROUP BY co.channel_norm
+     ORDER BY orders DESC, co.channel_norm`
+  ).all();
+
   // M22 freshness + M30 roll-up (contract: computed in code, not SQL)
   let freshnessMinutes: number | null = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
@@ -525,6 +560,14 @@ async function getDataQuality(env: any): Promise<Response> {
     },
     recent_runs: runs.results || [],
     channel_freshness: freshness.results || [],
+    coverage: {
+      first_order_day: spanRow?.first_order_day ?? null,
+      last_order_day: spanRow?.last_order_day ?? null,
+      total_orders: Number(spanRow?.total_orders || 0),
+      channels: Number(spanRow?.channels || 0),
+      by_year: coverageYear.results || [],
+      by_channel: coverageChannel.results || [],
+    },
   });
 }
 

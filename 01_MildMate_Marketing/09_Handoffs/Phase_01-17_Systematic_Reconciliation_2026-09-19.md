@@ -50,7 +50,7 @@ Phases 01–07 were genuinely built and documented (a handoff exists in `09_Hand
 
 1. ~~Migration 045 not applied to prod~~ — **resolved 2026-09-19**: applied via `d1 execute --remote --command` (file-import endpoint is auth-blocked on this account); both tables + seed rows verified.
 2. ~~Controlled production test not run~~ — **resolved 2026-09-19**: `POST /run?dry=1&limit=5` passed, `sync_runs` id 503 (see §3).
-3. Phase 08 open UI item: historical-coverage view in the Data Analyst dashboard.
+3. ~~Phase 08 open UI item: historical-coverage view in the Data Analyst dashboard~~ — **resolved 2026-09-20**: "Historical Coverage" card built (coverage block on the data-quality API; per-year "thin"/"partial" flags; per-channel first/last order dates). Pending one production deploy by the operator.
 4. Data quality: prices recorded as quantities on Line orders `44423079Li` (qty 5000/3780/2200) and `38507565Li`; `71333567Li` (qty 36) needs operator confirmation — corrections belong in Notion.
 5. 429 backoff path never fault-injected; `cron-worker/` (legacy) still points at preview D1.
 6. `product_mapping_events` audit table live but unused until the Worker runs.

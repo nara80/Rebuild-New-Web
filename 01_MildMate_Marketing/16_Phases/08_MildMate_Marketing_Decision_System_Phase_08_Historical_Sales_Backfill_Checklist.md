@@ -50,7 +50,7 @@ Populate enough historical unified sales data to support meaningful product/chan
 - [x] Reconcile total order revenue by channel/date where source data allows. *(THB 1,552,277.63 across 8 channels; per-channel + per-year tables sum to the total)*
 - [x] Measure mapping coverage by period. *(2023: 1 / 2024: 2 / 2025: 137 / 2026: 353 orders; span 2023-07-19 -> 2026-09-11)*
 - [x] Document remaining data gaps. *(reconciliation §8 "Known gaps / exceptions" — incl. the newly found price-as-quantity corruption on 2 Line orders)*
-- [ ] Update Data Analyst dashboard to show historical coverage. *(Phase 08 UI work — still open as of 2026-09-19 reconciliation)*
+- [x] Update Data Analyst dashboard to show historical coverage. *(built 2026-09-20: "Historical Coverage" card on the Data Analyst dashboard — span 2023-07-19 → 2026-09-10, 483 commercial orders (10 of 493 sales_orders rows are non-commercial status, per metric contract), 7 channels; per-year table flags 2023/2024 as "thin" (<10 orders) and 2025 as "partial" (137 orders but only 5 distinct months); per-channel table shows each channel's first/last order date. Served by a `coverage` block added to `GET /api/admin/analysis/data-quality` (computed live, 042 views unchanged); mirrored in `public/index.js` + `public/_worker.js`; render logic smoke-tested with real prod data — 8/8 checks passed.)*
 
 ## Deliverables
 
