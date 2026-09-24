@@ -160,6 +160,19 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="cov-channel-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="gsc-card">
+      <div class="card-header"><span>SEO / Google Search Console</span><span class="muted" style="font-size:0.75rem;font-weight:400">date + query + landing page grain; non-product pages remain unmapped by design</span></div>
+      <div class="card-body">
+        <div id="gsc-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest GSC report date</span></div>
+      <div class="table-wrap"><div id="gsc-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Landing Pages</span><span class="muted" style="font-size:0.75rem;font-weight:400">click-ranked</span></div>
+      <div class="table-wrap"><div id="gsc-pages-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Queries</span><span class="muted" style="font-size:0.75rem;font-weight:400">click-ranked</span></div>
+      <div class="table-wrap"><div id="gsc-queries-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
@@ -176,6 +189,7 @@ function esc(s){ return String(s === null || s === undefined ? '' : s).replace(/
 function fmtNum(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US'); }
 function fmtBaht(n){ return (n === null || n === undefined) ? '—' : '฿' + Number(n).toLocaleString('en-US', {maximumFractionDigits: 2}); }
 function fmtPct(n){ return (n === null || n === undefined) ? '—' : (Math.round(Number(n) * 10) / 10) + '%'; }
+function fmtPos(n){ return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US', {maximumFractionDigits: 2}); }
 
 async function authHeaders(){
   var headers = {};
@@ -425,6 +439,99 @@ function renderCoverage(cov){
   }
 }
 
+// ── SEO / GSC (Phase 09) ──
+
+async function loadGsc(){
+  setState('gsc-trend-table', '', 'Loading…');
+  setState('gsc-pages-table', '', 'Loading…');
+  setState('gsc-queries-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/gsc' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('gsc-summary').innerHTML =
+        '<span class="badge badge-grey">GSC schema not available in this environment yet</span>';
+      setState('gsc-trend-table', '', d.message || 'Apply migration 046_gsc_analytics.sql first.');
+      setState('gsc-pages-table', '', 'No GSC rows yet.');
+      setState('gsc-queries-table', '', 'No GSC rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var mappedImprPct = Number(s.impressions || 0) > 0 ? (Number(s.mapped_impressions || 0) * 100 / Number(s.impressions || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('gsc-summary').innerHTML =
+      '<span class="badge badge-blue">Clicks: ' + fmtNum(s.clicks) + '</span>' +
+      '<span class="badge badge-blue">Impressions: ' + fmtNum(s.impressions) + '</span>' +
+      '<span class="badge badge-grey">CTR: ' + fmtPct(s.ctr_pct) + '</span>' +
+      '<span class="badge badge-grey">Avg Position: ' + fmtPos(s.avg_position) + '</span>' +
+      '<span class="badge badge-grey">Queries: ' + fmtNum(s.queries) + '</span>' +
+      '<span class="badge badge-grey">Landing pages: ' + fmtNum(s.pages) + '</span>' +
+      '<span class="badge badge-grey">Mapped impression coverage: ' + fmtPct(mappedImprPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Clicks</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Avg Position</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtNum(t.clicks_28d) + '</td><td class="num">' + fmtNum(t.impressions_28d) + '</td><td class="num">' + fmtPct(t.ctr_28d) + '</td><td class="num">' + fmtPos(t.avg_position_28d) + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtNum(t.clicks_prev_28d) + '</td><td class="num">' + fmtNum(t.impressions_prev_28d) + '</td><td class="num">' + fmtPct(t.ctr_prev_28d) + '</td><td class="num">' + fmtPos(t.avg_position_prev_28d) + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.clicks_growth_pct === null || t.clicks_growth_pct === undefined ? '—' : ((t.clicks_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.clicks_growth_pct)))) + '</td>' +
+      '<td class="num">' + (t.impressions_growth_pct === null || t.impressions_growth_pct === undefined ? '—' : ((t.impressions_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.impressions_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td><td class="num"><span class="muted">—</span></td></tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('gsc-trend-table').innerHTML = trendHtml;
+
+    var pages = d.top_pages || [];
+    if (!pages.length) {
+      setState('gsc-pages-table', '', 'No GSC page rows for the selected filters.');
+    } else {
+      var p = '<table><thead><tr><th>Landing Page</th><th>Product</th><th class="num">Queries</th><th class="num">Clicks</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Avg Position</th></tr></thead><tbody>';
+      pages.forEach(function(r){
+        p += '<tr>' +
+          '<td class="mono">' + esc(r.page_path) + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtNum(r.queries) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtPos(r.avg_position) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('gsc-pages-table').innerHTML = p + '</tbody></table>';
+    }
+
+    var queries = d.top_queries || [];
+    if (!queries.length) {
+      setState('gsc-queries-table', '', 'No GSC query rows for the selected filters.');
+    } else {
+      var q = '<table><thead><tr><th>Query</th><th class="num">Pages</th><th class="num">Clicks</th><th class="num">Impressions</th><th class="num">CTR</th><th class="num">Avg Position</th></tr></thead><tbody>';
+      queries.forEach(function(r){
+        q += '<tr>' +
+          '<td>' + esc(r.query_text) + '</td>' +
+          '<td class="num">' + fmtNum(r.pages) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtPos(r.avg_position) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('gsc-queries-table').innerHTML = q + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('gsc-summary').innerHTML = '<span class="badge badge-red">GSC unavailable</span>';
+    setState('gsc-trend-table', 'error', 'Could not load GSC trend: ' + e.message);
+    setState('gsc-pages-table', 'error', 'Could not load GSC pages: ' + e.message);
+    setState('gsc-queries-table', 'error', 'Could not load GSC queries: ' + e.message);
+  }
+}
+
 // ── Sales Detail ──
 
 async function loadSales(){
@@ -547,11 +654,11 @@ async function populateProductFilter(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels();
+  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); populateProductFilter();
 }
 
 async function boot(){

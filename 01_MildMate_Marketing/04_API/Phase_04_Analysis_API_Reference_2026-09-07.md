@@ -57,6 +57,19 @@ Per channel: `orders, order_revenue, units, aov, mapped_orders, mapped_pct`.
 `analysis_data_quality` row + computed `freshness_minutes` (M22), `mapped_order_pct`, `mapped_item_pct`, `exact_item_pct`, `unallocated_item_pct`, and M30 roll-up `status: ok|warning|critical` with human-readable `warnings[]`.
 Thresholds: critical = no/failed sync or invalid product refs; warning = freshness > 30 min, sync errors 7d, missing Product_IDs, itemless orders, missing dates, unknown status/source labels, null/zero order totals.
 **Phase 06 additions:** response also includes `data_quality.zero_total_orders` (computed live), `thresholds` (documented freshness rules), `recent_runs[]` (last 10 `sync_runs` rows, error text truncated to 300 chars), and `channel_freshness[]` (per channel: `last_order_day`, `days_since_last_order`, `orders`).
+**Phase 09 additions:** response includes `gsc_freshness` (`available`, `total_rows`, `latest_report_date`, `days_since_latest_report`, `last_success_sync_at`, `last_sync_at`, `last_sync_status`, `sync_errors_7d`, `status`, `caveat`). If migration 046 is not present in the environment, `available=false` and sales data-quality behavior remains unchanged.
+
+### GET `/api/admin/analysis/gsc` (Phase 09)
+Query params: `start`, `end`, optional `product_id`.
+
+Returns:
+- `summary` — queries, pages, clicks, impressions, CTR%, weighted avg position, mapped coverage counters
+- `trend_28d` — current 28-day vs previous 28-day clicks/impressions/CTR/position with growth %
+- `freshness` — latest GSC report date + collector sync health from `sync_runs` (`source='gsc-make-collector'`)
+- `top_pages` — click-ranked landing pages (with Product_ID/title where defensibly mapped)
+- `top_queries` — click-ranked queries
+
+Mapping rule: only `/product/{slug}` and `/th/product/{slug}` URLs are mapped to Product_ID; all other URLs stay unmapped by design.
 
 ### GET `/api/admin/analysis/data-quality/exceptions?type=...` (Phase 06)
 PII-free drill-down of affected records, LIMIT 100 (`truncated` flag when capped). Response: `{success, type, description, count, truncated, rows[]}`.

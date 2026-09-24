@@ -2599,7 +2599,7 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response2 = {
+      const response3 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
@@ -2610,9 +2610,9 @@ async function handlePricing(request, env) {
         derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
-        response2.breakdown = resultUsd.breakdown;
+        response3.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response2), {
+      return new Response(JSON.stringify(response3), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -5752,6 +5752,14 @@ function dayRangeWhere(f, col = "order_day") {
   return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
 }
 __name(dayRangeWhere, "dayRangeWhere");
+function shiftIsoDate(isoDay, deltaDays) {
+  if (!DATE_RE.test(isoDay)) return null;
+  const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
+  if (isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
+}
+__name(shiftIsoDate, "shiftIsoDate");
 async function getSummary(env, f) {
   const range = dayRangeWhere(f);
   const binds = [...range.binds];
@@ -5985,6 +5993,204 @@ async function getChannels(env, f) {
   });
 }
 __name(getChannels, "getChannels");
+async function getGsc(env, f) {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.query_norm) AS queries,
+         COUNT(DISTINCT g.page_path) AS pages,
+         COALESCE(SUM(g.clicks), 0) AS clicks,
+         COALESCE(SUM(g.impressions), 0) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.clicks ELSE 0 END), 0) AS mapped_clicks,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.impressions ELSE 0 END), 0) AS mapped_impressions
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         COUNT(DISTINCT g.query_norm) AS queries,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, g.page_path
+       LIMIT 15`
+    ).bind(...binds).all();
+    const topQueries = await env.DB.prepare(
+      `SELECT
+         MIN(g.query_text) AS query_text,
+         COUNT(DISTINCT g.page_path) AS pages,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.query_norm
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, MIN(g.query_text)
+       LIMIT 20`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      ctr_28d: null,
+      avg_position_28d: null,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      ctr_prev_28d: null,
+      avg_position_prev_28d: null,
+      clicks_growth_pct: null,
+      impressions_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevClicks = Number(prev?.clicks || 0);
+        const prevImpr = Number(prev?.impressions || 0);
+        const curClicks = Number(cur?.clicks || 0);
+        const curImpr = Number(cur?.impressions || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          clicks_28d: curClicks,
+          impressions_28d: curImpr,
+          ctr_28d: cur?.ctr_pct === null || cur?.ctr_pct === void 0 ? null : Number(cur.ctr_pct),
+          avg_position_28d: cur?.avg_position === null || cur?.avg_position === void 0 ? null : Number(cur.avg_position),
+          clicks_prev_28d: prevClicks,
+          impressions_prev_28d: prevImpr,
+          ctr_prev_28d: prev?.ctr_pct === null || prev?.ctr_pct === void 0 ? null : Number(prev.ctr_pct),
+          avg_position_prev_28d: prev?.avg_position === null || prev?.avg_position === void 0 ? null : Number(prev.avg_position),
+          clicks_growth_pct: prevClicks > 0 ? Math.round((curClicks - prevClicks) * 1e4 / prevClicks) / 100 : null,
+          impressions_growth_pct: prevImpr > 0 ? Math.round((curImpr - prevImpr) * 1e4 / prevImpr) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const gscDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    const latestSyncAt = fresh?.last_sync_at || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (gscDays !== null && gscDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json5({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        queries: Number(summary?.queries || 0),
+        pages: Number(summary?.pages || 0),
+        clicks: Number(summary?.clicks || 0),
+        impressions: Number(summary?.impressions || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === void 0 ? null : Number(summary.ctr_pct),
+        avg_position: summary?.avg_position === null || summary?.avg_position === void 0 ? null : Number(summary.avg_position),
+        mapped_clicks: Number(summary?.mapped_clicks || 0),
+        mapped_impressions: Number(summary?.mapped_impressions || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: gscDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: latestSyncAt,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+      },
+      top_pages: topPages.results || [],
+      top_queries: topQueries.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: gsc_search_daily") || msg.includes("no such table: analysis_gsc_freshness")) {
+      return json5({
+        success: true,
+        available: false,
+        message: "GSC schema is not available in this environment yet. Apply migration 046_gsc_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err("GSC_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGsc, "getGsc");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -6040,6 +6246,12 @@ async function getDataQuality(env) {
      GROUP BY co.channel_norm
      ORDER BY orders DESC, co.channel_norm`
   ).all();
+  let gscFreshness = null;
+  try {
+    gscFreshness = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+  } catch {
+    gscFreshness = null;
+  }
   let freshnessMinutes = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
   if (rawTs) {
@@ -6078,6 +6290,13 @@ async function getDataQuality(env) {
   if (Number(dq.unknown_status_orders || 0) > 0) warn(dq.unknown_status_orders + " order(s) have an unknown status value.");
   if (Number(dq.unknown_source_labels || 0) > 0) warn(dq.unknown_source_labels + " unknown source label(s) present.");
   if (zeroTotalOrders > 0) warn(zeroTotalOrders + " commercial order(s) have a null/zero order total (business rules require a positive total).");
+  const gscRows = Number(gscFreshness?.total_rows || 0);
+  const gscDays = gscFreshness?.days_since_latest_report === null || gscFreshness?.days_since_latest_report === void 0 ? null : Number(gscFreshness.days_since_latest_report);
+  const gscLastStatus = String(gscFreshness?.last_sync_status || "").toLowerCase();
+  if (gscRows > 0) {
+    if (gscDays !== null && gscDays > 4) warn("GSC freshness is " + gscDays + " days old (threshold 4).");
+    if (["failed", "partial", "error"].includes(gscLastStatus)) warn("Latest GSC sync run status: " + gscLastStatus + ".");
+  }
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
   return json5({
@@ -6099,6 +6318,18 @@ async function getDataQuality(env) {
     },
     recent_runs: runs.results || [],
     channel_freshness: freshness.results || [],
+    gsc_freshness: {
+      available: !!gscFreshness,
+      total_rows: gscRows,
+      latest_report_date: gscFreshness?.latest_report_date || null,
+      days_since_latest_report: gscDays,
+      last_success_sync_at: gscFreshness?.last_success_sync_at || null,
+      last_sync_at: gscFreshness?.last_sync_at || null,
+      last_sync_status: gscLastStatus || null,
+      sync_errors_7d: Number(gscFreshness?.sync_errors_7d || 0),
+      status: gscRows === 0 ? "empty" : gscDays !== null && gscDays > 4 || ["failed", "partial", "error"].includes(gscLastStatus) ? "warning" : "ok",
+      caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+    },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
       last_order_day: spanRow?.last_order_day ?? null,
@@ -6220,6 +6451,7 @@ async function handleAdminAnalysis(request, env) {
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
+  if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
@@ -12125,6 +12357,382 @@ async function handleColorInventory(request, env) {
 }
 __name(handleColorInventory, "handleColorInventory");
 
+// ../workers/api/gsc.ts
+var GSC_SERVICE_NAME = "mildmate-gsc-api";
+var GSC_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE2 = /^\d{4}-\d{2}-\d{2}$/;
+var ALLOWED_DEVICE = /* @__PURE__ */ new Set(["", "DESKTOP", "MOBILE", "TABLET"]);
+var ALLOWED_SEARCH_TYPE = /* @__PURE__ */ new Set(["web", "image", "video", "news", "discover", "google_news"]);
+function response2(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response2, "response");
+function trimTo2(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo2, "trimTo");
+function toNum2(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum2, "toNum");
+function normalizeDate(v) {
+  const s = trimTo2(v, 20);
+  if (!DATE_RE2.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate, "normalizeDate");
+function normalizeQuery(v) {
+  const queryText = trimTo2(v, 1e3);
+  if (!queryText) throw new Error("query is required");
+  const queryNorm = queryText.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!queryNorm) throw new Error("query is required");
+  return { queryText, queryNorm };
+}
+__name(normalizeQuery, "normalizeQuery");
+function normalizeCountry(v) {
+  return trimTo2(v, 20).toUpperCase();
+}
+__name(normalizeCountry, "normalizeCountry");
+function normalizeDevice(v) {
+  const device = trimTo2(v, 20).toUpperCase();
+  if (!ALLOWED_DEVICE.has(device)) throw new Error("device must be one of: DESKTOP, MOBILE, TABLET");
+  return device;
+}
+__name(normalizeDevice, "normalizeDevice");
+function normalizeSearchType(v) {
+  const t = trimTo2(v, 40).toLowerCase() || "web";
+  if (!ALLOWED_SEARCH_TYPE.has(t)) throw new Error("search_type is invalid");
+  return t;
+}
+__name(normalizeSearchType, "normalizeSearchType");
+function normalizeSearchAppearance(v) {
+  return trimTo2(v, 120);
+}
+__name(normalizeSearchAppearance, "normalizeSearchAppearance");
+function normalizePage(pageRaw, propertyHintRaw) {
+  const raw = trimTo2(pageRaw, 2e3);
+  if (!raw) throw new Error("page is required");
+  let pageUrl = raw;
+  let pagePath = raw;
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const u = new URL(raw);
+      const path = u.pathname || "/";
+      pagePath = path;
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${path}`;
+    } else if (raw.startsWith("/")) {
+      pagePath = raw;
+      const propertyHint = trimTo2(propertyHintRaw, 300);
+      if (propertyHint.startsWith("http://") || propertyHint.startsWith("https://")) {
+        const p = new URL(propertyHint);
+        pageUrl = `${p.protocol}//${p.hostname.toLowerCase()}${raw}`;
+      } else if (propertyHint.startsWith("sc-domain:")) {
+        const host = propertyHint.slice("sc-domain:".length).trim().toLowerCase();
+        if (host) pageUrl = `https://${host}${raw}`;
+      } else {
+        pageUrl = raw;
+      }
+    } else {
+      pagePath = "/" + raw;
+      pageUrl = pagePath;
+    }
+  } catch {
+    if (!raw.startsWith("/")) pagePath = "/" + raw;
+    pageUrl = pagePath;
+  }
+  pagePath = pagePath.replace(/\\/g, "/");
+  pagePath = pagePath.replace(/\/{2,}/g, "/");
+  if (!pagePath.startsWith("/")) pagePath = "/" + pagePath;
+  if (pagePath.length > 1 && pagePath.endsWith("/")) pagePath = pagePath.slice(0, -1);
+  if (!pageUrl.startsWith("http://") && !pageUrl.startsWith("https://")) {
+    pageUrl = pagePath;
+  } else {
+    try {
+      const u = new URL(pageUrl);
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${pagePath}`;
+    } catch {
+    }
+  }
+  return { pageUrl: pageUrl.slice(0, 2e3), pagePath: pagePath.slice(0, 1e3) };
+}
+__name(normalizePage, "normalizePage");
+function extractProductSlug(pagePath) {
+  const m = pagePath.match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]).trim().toLowerCase();
+  } catch {
+    return m[1].trim().toLowerCase();
+  }
+}
+__name(extractProductSlug, "extractProductSlug");
+function sameNullable(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable, "sameNullable");
+function sameNullableNum(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum, "sameNullableNum");
+async function requireBearerAuth2(request, env) {
+  const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth2, "requireBearerAuth");
+async function createSyncRun2(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun2, "createSyncRun");
+async function finishSyncRun2(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun2, "finishSyncRun");
+async function resolveProductIdBySlug(env, slug, cache) {
+  if (cache.has(slug)) return cache.get(slug) || null;
+  const row = await env.DB.prepare(
+    `SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`
+  ).bind(slug).first();
+  const id = row && row.id ? Number(row.id) : null;
+  cache.set(slug, id);
+  return id;
+}
+__name(resolveProductIdBySlug, "resolveProductIdBySlug");
+async function handleRowsUpsert(request, env) {
+  const auth = await requireBearerAuth2(request, env);
+  if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response2({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response2({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo2(body.sync_source, 80) || "gsc-make-collector";
+  const scenario = trimTo2(body.scenario, 200) || "phase09-gsc-collector";
+  const propertyHint = trimTo2(body.property || body.site_url || body.site, 300);
+  const runId = await createSyncRun2(env, source, scenario, rowsRaw.length);
+  const slugCache = /* @__PURE__ */ new Map();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate(raw.date || raw.report_date);
+        const q = normalizeQuery(raw.query || raw.query_text);
+        const page = normalizePage(raw.page || raw.page_url || raw.landing_page, propertyHint);
+        const country = normalizeCountry(raw.country);
+        const device = normalizeDevice(raw.device);
+        const searchType = normalizeSearchType(raw.search_type);
+        const searchAppearance = normalizeSearchAppearance(raw.search_appearance);
+        const clicksNum = toNum2(raw.clicks);
+        if (clicksNum === null || clicksNum < 0) throw new Error("clicks must be a non-negative number");
+        const impressionsNum = toNum2(raw.impressions);
+        if (impressionsNum === null || impressionsNum < 0) throw new Error("impressions must be a non-negative number");
+        const clicks = Math.round(clicksNum);
+        const impressions = Math.round(impressionsNum);
+        const ctrInput = toNum2(raw.ctr);
+        const ctr = ctrInput === null ? impressions > 0 ? Math.round(clicks / impressions * 1e6) / 1e6 : null : ctrInput;
+        const position = toNum2(raw.position);
+        if (position !== null && position < 0) throw new Error("position must be >= 0");
+        const slug = extractProductSlug(page.pagePath);
+        let productId = null;
+        let mappingScope = "non_product";
+        if (slug) {
+          productId = await resolveProductIdBySlug(env, slug, slugCache);
+          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, query_text, page_path, clicks, impressions, ctr, position, product_id, mapping_scope
+           FROM gsc_search_daily
+           WHERE report_date = ?1 AND query_norm = ?2 AND page_url = ?3
+             AND country = ?4 AND device = ?5 AND search_type = ?6 AND search_appearance = ?7
+           LIMIT 1`
+        ).bind(reportDate, q.queryNorm, page.pageUrl, country, device, searchType, searchAppearance).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO gsc_search_daily
+             (report_date, query_text, query_norm, page_url, page_path, country, device, search_type, search_appearance,
+              clicks, impressions, ctr, position, product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`
+          ).bind(
+            reportDate,
+            q.queryText,
+            q.queryNorm,
+            page.pageUrl,
+            page.pagePath,
+            country,
+            device,
+            searchType,
+            searchAppearance,
+            clicks,
+            impressions,
+            ctr,
+            position,
+            productId,
+            mappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable(existing.query_text, q.queryText) && sameNullable(existing.page_path, page.pagePath) && Number(existing.clicks || 0) === clicks && Number(existing.impressions || 0) === impressions && sameNullableNum(existing.ctr, ctr) && sameNullableNum(existing.position, position) && sameNullable(existing.product_id, productId) && sameNullable(existing.mapping_scope, mappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE gsc_search_daily
+           SET query_text = ?1,
+               page_path = ?2,
+               clicks = ?3,
+               impressions = ?4,
+               ctr = ?5,
+               position = ?6,
+               product_id = ?7,
+               mapping_scope = ?8,
+               source_updated_at = ?9,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?10`
+        ).bind(
+          q.queryText,
+          page.pagePath,
+          clicks,
+          impressions,
+          ctr,
+          position,
+          productId,
+          mappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun2(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response2({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun2(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response2(
+      {
+        success: false,
+        error_code: "GSC_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert, "handleRowsUpsert");
+async function handleGscApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
+  if (method === "OPTIONS") return response2({ ok: true });
+  if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
+    return response2({ ok: true, service: GSC_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
+    return handleRowsUpsert(request, env);
+  }
+  return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
+}
+__name(handleGscApi, "handleGscApi");
+
 // api/[[path]].ts
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url5(url) {
@@ -12156,6 +12764,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  if (path.startsWith("/api/v1/gsc")) {
+    const gscRes = await handleGscApi(request, env);
+    if (gscRes) return gscRes;
+  }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
     const salesRes = await handleSalesApi(request, env);
     if (salesRes) return salesRes;
@@ -13853,10 +14465,10 @@ async function onRequest12(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response2 = await context.next();
-  const contentType = response2.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response2;
-  let html = await response2.text();
+  const response3 = await context.next();
+  const contentType = response3.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response3;
+  let html = await response3.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -13942,11 +14554,11 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response2.status, headers: response2.headers });
+  return new Response(html, { status: response3.status, headers: response3.headers });
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-nBUxhM/functionsRoutes-0.029787022756127324.mjs
+// ../.wrangler/tmp/pages-aHzSm4/functionsRoutes-0.01964316670396571.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -14462,35 +15074,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response2 = await handler(context);
-        if (!(response2 instanceof Response)) {
+        const response3 = await handler(context);
+        if (!(response3 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response2);
+        return cloneResponse(response3);
       } else if ("ASSETS") {
-        const response2 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response2);
+        const response3 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response3);
       } else {
-        const response2 = await fetch(request);
-        return cloneResponse(response2);
+        const response3 = await fetch(request);
+        return cloneResponse(response3);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response2 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response2);
+        const response3 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response3);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response2) => (
+var cloneResponse = /* @__PURE__ */ __name((response3) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response2.status) ? null : response2.body,
-    response2
+    [101, 204, 205, 304].includes(response3.status) ? null : response3.body,
+    response3
   )
 ), "cloneResponse");
 export {

@@ -66,6 +66,7 @@ import { handleCustomers } from "../../workers/api/customers";
 import { handleOrderConfirmed } from "../../workers/api/order-confirmed";
 import { handleColorInventory } from "../../workers/api/color-inventory";
 import { handleSalesApi } from "../../workers/api/sales";
+import { handleGscApi } from "../../workers/api/gsc";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -76,6 +77,12 @@ export const onRequest: PagesFunction<{
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+
+  // Phase 09 — GSC collector API under /api/v1/gsc/*
+  if (path.startsWith("/api/v1/gsc")) {
+    const gscRes = await handleGscApi(request, env);
+    if (gscRes) return gscRes;
+  }
 
   // Unified sales API under /api/v1/*
   if (path.startsWith("/api/v1/") || path === "/api/v1") {

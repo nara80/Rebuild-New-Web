@@ -1,4 +1,4 @@
-var __defProp = Object.defineProperty;
+﻿var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
 // ../workers/api/sales.ts
@@ -1138,7 +1138,10 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
       }
       paginationHtml = '<div class="blog-pagination"><button class="pag-arrow' + (prevDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(prevPage)) + `'"` + (prevDisabled ? " disabled" : "") + ' aria-label="Previous page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button><div class="pag-dots">' + dotsHtml + '</div><button class="pag-arrow' + (nextDisabled ? " disabled" : "") + `" onclick="window.location.href='` + escAttr(pageUrl(nextPage)) + `'"` + (nextDisabled ? " disabled" : "") + ' aria-label="Next page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button></div>';
     }
-    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
+    const canonicalHref = (isThai ? "/th/blogs/" : "/blogs/") + (page > 1 ? "?page=" + page : "");
+    const enListingHref = "https://www.mildmate.com/blogs/" + (page > 1 ? "?page=" + page : "");
+    const thListingHref = "https://www.mildmate.com/th/blogs/" + (page > 1 ? "?page=" + page : "");
+    const html = '<!DOCTYPE html>\n<html lang="' + (isThai ? "th" : "en") + '">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "MildMate Blog - bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners.") + '">\n<title>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate - \u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29" : "MildMate Blog - Bedding Guides and Sleep Tips") + '</title>\n<link rel="canonical" href="https://www.mildmate.com' + canonicalHref + '">\n<link rel="alternate" hreflang="en" href="' + enListingHref + '">\n<link rel="alternate" hreflang="th" href="' + thListingHref + '">\n<link href="/css/fonts.css" rel="stylesheet">\n<link rel="stylesheet" href="/css/main.min.css">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n.blog-index-page{background:#f0f7ff}\n.site-header{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;border-bottom:1px solid #e2e8f0;height:80px;display:flex;align-items:center}\n.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;width:100%;display:flex;align-items:center;justify-content:space-between}\n.logo-link{display:flex;align-items:center}\n.logo-link img{max-height:52px;width:auto}\n.main-nav{flex:1;display:flex;justify-content:center}\n.nav-list{display:flex;gap:32px;list-style:none;margin:0;padding:0}\n.nav-link{font-size:1.2rem;font-weight:600;color:#1e293b;text-decoration:none;padding:4px 0;position:relative}\n.nav-link::after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:2px;background:#2c96f4;transform:scaleX(0);transition:transform 0.2s}\n.nav-link:hover::after{transform:scaleX(1)}\n.header-actions{display:flex;gap:8px;align-items:center}\n.search-btn,.account-btn,.cart-btn{background:none;border:none;cursor:pointer;color:#1e293b;padding:8px;display:flex;align-items:center;gap:4px;text-decoration:none}\n.lang-toggle{display:flex;gap:4px;font-size:0.8125rem;font-weight:700;cursor:pointer}\n.lang-toggle span{padding:2px 4px}\n.cart-count{background:#2c96f4;color:#fff;border-radius:10px;font-size:0.6875rem;min-width:18px;text-align:center;padding:1px 5px}\n.mobile-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:998;opacity:0;visibility:hidden;transition:opacity 0.25s,visibility 0.25s}\n.mobile-overlay.active{opacity:1;visibility:visible}\n.mobile-drawer{position:fixed;top:0;left:0;width:240px;max-width:85vw;height:100vh;background:#fff;z-index:999;transform:translateX(-100%);transition:transform 0.3s ease;overflow-y:auto;padding:18px;padding-top:calc(80px + 12px);box-shadow:4px 0 16px rgba(0,0,0,0.1)}\n.mobile-drawer.active{transform:translateX(0)}\n.mobile-drawer-search{margin-bottom:20px}\n.drawer-search-form{display:flex;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;padding:6px 10px;align-items:center;gap:6px}\n.drawer-search-form input{flex:1;padding:4px;border:none;outline:none;font-size:0.875rem;font-family:inherit}\n.drawer-search-form button{background:none;border:none;padding:4px;cursor:pointer;color:#64748b}\n.mobile-nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}\n.mobile-nav-list a{display:block;padding:8px 0;font-weight:600;color:#1e293b;text-decoration:none;font-size:1rem}\n.mobile-nav-list a:hover{background:#f0f7ff;color:#2c96f4}\n.search-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:1003;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.25s,visibility 0.25s}\n.search-overlay.active{opacity:1;visibility:visible;pointer-events:auto}\n.search-overlay-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px}\n.search-close{background:none;border:none;cursor:pointer;padding:8px;color:#64748b}\n.search-form{flex:1;display:flex;border:2px solid #e2e8f0;border-radius:8px;overflow:hidden}\n.search-form input{flex:1;padding:12px 16px;border:none;outline:none;font-size:1rem;font-family:inherit}\n.search-form button{background:#2c96f4;border:none;padding:12px 20px;cursor:pointer;color:#fff;font-weight:600}\n.blog-hero{background:linear-gradient(135deg,#2c96f4 0%,#1a7fd4 100%);padding:80px 24px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}\n.blog-hero::before{content:"";position:absolute;inset:0;opacity:0.08;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:40px 40px}\n.blog-hero h1{font-size:2.5rem;font-weight:700;margin-bottom:12px;color:#fff;position:relative;z-index:1}\n.blog-hero p{font-size:1.0625rem;color:rgba(255,255,255,0.9);max-width:560px;margin:0 auto;line-height:1.6;position:relative;z-index:1}\n.blog-filters{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px}\n.blog-filters-inner{max-width:1200px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;padding:16px 0}\n.filter-tab{padding:8px 20px;border-radius:20px;font-size:0.875rem;font-weight:600;white-space:nowrap;cursor:pointer;transition:background 0.2s,color 0.2s;background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0}\n.filter-tab:hover,.filter-tab.active{background:#2c96f4;color:#fff;border-color:#2c96f4}\n.blog-listing-section{padding:48px 24px 80px;max-width:1200px;margin:0 auto}\n.blog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:40px}\n.blog-card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 12px rgba(0,0,0,0.06);overflow:hidden;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;display:flex;flex-direction:column}.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(0,0,0,0.12);border-color:#2c96f4}\n.blog-card .card-image{position:relative;overflow:hidden;aspect-ratio:16/9}\n.blog-card .card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s}\n.blog-card:hover .card-image img{transform:scale(1.04)}\n.blog-card .card-category{position:absolute;top:12px;left:12px;background:#2c96f4;color:#fff;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 10px;border-radius:20px}\n.blog-card .card-body{padding:24px;flex:1;display:flex;flex-direction:column}\n.blog-card .card-date{font-size:0.75rem;color:#999;margin-bottom:8px;display:flex;align-items:center;gap:5px}\n.blog-card .card-title{font-size:1.0625rem;font-weight:700;color:#1e293b;line-height:1.35;margin-bottom:10px;flex:1}\n.blog-card .card-title a{color:inherit;text-decoration:none}\n.blog-card .card-title a:hover{color:#2c96f4}\n.blog-card .card-excerpt{font-size:0.875rem;color:#64748b;line-height:1.6;margin-bottom:16px}\n.blog-card .card-read-more{font-size:0.8125rem;font-weight:600;color:#2c96f4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:auto}\n.blog-card .card-read-more:hover{text-decoration:underline}\n.featured-post{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;margin-bottom:48px}\n.featured-post .card-image{position:relative;overflow:hidden;min-height:380px}\n.featured-post .card-image img{width:100%;height:100%;object-fit:cover}\n.featured-post .card-body{padding:40px;display:flex;flex-direction:column;justify-content:center}\n.featured-post .card-date{font-size:0.8125rem;color:#999;margin-bottom:16px;display:flex;align-items:center;gap:6px}\n.featured-post .card-title{font-size:1.5rem;font-weight:700;color:#1e293b;line-height:1.3;margin-bottom:16px}\n.featured-post .card-title a{color:inherit;text-decoration:none}\n.featured-post .card-title a:hover{color:#2c96f4}\n.featured-post .card-excerpt{font-size:0.9375rem;color:#64748b;line-height:1.7;margin-bottom:24px}\n.featured-post .card-read-more{font-size:0.875rem;font-weight:600;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:12px 28px;background:#2c96f4;border-radius:8px;width:fit-content;transition:background 0.2s}\n.featured-post .card-read-more:hover{background:#1a7fd4}\n.blog-pagination{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:48px;padding:16px 0}\n.pag-arrow{width:44px;height:44px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1e293b;transition:all 0.2s;padding:0}\n.pag-arrow:hover:not(.disabled){border-color:#2c96f4;color:#2c96f4;box-shadow:0 2px 8px rgba(44,150,244,0.15)}\n.pag-arrow.disabled{opacity:0.35;cursor:default}\n.pag-dots{display:flex;align-items:center;gap:8px}\n.pag-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:transparent;cursor:pointer;padding:0;transition:all 0.25s}\n.pag-dot:hover{border-color:#2c96f4}\n.pag-dot.active{border-color:#2c96f4;background:#2c96f4}\n@media(max-width:1024px){.blog-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:768px){\n.hamburger{display:flex !important}\n.main-nav{display:none}\n.blog-hero h1{font-size:1.75rem}\n.featured-post{grid-template-columns:1fr}\n.featured-post .card-image{min-height:240px}\n.featured-post .card-body{padding:28px}\n.blog-grid{grid-template-columns:1fr}\n.blog-pagination{gap:12px}\n.pag-arrow{width:40px;height:40px}\n.pag-dot{width:11px;height:11px}\n}\n</style>\n</head>\n<body class="blog-index-page">\n<!-- __HEADER__ -->\n<section class="blog-hero">\n  <h1>' + (isThai ? "\u0E1A\u0E17\u0E04\u0E27\u0E32\u0E21 MildMate" : "MildMate Blog") + "</h1>\n  <p>" + (isThai ? "\u0E04\u0E25\u0E31\u0E07\u0E04\u0E27\u0E32\u0E21\u0E23\u0E39\u0E49\u0E19\u0E27\u0E31\u0E15\u0E01\u0E23\u0E23\u0E21\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E19\u0E2D\u0E19\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29: \u0E1B\u0E25\u0E14\u0E25\u0E47\u0E2D\u0E01\u0E01\u0E32\u0E23\u0E19\u0E2D\u0E19\u0E2B\u0E25\u0E31\u0E1A\u0E17\u0E35\u0E48\u0E2A\u0E21\u0E1A\u0E39\u0E23\u0E13\u0E4C\u0E41\u0E1A\u0E1A\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E44\u0E25\u0E1F\u0E4C\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "Bedding guides, sleep tips, and custom bedding advice for marine, family, and pet owners - from MildMate engineers.") + "</p>\n</section>\n" + (posts.length > 0 ? '<div class="blog-filters"><div class="blog-filters-inner">' + filterBtns + "</div></div>" : "") + '\n<section class="blog-listing-section">\n  ' + featuredHtml + "\n  " + (posts.length > 0 ? '<div class="blog-grid">' + gridHtml + "</div>" : '<div style="text-align:center;padding:80px 0;color:#64748b"><p style="font-size:1.25rem;margin-bottom:8px">No posts yet.</p><p><a href="/admin/blog.html" style="color:#2c96f4">Create your first post in the admin panel</a></p></div>') + "\n  " + newsletter + "\n  " + paginationHtml + '\n</section>\n<!-- __FOOTER__ -->\n<script src="/js/nav.js"><\/script>\n<script src="/js/clerk.js"><\/script>\n<script src="/js/cart.js"><\/script>\n</body>\n</html>';
     return new Response(html, {
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=60" }
     });
@@ -1556,6 +1559,89 @@ function applyLocalizedFaqFromD1(html, faq) {
   );
 }
 __name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+var TH_GENERIC_FAQ_INNER = `<details class="faq-item" open>
+            <summary>\u0E08\u0E30\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E14\u0E39<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19 \u0E2B\u0E23\u0E37\u0E2D\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E2A\u0E32\u0E21\u0E32\u0E23\u0E16\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14\u0E1E\u0E34\u0E40\u0E28\u0E29\u0E44\u0E14\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48?</summary>
+            <p>\u0E44\u0E14\u0E49 \u0E04\u0E25\u0E34\u0E01 <strong>\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E41\u0E1A\u0E1A\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E40\u0E2D\u0E07</strong> \u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E41\u0E25\u0E49\u0E27\u0E2A\u0E48\u0E07\u0E04\u0E33\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E04\u0E27\u0E23\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E14\u0E39\u0E41\u0E25\u0E23\u0E31\u0E01\u0E29\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E1C\u0E49\u0E32\u0E17\u0E38\u0E01\u0E0A\u0E19\u0E34\u0E14\u0E02\u0E2D\u0E07 MildMate \u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49\u0E17\u0E35\u0E48\u0E2D\u0E38\u0E13\u0E2B\u0E20\u0E39\u0E21\u0E34\u0E1B\u0E32\u0E19\u0E01\u0E25\u0E32\u0E07 (40\xB0C / 104\xB0F) \u0E2B\u0E49\u0E32\u0E21\u0E43\u0E0A\u0E49\u0E19\u0E49\u0E33\u0E22\u0E32\u0E1F\u0E2D\u0E01\u0E02\u0E32\u0E27 \u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E15\u0E32\u0E01\u0E41\u0E2B\u0E49\u0E07\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E48\u0E21\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E40\u0E2A\u0E49\u0E19\u0E43\u0E22\u0E23\u0E30\u0E22\u0E30\u0E22\u0E32\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E19\u0E32\u0E19\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48?</summary>
+            <p>\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E17\u0E35\u0E48\u0E42\u0E23\u0E07\u0E07\u0E32\u0E19\u0E43\u0E19\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22 \u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E02\u0E36\u0E49\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E01\u0E31\u0E1A\u0E1B\u0E25\u0E32\u0E22\u0E17\u0E32\u0E07\u0E41\u0E25\u0E30\u0E08\u0E30\u0E41\u0E08\u0E49\u0E07\u0E43\u0E2B\u0E49\u0E17\u0E23\u0E32\u0E1A\u0E43\u0E19\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E2B\u0E23\u0E37\u0E2D\u0E04\u0E33\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
+          </details>`;
+var TH_MARINE_FAQ_INNER = `<details class="faq-item" open>
+            <summary>\u0E04\u0E27\u0E23\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E01\u0E35\u0E48\u0E22\u0E27\u0E01\u0E31\u0E1A\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32\u0E41\u0E25\u0E30\u0E01\u0E32\u0E23\u0E14\u0E39\u0E41\u0E25\u0E23\u0E31\u0E01\u0E29\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E1C\u0E49\u0E32 CloudSoft \u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E0B\u0E31\u0E01\u0E40\u0E04\u0E23\u0E37\u0E48\u0E2D\u0E07\u0E44\u0E14\u0E49 \u0E41\u0E2B\u0E49\u0E07\u0E40\u0E23\u0E47\u0E27 \u0E17\u0E19\u0E17\u0E32\u0E19\u0E15\u0E48\u0E2D\u0E2A\u0E20\u0E32\u0E1E\u0E41\u0E27\u0E14\u0E25\u0E49\u0E2D\u0E21\u0E17\u0E32\u0E07\u0E17\u0E30\u0E40\u0E25 \u0E2B\u0E49\u0E32\u0E21\u0E43\u0E0A\u0E49\u0E19\u0E49\u0E33\u0E22\u0E32\u0E1F\u0E2D\u0E01\u0E02\u0E32\u0E27 \u0E41\u0E19\u0E30\u0E19\u0E33\u0E43\u0E2B\u0E49\u0E15\u0E32\u0E01\u0E41\u0E2B\u0E49\u0E07\u0E43\u0E19\u0E17\u0E35\u0E48\u0E23\u0E48\u0E21\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E40\u0E2A\u0E49\u0E19\u0E43\u0E22\u0E23\u0E30\u0E22\u0E30\u0E22\u0E32\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
+            <p>\u0E43\u0E0A\u0E49<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E40\u0E1B\u0E47\u0E19\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E2D\u0E49\u0E32\u0E07\u0E2D\u0E34\u0E07 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E40\u0E15\u0E35\u0E22\u0E07\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19 \u0E41\u0E25\u0E49\u0E27\u0E01\u0E23\u0E2D\u0E01\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27\u0E02\u0E2D\u0E07\u0E41\u0E15\u0E48\u0E25\u0E30\u0E14\u0E49\u0E32\u0E19\u0E43\u0E2B\u0E49\u0E15\u0E23\u0E07\u0E15\u0E32\u0E21\u0E17\u0E35\u0E48\u0E27\u0E31\u0E14\u0E44\u0E14\u0E49\u0E08\u0E23\u0E34\u0E07 \u0E23\u0E30\u0E1A\u0E38\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E19\u0E32\u0E02\u0E2D\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E2B\u0E49\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E1E\u0E2D\u0E14\u0E35\u0E41\u0E1A\u0E1A\u0E01\u0E33\u0E2B\u0E19\u0E14\u0E40\u0E2D\u0E07</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E25\u0E30\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E19\u0E32\u0E19\u0E40\u0E17\u0E48\u0E32\u0E44\u0E2B\u0E23\u0E48?</summary>
+            <p>\u0E1C\u0E25\u0E34\u0E15\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C\u0E15\u0E32\u0E21\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E41\u0E25\u0E30\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E43\u0E0A\u0E49\u0E40\u0E27\u0E25\u0E32\u0E1C\u0E25\u0E34\u0E15 5\u20137 \u0E27\u0E31\u0E19\u0E17\u0E33\u0E01\u0E32\u0E23 \u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E02\u0E36\u0E49\u0E19\u0E2D\u0E22\u0E39\u0E48\u0E01\u0E31\u0E1A\u0E1B\u0E25\u0E32\u0E22\u0E17\u0E32\u0E07 \u0E04\u0E38\u0E13\u0E08\u0E30\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E1E\u0E31\u0E2A\u0E14\u0E38\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E41\u0E25\u0E49\u0E27</p>
+          </details>
+          <details class="faq-item">
+            <summary>\u0E16\u0E49\u0E32\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E44\u0E21\u0E48\u0E2D\u0E22\u0E39\u0E48\u0E43\u0E19\u0E25\u0E34\u0E2A\u0E15\u0E4C\u0E25\u0E48\u0E30?</summary>
+            <p>\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E43\u0E01\u0E25\u0E49\u0E40\u0E04\u0E35\u0E22\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14\u0E41\u0E25\u0E30\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32 \u2014 \u0E40\u0E23\u0E32\u0E1C\u0E25\u0E34\u0E15\u0E15\u0E32\u0E21\u0E41\u0E1A\u0E1A\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 \u0E2B\u0E23\u0E37\u0E2D<a href="/th/contact/">\u0E15\u0E34\u0E14\u0E15\u0E48\u0E2D\u0E40\u0E23\u0E32</a>\u0E42\u0E14\u0E22\u0E15\u0E23\u0E07\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E41\u0E19\u0E1A\u0E20\u0E32\u0E1E\u0E27\u0E32\u0E14\u0E2B\u0E23\u0E37\u0E2D\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</p>
+          </details>`;
+var MARINE_FAQ_SLUGS = /* @__PURE__ */ new Set(["marine-fitted-sheet", "marine-top-sheet", "marine-mattress-protector"]);
+var TH_BREADCRUMB_CATEGORY_LABELS = {
+  "/sheets/": "\u0E1C\u0E49\u0E32\u0E1B\u0E39\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19",
+  "/duvet-covers/": "\u0E1B\u0E25\u0E2D\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21",
+  "/pillowcases/": "\u0E1B\u0E25\u0E2D\u0E01\u0E2B\u0E21\u0E2D\u0E19",
+  "/protection/": "\u0E1C\u0E25\u0E34\u0E15\u0E20\u0E31\u0E13\u0E11\u0E4C\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07",
+  "/accessories/": "\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C\u0E40\u0E2A\u0E23\u0E34\u0E21"
+};
+var TH_MARINE_SHAPE_LABELS = [
+  [/Choose Your Boat Mattress Shape/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13"],
+  [/— Select a shape —/g, "\u2014 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07 \u2014"],
+  [/Select a shape above to see the measurement diagram/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E14\u0E49\u0E32\u0E19\u0E1A\u0E19\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E14\u0E39\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14"]
+];
+var TH_STATIC_HTML_REPLACEMENTS = [
+  // Configurator dimension labels
+  [/<label for="dim-width">Width \(W\)<\/label>/g, '<label for="dim-width">\u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W)</label>'],
+  [/<label for="dim-length">Length \(L\)<\/label>/g, '<label for="dim-length">\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L)</label>'],
+  [/<label for="dim-depth">Depth \(D\)<\/label>/g, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E25\u0E36\u0E01 (D)</label>'],
+  // Price labels
+  [/<span class="price-label">Estimated price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32\u0E1B\u0E23\u0E30\u0E21\u0E32\u0E13\u0E01\u0E32\u0E23</span>'],
+  [/<span class="price-label">Price<\/span>/g, '<span class="price-label">\u0E23\u0E32\u0E04\u0E32</span>'],
+  [/<span class="price-sub" id="price-top-sub">Starting from<\/span>/g, '<span class="price-sub" id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>'],
+  // Color picker label (preserves fabric name in English — fabric names stay EN)
+  [/<div class="panel-label">Color — /g, '<div class="panel-label">\u0E2A\u0E35 \u2014 '],
+  // Payment badges
+  [/<\/svg> Secure checkout<\/span>/g, "</svg> \u0E0A\u0E33\u0E23\u0E30\u0E40\u0E07\u0E34\u0E19\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22</span>"],
+  // Trust badges (OEKO label fallback) — Premium Quality (no space and with space)
+  [/<\/svg>Premium Quality<\/div>/g, "</svg>\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</div>"],
+  [/<\/svg> Premium Quality<\/div>/g, "</svg> \u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</div>"],
+  [/<\/svg>Premium Quality<\/span>/g, "</svg>\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>"],
+  // Trust badges (mobile, customizable template)
+  [/<\/svg>Custom Fit<\/div>/g, "</svg>\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>"],
+  [/<\/svg>Human Safe<\/div>/g, "</svg>\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>"],
+  [/<\/svg>Pet Resist<\/div>/g, "</svg>\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>"],
+  // Trust badges (desktop, all templates)
+  [/<\/svg> Top-Rated Etsy Boutique/g, "</svg> \u0E23\u0E49\u0E32\u0E19 Etsy \u0E17\u0E35\u0E48\u0E44\u0E14\u0E49\u0E23\u0E31\u0E1A\u0E04\u0E30\u0E41\u0E19\u0E19\u0E2A\u0E39\u0E07"],
+  [/<\/svg> Ships from Thailand/g, "</svg> \u0E08\u0E31\u0E14\u0E2A\u0E48\u0E07\u0E08\u0E32\u0E01\u0E1B\u0E23\u0E30\u0E40\u0E17\u0E28\u0E44\u0E17\u0E22"],
+  // Reviews section
+  [/<div class="reviews-header"><h2>Customer Reviews<\/h2><\/div>/g, '<div class="reviews-header"><h2>\u0E23\u0E35\u0E27\u0E34\u0E27\u0E08\u0E32\u0E01\u0E25\u0E39\u0E01\u0E04\u0E49\u0E32</h2></div>'],
+  [/id="product-review-count">Loading reviews\.\.\.<\/div>/g, 'id="product-review-count">\u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E23\u0E35\u0E27\u0E34\u0E27...</div>'],
+  [/<h2>You might also like<\/h2>/g, "<h2>\u0E2A\u0E34\u0E19\u0E04\u0E49\u0E32\u0E17\u0E35\u0E48\u0E04\u0E38\u0E13\u0E2D\u0E32\u0E08\u0E2A\u0E19\u0E43\u0E08</h2>"],
+  // Tags label (anchored on class context to avoid false matches)
+  [/text-transform:uppercase; letter-spacing:0\.08em; margin-right:4px;">Tags:<\/span>/g, 'text-transform:uppercase; letter-spacing:0.08em; margin-right:4px;">\u0E2B\u0E21\u0E27\u0E14\u0E2B\u0E21\u0E39\u0E48:</span>'],
+  // Marine template — fabric spec label + boat model prompt
+  [/<div class="spec-label">Fabric<\/div>/g, '<div class="spec-label">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</div>'],
+  // Configurator inline JS — single-fabric Fabric badge label
+  [/<div class="panel-label">Fabric<\/div>/g, '<div class="panel-label">\u0E40\u0E19\u0E37\u0E49\u0E2D\u0E1C\u0E49\u0E32</div>'],
+  [/Know your boat model\? Choose fixed-price option/g, "\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13? \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E32\u0E04\u0E32\u0E04\u0E07\u0E17\u0E35\u0E48"],
+  // Unit warning (configurator) — preserves <strong> markup
+  [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, "\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19: <strong>\u0E0B\u0E21.</strong> \u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E19\u0E34\u0E49\u0E27? \u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E40\u0E1B\u0E47\u0E19 <strong>\u0E19\u0E34\u0E49\u0E27</strong> \u0E01\u0E48\u0E2D\u0E19"]
+];
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
@@ -1619,7 +1705,8 @@ async function onRequest3(context) {
     const product = await stmt.first();
     const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
-    const localizedFaq = isTh ? String(product?.faq_th || "") : String(product?.faq_en || "");
+    const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
+    const localizedFaq = isTh ? String(product?.faq_th || thFaqFallback) : String(product?.faq_en || "");
     html = applyLocalizedFaqFromD1(html, localizedFaq);
     if (isTh) {
       html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""), slug);
@@ -1653,6 +1740,32 @@ async function onRequest3(context) {
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
         `$1${title}$2`
       );
+    }
+    if (isTh) {
+      html = html.replace(
+        /<nav class="product-breadcrumb"[\s\S]*?<\/nav>/i,
+        (navBlock) => {
+          let patched = navBlock;
+          for (const [catUrl, thLabel] of Object.entries(TH_BREADCRUMB_CATEGORY_LABELS)) {
+            const re = new RegExp(
+              '(<a href="' + catUrl.replace(/\//g, "\\/") + '"[^>]*>)([\\s\\S]*?)(<\\/a>)',
+              "g"
+            );
+            patched = patched.replace(re, (_m, open, _text, close) => `${open}${thLabel}${close}`);
+          }
+          patched = patched.replace(
+            /(<a href="\/"[^>]*>)Home(<\/a>)/,
+            "$1\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E23\u0E01$2"
+          );
+          return patched;
+        }
+      );
+      for (const [re, thLabel] of TH_MARINE_SHAPE_LABELS) {
+        html = html.replace(re, thLabel);
+      }
+      for (const [re, thLabel] of TH_STATIC_HTML_REPLACEMENTS) {
+        html = html.replace(re, thLabel);
+      }
     }
     {
       const enPath = `/product/${slug}/`;
@@ -2486,7 +2599,7 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response2 = {
+      const response3 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
@@ -2497,9 +2610,9 @@ async function handlePricing(request, env) {
         derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
-        response2.breakdown = resultUsd.breakdown;
+        response3.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response2), {
+      return new Response(JSON.stringify(response3), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -5639,6 +5752,14 @@ function dayRangeWhere(f, col = "order_day") {
   return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
 }
 __name(dayRangeWhere, "dayRangeWhere");
+function shiftIsoDate(isoDay, deltaDays) {
+  if (!DATE_RE.test(isoDay)) return null;
+  const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
+  if (isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
+}
+__name(shiftIsoDate, "shiftIsoDate");
 async function getSummary(env, f) {
   const range = dayRangeWhere(f);
   const binds = [...range.binds];
@@ -5872,6 +5993,204 @@ async function getChannels(env, f) {
   });
 }
 __name(getChannels, "getChannels");
+async function getGsc(env, f) {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.query_norm) AS queries,
+         COUNT(DISTINCT g.page_path) AS pages,
+         COALESCE(SUM(g.clicks), 0) AS clicks,
+         COALESCE(SUM(g.impressions), 0) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.clicks ELSE 0 END), 0) AS mapped_clicks,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.impressions ELSE 0 END), 0) AS mapped_impressions
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         COUNT(DISTINCT g.query_norm) AS queries,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, g.page_path
+       LIMIT 15`
+    ).bind(...binds).all();
+    const topQueries = await env.DB.prepare(
+      `SELECT
+         MIN(g.query_text) AS query_text,
+         COUNT(DISTINCT g.page_path) AS pages,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.query_norm
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, MIN(g.query_text)
+       LIMIT 20`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      ctr_28d: null,
+      avg_position_28d: null,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      ctr_prev_28d: null,
+      avg_position_prev_28d: null,
+      clicks_growth_pct: null,
+      impressions_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevClicks = Number(prev?.clicks || 0);
+        const prevImpr = Number(prev?.impressions || 0);
+        const curClicks = Number(cur?.clicks || 0);
+        const curImpr = Number(cur?.impressions || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          clicks_28d: curClicks,
+          impressions_28d: curImpr,
+          ctr_28d: cur?.ctr_pct === null || cur?.ctr_pct === void 0 ? null : Number(cur.ctr_pct),
+          avg_position_28d: cur?.avg_position === null || cur?.avg_position === void 0 ? null : Number(cur.avg_position),
+          clicks_prev_28d: prevClicks,
+          impressions_prev_28d: prevImpr,
+          ctr_prev_28d: prev?.ctr_pct === null || prev?.ctr_pct === void 0 ? null : Number(prev.ctr_pct),
+          avg_position_prev_28d: prev?.avg_position === null || prev?.avg_position === void 0 ? null : Number(prev.avg_position),
+          clicks_growth_pct: prevClicks > 0 ? Math.round((curClicks - prevClicks) * 1e4 / prevClicks) / 100 : null,
+          impressions_growth_pct: prevImpr > 0 ? Math.round((curImpr - prevImpr) * 1e4 / prevImpr) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const gscDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    const latestSyncAt = fresh?.last_sync_at || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (gscDays !== null && gscDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json5({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        queries: Number(summary?.queries || 0),
+        pages: Number(summary?.pages || 0),
+        clicks: Number(summary?.clicks || 0),
+        impressions: Number(summary?.impressions || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === void 0 ? null : Number(summary.ctr_pct),
+        avg_position: summary?.avg_position === null || summary?.avg_position === void 0 ? null : Number(summary.avg_position),
+        mapped_clicks: Number(summary?.mapped_clicks || 0),
+        mapped_impressions: Number(summary?.mapped_impressions || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: gscDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: latestSyncAt,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+      },
+      top_pages: topPages.results || [],
+      top_queries: topQueries.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: gsc_search_daily") || msg.includes("no such table: analysis_gsc_freshness")) {
+      return json5({
+        success: true,
+        available: false,
+        message: "GSC schema is not available in this environment yet. Apply migration 046_gsc_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err("GSC_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGsc, "getGsc");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -5927,6 +6246,12 @@ async function getDataQuality(env) {
      GROUP BY co.channel_norm
      ORDER BY orders DESC, co.channel_norm`
   ).all();
+  let gscFreshness = null;
+  try {
+    gscFreshness = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+  } catch {
+    gscFreshness = null;
+  }
   let freshnessMinutes = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
   if (rawTs) {
@@ -5965,6 +6290,13 @@ async function getDataQuality(env) {
   if (Number(dq.unknown_status_orders || 0) > 0) warn(dq.unknown_status_orders + " order(s) have an unknown status value.");
   if (Number(dq.unknown_source_labels || 0) > 0) warn(dq.unknown_source_labels + " unknown source label(s) present.");
   if (zeroTotalOrders > 0) warn(zeroTotalOrders + " commercial order(s) have a null/zero order total (business rules require a positive total).");
+  const gscRows = Number(gscFreshness?.total_rows || 0);
+  const gscDays = gscFreshness?.days_since_latest_report === null || gscFreshness?.days_since_latest_report === void 0 ? null : Number(gscFreshness.days_since_latest_report);
+  const gscLastStatus = String(gscFreshness?.last_sync_status || "").toLowerCase();
+  if (gscRows > 0) {
+    if (gscDays !== null && gscDays > 4) warn("GSC freshness is " + gscDays + " days old (threshold 4).");
+    if (["failed", "partial", "error"].includes(gscLastStatus)) warn("Latest GSC sync run status: " + gscLastStatus + ".");
+  }
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
   return json5({
@@ -5986,6 +6318,18 @@ async function getDataQuality(env) {
     },
     recent_runs: runs.results || [],
     channel_freshness: freshness.results || [],
+    gsc_freshness: {
+      available: !!gscFreshness,
+      total_rows: gscRows,
+      latest_report_date: gscFreshness?.latest_report_date || null,
+      days_since_latest_report: gscDays,
+      last_success_sync_at: gscFreshness?.last_success_sync_at || null,
+      last_sync_at: gscFreshness?.last_sync_at || null,
+      last_sync_status: gscLastStatus || null,
+      sync_errors_7d: Number(gscFreshness?.sync_errors_7d || 0),
+      status: gscRows === 0 ? "empty" : gscDays !== null && gscDays > 4 || ["failed", "partial", "error"].includes(gscLastStatus) ? "warning" : "ok",
+      caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+    },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
       last_order_day: spanRow?.last_order_day ?? null,
@@ -6107,6 +6451,7 @@ async function handleAdminAnalysis(request, env) {
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
+  if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
@@ -12012,6 +12357,382 @@ async function handleColorInventory(request, env) {
 }
 __name(handleColorInventory, "handleColorInventory");
 
+// ../workers/api/gsc.ts
+var GSC_SERVICE_NAME = "mildmate-gsc-api";
+var GSC_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE2 = /^\d{4}-\d{2}-\d{2}$/;
+var ALLOWED_DEVICE = /* @__PURE__ */ new Set(["", "DESKTOP", "MOBILE", "TABLET"]);
+var ALLOWED_SEARCH_TYPE = /* @__PURE__ */ new Set(["web", "image", "video", "news", "discover", "google_news"]);
+function response2(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response2, "response");
+function trimTo2(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo2, "trimTo");
+function toNum2(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum2, "toNum");
+function normalizeDate(v) {
+  const s = trimTo2(v, 20);
+  if (!DATE_RE2.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate, "normalizeDate");
+function normalizeQuery(v) {
+  const queryText = trimTo2(v, 1e3);
+  if (!queryText) throw new Error("query is required");
+  const queryNorm = queryText.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!queryNorm) throw new Error("query is required");
+  return { queryText, queryNorm };
+}
+__name(normalizeQuery, "normalizeQuery");
+function normalizeCountry(v) {
+  return trimTo2(v, 20).toUpperCase();
+}
+__name(normalizeCountry, "normalizeCountry");
+function normalizeDevice(v) {
+  const device = trimTo2(v, 20).toUpperCase();
+  if (!ALLOWED_DEVICE.has(device)) throw new Error("device must be one of: DESKTOP, MOBILE, TABLET");
+  return device;
+}
+__name(normalizeDevice, "normalizeDevice");
+function normalizeSearchType(v) {
+  const t = trimTo2(v, 40).toLowerCase() || "web";
+  if (!ALLOWED_SEARCH_TYPE.has(t)) throw new Error("search_type is invalid");
+  return t;
+}
+__name(normalizeSearchType, "normalizeSearchType");
+function normalizeSearchAppearance(v) {
+  return trimTo2(v, 120);
+}
+__name(normalizeSearchAppearance, "normalizeSearchAppearance");
+function normalizePage(pageRaw, propertyHintRaw) {
+  const raw = trimTo2(pageRaw, 2e3);
+  if (!raw) throw new Error("page is required");
+  let pageUrl = raw;
+  let pagePath = raw;
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const u = new URL(raw);
+      const path = u.pathname || "/";
+      pagePath = path;
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${path}`;
+    } else if (raw.startsWith("/")) {
+      pagePath = raw;
+      const propertyHint = trimTo2(propertyHintRaw, 300);
+      if (propertyHint.startsWith("http://") || propertyHint.startsWith("https://")) {
+        const p = new URL(propertyHint);
+        pageUrl = `${p.protocol}//${p.hostname.toLowerCase()}${raw}`;
+      } else if (propertyHint.startsWith("sc-domain:")) {
+        const host = propertyHint.slice("sc-domain:".length).trim().toLowerCase();
+        if (host) pageUrl = `https://${host}${raw}`;
+      } else {
+        pageUrl = raw;
+      }
+    } else {
+      pagePath = "/" + raw;
+      pageUrl = pagePath;
+    }
+  } catch {
+    if (!raw.startsWith("/")) pagePath = "/" + raw;
+    pageUrl = pagePath;
+  }
+  pagePath = pagePath.replace(/\\/g, "/");
+  pagePath = pagePath.replace(/\/{2,}/g, "/");
+  if (!pagePath.startsWith("/")) pagePath = "/" + pagePath;
+  if (pagePath.length > 1 && pagePath.endsWith("/")) pagePath = pagePath.slice(0, -1);
+  if (!pageUrl.startsWith("http://") && !pageUrl.startsWith("https://")) {
+    pageUrl = pagePath;
+  } else {
+    try {
+      const u = new URL(pageUrl);
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${pagePath}`;
+    } catch {
+    }
+  }
+  return { pageUrl: pageUrl.slice(0, 2e3), pagePath: pagePath.slice(0, 1e3) };
+}
+__name(normalizePage, "normalizePage");
+function extractProductSlug(pagePath) {
+  const m = pagePath.match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]).trim().toLowerCase();
+  } catch {
+    return m[1].trim().toLowerCase();
+  }
+}
+__name(extractProductSlug, "extractProductSlug");
+function sameNullable(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable, "sameNullable");
+function sameNullableNum(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum, "sameNullableNum");
+async function requireBearerAuth2(request, env) {
+  const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth2, "requireBearerAuth");
+async function createSyncRun2(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun2, "createSyncRun");
+async function finishSyncRun2(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun2, "finishSyncRun");
+async function resolveProductIdBySlug(env, slug, cache) {
+  if (cache.has(slug)) return cache.get(slug) || null;
+  const row = await env.DB.prepare(
+    `SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`
+  ).bind(slug).first();
+  const id = row && row.id ? Number(row.id) : null;
+  cache.set(slug, id);
+  return id;
+}
+__name(resolveProductIdBySlug, "resolveProductIdBySlug");
+async function handleRowsUpsert(request, env) {
+  const auth = await requireBearerAuth2(request, env);
+  if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response2({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response2({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo2(body.sync_source, 80) || "gsc-make-collector";
+  const scenario = trimTo2(body.scenario, 200) || "phase09-gsc-collector";
+  const propertyHint = trimTo2(body.property || body.site_url || body.site, 300);
+  const runId = await createSyncRun2(env, source, scenario, rowsRaw.length);
+  const slugCache = /* @__PURE__ */ new Map();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate(raw.date || raw.report_date);
+        const q = normalizeQuery(raw.query || raw.query_text);
+        const page = normalizePage(raw.page || raw.page_url || raw.landing_page, propertyHint);
+        const country = normalizeCountry(raw.country);
+        const device = normalizeDevice(raw.device);
+        const searchType = normalizeSearchType(raw.search_type);
+        const searchAppearance = normalizeSearchAppearance(raw.search_appearance);
+        const clicksNum = toNum2(raw.clicks);
+        if (clicksNum === null || clicksNum < 0) throw new Error("clicks must be a non-negative number");
+        const impressionsNum = toNum2(raw.impressions);
+        if (impressionsNum === null || impressionsNum < 0) throw new Error("impressions must be a non-negative number");
+        const clicks = Math.round(clicksNum);
+        const impressions = Math.round(impressionsNum);
+        const ctrInput = toNum2(raw.ctr);
+        const ctr = ctrInput === null ? impressions > 0 ? Math.round(clicks / impressions * 1e6) / 1e6 : null : ctrInput;
+        const position = toNum2(raw.position);
+        if (position !== null && position < 0) throw new Error("position must be >= 0");
+        const slug = extractProductSlug(page.pagePath);
+        let productId = null;
+        let mappingScope = "non_product";
+        if (slug) {
+          productId = await resolveProductIdBySlug(env, slug, slugCache);
+          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, query_text, page_path, clicks, impressions, ctr, position, product_id, mapping_scope
+           FROM gsc_search_daily
+           WHERE report_date = ?1 AND query_norm = ?2 AND page_url = ?3
+             AND country = ?4 AND device = ?5 AND search_type = ?6 AND search_appearance = ?7
+           LIMIT 1`
+        ).bind(reportDate, q.queryNorm, page.pageUrl, country, device, searchType, searchAppearance).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO gsc_search_daily
+             (report_date, query_text, query_norm, page_url, page_path, country, device, search_type, search_appearance,
+              clicks, impressions, ctr, position, product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`
+          ).bind(
+            reportDate,
+            q.queryText,
+            q.queryNorm,
+            page.pageUrl,
+            page.pagePath,
+            country,
+            device,
+            searchType,
+            searchAppearance,
+            clicks,
+            impressions,
+            ctr,
+            position,
+            productId,
+            mappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable(existing.query_text, q.queryText) && sameNullable(existing.page_path, page.pagePath) && Number(existing.clicks || 0) === clicks && Number(existing.impressions || 0) === impressions && sameNullableNum(existing.ctr, ctr) && sameNullableNum(existing.position, position) && sameNullable(existing.product_id, productId) && sameNullable(existing.mapping_scope, mappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE gsc_search_daily
+           SET query_text = ?1,
+               page_path = ?2,
+               clicks = ?3,
+               impressions = ?4,
+               ctr = ?5,
+               position = ?6,
+               product_id = ?7,
+               mapping_scope = ?8,
+               source_updated_at = ?9,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?10`
+        ).bind(
+          q.queryText,
+          page.pagePath,
+          clicks,
+          impressions,
+          ctr,
+          position,
+          productId,
+          mappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun2(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response2({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun2(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response2(
+      {
+        success: false,
+        error_code: "GSC_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert, "handleRowsUpsert");
+async function handleGscApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
+  if (method === "OPTIONS") return response2({ ok: true });
+  if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
+    return response2({ ok: true, service: GSC_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
+    return handleRowsUpsert(request, env);
+  }
+  return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
+}
+__name(handleGscApi, "handleGscApi");
+
 // api/[[path]].ts
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url5(url) {
@@ -12043,6 +12764,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  if (path.startsWith("/api/v1/gsc")) {
+    const gscRes = await handleGscApi(request, env);
+    if (gscRes) return gscRes;
+  }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
     const salesRes = await handleSalesApi(request, env);
     if (salesRes) return salesRes;
@@ -13740,10 +14465,10 @@ async function onRequest12(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response2 = await context.next();
-  const contentType = response2.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response2;
-  let html = await response2.text();
+  const response3 = await context.next();
+  const contentType = response3.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response3;
+  let html = await response3.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -13829,11 +14554,11 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response2.status, headers: response2.headers });
+  return new Response(html, { status: response3.status, headers: response3.headers });
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-HASSdo/functionsRoutes-0.6255173493488387.mjs
+// ../.wrangler/tmp/pages-llZAUi/functionsRoutes-0.11785667564582558.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -14349,35 +15074,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response2 = await handler(context);
-        if (!(response2 instanceof Response)) {
+        const response3 = await handler(context);
+        if (!(response3 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response2);
+        return cloneResponse(response3);
       } else if ("ASSETS") {
-        const response2 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response2);
+        const response3 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response3);
       } else {
-        const response2 = await fetch(request);
-        return cloneResponse(response2);
+        const response3 = await fetch(request);
+        return cloneResponse(response3);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response2 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response2);
+        const response3 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response3);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response2) => (
+var cloneResponse = /* @__PURE__ */ __name((response3) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response2.status) ? null : response2.body,
-    response2
+    [101, 204, 205, 304].includes(response3.status) ? null : response3.body,
+    response3
   )
 ), "cloneResponse");
 export {

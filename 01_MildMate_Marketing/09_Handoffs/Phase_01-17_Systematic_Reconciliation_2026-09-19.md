@@ -71,3 +71,17 @@ D1 sales_orders / sales_order_items
 
 - The Make.com scenario `MildMate - Notion OrderList to D1 Sales Sync` is **permanently retired** (stays OFF; safe to archive/delete in Make.com).
 - Make.com's remaining role is exclusively **channel→Notion** ingestion — the Worker never creates OrderList records, so those import scenarios must remain active or the Worker will find nothing new to sync.
+
+## 7. Addendum — Phase 09 build status (2026-09-24)
+
+Phase 09 is no longer "not started" in the repository:
+
+- Added migration `046_gsc_analytics.sql` (`gsc_search_daily` + `analysis_gsc_*` views)
+- Added authenticated ingestion API (`workers/api/gsc.ts`) at `/api/v1/gsc/*`
+- Added admin read route `GET /api/admin/analysis/gsc`
+- Extended data-quality payload with `gsc_freshness`
+- Added GSC section to Data Analyst dashboard (`/super-admin/marketing/data-analyst/`)
+
+Current state remains **not production-verified**:
+- Make.com scenario wiring is operator-side and still pending
+- First live GSC reconciliation (clicks/impressions vs sampled GSC reports) is still pending

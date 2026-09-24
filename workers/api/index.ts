@@ -43,6 +43,7 @@ import { handleAuth } from "./auth";
 import { handleCustomers } from "./customers";
 import { handleOrderConfirmed } from "./order-confirmed";
 import { handleSalesApi } from "./sales";
+import { handleGscApi } from "./gsc";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -54,6 +55,12 @@ export default {
       return new Response(JSON.stringify({ status: "ok", project: "mildmate-new" }), {
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Phase 09 — GSC collector API (token-auth upsert under /v1/gsc/* and /api/v1/gsc/*)
+    if (path.startsWith("/v1/gsc") || path.startsWith("/api/v1/gsc")) {
+      const gscRes = await handleGscApi(request, env);
+      if (gscRes) return gscRes;
     }
 
     // Unified sales API (supports /v1/* and /api/v1/*)

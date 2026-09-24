@@ -123,7 +123,7 @@ Verified state to preserve in future sessions:
 - **Make.com flow `MildMate - Notion OrderList to D1 Sales Sync`:** built + end-to-end verified in Sep 2026, then **permanently retired without activation** — superseded by the Phase 17 Worker, which reads Notion directly (final decision 2026-09-19; see Update below).
 - **Historical product mapping:** partial; resolver automation workflow is design/handoff only and not production-verified.
 - **D1 → Google Product Master auto-sync:** pending; `Last_Synced_At` is not yet a trusted production signal.
-- **External collectors (GSC/GA4/Etsy performance/Google Ads/Meta Ads):** pending Phase 3 work.
+- **External collectors:** GSC collector layer is implemented in-repo (2026-09-24) but not production-verified yet (pending migration/deploy + first live reconciliation). GA4/Etsy performance/Google Ads/Meta Ads remain pending.
 - **Commercial reporting guardrail:** exclude known smoke-test order (`TEST-MAKE-001`) from business KPIs.
 
 Status taxonomy for this workstream:
@@ -137,7 +137,8 @@ Full evidence-based reconciliation of all 17 phase checklists: `01_MildMate_Mark
 - **Phases 01–07: ✅ complete and production-verified** (audit report, metric dictionary, 10 analysis views in migration 042 — earlier "11 views" claims were a miscount — 6 analysis API routes, Data Analyst dashboard at `/super-admin/marketing/data-analyst/`, data-quality/sync monitor, direct Notion mapper). Phase 07's v1 Make.com auto-mapper design was superseded by the v2 direct mapper (syncs only human-confirmed `Mapped` records; never maps or guesses).
 - **Phase 08: ✅ complete (final item closed 2026-09-20)** — historical backfill done: 493 orders / 737 items / ฿1,552,277.63 in prod `sales_orders`; all 18 held records resolved; Data Analyst dashboard "Historical Coverage" card built (`coverage` block on `/api/admin/analysis/data-quality`: span 2023-07-19 → 2026-09-10, 483 commercial orders, 7 channels, per-year thin/partial flags, per-channel first/last order dates; mirrored in `public/index.js` + `public/_worker.js`).
 - **Phase 17: ✅ deployed and OPERATIONAL (go-live 2026-09-19)** — Worker `mildmate-marketing-sync` at `https://mildmate-marketing-sync.nara19080.workers.dev`, all 4 secrets set; migration 045 applied to prod (initially missed after deploy, fixed same day); controlled test passed (`sync_runs` id 503, success, 5/5 `skipped_unchanged`). Schedule: main run 1st/15th 02:00 UTC + hourly drain. Note: `wrangler d1 execute --remote --file` fails with auth code 10000 on this account (file-import endpoint); run migration SQL via `--command` instead.
-- **Phases 09–16: ⬜ not started** (verified: no artifacts in repo or prod D1).
+- **Phase 09 (GSC): 🟡 implemented in repo (2026-09-24), pending production verification** — migration `046_gsc_analytics.sql`, ingestion API `/api/v1/gsc/*`, analysis endpoint `/api/admin/analysis/gsc`, and Data Analyst GSC section are built; Make.com wiring + first live reconciliation still pending.
+- **Phases 10–16: ⬜ not started** (verified in repo and prod D1 at 2026-09-24 checkpoint).
 - **Final pipeline architecture (user decision 2026-09-19):** Make.com is **not** used for Notion→D1 sync — the Worker reads Notion directly. Division of labor: (1) **Make.com = channel→Notion** order ingestion only (ongoing imports + any historical backfill; these scenarios must stay active, since the Worker never creates OrderList records); (2) **Human = mapping confirmation** in Notion (`Product_Mapping_Status = Mapped`; the system never maps or guesses); (3) **Worker = Notion→D1** (direct, scheduled, replaces the Make.com sales-sync scenario entirely — that scenario stays OFF permanently and is safe to archive/delete in Make.com).
 
 ---

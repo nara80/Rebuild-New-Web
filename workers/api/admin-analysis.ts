@@ -7,6 +7,7 @@
 // GET /api/admin/analysis/product/:id
 // GET /api/admin/analysis/channels      ?start&end
 // GET /api/admin/analysis/data-quality
+// GET /api/admin/analysis/gsc           ?start&end&product_id
 //
 // Reads ONLY the analysis_* views from migration 042 (plus products for titles).
 // Metric semantics: 01_MildMate_Marketing/02_Metric_Dictionary/Phase_02_Metric_Contract_2026-09-07.md
@@ -213,6 +214,14 @@ function dayRangeWhere(f: Filters, col = "order_day"): { sql: string; binds: any
   if (f.start) { parts.push(`${col} >= ?`); binds.push(f.start); }
   if (f.end) { parts.push(`${col} <= ?`); binds.push(f.end); }
   return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
+}
+
+function shiftIsoDate(isoDay: string, deltaDays: number): string | null {
+  if (!DATE_RE.test(isoDay)) return null;
+  const d = new Date(isoDay + "T00:00:00Z");
+  if (isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  return d.toISOString().slice(0, 10);
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────────────
@@ -443,6 +452,217 @@ async function getChannels(env: any, f: Filters): Promise<Response> {
   });
 }
 
+async function getGsc(env: any, f: Filters): Promise<Response> {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds: any[] = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+
+  try {
+    const summary: any = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.query_norm) AS queries,
+         COUNT(DISTINCT g.page_path) AS pages,
+         COALESCE(SUM(g.clicks), 0) AS clicks,
+         COALESCE(SUM(g.impressions), 0) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.clicks ELSE 0 END), 0) AS mapped_clicks,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.impressions ELSE 0 END), 0) AS mapped_impressions
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         COUNT(DISTINCT g.query_norm) AS queries,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, g.page_path
+       LIMIT 15`
+    ).bind(...binds).all();
+
+    const topQueries = await env.DB.prepare(
+      `SELECT
+         MIN(g.query_text) AS query_text,
+         COUNT(DISTINCT g.page_path) AS pages,
+         SUM(g.clicks) AS clicks,
+         SUM(g.impressions) AS impressions,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(g.impressions) > 0
+              THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+         END AS avg_position
+       FROM gsc_search_daily g
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.query_norm
+       ORDER BY SUM(g.clicks) DESC, SUM(g.impressions) DESC, MIN(g.query_text)
+       LIMIT 20`
+    ).bind(...binds).all();
+
+    const fresh: any = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+
+    let trend: any = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      ctr_28d: null,
+      avg_position_28d: null,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      ctr_prev_28d: null,
+      avg_position_prev_28d: null,
+      clicks_growth_pct: null,
+      impressions_growth_pct: null,
+    };
+
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds: any[] = [currentStart, anchorDate];
+        const prevBinds: any[] = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+
+        const prev: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.clicks), 0) AS clicks,
+             COALESCE(SUM(g.impressions), 0) AS impressions,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(g.clicks) * 100.0 / SUM(g.impressions), 2)
+             END AS ctr_pct,
+             CASE WHEN SUM(g.impressions) > 0
+                  THEN ROUND(SUM(COALESCE(g.position, 0) * g.impressions) * 1.0 / SUM(g.impressions), 2)
+             END AS avg_position
+           FROM gsc_search_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+
+        const prevClicks = Number(prev?.clicks || 0);
+        const prevImpr = Number(prev?.impressions || 0);
+        const curClicks = Number(cur?.clicks || 0);
+        const curImpr = Number(cur?.impressions || 0);
+
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          clicks_28d: curClicks,
+          impressions_28d: curImpr,
+          ctr_28d: cur?.ctr_pct === null || cur?.ctr_pct === undefined ? null : Number(cur.ctr_pct),
+          avg_position_28d: cur?.avg_position === null || cur?.avg_position === undefined ? null : Number(cur.avg_position),
+          clicks_prev_28d: prevClicks,
+          impressions_prev_28d: prevImpr,
+          ctr_prev_28d: prev?.ctr_pct === null || prev?.ctr_pct === undefined ? null : Number(prev.ctr_pct),
+          avg_position_prev_28d: prev?.avg_position === null || prev?.avg_position === undefined ? null : Number(prev.avg_position),
+          clicks_growth_pct: prevClicks > 0 ? Math.round(((curClicks - prevClicks) * 10000) / prevClicks) / 100 : null,
+          impressions_growth_pct: prevImpr > 0 ? Math.round(((curImpr - prevImpr) * 10000) / prevImpr) / 100 : null,
+        };
+      }
+    }
+
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const gscDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === undefined
+      ? null
+      : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    const latestSyncAt = fresh?.last_sync_at || null;
+    let freshnessStatus: "ok" | "warning" | "empty" = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (gscDays !== null && gscDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+
+    return json({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        queries: Number(summary?.queries || 0),
+        pages: Number(summary?.pages || 0),
+        clicks: Number(summary?.clicks || 0),
+        impressions: Number(summary?.impressions || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === undefined ? null : Number(summary.ctr_pct),
+        avg_position: summary?.avg_position === null || summary?.avg_position === undefined ? null : Number(summary.avg_position),
+        mapped_clicks: Number(summary?.mapped_clicks || 0),
+        mapped_impressions: Number(summary?.mapped_impressions || 0),
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: gscDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: latestSyncAt,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GSC data is typically delayed by 1–2 days; freshness warning threshold = 4 days.",
+      },
+      top_pages: topPages.results || [],
+      top_queries: topQueries.results || [],
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: gsc_search_daily") || msg.includes("no such table: analysis_gsc_freshness")) {
+      return json({
+        success: true,
+        available: false,
+        message: "GSC schema is not available in this environment yet. Apply migration 046_gsc_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId },
+      });
+    }
+    return err("GSC_QUERY_FAILED", msg, 500);
+  }
+}
+
 async function getDataQuality(env: any): Promise<Response> {
   const dq: any = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -507,6 +727,14 @@ async function getDataQuality(env: any): Promise<Response> {
      ORDER BY orders DESC, co.channel_norm`
   ).all();
 
+  let gscFreshness: any = null;
+  try {
+    gscFreshness = await env.DB.prepare(`SELECT * FROM analysis_gsc_freshness`).first();
+  } catch {
+    // Migration 046 may not exist yet in a given environment.
+    gscFreshness = null;
+  }
+
   // M22 freshness + M30 roll-up (contract: computed in code, not SQL)
   let freshnessMinutes: number | null = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
@@ -538,6 +766,16 @@ async function getDataQuality(env: any): Promise<Response> {
   if (Number(dq.unknown_source_labels || 0) > 0) warn(dq.unknown_source_labels + " unknown source label(s) present.");
   if (zeroTotalOrders > 0) warn(zeroTotalOrders + " commercial order(s) have a null/zero order total (business rules require a positive total).");
 
+  const gscRows = Number(gscFreshness?.total_rows || 0);
+  const gscDays = gscFreshness?.days_since_latest_report === null || gscFreshness?.days_since_latest_report === undefined
+    ? null
+    : Number(gscFreshness.days_since_latest_report);
+  const gscLastStatus = String(gscFreshness?.last_sync_status || "").toLowerCase();
+  if (gscRows > 0) {
+    if (gscDays !== null && gscDays > 4) warn("GSC freshness is " + gscDays + " days old (threshold 4).");
+    if (["failed", "partial", "error"].includes(gscLastStatus)) warn("Latest GSC sync run status: " + gscLastStatus + ".");
+  }
+
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
 
@@ -560,6 +798,20 @@ async function getDataQuality(env: any): Promise<Response> {
     },
     recent_runs: runs.results || [],
     channel_freshness: freshness.results || [],
+    gsc_freshness: {
+      available: !!gscFreshness,
+      total_rows: gscRows,
+      latest_report_date: gscFreshness?.latest_report_date || null,
+      days_since_latest_report: gscDays,
+      last_success_sync_at: gscFreshness?.last_success_sync_at || null,
+      last_sync_at: gscFreshness?.last_sync_at || null,
+      last_sync_status: gscLastStatus || null,
+      sync_errors_7d: Number(gscFreshness?.sync_errors_7d || 0),
+      status: gscRows === 0
+        ? "empty"
+        : ((gscDays !== null && gscDays > 4) || ["failed", "partial", "error"].includes(gscLastStatus) ? "warning" : "ok"),
+      caveat: "GSC data is typically delayed by 1–2 days; freshness warning threshold = 4 days.",
+    },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
       last_order_day: spanRow?.last_order_day ?? null,
@@ -692,6 +944,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
 
+  if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);

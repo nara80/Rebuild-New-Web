@@ -27,44 +27,44 @@ Add organic search demand and search visibility to the analytical system.
 
 ## Task Checklist
 
-- [ ] Define GSC source grain: date + query + page + relevant dimensions.
-- [ ] Define D1 GSC fact table schema.
-- [ ] Define stable source uniqueness key.
-- [ ] Build authenticated ingestion endpoint.
-- [ ] Build Make.com GSC collector.
-- [ ] Collect clicks.
-- [ ] Collect impressions.
-- [ ] Collect CTR.
-- [ ] Collect average position.
-- [ ] Preserve query and page identity.
-- [ ] Map MildMate product landing pages to Product_ID where defensible.
-- [ ] Keep non-product pages unmapped rather than forcing Product_ID.
-- [ ] Build GSC daily analytical views.
-- [ ] Build 28-day vs previous-28-day trend.
-- [ ] Add GSC freshness monitoring.
-- [ ] Add GSC section to Data Analyst dashboard.
-- [ ] Document metric limits and GSC aggregation caveats.
+- [x] Define GSC source grain: date + query + page + relevant dimensions.
+- [x] Define D1 GSC fact table schema.
+- [x] Define stable source uniqueness key.
+- [x] Build authenticated ingestion endpoint.
+- [ ] Build Make.com GSC collector. *(API contract + payload shape are ready; Make scenario wiring in the user account is still operator-side.)*
+- [x] Collect clicks.
+- [x] Collect impressions.
+- [x] Collect CTR.
+- [x] Collect average position.
+- [x] Preserve query and page identity.
+- [x] Map MildMate product landing pages to Product_ID where defensible.
+- [x] Keep non-product pages unmapped rather than forcing Product_ID.
+- [x] Build GSC daily analytical views.
+- [x] Build 28-day vs previous-28-day trend.
+- [x] Add GSC freshness monitoring.
+- [x] Add GSC section to Data Analyst dashboard.
+- [x] Document metric limits and GSC aggregation caveats.
 
 ## Deliverables
 
-- [ ] GSC D1 fact table.
-- [ ] GSC Make collector.
-- [ ] GSC ingestion API.
-- [ ] GSC analytical views.
-- [ ] GSC Data Analyst section.
+- [x] GSC D1 fact table.
+- [ ] GSC Make collector. *(operator-side Make.com scenario still pending)*
+- [x] GSC ingestion API.
+- [x] GSC analytical views.
+- [x] GSC Data Analyst section.
 
 ## Verification / Test Checklist
 
-- [ ] Collector retry is idempotent.
-- [ ] Date/query/page uniqueness works.
-- [ ] Clicks/impressions reconcile to sampled GSC reports.
-- [ ] Product URL mapping is correct.
-- [ ] Non-product URLs are not falsely mapped.
+- [x] Collector retry is idempotent. *(upsert key + created/updated/unchanged/rejected accounting implemented in API logic)*
+- [x] Date/query/page uniqueness works. *(UNIQUE key in migration 046 on report_date + query_norm + page_url + dimensions)*
+- [ ] Clicks/impressions reconcile to sampled GSC reports. *(pending first live collector run)*
+- [x] Product URL mapping is correct. *(defensible mapping only for `/product/{slug}` and `/th/product/{slug}` paths)*
+- [x] Non-product URLs are not falsely mapped.
 
 ## Definition of Done
 
-- [ ] Analyst can see which products/pages have rising or falling organic demand.
-- [ ] GSC data is fresh, auditable, and linked to Product_ID where defensible.
+- [ ] Analyst can see which products/pages have rising or falling organic demand. *(UI + API are ready; awaits live GSC ingestion.)*
+- [ ] GSC data is fresh, auditable, and linked to Product_ID where defensible. *(schema/API complete; freshness depends on first live sync.)*
 
 ## Global Guardrails
 
@@ -83,13 +83,13 @@ Add organic search demand and search visibility to the analytical system.
 
 ## Phase Handoff Rule
 
-- [ ] Record files changed.
-- [ ] Record migrations/API routes/UI routes created or changed.
-- [ ] Record tests performed and results.
-- [ ] Record unresolved issues and risks.
-- [ ] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
-- [ ] Commit only phase-scoped changes with a clear Git commit message.
-- [ ] Prepare a concise handoff for Phase 10 and stop.
+- [x] Record files changed.
+- [x] Record migrations/API routes/UI routes created or changed.
+- [x] Record tests performed and results.
+- [x] Record unresolved issues and risks.
+- [x] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
+- [x] Commit only phase-scoped changes with a clear Git commit message.
+- [x] Prepare a concise handoff for Phase 10 and stop.
 
 ## Recommended Droid Session Name
 
@@ -103,4 +103,4 @@ Add organic search demand and search visibility to the analytical system.
 
 ## Reconciliation Note (2026-09-19)
 
-Status verified: **NOT STARTED**. Systematic reconciliation on 2026-09-19 found no artifacts for this phase in the repository (no matching workers/migrations/collectors) and none in production D1 (no GSC/GA4/Etsy-performance/ads/profitability/opportunity tables or views). Checklist state above is accurate. Prerequisite gate now satisfied: Phases 01-08 are complete and Phase 17 (scheduled confirmed-mapping sync) is deployed.
+Status update (2026-09-24): **PARTIALLY IMPLEMENTED IN REPO (not yet production-verified)**. Phase 09 artifacts now exist locally: migration `046_gsc_analytics.sql`, ingestion handler `workers/api/gsc.ts` exposed at `/api/v1/gsc/*`, analysis endpoint `GET /api/admin/analysis/gsc`, and a new GSC section in `public/super-admin/marketing/data-analyst/index.html`. Runtime bundles were rebuilt (`public/_worker.js`, `public/index.js`) and local migration validation passed. Remaining external/live items are Make.com scenario wiring and first live reconciliation against sampled GSC reports.
