@@ -1,8 +1,8 @@
 # MildMate Marketing Decision System — Phase 09 Handoff
 ## Google Search Console Analytics
 
-**Date:** 2026-09-24  
-**Status:** Implemented in repository, not yet production-verified (no deploy in this session)
+**Date:** 2026-09-25  
+**Status:** Deployed with migration applied (Phase 09 infra live), awaiting first live GSC ingest/reconciliation
 
 ---
 
@@ -19,7 +19,7 @@ Built the Phase 09 GSC analytics layer end-to-end in code:
 Guardrails preserved:
 - No renumbering of canonical product IDs
 - Non-product URLs remain unmapped
-- No production deploy and no secret exposure
+- No secret exposure
 
 ---
 
@@ -123,8 +123,8 @@ Updated `public/super-admin/marketing/data-analyst/index.html`:
 2. **Live reconciliation pending**:
    - Clicks/impressions must be cross-checked against sampled GSC reports after first live ingest.
 
-3. **Production DB migration not applied in this session**:
-   - Migration 046 validated locally only.
+3. **First live data run not completed in this session**:
+   - Migration/deploy are complete, but no production `gsc-make-collector` ingest/reconciliation evidence yet.
 
 ---
 

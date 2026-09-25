@@ -82,6 +82,10 @@ Phase 09 is no longer "not started" in the repository:
 - Extended data-quality payload with `gsc_freshness`
 - Added GSC section to Data Analyst dashboard (`/super-admin/marketing/data-analyst/`)
 
-Current state remains **not production-verified**:
+Current state is now **deployed/infrastructure-live** (updated 2026-09-25):
+- Migration 046 applied on remote D1 (`gsc_search_daily` + all `analysis_gsc_*` views confirmed in `sqlite_master`)
+- Pages runtime deployed with GSC dashboard/API changes (deployment URL observed: `https://31c3cbc3.mildmate-new.pages.dev`)
+
+Remaining to reach "production-verified data quality":
 - Make.com scenario wiring is operator-side and still pending
 - First live GSC reconciliation (clicks/impressions vs sampled GSC reports) is still pending
