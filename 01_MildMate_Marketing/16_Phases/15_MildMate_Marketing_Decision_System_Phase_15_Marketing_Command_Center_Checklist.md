@@ -23,7 +23,7 @@ Turn the existing `/super-admin/marketing/` area into the owner/decision view fo
 ## Prerequisites / Confirmed Baseline
 
 - [x] Data Analyst dashboard established.
-- [x] Opportunity Engine working.
+- [ ] Opportunity Engine working. *(requires Phase 14 implementation)*
 - [x] Data Confidence visible.
 
 ## Task Checklist
@@ -101,6 +101,6 @@ Turn the existing `/super-admin/marketing/` area into the owner/decision view fo
 
 ---
 
-## Reconciliation Note (2026-09-19)
+## Reconciliation Note (2026-09-26)
 
-Status verified: **NOT STARTED**. Systematic reconciliation on 2026-09-19 found no artifacts for this phase in the repository (no matching workers/migrations/collectors) and none in production D1 (no GSC/GA4/Etsy-performance/ads/profitability/opportunity tables or views). Checklist state above is accurate. Prerequisite gate now satisfied: Phases 01-08 are complete and Phase 17 (scheduled confirmed-mapping sync) is deployed.
+Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No command-center implementation artifacts for this phase (executive opportunity view, approval workflow layer, or related routes) were found in the repository or production runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and Opportunity Engine dependency (Phase 14) is still pending.

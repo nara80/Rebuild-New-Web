@@ -22,7 +22,9 @@ Add spend, acquisition efficiency, and paid-channel performance.
 
 ## Prerequisites / Confirmed Baseline
 
-- [x] Core sales, product, GSC/GA4/Etsy analytical patterns established.
+- [x] Core sales + product analytical foundations are operational.
+- [x] Phase 09 GSC analytical pattern is live in production.
+- [ ] GA4 and Etsy analytical patterns are established. *(requires Phase 10 + Phase 11 implementation)*
 
 ## Task Checklist
 
@@ -99,6 +101,6 @@ Add spend, acquisition efficiency, and paid-channel performance.
 
 ---
 
-## Reconciliation Note (2026-09-19)
+## Reconciliation Note (2026-09-26)
 
-Status verified: **NOT STARTED**. Systematic reconciliation on 2026-09-19 found no artifacts for this phase in the repository (no matching workers/migrations/collectors) and none in production D1 (no GSC/GA4/Etsy-performance/ads/profitability/opportunity tables or views). Checklist state above is accurate. Prerequisite gate now satisfied: Phases 01-08 are complete and Phase 17 (scheduled confirmed-mapping sync) is deployed.
+Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No Google Ads/Meta Ads collectors, paid-media fact schema, or paid-media analysis views for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and prerequisite dependencies on Phases 10-11 are still pending.

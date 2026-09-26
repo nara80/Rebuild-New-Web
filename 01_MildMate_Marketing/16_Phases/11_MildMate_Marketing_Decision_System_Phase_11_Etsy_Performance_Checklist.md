@@ -97,6 +97,6 @@ Connect Etsy listing performance and sales signals to canonical MildMate product
 
 ---
 
-## Reconciliation Note (2026-09-19)
+## Reconciliation Note (2026-09-26)
 
-Status verified: **NOT STARTED**. Systematic reconciliation on 2026-09-19 found no artifacts for this phase in the repository (no matching workers/migrations/collectors) and none in production D1 (no GSC/GA4/Etsy-performance/ads/profitability/opportunity tables or views). Checklist state above is accurate. Prerequisite gate now satisfied: Phases 01-08 are complete and Phase 17 (scheduled confirmed-mapping sync) is deployed.
+Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No Etsy performance collector, Etsy fact schema, or Etsy analytical views for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Updated baseline: Phases 01-08 and 17 are operational, and Phase 09 GSC ingestion is live with production data.

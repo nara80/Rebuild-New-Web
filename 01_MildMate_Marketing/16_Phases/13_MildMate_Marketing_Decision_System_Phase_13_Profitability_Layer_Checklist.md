@@ -22,7 +22,7 @@ Move decision-making from revenue growth to profitable growth.
 
 ## Prerequisites / Confirmed Baseline
 
-- [x] Sales and paid-media data sufficiently stable.
+- [ ] Sales and paid-media data sufficiently stable. *(requires Phase 12 implementation)*
 - [x] Business agrees that cost inputs may include controlled estimates where clearly labelled.
 
 ## Task Checklist
@@ -100,6 +100,6 @@ Move decision-making from revenue growth to profitable growth.
 
 ---
 
-## Reconciliation Note (2026-09-19)
+## Reconciliation Note (2026-09-26)
 
-Status verified: **NOT STARTED**. Systematic reconciliation on 2026-09-19 found no artifacts for this phase in the repository (no matching workers/migrations/collectors) and none in production D1 (no GSC/GA4/Etsy-performance/ads/profitability/opportunity tables or views). Checklist state above is accurate. Prerequisite gate now satisfied: Phases 01-08 are complete and Phase 17 (scheduled confirmed-mapping sync) is deployed.
+Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No profitability cost schema, contribution-margin views, or profitability dashboard artifacts for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and paid-media dependency (Phase 12) is not yet complete.

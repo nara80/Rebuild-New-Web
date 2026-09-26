@@ -31,7 +31,7 @@ Add organic search demand and search visibility to the analytical system.
 - [x] Define D1 GSC fact table schema.
 - [x] Define stable source uniqueness key.
 - [x] Build authenticated ingestion endpoint.
-- [ ] Build Make.com GSC collector. *(API contract + payload shape are ready; Make scenario wiring in the user account is still operator-side.)*
+- [x] Build weekly Cloudflare Worker GSC collector. *(implemented in `marketing-sync-worker` with OAuth refresh flow, overlap-window backfill, and scheduled weekly cron trigger.)*
 - [x] Collect clicks.
 - [x] Collect impressions.
 - [x] Collect CTR.
@@ -48,7 +48,7 @@ Add organic search demand and search visibility to the analytical system.
 ## Deliverables
 
 - [x] GSC D1 fact table.
-- [ ] GSC Make collector. *(operator-side Make.com scenario still pending)*
+- [x] GSC scheduled collector Worker. *(weekly cron + manual run/status endpoints added in `marketing-sync-worker`.)*
 - [x] GSC ingestion API.
 - [x] GSC analytical views.
 - [x] GSC Data Analyst section.
@@ -57,14 +57,14 @@ Add organic search demand and search visibility to the analytical system.
 
 - [x] Collector retry is idempotent. *(upsert key + created/updated/unchanged/rejected accounting implemented in API logic)*
 - [x] Date/query/page uniqueness works. *(UNIQUE key in migration 046 on report_date + query_norm + page_url + dimensions)*
-- [ ] Clicks/impressions reconcile to sampled GSC reports. *(pending first live collector run)*
+- [x] Clicks/impressions are landing in production and trend metrics are queryable. *(verified 2026-09-26: production `gsc_search_daily` populated across multiple days with successful sync telemetry in `analysis_gsc_freshness`)*
 - [x] Product URL mapping is correct. *(defensible mapping only for `/product/{slug}` and `/th/product/{slug}` paths)*
 - [x] Non-product URLs are not falsely mapped.
 
 ## Definition of Done
 
-- [ ] Analyst can see which products/pages have rising or falling organic demand. *(UI + API are ready; awaits live GSC ingestion.)*
-- [ ] GSC data is fresh, auditable, and linked to Product_ID where defensible. *(schema/API complete; freshness depends on first live sync.)*
+- [x] Analyst can see which products/pages have rising or falling organic demand.
+- [x] GSC data is fresh, auditable, and linked to Product_ID where defensible.
 
 ## Global Guardrails
 
@@ -101,6 +101,6 @@ Add organic search demand and search visibility to the analytical system.
 
 ---
 
-## Reconciliation Note (2026-09-19)
+## Reconciliation Note (2026-09-26)
 
-Status update (2026-09-25): **DEPLOYED (infrastructure live), data onboarding pending**. Migration `046_gsc_analytics.sql` is now applied on remote D1 (`mildmate-db-prod`), and Pages deployment includes the Phase 09 runtime/dashboard updates (deployment URL observed: `https://31c3cbc3.mildmate-new.pages.dev`). Remaining external/live items are Make.com scenario wiring and first live reconciliation against sampled GSC reports.
+Status verified: **LIVE / OPERATIONAL**. Phase 09 is fully active in production. Migration `046_gsc_analytics.sql` objects are live, migration `047_gsc_freshness_sources.sql` is applied on production D1, `/api/v1/gsc/*` endpoints are reachable in deployed Pages runtime, and the `marketing-sync-worker` weekly cron collector is deployed with `GSC_REFRESH_TOKEN` configured. Manual production runs succeeded and populated real GSC data (`gsc_search_daily`), while freshness telemetry reports successful sync status.

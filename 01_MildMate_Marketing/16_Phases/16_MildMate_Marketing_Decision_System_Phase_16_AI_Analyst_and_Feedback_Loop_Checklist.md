@@ -22,9 +22,9 @@ Use AI to interpret trusted analytics, record approved actions, and measure whet
 
 ## Prerequisites / Confirmed Baseline
 
-- [x] Marketing Command Center and Opportunity Engine working.
+- [ ] Marketing Command Center and Opportunity Engine working. *(requires Phases 14-15 implementation)*
 - [x] Data Confidence available.
-- [x] Canonical metrics/history available in D1.
+- [ ] Canonical multi-source metrics/history available in D1. *(full dependency set requires Phases 10-15 implementation)*
 
 ## Task Checklist
 
@@ -107,6 +107,6 @@ Use AI to interpret trusted analytics, record approved actions, and measure whet
 
 ---
 
-## Reconciliation Note (2026-09-19)
+## Reconciliation Note (2026-09-26)
 
-Status verified: **NOT STARTED**. Systematic reconciliation on 2026-09-19 found no artifacts for this phase in the repository (no matching workers/migrations/collectors) and none in production D1 (no GSC/GA4/Etsy-performance/ads/profitability/opportunity tables or views). Checklist state above is accurate. Prerequisite gate now satisfied: Phases 01-08 are complete and Phase 17 (scheduled confirmed-mapping sync) is deployed.
+Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No AI-analyst recommendation layer, `marketing_actions` persistence, approval workflow, or feedback-loop artifacts for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and prerequisites from Phases 10-15 are not yet complete.
