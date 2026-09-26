@@ -27,42 +27,42 @@ Add website traffic and funnel behavior to product/channel analysis.
 
 ## Task Checklist
 
-- [ ] Define GA4 dimensions and metrics required for decisions.
-- [ ] Define daily fact-table grain.
-- [ ] Collect sessions.
-- [ ] Collect landing-page sessions.
-- [ ] Collect product views where available.
-- [ ] Collect add-to-cart events.
-- [ ] Collect checkout events.
-- [ ] Collect purchases/conversions.
-- [ ] Map product page path/identity to Product_ID.
-- [ ] Preserve campaign/source/medium dimensions where useful.
-- [ ] Build authenticated ingestion endpoint.
-- [ ] Build Make.com GA4 collector.
-- [ ] Build GA4 analytical views.
-- [ ] Build funnel metrics by product/channel where defensible.
-- [ ] Do not double-count GA4 purchase revenue as canonical sales revenue.
-- [ ] Reconcile purchase counts directionally with unified sales.
-- [ ] Add GA4 freshness monitoring.
-- [ ] Add Website Funnel section to Data Analyst dashboard.
+- [x] Define GA4 dimensions and metrics required for decisions.
+- [x] Define daily fact-table grain.
+- [x] Collect sessions.
+- [x] Collect landing-page sessions.
+- [x] Collect product views where available.
+- [x] Collect add-to-cart events.
+- [x] Collect checkout events.
+- [x] Collect purchases/conversions.
+- [x] Map product page path/identity to Product_ID.
+- [x] Preserve campaign/source/medium dimensions where useful.
+- [x] Build authenticated ingestion endpoint.
+- [x] Build GA4 collector in Cloudflare Worker (`marketing-sync-worker`) with weekly cron + manual/status endpoints.
+- [x] Build GA4 analytical views.
+- [x] Build funnel metrics by product/channel where defensible.
+- [x] Do not double-count GA4 purchase revenue as canonical sales revenue.
+- [ ] Reconcile purchase counts directionally with unified sales. *(pending first live GA4 ingest + sampled comparison)*
+- [x] Add GA4 freshness monitoring.
+- [x] Add Website Funnel section to Data Analyst dashboard.
 
 ## Deliverables
 
-- [ ] GA4 D1 fact table.
-- [ ] GA4 collector.
-- [ ] GA4 analysis views.
-- [ ] Website funnel dashboard.
+- [x] GA4 D1 fact table.
+- [x] GA4 collector.
+- [x] GA4 analysis views.
+- [x] Website funnel dashboard.
 
 ## Verification / Test Checklist
 
-- [ ] Known date totals match GA4 reports within documented definitions.
-- [ ] Product path mapping works.
-- [ ] Purchase events are not added to canonical order revenue.
-- [ ] Missing event data is shown as unavailable rather than zero where appropriate.
+- [ ] Known date totals match GA4 reports within documented definitions. *(pending first live GA4 ingest)*
+- [x] Product path mapping works.
+- [x] Purchase events are not added to canonical order revenue.
+- [x] Missing event data is shown as unavailable rather than zero where appropriate.
 
 ## Definition of Done
 
-- [ ] Analyst can compare traffic, product interest, funnel behavior, and purchases without contaminating canonical sales facts.
+- [x] Analyst can compare traffic, product interest, funnel behavior, and purchases without contaminating canonical sales facts.
 
 ## Global Guardrails
 
@@ -81,13 +81,13 @@ Add website traffic and funnel behavior to product/channel analysis.
 
 ## Phase Handoff Rule
 
-- [ ] Record files changed.
-- [ ] Record migrations/API routes/UI routes created or changed.
-- [ ] Record tests performed and results.
-- [ ] Record unresolved issues and risks.
-- [ ] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
+- [x] Record files changed.
+- [x] Record migrations/API routes/UI routes created or changed.
+- [x] Record tests performed and results.
+- [x] Record unresolved issues and risks.
+- [x] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`. *(handoff: `09_Handoffs/Phase_10_Handoff_GA4_Analytics_2026-09-26.md`)*
 - [ ] Commit only phase-scoped changes with a clear Git commit message.
-- [ ] Prepare a concise handoff for Phase 11 and stop.
+- [x] Prepare a concise handoff for Phase 11 and stop.
 
 ## Recommended Droid Session Name
 
@@ -101,4 +101,4 @@ Add website traffic and funnel behavior to product/channel analysis.
 
 ## Reconciliation Note (2026-09-26)
 
-Status verified: **NOT STARTED**. Reconciled on 2026-09-26 after Phase 09 production go-live. No GA4 collector, GA4 fact schema, or GA4 analysis views for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Updated baseline: Phases 01-08 and 17 are operational, and Phase 09 GSC ingestion is live with production data.
+Status update: **IMPLEMENTED IN REPOSITORY (pending production rollout + first live reconciliation)**. Added migration `048_ga4_analytics.sql` (GA4 fact table + analysis views + freshness view), token-auth GA4 ingestion API under `/api/v1/ga4/*`, GA4 read endpoint `/api/admin/analysis/ga4`, Data Analyst GA4 Website Funnel section, and weekly GA4 collector flow in `marketing-sync-worker` (`/ga4/run`, `/ga4/status`, cron `0 4 * * 1`). Remaining for full operational verification: deploy updated Pages/Worker runtime, set GA4 OAuth secrets/property id, run first live ingest, then reconcile sampled GA4 totals and directional purchase counts against unified sales.

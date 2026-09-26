@@ -8,6 +8,7 @@
 // GET /api/admin/analysis/channels      ?start&end
 // GET /api/admin/analysis/data-quality
 // GET /api/admin/analysis/gsc           ?start&end&product_id
+// GET /api/admin/analysis/ga4           ?start&end&product_id
 //
 // Reads ONLY the analysis_* views from migration 042 (plus products for titles).
 // Metric semantics: 01_MildMate_Marketing/02_Metric_Dictionary/Phase_02_Metric_Contract_2026-09-07.md
@@ -663,6 +664,266 @@ async function getGsc(env: any, f: Filters): Promise<Response> {
   }
 }
 
+async function getGa4(env: any, f: Filters): Promise<Response> {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds: any[] = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+
+  try {
+    const summary: any = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.landing_page_path) AS landing_pages,
+         COUNT(DISTINCT g.page_path) AS page_paths,
+         COALESCE(SUM(g.sessions), 0) AS sessions,
+         COALESCE(SUM(g.users), 0) AS users,
+         COALESCE(SUM(g.engaged_sessions), 0) AS engaged_sessions,
+         COALESCE(SUM(g.product_views), 0) AS product_views,
+         COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+         COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+         COALESCE(SUM(g.purchases), 0) AS purchases,
+         COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.engaged_sessions) * 100.0 / SUM(g.sessions), 2)
+         END AS engagement_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.add_to_cart) * 100.0 / SUM(g.sessions), 2)
+         END AS add_to_cart_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.begin_checkout) * 100.0 / SUM(g.sessions), 2)
+         END AS checkout_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.purchases) * 100.0 / SUM(g.sessions), 2)
+         END AS purchase_rate_pct,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.sessions ELSE 0 END), 0) AS mapped_sessions
+       FROM ga4_funnel_daily g
+       WHERE 1=1${range.sql}${productSql}`
+    )
+      .bind(...binds)
+      .first();
+
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.landing_page_path,
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         SUM(g.sessions) AS sessions,
+         SUM(g.users) AS users,
+         SUM(g.product_views) AS product_views,
+         SUM(g.add_to_cart) AS add_to_cart,
+         SUM(g.begin_checkout) AS begin_checkout,
+         SUM(g.purchases) AS purchases,
+         SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.purchases) * 100.0 / SUM(g.sessions), 2)
+         END AS purchase_rate_pct
+       FROM ga4_funnel_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.landing_page_path, g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
+       LIMIT 15`
+    )
+      .bind(...binds)
+      .all();
+
+    const bySource = await env.DB.prepare(
+      `SELECT
+         CASE
+           WHEN length(trim(g.source)) = 0 THEN '(direct)'
+           WHEN length(trim(g.medium)) = 0 THEN lower(g.source)
+           ELSE lower(g.source) || ' / ' || lower(g.medium)
+         END AS source_medium,
+         SUM(g.sessions) AS sessions,
+         SUM(g.purchases) AS purchases,
+         SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue
+       FROM ga4_funnel_daily g
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY source_medium
+       ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
+       LIMIT 12`
+    )
+      .bind(...binds)
+      .all();
+
+    const fresh: any = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+
+    let trend: any = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      sessions_28d: 0,
+      product_views_28d: 0,
+      add_to_cart_28d: 0,
+      begin_checkout_28d: 0,
+      purchases_28d: 0,
+      purchase_revenue_28d: 0,
+      sessions_prev_28d: 0,
+      product_views_prev_28d: 0,
+      add_to_cart_prev_28d: 0,
+      begin_checkout_prev_28d: 0,
+      purchases_prev_28d: 0,
+      purchase_revenue_prev_28d: 0,
+      sessions_growth_pct: null,
+      purchases_growth_pct: null,
+      purchase_revenue_growth_pct: null,
+    };
+
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds: any[] = [currentStart, anchorDate];
+        const prevBinds: any[] = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+
+        const cur: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.sessions), 0) AS sessions,
+             COALESCE(SUM(g.product_views), 0) AS product_views,
+             COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+             COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+             COALESCE(SUM(g.purchases), 0) AS purchases,
+             COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
+           FROM ga4_funnel_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        )
+          .bind(...curBinds)
+          .first();
+
+        const prev: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.sessions), 0) AS sessions,
+             COALESCE(SUM(g.product_views), 0) AS product_views,
+             COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+             COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+             COALESCE(SUM(g.purchases), 0) AS purchases,
+             COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
+           FROM ga4_funnel_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        )
+          .bind(...prevBinds)
+          .first();
+
+        const prevSessions = Number(prev?.sessions || 0);
+        const prevPurchases = Number(prev?.purchases || 0);
+        const prevRevenue = Number(prev?.purchase_revenue || 0);
+        const curSessions = Number(cur?.sessions || 0);
+        const curPurchases = Number(cur?.purchases || 0);
+        const curRevenue = Number(cur?.purchase_revenue || 0);
+
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          sessions_28d: curSessions,
+          product_views_28d: Number(cur?.product_views || 0),
+          add_to_cart_28d: Number(cur?.add_to_cart || 0),
+          begin_checkout_28d: Number(cur?.begin_checkout || 0),
+          purchases_28d: curPurchases,
+          purchase_revenue_28d: curRevenue,
+          sessions_prev_28d: prevSessions,
+          product_views_prev_28d: Number(prev?.product_views || 0),
+          add_to_cart_prev_28d: Number(prev?.add_to_cart || 0),
+          begin_checkout_prev_28d: Number(prev?.begin_checkout || 0),
+          purchases_prev_28d: prevPurchases,
+          purchase_revenue_prev_28d: prevRevenue,
+          sessions_growth_pct: prevSessions > 0 ? Math.round(((curSessions - prevSessions) * 10000) / prevSessions) / 100 : null,
+          purchases_growth_pct: prevPurchases > 0 ? Math.round(((curPurchases - prevPurchases) * 10000) / prevPurchases) / 100 : null,
+          purchase_revenue_growth_pct: prevRevenue > 0 ? Math.round(((curRevenue - prevRevenue) * 10000) / prevRevenue) / 100 : null,
+        };
+      }
+    }
+
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const ga4Days =
+      fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === undefined
+        ? null
+        : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus: "ok" | "warning" | "empty" = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (ga4Days !== null && ga4Days > 3) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+
+    return json({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        landing_pages: Number(summary?.landing_pages || 0),
+        page_paths: Number(summary?.page_paths || 0),
+        sessions: Number(summary?.sessions || 0),
+        users: Number(summary?.users || 0),
+        engaged_sessions: Number(summary?.engaged_sessions || 0),
+        product_views: Number(summary?.product_views || 0),
+        add_to_cart: Number(summary?.add_to_cart || 0),
+        begin_checkout: Number(summary?.begin_checkout || 0),
+        purchases: Number(summary?.purchases || 0),
+        purchase_revenue: Number(summary?.purchase_revenue || 0),
+        engagement_rate_pct:
+          summary?.engagement_rate_pct === null || summary?.engagement_rate_pct === undefined
+            ? null
+            : Number(summary.engagement_rate_pct),
+        add_to_cart_rate_pct:
+          summary?.add_to_cart_rate_pct === null || summary?.add_to_cart_rate_pct === undefined
+            ? null
+            : Number(summary.add_to_cart_rate_pct),
+        checkout_rate_pct:
+          summary?.checkout_rate_pct === null || summary?.checkout_rate_pct === undefined
+            ? null
+            : Number(summary.checkout_rate_pct),
+        purchase_rate_pct:
+          summary?.purchase_rate_pct === null || summary?.purchase_rate_pct === undefined
+            ? null
+            : Number(summary.purchase_rate_pct),
+        mapped_sessions: Number(summary?.mapped_sessions || 0),
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: ga4Days,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days.",
+      },
+      top_pages: topPages.results || [],
+      top_sources: bySource.results || [],
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: ga4_funnel_daily") || msg.includes("no such table: analysis_ga4_freshness")) {
+      return json({
+        success: true,
+        available: false,
+        message: "GA4 schema is not available in this environment yet. Apply migration 048_ga4_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId },
+      });
+    }
+    return err("GA4_QUERY_FAILED", msg, 500);
+  }
+}
+
 async function getDataQuality(env: any): Promise<Response> {
   const dq: any = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -735,6 +996,14 @@ async function getDataQuality(env: any): Promise<Response> {
     gscFreshness = null;
   }
 
+  let ga4Freshness: any = null;
+  try {
+    ga4Freshness = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+  } catch {
+    // Migration 048 may not exist yet in a given environment.
+    ga4Freshness = null;
+  }
+
   // M22 freshness + M30 roll-up (contract: computed in code, not SQL)
   let freshnessMinutes: number | null = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
@@ -776,6 +1045,17 @@ async function getDataQuality(env: any): Promise<Response> {
     if (["failed", "partial", "error"].includes(gscLastStatus)) warn("Latest GSC sync run status: " + gscLastStatus + ".");
   }
 
+  const ga4Rows = Number(ga4Freshness?.total_rows || 0);
+  const ga4Days =
+    ga4Freshness?.days_since_latest_report === null || ga4Freshness?.days_since_latest_report === undefined
+      ? null
+      : Number(ga4Freshness.days_since_latest_report);
+  const ga4LastStatus = String(ga4Freshness?.last_sync_status || "").toLowerCase();
+  if (ga4Rows > 0) {
+    if (ga4Days !== null && ga4Days > 3) warn("GA4 freshness is " + ga4Days + " days old (threshold 3).");
+    if (["failed", "partial", "error"].includes(ga4LastStatus)) warn("Latest GA4 sync run status: " + ga4LastStatus + ".");
+  }
+
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
 
@@ -811,6 +1091,20 @@ async function getDataQuality(env: any): Promise<Response> {
         ? "empty"
         : ((gscDays !== null && gscDays > 4) || ["failed", "partial", "error"].includes(gscLastStatus) ? "warning" : "ok"),
       caveat: "GSC data is typically delayed by 1–2 days; freshness warning threshold = 4 days.",
+    },
+    ga4_freshness: {
+      available: !!ga4Freshness,
+      total_rows: ga4Rows,
+      latest_report_date: ga4Freshness?.latest_report_date || null,
+      days_since_latest_report: ga4Days,
+      last_success_sync_at: ga4Freshness?.last_success_sync_at || null,
+      last_sync_at: ga4Freshness?.last_sync_at || null,
+      last_sync_status: ga4LastStatus || null,
+      sync_errors_7d: Number(ga4Freshness?.sync_errors_7d || 0),
+      status: ga4Rows === 0
+        ? "empty"
+        : ((ga4Days !== null && ga4Days > 3) || ["failed", "partial", "error"].includes(ga4LastStatus) ? "warning" : "ok"),
+      caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days.",
     },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
@@ -945,6 +1239,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   const f = parsed.f;
 
   if (sub === "/gsc") return getGsc(env, f);
+  if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);

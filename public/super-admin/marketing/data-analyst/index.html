@@ -173,6 +173,19 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="gsc-queries-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="ga4-card">
+      <div class="card-header"><span>Website Funnel / GA4</span><span class="muted" style="font-size:0.75rem;font-weight:400">date + landing/page + source/medium grain; purchase metrics are directional and never replace canonical sales revenue</span></div>
+      <div class="card-body">
+        <div id="ga4-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest GA4 report date</span></div>
+      <div class="table-wrap"><div id="ga4-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Landing / Page Paths</span><span class="muted" style="font-size:0.75rem;font-weight:400">session-ranked</span></div>
+      <div class="table-wrap"><div id="ga4-pages-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Source / Medium</span><span class="muted" style="font-size:0.75rem;font-weight:400">session-ranked</span></div>
+      <div class="table-wrap"><div id="ga4-sources-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
@@ -532,6 +545,110 @@ async function loadGsc(){
   }
 }
 
+// ── Website Funnel / GA4 (Phase 10) ──
+
+async function loadGa4(){
+  setState('ga4-trend-table', '', 'Loading…');
+  setState('ga4-pages-table', '', 'Loading…');
+  setState('ga4-sources-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/ga4' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('ga4-summary').innerHTML =
+        '<span class="badge badge-grey">GA4 schema not available in this environment yet</span>';
+      setState('ga4-trend-table', '', d.message || 'Apply migration 048_ga4_analytics.sql first.');
+      setState('ga4-pages-table', '', 'No GA4 rows yet.');
+      setState('ga4-sources-table', '', 'No GA4 rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var mappedSessionPct = Number(s.sessions || 0) > 0 ? (Number(s.mapped_sessions || 0) * 100 / Number(s.sessions || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('ga4-summary').innerHTML =
+      '<span class="badge badge-blue">Sessions: ' + fmtNum(s.sessions) + '</span>' +
+      '<span class="badge badge-blue">Users: ' + fmtNum(s.users) + '</span>' +
+      '<span class="badge badge-grey">Engaged Sessions: ' + fmtNum(s.engaged_sessions) + '</span>' +
+      '<span class="badge badge-grey">Product Views: ' + fmtNum(s.product_views) + '</span>' +
+      '<span class="badge badge-grey">Add to Cart: ' + fmtNum(s.add_to_cart) + '</span>' +
+      '<span class="badge badge-grey">Checkout: ' + fmtNum(s.begin_checkout) + '</span>' +
+      '<span class="badge badge-grey">Purchases: ' + fmtNum(s.purchases) + '</span>' +
+      '<span class="badge badge-grey">Purchase Rev (GA4): ' + fmtBaht(s.purchase_revenue) + '</span>' +
+      '<span class="badge badge-grey">ATC Rate: ' + fmtPct(s.add_to_cart_rate_pct) + '</span>' +
+      '<span class="badge badge-grey">Purchase Rate: ' + fmtPct(s.purchase_rate_pct) + '</span>' +
+      '<span class="badge badge-grey">Mapped session coverage: ' + fmtPct(mappedSessionPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Sessions</th><th class="num">Product Views</th><th class="num">Add to Cart</th><th class="num">Checkout</th><th class="num">Purchases</th><th class="num">Purchase Rev (GA4)</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtNum(t.sessions_28d) + '</td><td class="num">' + fmtNum(t.product_views_28d) + '</td><td class="num">' + fmtNum(t.add_to_cart_28d) + '</td><td class="num">' + fmtNum(t.begin_checkout_28d) + '</td><td class="num">' + fmtNum(t.purchases_28d) + '</td><td class="num">' + fmtBaht(t.purchase_revenue_28d) + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtNum(t.sessions_prev_28d) + '</td><td class="num">' + fmtNum(t.product_views_prev_28d) + '</td><td class="num">' + fmtNum(t.add_to_cart_prev_28d) + '</td><td class="num">' + fmtNum(t.begin_checkout_prev_28d) + '</td><td class="num">' + fmtNum(t.purchases_prev_28d) + '</td><td class="num">' + fmtBaht(t.purchase_revenue_prev_28d) + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.sessions_growth_pct === null || t.sessions_growth_pct === undefined ? '—' : ((t.sessions_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.sessions_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.purchases_growth_pct === null || t.purchases_growth_pct === undefined ? '—' : ((t.purchases_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.purchases_growth_pct)))) + '</td>' +
+      '<td class="num">' + (t.purchase_revenue_growth_pct === null || t.purchase_revenue_growth_pct === undefined ? '—' : ((t.purchase_revenue_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.purchase_revenue_growth_pct)))) + '</td>' +
+      '</tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('ga4-trend-table').innerHTML = trendHtml;
+
+    var pages = d.top_pages || [];
+    if (!pages.length) {
+      setState('ga4-pages-table', '', 'No GA4 page rows for the selected filters.');
+    } else {
+      var p = '<table><thead><tr><th>Landing Page</th><th>Page Path</th><th>Product</th><th class="num">Sessions</th><th class="num">Product Views</th><th class="num">Add to Cart</th><th class="num">Checkout</th><th class="num">Purchases</th><th class="num">Purchase Rate</th><th class="num">Purchase Rev (GA4)</th></tr></thead><tbody>';
+      pages.forEach(function(r){
+        p += '<tr>' +
+          '<td class="mono">' + (r.landing_page_path ? esc(r.landing_page_path) : '<span class="muted">—</span>') + '</td>' +
+          '<td class="mono">' + (r.page_path ? esc(r.page_path) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtNum(r.sessions) + '</td>' +
+          '<td class="num">' + fmtNum(r.product_views) + '</td>' +
+          '<td class="num">' + fmtNum(r.add_to_cart) + '</td>' +
+          '<td class="num">' + fmtNum(r.begin_checkout) + '</td>' +
+          '<td class="num">' + fmtNum(r.purchases) + '</td>' +
+          '<td class="num">' + fmtPct(r.purchase_rate_pct) + '</td>' +
+          '<td class="num">' + fmtBaht(r.purchase_revenue) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-pages-table').innerHTML = p + '</tbody></table>';
+    }
+
+    var sources = d.top_sources || [];
+    if (!sources.length) {
+      setState('ga4-sources-table', '', 'No GA4 source rows for the selected filters.');
+    } else {
+      var src = '<table><thead><tr><th>Source / Medium</th><th class="num">Sessions</th><th class="num">Purchases</th><th class="num">Purchase Rate</th><th class="num">Purchase Rev (GA4)</th></tr></thead><tbody>';
+      sources.forEach(function(r){
+        var rate = Number(r.sessions || 0) > 0 ? (Number(r.purchases || 0) * 100 / Number(r.sessions || 0)) : null;
+        src += '<tr>' +
+          '<td>' + esc(r.source_medium || '(direct)') + '</td>' +
+          '<td class="num">' + fmtNum(r.sessions) + '</td>' +
+          '<td class="num">' + fmtNum(r.purchases) + '</td>' +
+          '<td class="num">' + fmtPct(rate) + '</td>' +
+          '<td class="num">' + fmtBaht(r.purchase_revenue) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('ga4-sources-table').innerHTML = src + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('ga4-summary').innerHTML = '<span class="badge badge-red">GA4 unavailable</span>';
+    setState('ga4-trend-table', 'error', 'Could not load GA4 trend: ' + e.message);
+    setState('ga4-pages-table', 'error', 'Could not load GA4 pages: ' + e.message);
+    setState('ga4-sources-table', 'error', 'Could not load GA4 sources: ' + e.message);
+  }
+}
+
 // ── Sales Detail ──
 
 async function loadSales(){
@@ -654,11 +771,11 @@ async function populateProductFilter(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc();
+  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); populateProductFilter();
 }
 
 async function boot(){

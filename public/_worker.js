@@ -985,10 +985,745 @@ async function handleSalesApi(request, env) {
 }
 __name(handleSalesApi, "handleSalesApi");
 
+// ../workers/api/gsc.ts
+var GSC_SERVICE_NAME = "mildmate-gsc-api";
+var GSC_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+var ALLOWED_DEVICE = /* @__PURE__ */ new Set(["", "DESKTOP", "MOBILE", "TABLET"]);
+var ALLOWED_SEARCH_TYPE = /* @__PURE__ */ new Set(["web", "image", "video", "news", "discover", "google_news"]);
+function response2(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response2, "response");
+function trimTo2(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo2, "trimTo");
+function toNum2(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum2, "toNum");
+function normalizeDate(v) {
+  const s = trimTo2(v, 20);
+  if (!DATE_RE.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate, "normalizeDate");
+function normalizeQuery(v) {
+  const queryText = trimTo2(v, 1e3);
+  if (!queryText) throw new Error("query is required");
+  const queryNorm = queryText.toLowerCase().replace(/\s+/g, " ").trim();
+  if (!queryNorm) throw new Error("query is required");
+  return { queryText, queryNorm };
+}
+__name(normalizeQuery, "normalizeQuery");
+function normalizeCountry(v) {
+  return trimTo2(v, 20).toUpperCase();
+}
+__name(normalizeCountry, "normalizeCountry");
+function normalizeDevice(v) {
+  const device = trimTo2(v, 20).toUpperCase();
+  if (!ALLOWED_DEVICE.has(device)) throw new Error("device must be one of: DESKTOP, MOBILE, TABLET");
+  return device;
+}
+__name(normalizeDevice, "normalizeDevice");
+function normalizeSearchType(v) {
+  const t = trimTo2(v, 40).toLowerCase() || "web";
+  if (!ALLOWED_SEARCH_TYPE.has(t)) throw new Error("search_type is invalid");
+  return t;
+}
+__name(normalizeSearchType, "normalizeSearchType");
+function normalizeSearchAppearance(v) {
+  return trimTo2(v, 120);
+}
+__name(normalizeSearchAppearance, "normalizeSearchAppearance");
+function normalizePage(pageRaw, propertyHintRaw) {
+  const raw = trimTo2(pageRaw, 2e3);
+  if (!raw) throw new Error("page is required");
+  let pageUrl = raw;
+  let pagePath = raw;
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const u = new URL(raw);
+      const path = u.pathname || "/";
+      pagePath = path;
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${path}`;
+    } else if (raw.startsWith("/")) {
+      pagePath = raw;
+      const propertyHint = trimTo2(propertyHintRaw, 300);
+      if (propertyHint.startsWith("http://") || propertyHint.startsWith("https://")) {
+        const p = new URL(propertyHint);
+        pageUrl = `${p.protocol}//${p.hostname.toLowerCase()}${raw}`;
+      } else if (propertyHint.startsWith("sc-domain:")) {
+        const host = propertyHint.slice("sc-domain:".length).trim().toLowerCase();
+        if (host) pageUrl = `https://${host}${raw}`;
+      } else {
+        pageUrl = raw;
+      }
+    } else {
+      pagePath = "/" + raw;
+      pageUrl = pagePath;
+    }
+  } catch {
+    if (!raw.startsWith("/")) pagePath = "/" + raw;
+    pageUrl = pagePath;
+  }
+  pagePath = pagePath.replace(/\\/g, "/");
+  pagePath = pagePath.replace(/\/{2,}/g, "/");
+  if (!pagePath.startsWith("/")) pagePath = "/" + pagePath;
+  if (pagePath.length > 1 && pagePath.endsWith("/")) pagePath = pagePath.slice(0, -1);
+  if (!pageUrl.startsWith("http://") && !pageUrl.startsWith("https://")) {
+    pageUrl = pagePath;
+  } else {
+    try {
+      const u = new URL(pageUrl);
+      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${pagePath}`;
+    } catch {
+    }
+  }
+  return { pageUrl: pageUrl.slice(0, 2e3), pagePath: pagePath.slice(0, 1e3) };
+}
+__name(normalizePage, "normalizePage");
+function extractProductSlug(pagePath) {
+  const m = pagePath.match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]).trim().toLowerCase();
+  } catch {
+    return m[1].trim().toLowerCase();
+  }
+}
+__name(extractProductSlug, "extractProductSlug");
+function sameNullable(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable, "sameNullable");
+function sameNullableNum(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum, "sameNullableNum");
+async function requireBearerAuth2(request, env) {
+  const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth2, "requireBearerAuth");
+async function createSyncRun2(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun2, "createSyncRun");
+async function finishSyncRun2(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun2, "finishSyncRun");
+async function resolveProductIdBySlug(env, slug, cache) {
+  if (cache.has(slug)) return cache.get(slug) || null;
+  const row = await env.DB.prepare(
+    `SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`
+  ).bind(slug).first();
+  const id = row && row.id ? Number(row.id) : null;
+  cache.set(slug, id);
+  return id;
+}
+__name(resolveProductIdBySlug, "resolveProductIdBySlug");
+async function handleRowsUpsert(request, env) {
+  const auth = await requireBearerAuth2(request, env);
+  if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response2({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response2({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo2(body.sync_source, 80) || "gsc-make-collector";
+  const scenario = trimTo2(body.scenario, 200) || "phase09-gsc-collector";
+  const propertyHint = trimTo2(body.property || body.site_url || body.site, 300);
+  const runId = await createSyncRun2(env, source, scenario, rowsRaw.length);
+  const slugCache = /* @__PURE__ */ new Map();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate(raw.date || raw.report_date);
+        const q = normalizeQuery(raw.query || raw.query_text);
+        const page = normalizePage(raw.page || raw.page_url || raw.landing_page, propertyHint);
+        const country = normalizeCountry(raw.country);
+        const device = normalizeDevice(raw.device);
+        const searchType = normalizeSearchType(raw.search_type);
+        const searchAppearance = normalizeSearchAppearance(raw.search_appearance);
+        const clicksNum = toNum2(raw.clicks);
+        if (clicksNum === null || clicksNum < 0) throw new Error("clicks must be a non-negative number");
+        const impressionsNum = toNum2(raw.impressions);
+        if (impressionsNum === null || impressionsNum < 0) throw new Error("impressions must be a non-negative number");
+        const clicks = Math.round(clicksNum);
+        const impressions = Math.round(impressionsNum);
+        const ctrInput = toNum2(raw.ctr);
+        const ctr = ctrInput === null ? impressions > 0 ? Math.round(clicks / impressions * 1e6) / 1e6 : null : ctrInput;
+        const position = toNum2(raw.position);
+        if (position !== null && position < 0) throw new Error("position must be >= 0");
+        const slug = extractProductSlug(page.pagePath);
+        let productId = null;
+        let mappingScope = "non_product";
+        if (slug) {
+          productId = await resolveProductIdBySlug(env, slug, slugCache);
+          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, query_text, page_path, clicks, impressions, ctr, position, product_id, mapping_scope
+           FROM gsc_search_daily
+           WHERE report_date = ?1 AND query_norm = ?2 AND page_url = ?3
+             AND country = ?4 AND device = ?5 AND search_type = ?6 AND search_appearance = ?7
+           LIMIT 1`
+        ).bind(reportDate, q.queryNorm, page.pageUrl, country, device, searchType, searchAppearance).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO gsc_search_daily
+             (report_date, query_text, query_norm, page_url, page_path, country, device, search_type, search_appearance,
+              clicks, impressions, ctr, position, product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`
+          ).bind(
+            reportDate,
+            q.queryText,
+            q.queryNorm,
+            page.pageUrl,
+            page.pagePath,
+            country,
+            device,
+            searchType,
+            searchAppearance,
+            clicks,
+            impressions,
+            ctr,
+            position,
+            productId,
+            mappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable(existing.query_text, q.queryText) && sameNullable(existing.page_path, page.pagePath) && Number(existing.clicks || 0) === clicks && Number(existing.impressions || 0) === impressions && sameNullableNum(existing.ctr, ctr) && sameNullableNum(existing.position, position) && sameNullable(existing.product_id, productId) && sameNullable(existing.mapping_scope, mappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE gsc_search_daily
+           SET query_text = ?1,
+               page_path = ?2,
+               clicks = ?3,
+               impressions = ?4,
+               ctr = ?5,
+               position = ?6,
+               product_id = ?7,
+               mapping_scope = ?8,
+               source_updated_at = ?9,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?10`
+        ).bind(
+          q.queryText,
+          page.pagePath,
+          clicks,
+          impressions,
+          ctr,
+          position,
+          productId,
+          mappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun2(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response2({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun2(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response2(
+      {
+        success: false,
+        error_code: "GSC_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert, "handleRowsUpsert");
+async function handleGscApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
+  if (method === "OPTIONS") return response2({ ok: true });
+  if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
+    return response2({ ok: true, service: GSC_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
+    return handleRowsUpsert(request, env);
+  }
+  return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
+}
+__name(handleGscApi, "handleGscApi");
+
+// ../workers/api/ga4.ts
+var GA4_SERVICE_NAME = "mildmate-ga4-api";
+var GA4_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE2 = /^\d{4}-\d{2}-\d{2}$/;
+var ALLOWED_DEVICE2 = /* @__PURE__ */ new Set(["", "desktop", "mobile", "tablet"]);
+function response3(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response3, "response");
+function trimTo3(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo3, "trimTo");
+function toNum3(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum3, "toNum");
+function toNonNegativeInt(v, fieldName) {
+  const n = toNum3(v);
+  if (n === null || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n);
+}
+__name(toNonNegativeInt, "toNonNegativeInt");
+function normalizeDate2(v) {
+  const s = trimTo3(v, 20);
+  if (!DATE_RE2.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate2, "normalizeDate");
+function normalizePath(pathRaw) {
+  const raw = trimTo3(pathRaw, 2e3);
+  if (!raw) return "";
+  let path = raw;
+  try {
+    if (raw.startsWith("http://") || raw.startsWith("https://")) {
+      const u = new URL(raw);
+      path = u.pathname || "/";
+    } else {
+      const u = new URL(raw, "https://mildmate.local");
+      path = u.pathname || raw;
+    }
+  } catch {
+    const qIdx = raw.indexOf("?");
+    const hIdx = raw.indexOf("#");
+    const cutAt = [qIdx, hIdx].filter((i) => i >= 0).sort((a, b) => a - b)[0];
+    path = cutAt >= 0 ? raw.slice(0, cutAt) : raw;
+  }
+  path = path.replace(/\\/g, "/");
+  path = path.replace(/\/{2,}/g, "/");
+  if (!path.startsWith("/")) path = "/" + path;
+  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  return path.slice(0, 1e3);
+}
+__name(normalizePath, "normalizePath");
+function normalizeDevice2(v) {
+  const d = trimTo3(v, 30).toLowerCase();
+  if (!ALLOWED_DEVICE2.has(d)) throw new Error("device must be one of: desktop, mobile, tablet");
+  return d;
+}
+__name(normalizeDevice2, "normalizeDevice");
+function normalizeDim(v, max = 120) {
+  const out = trimTo3(v, max);
+  if (out.toLowerCase() === "(not set)") return "";
+  return out;
+}
+__name(normalizeDim, "normalizeDim");
+function extractProductSlug2(path) {
+  const m = String(path || "").match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
+  if (!m) return null;
+  try {
+    return decodeURIComponent(m[1]).trim().toLowerCase();
+  } catch {
+    return m[1].trim().toLowerCase();
+  }
+}
+__name(extractProductSlug2, "extractProductSlug");
+function sameNullable2(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable2, "sameNullable");
+function sameNullableNum2(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum2, "sameNullableNum");
+async function requireBearerAuth3(request, env) {
+  const configured = trimTo3(env[GA4_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GA4_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth3, "requireBearerAuth");
+async function createSyncRun3(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun3, "createSyncRun");
+async function finishSyncRun3(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun3, "finishSyncRun");
+async function resolveProductIdBySlug2(env, slug, cache) {
+  if (cache.has(slug)) return cache.get(slug) || null;
+  const row = await env.DB.prepare(`SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`).bind(slug).first();
+  const id = row && row.id ? Number(row.id) : null;
+  cache.set(slug, id);
+  return id;
+}
+__name(resolveProductIdBySlug2, "resolveProductIdBySlug");
+async function handleRowsUpsert2(request, env) {
+  const auth = await requireBearerAuth3(request, env);
+  if (!auth.ok) return response3({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response3({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response3({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response3({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo3(body.sync_source, 80) || "ga4-manual-collector";
+  const scenario = trimTo3(body.scenario, 200) || "phase10-ga4-collector";
+  const runId = await createSyncRun3(env, source, scenario, rowsRaw.length);
+  const slugCache = /* @__PURE__ */ new Map();
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate2(raw.date || raw.report_date);
+        const landingPagePath = normalizePath(raw.landing_page_path || raw.landing_page || raw.landingPage || "");
+        const pagePath = normalizePath(raw.page_path || raw.pagePath || raw.page || "");
+        const sourceDim = normalizeDim(raw.source, 120).toLowerCase();
+        const medium = normalizeDim(raw.medium, 120).toLowerCase();
+        const campaign = normalizeDim(raw.campaign, 180);
+        const country = normalizeDim(raw.country, 120);
+        const device = normalizeDevice2(raw.device || "");
+        const sessions = toNonNegativeInt(raw.sessions, "sessions");
+        const users = toNonNegativeInt(raw.users, "users");
+        const engagedSessions = toNonNegativeInt(raw.engaged_sessions, "engaged_sessions");
+        const productViews = toNonNegativeInt(raw.product_views, "product_views");
+        const addToCart = toNonNegativeInt(raw.add_to_cart, "add_to_cart");
+        const beginCheckout = toNonNegativeInt(raw.begin_checkout, "begin_checkout");
+        const purchases = toNonNegativeInt(raw.purchases, "purchases");
+        const purchaseRevenue = toNum3(raw.purchase_revenue);
+        if (purchaseRevenue !== null && purchaseRevenue < 0) throw new Error("purchase_revenue must be >= 0");
+        const candidatePath = pagePath || landingPagePath;
+        const slug = extractProductSlug2(candidatePath);
+        let productId = null;
+        let mappingScope = "non_product";
+        if (slug) {
+          productId = await resolveProductIdBySlug2(env, slug, slugCache);
+          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout,
+                  purchases, purchase_revenue, product_id, mapping_scope
+             FROM ga4_funnel_daily
+            WHERE report_date = ?1 AND landing_page_path = ?2 AND page_path = ?3
+              AND source = ?4 AND medium = ?5 AND campaign = ?6 AND country = ?7 AND device = ?8
+            LIMIT 1`
+        ).bind(reportDate, landingPagePath, pagePath, sourceDim, medium, campaign, country, device).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO ga4_funnel_daily
+             (report_date, landing_page_path, page_path, source, medium, campaign, country, device,
+              sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout, purchases, purchase_revenue,
+              product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)`
+          ).bind(
+            reportDate,
+            landingPagePath,
+            pagePath,
+            sourceDim,
+            medium,
+            campaign,
+            country,
+            device,
+            sessions,
+            users,
+            engagedSessions,
+            productViews,
+            addToCart,
+            beginCheckout,
+            purchases,
+            purchaseRevenue,
+            productId,
+            mappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = Number(existing.sessions || 0) === sessions && Number(existing.users || 0) === users && Number(existing.engaged_sessions || 0) === engagedSessions && Number(existing.product_views || 0) === productViews && Number(existing.add_to_cart || 0) === addToCart && Number(existing.begin_checkout || 0) === beginCheckout && Number(existing.purchases || 0) === purchases && sameNullableNum2(existing.purchase_revenue, purchaseRevenue) && sameNullable2(existing.product_id, productId) && sameNullable2(existing.mapping_scope, mappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE ga4_funnel_daily
+              SET sessions = ?1,
+                  users = ?2,
+                  engaged_sessions = ?3,
+                  product_views = ?4,
+                  add_to_cart = ?5,
+                  begin_checkout = ?6,
+                  purchases = ?7,
+                  purchase_revenue = ?8,
+                  product_id = ?9,
+                  mapping_scope = ?10,
+                  source_updated_at = ?11,
+                  updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?12`
+        ).bind(
+          sessions,
+          users,
+          engagedSessions,
+          productViews,
+          addToCart,
+          beginCheckout,
+          purchases,
+          purchaseRevenue,
+          productId,
+          mappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun3(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response3({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun3(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response3(
+      {
+        success: false,
+        error_code: "GA4_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert2, "handleRowsUpsert");
+async function handleGa4Api(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/ga4") && !path.startsWith("/api/v1/ga4")) return null;
+  if (method === "OPTIONS") return response3({ ok: true });
+  if (method === "GET" && (path === "/v1/ga4/health" || path === "/api/v1/ga4/health")) {
+    return response3({ ok: true, service: GA4_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/ga4/rows/upsert" || path === "/api/v1/ga4/rows/upsert")) {
+    return handleRowsUpsert2(request, env);
+  }
+  return response3({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GA4 route not found." }, 404);
+}
+__name(handleGa4Api, "handleGa4Api");
+
 // api/v1/[[path]].ts
 var onRequest = /* @__PURE__ */ __name(async (context) => {
-  const res = await handleSalesApi(context.request, context.env);
-  if (res) return res;
+  const path = new URL(context.request.url).pathname.replace(/\/+$/, "");
+  if (path.startsWith("/api/v1/gsc") || path.startsWith("/v1/gsc")) {
+    const gscRes = await handleGscApi(context.request, context.env);
+    if (gscRes) return gscRes;
+  }
+  if (path.startsWith("/api/v1/ga4") || path.startsWith("/v1/ga4")) {
+    const ga4Res = await handleGa4Api(context.request, context.env);
+    if (ga4Res) return ga4Res;
+  }
+  const salesRes = await handleSalesApi(context.request, context.env);
+  if (salesRes) return salesRes;
   return new Response(JSON.stringify({ error: "Not Found" }), {
     status: 404,
     headers: { "Content-Type": "application/json" }
@@ -2599,7 +3334,7 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response3 = {
+      const response4 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
@@ -2610,9 +3345,9 @@ async function handlePricing(request, env) {
         derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
-        response3.breakdown = resultUsd.breakdown;
+        response4.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response3), {
+      return new Response(JSON.stringify(response4), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -5689,7 +6424,7 @@ async function authorizeAdmin5(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin5, "authorizeAdmin");
-var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+var DATE_RE3 = /^\d{4}-\d{2}-\d{2}$/;
 var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
 var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
 var REVENUE_STATUSES = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
@@ -5699,9 +6434,9 @@ var DEFAULT_LIMIT = 50;
 function parseFilters(url) {
   const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
   const start = (url.searchParams.get("start") || "").trim() || null;
-  if (start && !DATE_RE.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
+  if (start && !DATE_RE3.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
   const end = (url.searchParams.get("end") || "").trim() || null;
-  if (end && !DATE_RE.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
+  if (end && !DATE_RE3.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
   if (start && end && start > end) return bad("INVALID_DATE_RANGE", "start must be on or before end.");
   const channelRaw = (url.searchParams.get("channel") || "").trim().toLowerCase() || null;
   if (channelRaw && !CHANNEL_RE.test(channelRaw)) return bad("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
@@ -5753,7 +6488,7 @@ function dayRangeWhere(f, col = "order_day") {
 }
 __name(dayRangeWhere, "dayRangeWhere");
 function shiftIsoDate(isoDay, deltaDays) {
-  if (!DATE_RE.test(isoDay)) return null;
+  if (!DATE_RE3.test(isoDay)) return null;
   const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
   if (isNaN(d.getTime())) return null;
   d.setUTCDate(d.getUTCDate() + deltaDays);
@@ -6191,6 +6926,229 @@ async function getGsc(env, f) {
   }
 }
 __name(getGsc, "getGsc");
+async function getGa4(env, f) {
+  const range = dayRangeWhere(f, "g.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND g.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT g.landing_page_path) AS landing_pages,
+         COUNT(DISTINCT g.page_path) AS page_paths,
+         COALESCE(SUM(g.sessions), 0) AS sessions,
+         COALESCE(SUM(g.users), 0) AS users,
+         COALESCE(SUM(g.engaged_sessions), 0) AS engaged_sessions,
+         COALESCE(SUM(g.product_views), 0) AS product_views,
+         COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+         COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+         COALESCE(SUM(g.purchases), 0) AS purchases,
+         COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.engaged_sessions) * 100.0 / SUM(g.sessions), 2)
+         END AS engagement_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.add_to_cart) * 100.0 / SUM(g.sessions), 2)
+         END AS add_to_cart_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.begin_checkout) * 100.0 / SUM(g.sessions), 2)
+         END AS checkout_rate_pct,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.purchases) * 100.0 / SUM(g.sessions), 2)
+         END AS purchase_rate_pct,
+         COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.sessions ELSE 0 END), 0) AS mapped_sessions
+       FROM ga4_funnel_daily g
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topPages = await env.DB.prepare(
+      `SELECT
+         g.landing_page_path,
+         g.page_path,
+         g.product_id,
+         COALESCE(p.title_en, '(non-product)') AS product_title,
+         SUM(g.sessions) AS sessions,
+         SUM(g.users) AS users,
+         SUM(g.product_views) AS product_views,
+         SUM(g.add_to_cart) AS add_to_cart,
+         SUM(g.begin_checkout) AS begin_checkout,
+         SUM(g.purchases) AS purchases,
+         SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue,
+         CASE WHEN SUM(g.sessions) > 0
+              THEN ROUND(SUM(g.purchases) * 100.0 / SUM(g.sessions), 2)
+         END AS purchase_rate_pct
+       FROM ga4_funnel_daily g
+       LEFT JOIN products p ON p.id = g.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY g.landing_page_path, g.page_path, g.product_id, p.title_en
+       ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
+       LIMIT 15`
+    ).bind(...binds).all();
+    const bySource = await env.DB.prepare(
+      `SELECT
+         CASE
+           WHEN length(trim(g.source)) = 0 THEN '(direct)'
+           WHEN length(trim(g.medium)) = 0 THEN lower(g.source)
+           ELSE lower(g.source) || ' / ' || lower(g.medium)
+         END AS source_medium,
+         SUM(g.sessions) AS sessions,
+         SUM(g.purchases) AS purchases,
+         SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue
+       FROM ga4_funnel_daily g
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY source_medium
+       ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
+       LIMIT 12`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      sessions_28d: 0,
+      product_views_28d: 0,
+      add_to_cart_28d: 0,
+      begin_checkout_28d: 0,
+      purchases_28d: 0,
+      purchase_revenue_28d: 0,
+      sessions_prev_28d: 0,
+      product_views_prev_28d: 0,
+      add_to_cart_prev_28d: 0,
+      begin_checkout_prev_28d: 0,
+      purchases_prev_28d: 0,
+      purchase_revenue_prev_28d: 0,
+      sessions_growth_pct: null,
+      purchases_growth_pct: null,
+      purchase_revenue_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND g.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.sessions), 0) AS sessions,
+             COALESCE(SUM(g.product_views), 0) AS product_views,
+             COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+             COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+             COALESCE(SUM(g.purchases), 0) AS purchases,
+             COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
+           FROM ga4_funnel_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(g.sessions), 0) AS sessions,
+             COALESCE(SUM(g.product_views), 0) AS product_views,
+             COALESCE(SUM(g.add_to_cart), 0) AS add_to_cart,
+             COALESCE(SUM(g.begin_checkout), 0) AS begin_checkout,
+             COALESCE(SUM(g.purchases), 0) AS purchases,
+             COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
+           FROM ga4_funnel_daily g
+           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevSessions = Number(prev?.sessions || 0);
+        const prevPurchases = Number(prev?.purchases || 0);
+        const prevRevenue = Number(prev?.purchase_revenue || 0);
+        const curSessions = Number(cur?.sessions || 0);
+        const curPurchases = Number(cur?.purchases || 0);
+        const curRevenue = Number(cur?.purchase_revenue || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          sessions_28d: curSessions,
+          product_views_28d: Number(cur?.product_views || 0),
+          add_to_cart_28d: Number(cur?.add_to_cart || 0),
+          begin_checkout_28d: Number(cur?.begin_checkout || 0),
+          purchases_28d: curPurchases,
+          purchase_revenue_28d: curRevenue,
+          sessions_prev_28d: prevSessions,
+          product_views_prev_28d: Number(prev?.product_views || 0),
+          add_to_cart_prev_28d: Number(prev?.add_to_cart || 0),
+          begin_checkout_prev_28d: Number(prev?.begin_checkout || 0),
+          purchases_prev_28d: prevPurchases,
+          purchase_revenue_prev_28d: prevRevenue,
+          sessions_growth_pct: prevSessions > 0 ? Math.round((curSessions - prevSessions) * 1e4 / prevSessions) / 100 : null,
+          purchases_growth_pct: prevPurchases > 0 ? Math.round((curPurchases - prevPurchases) * 1e4 / prevPurchases) / 100 : null,
+          purchase_revenue_growth_pct: prevRevenue > 0 ? Math.round((curRevenue - prevRevenue) * 1e4 / prevRevenue) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const ga4Days = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (ga4Days !== null && ga4Days > 3) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json5({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        landing_pages: Number(summary?.landing_pages || 0),
+        page_paths: Number(summary?.page_paths || 0),
+        sessions: Number(summary?.sessions || 0),
+        users: Number(summary?.users || 0),
+        engaged_sessions: Number(summary?.engaged_sessions || 0),
+        product_views: Number(summary?.product_views || 0),
+        add_to_cart: Number(summary?.add_to_cart || 0),
+        begin_checkout: Number(summary?.begin_checkout || 0),
+        purchases: Number(summary?.purchases || 0),
+        purchase_revenue: Number(summary?.purchase_revenue || 0),
+        engagement_rate_pct: summary?.engagement_rate_pct === null || summary?.engagement_rate_pct === void 0 ? null : Number(summary.engagement_rate_pct),
+        add_to_cart_rate_pct: summary?.add_to_cart_rate_pct === null || summary?.add_to_cart_rate_pct === void 0 ? null : Number(summary.add_to_cart_rate_pct),
+        checkout_rate_pct: summary?.checkout_rate_pct === null || summary?.checkout_rate_pct === void 0 ? null : Number(summary.checkout_rate_pct),
+        purchase_rate_pct: summary?.purchase_rate_pct === null || summary?.purchase_rate_pct === void 0 ? null : Number(summary.purchase_rate_pct),
+        mapped_sessions: Number(summary?.mapped_sessions || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: ga4Days,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days."
+      },
+      top_pages: topPages.results || [],
+      top_sources: bySource.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: ga4_funnel_daily") || msg.includes("no such table: analysis_ga4_freshness")) {
+      return json5({
+        success: true,
+        available: false,
+        message: "GA4 schema is not available in this environment yet. Apply migration 048_ga4_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err("GA4_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGa4, "getGa4");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -6252,6 +7210,12 @@ async function getDataQuality(env) {
   } catch {
     gscFreshness = null;
   }
+  let ga4Freshness = null;
+  try {
+    ga4Freshness = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+  } catch {
+    ga4Freshness = null;
+  }
   let freshnessMinutes = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
   if (rawTs) {
@@ -6297,6 +7261,13 @@ async function getDataQuality(env) {
     if (gscDays !== null && gscDays > 4) warn("GSC freshness is " + gscDays + " days old (threshold 4).");
     if (["failed", "partial", "error"].includes(gscLastStatus)) warn("Latest GSC sync run status: " + gscLastStatus + ".");
   }
+  const ga4Rows = Number(ga4Freshness?.total_rows || 0);
+  const ga4Days = ga4Freshness?.days_since_latest_report === null || ga4Freshness?.days_since_latest_report === void 0 ? null : Number(ga4Freshness.days_since_latest_report);
+  const ga4LastStatus = String(ga4Freshness?.last_sync_status || "").toLowerCase();
+  if (ga4Rows > 0) {
+    if (ga4Days !== null && ga4Days > 3) warn("GA4 freshness is " + ga4Days + " days old (threshold 3).");
+    if (["failed", "partial", "error"].includes(ga4LastStatus)) warn("Latest GA4 sync run status: " + ga4LastStatus + ".");
+  }
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
   return json5({
@@ -6329,6 +7300,18 @@ async function getDataQuality(env) {
       sync_errors_7d: Number(gscFreshness?.sync_errors_7d || 0),
       status: gscRows === 0 ? "empty" : gscDays !== null && gscDays > 4 || ["failed", "partial", "error"].includes(gscLastStatus) ? "warning" : "ok",
       caveat: "GSC data is typically delayed by 1\u20132 days; freshness warning threshold = 4 days."
+    },
+    ga4_freshness: {
+      available: !!ga4Freshness,
+      total_rows: ga4Rows,
+      latest_report_date: ga4Freshness?.latest_report_date || null,
+      days_since_latest_report: ga4Days,
+      last_success_sync_at: ga4Freshness?.last_success_sync_at || null,
+      last_sync_at: ga4Freshness?.last_sync_at || null,
+      last_sync_status: ga4LastStatus || null,
+      sync_errors_7d: Number(ga4Freshness?.sync_errors_7d || 0),
+      status: ga4Rows === 0 ? "empty" : ga4Days !== null && ga4Days > 3 || ["failed", "partial", "error"].includes(ga4LastStatus) ? "warning" : "ok",
+      caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days."
     },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
@@ -6452,6 +7435,7 @@ async function handleAdminAnalysis(request, env) {
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
   if (sub === "/gsc") return getGsc(env, f);
+  if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
@@ -12357,382 +13341,6 @@ async function handleColorInventory(request, env) {
 }
 __name(handleColorInventory, "handleColorInventory");
 
-// ../workers/api/gsc.ts
-var GSC_SERVICE_NAME = "mildmate-gsc-api";
-var GSC_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
-var DATE_RE2 = /^\d{4}-\d{2}-\d{2}$/;
-var ALLOWED_DEVICE = /* @__PURE__ */ new Set(["", "DESKTOP", "MOBILE", "TABLET"]);
-var ALLOWED_SEARCH_TYPE = /* @__PURE__ */ new Set(["web", "image", "video", "news", "discover", "google_news"]);
-function response2(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization"
-    }
-  });
-}
-__name(response2, "response");
-function trimTo2(v, max = 255) {
-  if (v === void 0 || v === null) return "";
-  return String(v).trim().slice(0, max);
-}
-__name(trimTo2, "trimTo");
-function toNum2(v) {
-  if (v === void 0 || v === null || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-__name(toNum2, "toNum");
-function normalizeDate(v) {
-  const s = trimTo2(v, 20);
-  if (!DATE_RE2.test(s)) throw new Error("date must be YYYY-MM-DD");
-  return s;
-}
-__name(normalizeDate, "normalizeDate");
-function normalizeQuery(v) {
-  const queryText = trimTo2(v, 1e3);
-  if (!queryText) throw new Error("query is required");
-  const queryNorm = queryText.toLowerCase().replace(/\s+/g, " ").trim();
-  if (!queryNorm) throw new Error("query is required");
-  return { queryText, queryNorm };
-}
-__name(normalizeQuery, "normalizeQuery");
-function normalizeCountry(v) {
-  return trimTo2(v, 20).toUpperCase();
-}
-__name(normalizeCountry, "normalizeCountry");
-function normalizeDevice(v) {
-  const device = trimTo2(v, 20).toUpperCase();
-  if (!ALLOWED_DEVICE.has(device)) throw new Error("device must be one of: DESKTOP, MOBILE, TABLET");
-  return device;
-}
-__name(normalizeDevice, "normalizeDevice");
-function normalizeSearchType(v) {
-  const t = trimTo2(v, 40).toLowerCase() || "web";
-  if (!ALLOWED_SEARCH_TYPE.has(t)) throw new Error("search_type is invalid");
-  return t;
-}
-__name(normalizeSearchType, "normalizeSearchType");
-function normalizeSearchAppearance(v) {
-  return trimTo2(v, 120);
-}
-__name(normalizeSearchAppearance, "normalizeSearchAppearance");
-function normalizePage(pageRaw, propertyHintRaw) {
-  const raw = trimTo2(pageRaw, 2e3);
-  if (!raw) throw new Error("page is required");
-  let pageUrl = raw;
-  let pagePath = raw;
-  try {
-    if (raw.startsWith("http://") || raw.startsWith("https://")) {
-      const u = new URL(raw);
-      const path = u.pathname || "/";
-      pagePath = path;
-      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${path}`;
-    } else if (raw.startsWith("/")) {
-      pagePath = raw;
-      const propertyHint = trimTo2(propertyHintRaw, 300);
-      if (propertyHint.startsWith("http://") || propertyHint.startsWith("https://")) {
-        const p = new URL(propertyHint);
-        pageUrl = `${p.protocol}//${p.hostname.toLowerCase()}${raw}`;
-      } else if (propertyHint.startsWith("sc-domain:")) {
-        const host = propertyHint.slice("sc-domain:".length).trim().toLowerCase();
-        if (host) pageUrl = `https://${host}${raw}`;
-      } else {
-        pageUrl = raw;
-      }
-    } else {
-      pagePath = "/" + raw;
-      pageUrl = pagePath;
-    }
-  } catch {
-    if (!raw.startsWith("/")) pagePath = "/" + raw;
-    pageUrl = pagePath;
-  }
-  pagePath = pagePath.replace(/\\/g, "/");
-  pagePath = pagePath.replace(/\/{2,}/g, "/");
-  if (!pagePath.startsWith("/")) pagePath = "/" + pagePath;
-  if (pagePath.length > 1 && pagePath.endsWith("/")) pagePath = pagePath.slice(0, -1);
-  if (!pageUrl.startsWith("http://") && !pageUrl.startsWith("https://")) {
-    pageUrl = pagePath;
-  } else {
-    try {
-      const u = new URL(pageUrl);
-      pageUrl = `${u.protocol}//${u.hostname.toLowerCase()}${pagePath}`;
-    } catch {
-    }
-  }
-  return { pageUrl: pageUrl.slice(0, 2e3), pagePath: pagePath.slice(0, 1e3) };
-}
-__name(normalizePage, "normalizePage");
-function extractProductSlug(pagePath) {
-  const m = pagePath.match(/^\/(?:th\/)?product\/([^\/?#]+)\/?$/i);
-  if (!m) return null;
-  try {
-    return decodeURIComponent(m[1]).trim().toLowerCase();
-  } catch {
-    return m[1].trim().toLowerCase();
-  }
-}
-__name(extractProductSlug, "extractProductSlug");
-function sameNullable(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : a;
-  const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x === null && y === null) return true;
-  return String(x) === String(y);
-}
-__name(sameNullable, "sameNullable");
-function sameNullableNum(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : Number(a);
-  const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x === null && y === null) return true;
-  if (x === null || y === null) return false;
-  return Math.abs(x - y) < 1e-6;
-}
-__name(sameNullableNum, "sameNullableNum");
-async function requireBearerAuth2(request, env) {
-  const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
-  if (!configured) {
-    return {
-      ok: false,
-      status: 503,
-      code: "AUTH_NOT_CONFIGURED",
-      message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
-    };
-  }
-  const auth = request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ")) {
-    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
-  }
-  const supplied = auth.slice(7).trim();
-  if (!supplied || supplied !== configured) {
-    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
-  }
-  return { ok: true };
-}
-__name(requireBearerAuth2, "requireBearerAuth");
-async function createSyncRun2(env, source, scenario, received) {
-  const ins = await env.DB.prepare(
-    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
-     VALUES (?1, ?2, ?3, 'running', ?4)`
-  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
-  return Number(ins.meta?.last_row_id || 0);
-}
-__name(createSyncRun2, "createSyncRun");
-async function finishSyncRun2(env, runId, data) {
-  if (!runId) return;
-  await env.DB.prepare(
-    `UPDATE sync_runs
-     SET status = ?1,
-         finished_at = ?2,
-         records_created = ?3,
-         records_updated = ?4,
-         records_unchanged = ?5,
-         records_rejected = ?6,
-         error_message = ?7
-     WHERE id = ?8`
-  ).bind(
-    data.status,
-    (/* @__PURE__ */ new Date()).toISOString(),
-    Number(data.created || 0),
-    Number(data.updated || 0),
-    Number(data.unchanged || 0),
-    Number(data.rejected || 0),
-    data.error ? String(data.error).slice(0, 500) : null,
-    runId
-  ).run();
-}
-__name(finishSyncRun2, "finishSyncRun");
-async function resolveProductIdBySlug(env, slug, cache) {
-  if (cache.has(slug)) return cache.get(slug) || null;
-  const row = await env.DB.prepare(
-    `SELECT id FROM products WHERE lower(slug) = ?1 LIMIT 1`
-  ).bind(slug).first();
-  const id = row && row.id ? Number(row.id) : null;
-  cache.set(slug, id);
-  return id;
-}
-__name(resolveProductIdBySlug, "resolveProductIdBySlug");
-async function handleRowsUpsert(request, env) {
-  const auth = await requireBearerAuth2(request, env);
-  if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
-  }
-  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
-  if (!rowsRaw.length) {
-    return response2({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
-  }
-  if (rowsRaw.length > 5e3) {
-    return response2({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
-  }
-  const source = trimTo2(body.sync_source, 80) || "gsc-make-collector";
-  const scenario = trimTo2(body.scenario, 200) || "phase09-gsc-collector";
-  const propertyHint = trimTo2(body.property || body.site_url || body.site, 300);
-  const runId = await createSyncRun2(env, source, scenario, rowsRaw.length);
-  const slugCache = /* @__PURE__ */ new Map();
-  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
-  let created = 0;
-  let updated = 0;
-  let unchanged = 0;
-  let rejected = 0;
-  const rejects = [];
-  try {
-    for (let i = 0; i < rowsRaw.length; i++) {
-      const raw = rowsRaw[i] || {};
-      try {
-        const reportDate = normalizeDate(raw.date || raw.report_date);
-        const q = normalizeQuery(raw.query || raw.query_text);
-        const page = normalizePage(raw.page || raw.page_url || raw.landing_page, propertyHint);
-        const country = normalizeCountry(raw.country);
-        const device = normalizeDevice(raw.device);
-        const searchType = normalizeSearchType(raw.search_type);
-        const searchAppearance = normalizeSearchAppearance(raw.search_appearance);
-        const clicksNum = toNum2(raw.clicks);
-        if (clicksNum === null || clicksNum < 0) throw new Error("clicks must be a non-negative number");
-        const impressionsNum = toNum2(raw.impressions);
-        if (impressionsNum === null || impressionsNum < 0) throw new Error("impressions must be a non-negative number");
-        const clicks = Math.round(clicksNum);
-        const impressions = Math.round(impressionsNum);
-        const ctrInput = toNum2(raw.ctr);
-        const ctr = ctrInput === null ? impressions > 0 ? Math.round(clicks / impressions * 1e6) / 1e6 : null : ctrInput;
-        const position = toNum2(raw.position);
-        if (position !== null && position < 0) throw new Error("position must be >= 0");
-        const slug = extractProductSlug(page.pagePath);
-        let productId = null;
-        let mappingScope = "non_product";
-        if (slug) {
-          productId = await resolveProductIdBySlug(env, slug, slugCache);
-          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
-        }
-        const existing = await env.DB.prepare(
-          `SELECT id, query_text, page_path, clicks, impressions, ctr, position, product_id, mapping_scope
-           FROM gsc_search_daily
-           WHERE report_date = ?1 AND query_norm = ?2 AND page_url = ?3
-             AND country = ?4 AND device = ?5 AND search_type = ?6 AND search_appearance = ?7
-           LIMIT 1`
-        ).bind(reportDate, q.queryNorm, page.pageUrl, country, device, searchType, searchAppearance).first();
-        if (!existing) {
-          await env.DB.prepare(
-            `INSERT INTO gsc_search_daily
-             (report_date, query_text, query_norm, page_url, page_path, country, device, search_type, search_appearance,
-              clicks, impressions, ctr, position, product_id, mapping_scope, source_updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)`
-          ).bind(
-            reportDate,
-            q.queryText,
-            q.queryNorm,
-            page.pageUrl,
-            page.pagePath,
-            country,
-            device,
-            searchType,
-            searchAppearance,
-            clicks,
-            impressions,
-            ctr,
-            position,
-            productId,
-            mappingScope,
-            nowIso
-          ).run();
-          created++;
-          continue;
-        }
-        const noChange = sameNullable(existing.query_text, q.queryText) && sameNullable(existing.page_path, page.pagePath) && Number(existing.clicks || 0) === clicks && Number(existing.impressions || 0) === impressions && sameNullableNum(existing.ctr, ctr) && sameNullableNum(existing.position, position) && sameNullable(existing.product_id, productId) && sameNullable(existing.mapping_scope, mappingScope);
-        if (noChange) {
-          unchanged++;
-          continue;
-        }
-        await env.DB.prepare(
-          `UPDATE gsc_search_daily
-           SET query_text = ?1,
-               page_path = ?2,
-               clicks = ?3,
-               impressions = ?4,
-               ctr = ?5,
-               position = ?6,
-               product_id = ?7,
-               mapping_scope = ?8,
-               source_updated_at = ?9,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?10`
-        ).bind(
-          q.queryText,
-          page.pagePath,
-          clicks,
-          impressions,
-          ctr,
-          position,
-          productId,
-          mappingScope,
-          nowIso,
-          Number(existing.id)
-        ).run();
-        updated++;
-      } catch (e) {
-        rejected++;
-        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
-      }
-    }
-    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
-    await finishSyncRun2(env, runId, { status, created, updated, unchanged, rejected, error: null });
-    return response2({
-      success: true,
-      run_id: runId,
-      source,
-      scenario,
-      totals: {
-        received: rowsRaw.length,
-        created,
-        updated,
-        unchanged,
-        rejected
-      },
-      rejected_samples: rejects
-    });
-  } catch (e) {
-    await finishSyncRun2(env, runId, {
-      status: "failed",
-      created,
-      updated,
-      unchanged,
-      rejected: rowsRaw.length - (created + updated + unchanged),
-      error: String(e?.message || e)
-    });
-    return response2(
-      {
-        success: false,
-        error_code: "GSC_UPSERT_FAILED",
-        message: String(e?.message || e),
-        run_id: runId
-      },
-      500
-    );
-  }
-}
-__name(handleRowsUpsert, "handleRowsUpsert");
-async function handleGscApi(request, env) {
-  const url = new URL(request.url);
-  const path = url.pathname.replace(/\/+$/, "");
-  const method = request.method.toUpperCase();
-  if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
-  if (method === "OPTIONS") return response2({ ok: true });
-  if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
-    return response2({ ok: true, service: GSC_SERVICE_NAME });
-  }
-  if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
-    return handleRowsUpsert(request, env);
-  }
-  return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
-}
-__name(handleGscApi, "handleGscApi");
-
 // api/[[path]].ts
 var R2_PUBLIC_BASE7 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
 function toR2Url5(url) {
@@ -12767,6 +13375,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   if (path.startsWith("/api/v1/gsc")) {
     const gscRes = await handleGscApi(request, env);
     if (gscRes) return gscRes;
+  }
+  if (path.startsWith("/api/v1/ga4")) {
+    const ga4Res = await handleGa4Api(request, env);
+    if (ga4Res) return ga4Res;
   }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
     const salesRes = await handleSalesApi(request, env);
@@ -14465,10 +15077,10 @@ async function onRequest12(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response3 = await context.next();
-  const contentType = response3.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response3;
-  let html = await response3.text();
+  const response4 = await context.next();
+  const contentType = response4.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response4;
+  let html = await response4.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -14554,11 +15166,11 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response3.status, headers: response3.headers });
+  return new Response(html, { status: response4.status, headers: response4.headers });
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-aHzSm4/functionsRoutes-0.01964316670396571.mjs
+// ../.wrangler/tmp/pages-4mszlf/functionsRoutes-0.2424944728286783.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -15074,35 +15686,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response3 = await handler(context);
-        if (!(response3 instanceof Response)) {
+        const response4 = await handler(context);
+        if (!(response4 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response3);
+        return cloneResponse(response4);
       } else if ("ASSETS") {
-        const response3 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response3);
+        const response4 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response4);
       } else {
-        const response3 = await fetch(request);
-        return cloneResponse(response3);
+        const response4 = await fetch(request);
+        return cloneResponse(response4);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response3 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response3);
+        const response4 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response4);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response3) => (
+var cloneResponse = /* @__PURE__ */ __name((response4) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response3.status) ? null : response3.body,
-    response3
+    [101, 204, 205, 304].includes(response4.status) ? null : response4.body,
+    response4
   )
 ), "cloneResponse");
 export {

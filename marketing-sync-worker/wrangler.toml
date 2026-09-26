@@ -4,12 +4,15 @@ main = "index.js"
 # Raise this only together with a wrangler upgrade, or `wrangler dev` fails to start.
 compatibility_date = "2026-06-18"
 
-# Bi-weekly main pass + hourly drain for carry-over work.
+# Bi-weekly Notion mapper pass + hourly drain for carry-over work,
+# plus weekly GSC + GA4 collector passes.
 # Cron cannot express a true 14-day interval; the 1st and 15th at 02:00 UTC
 # (09:00 Bangkok) is deterministic and needs no extra state. The hourly entry
 # returns immediately unless the previous run stopped bounded with work left.
+# GSC runs weekly on Monday 03:00 UTC with an overlap window (configurable).
+# GA4 runs weekly on Monday 04:00 UTC with an overlap window (configurable).
 [triggers]
-crons = ["0 2 1,15 * *", "0 * * * *"]
+crons = ["0 2 1,15 * *", "0 * * * *", "0 3 * * 1", "0 4 * * 1"]
 
 # PRODUCTION D1 — this Worker reads/writes live sales tables (sales_orders,
 # sales_order_items, sync_runs, product_mapping_events, marketing_sync_*).
@@ -21,6 +24,15 @@ database_id = "854f206a-b240-491c-bb91-7e064736d487"
 
 [vars]
 MAPPER_API_BASE = "https://www.mildmate.com"
+GSC_API_BASE = "https://www.mildmate.com"
+GSC_SITE_URL = "sc-domain:mildmate.com"
+GSC_SEARCH_TYPE = "web"
+GSC_OVERLAP_DAYS = "14"
+GSC_DATA_LAG_DAYS = "3"
+GA4_API_BASE = "https://www.mildmate.com"
+GA4_PROPERTY_ID = ""
+GA4_OVERLAP_DAYS = "14"
+GA4_DATA_LAG_DAYS = "2"
 # Date scope for ongoing runs. "rolling-prev-month" (default when unset) holds
 # back the current and previous month, matching the operator's correction
 # cadence (month M is finalised during M+1). Set SYNC_BEFORE_MODE = "none" to
@@ -33,3 +45,9 @@ SYNC_BEFORE_MODE = "rolling-prev-month"
 #   NOTION_DATA_SOURCE_ID
 #   SALES_SYNC_API_TOKEN
 #   RESEND_API_KEY
+#   GSC_CLIENT_ID
+#   GSC_CLIENT_SECRET
+#   GSC_REFRESH_TOKEN
+#   GA4_CLIENT_ID
+#   GA4_CLIENT_SECRET
+#   GA4_REFRESH_TOKEN

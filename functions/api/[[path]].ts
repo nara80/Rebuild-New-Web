@@ -67,6 +67,7 @@ import { handleOrderConfirmed } from "../../workers/api/order-confirmed";
 import { handleColorInventory } from "../../workers/api/color-inventory";
 import { handleSalesApi } from "../../workers/api/sales";
 import { handleGscApi } from "../../workers/api/gsc";
+import { handleGa4Api } from "../../workers/api/ga4";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -82,6 +83,12 @@ export const onRequest: PagesFunction<{
   if (path.startsWith("/api/v1/gsc")) {
     const gscRes = await handleGscApi(request, env);
     if (gscRes) return gscRes;
+  }
+
+  // Phase 10 — GA4 collector API under /api/v1/ga4/*
+  if (path.startsWith("/api/v1/ga4")) {
+    const ga4Res = await handleGa4Api(request, env);
+    if (ga4Res) return ga4Res;
   }
 
   // Unified sales API under /api/v1/*

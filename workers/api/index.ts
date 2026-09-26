@@ -44,6 +44,7 @@ import { handleCustomers } from "./customers";
 import { handleOrderConfirmed } from "./order-confirmed";
 import { handleSalesApi } from "./sales";
 import { handleGscApi } from "./gsc";
+import { handleGa4Api } from "./ga4";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -61,6 +62,12 @@ export default {
     if (path.startsWith("/v1/gsc") || path.startsWith("/api/v1/gsc")) {
       const gscRes = await handleGscApi(request, env);
       if (gscRes) return gscRes;
+    }
+
+    // Phase 10 — GA4 collector API (token-auth upsert under /v1/ga4/* and /api/v1/ga4/*)
+    if (path.startsWith("/v1/ga4") || path.startsWith("/api/v1/ga4")) {
+      const ga4Res = await handleGa4Api(request, env);
+      if (ga4Res) return ga4Res;
     }
 
     // Unified sales API (supports /v1/* and /api/v1/*)
