@@ -20,24 +20,28 @@
 
 ---
 
-## Marketing Decision System Reconciliation Snapshot (2026-09-07)
+## Marketing Decision System Reconciliation Snapshot (updated 2026-09-26)
 
 Reconciled from:
 - `00_Issue/00_MildMate_Marketing_Decision_System_Roadmap_D1_v5_2026-09-07.md`
 - `00_Issue/02_MildMate_Marketing_Decision_System_v5_Reconciliation_2026-09-07.md`
+- `01_MildMate_Marketing/09_Handoffs/Phase_01-17_Systematic_Reconciliation_2026-09-19.md`
 
 Verified/confirmed:
 - Canonical D1 product identity for the marketing system is **32 active products** (`1–29, 32, 33, 34`; gaps `30, 31` intentionally preserved).
-- Google Product Master currently has **32 rows** and remains a mirror/admin surface, not canonical source.
-- Etsy mapping is **partial**: 16 listing IDs manually confirmed in Product Master; canonical D1 channel-listing persistence and auto Etsy sync are pending.
+- Google Product Master has **32 rows** and remains a mirror/admin surface, not canonical source.
+- Etsy mapping is **partial**: 16 listing IDs manually confirmed in Product Master; canonical D1 channel-listing persistence + automated Etsy sync are still pending.
 - Unified sales analytics backend is **production-verified**: `sales_orders`, `sales_order_items`, `sync_runs` (migration `039_unified_sales_analytics.sql`).
 - Sales API is **production-verified** at `/api/v1/health`, `/api/v1/sales/orders/upsert`, `/api/v1/sales/orders/{source_system}/{source_order_id}` with Bearer auth (`SALES_SYNC_API_TOKEN`).
-- Make.com scenario `MildMate - Notion OrderList to D1 Sales Sync` is **built + end-to-end verified**. Remaining step is operational activation (`From now on`) with schedule every 15 minutes.
+- Make.com Sales Sync scenario (`MildMate - Notion OrderList to D1 Sales Sync`) is **retired permanently**; Notion→D1 sync is owned by Worker `mildmate-marketing-sync` (Phase 17 decision, 2026-09-19).
+- Phase 09 (GSC) base infrastructure is live: migration `046_gsc_analytics.sql` applied on prod D1, `/api/v1/gsc/*` ingestion API live, `/api/admin/analysis/gsc` live, dashboard GSC section deployed.
+- GSC freshness-source reconciliation is applied on prod D1: `analysis_gsc_freshness` now reads `sync_runs` with `source LIKE 'gsc-%'` (verified 2026-09-26).
 
-Not yet production-verified:
-- Historical product-mapping resolver automation (design/handoff only).
-- Automatic D1 → Google Product Master synchronization (`Last_Synced_At` not yet trusted).
-- External performance collectors (GSC, GA4, Etsy performance, Google Ads, Meta Ads).
+Current pending (not yet production-verified end-to-end):
+- Weekly GSC collector worker update is implemented in repo (`marketing-sync-worker`) but still needs final rollout completion: set `GSC_REFRESH_TOKEN`, deploy updated worker, run first live ingest, reconcile clicks/impressions against sampled GSC exports.
+- Historical product-mapping resolver automation remains design/handoff only.
+- Automatic D1 → Google Product Master synchronization remains pending (`Last_Synced_At` not yet trusted).
+- GA4/Etsy performance/Google Ads/Meta Ads collectors remain pending.
 
 Reporting guardrail:
 - Exclude smoke-test identity `TEST-MAKE-001` from commercial KPI reporting.
@@ -95,6 +99,7 @@ Scope clarification:
 | How to Measure | `/how-to-measure-mattress-size/` | ✅ Built |
 | Shipping Policy | `/shipping/` | ✅ Built |
 | Privacy Policy | `/policy/` | ✅ Built |
+| Terms of Service | `/terms/` | ✅ Built in repo (2026-09-26), deploy pending |
 | Customer Reviews | `/reviews/` | ✅ Built |
 | Checkout | `/checkout/` | ✅ Built |
 | Order Confirmed | `/order-confirmed/` | ✅ Built |
