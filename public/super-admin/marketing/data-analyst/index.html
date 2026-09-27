@@ -201,6 +201,19 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="etsy-products-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="google-ads-card">
+      <div class="card-header"><span>Paid Media / Google Ads</span><span class="muted" style="font-size:0.75rem;font-weight:400">daily campaign/ad-group grain; platform-attributed conversion value is directional and separate from canonical sales revenue</span></div>
+      <div class="card-body">
+        <div id="google-ads-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest Google Ads report date</span></div>
+      <div class="table-wrap"><div id="google-ads-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Campaigns / Ad Groups</span><span class="muted" style="font-size:0.75rem;font-weight:400">spend-ranked</span></div>
+      <div class="table-wrap"><div id="google-ads-campaigns-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Products from Google Ads</span><span class="muted" style="font-size:0.75rem;font-weight:400">aggregated by canonical Product_ID when mapping is verified</span></div>
+      <div class="table-wrap"><div id="google-ads-products-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
@@ -789,6 +802,116 @@ async function loadEtsy(){
   }
 }
 
+// ── Paid Media / Google Ads (Phase 12) ──
+
+async function loadGoogleAds(){
+  setState('google-ads-trend-table', '', 'Loading…');
+  setState('google-ads-campaigns-table', '', 'Loading…');
+  setState('google-ads-products-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/google-ads' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('google-ads-summary').innerHTML =
+        '<span class="badge badge-grey">Google Ads schema not available in this environment yet</span>';
+      setState('google-ads-trend-table', '', d.message || 'Apply migration 050_google_ads_analytics.sql first.');
+      setState('google-ads-campaigns-table', '', 'No Google Ads rows yet.');
+      setState('google-ads-products-table', '', 'No mapped Google Ads product rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var mappedCostPct = Number(s.cost || 0) > 0 ? (Number(s.mapped_cost || 0) * 100 / Number(s.cost || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('google-ads-summary').innerHTML =
+      '<span class="badge badge-blue">Spend: ' + fmtBaht(s.cost) + '</span>' +
+      '<span class="badge badge-blue">Conv Value: ' + fmtBaht(s.conversion_value) + '</span>' +
+      '<span class="badge badge-grey">Impressions: ' + fmtNum(s.impressions) + '</span>' +
+      '<span class="badge badge-grey">Clicks: ' + fmtNum(s.clicks) + '</span>' +
+      '<span class="badge badge-grey">CTR: ' + fmtPct(s.ctr_pct) + '</span>' +
+      '<span class="badge badge-grey">CPC: ' + fmtBaht(s.cpc) + '</span>' +
+      '<span class="badge badge-grey">Conversions: ' + fmtNum(s.conversions) + '</span>' +
+      '<span class="badge badge-grey">CPA: ' + fmtBaht(s.cpa) + '</span>' +
+      '<span class="badge badge-grey">ROAS: ' + (s.roas === null || s.roas === undefined ? '—' : Number(s.roas).toFixed(2) + 'x') + '</span>' +
+      '<span class="badge badge-grey">Mapped spend coverage: ' + fmtPct(mappedCostPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Spend</th><th class="num">Impressions</th><th class="num">Clicks</th><th class="num">Conversions</th><th class="num">Conv Value</th><th class="num">CPA</th><th class="num">ROAS</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtBaht(t.cost_28d) + '</td><td class="num">' + fmtNum(t.impressions_28d) + '</td><td class="num">' + fmtNum(t.clicks_28d) + '</td><td class="num">' + fmtNum(t.conversions_28d) + '</td><td class="num">' + fmtBaht(t.conversion_value_28d) + '</td><td class="num">' + fmtBaht(t.cpa_28d) + '</td><td class="num">' + (t.roas_28d === null || t.roas_28d === undefined ? '—' : Number(t.roas_28d).toFixed(2) + 'x') + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtBaht(t.cost_prev_28d) + '</td><td class="num">' + fmtNum(t.impressions_prev_28d) + '</td><td class="num">' + fmtNum(t.clicks_prev_28d) + '</td><td class="num">' + fmtNum(t.conversions_prev_28d) + '</td><td class="num">' + fmtBaht(t.conversion_value_prev_28d) + '</td><td class="num">' + fmtBaht(t.cpa_prev_28d) + '</td><td class="num">' + (t.roas_prev_28d === null || t.roas_prev_28d === undefined ? '—' : Number(t.roas_prev_28d).toFixed(2) + 'x') + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.cost_growth_pct === null || t.cost_growth_pct === undefined ? '—' : ((t.cost_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.cost_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.conversions_growth_pct === null || t.conversions_growth_pct === undefined ? '—' : ((t.conversions_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.conversions_growth_pct)))) + '</td>' +
+      '<td class="num">' + (t.conversion_value_growth_pct === null || t.conversion_value_growth_pct === undefined ? '—' : ((t.conversion_value_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.conversion_value_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td><td class="num"><span class="muted">—</span></td></tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('google-ads-trend-table').innerHTML = trendHtml;
+
+    var campaigns = d.top_campaigns || [];
+    if (!campaigns.length) {
+      setState('google-ads-campaigns-table', '', 'No Google Ads campaign rows for the selected filters.');
+    } else {
+      var ch = '<table><thead><tr><th>Campaign</th><th>Ad Group</th><th>Product</th><th class="num">Spend</th><th class="num">Impr</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">Conversions</th><th class="num">CPA</th><th class="num">Conv Value</th><th class="num">ROAS</th></tr></thead><tbody>';
+      campaigns.forEach(function(r){
+        ch += '<tr>' +
+          '<td><span class="mono">' + esc(r.campaign_id) + '</span>' + (r.campaign_name ? ('<br><span class="muted">' + esc(r.campaign_name) + '</span>') : '') + '</td>' +
+          '<td>' + (r.ad_group_id ? ('<span class="mono">' + esc(r.ad_group_id) + '</span>' + (r.ad_group_name ? ('<br><span class="muted">' + esc(r.ad_group_name) + '</span>') : '')) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cost) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpc) + '</td>' +
+          '<td class="num">' + fmtNum(r.conversions) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpa) + '</td>' +
+          '<td class="num">' + fmtBaht(r.conversion_value) + '</td>' +
+          '<td class="num">' + (r.roas === null || r.roas === undefined ? '—' : Number(r.roas).toFixed(2) + 'x') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('google-ads-campaigns-table').innerHTML = ch + '</tbody></table>';
+    }
+
+    var products = d.top_products || [];
+    if (!products.length) {
+      setState('google-ads-products-table', '', 'No mapped Google Ads product rows for the selected filters.');
+    } else {
+      var ph = '<table><thead><tr><th>Product</th><th class="num">Campaigns</th><th class="num">Ad Groups</th><th class="num">Spend</th><th class="num">Impr</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">Conversions</th><th class="num">CPA</th><th class="num">Conv Value</th><th class="num">ROAS</th></tr></thead><tbody>';
+      products.forEach(function(r){
+        ph += '<tr>' +
+          '<td>#' + esc(r.product_id) + ' — ' + esc(r.product_title || '') + '</td>' +
+          '<td class="num">' + fmtNum(r.campaign_count) + '</td>' +
+          '<td class="num">' + fmtNum(r.ad_group_count) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cost) + '</td>' +
+          '<td class="num">' + fmtNum(r.impressions) + '</td>' +
+          '<td class="num">' + fmtNum(r.clicks) + '</td>' +
+          '<td class="num">' + fmtPct(r.ctr_pct) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpc) + '</td>' +
+          '<td class="num">' + fmtNum(r.conversions) + '</td>' +
+          '<td class="num">' + fmtBaht(r.cpa) + '</td>' +
+          '<td class="num">' + fmtBaht(r.conversion_value) + '</td>' +
+          '<td class="num">' + (r.roas === null || r.roas === undefined ? '—' : Number(r.roas).toFixed(2) + 'x') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('google-ads-products-table').innerHTML = ph + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('google-ads-summary').innerHTML = '<span class="badge badge-red">Google Ads unavailable</span>';
+    setState('google-ads-trend-table', 'error', 'Could not load Google Ads trend: ' + e.message);
+    setState('google-ads-campaigns-table', 'error', 'Could not load Google Ads campaigns: ' + e.message);
+    setState('google-ads-products-table', 'error', 'Could not load Google Ads products: ' + e.message);
+  }
+}
+
 // ── Sales Detail ──
 
 async function loadSales(){
@@ -911,11 +1034,11 @@ async function populateProductFilter(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy();
+  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); populateProductFilter();
 }
 
 async function boot(){

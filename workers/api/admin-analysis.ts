@@ -10,6 +10,7 @@
 // GET /api/admin/analysis/gsc           ?start&end&product_id
 // GET /api/admin/analysis/ga4           ?start&end&product_id
 // GET /api/admin/analysis/etsy          ?start&end&product_id
+// GET /api/admin/analysis/google-ads    ?start&end&product_id
 //
 // Reads analysis_* views (plus selected supporting tables/products for titles).
 // Metric semantics: 01_MildMate_Marketing/02_Metric_Dictionary/Phase_02_Metric_Contract_2026-09-07.md
@@ -1188,6 +1189,289 @@ async function getEtsy(env: any, f: Filters): Promise<Response> {
   }
 }
 
+async function getGoogleAds(env: any, f: Filters): Promise<Response> {
+  const range = dayRangeWhere(f, "a.report_date");
+  const binds: any[] = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND a.product_id = ?";
+    binds.push(f.productId);
+  }
+
+  try {
+    const summary: any = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT a.campaign_id) AS campaigns,
+         COUNT(DISTINCT CASE WHEN length(trim(a.ad_group_id)) > 0 THEN a.ad_group_id END) AS ad_groups,
+         COALESCE(SUM(a.impressions), 0) AS impressions,
+         COALESCE(SUM(a.clicks), 0) AS clicks,
+         COALESCE(SUM(a.cost), 0) AS cost,
+         COALESCE(SUM(a.conversions), 0) AS conversions,
+         COALESCE(SUM(a.conversion_value), 0) AS conversion_value,
+         COALESCE(SUM(COALESCE(a.all_conversions, 0)), 0) AS all_conversions,
+         COALESCE(SUM(COALESCE(a.all_conversions_value, 0)), 0) AS all_conversions_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas,
+         COALESCE(SUM(CASE WHEN a.product_id IS NOT NULL THEN a.cost ELSE 0 END), 0) AS mapped_cost
+       FROM google_ads_campaign_daily a
+       WHERE 1=1${range.sql}${productSql}`
+    )
+      .bind(...binds)
+      .first();
+
+    const topCampaigns = await env.DB.prepare(
+      `SELECT
+         a.campaign_id,
+         MIN(a.campaign_name) AS campaign_name,
+         a.ad_group_id,
+         MIN(a.ad_group_name) AS ad_group_name,
+         MIN(a.channel_type) AS channel_type,
+         MIN(a.network) AS network,
+         MIN(a.device) AS device,
+         a.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         SUM(a.impressions) AS impressions,
+         SUM(a.clicks) AS clicks,
+         SUM(a.cost) AS cost,
+         SUM(a.conversions) AS conversions,
+         SUM(a.conversion_value) AS conversion_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas
+       FROM google_ads_campaign_daily a
+       LEFT JOIN products p ON p.id = a.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY a.campaign_id, a.ad_group_id, a.product_id, p.title_en
+       ORDER BY SUM(a.cost) DESC, SUM(a.conversions) DESC, a.campaign_id
+       LIMIT 20`
+    )
+      .bind(...binds)
+      .all();
+
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         a.product_id,
+         p.slug AS product_slug,
+         p.title_en AS product_title,
+         COUNT(DISTINCT a.campaign_id) AS campaign_count,
+         COUNT(DISTINCT CASE WHEN length(trim(a.ad_group_id)) > 0 THEN a.ad_group_id END) AS ad_group_count,
+         SUM(a.impressions) AS impressions,
+         SUM(a.clicks) AS clicks,
+         SUM(a.cost) AS cost,
+         SUM(a.conversions) AS conversions,
+         SUM(a.conversion_value) AS conversion_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas
+       FROM google_ads_campaign_daily a
+       JOIN products p ON p.id = a.product_id
+       WHERE a.product_id IS NOT NULL${range.sql}${productSql}
+       GROUP BY a.product_id, p.slug, p.title_en
+       ORDER BY SUM(a.cost) DESC, SUM(a.conversions) DESC, a.product_id
+       LIMIT 15`
+    )
+      .bind(...binds)
+      .all();
+
+    const fresh: any = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+
+    let trend: any = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      cost_28d: 0,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      conversions_28d: 0,
+      conversion_value_28d: 0,
+      cpa_28d: null,
+      roas_28d: null,
+      cost_prev_28d: 0,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      conversions_prev_28d: 0,
+      conversion_value_prev_28d: 0,
+      cpa_prev_28d: null,
+      roas_prev_28d: null,
+      cost_growth_pct: null,
+      conversions_growth_pct: null,
+      conversion_value_growth_pct: null,
+    };
+
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds: any[] = [currentStart, anchorDate];
+        const prevBinds: any[] = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND a.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+
+        const cur: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(a.cost), 0) AS cost,
+             COALESCE(SUM(a.clicks), 0) AS clicks,
+             COALESCE(SUM(a.impressions), 0) AS impressions,
+             COALESCE(SUM(a.conversions), 0) AS conversions,
+             COALESCE(SUM(a.conversion_value), 0) AS conversion_value
+           FROM google_ads_campaign_daily a
+           WHERE a.report_date >= ? AND a.report_date <= ?${productTrendSql}`
+        )
+          .bind(...curBinds)
+          .first();
+
+        const prev: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(a.cost), 0) AS cost,
+             COALESCE(SUM(a.clicks), 0) AS clicks,
+             COALESCE(SUM(a.impressions), 0) AS impressions,
+             COALESCE(SUM(a.conversions), 0) AS conversions,
+             COALESCE(SUM(a.conversion_value), 0) AS conversion_value
+           FROM google_ads_campaign_daily a
+           WHERE a.report_date >= ? AND a.report_date <= ?${productTrendSql}`
+        )
+          .bind(...prevBinds)
+          .first();
+
+        const prevCost = Number(prev?.cost || 0);
+        const prevConversions = Number(prev?.conversions || 0);
+        const prevConversionValue = Number(prev?.conversion_value || 0);
+        const curCost = Number(cur?.cost || 0);
+        const curConversions = Number(cur?.conversions || 0);
+        const curConversionValue = Number(cur?.conversion_value || 0);
+
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          cost_28d: curCost,
+          clicks_28d: Number(cur?.clicks || 0),
+          impressions_28d: Number(cur?.impressions || 0),
+          conversions_28d: curConversions,
+          conversion_value_28d: curConversionValue,
+          cpa_28d: curConversions > 0 ? Math.round((curCost / curConversions) * 100) / 100 : null,
+          roas_28d: curCost > 0 ? Math.round((curConversionValue / curCost) * 100) / 100 : null,
+          cost_prev_28d: prevCost,
+          clicks_prev_28d: Number(prev?.clicks || 0),
+          impressions_prev_28d: Number(prev?.impressions || 0),
+          conversions_prev_28d: prevConversions,
+          conversion_value_prev_28d: prevConversionValue,
+          cpa_prev_28d: prevConversions > 0 ? Math.round((prevCost / prevConversions) * 100) / 100 : null,
+          roas_prev_28d: prevCost > 0 ? Math.round((prevConversionValue / prevCost) * 100) / 100 : null,
+          cost_growth_pct: prevCost > 0 ? Math.round(((curCost - prevCost) * 10000) / prevCost) / 100 : null,
+          conversions_growth_pct:
+            prevConversions > 0 ? Math.round(((curConversions - prevConversions) * 10000) / prevConversions) / 100 : null,
+          conversion_value_growth_pct:
+            prevConversionValue > 0
+              ? Math.round(((curConversionValue - prevConversionValue) * 10000) / prevConversionValue) / 100
+              : null,
+        };
+      }
+    }
+
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const googleAdsDays =
+      fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === undefined
+        ? null
+        : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus: "ok" | "warning" | "empty" = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (googleAdsDays !== null && googleAdsDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+
+    return json({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        campaigns: Number(summary?.campaigns || 0),
+        ad_groups: Number(summary?.ad_groups || 0),
+        impressions: Number(summary?.impressions || 0),
+        clicks: Number(summary?.clicks || 0),
+        cost: Number(summary?.cost || 0),
+        conversions: Number(summary?.conversions || 0),
+        conversion_value: Number(summary?.conversion_value || 0),
+        all_conversions: Number(summary?.all_conversions || 0),
+        all_conversions_value: Number(summary?.all_conversions_value || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === undefined ? null : Number(summary.ctr_pct),
+        cpc: summary?.cpc === null || summary?.cpc === undefined ? null : Number(summary.cpc),
+        cpa: summary?.cpa === null || summary?.cpa === undefined ? null : Number(summary.cpa),
+        roas: summary?.roas === null || summary?.roas === undefined ? null : Number(summary.roas),
+        mapped_cost: Number(summary?.mapped_cost || 0),
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: googleAdsDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat:
+          "Google Ads conversion value is platform-attributed and directional only; keep separate from canonical D1 order revenue.",
+      },
+      top_campaigns: topCampaigns.results || [],
+      top_products: topProducts.results || [],
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (
+      msg.includes("no such table: google_ads_campaign_daily") ||
+      msg.includes("no such table: analysis_google_ads_freshness")
+    ) {
+      return json({
+        success: true,
+        available: false,
+        message: "Google Ads schema is not available in this environment yet. Apply migration 050_google_ads_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId },
+      });
+    }
+    return err("GOOGLE_ADS_QUERY_FAILED", msg, 500);
+  }
+}
+
 async function getDataQuality(env: any): Promise<Response> {
   const dq: any = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -1276,6 +1560,14 @@ async function getDataQuality(env: any): Promise<Response> {
     etsyFreshness = null;
   }
 
+  let googleAdsFreshness: any = null;
+  try {
+    googleAdsFreshness = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+  } catch {
+    // Migration 050 may not exist yet in a given environment.
+    googleAdsFreshness = null;
+  }
+
   // M22 freshness + M30 roll-up (contract: computed in code, not SQL)
   let freshnessMinutes: number | null = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
@@ -1337,6 +1629,21 @@ async function getDataQuality(env: any): Promise<Response> {
   if (etsyRows > 0) {
     if (etsyDays !== null && etsyDays > 7) warn("Etsy freshness is " + etsyDays + " days old (threshold 7).");
     if (["failed", "partial", "error"].includes(etsyLastStatus)) warn("Latest Etsy sync run status: " + etsyLastStatus + ".");
+  }
+
+  const googleAdsRows = Number(googleAdsFreshness?.total_rows || 0);
+  const googleAdsDays =
+    googleAdsFreshness?.days_since_latest_report === null || googleAdsFreshness?.days_since_latest_report === undefined
+      ? null
+      : Number(googleAdsFreshness.days_since_latest_report);
+  const googleAdsLastStatus = String(googleAdsFreshness?.last_sync_status || "").toLowerCase();
+  if (googleAdsRows > 0) {
+    if (googleAdsDays !== null && googleAdsDays > 4) {
+      warn("Google Ads freshness is " + googleAdsDays + " days old (threshold 4).");
+    }
+    if (["failed", "partial", "error"].includes(googleAdsLastStatus)) {
+      warn("Latest Google Ads sync run status: " + googleAdsLastStatus + ".");
+    }
   }
 
   const commercialOrders = Number(dq.commercial_orders || 0);
@@ -1405,6 +1712,21 @@ async function getDataQuality(env: any): Promise<Response> {
         ? "empty"
         : ((etsyDays !== null && etsyDays > 7) || ["failed", "partial", "error"].includes(etsyLastStatus) ? "warning" : "ok"),
       caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days.",
+    },
+    google_ads_freshness: {
+      available: !!googleAdsFreshness,
+      total_rows: googleAdsRows,
+      latest_report_date: googleAdsFreshness?.latest_report_date || null,
+      days_since_latest_report: googleAdsDays,
+      last_success_sync_at: googleAdsFreshness?.last_success_sync_at || null,
+      last_sync_at: googleAdsFreshness?.last_sync_at || null,
+      last_sync_status: googleAdsLastStatus || null,
+      sync_errors_7d: Number(googleAdsFreshness?.sync_errors_7d || 0),
+      status: googleAdsRows === 0
+        ? "empty"
+        : ((googleAdsDays !== null && googleAdsDays > 4) || ["failed", "partial", "error"].includes(googleAdsLastStatus) ? "warning" : "ok"),
+      caveat:
+        "Google Ads conversion value is platform-attributed and directional only; keep separate from canonical D1 order revenue.",
     },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
@@ -1541,6 +1863,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
+  if (sub === "/google-ads") return getGoogleAds(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);

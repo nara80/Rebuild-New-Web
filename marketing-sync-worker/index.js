@@ -32,8 +32,9 @@
  *                   one invocation would wait a fortnight to finish.
  *   "0 3 * * 1"     GSC weekly collector (Monday 03:00 UTC) with overlap
  *                   window to absorb late-settling Search Console rows.
- *   "0 4 * * 1"     GA4 + Etsy weekly collectors (Monday 04:00 UTC) with
- *                   overlap windows to absorb late-settling rows.
+ *   "0 4 * * 1"     GA4 + Etsy + Google Ads weekly collectors (Monday
+ *                   04:00 UTC) with overlap windows to absorb late-settling
+ *                   rows.
  */
 
 import {
@@ -105,6 +106,17 @@ const ETSY_DEFAULT_RECEIPT_PAGE_SIZE = 100;
 const ETSY_DEFAULT_CHUNK_SIZE = 1000;
 const ETSY_MAX_WINDOW_DAYS = 120;
 const ETSY_STATES = ["active", "inactive", "sold_out", "draft", "removed", "expired"];
+
+const GOOGLE_ADS_STREAM = "google-ads-weekly-sync";
+const GOOGLE_ADS_SYNC_SOURCE = "google-ads-worker-cron";
+const GOOGLE_ADS_SCENARIO = "phase12-weekly-google-ads-sync";
+const GOOGLE_ADS_WEEKLY_CRON = "0 4 * * 1"; // shared weekly Monday 04:00 UTC run
+const GOOGLE_ADS_UPSERT_ROUTE = "/api/v1/google-ads/rows/upsert";
+const GOOGLE_ADS_LOCK_TTL_MS = 20 * 60 * 1000;
+const GOOGLE_ADS_DEFAULT_OVERLAP_DAYS = 14;
+const GOOGLE_ADS_DEFAULT_LAG_DAYS = 2;
+const GOOGLE_ADS_DEFAULT_CHUNK_SIZE = 1000;
+const GOOGLE_ADS_MAX_WINDOW_DAYS = 90;
 
 // Stop and carry over via the cursor before the platform can cut the run off
 // mid-record. Notion calls are throttled to ~350ms, so this is wall-clock bound.
@@ -290,6 +302,32 @@ async function releaseEtsyLock(db, runId) {
     .run();
 }
 
+async function acquireGoogleAdsLock(db, runId) {
+  await ensureLockRow(db, GOOGLE_ADS_STREAM);
+  const until = new Date(Date.now() + GOOGLE_ADS_LOCK_TTL_MS).toISOString();
+  const res = await db
+    .prepare(
+      `UPDATE marketing_sync_lock
+          SET locked_until = ?, run_id = ?, updated_at = ?
+        WHERE name = ?
+          AND (locked_until IS NULL OR locked_until < ?)`
+    )
+    .bind(until, runId, nowIso(), GOOGLE_ADS_STREAM, nowIso())
+    .run();
+  return (res.meta?.changes ?? 0) === 1;
+}
+
+async function releaseGoogleAdsLock(db, runId) {
+  await db
+    .prepare(
+      `UPDATE marketing_sync_lock
+          SET locked_until = NULL, run_id = NULL, updated_at = ?
+        WHERE name = ? AND run_id = ?`
+    )
+    .bind(nowIso(), GOOGLE_ADS_STREAM, runId)
+    .run();
+}
+
 function resolveGscWindow(env, overrides = {}) {
   const lagDays = clampInt(
     toInt(overrides.lagDays ?? env.GSC_DATA_LAG_DAYS, GSC_DEFAULT_LAG_DAYS),
@@ -377,6 +415,39 @@ function resolveEtsyWindow(env, overrides = {}) {
   return { start, end, days, overlapDays, lagDays };
 }
 
+function resolveGoogleAdsWindow(env, overrides = {}) {
+  const lagDays = clampInt(
+    toInt(overrides.lagDays ?? env.GOOGLE_ADS_DATA_LAG_DAYS, GOOGLE_ADS_DEFAULT_LAG_DAYS),
+    0,
+    10
+  );
+  const overlapDays = clampInt(
+    toInt(overrides.overlapDays ?? env.GOOGLE_ADS_OVERLAP_DAYS, GOOGLE_ADS_DEFAULT_OVERLAP_DAYS),
+    7,
+    GOOGLE_ADS_MAX_WINDOW_DAYS
+  );
+  const maxDays = clampInt(
+    toInt(env.GOOGLE_ADS_MAX_WINDOW_DAYS, GOOGLE_ADS_MAX_WINDOW_DAYS),
+    7,
+    180
+  );
+  const todayIso = toIsoDay(new Date());
+  const defaultEnd = addDaysIso(todayIso, -lagDays);
+  const end = String(overrides.end || defaultEnd || "");
+  if (!parseIsoDay(end)) throw new Error("invalid end date (YYYY-MM-DD)");
+
+  let start = overrides.start ? String(overrides.start) : "";
+  if (!start) start = addDaysIso(end, -(overlapDays - 1)) || "";
+  if (!parseIsoDay(start)) throw new Error("invalid start date (YYYY-MM-DD)");
+  if (start > end) throw new Error("start date must be on/before end date");
+
+  const days = listIsoDaysInclusive(start, end);
+  if (days.length < 1) throw new Error("resolved Google Ads window is empty");
+  if (days.length > maxDays) throw new Error(`resolved Google Ads window exceeds max days (${maxDays})`);
+
+  return { start, end, days, overlapDays, lagDays };
+}
+
 function etsyApiBase(env) {
   return String(env.ETSY_API_BASE || "https://openapi.etsy.com").replace(/\/+$/, "");
 }
@@ -459,6 +530,30 @@ async function getGa4AccessToken(env) {
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.access_token) {
     throw new Error(`GA4 OAuth refresh failed (${res.status}): ${truncate(body?.error_description || body?.error || "", 220)}`);
+  }
+  return String(body.access_token);
+}
+
+async function getGoogleAdsAccessToken(env) {
+  for (const key of ["GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET", "GOOGLE_ADS_REFRESH_TOKEN"]) {
+    if (!env[key]) throw new Error(`${key} is not configured`);
+  }
+  const form = new URLSearchParams({
+    client_id: env.GOOGLE_ADS_CLIENT_ID,
+    client_secret: env.GOOGLE_ADS_CLIENT_SECRET,
+    refresh_token: env.GOOGLE_ADS_REFRESH_TOKEN,
+    grant_type: "refresh_token",
+  });
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form.toString(),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.access_token) {
+    throw new Error(
+      `Google Ads OAuth refresh failed (${res.status}): ${truncate(body?.error_description || body?.error || "", 220)}`
+    );
   }
   return String(body.access_token);
 }
@@ -1214,6 +1309,142 @@ async function resolveEtsyShopId(env, accessToken) {
   return String(body.shop_id);
 }
 
+function normalizeGoogleAdsEnum(v) {
+  const raw = String(v || "").trim();
+  if (!raw) return "";
+  return raw.toLowerCase();
+}
+
+function toGoogleAdsNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeGoogleAdsResultRow(row, currencyFallback) {
+  const date = String(row?.segments?.date || "").trim();
+  if (!parseIsoDay(date)) return null;
+  const campaignId = String(row?.campaign?.id || "").trim();
+  if (!campaignId) return null;
+  const customerId = String(row?.customer?.id || "").trim();
+  if (!customerId) return null;
+  const adGroupId = String(row?.adGroup?.id || "").trim();
+  const costMicros = toGoogleAdsNumber(row?.metrics?.costMicros);
+
+  return {
+    date,
+    customer_id: customerId,
+    customer_name: String(row?.customer?.descriptiveName || "").trim(),
+    campaign_id: campaignId,
+    campaign_name: String(row?.campaign?.name || "").trim(),
+    ad_group_id: adGroupId,
+    ad_group_name: String(row?.adGroup?.name || "").trim(),
+    channel_type: normalizeGoogleAdsEnum(row?.campaign?.advertisingChannelType),
+    network: normalizeGoogleAdsEnum(row?.segments?.adNetworkType),
+    device: normalizeGoogleAdsEnum(row?.segments?.device),
+    currency: String(currencyFallback || "THB").trim().toUpperCase() || "THB",
+    impressions: Math.max(0, Math.round(toGoogleAdsNumber(row?.metrics?.impressions))),
+    clicks: Math.max(0, Math.round(toGoogleAdsNumber(row?.metrics?.clicks))),
+    cost_micros: Math.max(0, Math.round(costMicros)),
+    cost: Math.round((Math.max(0, costMicros) / 1000000) * 1000000) / 1000000,
+    conversions: Math.max(0, toGoogleAdsNumber(row?.metrics?.conversions)),
+    conversion_value: Math.max(0, toGoogleAdsNumber(row?.metrics?.conversionsValue)),
+    all_conversions: Math.max(0, toGoogleAdsNumber(row?.metrics?.allConversions)),
+    all_conversions_value: Math.max(0, toGoogleAdsNumber(row?.metrics?.allConversionsValue)),
+  };
+}
+
+async function fetchGoogleAdsRowsForWindow(env, accessToken, startIso, endIso) {
+  const developerToken = String(env.GOOGLE_ADS_DEVELOPER_TOKEN || "").trim();
+  const customerId = String(env.GOOGLE_ADS_CUSTOMER_ID || "").trim();
+  if (!developerToken) throw new Error("GOOGLE_ADS_DEVELOPER_TOKEN is not configured");
+  if (!customerId) throw new Error("GOOGLE_ADS_CUSTOMER_ID is not configured");
+
+  const apiBase = String(env.GOOGLE_ADS_API_BASE || "https://googleads.googleapis.com").replace(/\/+$/, "");
+  const endpoint = `${apiBase}/v18/customers/${encodeURIComponent(customerId)}/googleAds:searchStream`;
+  const currency = String(env.GOOGLE_ADS_ACCOUNT_CURRENCY || "THB").trim().toUpperCase() || "THB";
+  const query = `
+    SELECT
+      segments.date,
+      customer.id,
+      customer.descriptive_name,
+      campaign.id,
+      campaign.name,
+      campaign.advertising_channel_type,
+      ad_group.id,
+      ad_group.name,
+      segments.device,
+      segments.ad_network_type,
+      metrics.impressions,
+      metrics.clicks,
+      metrics.cost_micros,
+      metrics.conversions,
+      metrics.conversions_value,
+      metrics.all_conversions,
+      metrics.all_conversions_value
+    FROM ad_group
+    WHERE segments.date >= '${startIso}'
+      AND segments.date <= '${endIso}'
+  `.trim();
+
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    "developer-token": developerToken,
+    "Content-Type": "application/json",
+  };
+  const loginCustomerId = String(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "").trim();
+  if (loginCustomerId) headers["login-customer-id"] = loginCustomerId;
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ query }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      body?.error?.message ||
+      body?.error?.details?.[0]?.errors?.[0]?.message ||
+      body?.message ||
+      "unknown error";
+    throw new Error(`Google Ads searchStream failed (${res.status}): ${truncate(String(msg), 240)}`);
+  }
+
+  const batches = Array.isArray(body) ? body : [body];
+  const rows = [];
+  for (const batch of batches) {
+    const results = Array.isArray(batch?.results) ? batch.results : [];
+    for (const raw of results) {
+      const row = normalizeGoogleAdsResultRow(raw, currency);
+      if (row) rows.push(row);
+    }
+  }
+  return rows;
+}
+
+async function postGoogleAdsRowsChunk(env, rows, triggerTag) {
+  const apiBase = String(env.MAPPER_API_BASE || "https://www.mildmate.com").replace(/\/+$/, "");
+  const token = String(env.SALES_SYNC_API_TOKEN || "");
+  if (!token) throw new Error("SALES_SYNC_API_TOKEN is not configured");
+  const payload = {
+    sync_source: GOOGLE_ADS_SYNC_SOURCE,
+    scenario: `${GOOGLE_ADS_SCENARIO}:${triggerTag}`,
+    rows,
+  };
+  const res = await fetch(apiBase + GOOGLE_ADS_UPSERT_ROUTE, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || body?.success !== true) {
+    throw new Error(`Google Ads upsert failed (${res.status}) ${truncate(body?.message || body?.error_code || "unknown", 220)}`);
+  }
+  return body;
+}
+
 function normalizeGscRow(day, keys, row, searchType) {
   const query = String(keys?.[0] || "").trim();
   const page = String(keys?.[1] || "").trim();
@@ -1673,6 +1904,84 @@ async function executeEtsySync(env, trigger, overrides = {}) {
   }
 }
 
+async function executeGoogleAdsSync(env, trigger, overrides = {}) {
+  for (const required of [
+    "SALES_SYNC_API_TOKEN",
+    "GOOGLE_ADS_DEVELOPER_TOKEN",
+    "GOOGLE_ADS_CUSTOMER_ID",
+    "GOOGLE_ADS_CLIENT_ID",
+    "GOOGLE_ADS_CLIENT_SECRET",
+    "GOOGLE_ADS_REFRESH_TOKEN",
+  ]) {
+    if (!env[required]) return { ok: false, reason: `${required} is not configured` };
+  }
+
+  const db = env.DB;
+  const runId = `${GOOGLE_ADS_STREAM}-${trigger}-${Date.now()}`;
+  if (!(await acquireGoogleAdsLock(db, runId))) {
+    console.log("GOOGLE-ADS-SYNC: previous run still active, skipping");
+    return { ok: true, skipped: "locked" };
+  }
+
+  try {
+    const window = resolveGoogleAdsWindow(env, overrides);
+    const accessToken = await getGoogleAdsAccessToken(env);
+    const chunkSize = clampInt(
+      toInt(env.GOOGLE_ADS_UPSERT_CHUNK_SIZE, GOOGLE_ADS_DEFAULT_CHUNK_SIZE),
+      200,
+      5000
+    );
+    const rows = await fetchGoogleAdsRowsForWindow(env, accessToken, window.start, window.end);
+    const totals = {
+      days_in_window: window.days.length,
+      fetched_rows: rows.length,
+      sent_rows: 0,
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      rejected: 0,
+      upsert_calls: 0,
+    };
+
+    const chunks = chunkRows(rows, chunkSize);
+    for (const chunk of chunks) {
+      const out = await postGoogleAdsRowsChunk(env, chunk, trigger);
+      totals.upsert_calls += 1;
+      totals.sent_rows += Number(out?.totals?.received || 0);
+      totals.created += Number(out?.totals?.created || 0);
+      totals.updated += Number(out?.totals?.updated || 0);
+      totals.unchanged += Number(out?.totals?.unchanged || 0);
+      totals.rejected += Number(out?.totals?.rejected || 0);
+    }
+
+    console.log(
+      `GOOGLE-ADS-SYNC: ${trigger} done — rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
+    );
+
+    return {
+      ok: true,
+      source: GOOGLE_ADS_SYNC_SOURCE,
+      scenario: GOOGLE_ADS_SCENARIO,
+      trigger,
+      window: {
+        start: window.start,
+        end: window.end,
+        days: window.days.length,
+        lag_days: window.lagDays,
+        overlap_days: window.overlapDays,
+      },
+      totals,
+    };
+  } catch (e) {
+    const msg = truncate(e?.message || String(e), 280);
+    console.log(`GOOGLE-ADS-SYNC: ${trigger} failed — ${msg}`);
+    return { ok: false, reason: msg };
+  } finally {
+    await releaseGoogleAdsLock(db, runId);
+  }
+}
+
 // ── State ──────────────────────────────────────────────────────────────────
 
 async function loadState(db) {
@@ -1920,6 +2229,11 @@ export default {
         } catch (e) {
           console.log(`ETSY-SYNC: unhandled — ${truncate(e.message, 300)}`);
         }
+        try {
+          await executeGoogleAdsSync(env, "scheduled-weekly");
+        } catch (e) {
+          console.log(`GOOGLE-ADS-SYNC: unhandled — ${truncate(e.message, 300)}`);
+        }
       })());
       return;
     }
@@ -1958,6 +2272,8 @@ export default {
    *   GET  /ga4/status
    *   POST /etsy/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=1]
    *   GET  /etsy/status
+   *   POST /google-ads/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=2]
+   *   GET  /google-ads/status
    *   GET  /ga4/debug-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=25]
    *   GET  /ga4/debug-realtime?[minutes=30&limit=100]
    *   GET  /ga4/debug-stream-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=100]
@@ -2136,6 +2452,54 @@ export default {
         lagDays: url.searchParams.get("lag") ? Number(url.searchParams.get("lag")) : null,
       };
       const out = await executeEtsySync(env, "manual", overrides);
+      return Response.json(out, { status: out.ok ? 200 : 500 });
+    }
+
+    if (url.pathname === "/google-ads/status") {
+      let freshness = null;
+      try {
+        freshness = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+      } catch {
+        freshness = null;
+      }
+      const runs = await env.DB.prepare(
+        `SELECT id, source, scenario, started_at, finished_at, status,
+                records_received, records_created, records_updated, records_unchanged, records_rejected, error_message
+           FROM sync_runs
+          WHERE source LIKE 'google-ads-%'
+          ORDER BY COALESCE(finished_at, started_at) DESC
+          LIMIT 10`
+      ).all();
+      const lock = await env.DB
+        .prepare(`SELECT locked_until, run_id FROM marketing_sync_lock WHERE name = ?`)
+        .bind(GOOGLE_ADS_STREAM)
+        .first();
+      let window = null;
+      try {
+        window = resolveGoogleAdsWindow(env);
+      } catch {
+        window = null;
+      }
+      return Response.json({
+        stream: GOOGLE_ADS_STREAM,
+        source: GOOGLE_ADS_SYNC_SOURCE,
+        scenario: GOOGLE_ADS_SCENARIO,
+        cron: GOOGLE_ADS_WEEKLY_CRON,
+        lock: lock || null,
+        freshness,
+        default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
+        recent_runs: runs.results || [],
+      });
+    }
+
+    if (url.pathname === "/google-ads/run" && request.method === "POST") {
+      const overrides = {
+        start: url.searchParams.get("start") || null,
+        end: url.searchParams.get("end") || null,
+        overlapDays: url.searchParams.get("overlap") ? Number(url.searchParams.get("overlap")) : null,
+        lagDays: url.searchParams.get("lag") ? Number(url.searchParams.get("lag")) : null,
+      };
+      const out = await executeGoogleAdsSync(env, "manual", overrides);
       return Response.json(out, { status: out.ok ? 200 : 500 });
     }
 

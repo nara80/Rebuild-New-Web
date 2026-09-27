@@ -2179,6 +2179,429 @@ async function handleEtsyApi(request, env) {
 }
 __name(handleEtsyApi, "handleEtsyApi");
 
+// ../workers/api/google-ads.ts
+var GOOGLE_ADS_SERVICE_NAME = "mildmate-google-ads-api";
+var GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
+var GOOGLE_ADS_SOURCE_SYSTEMS = /* @__PURE__ */ new Set(["", "google-ads", "google_ads", "googleads"]);
+function response5(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response5, "response");
+function trimTo5(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo5, "trimTo");
+function toNum5(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum5, "toNum");
+function toNonNegativeInt3(v, fieldName, fallback = 0) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n);
+}
+__name(toNonNegativeInt3, "toNonNegativeInt");
+function toNonNegativeReal(v, fieldName, fallback = 0) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n * 1e6) / 1e6;
+}
+__name(toNonNegativeReal, "toNonNegativeReal");
+function normalizeDate4(v) {
+  const s = trimTo5(v, 20);
+  if (!DATE_RE4.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate4, "normalizeDate");
+function normalizeCurrency2(v) {
+  return trimTo5(v || "THB", 10).toUpperCase();
+}
+__name(normalizeCurrency2, "normalizeCurrency");
+function normalizeText(v, max = 255) {
+  const out = trimTo5(v, max);
+  return out === "(not set)" ? "" : out;
+}
+__name(normalizeText, "normalizeText");
+function normalizeAliasCandidates(v) {
+  const raw = normalizeText(v, 500).toLowerCase().trim();
+  if (!raw) return [];
+  const collapsed = raw.replace(/\s+/g, " ").trim();
+  const compact = raw.replace(/[^a-z0-9]+/g, "");
+  const out = [];
+  if (collapsed) out.push(collapsed);
+  if (compact && compact !== collapsed) out.push(compact);
+  return Array.from(new Set(out));
+}
+__name(normalizeAliasCandidates, "normalizeAliasCandidates");
+function parseProductIdsJson3(raw) {
+  try {
+    const arr = JSON.parse(String(raw));
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson3, "parseProductIdsJson");
+function sameNullable4(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable4, "sameNullable");
+function sameNullableNum4(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum4, "sameNullableNum");
+async function requireBearerAuth5(request, env) {
+  const configured = trimTo5(env[GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth5, "requireBearerAuth");
+async function createSyncRun5(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun5, "createSyncRun");
+async function finishSyncRun5(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun5, "finishSyncRun");
+async function productExists2(env, productId, cache) {
+  if (cache.has(productId)) return !!cache.get(productId);
+  const row = await env.DB.prepare(`SELECT id FROM products WHERE id = ?1 LIMIT 1`).bind(productId).first();
+  const ok = !!row?.id;
+  cache.set(productId, ok);
+  return ok;
+}
+__name(productExists2, "productExists");
+async function resolveAliasProduct(env, value) {
+  const idRaw = trimTo5(value, 120);
+  if (!idRaw) return { productId: null, mappingScope: "unmapped" };
+  const aliases = normalizeAliasCandidates(idRaw);
+  const aliasA = aliases[0] || "";
+  const aliasB = aliases[1] || aliasA;
+  const row = await env.DB.prepare(
+    `SELECT source_system, listing_id, match_scope, product_ids
+     FROM product_mapping_aliases
+     WHERE verified = 1
+       AND (listing_id = ?1 OR alias_norm = ?2 OR alias_norm = ?3)
+     ORDER BY
+       (CASE WHEN lower(COALESCE(source_system, '')) IN ('google-ads', 'google_ads', 'googleads') THEN 1 ELSE 0 END) DESC,
+       (CASE WHEN lower(COALESCE(match_scope, '')) = 'listing' THEN 1 ELSE 0 END) DESC,
+       id ASC
+     LIMIT 1`
+  ).bind(idRaw, aliasA, aliasB).first();
+  if (!row) return { productId: null, mappingScope: "unmapped" };
+  const sourceSystem = String(row.source_system || "").toLowerCase().trim();
+  if (!GOOGLE_ADS_SOURCE_SYSTEMS.has(sourceSystem)) return { productId: null, mappingScope: "unmapped" };
+  const ids = parseProductIdsJson3(row.product_ids);
+  if (ids.length === 1) return { productId: ids[0], mappingScope: "alias" };
+  if (ids.length > 1) return { productId: null, mappingScope: "alias_multi_product" };
+  return { productId: null, mappingScope: "unmapped" };
+}
+__name(resolveAliasProduct, "resolveAliasProduct");
+async function handleRowsUpsert4(request, env) {
+  const auth = await requireBearerAuth5(request, env);
+  if (!auth.ok) return response5({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response5({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response5({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response5({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo5(body.sync_source, 80) || "google-ads-structured-import";
+  const scenario = trimTo5(body.scenario, 200) || "phase12-google-ads-collector";
+  const runId = await createSyncRun5(env, source, scenario, rowsRaw.length);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const productExistenceCache = /* @__PURE__ */ new Map();
+  const aliasCache = /* @__PURE__ */ new Map();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate4(raw.date || raw.report_date);
+        const customerId = normalizeText(raw.customer_id || raw.account_id || raw.customer || "", 120);
+        if (!customerId) throw new Error("customer_id is required");
+        const campaignId = normalizeText(raw.campaign_id || raw.campaign || "", 120);
+        if (!campaignId) throw new Error("campaign_id is required");
+        const adGroupId = normalizeText(raw.ad_group_id || raw.adgroup_id || raw.ad_group || "", 120);
+        const campaignName = normalizeText(raw.campaign_name || raw.campaign_title || "", 300);
+        const adGroupName = normalizeText(raw.ad_group_name || raw.adgroup_name || "", 300);
+        const customerName = normalizeText(raw.customer_name || raw.account_name || "", 300);
+        const channelType = normalizeText(raw.channel_type || raw.advertising_channel_type || "", 80).toLowerCase();
+        const network = normalizeText(raw.network || raw.ad_network_type || "", 80).toLowerCase();
+        const device = normalizeText(raw.device || "", 80).toLowerCase();
+        const currency = normalizeCurrency2(raw.currency || raw.currency_code || "THB");
+        const impressions = toNonNegativeInt3(raw.impressions, "impressions", 0);
+        const clicks = toNonNegativeInt3(raw.clicks, "clicks", 0);
+        const costMicros = toNum5(raw.cost_micros);
+        if (costMicros !== null && costMicros < 0) throw new Error("cost_micros must be >= 0");
+        const costRaw = raw.cost ?? raw.spend;
+        let cost = toNonNegativeReal(costRaw, "cost", 0);
+        if ((costRaw === void 0 || costRaw === null || costRaw === "") && costMicros !== null) {
+          cost = Math.round(costMicros / 1e6 * 1e6) / 1e6;
+        }
+        const conversions = toNonNegativeReal(raw.conversions, "conversions", 0);
+        const conversionValue = toNonNegativeReal(raw.conversion_value ?? raw.conversions_value, "conversion_value", 0);
+        const allConversions = toNum5(raw.all_conversions);
+        if (allConversions !== null && allConversions < 0) throw new Error("all_conversions must be >= 0");
+        const allConversionsValue = toNum5(raw.all_conversions_value);
+        if (allConversionsValue !== null && allConversionsValue < 0) throw new Error("all_conversions_value must be >= 0");
+        const explicitProductIdRaw = raw.product_id ?? raw.Product_ID;
+        const explicitProductId = explicitProductIdRaw === void 0 || explicitProductIdRaw === null || explicitProductIdRaw === "" ? null : Number(explicitProductIdRaw);
+        if (explicitProductId !== null && (!Number.isInteger(explicitProductId) || explicitProductId <= 0)) {
+          throw new Error("product_id must be a positive integer when provided");
+        }
+        if (explicitProductId !== null && !await productExists2(env, explicitProductId, productExistenceCache)) {
+          throw new Error(`product_id ${explicitProductId} does not exist in products`);
+        }
+        let resolvedProductId = null;
+        let resolvedScope = "unmapped";
+        if (explicitProductId !== null) {
+          resolvedProductId = explicitProductId;
+          resolvedScope = "explicit_product_id";
+        } else {
+          const lookupKeys = [
+            { key: `campaign_id:${campaignId}`, value: campaignId, scope: "alias_campaign_id" },
+            { key: `ad_group_id:${adGroupId}`, value: adGroupId, scope: "alias_ad_group_id" },
+            { key: `campaign_name:${campaignName}`, value: campaignName, scope: "alias_campaign_name" },
+            { key: `ad_group_name:${adGroupName}`, value: adGroupName, scope: "alias_ad_group_name" }
+          ];
+          for (const lk of lookupKeys) {
+            if (!lk.value) continue;
+            if (!aliasCache.has(lk.key)) aliasCache.set(lk.key, await resolveAliasProduct(env, lk.value));
+            const hit = aliasCache.get(lk.key);
+            if (hit.productId) {
+              resolvedProductId = hit.productId;
+              resolvedScope = lk.scope;
+              break;
+            }
+            if (hit.mappingScope === "alias_multi_product") {
+              resolvedScope = "alias_multi_product";
+            }
+          }
+        }
+        const existing = await env.DB.prepare(
+          `SELECT id, customer_name, campaign_name, ad_group_name, channel_type, network, device, currency,
+                  impressions, clicks, cost, conversions, conversion_value, all_conversions, all_conversions_value,
+                  product_id, mapping_scope
+           FROM google_ads_campaign_daily
+           WHERE report_date = ?1
+             AND customer_id = ?2
+             AND campaign_id = ?3
+             AND ad_group_id = ?4
+             AND network = ?5
+             AND device = ?6
+             AND currency = ?7
+           LIMIT 1`
+        ).bind(reportDate, customerId, campaignId, adGroupId, network, device, currency).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO google_ads_campaign_daily
+             (report_date, customer_id, customer_name, campaign_id, campaign_name, ad_group_id, ad_group_name,
+              channel_type, network, device, currency, impressions, clicks, cost, conversions, conversion_value,
+              all_conversions, all_conversions_value, product_id, mapping_scope, source_updated_at)
+             VALUES
+             (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21)`
+          ).bind(
+            reportDate,
+            customerId,
+            customerName,
+            campaignId,
+            campaignName,
+            adGroupId,
+            adGroupName,
+            channelType,
+            network,
+            device,
+            currency,
+            impressions,
+            clicks,
+            cost,
+            conversions,
+            conversionValue,
+            allConversions,
+            allConversionsValue,
+            resolvedProductId,
+            resolvedScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable4(existing.customer_name, customerName) && sameNullable4(existing.campaign_name, campaignName) && sameNullable4(existing.ad_group_name, adGroupName) && sameNullable4(existing.channel_type, channelType) && sameNullable4(existing.network, network) && sameNullable4(existing.device, device) && sameNullable4(existing.currency, currency) && Number(existing.impressions || 0) === impressions && Number(existing.clicks || 0) === clicks && sameNullableNum4(existing.cost, cost) && sameNullableNum4(existing.conversions, conversions) && sameNullableNum4(existing.conversion_value, conversionValue) && sameNullableNum4(existing.all_conversions, allConversions) && sameNullableNum4(existing.all_conversions_value, allConversionsValue) && sameNullable4(existing.product_id, resolvedProductId) && sameNullable4(existing.mapping_scope, resolvedScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE google_ads_campaign_daily
+           SET customer_name = ?1,
+               campaign_name = ?2,
+               ad_group_name = ?3,
+               channel_type = ?4,
+               impressions = ?5,
+               clicks = ?6,
+               cost = ?7,
+               conversions = ?8,
+               conversion_value = ?9,
+               all_conversions = ?10,
+               all_conversions_value = ?11,
+               product_id = ?12,
+               mapping_scope = ?13,
+               source_updated_at = ?14,
+               updated_at = ?15
+           WHERE id = ?16`
+        ).bind(
+          customerName,
+          campaignName,
+          adGroupName,
+          channelType,
+          impressions,
+          clicks,
+          cost,
+          conversions,
+          conversionValue,
+          allConversions,
+          allConversionsValue,
+          resolvedProductId,
+          resolvedScope,
+          nowIso,
+          nowIso,
+          existing.id
+        ).run();
+        updated++;
+      } catch (rowErr) {
+        rejected++;
+        rejects.push({
+          index: i,
+          reason: String(rowErr?.message || rowErr).slice(0, 220)
+        });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated > 0 ? "partial" : "failed";
+    await finishSyncRun5(env, runId, { status, created, updated, unchanged, rejected });
+    return response5({
+      success: status !== "failed",
+      run_id: runId,
+      status,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun5(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response5(
+      {
+        success: false,
+        error_code: "GOOGLE_ADS_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert4, "handleRowsUpsert");
+async function handleGoogleAdsApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/google-ads") && !path.startsWith("/api/v1/google-ads")) return null;
+  if (method === "OPTIONS") return response5({ ok: true });
+  if (method === "GET" && (path === "/v1/google-ads/health" || path === "/api/v1/google-ads/health")) {
+    return response5({ ok: true, service: GOOGLE_ADS_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/google-ads/rows/upsert" || path === "/api/v1/google-ads/rows/upsert")) {
+    return handleRowsUpsert4(request, env);
+  }
+  return response5({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Google Ads route not found." }, 404);
+}
+__name(handleGoogleAdsApi, "handleGoogleAdsApi");
+
 // api/v1/[[path]].ts
 var onRequest = /* @__PURE__ */ __name(async (context) => {
   const path = new URL(context.request.url).pathname.replace(/\/+$/, "");
@@ -2193,6 +2616,10 @@ var onRequest = /* @__PURE__ */ __name(async (context) => {
   if (path.startsWith("/api/v1/etsy") || path.startsWith("/v1/etsy")) {
     const etsyRes = await handleEtsyApi(context.request, context.env);
     if (etsyRes) return etsyRes;
+  }
+  if (path.startsWith("/api/v1/google-ads") || path.startsWith("/v1/google-ads")) {
+    const googleAdsRes = await handleGoogleAdsApi(context.request, context.env);
+    if (googleAdsRes) return googleAdsRes;
   }
   const salesRes = await handleSalesApi(context.request, context.env);
   if (salesRes) return salesRes;
@@ -3806,7 +4233,7 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response5 = {
+      const response6 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
@@ -3817,9 +4244,9 @@ async function handlePricing(request, env) {
         derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
-        response5.breakdown = resultUsd.breakdown;
+        response6.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response5), {
+      return new Response(JSON.stringify(response6), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -6896,7 +7323,7 @@ async function authorizeAdmin5(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin5, "authorizeAdmin");
-var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
+var DATE_RE5 = /^\d{4}-\d{2}-\d{2}$/;
 var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
 var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
 var REVENUE_STATUSES = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
@@ -6906,9 +7333,9 @@ var DEFAULT_LIMIT = 50;
 function parseFilters(url) {
   const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
   const start = (url.searchParams.get("start") || "").trim() || null;
-  if (start && !DATE_RE4.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
+  if (start && !DATE_RE5.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
   const end = (url.searchParams.get("end") || "").trim() || null;
-  if (end && !DATE_RE4.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
+  if (end && !DATE_RE5.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
   if (start && end && start > end) return bad("INVALID_DATE_RANGE", "start must be on or before end.");
   const channelRaw = (url.searchParams.get("channel") || "").trim().toLowerCase() || null;
   if (channelRaw && !CHANNEL_RE.test(channelRaw)) return bad("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
@@ -6960,7 +7387,7 @@ function dayRangeWhere(f, col = "order_day") {
 }
 __name(dayRangeWhere, "dayRangeWhere");
 function shiftIsoDate(isoDay, deltaDays) {
-  if (!DATE_RE4.test(isoDay)) return null;
+  if (!DATE_RE5.test(isoDay)) return null;
   const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
   if (isNaN(d.getTime())) return null;
   d.setUTCDate(d.getUTCDate() + deltaDays);
@@ -7854,6 +8281,256 @@ async function getEtsy(env, f) {
   }
 }
 __name(getEtsy, "getEtsy");
+async function getGoogleAds(env, f) {
+  const range = dayRangeWhere(f, "a.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND a.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT a.campaign_id) AS campaigns,
+         COUNT(DISTINCT CASE WHEN length(trim(a.ad_group_id)) > 0 THEN a.ad_group_id END) AS ad_groups,
+         COALESCE(SUM(a.impressions), 0) AS impressions,
+         COALESCE(SUM(a.clicks), 0) AS clicks,
+         COALESCE(SUM(a.cost), 0) AS cost,
+         COALESCE(SUM(a.conversions), 0) AS conversions,
+         COALESCE(SUM(a.conversion_value), 0) AS conversion_value,
+         COALESCE(SUM(COALESCE(a.all_conversions, 0)), 0) AS all_conversions,
+         COALESCE(SUM(COALESCE(a.all_conversions_value, 0)), 0) AS all_conversions_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas,
+         COALESCE(SUM(CASE WHEN a.product_id IS NOT NULL THEN a.cost ELSE 0 END), 0) AS mapped_cost
+       FROM google_ads_campaign_daily a
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topCampaigns = await env.DB.prepare(
+      `SELECT
+         a.campaign_id,
+         MIN(a.campaign_name) AS campaign_name,
+         a.ad_group_id,
+         MIN(a.ad_group_name) AS ad_group_name,
+         MIN(a.channel_type) AS channel_type,
+         MIN(a.network) AS network,
+         MIN(a.device) AS device,
+         a.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         SUM(a.impressions) AS impressions,
+         SUM(a.clicks) AS clicks,
+         SUM(a.cost) AS cost,
+         SUM(a.conversions) AS conversions,
+         SUM(a.conversion_value) AS conversion_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas
+       FROM google_ads_campaign_daily a
+       LEFT JOIN products p ON p.id = a.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY a.campaign_id, a.ad_group_id, a.product_id, p.title_en
+       ORDER BY SUM(a.cost) DESC, SUM(a.conversions) DESC, a.campaign_id
+       LIMIT 20`
+    ).bind(...binds).all();
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         a.product_id,
+         p.slug AS product_slug,
+         p.title_en AS product_title,
+         COUNT(DISTINCT a.campaign_id) AS campaign_count,
+         COUNT(DISTINCT CASE WHEN length(trim(a.ad_group_id)) > 0 THEN a.ad_group_id END) AS ad_group_count,
+         SUM(a.impressions) AS impressions,
+         SUM(a.clicks) AS clicks,
+         SUM(a.cost) AS cost,
+         SUM(a.conversions) AS conversions,
+         SUM(a.conversion_value) AS conversion_value,
+         CASE WHEN SUM(a.impressions) > 0
+              THEN ROUND(SUM(a.clicks) * 100.0 / SUM(a.impressions), 2)
+         END AS ctr_pct,
+         CASE WHEN SUM(a.clicks) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.clicks), 2)
+         END AS cpc,
+         CASE WHEN SUM(a.conversions) > 0
+              THEN ROUND(SUM(a.cost) / SUM(a.conversions), 2)
+         END AS cpa,
+         CASE WHEN SUM(a.cost) > 0
+              THEN ROUND(SUM(a.conversion_value) / SUM(a.cost), 2)
+         END AS roas
+       FROM google_ads_campaign_daily a
+       JOIN products p ON p.id = a.product_id
+       WHERE a.product_id IS NOT NULL${range.sql}${productSql}
+       GROUP BY a.product_id, p.slug, p.title_en
+       ORDER BY SUM(a.cost) DESC, SUM(a.conversions) DESC, a.product_id
+       LIMIT 15`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      cost_28d: 0,
+      clicks_28d: 0,
+      impressions_28d: 0,
+      conversions_28d: 0,
+      conversion_value_28d: 0,
+      cpa_28d: null,
+      roas_28d: null,
+      cost_prev_28d: 0,
+      clicks_prev_28d: 0,
+      impressions_prev_28d: 0,
+      conversions_prev_28d: 0,
+      conversion_value_prev_28d: 0,
+      cpa_prev_28d: null,
+      roas_prev_28d: null,
+      cost_growth_pct: null,
+      conversions_growth_pct: null,
+      conversion_value_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND a.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(a.cost), 0) AS cost,
+             COALESCE(SUM(a.clicks), 0) AS clicks,
+             COALESCE(SUM(a.impressions), 0) AS impressions,
+             COALESCE(SUM(a.conversions), 0) AS conversions,
+             COALESCE(SUM(a.conversion_value), 0) AS conversion_value
+           FROM google_ads_campaign_daily a
+           WHERE a.report_date >= ? AND a.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(a.cost), 0) AS cost,
+             COALESCE(SUM(a.clicks), 0) AS clicks,
+             COALESCE(SUM(a.impressions), 0) AS impressions,
+             COALESCE(SUM(a.conversions), 0) AS conversions,
+             COALESCE(SUM(a.conversion_value), 0) AS conversion_value
+           FROM google_ads_campaign_daily a
+           WHERE a.report_date >= ? AND a.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevCost = Number(prev?.cost || 0);
+        const prevConversions = Number(prev?.conversions || 0);
+        const prevConversionValue = Number(prev?.conversion_value || 0);
+        const curCost = Number(cur?.cost || 0);
+        const curConversions = Number(cur?.conversions || 0);
+        const curConversionValue = Number(cur?.conversion_value || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          cost_28d: curCost,
+          clicks_28d: Number(cur?.clicks || 0),
+          impressions_28d: Number(cur?.impressions || 0),
+          conversions_28d: curConversions,
+          conversion_value_28d: curConversionValue,
+          cpa_28d: curConversions > 0 ? Math.round(curCost / curConversions * 100) / 100 : null,
+          roas_28d: curCost > 0 ? Math.round(curConversionValue / curCost * 100) / 100 : null,
+          cost_prev_28d: prevCost,
+          clicks_prev_28d: Number(prev?.clicks || 0),
+          impressions_prev_28d: Number(prev?.impressions || 0),
+          conversions_prev_28d: prevConversions,
+          conversion_value_prev_28d: prevConversionValue,
+          cpa_prev_28d: prevConversions > 0 ? Math.round(prevCost / prevConversions * 100) / 100 : null,
+          roas_prev_28d: prevCost > 0 ? Math.round(prevConversionValue / prevCost * 100) / 100 : null,
+          cost_growth_pct: prevCost > 0 ? Math.round((curCost - prevCost) * 1e4 / prevCost) / 100 : null,
+          conversions_growth_pct: prevConversions > 0 ? Math.round((curConversions - prevConversions) * 1e4 / prevConversions) / 100 : null,
+          conversion_value_growth_pct: prevConversionValue > 0 ? Math.round((curConversionValue - prevConversionValue) * 1e4 / prevConversionValue) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const googleAdsDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (googleAdsDays !== null && googleAdsDays > 4) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json5({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        campaigns: Number(summary?.campaigns || 0),
+        ad_groups: Number(summary?.ad_groups || 0),
+        impressions: Number(summary?.impressions || 0),
+        clicks: Number(summary?.clicks || 0),
+        cost: Number(summary?.cost || 0),
+        conversions: Number(summary?.conversions || 0),
+        conversion_value: Number(summary?.conversion_value || 0),
+        all_conversions: Number(summary?.all_conversions || 0),
+        all_conversions_value: Number(summary?.all_conversions_value || 0),
+        ctr_pct: summary?.ctr_pct === null || summary?.ctr_pct === void 0 ? null : Number(summary.ctr_pct),
+        cpc: summary?.cpc === null || summary?.cpc === void 0 ? null : Number(summary.cpc),
+        cpa: summary?.cpa === null || summary?.cpa === void 0 ? null : Number(summary.cpa),
+        roas: summary?.roas === null || summary?.roas === void 0 ? null : Number(summary.roas),
+        mapped_cost: Number(summary?.mapped_cost || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: googleAdsDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "Google Ads conversion value is platform-attributed and directional only; keep separate from canonical D1 order revenue."
+      },
+      top_campaigns: topCampaigns.results || [],
+      top_products: topProducts.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: google_ads_campaign_daily") || msg.includes("no such table: analysis_google_ads_freshness")) {
+      return json5({
+        success: true,
+        available: false,
+        message: "Google Ads schema is not available in this environment yet. Apply migration 050_google_ads_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err("GOOGLE_ADS_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getGoogleAds, "getGoogleAds");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -7927,6 +8604,12 @@ async function getDataQuality(env) {
   } catch {
     etsyFreshness = null;
   }
+  let googleAdsFreshness = null;
+  try {
+    googleAdsFreshness = await env.DB.prepare(`SELECT * FROM analysis_google_ads_freshness`).first();
+  } catch {
+    googleAdsFreshness = null;
+  }
   let freshnessMinutes = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
   if (rawTs) {
@@ -7985,6 +8668,17 @@ async function getDataQuality(env) {
   if (etsyRows > 0) {
     if (etsyDays !== null && etsyDays > 7) warn("Etsy freshness is " + etsyDays + " days old (threshold 7).");
     if (["failed", "partial", "error"].includes(etsyLastStatus)) warn("Latest Etsy sync run status: " + etsyLastStatus + ".");
+  }
+  const googleAdsRows = Number(googleAdsFreshness?.total_rows || 0);
+  const googleAdsDays = googleAdsFreshness?.days_since_latest_report === null || googleAdsFreshness?.days_since_latest_report === void 0 ? null : Number(googleAdsFreshness.days_since_latest_report);
+  const googleAdsLastStatus = String(googleAdsFreshness?.last_sync_status || "").toLowerCase();
+  if (googleAdsRows > 0) {
+    if (googleAdsDays !== null && googleAdsDays > 4) {
+      warn("Google Ads freshness is " + googleAdsDays + " days old (threshold 4).");
+    }
+    if (["failed", "partial", "error"].includes(googleAdsLastStatus)) {
+      warn("Latest Google Ads sync run status: " + googleAdsLastStatus + ".");
+    }
   }
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
@@ -8045,6 +8739,18 @@ async function getDataQuality(env) {
       inactive_master_listings: Number(etsyFreshness?.inactive_master_listings || 0),
       status: etsyRows === 0 ? "empty" : etsyDays !== null && etsyDays > 7 || ["failed", "partial", "error"].includes(etsyLastStatus) ? "warning" : "ok",
       caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days."
+    },
+    google_ads_freshness: {
+      available: !!googleAdsFreshness,
+      total_rows: googleAdsRows,
+      latest_report_date: googleAdsFreshness?.latest_report_date || null,
+      days_since_latest_report: googleAdsDays,
+      last_success_sync_at: googleAdsFreshness?.last_success_sync_at || null,
+      last_sync_at: googleAdsFreshness?.last_sync_at || null,
+      last_sync_status: googleAdsLastStatus || null,
+      sync_errors_7d: Number(googleAdsFreshness?.sync_errors_7d || 0),
+      status: googleAdsRows === 0 ? "empty" : googleAdsDays !== null && googleAdsDays > 4 || ["failed", "partial", "error"].includes(googleAdsLastStatus) ? "warning" : "ok",
+      caveat: "Google Ads conversion value is platform-attributed and directional only; keep separate from canonical D1 order revenue."
     },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
@@ -8170,6 +8876,7 @@ async function handleAdminAnalysis(request, env) {
   if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
+  if (sub === "/google-ads") return getGoogleAds(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
@@ -14118,6 +14825,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     const etsyRes = await handleEtsyApi(request, env);
     if (etsyRes) return etsyRes;
   }
+  if (path.startsWith("/api/v1/google-ads")) {
+    const googleAdsRes = await handleGoogleAdsApi(request, env);
+    if (googleAdsRes) return googleAdsRes;
+  }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
     const salesRes = await handleSalesApi(request, env);
     if (salesRes) return salesRes;
@@ -15815,10 +16526,10 @@ async function onRequest12(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response5 = await context.next();
-  const contentType = response5.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response5;
-  let html = await response5.text();
+  const response6 = await context.next();
+  const contentType = response6.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response6;
+  let html = await response6.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -15904,11 +16615,11 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response5.status, headers: response5.headers });
+  return new Response(html, { status: response6.status, headers: response6.headers });
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-7dQaIL/functionsRoutes-0.8450011950130609.mjs
+// ../.wrangler/tmp/pages-IRfQu2/functionsRoutes-0.8292081210302885.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -16424,35 +17135,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response5 = await handler(context);
-        if (!(response5 instanceof Response)) {
+        const response6 = await handler(context);
+        if (!(response6 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response5);
+        return cloneResponse(response6);
       } else if ("ASSETS") {
-        const response5 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response5);
+        const response6 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response6);
       } else {
-        const response5 = await fetch(request);
-        return cloneResponse(response5);
+        const response6 = await fetch(request);
+        return cloneResponse(response6);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response5 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response5);
+        const response6 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response6);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response5) => (
+var cloneResponse = /* @__PURE__ */ __name((response6) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response5.status) ? null : response5.body,
-    response5
+    [101, 204, 205, 304].includes(response6.status) ? null : response6.body,
+    response6
   )
 ), "cloneResponse");
 export {

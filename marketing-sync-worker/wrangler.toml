@@ -5,12 +5,12 @@ main = "index.js"
 compatibility_date = "2026-06-18"
 
 # Bi-weekly Notion mapper pass + hourly drain for carry-over work,
-# plus weekly GSC and shared GA4+Etsy collector passes.
+# plus weekly GSC and shared GA4+Etsy+Google Ads collector passes.
 # Cron cannot express a true 14-day interval; the 1st and 15th at 02:00 UTC
 # (09:00 Bangkok) is deterministic and needs no extra state. The hourly entry
 # returns immediately unless the previous run stopped bounded with work left.
 # GSC runs weekly on Monday 03:00 UTC with an overlap window (configurable).
-# GA4 and Etsy run weekly on Monday 04:00 UTC with overlap windows (configurable).
+# GA4, Etsy, and Google Ads run weekly on Monday 04:00 UTC with overlap windows (configurable).
 [triggers]
 crons = ["0 2 1,15 * *", "0 * * * *", "0 3 * * 1", "0 4 * * 1"]
 
@@ -36,6 +36,15 @@ GA4_DATA_LAG_DAYS = "2"
 ETSY_API_BASE = "https://openapi.etsy.com"
 ETSY_OVERLAP_DAYS = "14"
 ETSY_DATA_LAG_DAYS = "1"
+GOOGLE_ADS_API_BASE = "https://googleads.googleapis.com"
+GOOGLE_ADS_OVERLAP_DAYS = "14"
+GOOGLE_ADS_DATA_LAG_DAYS = "2"
+# Required Google Ads account id (without hyphens), example: 1234567890
+GOOGLE_ADS_CUSTOMER_ID = ""
+# Optional manager account id when required by your token setup:
+# GOOGLE_ADS_LOGIN_CUSTOMER_ID = ""
+# Optional account currency fallback for spend/value rows:
+# GOOGLE_ADS_ACCOUNT_CURRENCY = "THB"
 # Optional Etsy conversion helper for non-THB rows if source rows omit revenue_thb.
 # ETSY_FX_TO_THB = "35"
 # Optional GA4 event-name overrides (comma-separated). Defaults:
@@ -66,3 +75,7 @@ SYNC_BEFORE_MODE = "rolling-prev-month"
 #   ETSY_CLIENT_SECRET
 #   ETSY_REFRESH_TOKEN
 #   ETSY_SHOP_ID
+#   GOOGLE_ADS_DEVELOPER_TOKEN
+#   GOOGLE_ADS_CLIENT_ID
+#   GOOGLE_ADS_CLIENT_SECRET
+#   GOOGLE_ADS_REFRESH_TOKEN

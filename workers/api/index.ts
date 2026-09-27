@@ -46,6 +46,7 @@ import { handleSalesApi } from "./sales";
 import { handleGscApi } from "./gsc";
 import { handleGa4Api } from "./ga4";
 import { handleEtsyApi } from "./etsy";
+import { handleGoogleAdsApi } from "./google-ads";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -75,6 +76,12 @@ export default {
     if (path.startsWith("/v1/etsy") || path.startsWith("/api/v1/etsy")) {
       const etsyRes = await handleEtsyApi(request, env);
       if (etsyRes) return etsyRes;
+    }
+
+    // Phase 12 — Google Ads paid-media collector API (token-auth upsert under /v1/google-ads/* and /api/v1/google-ads/*)
+    if (path.startsWith("/v1/google-ads") || path.startsWith("/api/v1/google-ads")) {
+      const googleAdsRes = await handleGoogleAdsApi(request, env);
+      if (googleAdsRes) return googleAdsRes;
     }
 
     // Unified sales API (supports /v1/* and /api/v1/*)

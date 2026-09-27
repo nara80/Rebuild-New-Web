@@ -69,6 +69,7 @@ import { handleSalesApi } from "../../workers/api/sales";
 import { handleGscApi } from "../../workers/api/gsc";
 import { handleGa4Api } from "../../workers/api/ga4";
 import { handleEtsyApi } from "../../workers/api/etsy";
+import { handleGoogleAdsApi } from "../../workers/api/google-ads";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -96,6 +97,12 @@ export const onRequest: PagesFunction<{
   if (path.startsWith("/api/v1/etsy")) {
     const etsyRes = await handleEtsyApi(request, env);
     if (etsyRes) return etsyRes;
+  }
+
+  // Phase 12 — Google Ads paid-media collector API under /api/v1/google-ads/*
+  if (path.startsWith("/api/v1/google-ads")) {
+    const googleAdsRes = await handleGoogleAdsApi(request, env);
+    if (googleAdsRes) return googleAdsRes;
   }
 
   // Unified sales API under /api/v1/*
