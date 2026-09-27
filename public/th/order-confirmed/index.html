@@ -187,6 +187,54 @@
       var pollingUntil = 0;
       var isFetching = false;
 
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params) {
+        try {
+          ensureGa4Stub();
+          window.gtag('event', name, params || {});
+        } catch (e) {}
+      }
+
+      function trackPurchaseOnce(data, currencyCode, totalValue) {
+        if (!data || !data.session_id || !data.orders || !data.orders.length) return;
+        var dedupeKey = 'mildmate_ga4_purchase_' + data.session_id;
+        try {
+          if (localStorage.getItem(dedupeKey) === '1') return;
+        } catch (e) {}
+
+        var items = data.orders.map(function(o) {
+          var qty = Number(o.quantity || 1) || 1;
+          var unitPrice = currencyCode === 'THB'
+            ? Number(o.price_thb || o.price_usd || 0)
+            : Number(o.price_usd || 0);
+          return {
+            item_id: o.product_slug || o.product_title_en || 'product',
+            item_name: o.product_title_en || 'Custom Order',
+            price: Number(unitPrice || 0) || 0,
+            quantity: qty
+          };
+        });
+
+        var payload = {
+          transaction_id: data.session_id,
+          currency: currencyCode,
+          value: Math.round((Number(totalValue || 0) || 0) * 100) / 100,
+          items: items
+        };
+        sendGa4Event('purchase', payload);
+        try {
+          localStorage.setItem(dedupeKey, '1');
+        } catch (e2) {}
+      }
+
       if (!sessionId) {
         document.getElementById('loading-state').style.display = 'none';
         document.getElementById('pending-state').style.display = 'block';
@@ -298,6 +346,7 @@
         var total = 0;
         var currency = data.orders && data.orders[0] && data.orders[0].currency
           ? String(data.orders[0].currency).toLowerCase() : 'usd';
+        var currencyCode = currency === 'thb' ? 'THB' : 'USD';
         function formatMoney(amount) {
           if (currency === 'thb') return '\u0E3F' + Math.round(amount || 0).toLocaleString();
           return '$' + Number(amount || 0).toFixed(2);
@@ -313,6 +362,7 @@
             '<div style="margin-top:4px">' + formatMoney(unitPrice) + '</div>' +
           '</div>';
         });
+        trackPurchaseOnce(data, currencyCode, total);
         document.getElementById('order-items').innerHTML = html;
         document.getElementById('order-total').textContent = formatMoney(total);
       }

@@ -633,6 +633,7 @@
       var externalScriptPromises = {};
       var geoDetectBound = false;
       var countrySelectsInitialized = false;
+      var ga4BeginCheckoutSent = false;
 
       function loadScriptOnce(src) {
         if (externalScriptPromises[src]) return externalScriptPromises[src];
@@ -688,6 +689,52 @@
 
       function getActiveCurrency() {
         return 'THB';
+      }
+
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params) {
+        try {
+          ensureGa4Stub();
+          window.gtag('event', name, params || {});
+        } catch (e) {}
+      }
+
+      function buildGa4Items(currency) {
+        return (cart.items || []).map(function(item) {
+          var qty = Number(item.qty || 1) || 1;
+          var unit = currency === 'THB' ? Number(item.price_thb || 0) : Number(item.price_usd || item.price || 0);
+          return {
+            item_id: item.product_slug || item.slug || item.id || 'product',
+            item_name: item.product_name || item.title || 'Product',
+            price: Number(unit || 0) || 0,
+            quantity: qty
+          };
+        });
+      }
+
+      function trackBeginCheckoutOnce() {
+        if (ga4BeginCheckoutSent) return;
+        var currency = getActiveCurrency();
+        var items = buildGa4Items(currency);
+        if (!items.length) return;
+        var value = items.reduce(function(sum, it) {
+          return sum + ((Number(it.price || 0) || 0) * (Number(it.quantity || 1) || 1));
+        }, 0);
+        var payload = {
+          currency: currency,
+          value: Math.round(value * 100) / 100,
+          items: items
+        };
+        sendGa4Event('begin_checkout', payload);
+        ga4BeginCheckoutSent = true;
       }
 
       function bindCheckoutLanguageToggle() {
@@ -1688,6 +1735,7 @@
             });
           }
           populateStep2Summary();
+          trackBeginCheckoutOnce();
         }
         if (step === 3) renderStep3();
       };

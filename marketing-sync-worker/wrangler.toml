@@ -30,9 +30,15 @@ GSC_SEARCH_TYPE = "web"
 GSC_OVERLAP_DAYS = "14"
 GSC_DATA_LAG_DAYS = "3"
 GA4_API_BASE = "https://www.mildmate.com"
-GA4_PROPERTY_ID = ""
+GA4_PROPERTY_ID = "366290587"
 GA4_OVERLAP_DAYS = "14"
 GA4_DATA_LAG_DAYS = "2"
+# Optional GA4 event-name overrides (comma-separated). Defaults:
+# view_item, add_to_cart, begin_checkout, purchase
+# GA4_EVENT_VIEW_ITEM_NAMES = "view_item"
+# GA4_EVENT_ADD_TO_CART_NAMES = "add_to_cart"
+# GA4_EVENT_BEGIN_CHECKOUT_NAMES = "begin_checkout"
+# GA4_EVENT_PURCHASE_NAMES = "purchase"
 # Date scope for ongoing runs. "rolling-prev-month" (default when unset) holds
 # back the current and previous month, matching the operator's correction
 # cadence (month M is finalised during M+1). Set SYNC_BEFORE_MODE = "none" to

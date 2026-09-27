@@ -1106,6 +1106,107 @@
     return formatPrice(thb, usd);
   }
 
+  function ensureGa4Stub() {
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+    }
+  }
+
+  function sendGa4Event(name, params) {
+    try {
+      ensureGa4Stub();
+      window.gtag('event', name, params || {});
+    } catch (e) {}
+  }
+
+  function getGa4Currency() {
+    return isEN ? 'USD' : 'THB';
+  }
+
+  function getProductSlug() {
+    return window.location.pathname.split('/').filter(Boolean).slice(-1)[0] || 'product';
+  }
+
+  function getProductName() {
+    var titleEl = document.querySelector('.product-title');
+    return titleEl ? titleEl.textContent.trim() : getProductSlug().replace(/-/g, ' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+  }
+
+  function getSelectedColorLabel() {
+    var activeColorGroup = document.querySelector('.fabric-color-group[data-fabric="' + state.fabric + '"]');
+    var selectedColorEl = activeColorGroup ? activeColorGroup.querySelector('.color-option.selected') : null;
+    return selectedColorEl ? formatColorName(selectedColorEl.getAttribute('title') || selectedColorEl.getAttribute('data-color') || '') : (getFixedProtectorColorLabel() || '');
+  }
+
+  function getSelectedSizeLabel() {
+    if (sizeSelect && sizeSelect.selectedOptions[0] && sizeSelect.value && sizeSelect.value !== 'custom') {
+      return sizeSelect.selectedOptions[0].text.trim();
+    }
+    if (isMarineShapeProduct) {
+      var ms = document.getElementById('marine-shape-select');
+      if (ms && ms.selectedOptions[0] && ms.value) return ms.selectedOptions[0].text.trim();
+    }
+    return '';
+  }
+
+  function buildGa4ItemFromCurrentState(quantity) {
+    var qty = Number(quantity || 1) || 1;
+    var unitPrice = isEN
+      ? Number((state._price && state._price.usd) || 0)
+      : Number((state._price && state._price.thb) || 0);
+    var item = {
+      item_id: getProductSlug(),
+      item_name: getProductName(),
+      price: unitPrice,
+      quantity: qty
+    };
+    return item;
+  }
+
+  var ga4ViewItemSent = false;
+  function trackViewItemOnce() {
+    if (ga4ViewItemSent) return;
+    var item = buildGa4ItemFromCurrentState(1);
+    var value = (Number(item.price || 0) || 0) * (Number(item.quantity || 1) || 1);
+    var payload = {
+      currency: getGa4Currency(),
+      value: Math.round(value * 100) / 100,
+      items: [item]
+    };
+    sendGa4Event('view_item', payload);
+    ga4ViewItemSent = true;
+  }
+
+  function trackAddToCart(item) {
+    if (!item) return;
+    var currency = getGa4Currency();
+    var qty = Number(item.qty || 1) || 1;
+    var unitPrice = currency === 'THB'
+      ? Number(item.price_thb || 0)
+      : Number(item.price_usd || item.price || 0);
+    if (!(unitPrice > 0) && state._price) {
+      unitPrice = currency === 'THB'
+        ? Number(state._price.thb || 0)
+        : Number(state._price.usd || 0);
+    }
+    var gaItem = {
+      item_id: item.product_slug || getProductSlug(),
+      item_name: item.product_name || getProductName(),
+      price: Number(unitPrice || 0) || 0,
+      quantity: qty
+    };
+    var value = gaItem.price * qty;
+    var payload = {
+      currency: currency,
+      value: Math.round(value * 100) / 100,
+      items: [gaItem]
+    };
+    sendGa4Event('add_to_cart', payload);
+  }
+
   function applyDerivedMarkupToResult(result) {
     if (!result || !DERIVED_MARKUP_PCT) return result;
     var factor = 1 + (DERIVED_MARKUP_PCT / 100);
@@ -1640,6 +1741,7 @@
       if (window.MildMateCart) {
         window.MildMateCart.add(item);
       }
+      trackAddToCart(item);
 
       // Visual feedback
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
@@ -1683,6 +1785,7 @@
 
   // -- Init: default price --
   updateAllPrices();
+  trackViewItemOnce();
 
   // -- Color inventory: fetch and apply out-of-stock state --
   var colorInventory = {};

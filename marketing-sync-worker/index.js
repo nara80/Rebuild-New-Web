@@ -87,6 +87,10 @@ const GA4_DIMENSIONS = [
   "country",
   "deviceCategory",
 ];
+const GA4_DEFAULT_VIEW_ITEM_EVENTS = ["view_item"];
+const GA4_DEFAULT_ADD_TO_CART_EVENTS = ["add_to_cart"];
+const GA4_DEFAULT_BEGIN_CHECKOUT_EVENTS = ["begin_checkout"];
+const GA4_DEFAULT_PURCHASE_EVENTS = ["purchase"];
 
 // Stop and carry over via the cursor before the platform can cut the run off
 // mid-record. Notion calls are throttled to ~350ms, so this is wall-clock bound.
@@ -389,6 +393,41 @@ function parseGa4Row(base, metricNames, metricValues) {
   return out;
 }
 
+function parseEventNameList(raw, fallback) {
+  const input = String(raw || "");
+  const parts = input
+    .split(",")
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  const chosen = parts.length ? parts : fallback;
+  return Array.from(new Set(chosen.map((s) => String(s || "").trim()).filter(Boolean)));
+}
+
+function resolveGa4EventFilters(env) {
+  return [
+    {
+      events: parseEventNameList(env.GA4_EVENT_VIEW_ITEM_NAMES, GA4_DEFAULT_VIEW_ITEM_EVENTS),
+      field: "product_views",
+      includeRevenue: false,
+    },
+    {
+      events: parseEventNameList(env.GA4_EVENT_ADD_TO_CART_NAMES, GA4_DEFAULT_ADD_TO_CART_EVENTS),
+      field: "add_to_cart",
+      includeRevenue: false,
+    },
+    {
+      events: parseEventNameList(env.GA4_EVENT_BEGIN_CHECKOUT_NAMES, GA4_DEFAULT_BEGIN_CHECKOUT_EVENTS),
+      field: "begin_checkout",
+      includeRevenue: false,
+    },
+    {
+      events: parseEventNameList(env.GA4_EVENT_PURCHASE_NAMES, GA4_DEFAULT_PURCHASE_EVENTS),
+      field: "purchases",
+      includeRevenue: true,
+    },
+  ];
+}
+
 async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimensionFilter = null) {
   const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
   if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
@@ -458,6 +497,294 @@ async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimen
   }
 
   return rows;
+}
+
+async function runGa4EventNameSummary(env, accessToken, startDate, endDate, limit = 25) {
+  const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
+  if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
+  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runReport`;
+  const payload = {
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: "eventName" }],
+    metrics: [{ name: "eventCount" }],
+    orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+    limit: String(clampInt(toInt(limit, 25), 1, 100)),
+    keepEmptyRows: false,
+  };
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = body?.error?.message || body?.message || "unknown error";
+    throw new Error(`GA4 events report failed (${res.status}): ${truncate(msg, 240)}`);
+  }
+  const rows = Array.isArray(body.rows) ? body.rows : [];
+  return rows.map((r) => ({
+    event_name: String(r?.dimensionValues?.[0]?.value || ""),
+    event_count: Number(r?.metricValues?.[0]?.value || 0),
+  }));
+}
+
+async function runGa4StreamEventSummary(env, accessToken, startDate, endDate, limit = 100) {
+  const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
+  if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
+  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runReport`;
+  const payload = {
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: "eventName" }, { name: "streamId" }],
+    metrics: [{ name: "eventCount" }],
+    orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+    limit: String(clampInt(toInt(limit, 100), 1, 500)),
+    keepEmptyRows: false,
+  };
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = body?.error?.message || body?.message || "unknown error";
+    throw new Error(`GA4 stream-events report failed (${res.status}): ${truncate(msg, 240)}`);
+  }
+  const rows = Array.isArray(body.rows) ? body.rows : [];
+  return rows.map((r) => ({
+    event_name: String(r?.dimensionValues?.[0]?.value || ""),
+    stream_id: String(r?.dimensionValues?.[1]?.value || ""),
+    event_count: Number(r?.metricValues?.[0]?.value || 0),
+  }));
+}
+
+async function runGa4RealtimeReport(env, accessToken, minutes = 30, limit = 100, dimensions = ["eventName"]) {
+  const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
+  if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
+  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runRealtimeReport`;
+  const minuteWindow = clampInt(toInt(minutes, 29), 1, 29);
+  const payload = {
+    minuteRanges: [{ startMinutesAgo: minuteWindow, endMinutesAgo: 0 }],
+    dimensions: dimensions.map((name) => ({ name })),
+    metrics: [{ name: "eventCount" }],
+    orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+    limit: String(clampInt(toInt(limit, 100), 1, 500)),
+  };
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = body?.error?.message || body?.message || "unknown error";
+    throw new Error(`GA4 realtime report failed (${res.status}): ${truncate(msg, 240)}`);
+  }
+  return Array.isArray(body.rows) ? body.rows : [];
+}
+
+async function runGa4RealtimeSummary(env, accessToken, minutes = 30, limit = 100) {
+  const eventRows = await runGa4RealtimeReport(env, accessToken, minutes, limit, ["eventName"]);
+  const topEvents = eventRows.map((r) => ({
+    event_name: String(r?.dimensionValues?.[0]?.value || ""),
+    event_count: Number(r?.metricValues?.[0]?.value || 0),
+  }));
+  return {
+    top_events: topEvents,
+    top_event_hosts: [],
+    host_breakdown_error: "hostName dimension is not available in GA4 Realtime Data API",
+  };
+}
+
+async function fetchJsonWithBearer(url, accessToken) {
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const body = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, body };
+}
+
+async function runGa4PropertyDiagnostics(env, accessToken, measurementId = "") {
+  const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
+  if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
+  const out = {
+    property_id: propertyId,
+    requested_measurement_id: measurementId || null,
+    data_api_metadata_ok: false,
+    admin_property: null,
+    admin_streams: [],
+    matched_streams: [],
+    errors: {},
+  };
+
+  {
+    const url = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}/metadata`;
+    const meta = await fetchJsonWithBearer(url, accessToken);
+    if (meta.ok) {
+      out.data_api_metadata_ok = true;
+      out.data_api_metadata_summary = {
+        dimensions: Array.isArray(meta.body?.dimensions) ? meta.body.dimensions.length : 0,
+        metrics: Array.isArray(meta.body?.metrics) ? meta.body.metrics.length : 0,
+      };
+    } else {
+      out.errors.data_api_metadata = {
+        status: meta.status,
+        message: truncate(meta.body?.error?.message || meta.body?.message || "metadata request failed", 280),
+      };
+    }
+  }
+
+  {
+    const url = `https://analyticsadmin.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}`;
+    const prop = await fetchJsonWithBearer(url, accessToken);
+    if (prop.ok) {
+      out.admin_property = {
+        name: String(prop.body?.name || ""),
+        display_name: String(prop.body?.displayName || ""),
+        parent: String(prop.body?.parent || ""),
+        property_type: String(prop.body?.propertyType || ""),
+        time_zone: String(prop.body?.timeZone || ""),
+        currency_code: String(prop.body?.currencyCode || ""),
+      };
+    } else {
+      out.errors.admin_property = {
+        status: prop.status,
+        message: truncate(prop.body?.error?.message || prop.body?.message || "admin property request failed", 280),
+      };
+    }
+  }
+
+  {
+    const url = `https://analyticsadmin.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}/dataStreams?pageSize=200`;
+    const streams = await fetchJsonWithBearer(url, accessToken);
+    if (streams.ok) {
+      const rows = Array.isArray(streams.body?.dataStreams) ? streams.body.dataStreams : [];
+      out.admin_streams = rows.map((s) => ({
+        name: String(s?.name || ""),
+        display_name: String(s?.displayName || ""),
+        type: String(s?.type || ""),
+        measurement_id: String(s?.webStreamData?.measurementId || ""),
+        default_uri: String(s?.webStreamData?.defaultUri || ""),
+      }));
+    } else {
+      out.errors.admin_streams = {
+        status: streams.status,
+        message: truncate(streams.body?.error?.message || streams.body?.message || "admin streams request failed", 280),
+      };
+    }
+  }
+
+  if (measurementId) {
+    const target = String(measurementId).trim().toUpperCase();
+    out.matched_streams = out.admin_streams.filter((s) => String(s.measurement_id || "").toUpperCase() === target);
+  }
+
+  return out;
+}
+
+async function listGa4PropertiesForAccount(accessToken, accountName) {
+  const out = [];
+  let pageToken = "";
+  const account = String(accountName || "").trim();
+  if (!/^accounts\/\d+$/.test(account)) throw new Error("invalid account name");
+  while (true) {
+    const qs = new URLSearchParams({
+      filter: `parent:${account}`,
+      pageSize: "200",
+    });
+    if (pageToken) qs.set("pageToken", pageToken);
+    const url = `https://analyticsadmin.googleapis.com/v1beta/properties?${qs.toString()}`;
+    const res = await fetchJsonWithBearer(url, accessToken);
+    if (!res.ok) {
+      throw new Error(`properties list failed (${res.status}): ${truncate(res.body?.error?.message || res.body?.message || "unknown", 220)}`);
+    }
+    const rows = Array.isArray(res.body?.properties) ? res.body.properties : [];
+    rows.forEach((p) => out.push(p));
+    pageToken = String(res.body?.nextPageToken || "");
+    if (!pageToken) break;
+  }
+  return out;
+}
+
+async function listGa4StreamsForProperty(accessToken, propertyName) {
+  const out = [];
+  let pageToken = "";
+  const prop = String(propertyName || "").trim();
+  if (!/^properties\/\d+$/.test(prop)) throw new Error("invalid property name");
+  while (true) {
+    const qs = new URLSearchParams({ pageSize: "200" });
+    if (pageToken) qs.set("pageToken", pageToken);
+    const url = `https://analyticsadmin.googleapis.com/v1beta/${prop}/dataStreams?${qs.toString()}`;
+    const res = await fetchJsonWithBearer(url, accessToken);
+    if (!res.ok) {
+      throw new Error(`streams list failed (${res.status}): ${truncate(res.body?.error?.message || res.body?.message || "unknown", 220)}`);
+    }
+    const rows = Array.isArray(res.body?.dataStreams) ? res.body.dataStreams : [];
+    rows.forEach((s) => out.push(s));
+    pageToken = String(res.body?.nextPageToken || "");
+    if (!pageToken) break;
+  }
+  return out;
+}
+
+async function findGa4PropertyByMeasurementId(env, accessToken, measurementId) {
+  const target = String(measurementId || "").trim().toUpperCase();
+  if (!/^G-[A-Z0-9]+$/.test(target)) throw new Error("measurement_id must look like G-XXXXXXXXXX");
+
+  const current = await runGa4PropertyDiagnostics(env, accessToken, "");
+  const account = String(current?.admin_property?.parent || "");
+  if (!account) throw new Error("could not resolve parent account from current GA4_PROPERTY_ID");
+
+  const properties = await listGa4PropertiesForAccount(accessToken, account);
+  const matches = [];
+  for (const p of properties) {
+    const propName = String(p?.name || "");
+    if (!/^properties\/\d+$/.test(propName)) continue;
+    let streams = [];
+    try {
+      streams = await listGa4StreamsForProperty(accessToken, propName);
+    } catch (e) {
+      matches.push({
+        property_name: propName,
+        property_display_name: String(p?.displayName || ""),
+        error: truncate(e?.message || String(e), 220),
+        streams: [],
+      });
+      continue;
+    }
+    const reduced = streams.map((s) => ({
+      name: String(s?.name || ""),
+      display_name: String(s?.displayName || ""),
+      measurement_id: String(s?.webStreamData?.measurementId || ""),
+      default_uri: String(s?.webStreamData?.defaultUri || ""),
+      type: String(s?.type || ""),
+    }));
+    const found = reduced.filter((s) => String(s.measurement_id || "").toUpperCase() === target);
+    if (found.length) {
+      matches.push({
+        property_name: propName,
+        property_display_name: String(p?.displayName || ""),
+        streams: found,
+      });
+    }
+  }
+
+  return {
+    searched_account: account,
+    requested_measurement_id: target,
+    properties_scanned: properties.length,
+    matches,
+  };
 }
 
 function ga4Key(row) {
@@ -741,32 +1068,29 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
       row.engaged_sessions = Number(r.engaged_sessions || 0);
     });
 
-    const eventFilters = [
-      { event: "view_item", field: "product_views", includeRevenue: false },
-      { event: "add_to_cart", field: "add_to_cart", includeRevenue: false },
-      { event: "begin_checkout", field: "begin_checkout", includeRevenue: false },
-      { event: "purchase", field: "purchases", includeRevenue: true },
-    ];
+    const eventFilters = resolveGa4EventFilters(env);
 
     for (const ev of eventFilters) {
-      const rows = await runGa4Report(
-        env,
-        accessToken,
-        window.start,
-        window.end,
-        ev.includeRevenue ? ["eventCount", "purchaseRevenue"] : ["eventCount"],
-        {
-          filter: {
-            fieldName: "eventName",
-            stringFilter: { matchType: "EXACT", value: ev.event },
-          },
-        }
-      );
-      rows.forEach((r) => {
-        const row = ensureGa4AccumulatorRow(acc, r);
-        row[ev.field] = Number(r.event_count || 0);
-        if (ev.includeRevenue) row.purchase_revenue = Number(r.purchase_revenue || 0);
-      });
+      for (const eventName of ev.events) {
+        const rows = await runGa4Report(
+          env,
+          accessToken,
+          window.start,
+          window.end,
+          ev.includeRevenue ? ["eventCount", "purchaseRevenue"] : ["eventCount"],
+          {
+            filter: {
+              fieldName: "eventName",
+              stringFilter: { matchType: "EXACT", value: eventName },
+            },
+          }
+        );
+        rows.forEach((r) => {
+          const row = ensureGa4AccumulatorRow(acc, r);
+          row[ev.field] = Number(row[ev.field] || 0) + Number(r.event_count || 0);
+          if (ev.includeRevenue) row.purchase_revenue = Number(row.purchase_revenue || 0) + Number(r.purchase_revenue || 0);
+        });
+      }
     }
 
     const merged = Array.from(acc.values())
@@ -813,6 +1137,7 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
       scenario: GA4_SCENARIO,
       trigger,
       window: { start: window.start, end: window.end, days: window.days.length, lag_days: window.lagDays, overlap_days: window.overlapDays },
+      event_filters: eventFilters,
       totals,
     };
   } catch (e) {
@@ -1100,6 +1425,11 @@ export default {
    *   GET  /gsc/status
    *   POST /ga4/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=2]
    *   GET  /ga4/status
+   *   GET  /ga4/debug-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=25]
+   *   GET  /ga4/debug-realtime?[minutes=30&limit=100]
+   *   GET  /ga4/debug-stream-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=100]
+   *   GET  /ga4/debug-property?[measurement_id=G-XXXX]
+   *   GET  /ga4/find-property-by-measurement?measurement_id=G-XXXX
    */
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -1220,11 +1550,110 @@ export default {
         source: GA4_SYNC_SOURCE,
         scenario: GA4_SCENARIO,
         cron: GA4_WEEKLY_CRON,
+        event_filters: resolveGa4EventFilters(env),
         lock: lock || null,
         freshness,
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
         recent_runs: runs.results || [],
       });
+    }
+
+    if (url.pathname === "/ga4/debug-events") {
+      const start = url.searchParams.get("start") || null;
+      const end = url.searchParams.get("end") || null;
+      const limit = url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 25;
+      const window = resolveGa4Window(env, { start, end });
+      const accessToken = await getGa4AccessToken(env);
+      const events = await runGa4EventNameSummary(env, accessToken, window.start, window.end, limit);
+      return Response.json({
+        source: GA4_SYNC_SOURCE,
+        window: { start: window.start, end: window.end, days: window.days.length },
+        configured_event_filters: resolveGa4EventFilters(env),
+        top_events: events,
+      });
+    }
+
+    if (url.pathname === "/ga4/debug-stream-events") {
+      try {
+        const start = url.searchParams.get("start") || null;
+        const end = url.searchParams.get("end") || null;
+        const limit = url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 100;
+        const window = resolveGa4Window(env, { start, end });
+        const accessToken = await getGa4AccessToken(env);
+        const rows = await runGa4StreamEventSummary(env, accessToken, window.start, window.end, limit);
+        return Response.json({
+          source: GA4_SYNC_SOURCE,
+          window: { start: window.start, end: window.end, days: window.days.length },
+          rows,
+        });
+      } catch (e) {
+        return Response.json(
+          {
+            error: "ga4_stream_events_debug_failed",
+            message: truncate(e?.message || String(e), 280),
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (url.pathname === "/ga4/debug-realtime") {
+      try {
+        const minutes = url.searchParams.get("minutes") ? Number(url.searchParams.get("minutes")) : 29;
+        const limit = url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 100;
+        const accessToken = await getGa4AccessToken(env);
+        const realtime = await runGa4RealtimeSummary(env, accessToken, minutes, limit);
+        return Response.json({
+          source: GA4_SYNC_SOURCE,
+          window_minutes: clampInt(toInt(minutes, 29), 1, 29),
+          configured_event_filters: resolveGa4EventFilters(env),
+          top_events: realtime.top_events,
+          top_event_hosts: realtime.top_event_hosts,
+          host_breakdown_error: realtime.host_breakdown_error || null,
+        });
+      } catch (e) {
+        return Response.json(
+          {
+            error: "ga4_realtime_debug_failed",
+            message: truncate(e?.message || String(e), 280),
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (url.pathname === "/ga4/debug-property") {
+      try {
+        const measurementId = String(url.searchParams.get("measurement_id") || "").trim();
+        const accessToken = await getGa4AccessToken(env);
+        const diag = await runGa4PropertyDiagnostics(env, accessToken, measurementId);
+        return Response.json(diag);
+      } catch (e) {
+        return Response.json(
+          {
+            error: "ga4_property_debug_failed",
+            message: truncate(e?.message || String(e), 280),
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (url.pathname === "/ga4/find-property-by-measurement") {
+      try {
+        const measurementId = String(url.searchParams.get("measurement_id") || "").trim();
+        const accessToken = await getGa4AccessToken(env);
+        const out = await findGa4PropertyByMeasurementId(env, accessToken, measurementId);
+        return Response.json(out);
+      } catch (e) {
+        return Response.json(
+          {
+            error: "ga4_find_property_failed",
+            message: truncate(e?.message || String(e), 280),
+          },
+          { status: 500 }
+        );
+      }
     }
 
     if (url.pathname === "/ga4/run" && request.method === "POST") {
