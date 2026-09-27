@@ -104,7 +104,7 @@ Returns:
 
 ### Collector runtime (`marketing-sync-worker`)
 - Scheduled cron:
-  - `0 5 * * 1` (weekly Monday 05:00 UTC)
+  - shared with GA4 at `0 4 * * 1` (weekly Monday 04:00 UTC)
 - Manual/status endpoints:
   - `POST /etsy/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=1]`
   - `GET /etsy/status`

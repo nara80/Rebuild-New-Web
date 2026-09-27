@@ -32,10 +32,8 @@
  *                   one invocation would wait a fortnight to finish.
  *   "0 3 * * 1"     GSC weekly collector (Monday 03:00 UTC) with overlap
  *                   window to absorb late-settling Search Console rows.
- *   "0 4 * * 1"     GA4 weekly collector (Monday 04:00 UTC) with overlap
- *                   window to absorb late-settling event rows.
- *   "0 5 * * 1"     Etsy weekly collector (Monday 05:00 UTC) with overlap
- *                   window to absorb late-settling receipts/transactions.
+ *   "0 4 * * 1"     GA4 + Etsy weekly collectors (Monday 04:00 UTC) with
+ *                   overlap windows to absorb late-settling rows.
  */
 
 import {
@@ -97,7 +95,7 @@ const GA4_DEFAULT_PURCHASE_EVENTS = ["purchase"];
 const ETSY_STREAM = "etsy-weekly-sync";
 const ETSY_SYNC_SOURCE = "etsy-worker-cron";
 const ETSY_SCENARIO = "phase11-weekly-etsy-sync";
-const ETSY_WEEKLY_CRON = "0 5 * * 1"; // weekly Monday 05:00 UTC
+const ETSY_WEEKLY_CRON = "0 4 * * 1"; // shared weekly Monday 04:00 UTC run
 const ETSY_UPSERT_ROUTE = "/api/v1/etsy/rows/upsert";
 const ETSY_LOCK_TTL_MS = 20 * 60 * 1000;
 const ETSY_DEFAULT_OVERLAP_DAYS = 14;
@@ -1910,21 +1908,19 @@ async function executeSync(env, trigger, overrides = {}) {
 
 export default {
   async scheduled(event, env, ctx) {
-    if (event.cron === ETSY_WEEKLY_CRON) {
-      ctx.waitUntil(
-        executeEtsySync(env, "scheduled-weekly").catch((e) =>
-          console.log(`ETSY-SYNC: unhandled — ${truncate(e.message, 300)}`)
-        )
-      );
-      return;
-    }
-
     if (event.cron === GA4_WEEKLY_CRON) {
-      ctx.waitUntil(
-        executeGa4Sync(env, "scheduled-weekly").catch((e) =>
-          console.log(`GA4-SYNC: unhandled — ${truncate(e.message, 300)}`)
-        )
-      );
+      ctx.waitUntil((async () => {
+        try {
+          await executeGa4Sync(env, "scheduled-weekly");
+        } catch (e) {
+          console.log(`GA4-SYNC: unhandled — ${truncate(e.message, 300)}`);
+        }
+        try {
+          await executeEtsySync(env, "scheduled-weekly");
+        } catch (e) {
+          console.log(`ETSY-SYNC: unhandled — ${truncate(e.message, 300)}`);
+        }
+      })());
       return;
     }
 
