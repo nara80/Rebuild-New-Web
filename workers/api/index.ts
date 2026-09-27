@@ -45,6 +45,7 @@ import { handleOrderConfirmed } from "./order-confirmed";
 import { handleSalesApi } from "./sales";
 import { handleGscApi } from "./gsc";
 import { handleGa4Api } from "./ga4";
+import { handleEtsyApi } from "./etsy";
 
 export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
@@ -68,6 +69,12 @@ export default {
     if (path.startsWith("/v1/ga4") || path.startsWith("/api/v1/ga4")) {
       const ga4Res = await handleGa4Api(request, env);
       if (ga4Res) return ga4Res;
+    }
+
+    // Phase 11 — Etsy listing analytics collector API (token-auth upsert under /v1/etsy/* and /api/v1/etsy/*)
+    if (path.startsWith("/v1/etsy") || path.startsWith("/api/v1/etsy")) {
+      const etsyRes = await handleEtsyApi(request, env);
+      if (etsyRes) return etsyRes;
     }
 
     // Unified sales API (supports /v1/* and /api/v1/*)

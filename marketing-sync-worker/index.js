@@ -34,6 +34,8 @@
  *                   window to absorb late-settling Search Console rows.
  *   "0 4 * * 1"     GA4 weekly collector (Monday 04:00 UTC) with overlap
  *                   window to absorb late-settling event rows.
+ *   "0 5 * * 1"     Etsy weekly collector (Monday 05:00 UTC) with overlap
+ *                   window to absorb late-settling receipts/transactions.
  */
 
 import {
@@ -91,6 +93,20 @@ const GA4_DEFAULT_VIEW_ITEM_EVENTS = ["view_item"];
 const GA4_DEFAULT_ADD_TO_CART_EVENTS = ["add_to_cart"];
 const GA4_DEFAULT_BEGIN_CHECKOUT_EVENTS = ["begin_checkout"];
 const GA4_DEFAULT_PURCHASE_EVENTS = ["purchase"];
+
+const ETSY_STREAM = "etsy-weekly-sync";
+const ETSY_SYNC_SOURCE = "etsy-worker-cron";
+const ETSY_SCENARIO = "phase11-weekly-etsy-sync";
+const ETSY_WEEKLY_CRON = "0 5 * * 1"; // weekly Monday 05:00 UTC
+const ETSY_UPSERT_ROUTE = "/api/v1/etsy/rows/upsert";
+const ETSY_LOCK_TTL_MS = 20 * 60 * 1000;
+const ETSY_DEFAULT_OVERLAP_DAYS = 14;
+const ETSY_DEFAULT_LAG_DAYS = 1;
+const ETSY_DEFAULT_LISTING_PAGE_SIZE = 100;
+const ETSY_DEFAULT_RECEIPT_PAGE_SIZE = 100;
+const ETSY_DEFAULT_CHUNK_SIZE = 1000;
+const ETSY_MAX_WINDOW_DAYS = 120;
+const ETSY_STATES = ["active", "inactive", "sold_out", "draft", "removed", "expired"];
 
 // Stop and carry over via the cursor before the platform can cut the run off
 // mid-record. Notion calls are throttled to ~350ms, so this is wall-clock bound.
@@ -250,6 +266,32 @@ async function releaseGa4Lock(db, runId) {
     .run();
 }
 
+async function acquireEtsyLock(db, runId) {
+  await ensureLockRow(db, ETSY_STREAM);
+  const until = new Date(Date.now() + ETSY_LOCK_TTL_MS).toISOString();
+  const res = await db
+    .prepare(
+      `UPDATE marketing_sync_lock
+          SET locked_until = ?, run_id = ?, updated_at = ?
+        WHERE name = ?
+          AND (locked_until IS NULL OR locked_until < ?)`
+    )
+    .bind(until, runId, nowIso(), ETSY_STREAM, nowIso())
+    .run();
+  return (res.meta?.changes ?? 0) === 1;
+}
+
+async function releaseEtsyLock(db, runId) {
+  await db
+    .prepare(
+      `UPDATE marketing_sync_lock
+          SET locked_until = NULL, run_id = NULL, updated_at = ?
+        WHERE name = ? AND run_id = ?`
+    )
+    .bind(nowIso(), ETSY_STREAM, runId)
+    .run();
+}
+
 function resolveGscWindow(env, overrides = {}) {
   const lagDays = clampInt(
     toInt(overrides.lagDays ?? env.GSC_DATA_LAG_DAYS, GSC_DEFAULT_LAG_DAYS),
@@ -308,6 +350,77 @@ function resolveGa4Window(env, overrides = {}) {
   return { start, end, days, overlapDays, lagDays };
 }
 
+function resolveEtsyWindow(env, overrides = {}) {
+  const lagDays = clampInt(
+    toInt(overrides.lagDays ?? env.ETSY_DATA_LAG_DAYS, ETSY_DEFAULT_LAG_DAYS),
+    0,
+    10
+  );
+  const overlapDays = clampInt(
+    toInt(overrides.overlapDays ?? env.ETSY_OVERLAP_DAYS, ETSY_DEFAULT_OVERLAP_DAYS),
+    7,
+    ETSY_MAX_WINDOW_DAYS
+  );
+  const maxDays = clampInt(toInt(env.ETSY_MAX_WINDOW_DAYS, ETSY_MAX_WINDOW_DAYS), 7, 180);
+  const todayIso = toIsoDay(new Date());
+  const defaultEnd = addDaysIso(todayIso, -lagDays);
+  const end = String(overrides.end || defaultEnd || "");
+  if (!parseIsoDay(end)) throw new Error("invalid end date (YYYY-MM-DD)");
+
+  let start = overrides.start ? String(overrides.start) : "";
+  if (!start) start = addDaysIso(end, -(overlapDays - 1)) || "";
+  if (!parseIsoDay(start)) throw new Error("invalid start date (YYYY-MM-DD)");
+  if (start > end) throw new Error("start date must be on/before end date");
+
+  const days = listIsoDaysInclusive(start, end);
+  if (days.length < 1) throw new Error("resolved Etsy window is empty");
+  if (days.length > maxDays) throw new Error(`resolved Etsy window exceeds max days (${maxDays})`);
+
+  return { start, end, days, overlapDays, lagDays };
+}
+
+function etsyApiBase(env) {
+  return String(env.ETSY_API_BASE || "https://openapi.etsy.com").replace(/\/+$/, "");
+}
+
+function etsyAuthHeaders(env, accessToken) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    "x-api-key": `${env.ETSY_CLIENT_ID}:${env.ETSY_CLIENT_SECRET}`,
+    "Content-Type": "application/json",
+  };
+}
+
+function toUnixStartOfDay(isoDay) {
+  const d = parseIsoDay(isoDay);
+  if (!d) return null;
+  return Math.floor(d.getTime() / 1000);
+}
+
+function toUnixEndOfDay(isoDay) {
+  const d = parseIsoDay(isoDay);
+  if (!d) return null;
+  d.setUTCHours(23, 59, 59, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+function parseEtsyAmount(v) {
+  if (!v || typeof v !== "object") return 0;
+  const amount = Number(v.amount || 0);
+  const divisor = Number(v.divisor || 1);
+  if (!Number.isFinite(amount) || !Number.isFinite(divisor) || divisor === 0) return 0;
+  return amount / divisor;
+}
+
+function normalizeEtsyState(v) {
+  const s = String(v || "").trim().toLowerCase();
+  return s || "active";
+}
+
+function etsyStateIsActive(state) {
+  return state === "active";
+}
+
 async function getGoogleAccessToken(env) {
   for (const key of ["GSC_CLIENT_ID", "GSC_CLIENT_SECRET", "GSC_REFRESH_TOKEN"]) {
     if (!env[key]) throw new Error(`${key} is not configured`);
@@ -348,6 +461,28 @@ async function getGa4AccessToken(env) {
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.access_token) {
     throw new Error(`GA4 OAuth refresh failed (${res.status}): ${truncate(body?.error_description || body?.error || "", 220)}`);
+  }
+  return String(body.access_token);
+}
+
+async function getEtsyAccessToken(env) {
+  for (const key of ["ETSY_CLIENT_ID", "ETSY_CLIENT_SECRET", "ETSY_REFRESH_TOKEN"]) {
+    if (!env[key]) throw new Error(`${key} is not configured`);
+  }
+  const form = new URLSearchParams({
+    grant_type: "refresh_token",
+    client_id: env.ETSY_CLIENT_ID,
+    client_secret: env.ETSY_CLIENT_SECRET,
+    refresh_token: env.ETSY_REFRESH_TOKEN,
+  });
+  const res = await fetch("https://openapi.etsy.com/v3/public/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form.toString(),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.access_token) {
+    throw new Error(`Etsy OAuth refresh failed (${res.status}): ${truncate(body?.error_description || body?.error || "", 220)}`);
   }
   return String(body.access_token);
 }
@@ -850,6 +985,237 @@ async function postGa4RowsChunk(env, rows, triggerTag) {
   return body;
 }
 
+async function fetchEtsyListingsByState(env, accessToken, shopId, state) {
+  const apiBase = etsyApiBase(env);
+  const limit = clampInt(toInt(env.ETSY_LISTING_PAGE_SIZE, ETSY_DEFAULT_LISTING_PAGE_SIZE), 1, 100);
+  const rows = [];
+  let offset = 0;
+  let pages = 0;
+
+  while (true) {
+    pages += 1;
+    if (pages > 500) throw new Error(`Etsy listing paging exceeded 500 pages for state=${state}`);
+    const qs = new URLSearchParams({
+      state: state,
+      limit: String(limit),
+      offset: String(offset),
+      sort_on: "updated",
+      sort_order: "desc",
+    });
+    const url = `${apiBase}/v3/application/shops/${encodeURIComponent(shopId)}/listings?${qs.toString()}`;
+    const res = await fetch(url, { headers: etsyAuthHeaders(env, accessToken) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = body?.error || body?.message || "unknown error";
+      throw new Error(`Etsy listings fetch failed (${res.status}) state=${state}: ${truncate(String(msg), 240)}`);
+    }
+    const batch = Array.isArray(body?.results) ? body.results : [];
+    rows.push(...batch);
+    if (batch.length < limit) break;
+    offset += batch.length;
+  }
+
+  return rows;
+}
+
+function normalizeEtsyListingRecord(raw, fallbackState) {
+  const state = normalizeEtsyState(raw?.state || fallbackState);
+  const listingId = String(raw?.listing_id || "").trim();
+  if (!listingId) return null;
+  return {
+    listing_id: listingId,
+    listing_title: String(raw?.title || "").trim(),
+    listing_state: state,
+    is_active: etsyStateIsActive(state) ? 1 : 0,
+    listing_url: String(raw?.url || "").trim(),
+    currency: String(raw?.price?.currency_code || "").trim().toUpperCase() || "USD",
+    price: parseEtsyAmount(raw?.price),
+    quantity_available: Number.isFinite(Number(raw?.quantity)) ? Number(raw.quantity) : null,
+    views_total: Number.isFinite(Number(raw?.views)) ? Number(raw.views) : 0,
+    favorites_total: Number.isFinite(Number(raw?.num_favorers)) ? Number(raw.num_favorers) : 0,
+    shop_id: String(raw?.shop_id || "").trim(),
+  };
+}
+
+async function fetchAllEtsyListings(env, accessToken, shopId) {
+  const byListing = new Map();
+  for (const state of ETSY_STATES) {
+    const rows = await fetchEtsyListingsByState(env, accessToken, shopId, state);
+    for (const raw of rows) {
+      const normalized = normalizeEtsyListingRecord(raw, state);
+      if (!normalized) continue;
+      const existing = byListing.get(normalized.listing_id);
+      if (!existing) {
+        byListing.set(normalized.listing_id, normalized);
+        continue;
+      }
+      if (existing.is_active !== 1 && normalized.is_active === 1) {
+        byListing.set(normalized.listing_id, normalized);
+      }
+    }
+  }
+  return Array.from(byListing.values());
+}
+
+async function fetchEtsyReceiptsForWindow(env, accessToken, shopId, startIso, endIso) {
+  const minCreated = toUnixStartOfDay(startIso);
+  const maxCreated = toUnixEndOfDay(endIso);
+  if (!Number.isInteger(minCreated) || !Number.isInteger(maxCreated)) throw new Error("invalid Etsy receipt date window");
+
+  const apiBase = etsyApiBase(env);
+  const limit = clampInt(toInt(env.ETSY_RECEIPT_PAGE_SIZE, ETSY_DEFAULT_RECEIPT_PAGE_SIZE), 1, 100);
+  const rows = [];
+  let offset = 0;
+  let pages = 0;
+
+  while (true) {
+    pages += 1;
+    if (pages > 500) throw new Error("Etsy receipt paging exceeded 500 pages");
+    const qs = new URLSearchParams({
+      min_created: String(minCreated),
+      max_created: String(maxCreated),
+      was_paid: "true",
+      limit: String(limit),
+      offset: String(offset),
+      sort_on: "created",
+      sort_order: "asc",
+    });
+    const url = `${apiBase}/v3/application/shops/${encodeURIComponent(shopId)}/receipts?${qs.toString()}`;
+    const res = await fetch(url, { headers: etsyAuthHeaders(env, accessToken) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = body?.error || body?.message || "unknown error";
+      throw new Error(`Etsy receipts fetch failed (${res.status}): ${truncate(String(msg), 240)}`);
+    }
+    const batch = Array.isArray(body?.results) ? body.results : [];
+    rows.push(...batch);
+    if (batch.length < limit) break;
+    offset += batch.length;
+  }
+
+  return rows;
+}
+
+function buildEtsyOrderRows(receipts, windowDaySet) {
+  const rowMap = new Map();
+  const orderKeySet = new Set();
+
+  for (const receipt of receipts) {
+    const ts = Number(receipt?.created_timestamp || receipt?.create_timestamp || 0);
+    if (!Number.isFinite(ts) || ts <= 0) continue;
+    const day = toIsoDay(new Date(ts * 1000));
+    if (!windowDaySet.has(day)) continue;
+    const txns = Array.isArray(receipt?.transactions) ? receipt.transactions : [];
+    for (const tx of txns) {
+      const listingId = String(tx?.listing_id || "").trim();
+      if (!listingId) continue;
+      const currency = String(tx?.price?.currency_code || receipt?.grandtotal?.currency_code || "USD").trim().toUpperCase() || "USD";
+      const key = `${day}||${listingId}||${currency}`;
+      if (!rowMap.has(key)) {
+        rowMap.set(key, {
+          date: day,
+          listing_id: listingId,
+          currency,
+          listing_title: String(tx?.title || "").trim(),
+          orders: 0,
+          transactions: 0,
+          units_sold: 0,
+          revenue: 0,
+        });
+      }
+      const row = rowMap.get(key);
+      const qty = Number.isFinite(Number(tx?.quantity)) ? Number(tx.quantity) : 0;
+      const unitPrice = parseEtsyAmount(tx?.price);
+      row.transactions += 1;
+      row.units_sold += qty;
+      row.revenue += unitPrice * qty;
+      const receiptId = String(receipt?.receipt_id || "").trim();
+      if (receiptId) {
+        const orderKey = `${key}||${receiptId}`;
+        if (!orderKeySet.has(orderKey)) {
+          orderKeySet.add(orderKey);
+          row.orders += 1;
+        }
+      }
+    }
+  }
+
+  return Array.from(rowMap.values()).map((row) => ({
+    ...row,
+    revenue: Math.round(Number(row.revenue || 0) * 100) / 100,
+  }));
+}
+
+async function loadEtsyReferenceMaps(db, endDate) {
+  const masterRows = await db
+    .prepare(`SELECT listing_id, views_total, favorites_total FROM etsy_listing_master`)
+    .all();
+  const endRows = await db
+    .prepare(
+      `SELECT listing_id, currency, views, favorites, visits
+         FROM etsy_listing_daily
+        WHERE report_date = ?`
+    )
+    .bind(endDate)
+    .all();
+
+  const masterMap = new Map();
+  (masterRows.results || []).forEach((r) => {
+    masterMap.set(String(r.listing_id || ""), {
+      views_total: Number(r.views_total || 0),
+      favorites_total: Number(r.favorites_total || 0),
+    });
+  });
+  const dayMap = new Map();
+  (endRows.results || []).forEach((r) => {
+    const key = `${String(r.listing_id || "")}||${String(r.currency || "").toUpperCase() || "USD"}`;
+    dayMap.set(key, {
+      views: Number(r.views || 0),
+      favorites: Number(r.favorites || 0),
+      visits: Number(r.visits || 0),
+    });
+  });
+  return { masterMap, dayMap };
+}
+
+async function postEtsyRowsChunk(env, rows, triggerTag) {
+  const apiBase = String(env.MAPPER_API_BASE || "https://www.mildmate.com").replace(/\/+$/, "");
+  const token = String(env.SALES_SYNC_API_TOKEN || "");
+  if (!token) throw new Error("SALES_SYNC_API_TOKEN is not configured");
+  const payload = {
+    sync_source: ETSY_SYNC_SOURCE,
+    scenario: `${ETSY_SCENARIO}:${triggerTag}`,
+    rows,
+  };
+  const res = await fetch(apiBase + ETSY_UPSERT_ROUTE, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || body?.success !== true) {
+    throw new Error(`Etsy upsert failed (${res.status}) ${truncate(body?.message || body?.error_code || "unknown", 220)}`);
+  }
+  return body;
+}
+
+async function resolveEtsyShopId(env, accessToken) {
+  const configured = String(env.ETSY_SHOP_ID || "").trim();
+  if (configured) return configured;
+  const res = await fetch(`${etsyApiBase(env)}/v3/application/users/me`, {
+    headers: etsyAuthHeaders(env, accessToken),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body?.shop_id) {
+    const msg = body?.error || body?.message || "unknown error";
+    throw new Error(`ETSY_SHOP_ID missing and users/me failed (${res.status}): ${truncate(String(msg), 220)}`);
+  }
+  return String(body.shop_id);
+}
+
 function normalizeGscRow(day, keys, row, searchType) {
   const query = String(keys?.[0] || "").trim();
   const page = String(keys?.[1] || "").trim();
@@ -1149,6 +1515,166 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
   }
 }
 
+async function executeEtsySync(env, trigger, overrides = {}) {
+  for (const required of ["SALES_SYNC_API_TOKEN", "ETSY_CLIENT_ID", "ETSY_CLIENT_SECRET", "ETSY_REFRESH_TOKEN"]) {
+    if (!env[required]) return { ok: false, reason: `${required} is not configured` };
+  }
+
+  const db = env.DB;
+  const runId = `${ETSY_STREAM}-${trigger}-${Date.now()}`;
+  if (!(await acquireEtsyLock(db, runId))) {
+    console.log("ETSY-SYNC: previous run still active, skipping");
+    return { ok: true, skipped: "locked" };
+  }
+
+  try {
+    const window = resolveEtsyWindow(env, overrides);
+    const accessToken = await getEtsyAccessToken(env);
+    const shopId = await resolveEtsyShopId(env, accessToken);
+    const chunkSize = clampInt(toInt(env.ETSY_UPSERT_CHUNK_SIZE, ETSY_DEFAULT_CHUNK_SIZE), 200, 5000);
+    const fxToThb = Number(env.ETSY_FX_TO_THB || 0);
+    const hasFx = Number.isFinite(fxToThb) && fxToThb > 0;
+
+    const listings = await fetchAllEtsyListings(env, accessToken, shopId);
+    const receipts = await fetchEtsyReceiptsForWindow(env, accessToken, shopId, window.start, window.end);
+    const orderRows = buildEtsyOrderRows(receipts, new Set(window.days));
+    const { masterMap, dayMap } = await loadEtsyReferenceMaps(db, window.end);
+
+    const byKey = new Map();
+    for (const orderRow of orderRows) {
+      const key = `${orderRow.date}||${orderRow.listing_id}||${orderRow.currency}`;
+      byKey.set(key, {
+        date: orderRow.date,
+        listing_id: orderRow.listing_id,
+        listing_title: orderRow.listing_title || "",
+        listing_state: "unknown",
+        is_active: 0,
+        currency: orderRow.currency || "USD",
+        visits: 0,
+        views: 0,
+        favorites: 0,
+        orders: Number(orderRow.orders || 0),
+        transactions: Number(orderRow.transactions || 0),
+        units_sold: Number(orderRow.units_sold || 0),
+        revenue: Math.round(Number(orderRow.revenue || 0) * 100) / 100,
+        shop_id: shopId,
+      });
+    }
+
+    for (const listing of listings) {
+      const currency = String(listing.currency || "USD").toUpperCase();
+      const key = `${window.end}||${listing.listing_id}||${currency}`;
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          date: window.end,
+          listing_id: listing.listing_id,
+          listing_title: listing.listing_title || "",
+          listing_state: listing.listing_state || "unknown",
+          is_active: Number(listing.is_active || 0),
+          currency,
+          visits: 0,
+          views: 0,
+          favorites: 0,
+          orders: 0,
+          transactions: 0,
+          units_sold: 0,
+          revenue: 0,
+          shop_id: listing.shop_id || shopId,
+        });
+      }
+      const row = byKey.get(key);
+      row.listing_title = listing.listing_title || row.listing_title || "";
+      row.listing_state = listing.listing_state || row.listing_state || "unknown";
+      row.is_active = Number(listing.is_active || row.is_active || 0);
+      row.listing_url = listing.listing_url || row.listing_url || "";
+      row.shop_id = listing.shop_id || row.shop_id || shopId;
+      row.price = Number.isFinite(Number(listing.price)) ? Number(listing.price) : row.price;
+      row.quantity_available = Number.isFinite(Number(listing.quantity_available)) ? Number(listing.quantity_available) : row.quantity_available;
+      row.views_total = Number.isFinite(Number(listing.views_total)) ? Number(listing.views_total) : 0;
+      row.favorites_total = Number.isFinite(Number(listing.favorites_total)) ? Number(listing.favorites_total) : 0;
+
+      const prevTotals = masterMap.get(listing.listing_id) || { views_total: 0, favorites_total: 0 };
+      const priorDay = dayMap.get(`${listing.listing_id}||${currency}`) || { views: 0, favorites: 0, visits: 0 };
+      const deltaViews = Math.max(0, Number(row.views_total || 0) - Number(prevTotals.views_total || 0));
+      const deltaFavorites = Math.max(0, Number(row.favorites_total || 0) - Number(prevTotals.favorites_total || 0));
+      row.views = Number(priorDay.views || 0) + deltaViews;
+      row.favorites = Number(priorDay.favorites || 0) + deltaFavorites;
+      row.visits = Number(priorDay.visits || 0);
+    }
+
+    const rows = Array.from(byKey.values()).map((row) => {
+      const out = {
+        date: row.date,
+        listing_id: row.listing_id,
+        listing_title: row.listing_title || "",
+        listing_state: row.listing_state || "unknown",
+        is_active: Number(row.is_active || 0) === 1,
+        listing_url: row.listing_url || "",
+        shop_id: row.shop_id || shopId,
+        currency: row.currency || "USD",
+        visits: Math.max(0, Math.round(Number(row.visits || 0))),
+        views: Math.max(0, Math.round(Number(row.views || 0))),
+        favorites: Math.max(0, Math.round(Number(row.favorites || 0))),
+        orders: Math.max(0, Math.round(Number(row.orders || 0))),
+        transactions: Math.max(0, Math.round(Number(row.transactions || 0))),
+        units_sold: Math.max(0, Math.round(Number(row.units_sold || 0))),
+        revenue: Math.round(Number(row.revenue || 0) * 100) / 100,
+        price: Number.isFinite(Number(row.price)) ? Number(row.price) : null,
+        quantity_available: Number.isFinite(Number(row.quantity_available)) ? Math.max(0, Math.round(Number(row.quantity_available))) : null,
+        views_total: Number.isFinite(Number(row.views_total)) ? Math.max(0, Math.round(Number(row.views_total))) : 0,
+        favorites_total: Number.isFinite(Number(row.favorites_total)) ? Math.max(0, Math.round(Number(row.favorites_total))) : 0,
+      };
+      if (out.currency === "THB") out.revenue_thb = out.revenue;
+      else if (hasFx && out.revenue > 0) out.fx_rate_to_thb = fxToThb;
+      return out;
+    });
+
+    const totals = {
+      days_in_window: window.days.length,
+      listings_seen: listings.length,
+      receipts_seen: receipts.length,
+      fetched_rows: rows.length,
+      sent_rows: 0,
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      rejected: 0,
+      upsert_calls: 0,
+    };
+
+    const chunks = chunkRows(rows, chunkSize);
+    for (const chunk of chunks) {
+      const out = await postEtsyRowsChunk(env, chunk, trigger);
+      totals.upsert_calls += 1;
+      totals.sent_rows += Number(out?.totals?.received || 0);
+      totals.created += Number(out?.totals?.created || 0);
+      totals.updated += Number(out?.totals?.updated || 0);
+      totals.unchanged += Number(out?.totals?.unchanged || 0);
+      totals.rejected += Number(out?.totals?.rejected || 0);
+    }
+
+    console.log(
+      `ETSY-SYNC: ${trigger} done — listings ${totals.listings_seen}, receipts ${totals.receipts_seen}, rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
+    );
+
+    return {
+      ok: true,
+      source: ETSY_SYNC_SOURCE,
+      scenario: ETSY_SCENARIO,
+      trigger,
+      window: { start: window.start, end: window.end, days: window.days.length, lag_days: window.lagDays, overlap_days: window.overlapDays },
+      totals,
+    };
+  } catch (e) {
+    const msg = truncate(e?.message || String(e), 280);
+    console.log(`ETSY-SYNC: ${trigger} failed — ${msg}`);
+    return { ok: false, reason: msg };
+  } finally {
+    await releaseEtsyLock(db, runId);
+  }
+}
+
 // ── State ──────────────────────────────────────────────────────────────────
 
 async function loadState(db) {
@@ -1384,6 +1910,15 @@ async function executeSync(env, trigger, overrides = {}) {
 
 export default {
   async scheduled(event, env, ctx) {
+    if (event.cron === ETSY_WEEKLY_CRON) {
+      ctx.waitUntil(
+        executeEtsySync(env, "scheduled-weekly").catch((e) =>
+          console.log(`ETSY-SYNC: unhandled — ${truncate(e.message, 300)}`)
+        )
+      );
+      return;
+    }
+
     if (event.cron === GA4_WEEKLY_CRON) {
       ctx.waitUntil(
         executeGa4Sync(env, "scheduled-weekly").catch((e) =>
@@ -1425,6 +1960,8 @@ export default {
    *   GET  /gsc/status
    *   POST /ga4/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=2]
    *   GET  /ga4/status
+   *   POST /etsy/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=1]
+   *   GET  /etsy/status
    *   GET  /ga4/debug-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=25]
    *   GET  /ga4/debug-realtime?[minutes=30&limit=100]
    *   GET  /ga4/debug-stream-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=100]
@@ -1556,6 +2093,54 @@ export default {
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
         recent_runs: runs.results || [],
       });
+    }
+
+    if (url.pathname === "/etsy/status") {
+      let freshness = null;
+      try {
+        freshness = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+      } catch {
+        freshness = null;
+      }
+      const runs = await env.DB.prepare(
+        `SELECT id, source, scenario, started_at, finished_at, status,
+                records_received, records_created, records_updated, records_unchanged, records_rejected, error_message
+           FROM sync_runs
+          WHERE source LIKE 'etsy-%'
+          ORDER BY COALESCE(finished_at, started_at) DESC
+          LIMIT 10`
+      ).all();
+      const lock = await env.DB
+        .prepare(`SELECT locked_until, run_id FROM marketing_sync_lock WHERE name = ?`)
+        .bind(ETSY_STREAM)
+        .first();
+      let window = null;
+      try {
+        window = resolveEtsyWindow(env);
+      } catch {
+        window = null;
+      }
+      return Response.json({
+        stream: ETSY_STREAM,
+        source: ETSY_SYNC_SOURCE,
+        scenario: ETSY_SCENARIO,
+        cron: ETSY_WEEKLY_CRON,
+        lock: lock || null,
+        freshness,
+        default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
+        recent_runs: runs.results || [],
+      });
+    }
+
+    if (url.pathname === "/etsy/run" && request.method === "POST") {
+      const overrides = {
+        start: url.searchParams.get("start") || null,
+        end: url.searchParams.get("end") || null,
+        overlapDays: url.searchParams.get("overlap") ? Number(url.searchParams.get("overlap")) : null,
+        lagDays: url.searchParams.get("lag") ? Number(url.searchParams.get("lag")) : null,
+      };
+      const out = await executeEtsySync(env, "manual", overrides);
+      return Response.json(out, { status: out.ok ? 200 : 500 });
     }
 
     if (url.pathname === "/ga4/debug-events") {

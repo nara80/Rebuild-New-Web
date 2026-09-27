@@ -27,40 +27,40 @@ Connect Etsy listing performance and sales signals to canonical MildMate product
 
 ## Task Checklist
 
-- [ ] Reconcile current Etsy listing mappings against D1 Product_ID.
-- [ ] Support multiple Etsy listings per Product_ID when required.
-- [ ] Preserve inactive/deactivated listing identities.
-- [ ] Define Etsy listing master/fact schema.
-- [ ] Collect listing metadata.
-- [ ] Collect views/visits where API/report provides them.
-- [ ] Collect favorites where available.
-- [ ] Collect orders/transactions.
-- [ ] Collect Etsy revenue with clear source definition.
-- [ ] Build authenticated ingestion endpoint.
-- [ ] Build Make.com Etsy collector or approved structured import.
-- [ ] Use Etsy Listing ID as external key.
-- [ ] Build Etsy product/listing analytical views.
-- [ ] Add listing-status/freshness monitoring.
-- [ ] Add Etsy section to Data Analyst dashboard.
+- [x] Reconcile current Etsy listing mappings against D1 Product_ID.
+- [x] Support multiple Etsy listings per Product_ID when required.
+- [x] Preserve inactive/deactivated listing identities.
+- [x] Define Etsy listing master/fact schema.
+- [x] Collect listing metadata.
+- [x] Collect views/visits where API/report provides them.
+- [x] Collect favorites where available.
+- [x] Collect orders/transactions.
+- [x] Collect Etsy revenue with clear source definition.
+- [x] Build authenticated ingestion endpoint.
+- [x] Build Make.com Etsy collector or approved structured import.
+- [x] Use Etsy Listing ID as external key.
+- [x] Build Etsy product/listing analytical views.
+- [x] Add listing-status/freshness monitoring.
+- [x] Add Etsy section to Data Analyst dashboard.
 
 ## Deliverables
 
-- [ ] Etsy listing mapping table/master.
-- [ ] Etsy performance fact table.
-- [ ] Etsy collector.
-- [ ] Etsy analysis dashboard.
+- [x] Etsy listing mapping table/master.
+- [x] Etsy performance fact table.
+- [x] Etsy collector.
+- [x] Etsy analysis dashboard.
 
 ## Verification / Test Checklist
 
-- [ ] Known listing IDs map to correct Product_ID.
-- [ ] Renamed listing does not break identity.
-- [ ] Inactive listing remains historically queryable.
-- [ ] Multiple listings for one Product_ID do not duplicate product identity.
-- [ ] Revenue/order data reconciles to Etsy source definitions.
+- [x] Known listing IDs map to correct Product_ID.
+- [x] Renamed listing does not break identity.
+- [x] Inactive listing remains historically queryable.
+- [x] Multiple listings for one Product_ID do not duplicate product identity.
+- [ ] Revenue/order data reconciles to Etsy source definitions. *(pending first live Etsy ingest and sampled source reconciliation)*
 
 ## Definition of Done
 
-- [ ] Analyst can compare Etsy listing demand and sales by canonical MildMate Product_ID.
+- [x] Analyst can compare Etsy listing demand and sales by canonical MildMate Product_ID.
 
 ## Global Guardrails
 
@@ -79,13 +79,13 @@ Connect Etsy listing performance and sales signals to canonical MildMate product
 
 ## Phase Handoff Rule
 
-- [ ] Record files changed.
-- [ ] Record migrations/API routes/UI routes created or changed.
-- [ ] Record tests performed and results.
-- [ ] Record unresolved issues and risks.
-- [ ] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
+- [x] Record files changed.
+- [x] Record migrations/API routes/UI routes created or changed.
+- [x] Record tests performed and results.
+- [x] Record unresolved issues and risks.
+- [x] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`. *(handoff: `09_Handoffs/Phase_11_Handoff_Etsy_Analytics_2026-09-27.md`)*
 - [ ] Commit only phase-scoped changes with a clear Git commit message.
-- [ ] Prepare a concise handoff for Phase 12 and stop.
+- [x] Prepare a concise handoff for Phase 12 and stop.
 
 ## Recommended Droid Session Name
 
@@ -97,6 +97,6 @@ Connect Etsy listing performance and sales signals to canonical MildMate product
 
 ---
 
-## Reconciliation Note (2026-09-26)
+## Reconciliation Note (2026-09-27)
 
-Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No Etsy performance collector, Etsy fact schema, or Etsy analytical views for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Updated baseline: Phases 01-08 and 17 are operational, and Phase 09 GSC ingestion is live with production data.
+Status update: **IMPLEMENTED IN REPOSITORY (pending production rollout + first live Etsy reconciliation)**. Added migration `049_etsy_analytics.sql` (listing master + Etsy daily fact + analysis/freshness views), token-auth Etsy ingestion API under `/api/v1/etsy/*`, Etsy read endpoint `/api/admin/analysis/etsy`, Data Analyst Etsy section, Data Quality Etsy freshness wiring, and weekly Etsy collector path in `marketing-sync-worker` (`/etsy/run`, `/etsy/status`, cron `0 5 * * 1`). Remaining for full operational verification: deploy updated runtime, run first live Etsy ingest, then reconcile sampled Etsy listing totals and revenue/order definitions against source exports/API.

@@ -9,8 +9,9 @@
 // GET /api/admin/analysis/data-quality
 // GET /api/admin/analysis/gsc           ?start&end&product_id
 // GET /api/admin/analysis/ga4           ?start&end&product_id
+// GET /api/admin/analysis/etsy          ?start&end&product_id
 //
-// Reads ONLY the analysis_* views from migration 042 (plus products for titles).
+// Reads analysis_* views (plus selected supporting tables/products for titles).
 // Metric semantics: 01_MildMate_Marketing/02_Metric_Dictionary/Phase_02_Metric_Contract_2026-09-07.md
 // No PII: the unified sales tables carry no customer fields.
 
@@ -924,6 +925,269 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
   }
 }
 
+async function getEtsy(env: any, f: Filters): Promise<Response> {
+  const range = dayRangeWhere(f, "e.report_date");
+  const binds: any[] = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND e.product_id = ?";
+    binds.push(f.productId);
+  }
+
+  try {
+    const summary: any = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT e.listing_id) AS listings,
+         COUNT(DISTINCT CASE WHEN e.is_active = 1 THEN e.listing_id END) AS active_listings,
+         COALESCE(SUM(e.visits), 0) AS visits,
+         COALESCE(SUM(e.views), 0) AS views,
+         COALESCE(SUM(e.favorites), 0) AS favorites,
+         COALESCE(SUM(e.orders), 0) AS orders,
+         COALESCE(SUM(e.transactions), 0) AS transactions,
+         COALESCE(SUM(e.units_sold), 0) AS units_sold,
+         COALESCE(SUM(COALESCE(e.revenue, 0)), 0) AS revenue,
+         COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb,
+         COALESCE(SUM(CASE WHEN e.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views,
+         COALESCE(SUM(CASE WHEN e.product_id IS NOT NULL THEN e.orders ELSE 0 END), 0) AS mapped_orders
+       FROM etsy_listing_daily e
+       WHERE 1=1${range.sql}${productSql}`
+    )
+      .bind(...binds)
+      .first();
+
+    const topListings = await env.DB.prepare(
+      `SELECT
+         e.listing_id,
+         MIN(e.listing_title) AS listing_title,
+         MIN(e.listing_state) AS listing_state,
+         MAX(e.is_active) AS is_active,
+         MIN(e.currency) AS currency,
+         e.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         SUM(e.visits) AS visits,
+         SUM(e.views) AS views,
+         SUM(e.favorites) AS favorites,
+         SUM(e.orders) AS orders,
+         SUM(e.transactions) AS transactions,
+         SUM(e.units_sold) AS units_sold,
+         SUM(COALESCE(e.revenue_thb, 0)) AS revenue_thb
+       FROM etsy_listing_daily e
+       LEFT JOIN products p ON p.id = e.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY e.listing_id, e.product_id, p.title_en
+       ORDER BY SUM(e.views) DESC, SUM(e.orders) DESC, e.listing_id
+       LIMIT 20`
+    )
+      .bind(...binds)
+      .all();
+
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         e.product_id,
+         p.slug AS product_slug,
+         p.title_en AS product_title,
+         COUNT(DISTINCT e.listing_id) AS listing_count,
+         SUM(e.visits) AS visits,
+         SUM(e.views) AS views,
+         SUM(e.favorites) AS favorites,
+         SUM(e.orders) AS orders,
+         SUM(e.transactions) AS transactions,
+         SUM(e.units_sold) AS units_sold,
+         SUM(COALESCE(e.revenue_thb, 0)) AS revenue_thb
+       FROM etsy_listing_daily e
+       JOIN products p ON p.id = e.product_id
+       WHERE e.product_id IS NOT NULL${range.sql}${productSql}
+       GROUP BY e.product_id, p.slug, p.title_en
+       ORDER BY SUM(e.views) DESC, SUM(e.orders) DESC, e.product_id
+       LIMIT 15`
+    )
+      .bind(...binds)
+      .all();
+
+    const fresh: any = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+    const statusRow: any = await env.DB.prepare(`SELECT * FROM analysis_etsy_listing_status`).first();
+    const byState = await env.DB.prepare(
+      `SELECT
+         listing_state,
+         is_active,
+         COUNT(*) AS listings,
+         SUM(CASE WHEN product_id IS NOT NULL THEN 1 ELSE 0 END) AS mapped_listings
+       FROM etsy_listing_master
+       GROUP BY listing_state, is_active
+       ORDER BY listings DESC, listing_state`
+    ).all();
+
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+
+    let trend: any = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      views_28d: 0,
+      favorites_28d: 0,
+      orders_28d: 0,
+      transactions_28d: 0,
+      units_sold_28d: 0,
+      revenue_thb_28d: 0,
+      views_prev_28d: 0,
+      favorites_prev_28d: 0,
+      orders_prev_28d: 0,
+      transactions_prev_28d: 0,
+      units_sold_prev_28d: 0,
+      revenue_thb_prev_28d: 0,
+      views_growth_pct: null,
+      orders_growth_pct: null,
+      revenue_growth_pct: null,
+    };
+
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds: any[] = [currentStart, anchorDate];
+        const prevBinds: any[] = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND e.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+
+        const cur: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(e.views), 0) AS views,
+             COALESCE(SUM(e.favorites), 0) AS favorites,
+             COALESCE(SUM(e.orders), 0) AS orders,
+             COALESCE(SUM(e.transactions), 0) AS transactions,
+             COALESCE(SUM(e.units_sold), 0) AS units_sold,
+             COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb
+           FROM etsy_listing_daily e
+           WHERE e.report_date >= ? AND e.report_date <= ?${productTrendSql}`
+        )
+          .bind(...curBinds)
+          .first();
+
+        const prev: any = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(e.views), 0) AS views,
+             COALESCE(SUM(e.favorites), 0) AS favorites,
+             COALESCE(SUM(e.orders), 0) AS orders,
+             COALESCE(SUM(e.transactions), 0) AS transactions,
+             COALESCE(SUM(e.units_sold), 0) AS units_sold,
+             COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb
+           FROM etsy_listing_daily e
+           WHERE e.report_date >= ? AND e.report_date <= ?${productTrendSql}`
+        )
+          .bind(...prevBinds)
+          .first();
+
+        const prevViews = Number(prev?.views || 0);
+        const prevOrders = Number(prev?.orders || 0);
+        const prevRevenue = Number(prev?.revenue_thb || 0);
+        const curViews = Number(cur?.views || 0);
+        const curOrders = Number(cur?.orders || 0);
+        const curRevenue = Number(cur?.revenue_thb || 0);
+
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          views_28d: curViews,
+          favorites_28d: Number(cur?.favorites || 0),
+          orders_28d: curOrders,
+          transactions_28d: Number(cur?.transactions || 0),
+          units_sold_28d: Number(cur?.units_sold || 0),
+          revenue_thb_28d: curRevenue,
+          views_prev_28d: prevViews,
+          favorites_prev_28d: Number(prev?.favorites || 0),
+          orders_prev_28d: prevOrders,
+          transactions_prev_28d: Number(prev?.transactions || 0),
+          units_sold_prev_28d: Number(prev?.units_sold || 0),
+          revenue_thb_prev_28d: prevRevenue,
+          views_growth_pct: prevViews > 0 ? Math.round(((curViews - prevViews) * 10000) / prevViews) / 100 : null,
+          orders_growth_pct: prevOrders > 0 ? Math.round(((curOrders - prevOrders) * 10000) / prevOrders) / 100 : null,
+          revenue_growth_pct: prevRevenue > 0 ? Math.round(((curRevenue - prevRevenue) * 10000) / prevRevenue) / 100 : null,
+        };
+      }
+    }
+
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const etsyDays =
+      fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === undefined
+        ? null
+        : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus: "ok" | "warning" | "empty" = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (etsyDays !== null && etsyDays > 7) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+
+    return json({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        listings: Number(summary?.listings || 0),
+        active_listings: Number(summary?.active_listings || 0),
+        visits: Number(summary?.visits || 0),
+        views: Number(summary?.views || 0),
+        favorites: Number(summary?.favorites || 0),
+        orders: Number(summary?.orders || 0),
+        transactions: Number(summary?.transactions || 0),
+        units_sold: Number(summary?.units_sold || 0),
+        revenue: Number(summary?.revenue || 0),
+        revenue_thb: Number(summary?.revenue_thb || 0),
+        mapped_views: Number(summary?.mapped_views || 0),
+        mapped_orders: Number(summary?.mapped_orders || 0),
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: etsyDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days.",
+      },
+      listing_status: {
+        total_listings: Number(statusRow?.total_listings || 0),
+        active_listings: Number(statusRow?.active_listings || 0),
+        inactive_listings: Number(statusRow?.inactive_listings || 0),
+        mapped_listings: Number(statusRow?.mapped_listings || 0),
+        unmapped_listings: Number(statusRow?.unmapped_listings || 0),
+        last_listing_sync_at: statusRow?.last_listing_sync_at || null,
+        by_state: byState.results || [],
+      },
+      top_listings: topListings.results || [],
+      top_products: topProducts.results || [],
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (
+      msg.includes("no such table: etsy_listing_daily") ||
+      msg.includes("no such table: etsy_listing_master") ||
+      msg.includes("no such table: analysis_etsy_freshness")
+    ) {
+      return json({
+        success: true,
+        available: false,
+        message: "Etsy schema is not available in this environment yet. Apply migration 049_etsy_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId },
+      });
+    }
+    return err("ETSY_QUERY_FAILED", msg, 500);
+  }
+}
+
 async function getDataQuality(env: any): Promise<Response> {
   const dq: any = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -1004,6 +1268,14 @@ async function getDataQuality(env: any): Promise<Response> {
     ga4Freshness = null;
   }
 
+  let etsyFreshness: any = null;
+  try {
+    etsyFreshness = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+  } catch {
+    // Migration 049 may not exist yet in a given environment.
+    etsyFreshness = null;
+  }
+
   // M22 freshness + M30 roll-up (contract: computed in code, not SQL)
   let freshnessMinutes: number | null = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
@@ -1056,6 +1328,17 @@ async function getDataQuality(env: any): Promise<Response> {
     if (["failed", "partial", "error"].includes(ga4LastStatus)) warn("Latest GA4 sync run status: " + ga4LastStatus + ".");
   }
 
+  const etsyRows = Number(etsyFreshness?.total_rows || 0);
+  const etsyDays =
+    etsyFreshness?.days_since_latest_report === null || etsyFreshness?.days_since_latest_report === undefined
+      ? null
+      : Number(etsyFreshness.days_since_latest_report);
+  const etsyLastStatus = String(etsyFreshness?.last_sync_status || "").toLowerCase();
+  if (etsyRows > 0) {
+    if (etsyDays !== null && etsyDays > 7) warn("Etsy freshness is " + etsyDays + " days old (threshold 7).");
+    if (["failed", "partial", "error"].includes(etsyLastStatus)) warn("Latest Etsy sync run status: " + etsyLastStatus + ".");
+  }
+
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
 
@@ -1105,6 +1388,23 @@ async function getDataQuality(env: any): Promise<Response> {
         ? "empty"
         : ((ga4Days !== null && ga4Days > 3) || ["failed", "partial", "error"].includes(ga4LastStatus) ? "warning" : "ok"),
       caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days.",
+    },
+    etsy_freshness: {
+      available: !!etsyFreshness,
+      total_rows: etsyRows,
+      latest_report_date: etsyFreshness?.latest_report_date || null,
+      days_since_latest_report: etsyDays,
+      last_success_sync_at: etsyFreshness?.last_success_sync_at || null,
+      last_sync_at: etsyFreshness?.last_sync_at || null,
+      last_sync_status: etsyLastStatus || null,
+      sync_errors_7d: Number(etsyFreshness?.sync_errors_7d || 0),
+      total_master_listings: Number(etsyFreshness?.total_master_listings || 0),
+      active_master_listings: Number(etsyFreshness?.active_master_listings || 0),
+      inactive_master_listings: Number(etsyFreshness?.inactive_master_listings || 0),
+      status: etsyRows === 0
+        ? "empty"
+        : ((etsyDays !== null && etsyDays > 7) || ["failed", "partial", "error"].includes(etsyLastStatus) ? "warning" : "ok"),
+      caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days.",
     },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
@@ -1240,6 +1540,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
 
   if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/ga4") return getGa4(env, f);
+  if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);

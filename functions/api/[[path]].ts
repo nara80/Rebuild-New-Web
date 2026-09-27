@@ -68,6 +68,7 @@ import { handleColorInventory } from "../../workers/api/color-inventory";
 import { handleSalesApi } from "../../workers/api/sales";
 import { handleGscApi } from "../../workers/api/gsc";
 import { handleGa4Api } from "../../workers/api/ga4";
+import { handleEtsyApi } from "../../workers/api/etsy";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -89,6 +90,12 @@ export const onRequest: PagesFunction<{
   if (path.startsWith("/api/v1/ga4")) {
     const ga4Res = await handleGa4Api(request, env);
     if (ga4Res) return ga4Res;
+  }
+
+  // Phase 11 — Etsy listing analytics collector API under /api/v1/etsy/*
+  if (path.startsWith("/api/v1/etsy")) {
+    const etsyRes = await handleEtsyApi(request, env);
+    if (etsyRes) return etsyRes;
   }
 
   // Unified sales API under /api/v1/*

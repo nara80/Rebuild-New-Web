@@ -186,6 +186,21 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="ga4-sources-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="etsy-card">
+      <div class="card-header"><span>Marketplace / Etsy</span><span class="muted" style="font-size:0.75rem;font-weight:400">daily listing grain; listing id is durable identity and may map multiple listings to one Product_ID</span></div>
+      <div class="card-body">
+        <div id="etsy-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>28d vs Previous 28d</span><span class="muted" style="font-size:0.75rem;font-weight:400">anchor = filter end date if set, else latest Etsy report date</span></div>
+      <div class="table-wrap"><div id="etsy-trend-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Listing Status Snapshot</span><span class="muted" style="font-size:0.75rem;font-weight:400">active/inactive + mapping coverage</span></div>
+      <div class="table-wrap"><div id="etsy-status-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Listings</span><span class="muted" style="font-size:0.75rem;font-weight:400">view-ranked</span></div>
+      <div class="table-wrap"><div id="etsy-listings-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Products from Etsy</span><span class="muted" style="font-size:0.75rem;font-weight:400">aggregated by canonical Product_ID</span></div>
+      <div class="table-wrap"><div id="etsy-products-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
@@ -649,6 +664,131 @@ async function loadGa4(){
   }
 }
 
+// ── Marketplace / Etsy (Phase 11) ──
+
+async function loadEtsy(){
+  setState('etsy-trend-table', '', 'Loading…');
+  setState('etsy-status-table', '', 'Loading…');
+  setState('etsy-listings-table', '', 'Loading…');
+  setState('etsy-products-table', '', 'Loading…');
+  try {
+    var qs = [];
+    var v;
+    v = document.getElementById('f-start').value; if (v) qs.push('start=' + v);
+    v = document.getElementById('f-end').value; if (v) qs.push('end=' + v);
+    v = document.getElementById('f-product').value; if (v) qs.push('product_id=' + v);
+    var d = await api('/etsy' + (qs.length ? '?' + qs.join('&') : ''));
+
+    if (!d.available) {
+      document.getElementById('etsy-summary').innerHTML =
+        '<span class="badge badge-grey">Etsy schema not available in this environment yet</span>';
+      setState('etsy-trend-table', '', d.message || 'Apply migration 049_etsy_analytics.sql first.');
+      setState('etsy-status-table', '', 'No Etsy listing rows yet.');
+      setState('etsy-listings-table', '', 'No Etsy listing rows yet.');
+      setState('etsy-products-table', '', 'No Etsy product rows yet.');
+      return;
+    }
+
+    var s = d.summary || {};
+    var fr = d.freshness || {};
+    var t = d.trend_28d || {};
+    var ls = d.listing_status || {};
+    var mappedViewPct = Number(s.views || 0) > 0 ? (Number(s.mapped_views || 0) * 100 / Number(s.views || 0)) : null;
+    var freshCls = fr.status === 'warning' ? 'badge-amber' : fr.status === 'ok' ? 'badge-green' : 'badge-grey';
+
+    document.getElementById('etsy-summary').innerHTML =
+      '<span class="badge badge-blue">Listings: ' + fmtNum(s.listings) + '</span>' +
+      '<span class="badge badge-blue">Active Listings: ' + fmtNum(s.active_listings) + '</span>' +
+      '<span class="badge badge-grey">Views: ' + fmtNum(s.views) + '</span>' +
+      '<span class="badge badge-grey">Favorites: ' + fmtNum(s.favorites) + '</span>' +
+      '<span class="badge badge-grey">Orders: ' + fmtNum(s.orders) + '</span>' +
+      '<span class="badge badge-grey">Transactions: ' + fmtNum(s.transactions) + '</span>' +
+      '<span class="badge badge-grey">Units Sold: ' + fmtNum(s.units_sold) + '</span>' +
+      '<span class="badge badge-grey">Revenue (THB): ' + fmtBaht(s.revenue_thb) + '</span>' +
+      '<span class="badge badge-grey">Mapped View Coverage: ' + fmtPct(mappedViewPct) + '</span>' +
+      '<span class="badge ' + freshCls + '">Freshness: ' + (fr.latest_report_date ? (esc(fr.latest_report_date) + ' (' + fmtNum(fr.days_since_latest_report) + ' d ago)') : 'no data') + '</span>';
+
+    var trendHtml = '<table><thead><tr><th>Window</th><th class="num">Views</th><th class="num">Favorites</th><th class="num">Orders</th><th class="num">Transactions</th><th class="num">Units</th><th class="num">Revenue (THB)</th></tr></thead><tbody>';
+    trendHtml += '<tr><td>Current 28d</td><td class="num">' + fmtNum(t.views_28d) + '</td><td class="num">' + fmtNum(t.favorites_28d) + '</td><td class="num">' + fmtNum(t.orders_28d) + '</td><td class="num">' + fmtNum(t.transactions_28d) + '</td><td class="num">' + fmtNum(t.units_sold_28d) + '</td><td class="num">' + fmtBaht(t.revenue_thb_28d) + '</td></tr>';
+    trendHtml += '<tr><td>Previous 28d</td><td class="num">' + fmtNum(t.views_prev_28d) + '</td><td class="num">' + fmtNum(t.favorites_prev_28d) + '</td><td class="num">' + fmtNum(t.orders_prev_28d) + '</td><td class="num">' + fmtNum(t.transactions_prev_28d) + '</td><td class="num">' + fmtNum(t.units_sold_prev_28d) + '</td><td class="num">' + fmtBaht(t.revenue_thb_prev_28d) + '</td></tr>';
+    trendHtml += '<tr><td><strong>Growth</strong></td>' +
+      '<td class="num">' + (t.views_growth_pct === null || t.views_growth_pct === undefined ? '—' : ((t.views_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.views_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.orders_growth_pct === null || t.orders_growth_pct === undefined ? '—' : ((t.orders_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.orders_growth_pct)))) + '</td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num"><span class="muted">—</span></td>' +
+      '<td class="num">' + (t.revenue_growth_pct === null || t.revenue_growth_pct === undefined ? '—' : ((t.revenue_growth_pct >= 0 ? '▲ ' : '▼ ') + fmtPct(Math.abs(t.revenue_growth_pct)))) + '</td>' +
+      '</tr>';
+    trendHtml += '</tbody></table>';
+    document.getElementById('etsy-trend-table').innerHTML = trendHtml;
+
+    var st = ls.by_state || [];
+    var sh = '<table><thead><tr><th>Summary</th><th class="num">Count</th></tr></thead><tbody>';
+    sh += '<tr><td>Total listings</td><td class="num">' + fmtNum(ls.total_listings) + '</td></tr>';
+    sh += '<tr><td>Active listings</td><td class="num">' + fmtNum(ls.active_listings) + '</td></tr>';
+    sh += '<tr><td>Inactive listings</td><td class="num">' + fmtNum(ls.inactive_listings) + '</td></tr>';
+    sh += '<tr><td>Mapped listings</td><td class="num">' + fmtNum(ls.mapped_listings) + '</td></tr>';
+    sh += '<tr><td>Unmapped listings</td><td class="num">' + fmtNum(ls.unmapped_listings) + '</td></tr>';
+    sh += '</tbody></table>';
+    if (st.length) {
+      sh += '<table style="margin-top:10px"><thead><tr><th>Listing State</th><th>Active</th><th class="num">Listings</th><th class="num">Mapped</th></tr></thead><tbody>';
+      st.forEach(function(r){
+        sh += '<tr><td>' + esc(r.listing_state || '(blank)') + '</td><td>' + (Number(r.is_active || 0) === 1 ? 'yes' : 'no') + '</td><td class="num">' + fmtNum(r.listings) + '</td><td class="num">' + fmtNum(r.mapped_listings) + '</td></tr>';
+      });
+      sh += '</tbody></table>';
+    }
+    document.getElementById('etsy-status-table').innerHTML = sh;
+
+    var listings = d.top_listings || [];
+    if (!listings.length) {
+      setState('etsy-listings-table', '', 'No Etsy listing rows for the selected filters.');
+    } else {
+      var lh = '<table><thead><tr><th>Listing ID</th><th>Title</th><th>State</th><th>Product</th><th class="num">Views</th><th class="num">Favorites</th><th class="num">Orders</th><th class="num">Transactions</th><th class="num">Units</th><th class="num">Revenue (THB)</th></tr></thead><tbody>';
+      listings.forEach(function(r){
+        lh += '<tr>' +
+          '<td class="mono">' + esc(r.listing_id) + '</td>' +
+          '<td>' + esc(r.listing_title || '—') + '</td>' +
+          '<td>' + esc(r.listing_state || '—') + (Number(r.is_active || 0) === 1 ? '' : ' <span class="badge badge-grey">inactive</span>') + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="muted">—</span>' : ('#' + esc(r.product_id) + ' — ' + esc(r.product_title || ''))) + '</td>' +
+          '<td class="num">' + fmtNum(r.views) + '</td>' +
+          '<td class="num">' + fmtNum(r.favorites) + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtNum(r.transactions) + '</td>' +
+          '<td class="num">' + fmtNum(r.units_sold) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('etsy-listings-table').innerHTML = lh + '</tbody></table>';
+    }
+
+    var products = d.top_products || [];
+    if (!products.length) {
+      setState('etsy-products-table', '', 'No mapped Etsy product rows for the selected filters.');
+    } else {
+      var ph = '<table><thead><tr><th>Product</th><th class="num">Listings</th><th class="num">Views</th><th class="num">Favorites</th><th class="num">Orders</th><th class="num">Transactions</th><th class="num">Units</th><th class="num">Revenue (THB)</th></tr></thead><tbody>';
+      products.forEach(function(r){
+        ph += '<tr>' +
+          '<td>#' + esc(r.product_id) + ' — ' + esc(r.product_title || '') + '</td>' +
+          '<td class="num">' + fmtNum(r.listing_count) + '</td>' +
+          '<td class="num">' + fmtNum(r.views) + '</td>' +
+          '<td class="num">' + fmtNum(r.favorites) + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtNum(r.transactions) + '</td>' +
+          '<td class="num">' + fmtNum(r.units_sold) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('etsy-products-table').innerHTML = ph + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('etsy-summary').innerHTML = '<span class="badge badge-red">Etsy unavailable</span>';
+    setState('etsy-trend-table', 'error', 'Could not load Etsy trend: ' + e.message);
+    setState('etsy-status-table', 'error', 'Could not load Etsy listing status: ' + e.message);
+    setState('etsy-listings-table', 'error', 'Could not load Etsy listings: ' + e.message);
+    setState('etsy-products-table', 'error', 'Could not load Etsy products: ' + e.message);
+  }
+}
+
 // ── Sales Detail ──
 
 async function loadSales(){
@@ -771,11 +911,11 @@ async function populateProductFilter(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4();
+  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); populateProductFilter();
 }
 
 async function boot(){

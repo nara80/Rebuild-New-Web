@@ -1711,6 +1711,474 @@ async function handleGa4Api(request, env) {
 }
 __name(handleGa4Api, "handleGa4Api");
 
+// ../workers/api/etsy.ts
+var ETSY_SERVICE_NAME = "mildmate-etsy-api";
+var ETSY_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
+var DATE_RE3 = /^\d{4}-\d{2}-\d{2}$/;
+var KNOWN_INACTIVE_STATES = /* @__PURE__ */ new Set(["inactive", "deactivated", "expired", "removed", "draft", "sold_out"]);
+function response4(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
+}
+__name(response4, "response");
+function trimTo4(v, max = 255) {
+  if (v === void 0 || v === null) return "";
+  return String(v).trim().slice(0, max);
+}
+__name(trimTo4, "trimTo");
+function toNum4(v) {
+  if (v === void 0 || v === null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toNum4, "toNum");
+function toNonNegativeInt2(v, fieldName, fallback = 0) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) throw new Error(`${fieldName} must be a non-negative number`);
+  return Math.round(n);
+}
+__name(toNonNegativeInt2, "toNonNegativeInt");
+function normalizeDate3(v) {
+  const s = trimTo4(v, 20);
+  if (!DATE_RE3.test(s)) throw new Error("date must be YYYY-MM-DD");
+  return s;
+}
+__name(normalizeDate3, "normalizeDate");
+function normalizeListingId(v) {
+  const s = trimTo4(v, 120);
+  if (!s) throw new Error("listing_id is required");
+  return s;
+}
+__name(normalizeListingId, "normalizeListingId");
+function normalizeCurrency(v) {
+  return trimTo4(v || "USD", 10).toUpperCase();
+}
+__name(normalizeCurrency, "normalizeCurrency");
+function normalizeListingState(v) {
+  return trimTo4(v || "active", 60).toLowerCase();
+}
+__name(normalizeListingState, "normalizeListingState");
+function normalizeBoolean(v, fallback) {
+  if (v === void 0 || v === null || v === "") return fallback;
+  if (typeof v === "boolean") return v;
+  const s = String(v).trim().toLowerCase();
+  if (["1", "true", "yes", "y", "active"].includes(s)) return true;
+  if (["0", "false", "no", "n", "inactive"].includes(s)) return false;
+  return fallback;
+}
+__name(normalizeBoolean, "normalizeBoolean");
+function inferActive(state) {
+  if (!state) return true;
+  return !KNOWN_INACTIVE_STATES.has(state);
+}
+__name(inferActive, "inferActive");
+function parseProductIdsJson2(raw) {
+  try {
+    const arr = JSON.parse(String(raw));
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => Number(v)).filter((v) => Number.isInteger(v) && v > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson2, "parseProductIdsJson");
+function sameNullable3(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : a;
+  const y = b === void 0 || b === null || b === "" ? null : b;
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
+}
+__name(sameNullable3, "sameNullable");
+function sameNullableNum3(a, b) {
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const y = b === void 0 || b === null || b === "" ? null : Number(b);
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
+}
+__name(sameNullableNum3, "sameNullableNum");
+async function requireBearerAuth4(request, env) {
+  const configured = trimTo4(env[ETSY_SYNC_TOKEN_SECRET_NAME], 500);
+  if (!configured) {
+    return {
+      ok: false,
+      status: 503,
+      code: "AUTH_NOT_CONFIGURED",
+      message: `${ETSY_SYNC_TOKEN_SECRET_NAME} is not configured`
+    };
+  }
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
+  }
+  const supplied = auth.slice(7).trim();
+  if (!supplied || supplied !== configured) {
+    return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Invalid Bearer token" };
+  }
+  return { ok: true };
+}
+__name(requireBearerAuth4, "requireBearerAuth");
+async function createSyncRun4(env, source, scenario, received) {
+  const ins = await env.DB.prepare(
+    `INSERT INTO sync_runs (source, scenario, started_at, status, records_received)
+     VALUES (?1, ?2, ?3, 'running', ?4)`
+  ).bind(source, scenario || null, (/* @__PURE__ */ new Date()).toISOString(), Number(received || 0)).run();
+  return Number(ins.meta?.last_row_id || 0);
+}
+__name(createSyncRun4, "createSyncRun");
+async function finishSyncRun4(env, runId, data) {
+  if (!runId) return;
+  await env.DB.prepare(
+    `UPDATE sync_runs
+     SET status = ?1,
+         finished_at = ?2,
+         records_created = ?3,
+         records_updated = ?4,
+         records_unchanged = ?5,
+         records_rejected = ?6,
+         error_message = ?7
+     WHERE id = ?8`
+  ).bind(
+    data.status,
+    (/* @__PURE__ */ new Date()).toISOString(),
+    Number(data.created || 0),
+    Number(data.updated || 0),
+    Number(data.unchanged || 0),
+    Number(data.rejected || 0),
+    data.error ? String(data.error).slice(0, 500) : null,
+    runId
+  ).run();
+}
+__name(finishSyncRun4, "finishSyncRun");
+async function productExists(env, productId, cache) {
+  if (cache.has(productId)) return !!cache.get(productId);
+  const row = await env.DB.prepare(`SELECT id FROM products WHERE id = ?1 LIMIT 1`).bind(productId).first();
+  const ok = !!row?.id;
+  cache.set(productId, ok);
+  return ok;
+}
+__name(productExists, "productExists");
+async function resolveListingAliasProduct(env, listingId) {
+  const norm = trimTo4(listingId, 120).toLowerCase();
+  const row = await env.DB.prepare(
+    `SELECT product_ids
+     FROM product_mapping_aliases
+     WHERE match_scope = 'listing'
+       AND verified = 1
+       AND (COALESCE(source_system, '') = '' OR lower(source_system) = 'etsy')
+       AND (listing_id = ?1 OR alias_norm = ?2)
+     ORDER BY (CASE WHEN lower(COALESCE(source_system, '')) = 'etsy' THEN 1 ELSE 0 END) DESC,
+              verified DESC,
+              id ASC
+     LIMIT 1`
+  ).bind(listingId, norm).first();
+  if (!row) return { productId: null, mappingScope: "unmapped" };
+  const ids = parseProductIdsJson2(row.product_ids);
+  if (ids.length === 1) return { productId: ids[0], mappingScope: "alias_listing" };
+  if (ids.length > 1) return { productId: null, mappingScope: "alias_multi_product" };
+  return { productId: null, mappingScope: "unmapped" };
+}
+__name(resolveListingAliasProduct, "resolveListingAliasProduct");
+async function handleRowsUpsert3(request, env) {
+  const auth = await requireBearerAuth4(request, env);
+  if (!auth.ok) return response4({ success: false, error_code: auth.code, message: auth.message }, auth.status);
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return response4({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
+  }
+  const rowsRaw = Array.isArray(body.rows) ? body.rows : body.row && typeof body.row === "object" ? [body.row] : [];
+  if (!rowsRaw.length) {
+    return response4({ success: false, error_code: "MISSING_ROWS", message: "rows[] (or row) is required." }, 400);
+  }
+  if (rowsRaw.length > 5e3) {
+    return response4({ success: false, error_code: "TOO_MANY_ROWS", message: "Maximum 5000 rows per request." }, 400);
+  }
+  const source = trimTo4(body.sync_source, 80) || "etsy-structured-import";
+  const scenario = trimTo4(body.scenario, 200) || "phase11-etsy-collector";
+  const runId = await createSyncRun4(env, source, scenario, rowsRaw.length);
+  const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+  const productExistenceCache = /* @__PURE__ */ new Map();
+  const masterCache = /* @__PURE__ */ new Map();
+  const aliasCache = /* @__PURE__ */ new Map();
+  let created = 0;
+  let updated = 0;
+  let unchanged = 0;
+  let rejected = 0;
+  const rejects = [];
+  try {
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const raw = rowsRaw[i] || {};
+      try {
+        const reportDate = normalizeDate3(raw.date || raw.report_date);
+        const listingId = normalizeListingId(raw.listing_id || raw.etsy_listing_id || raw.listing);
+        const listingState = normalizeListingState(raw.listing_state || raw.state || raw.status || "active");
+        const isActive = normalizeBoolean(raw.is_active, inferActive(listingState)) ? 1 : 0;
+        const currency = normalizeCurrency(raw.currency || raw.order_currency || "USD");
+        const visits = toNonNegativeInt2(raw.visits ?? raw.visit_count, "visits", 0);
+        const views = toNonNegativeInt2(raw.views ?? raw.view_count, "views", 0);
+        const favorites = toNonNegativeInt2(raw.favorites ?? raw.favorers ?? raw.favorite_count, "favorites", 0);
+        const orders = toNonNegativeInt2(raw.orders ?? raw.order_count, "orders", 0);
+        const transactions = toNonNegativeInt2(raw.transactions ?? raw.transaction_count, "transactions", 0);
+        const unitsSold = toNonNegativeInt2(raw.units_sold ?? raw.quantity_sold ?? raw.items_sold, "units_sold", 0);
+        const revenue = toNum4(raw.revenue ?? raw.revenue_amount ?? raw.gross_revenue);
+        if (revenue !== null && revenue < 0) throw new Error("revenue must be >= 0");
+        const revenueThbInput = toNum4(raw.revenue_thb);
+        if (revenueThbInput !== null && revenueThbInput < 0) throw new Error("revenue_thb must be >= 0");
+        const fxToThb = toNum4(raw.fx_rate_to_thb ?? raw.exchange_rate_to_thb ?? raw.thb_rate);
+        if (fxToThb !== null && fxToThb <= 0) throw new Error("fx_rate_to_thb must be > 0");
+        const revenueThb = revenueThbInput !== null ? revenueThbInput : revenue !== null && fxToThb !== null ? Math.round(revenue * fxToThb * 100) / 100 : null;
+        const explicitProductIdRaw = raw.product_id ?? raw.Product_ID;
+        const explicitProductId = explicitProductIdRaw === void 0 || explicitProductIdRaw === null || explicitProductIdRaw === "" ? null : Number(explicitProductIdRaw);
+        if (explicitProductId !== null && (!Number.isInteger(explicitProductId) || explicitProductId <= 0)) {
+          throw new Error("product_id must be a positive integer when provided");
+        }
+        if (explicitProductId !== null && !await productExists(env, explicitProductId, productExistenceCache)) {
+          throw new Error(`product_id ${explicitProductId} does not exist in products`);
+        }
+        if (!masterCache.has(listingId)) {
+          const masterRow = await env.DB.prepare(
+            `SELECT listing_id, shop_id, shop_name, listing_title, listing_state, is_active, listing_url,
+                    currency, price, quantity_available, views_total, favorites_total, product_id, mapping_scope
+             FROM etsy_listing_master
+             WHERE listing_id = ?1
+             LIMIT 1`
+          ).bind(listingId).first();
+          masterCache.set(listingId, masterRow || null);
+        }
+        const existingMaster = masterCache.get(listingId) || null;
+        if (!aliasCache.has(listingId)) {
+          aliasCache.set(listingId, await resolveListingAliasProduct(env, listingId));
+        }
+        const aliasResolved = aliasCache.get(listingId);
+        let resolvedProductId = null;
+        let resolvedScope = "unmapped";
+        if (explicitProductId !== null) {
+          resolvedProductId = explicitProductId;
+          resolvedScope = "explicit_product_id";
+        } else if (existingMaster?.product_id) {
+          resolvedProductId = Number(existingMaster.product_id);
+          resolvedScope = trimTo4(existingMaster.mapping_scope, 80) || "listing_master";
+        } else if (aliasResolved.productId) {
+          resolvedProductId = aliasResolved.productId;
+          resolvedScope = aliasResolved.mappingScope;
+        } else if (aliasResolved.mappingScope === "alias_multi_product") {
+          resolvedScope = aliasResolved.mappingScope;
+        }
+        const listingTitle = trimTo4(raw.listing_title || raw.title || existingMaster?.listing_title, 500);
+        const listingUrl = trimTo4(raw.listing_url || raw.url || existingMaster?.listing_url, 1e3);
+        const shopId = trimTo4(raw.shop_id || existingMaster?.shop_id, 120);
+        const shopName = trimTo4(raw.shop_name || existingMaster?.shop_name, 200);
+        const price = toNum4(raw.price ?? existingMaster?.price);
+        if (price !== null && price < 0) throw new Error("price must be >= 0");
+        const quantityAvailable = toNum4(raw.quantity_available ?? raw.stock_quantity ?? existingMaster?.quantity_available);
+        if (quantityAvailable !== null && quantityAvailable < 0) throw new Error("quantity_available must be >= 0");
+        const viewsTotal = toNum4(raw.views_total ?? raw.total_views ?? existingMaster?.views_total);
+        if (viewsTotal !== null && viewsTotal < 0) throw new Error("views_total must be >= 0");
+        const favoritesTotal = toNum4(raw.favorites_total ?? raw.total_favorites ?? existingMaster?.favorites_total);
+        if (favoritesTotal !== null && favoritesTotal < 0) throw new Error("favorites_total must be >= 0");
+        const effectiveProductId = resolvedProductId !== null ? resolvedProductId : existingMaster?.product_id ? Number(existingMaster.product_id) : null;
+        const effectiveMappingScope = effectiveProductId !== null ? resolvedScope : trimTo4(existingMaster?.mapping_scope, 80) || resolvedScope || "unmapped";
+        await env.DB.prepare(
+          `INSERT INTO etsy_listing_master
+             (listing_id, shop_id, shop_name, listing_title, listing_state, is_active, listing_url, currency,
+              price, quantity_available, views_total, favorites_total, product_id, mapping_scope,
+              source_updated_at, first_seen_at, last_seen_at)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?15, ?15)
+           ON CONFLICT(listing_id) DO UPDATE SET
+             shop_id = excluded.shop_id,
+             shop_name = excluded.shop_name,
+             listing_title = excluded.listing_title,
+             listing_state = excluded.listing_state,
+             is_active = excluded.is_active,
+             listing_url = excluded.listing_url,
+             currency = excluded.currency,
+             price = excluded.price,
+             quantity_available = excluded.quantity_available,
+             views_total = excluded.views_total,
+             favorites_total = excluded.favorites_total,
+             product_id = excluded.product_id,
+             mapping_scope = excluded.mapping_scope,
+             source_updated_at = excluded.source_updated_at,
+             last_seen_at = excluded.last_seen_at,
+             updated_at = CURRENT_TIMESTAMP`
+        ).bind(
+          listingId,
+          shopId,
+          shopName,
+          listingTitle,
+          listingState,
+          isActive,
+          listingUrl,
+          currency,
+          price,
+          quantityAvailable === null ? null : Math.round(quantityAvailable),
+          viewsTotal === null ? null : Math.round(viewsTotal),
+          favoritesTotal === null ? null : Math.round(favoritesTotal),
+          effectiveProductId,
+          effectiveMappingScope,
+          nowIso
+        ).run();
+        masterCache.set(listingId, {
+          listing_id: listingId,
+          shop_id: shopId,
+          shop_name: shopName,
+          listing_title: listingTitle,
+          listing_state: listingState,
+          is_active: isActive,
+          listing_url: listingUrl,
+          currency,
+          price,
+          quantity_available: quantityAvailable === null ? null : Math.round(quantityAvailable),
+          views_total: viewsTotal === null ? null : Math.round(viewsTotal),
+          favorites_total: favoritesTotal === null ? null : Math.round(favoritesTotal),
+          product_id: effectiveProductId,
+          mapping_scope: effectiveMappingScope
+        });
+        const existing = await env.DB.prepare(
+          `SELECT id, listing_title, listing_state, is_active, visits, views, favorites, orders, transactions,
+                  units_sold, revenue, revenue_thb, product_id, mapping_scope
+           FROM etsy_listing_daily
+           WHERE report_date = ?1 AND listing_id = ?2 AND currency = ?3
+           LIMIT 1`
+        ).bind(reportDate, listingId, currency).first();
+        if (!existing) {
+          await env.DB.prepare(
+            `INSERT INTO etsy_listing_daily
+               (report_date, listing_id, listing_title, listing_state, is_active, currency,
+                visits, views, favorites, orders, transactions, units_sold, revenue, revenue_thb,
+                product_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)`
+          ).bind(
+            reportDate,
+            listingId,
+            listingTitle,
+            listingState,
+            isActive,
+            currency,
+            visits,
+            views,
+            favorites,
+            orders,
+            transactions,
+            unitsSold,
+            revenue,
+            revenueThb,
+            effectiveProductId,
+            effectiveMappingScope,
+            nowIso
+          ).run();
+          created++;
+          continue;
+        }
+        const noChange = sameNullable3(existing.listing_title, listingTitle) && sameNullable3(existing.listing_state, listingState) && Number(existing.is_active || 0) === isActive && Number(existing.visits || 0) === visits && Number(existing.views || 0) === views && Number(existing.favorites || 0) === favorites && Number(existing.orders || 0) === orders && Number(existing.transactions || 0) === transactions && Number(existing.units_sold || 0) === unitsSold && sameNullableNum3(existing.revenue, revenue) && sameNullableNum3(existing.revenue_thb, revenueThb) && sameNullable3(existing.product_id, effectiveProductId) && sameNullable3(existing.mapping_scope, effectiveMappingScope);
+        if (noChange) {
+          unchanged++;
+          continue;
+        }
+        await env.DB.prepare(
+          `UPDATE etsy_listing_daily
+           SET listing_title = ?1,
+               listing_state = ?2,
+               is_active = ?3,
+               visits = ?4,
+               views = ?5,
+               favorites = ?6,
+               orders = ?7,
+               transactions = ?8,
+               units_sold = ?9,
+               revenue = ?10,
+               revenue_thb = ?11,
+               product_id = ?12,
+               mapping_scope = ?13,
+               source_updated_at = ?14,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?15`
+        ).bind(
+          listingTitle,
+          listingState,
+          isActive,
+          visits,
+          views,
+          favorites,
+          orders,
+          transactions,
+          unitsSold,
+          revenue,
+          revenueThb,
+          effectiveProductId,
+          effectiveMappingScope,
+          nowIso,
+          Number(existing.id)
+        ).run();
+        updated++;
+      } catch (e) {
+        rejected++;
+        if (rejects.length < 25) rejects.push({ index: i, reason: String(e?.message || e).slice(0, 180) });
+      }
+    }
+    const status = rejected === 0 ? "success" : created + updated + unchanged > 0 ? "partial" : "failed";
+    await finishSyncRun4(env, runId, { status, created, updated, unchanged, rejected, error: null });
+    return response4({
+      success: true,
+      run_id: runId,
+      source,
+      scenario,
+      totals: {
+        received: rowsRaw.length,
+        created,
+        updated,
+        unchanged,
+        rejected
+      },
+      rejected_samples: rejects
+    });
+  } catch (e) {
+    await finishSyncRun4(env, runId, {
+      status: "failed",
+      created,
+      updated,
+      unchanged,
+      rejected: rowsRaw.length - (created + updated + unchanged),
+      error: String(e?.message || e)
+    });
+    return response4(
+      {
+        success: false,
+        error_code: "ETSY_UPSERT_FAILED",
+        message: String(e?.message || e),
+        run_id: runId
+      },
+      500
+    );
+  }
+}
+__name(handleRowsUpsert3, "handleRowsUpsert");
+async function handleEtsyApi(request, env) {
+  const url = new URL(request.url);
+  const path = url.pathname.replace(/\/+$/, "");
+  const method = request.method.toUpperCase();
+  if (!path.startsWith("/v1/etsy") && !path.startsWith("/api/v1/etsy")) return null;
+  if (method === "OPTIONS") return response4({ ok: true });
+  if (method === "GET" && (path === "/v1/etsy/health" || path === "/api/v1/etsy/health")) {
+    return response4({ ok: true, service: ETSY_SERVICE_NAME });
+  }
+  if (method === "POST" && (path === "/v1/etsy/rows/upsert" || path === "/api/v1/etsy/rows/upsert")) {
+    return handleRowsUpsert3(request, env);
+  }
+  return response4({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Etsy route not found." }, 404);
+}
+__name(handleEtsyApi, "handleEtsyApi");
+
 // api/v1/[[path]].ts
 var onRequest = /* @__PURE__ */ __name(async (context) => {
   const path = new URL(context.request.url).pathname.replace(/\/+$/, "");
@@ -1721,6 +2189,10 @@ var onRequest = /* @__PURE__ */ __name(async (context) => {
   if (path.startsWith("/api/v1/ga4") || path.startsWith("/v1/ga4")) {
     const ga4Res = await handleGa4Api(context.request, context.env);
     if (ga4Res) return ga4Res;
+  }
+  if (path.startsWith("/api/v1/etsy") || path.startsWith("/v1/etsy")) {
+    const etsyRes = await handleEtsyApi(context.request, context.env);
+    if (etsyRes) return etsyRes;
   }
   const salesRes = await handleSalesApi(context.request, context.env);
   if (salesRes) return salesRes;
@@ -3334,7 +3806,7 @@ async function handlePricing(request, env) {
       } else if (isFittedSheetProduct(body.product || "") || !body.product && body.mode !== "vberth") {
         formulaType = "fitted-sheet";
       }
-      const response4 = {
+      const response5 = {
         price_usd: resultUsd.price,
         price_thb: resultThb.price,
         product: body.product || null,
@@ -3345,9 +3817,9 @@ async function handlePricing(request, env) {
         derived_markup_pct: body.product ? derivedMarkupMap[body.product] || 0 : 0
       };
       if (resultUsd.breakdown) {
-        response4.breakdown = resultUsd.breakdown;
+        response5.breakdown = resultUsd.breakdown;
       }
-      return new Response(JSON.stringify(response4), {
+      return new Response(JSON.stringify(response5), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (e) {
@@ -6424,7 +6896,7 @@ async function authorizeAdmin5(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin5, "authorizeAdmin");
-var DATE_RE3 = /^\d{4}-\d{2}-\d{2}$/;
+var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
 var CHANNEL_RE = /^[a-z0-9-]{1,30}$/;
 var COMMERCIAL_STATUSES = /* @__PURE__ */ new Set(["paid", "processing", "shipped", "completed"]);
 var REVENUE_STATUSES = /* @__PURE__ */ new Set(["EXACT", "UNALLOCATED"]);
@@ -6434,9 +6906,9 @@ var DEFAULT_LIMIT = 50;
 function parseFilters(url) {
   const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
   const start = (url.searchParams.get("start") || "").trim() || null;
-  if (start && !DATE_RE3.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
+  if (start && !DATE_RE4.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
   const end = (url.searchParams.get("end") || "").trim() || null;
-  if (end && !DATE_RE3.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
+  if (end && !DATE_RE4.test(end)) return bad("INVALID_END_DATE", "end must be YYYY-MM-DD.");
   if (start && end && start > end) return bad("INVALID_DATE_RANGE", "start must be on or before end.");
   const channelRaw = (url.searchParams.get("channel") || "").trim().toLowerCase() || null;
   if (channelRaw && !CHANNEL_RE.test(channelRaw)) return bad("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
@@ -6488,7 +6960,7 @@ function dayRangeWhere(f, col = "order_day") {
 }
 __name(dayRangeWhere, "dayRangeWhere");
 function shiftIsoDate(isoDay, deltaDays) {
-  if (!DATE_RE3.test(isoDay)) return null;
+  if (!DATE_RE4.test(isoDay)) return null;
   const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
   if (isNaN(d.getTime())) return null;
   d.setUTCDate(d.getUTCDate() + deltaDays);
@@ -7149,6 +7621,239 @@ async function getGa4(env, f) {
   }
 }
 __name(getGa4, "getGa4");
+async function getEtsy(env, f) {
+  const range = dayRangeWhere(f, "e.report_date");
+  const binds = [...range.binds];
+  let productSql = "";
+  if (f.productId !== null) {
+    productSql = " AND e.product_id = ?";
+    binds.push(f.productId);
+  }
+  try {
+    const summary = await env.DB.prepare(
+      `SELECT
+         COUNT(DISTINCT e.listing_id) AS listings,
+         COUNT(DISTINCT CASE WHEN e.is_active = 1 THEN e.listing_id END) AS active_listings,
+         COALESCE(SUM(e.visits), 0) AS visits,
+         COALESCE(SUM(e.views), 0) AS views,
+         COALESCE(SUM(e.favorites), 0) AS favorites,
+         COALESCE(SUM(e.orders), 0) AS orders,
+         COALESCE(SUM(e.transactions), 0) AS transactions,
+         COALESCE(SUM(e.units_sold), 0) AS units_sold,
+         COALESCE(SUM(COALESCE(e.revenue, 0)), 0) AS revenue,
+         COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb,
+         COALESCE(SUM(CASE WHEN e.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views,
+         COALESCE(SUM(CASE WHEN e.product_id IS NOT NULL THEN e.orders ELSE 0 END), 0) AS mapped_orders
+       FROM etsy_listing_daily e
+       WHERE 1=1${range.sql}${productSql}`
+    ).bind(...binds).first();
+    const topListings = await env.DB.prepare(
+      `SELECT
+         e.listing_id,
+         MIN(e.listing_title) AS listing_title,
+         MIN(e.listing_state) AS listing_state,
+         MAX(e.is_active) AS is_active,
+         MIN(e.currency) AS currency,
+         e.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         SUM(e.visits) AS visits,
+         SUM(e.views) AS views,
+         SUM(e.favorites) AS favorites,
+         SUM(e.orders) AS orders,
+         SUM(e.transactions) AS transactions,
+         SUM(e.units_sold) AS units_sold,
+         SUM(COALESCE(e.revenue_thb, 0)) AS revenue_thb
+       FROM etsy_listing_daily e
+       LEFT JOIN products p ON p.id = e.product_id
+       WHERE 1=1${range.sql}${productSql}
+       GROUP BY e.listing_id, e.product_id, p.title_en
+       ORDER BY SUM(e.views) DESC, SUM(e.orders) DESC, e.listing_id
+       LIMIT 20`
+    ).bind(...binds).all();
+    const topProducts = await env.DB.prepare(
+      `SELECT
+         e.product_id,
+         p.slug AS product_slug,
+         p.title_en AS product_title,
+         COUNT(DISTINCT e.listing_id) AS listing_count,
+         SUM(e.visits) AS visits,
+         SUM(e.views) AS views,
+         SUM(e.favorites) AS favorites,
+         SUM(e.orders) AS orders,
+         SUM(e.transactions) AS transactions,
+         SUM(e.units_sold) AS units_sold,
+         SUM(COALESCE(e.revenue_thb, 0)) AS revenue_thb
+       FROM etsy_listing_daily e
+       JOIN products p ON p.id = e.product_id
+       WHERE e.product_id IS NOT NULL${range.sql}${productSql}
+       GROUP BY e.product_id, p.slug, p.title_en
+       ORDER BY SUM(e.views) DESC, SUM(e.orders) DESC, e.product_id
+       LIMIT 15`
+    ).bind(...binds).all();
+    const fresh = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+    const statusRow = await env.DB.prepare(`SELECT * FROM analysis_etsy_listing_status`).first();
+    const byState = await env.DB.prepare(
+      `SELECT
+         listing_state,
+         is_active,
+         COUNT(*) AS listings,
+         SUM(CASE WHEN product_id IS NOT NULL THEN 1 ELSE 0 END) AS mapped_listings
+       FROM etsy_listing_master
+       GROUP BY listing_state, is_active
+       ORDER BY listings DESC, listing_state`
+    ).all();
+    const latestReportDate = fresh?.latest_report_date || null;
+    const anchorDate = f.end || latestReportDate || null;
+    let trend = {
+      anchor_date: anchorDate,
+      current_start: null,
+      previous_start: null,
+      previous_end: null,
+      views_28d: 0,
+      favorites_28d: 0,
+      orders_28d: 0,
+      transactions_28d: 0,
+      units_sold_28d: 0,
+      revenue_thb_28d: 0,
+      views_prev_28d: 0,
+      favorites_prev_28d: 0,
+      orders_prev_28d: 0,
+      transactions_prev_28d: 0,
+      units_sold_prev_28d: 0,
+      revenue_thb_prev_28d: 0,
+      views_growth_pct: null,
+      orders_growth_pct: null,
+      revenue_growth_pct: null
+    };
+    if (anchorDate) {
+      const currentStart = shiftIsoDate(anchorDate, -27);
+      const previousEnd = shiftIsoDate(anchorDate, -28);
+      const previousStart = shiftIsoDate(anchorDate, -55);
+      if (currentStart && previousEnd && previousStart) {
+        let productTrendSql = "";
+        const curBinds = [currentStart, anchorDate];
+        const prevBinds = [previousStart, previousEnd];
+        if (f.productId !== null) {
+          productTrendSql = " AND e.product_id = ?";
+          curBinds.push(f.productId);
+          prevBinds.push(f.productId);
+        }
+        const cur = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(e.views), 0) AS views,
+             COALESCE(SUM(e.favorites), 0) AS favorites,
+             COALESCE(SUM(e.orders), 0) AS orders,
+             COALESCE(SUM(e.transactions), 0) AS transactions,
+             COALESCE(SUM(e.units_sold), 0) AS units_sold,
+             COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb
+           FROM etsy_listing_daily e
+           WHERE e.report_date >= ? AND e.report_date <= ?${productTrendSql}`
+        ).bind(...curBinds).first();
+        const prev = await env.DB.prepare(
+          `SELECT
+             COALESCE(SUM(e.views), 0) AS views,
+             COALESCE(SUM(e.favorites), 0) AS favorites,
+             COALESCE(SUM(e.orders), 0) AS orders,
+             COALESCE(SUM(e.transactions), 0) AS transactions,
+             COALESCE(SUM(e.units_sold), 0) AS units_sold,
+             COALESCE(SUM(COALESCE(e.revenue_thb, 0)), 0) AS revenue_thb
+           FROM etsy_listing_daily e
+           WHERE e.report_date >= ? AND e.report_date <= ?${productTrendSql}`
+        ).bind(...prevBinds).first();
+        const prevViews = Number(prev?.views || 0);
+        const prevOrders = Number(prev?.orders || 0);
+        const prevRevenue = Number(prev?.revenue_thb || 0);
+        const curViews = Number(cur?.views || 0);
+        const curOrders = Number(cur?.orders || 0);
+        const curRevenue = Number(cur?.revenue_thb || 0);
+        trend = {
+          anchor_date: anchorDate,
+          current_start: currentStart,
+          previous_start: previousStart,
+          previous_end: previousEnd,
+          views_28d: curViews,
+          favorites_28d: Number(cur?.favorites || 0),
+          orders_28d: curOrders,
+          transactions_28d: Number(cur?.transactions || 0),
+          units_sold_28d: Number(cur?.units_sold || 0),
+          revenue_thb_28d: curRevenue,
+          views_prev_28d: prevViews,
+          favorites_prev_28d: Number(prev?.favorites || 0),
+          orders_prev_28d: prevOrders,
+          transactions_prev_28d: Number(prev?.transactions || 0),
+          units_sold_prev_28d: Number(prev?.units_sold || 0),
+          revenue_thb_prev_28d: prevRevenue,
+          views_growth_pct: prevViews > 0 ? Math.round((curViews - prevViews) * 1e4 / prevViews) / 100 : null,
+          orders_growth_pct: prevOrders > 0 ? Math.round((curOrders - prevOrders) * 1e4 / prevOrders) / 100 : null,
+          revenue_growth_pct: prevRevenue > 0 ? Math.round((curRevenue - prevRevenue) * 1e4 / prevRevenue) / 100 : null
+        };
+      }
+    }
+    const rowsTotal = Number(fresh?.total_rows || 0);
+    const etsyDays = fresh?.days_since_latest_report === null || fresh?.days_since_latest_report === void 0 ? null : Number(fresh.days_since_latest_report);
+    const latestSyncStatus = String(fresh?.last_sync_status || "").toLowerCase() || null;
+    let freshnessStatus = "empty";
+    if (rowsTotal > 0) {
+      freshnessStatus = "ok";
+      if (etsyDays !== null && etsyDays > 7) freshnessStatus = "warning";
+      if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
+    }
+    return json5({
+      success: true,
+      available: true,
+      filters: { start: f.start, end: f.end, product_id: f.productId },
+      summary: {
+        listings: Number(summary?.listings || 0),
+        active_listings: Number(summary?.active_listings || 0),
+        visits: Number(summary?.visits || 0),
+        views: Number(summary?.views || 0),
+        favorites: Number(summary?.favorites || 0),
+        orders: Number(summary?.orders || 0),
+        transactions: Number(summary?.transactions || 0),
+        units_sold: Number(summary?.units_sold || 0),
+        revenue: Number(summary?.revenue || 0),
+        revenue_thb: Number(summary?.revenue_thb || 0),
+        mapped_views: Number(summary?.mapped_views || 0),
+        mapped_orders: Number(summary?.mapped_orders || 0)
+      },
+      trend_28d: trend,
+      freshness: {
+        total_rows: rowsTotal,
+        latest_report_date: latestReportDate,
+        days_since_latest_report: etsyDays,
+        last_success_sync_at: fresh?.last_success_sync_at || null,
+        last_sync_at: fresh?.last_sync_at || null,
+        last_sync_status: latestSyncStatus,
+        sync_errors_7d: Number(fresh?.sync_errors_7d || 0),
+        status: freshnessStatus,
+        caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days."
+      },
+      listing_status: {
+        total_listings: Number(statusRow?.total_listings || 0),
+        active_listings: Number(statusRow?.active_listings || 0),
+        inactive_listings: Number(statusRow?.inactive_listings || 0),
+        mapped_listings: Number(statusRow?.mapped_listings || 0),
+        unmapped_listings: Number(statusRow?.unmapped_listings || 0),
+        last_listing_sync_at: statusRow?.last_listing_sync_at || null,
+        by_state: byState.results || []
+      },
+      top_listings: topListings.results || [],
+      top_products: topProducts.results || []
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table: etsy_listing_daily") || msg.includes("no such table: etsy_listing_master") || msg.includes("no such table: analysis_etsy_freshness")) {
+      return json5({
+        success: true,
+        available: false,
+        message: "Etsy schema is not available in this environment yet. Apply migration 049_etsy_analytics.sql.",
+        filters: { start: f.start, end: f.end, product_id: f.productId }
+      });
+    }
+    return err("ETSY_QUERY_FAILED", msg, 500);
+  }
+}
+__name(getEtsy, "getEtsy");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -7216,6 +7921,12 @@ async function getDataQuality(env) {
   } catch {
     ga4Freshness = null;
   }
+  let etsyFreshness = null;
+  try {
+    etsyFreshness = await env.DB.prepare(`SELECT * FROM analysis_etsy_freshness`).first();
+  } catch {
+    etsyFreshness = null;
+  }
   let freshnessMinutes = null;
   const rawTs = String(dq.last_success_sync_at || "").trim();
   if (rawTs) {
@@ -7268,6 +7979,13 @@ async function getDataQuality(env) {
     if (ga4Days !== null && ga4Days > 3) warn("GA4 freshness is " + ga4Days + " days old (threshold 3).");
     if (["failed", "partial", "error"].includes(ga4LastStatus)) warn("Latest GA4 sync run status: " + ga4LastStatus + ".");
   }
+  const etsyRows = Number(etsyFreshness?.total_rows || 0);
+  const etsyDays = etsyFreshness?.days_since_latest_report === null || etsyFreshness?.days_since_latest_report === void 0 ? null : Number(etsyFreshness.days_since_latest_report);
+  const etsyLastStatus = String(etsyFreshness?.last_sync_status || "").toLowerCase();
+  if (etsyRows > 0) {
+    if (etsyDays !== null && etsyDays > 7) warn("Etsy freshness is " + etsyDays + " days old (threshold 7).");
+    if (["failed", "partial", "error"].includes(etsyLastStatus)) warn("Latest Etsy sync run status: " + etsyLastStatus + ".");
+  }
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
   return json5({
@@ -7312,6 +8030,21 @@ async function getDataQuality(env) {
       sync_errors_7d: Number(ga4Freshness?.sync_errors_7d || 0),
       status: ga4Rows === 0 ? "empty" : ga4Days !== null && ga4Days > 3 || ["failed", "partial", "error"].includes(ga4LastStatus) ? "warning" : "ok",
       caveat: "GA4 event data may finalize with delay; freshness warning threshold = 3 days."
+    },
+    etsy_freshness: {
+      available: !!etsyFreshness,
+      total_rows: etsyRows,
+      latest_report_date: etsyFreshness?.latest_report_date || null,
+      days_since_latest_report: etsyDays,
+      last_success_sync_at: etsyFreshness?.last_success_sync_at || null,
+      last_sync_at: etsyFreshness?.last_sync_at || null,
+      last_sync_status: etsyLastStatus || null,
+      sync_errors_7d: Number(etsyFreshness?.sync_errors_7d || 0),
+      total_master_listings: Number(etsyFreshness?.total_master_listings || 0),
+      active_master_listings: Number(etsyFreshness?.active_master_listings || 0),
+      inactive_master_listings: Number(etsyFreshness?.inactive_master_listings || 0),
+      status: etsyRows === 0 ? "empty" : etsyDays !== null && etsyDays > 7 || ["failed", "partial", "error"].includes(etsyLastStatus) ? "warning" : "ok",
+      caveat: "Etsy metrics depend on source exports/API windows; freshness warning threshold = 7 days."
     },
     coverage: {
       first_order_day: spanRow?.first_order_day ?? null,
@@ -7436,6 +8169,7 @@ async function handleAdminAnalysis(request, env) {
   const f = parsed.f;
   if (sub === "/gsc") return getGsc(env, f);
   if (sub === "/ga4") return getGa4(env, f);
+  if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
@@ -13380,6 +14114,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     const ga4Res = await handleGa4Api(request, env);
     if (ga4Res) return ga4Res;
   }
+  if (path.startsWith("/api/v1/etsy")) {
+    const etsyRes = await handleEtsyApi(request, env);
+    if (etsyRes) return etsyRes;
+  }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
     const salesRes = await handleSalesApi(request, env);
     if (salesRes) return salesRes;
@@ -15077,10 +15815,10 @@ async function onRequest12(context) {
   if (legacyProductRedirect) {
     return Response.redirect(new URL(legacyProductRedirect, url.origin).toString(), 301);
   }
-  const response4 = await context.next();
-  const contentType = response4.headers.get("Content-Type") || "";
-  if (!contentType.includes("text/html")) return response4;
-  let html = await response4.text();
+  const response5 = await context.next();
+  const contentType = response5.headers.get("Content-Type") || "";
+  if (!contentType.includes("text/html")) return response5;
+  let html = await response5.text();
   const normalizedPath = normalizeRoutePath(path);
   const listingConfig = LISTING_ROUTES[normalizedPath];
   if (listingConfig && context.env?.DB) {
@@ -15166,11 +15904,11 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response4.status, headers: response4.headers });
+  return new Response(html, { status: response5.status, headers: response5.headers });
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-4mszlf/functionsRoutes-0.2424944728286783.mjs
+// ../.wrangler/tmp/pages-7dQaIL/functionsRoutes-0.8450011950130609.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -15686,35 +16424,35 @@ var pages_template_worker_default = {
             isFailOpen = true;
           }, "passThroughOnException")
         };
-        const response4 = await handler(context);
-        if (!(response4 instanceof Response)) {
+        const response5 = await handler(context);
+        if (!(response5 instanceof Response)) {
           throw new Error("Your Pages function should return a Response");
         }
-        return cloneResponse(response4);
+        return cloneResponse(response5);
       } else if ("ASSETS") {
-        const response4 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response4);
+        const response5 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response5);
       } else {
-        const response4 = await fetch(request);
-        return cloneResponse(response4);
+        const response5 = await fetch(request);
+        return cloneResponse(response5);
       }
     }, "next");
     try {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response4 = await env["ASSETS"].fetch(request);
-        return cloneResponse(response4);
+        const response5 = await env["ASSETS"].fetch(request);
+        return cloneResponse(response5);
       }
       throw error;
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response4) => (
+var cloneResponse = /* @__PURE__ */ __name((response5) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
-    [101, 204, 205, 304].includes(response4.status) ? null : response4.body,
-    response4
+    [101, 204, 205, 304].includes(response5.status) ? null : response5.body,
+    response5
   )
 ), "cloneResponse");
 export {
