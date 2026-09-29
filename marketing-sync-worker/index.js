@@ -1354,13 +1354,13 @@ function normalizeGoogleAdsResultRow(row, currencyFallback) {
 }
 
 async function fetchGoogleAdsRowsForWindow(env, accessToken, startIso, endIso) {
-  const developerToken = String(env.GOOGLE_ADS_DEVELOPER_TOKEN || "").trim();
   const customerId = String(env.GOOGLE_ADS_CUSTOMER_ID || "").trim();
-  if (!developerToken) throw new Error("GOOGLE_ADS_DEVELOPER_TOKEN is not configured");
+  const loginCustomerId = String(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "").trim();
   if (!customerId) throw new Error("GOOGLE_ADS_CUSTOMER_ID is not configured");
+  if (!loginCustomerId) throw new Error("GOOGLE_ADS_LOGIN_CUSTOMER_ID is not configured");
 
   const apiBase = String(env.GOOGLE_ADS_API_BASE || "https://googleads.googleapis.com").replace(/\/+$/, "");
-  const endpoint = `${apiBase}/v18/customers/${encodeURIComponent(customerId)}/googleAds:searchStream`;
+  const endpoint = `${apiBase}/v25/customers/${encodeURIComponent(customerId)}/googleAds:searchStream`;
   const currency = String(env.GOOGLE_ADS_ACCOUNT_CURRENCY || "THB").trim().toUpperCase() || "THB";
   const query = `
     SELECT
@@ -1388,25 +1388,30 @@ async function fetchGoogleAdsRowsForWindow(env, accessToken, startIso, endIso) {
 
   const headers = {
     Authorization: `Bearer ${accessToken}`,
-    "developer-token": developerToken,
+    "login-customer-id": loginCustomerId,
     "Content-Type": "application/json",
   };
-  const loginCustomerId = String(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "").trim();
-  if (loginCustomerId) headers["login-customer-id"] = loginCustomerId;
 
   const res = await fetch(endpoint, {
     method: "POST",
     headers,
     body: JSON.stringify({ query }),
   });
-  const body = await res.json().catch(() => ({}));
+  const rawBody = await res.text();
+  let body = {};
+  try {
+    body = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    body = {};
+  }
   if (!res.ok) {
     const msg =
       body?.error?.message ||
       body?.error?.details?.[0]?.errors?.[0]?.message ||
       body?.message ||
+      rawBody ||
       "unknown error";
-    throw new Error(`Google Ads searchStream failed (${res.status}): ${truncate(String(msg), 240)}`);
+    throw new Error(`Google Ads searchStream failed (${res.status}): ${truncate(String(msg), 4000)}`);
   }
 
   const batches = Array.isArray(body) ? body : [body];
@@ -1907,8 +1912,8 @@ async function executeEtsySync(env, trigger, overrides = {}) {
 async function executeGoogleAdsSync(env, trigger, overrides = {}) {
   for (const required of [
     "SALES_SYNC_API_TOKEN",
-    "GOOGLE_ADS_DEVELOPER_TOKEN",
     "GOOGLE_ADS_CUSTOMER_ID",
+    "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
     "GOOGLE_ADS_CLIENT_ID",
     "GOOGLE_ADS_CLIENT_SECRET",
     "GOOGLE_ADS_REFRESH_TOKEN",
