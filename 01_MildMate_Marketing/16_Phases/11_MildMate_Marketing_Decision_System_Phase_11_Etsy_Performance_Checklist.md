@@ -97,6 +97,6 @@ Connect Etsy listing performance and sales signals to canonical MildMate product
 
 ---
 
-## Reconciliation Note (2026-09-27)
+## Reconciliation Note (2026-09-29)
 
-Status update: **IMPLEMENTED IN REPOSITORY (pending production rollout + first live Etsy reconciliation)**. Added migration `049_etsy_analytics.sql` (listing master + Etsy daily fact + analysis/freshness views), token-auth Etsy ingestion API under `/api/v1/etsy/*`, Etsy read endpoint `/api/admin/analysis/etsy`, Data Analyst Etsy section, Data Quality Etsy freshness wiring, and weekly Etsy collector path in `marketing-sync-worker` (`/etsy/run`, `/etsy/status`, shared GA4+Etsy cron `0 4 * * 1`). Remaining for full operational verification: deploy updated runtime, run first live Etsy ingest, then reconcile sampled Etsy listing totals and revenue/order definitions against source exports/API.
+Status update: **DEPLOYED / READY FOR LIVE RECONCILIATION**. Migration `049_etsy_analytics.sql`, token-auth Etsy ingestion API (`/api/v1/etsy/*`), read endpoint (`/api/admin/analysis/etsy`), dashboard section, freshness wiring, and collector flow (`/etsy/run`, `/etsy/status`, shared Monday `0 4 * * 1` cron) are implemented and deployed. Etsy OAuth/shop secrets are configured. Remaining for full operational verification: run/confirm first live Etsy ingest and reconcile sampled listing totals plus revenue/order definitions against Etsy source exports/API.

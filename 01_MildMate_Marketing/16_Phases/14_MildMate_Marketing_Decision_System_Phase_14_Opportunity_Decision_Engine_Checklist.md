@@ -102,6 +102,6 @@ Rank product/channel opportunities consistently using approved analytical inputs
 
 ---
 
-## Reconciliation Note (2026-09-26)
+## Reconciliation Note (2026-09-29)
 
-Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No opportunity-score schema, score-history storage, or opportunity-ranking endpoints/views for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and prerequisite analytical layers from Phases 10-13 are still pending.
+Status verified: **NOT STARTED**. No opportunity-score schema, score-history storage, or opportunity-ranking endpoints/views for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-09 and 17 are operational; Phases 10-11 are deployed and awaiting first live metric reconciliations; Phase 12 Google Ads slice is deployed (Meta Ads intentionally deferred); Phase 13 remains pending.

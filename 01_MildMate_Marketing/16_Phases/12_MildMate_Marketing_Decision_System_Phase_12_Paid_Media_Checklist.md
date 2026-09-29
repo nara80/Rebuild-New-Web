@@ -1,5 +1,5 @@
 # MildMate Marketing Decision System — Phase 12
-## Paid Media Analytics — Google Ads & Meta Ads
+## Paid Media Analytics — Google Ads (Meta Ads Deferred)
 
 **Project root:** `D:/00_Mildmate/Re-build_web/`  
 **Planning / handoff folder:** `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`  
@@ -29,7 +29,7 @@ Add spend, acquisition efficiency, and paid-channel performance.
 ## Task Checklist
 
 - [x] Define Google Ads fact-table grain.
-- [ ] Define Meta Ads fact-table grain.
+- [ ] Define Meta Ads fact-table grain. *(deferred by owner decision, 2026-09-29)*
 - [x] Preserve campaign/ad group/ad identifiers.
 - [x] Collect spend.
 - [x] Collect impressions.
@@ -37,34 +37,34 @@ Add spend, acquisition efficiency, and paid-channel performance.
 - [x] Collect conversions.
 - [x] Collect conversion value with source definition.
 - [x] Build Google Ads ingestion endpoint/collector.
-- [ ] Build Meta Ads ingestion endpoint/collector.
+- [ ] Build Meta Ads ingestion endpoint/collector. *(deferred by owner decision, 2026-09-29)*
 - [x] Define campaign → product mapping where defensible.
 - [x] Keep non-product campaigns unassigned rather than forcing Product_ID.
 - [x] Calculate CPA.
 - [x] Calculate ROAS using clearly defined revenue basis.
 - [x] Keep platform-attributed revenue separate from canonical D1 order revenue.
-- [ ] Build paid-media analytical views. *(Google Ads done; Meta Ads pending)*
+- [x] Build paid-media analytical views for active source scope. *(Google Ads done; Meta Ads explicitly deferred by owner decision, 2026-09-29)*
 - [x] Add Paid Media section to Data Analyst dashboard.
 - [x] Add source freshness and collector-error monitoring.
 
 ## Deliverables
 
 - [x] Google Ads fact table + collector.
-- [ ] Meta Ads fact table + collector.
-- [ ] Paid media analytical views. *(Google Ads done; Meta Ads pending)*
+- [ ] Meta Ads fact table + collector. *(deferred by owner decision, 2026-09-29)*
+- [x] Paid media analytical views for active source scope. *(Google Ads done; Meta Ads explicitly deferred by owner decision, 2026-09-29)*
 - [x] Paid Media dashboard. *(Google Ads section added)*
 
 ## Verification / Test Checklist
 
-- [ ] Spend matches source reports.
+- [ ] Spend matches source reports. *(Google Ads API run succeeded; zero rows returned because no active campaigns yet)*
 - [x] Campaign IDs remain stable through name changes.
-- [ ] Product mapping does not force ambiguous campaigns.
+- [x] Product mapping does not force ambiguous campaigns.
 - [x] CPA/ROAS definitions are documented.
 - [x] Platform revenue is not double-counted as canonical sales.
 
 ## Definition of Done
 
-- [ ] Analyst can compare paid spend and acquisition efficiency while preserving source attribution boundaries.
+- [ ] Analyst can compare paid spend and acquisition efficiency while preserving source attribution boundaries. *(awaiting active Google Ads campaign data)*
 
 ## Global Guardrails
 
@@ -93,7 +93,7 @@ Add spend, acquisition efficiency, and paid-channel performance.
 
 ## Recommended Droid Session Name
 
-`MildMate Marketing Decision System — Phase 12 — Paid Media Analytics — Google Ads & Meta Ads`
+`MildMate Marketing Decision System — Phase 12 — Paid Media Analytics — Google Ads (Meta Ads Deferred)`
 
 ## Droid Working Instruction
 
@@ -101,6 +101,6 @@ Add spend, acquisition efficiency, and paid-channel performance.
 
 ---
 
-## Reconciliation Note (2026-09-26)
+## Reconciliation Note (2026-09-29)
 
-Status update (2026-09-27): **PARTIALLY IMPLEMENTED IN REPOSITORY (Google Ads complete; Meta Ads pending)**. Added migration `050_google_ads_analytics.sql` (Google Ads fact table + analysis/freshness views), token-auth Google Ads ingestion API under `/api/v1/google-ads/*`, Google Ads collector path in `marketing-sync-worker` (`/google-ads/run`, `/google-ads/status`, shared Monday `0 4 * * 1` cron with GA4+Etsy), Google Ads read endpoint `/api/admin/analysis/google-ads`, Data Quality Google Ads freshness wiring, and Data Analyst Google Ads section. Remaining to complete Phase 12 scope: implement Meta Ads schema/collector/views/dashboard slices, then run first live paid-media reconciliation before production rollout.
+Status update: **GOOGLE ADS SLICE DEPLOYED / META ADS DEFERRED BY OWNER DECISION**. Added migration `050_google_ads_analytics.sql` (fact table + analysis/freshness views), token-auth Google Ads ingestion API under `/api/v1/google-ads/*`, Google Ads collector path in `marketing-sync-worker` (`/google-ads/run`, `/google-ads/status`, shared Monday `0 4 * * 1` cron with GA4+Etsy), Google Ads read endpoint `/api/admin/analysis/google-ads`, Data Quality Google Ads freshness wiring, and Data Analyst Google Ads section. Runtime was reconciled to remove the sunset developer-token requirement; OAuth now uses `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN` with required `GOOGLE_ADS_CUSTOMER_ID` and `GOOGLE_ADS_LOGIN_CUSTOMER_ID` (no hyphens). Manual production run succeeded (`ok: true`) and returned zero rows because no active Google Ads campaign data exists yet. Meta Ads work is intentionally deferred and out of current scope unless re-approved.

@@ -100,7 +100,7 @@ Fallback if the cron schedule is not approved: manual Super Admin trigger or a s
 
 ## Deliverables
 
-- [x] Scheduled (or approved alternative) ongoing confirmed-mapping sync. *(built; deploy pending approval)*
+- [x] Scheduled (or approved alternative) ongoing confirmed-mapping sync. *(deployed and operational in production; see Deployment Reconciliation Note)*
 - [x] Cursor/incremental query with persisted state.
 - [x] Run lock + throttle/backoff + bounded runs.
 - [x] Run logs + `product_mapping_events` audit integration.

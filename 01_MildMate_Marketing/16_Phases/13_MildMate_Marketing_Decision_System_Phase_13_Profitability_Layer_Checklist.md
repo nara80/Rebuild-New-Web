@@ -22,7 +22,7 @@ Move decision-making from revenue growth to profitable growth.
 
 ## Prerequisites / Confirmed Baseline
 
-- [ ] Sales and paid-media data sufficiently stable. *(requires Phase 12 implementation)*
+- [ ] Sales and paid-media data sufficiently stable. *(Phase 12 Google Ads slice is deployed; Meta Ads is intentionally deferred by owner decision, and active Google Ads campaign data is still pending.)*
 - [x] Business agrees that cost inputs may include controlled estimates where clearly labelled.
 
 ## Task Checklist
@@ -100,6 +100,6 @@ Move decision-making from revenue growth to profitable growth.
 
 ---
 
-## Reconciliation Note (2026-09-26)
+## Reconciliation Note (2026-09-29)
 
-Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No profitability cost schema, contribution-margin views, or profitability dashboard artifacts for this phase were found in the repository or production D1. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and paid-media dependency (Phase 12) is not yet complete.
+Status verified: **NOT STARTED**. No profitability cost schema, contribution-margin views, or profitability dashboard artifacts for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-09 and 17 are operational; Phases 10-11 are deployed and awaiting first live metric reconciliations; Phase 12 Google Ads slice is deployed (Meta Ads intentionally deferred by owner decision).

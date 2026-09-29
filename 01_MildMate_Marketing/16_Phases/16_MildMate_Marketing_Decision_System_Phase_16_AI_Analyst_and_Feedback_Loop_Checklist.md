@@ -107,6 +107,6 @@ Use AI to interpret trusted analytics, record approved actions, and measure whet
 
 ---
 
-## Reconciliation Note (2026-09-26)
+## Reconciliation Note (2026-09-29)
 
-Status verified: **NOT STARTED**. Reconciled on 2026-09-26 with current production state. No AI-analyst recommendation layer, `marketing_actions` persistence, approval workflow, or feedback-loop artifacts for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-08 and 17 are operational, Phase 09 GSC is live, and prerequisites from Phases 10-15 are not yet complete.
+Status verified: **NOT STARTED**. No AI-analyst recommendation layer, `marketing_actions` persistence, approval workflow, or feedback-loop artifacts for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-09 and 17 are operational; Phases 10-12 are deployed in current approved scope (Phase 12 = Google Ads only, Meta Ads deferred); prerequisites from Phases 13-15 remain incomplete.

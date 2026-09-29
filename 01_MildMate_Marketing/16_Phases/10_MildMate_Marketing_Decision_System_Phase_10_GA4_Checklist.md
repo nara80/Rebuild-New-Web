@@ -99,6 +99,6 @@ Add website traffic and funnel behavior to product/channel analysis.
 
 ---
 
-## Reconciliation Note (2026-09-26)
+## Reconciliation Note (2026-09-29)
 
-Status update: **IMPLEMENTED IN REPOSITORY (pending production rollout + first live reconciliation)**. Added migration `048_ga4_analytics.sql` (GA4 fact table + analysis views + freshness view), token-auth GA4 ingestion API under `/api/v1/ga4/*`, GA4 read endpoint `/api/admin/analysis/ga4`, Data Analyst GA4 Website Funnel section, and weekly GA4 collector flow in `marketing-sync-worker` (`/ga4/run`, `/ga4/status`, cron `0 4 * * 1`). Remaining for full operational verification: deploy updated Pages/Worker runtime, set GA4 OAuth secrets/property id, run first live ingest, then reconcile sampled GA4 totals and directional purchase counts against unified sales.
+Status update: **DEPLOYED / READY FOR LIVE RECONCILIATION**. Migration `048_ga4_analytics.sql`, token-auth GA4 ingestion API (`/api/v1/ga4/*`), read endpoint (`/api/admin/analysis/ga4`), dashboard section, and weekly collector flow (`/ga4/run`, `/ga4/status`, shared Monday `0 4 * * 1` cron) are implemented and deployed. GA4 OAuth secrets are configured. Remaining for full operational verification: run/confirm first live GA4 ingest in production and reconcile sampled GA4 totals plus directional purchase counts against unified sales.
