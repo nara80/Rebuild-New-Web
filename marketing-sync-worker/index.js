@@ -1,12 +1,12 @@
-/**
- * MildMate Marketing Decision System — Phase 17
+﻿/**
+ * MildMate Marketing Decision System â€” Phase 17
  * Scheduled confirmed-mapping sync Worker.
  *
  * Automates the Phase 07 v3 sync so Make.com-confirmed `Mapped` OrderList
  * records reach D1 without a human running the CLI. This Worker is a thin
  * scheduling/persistence shell: ALL sync logic comes from the shared engine
  * `scripts/notion-mapper-core.mjs`, which the manual CLI also uses. The logic
- * is never forked — fix the core and both runtimes change together.
+ * is never forked â€” fix the core and both runtimes change together.
  *
  * What this Worker adds over the CLI:
  *   - cron scheduling (Pages cannot host cron triggers)
@@ -24,10 +24,10 @@
  *   - Secrets come from bindings and are never logged.
  *
  * Schedules:
- *   "0 2 1,15 * *"  main run — 1st and 15th at 02:00 UTC (09:00 Bangkok).
+ *   "0 2 1,15 * *"  main run â€” 1st and 15th at 02:00 UTC (09:00 Bangkok).
  *                   Cron cannot express a true 14-day interval; twice-monthly
  *                   on fixed dates is deterministic and needs no extra state.
- *   "0 * * * *"     drain — no-ops unless the previous run stopped bounded
+ *   "0 * * * *"     drain â€” no-ops unless the previous run stopped bounded
  *                   with carry-over work. Without this, a batch too large for
  *                   one invocation would wait a fortnight to finish.
  *   "0 3 * * 1"     GSC weekly collector (Monday 03:00 UTC) with overlap
@@ -88,6 +88,10 @@ const GA4_DIMENSIONS = [
   "country",
   "deviceCategory",
 ];
+// Session-scoped metrics must not be dimensioned by pagePath: GA4 counts a
+// session once per page it touched, so page-dimensioned session sums inflate.
+// Landing page is unique per session, so these sums stay exact.
+const GA4_TRAFFIC_DIMENSIONS = GA4_DIMENSIONS.filter((name) => name !== "pagePath");
 const GA4_DEFAULT_VIEW_ITEM_EVENTS = ["view_item"];
 const GA4_DEFAULT_ADD_TO_CART_EVENTS = ["add_to_cart"];
 const GA4_DEFAULT_BEGIN_CHECKOUT_EVENTS = ["begin_checkout"];
@@ -174,7 +178,7 @@ function listIsoDaysInclusive(startIso, endIso) {
  *
  * Encodes the operator's stated correction cadence: month M is finalised in
  * Notion during month M+1 (e.g. August is corrected by end of September). So
- * the newest safely-syncable month is the one before last — cutoff = first day
+ * the newest safely-syncable month is the one before last â€” cutoff = first day
  * of the previous month. Records newer than that are held and sync themselves
  * on a later run once their signature changes.
  *
@@ -188,7 +192,7 @@ function resolveBefore(env, now = new Date()) {
   return d.toISOString().slice(0, 10);
 }
 
-// ── Lock ───────────────────────────────────────────────────────────────────
+// â”€â”€ Lock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function acquireLock(db, runId) {
   const until = new Date(Date.now() + LOCK_TTL_MS).toISOString();
@@ -558,28 +562,175 @@ async function getGoogleAdsAccessToken(env) {
   return String(body.access_token);
 }
 
+function etsyBase64ToBytes(value) {
+  const binary = atob(String(value || ""));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function etsyBytesToBase64(value) {
+  const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+async function getEtsyTokenEncryptionKey(env) {
+  if (!env.ETSY_TOKEN_ENCRYPTION_KEY) {
+    throw new Error("ETSY_TOKEN_ENCRYPTION_KEY is not configured");
+  }
+
+  const rawKey = etsyBase64ToBytes(
+    String(env.ETSY_TOKEN_ENCRYPTION_KEY).trim()
+  );
+
+  if (rawKey.byteLength !== 32) {
+    throw new Error(
+      "ETSY_TOKEN_ENCRYPTION_KEY must decode to exactly 32 bytes"
+    );
+  }
+
+  return crypto.subtle.importKey(
+    "raw",
+    rawKey,
+    { name: "AES-GCM" },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encryptEtsyRefreshToken(env, refreshToken) {
+  const key = await getEtsyTokenEncryptionKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = new TextEncoder().encode(String(refreshToken));
+
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    plaintext
+  );
+
+  return {
+    ciphertext: etsyBytesToBase64(new Uint8Array(encrypted)),
+    iv: etsyBytesToBase64(iv),
+  };
+}
+
+async function decryptEtsyRefreshToken(env, ciphertext, ivBase64) {
+  const key = await getEtsyTokenEncryptionKey(env);
+  const iv = etsyBase64ToBytes(ivBase64);
+  const encrypted = etsyBase64ToBytes(ciphertext);
+
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encrypted
+  );
+
+  return new TextDecoder().decode(plaintext);
+}
+
+async function loadEtsyRefreshToken(env) {
+  const row = await env.DB
+    .prepare(
+      `SELECT refresh_token_ciphertext, refresh_token_iv
+         FROM oauth_token_state
+        WHERE provider = ?
+        LIMIT 1`
+    )
+    .bind("etsy")
+    .first();
+
+  if (row?.refresh_token_ciphertext && row?.refresh_token_iv) {
+    return decryptEtsyRefreshToken(
+      env,
+      row.refresh_token_ciphertext,
+      row.refresh_token_iv
+    );
+  }
+
+  const fallback = String(env.ETSY_REFRESH_TOKEN || "").trim();
+
+  if (!fallback) {
+    throw new Error(
+      "No Etsy refresh token is available in D1 or ETSY_REFRESH_TOKEN"
+    );
+  }
+
+  return fallback;
+}
+
+async function saveEtsyRefreshToken(env, refreshToken) {
+  const encrypted = await encryptEtsyRefreshToken(env, refreshToken);
+
+  await env.DB
+    .prepare(
+      `INSERT INTO oauth_token_state
+         (provider, refresh_token_ciphertext, refresh_token_iv, token_version, updated_at)
+       VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
+       ON CONFLICT(provider) DO UPDATE SET
+         refresh_token_ciphertext = excluded.refresh_token_ciphertext,
+         refresh_token_iv = excluded.refresh_token_iv,
+         token_version = excluded.token_version,
+         updated_at = CURRENT_TIMESTAMP`
+    )
+    .bind("etsy", encrypted.ciphertext, encrypted.iv)
+    .run();
+}
+
 async function getEtsyAccessToken(env) {
-  for (const key of ["ETSY_CLIENT_ID", "ETSY_CLIENT_SECRET", "ETSY_REFRESH_TOKEN"]) {
+  for (const key of [
+    "ETSY_CLIENT_ID",
+    "ETSY_CLIENT_SECRET",
+    "ETSY_TOKEN_ENCRYPTION_KEY",
+  ]) {
     if (!env[key]) throw new Error(`${key} is not configured`);
   }
+
+  const refreshToken = await loadEtsyRefreshToken(env);
+
   const form = new URLSearchParams({
     grant_type: "refresh_token",
     client_id: env.ETSY_CLIENT_ID,
     client_secret: env.ETSY_CLIENT_SECRET,
-    refresh_token: env.ETSY_REFRESH_TOKEN,
+    refresh_token: refreshToken,
   });
-  const res = await fetch("https://openapi.etsy.com/v3/public/oauth/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: form.toString(),
-  });
+
+  const res = await fetch(
+    "https://openapi.etsy.com/v3/public/oauth/token",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: form.toString(),
+    }
+  );
+
   const body = await res.json().catch(() => ({}));
+
   if (!res.ok || !body.access_token) {
-    throw new Error(`Etsy OAuth refresh failed (${res.status}): ${truncate(body?.error_description || body?.error || "", 220)}`);
+    throw new Error(
+      `Etsy OAuth refresh failed (${res.status}): ${truncate(
+        body?.error_description || body?.error || "",
+        220
+      )}`
+    );
   }
+
+  const nextRefreshToken = String(body?.refresh_token || "").trim();
+
+  if (nextRefreshToken) {
+    await saveEtsyRefreshToken(env, nextRefreshToken);
+  }
+
   return String(body.access_token);
 }
-
 function ga4DateToIso(dateValue) {
   const raw = String(dateValue || "").trim();
   if (!/^\d{8}$/.test(raw)) return null;
@@ -656,12 +807,20 @@ function resolveGa4EventFilters(env) {
   ];
 }
 
-async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimensionFilter = null) {
+async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimensionFilter = null, dimensions = GA4_DIMENSIONS) {
   const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
   if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
 
   const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runReport`;
   const pageSize = clampInt(toInt(env.GA4_ROW_PAGE_SIZE, GA4_DEFAULT_PAGE_SIZE), 1000, 250000);
+  const dimIndex = {};
+  dimensions.forEach((name, i) => {
+    dimIndex[name] = i;
+  });
+  const dimValue = (dv, name) => {
+    const i = dimIndex[name];
+    return i === undefined ? "" : String(dv?.[i]?.value || "");
+  };
   const rows = [];
   let offset = 0;
   let pages = 0;
@@ -674,7 +833,7 @@ async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimen
 
     const payload = {
       dateRanges: [{ startDate, endDate }],
-      dimensions: GA4_DIMENSIONS.map((name) => ({ name })),
+      dimensions: dimensions.map((name) => ({ name })),
       metrics: metrics.map((name) => ({ name })),
       limit: String(pageSize),
       offset: String(offset),
@@ -700,19 +859,24 @@ async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimen
     const batch = Array.isArray(body.rows) ? body.rows : [];
     for (const row of batch) {
       const dv = Array.isArray(row?.dimensionValues) ? row.dimensionValues : [];
-      const date = ga4DateToIso(dv?.[0]?.value);
+      const date = ga4DateToIso(dimValue(dv, "date"));
       if (!date) continue;
+      const cleanDim = (name, lower = false) => {
+        const v = dimValue(dv, name).trim();
+        if (v === "(not set)") return "";
+        return lower ? v.toLowerCase() : v;
+      };
       rows.push(
         parseGa4Row(
           {
             date,
-            landing_page_path: normalizeGa4Path(dv?.[1]?.value || ""),
-            page_path: normalizeGa4Path(dv?.[2]?.value || ""),
-            source: String(dv?.[3]?.value || "").trim() === "(not set)" ? "" : String(dv?.[3]?.value || "").trim().toLowerCase(),
-            medium: String(dv?.[4]?.value || "").trim() === "(not set)" ? "" : String(dv?.[4]?.value || "").trim().toLowerCase(),
-            campaign: String(dv?.[5]?.value || "").trim() === "(not set)" ? "" : String(dv?.[5]?.value || "").trim(),
-            country: String(dv?.[6]?.value || "").trim() === "(not set)" ? "" : String(dv?.[6]?.value || "").trim(),
-            device: String(dv?.[7]?.value || "").trim() === "(not set)" ? "" : String(dv?.[7]?.value || "").trim().toLowerCase(),
+            landing_page_path: normalizeGa4Path(dimValue(dv, "landingPagePlusQueryString")),
+            page_path: normalizeGa4Path(dimValue(dv, "pagePath")),
+            source: cleanDim("sessionSource", true),
+            medium: cleanDim("sessionMedium", true),
+            campaign: cleanDim("sessionCampaignName"),
+            country: cleanDim("country"),
+            device: cleanDim("deviceCategory", true),
           },
           metricHeaders,
           row?.metricValues || []
@@ -1296,16 +1460,28 @@ async function postEtsyRowsChunk(env, rows, triggerTag) {
 }
 
 async function resolveEtsyShopId(env, accessToken) {
-  const configured = String(env.ETSY_SHOP_ID || "").trim();
-  if (configured) return configured;
-  const res = await fetch(`${etsyApiBase(env)}/v3/application/users/me`, {
-    headers: etsyAuthHeaders(env, accessToken),
-  });
+  const userId = String(accessToken || "").split(".")[0].trim();
+
+  if (!/^\d+$/.test(userId)) {
+    throw new Error("Unable to resolve Etsy user_id from access token");
+  }
+
+  const res = await fetch(
+    `${etsyApiBase(env)}/v3/application/users/${userId}/shops`,
+    {
+      headers: etsyAuthHeaders(env, accessToken),
+    }
+  );
+
   const body = await res.json().catch(() => ({}));
+
   if (!res.ok || !body?.shop_id) {
     const msg = body?.error || body?.message || "unknown error";
-    throw new Error(`ETSY_SHOP_ID missing and users/me failed (${res.status}): ${truncate(String(msg), 220)}`);
+    throw new Error(
+      `Etsy shop lookup failed (${res.status}): ${truncate(String(msg), 220)}`
+    );
   }
+
   return String(body.shop_id);
 }
 
@@ -1604,7 +1780,7 @@ async function executeGscSync(env, trigger, overrides = {}) {
     }
 
     console.log(
-      `GSC-SYNC: ${trigger} done — days ${window.days.length}, fetched ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `GSC-SYNC: ${trigger} done â€” days ${window.days.length}, fetched ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
       `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
     );
 
@@ -1619,7 +1795,7 @@ async function executeGscSync(env, trigger, overrides = {}) {
     };
   } catch (e) {
     const msg = truncate(e?.message || String(e), 280);
-    console.log(`GSC-SYNC: ${trigger} failed — ${msg}`);
+    console.log(`GSC-SYNC: ${trigger} failed â€” ${msg}`);
     return { ok: false, reason: msg };
   } finally {
     await releaseGscLock(db, runId);
@@ -1659,7 +1835,9 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
       accessToken,
       window.start,
       window.end,
-      ["sessions", "totalUsers", "engagedSessions"]
+      ["sessions", "totalUsers", "engagedSessions"],
+      null,
+      GA4_TRAFFIC_DIMENSIONS
     );
     sessionRows.forEach((r) => {
       const row = ensureGa4AccumulatorRow(acc, r);
@@ -1727,7 +1905,7 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
     }
 
     console.log(
-      `GA4-SYNC: ${trigger} done — rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `GA4-SYNC: ${trigger} done â€” rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
       `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
     );
 
@@ -1742,7 +1920,7 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
     };
   } catch (e) {
     const msg = truncate(e?.message || String(e), 280);
-    console.log(`GA4-SYNC: ${trigger} failed — ${msg}`);
+    console.log(`GA4-SYNC: ${trigger} failed â€” ${msg}`);
     return { ok: false, reason: msg };
   } finally {
     await releaseGa4Lock(db, runId);
@@ -1888,7 +2066,7 @@ async function executeEtsySync(env, trigger, overrides = {}) {
     }
 
     console.log(
-      `ETSY-SYNC: ${trigger} done — listings ${totals.listings_seen}, receipts ${totals.receipts_seen}, rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `ETSY-SYNC: ${trigger} done â€” listings ${totals.listings_seen}, receipts ${totals.receipts_seen}, rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
       `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
     );
 
@@ -1902,7 +2080,7 @@ async function executeEtsySync(env, trigger, overrides = {}) {
     };
   } catch (e) {
     const msg = truncate(e?.message || String(e), 280);
-    console.log(`ETSY-SYNC: ${trigger} failed — ${msg}`);
+    console.log(`ETSY-SYNC: ${trigger} failed â€” ${msg}`);
     return { ok: false, reason: msg };
   } finally {
     await releaseEtsyLock(db, runId);
@@ -1960,7 +2138,7 @@ async function executeGoogleAdsSync(env, trigger, overrides = {}) {
     }
 
     console.log(
-      `GOOGLE-ADS-SYNC: ${trigger} done — rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `GOOGLE-ADS-SYNC: ${trigger} done â€” rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
       `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
     );
 
@@ -1980,14 +2158,14 @@ async function executeGoogleAdsSync(env, trigger, overrides = {}) {
     };
   } catch (e) {
     const msg = truncate(e?.message || String(e), 280);
-    console.log(`GOOGLE-ADS-SYNC: ${trigger} failed — ${msg}`);
+    console.log(`GOOGLE-ADS-SYNC: ${trigger} failed â€” ${msg}`);
     return { ok: false, reason: msg };
   } finally {
     await releaseGoogleAdsLock(db, runId);
   }
 }
 
-// ── State ──────────────────────────────────────────────────────────────────
+// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function loadState(db) {
   const row = await db
@@ -2018,7 +2196,7 @@ async function finishState(db, { cursor, status, processed, synced, failed }) {
     .run();
 }
 
-// ── Telemetry ──────────────────────────────────────────────────────────────
+// â”€â”€ Telemetry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function startRun(db, trigger) {
   const res = await db
@@ -2089,7 +2267,7 @@ function newAuditBuffer(db, dryRun) {
   };
 }
 
-// ── Main run ───────────────────────────────────────────────────────────────
+// â”€â”€ Main run â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function executeSync(env, trigger, overrides = {}) {
   const db = env.DB;
@@ -2155,7 +2333,7 @@ async function executeSync(env, trigger, overrides = {}) {
     });
   } catch (e) {
     errorMessage = e.message;
-    console.log(`MARKETING-SYNC: run failed — ${truncate(e.message, 300)}`);
+    console.log(`MARKETING-SYNC: run failed â€” ${truncate(e.message, 300)}`);
     await finishRun(db, runRowId, { status: "failed", counts: {}, processed: 0, errorMessage });
     await finishState(db, { cursor: state.cursor || null, status: "failed", processed: 0, synced: 0, failed: true });
     await releaseLock(db, runId);
@@ -2173,7 +2351,7 @@ async function executeSync(env, trigger, overrides = {}) {
     await audit.flush();
   } catch (e) {
     // Audit is observability, not correctness: never fail a completed sync on it.
-    console.log(`MARKETING-SYNC: audit flush failed — ${truncate(e.message, 200)}`);
+    console.log(`MARKETING-SYNC: audit flush failed â€” ${truncate(e.message, 200)}`);
   }
 
   await finishRun(db, runRowId, { status: errCount > 0 ? "partial" : "success", counts, processed, errorMessage: null });
@@ -2213,7 +2391,7 @@ async function executeSync(env, trigger, overrides = {}) {
   }
 
   console.log(
-    `MARKETING-SYNC: ${trigger} done — processed ${processed}, synced ${counts.synced || 0}, ` +
+    `MARKETING-SYNC: ${trigger} done â€” processed ${processed}, synced ${counts.synced || 0}, ` +
       `errors ${errCount}, exhausted ${exhausted}, email ${emailed || "skipped"}`
   );
 
@@ -2227,17 +2405,17 @@ export default {
         try {
           await executeGa4Sync(env, "scheduled-weekly");
         } catch (e) {
-          console.log(`GA4-SYNC: unhandled — ${truncate(e.message, 300)}`);
+          console.log(`GA4-SYNC: unhandled â€” ${truncate(e.message, 300)}`);
         }
         try {
           await executeEtsySync(env, "scheduled-weekly");
         } catch (e) {
-          console.log(`ETSY-SYNC: unhandled — ${truncate(e.message, 300)}`);
+          console.log(`ETSY-SYNC: unhandled â€” ${truncate(e.message, 300)}`);
         }
         try {
           await executeGoogleAdsSync(env, "scheduled-weekly");
         } catch (e) {
-          console.log(`GOOGLE-ADS-SYNC: unhandled — ${truncate(e.message, 300)}`);
+          console.log(`GOOGLE-ADS-SYNC: unhandled â€” ${truncate(e.message, 300)}`);
         }
       })());
       return;
@@ -2246,7 +2424,7 @@ export default {
     if (event.cron === GSC_WEEKLY_CRON) {
       ctx.waitUntil(
         executeGscSync(env, "scheduled-weekly").catch((e) =>
-          console.log(`GSC-SYNC: unhandled — ${truncate(e.message, 300)}`)
+          console.log(`GSC-SYNC: unhandled â€” ${truncate(e.message, 300)}`)
         )
       );
       return;
@@ -2260,7 +2438,7 @@ export default {
       return;
     }
     ctx.waitUntil(
-      executeSync(env, trigger).catch((e) => console.log(`MARKETING-SYNC: unhandled — ${truncate(e.message, 300)}`))
+      executeSync(env, trigger).catch((e) => console.log(`MARKETING-SYNC: unhandled â€” ${truncate(e.message, 300)}`))
     );
   },
 
@@ -2620,3 +2798,5 @@ export default {
     return Response.json({ error: "not found" }, { status: 404 });
   },
 };
+
+
