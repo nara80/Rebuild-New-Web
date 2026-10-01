@@ -1,6 +1,8 @@
 # MildMate Marketing Decision System — Phase 17
 ## Ongoing Confirmed-Mapping Sync Automation (v3)
 
+> **⚠️ MAKE.COM REFERENCES SUPERSEDED — CURRENT STATE (2026-10-01).** Make.com is **fully retired** across MildMate (owner decision 2026-10-01). Where the historical body below names Make.com as the mapping authority or order-import mechanism, the current reality is: **humans work directly in Notion** (manual channel-order entry + manual `Product_Mapping_Status = Mapped` confirmation), and the deployed Phase 17 Worker `mildmate-marketing-sync` syncs confirmed records into D1 on cron `0 2 1,15 * *` + hourly drain (subrequest-budgeted bounded runs with cursor carry-over since 2026-10-01, `SYNC_MAX_SUBREQUESTS="20"`). The sync rules, eligibility gates, and guardrails below remain accurate and in force. Do not rebuild any Make.com scenario unless the owner re-approves. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`. *(Historical body below left unchanged.)*
+
 > **Revised 2026-09-12** to match the approved v3 design (`09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md`). The original version of this checklist was written for the superseded resolver design. Under v3, **nothing maps products automatically** — Make.com remains the mapping authority in Notion. This phase only automates the *sync* of confirmed `Mapped` records into D1.
 
 **Project root:** `D:/00_mildmate/Re-build_web/`  
