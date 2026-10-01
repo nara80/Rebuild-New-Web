@@ -68,12 +68,22 @@ export const SKIP_LABELS = {
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Outbound HTTP calls made through the core's helpers. Workers cap subrequests
+// per invocation (as low as 50 on the free plan), so runSync can take a budget
+// against this counter and bounded-stop instead of dying mid-record.
+let subrequestCount = 0;
+
+export function getSubrequestCount() {
+  return subrequestCount;
+}
+
 let lastNotionCall = 0;
 
 export async function throttledNotionFetch(url, init, attempt = 0) {
   const wait = lastNotionCall + NOTION_MIN_INTERVAL_MS - Date.now();
   if (wait > 0) await sleep(wait);
   lastNotionCall = Date.now();
+  subrequestCount += 1;
   const res = await fetch(url, init);
   if (res.status === 429 || res.status >= 500) {
     if (attempt >= 5) throw new Error(`Notion API ${res.status} after ${attempt + 1} attempts`);
@@ -183,6 +193,7 @@ export function parseConfirmedIds(idsText) {
 // ── Worker API ─────────────────────────────────────────────────────────────
 
 export async function workerFetch(base, token, route, init = {}) {
+  subrequestCount += 1;
   const res = await fetch(base + route, {
     ...init,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init.headers || {}) },
@@ -527,12 +538,13 @@ export async function runSync(options) {
     apiBase, apiToken, notionToken, dataSourceId,
     dryRun = false, before = null, limit = null, orderId = null, editedAfter = null,
     cursor: startCursor = null, rows = null,
-    log, onCursor, onEvent, maxMs = null,
+    log, onCursor, onEvent, maxMs = null, maxSubrequests = null,
     syncSource = "notion-direct-mapper", scenario = "phase07-confirmed-mapping-sync",
     catalogIds: providedCatalogIds = null,
   } = options;
 
   const startedMs = Date.now();
+  const startedSubrequests = getSubrequestCount();
   const catalogIds = providedCatalogIds || (await fetchCatalogIds(apiBase, apiToken)).ids;
 
   const report = newReportCollector();
@@ -544,6 +556,8 @@ export async function runSync(options) {
   let exhausted = true;
 
   const outOfTime = () => maxMs !== null && Date.now() - startedMs >= maxMs;
+  const overBudget = () =>
+    maxSubrequests !== null && getSubrequestCount() - startedSubrequests >= maxSubrequests;
 
   const handle = async (rec) => {
     try {
@@ -568,9 +582,19 @@ export async function runSync(options) {
     let hitLimit = false;
     while (more) {
       const page = await queryNotionPages({ token: notionToken, dataSourceId, cursor, editedAfter, orderId, before });
+      let stopMidPage = false;
       for (const p of page.results || []) {
         if (limit !== null && processed >= limit) { more = false; hitLimit = true; break; }
         await handle(extractRecord(p));
+        // Stop before the next record would blow the invocation's subrequest
+        // cap. The cursor still points at this page's start, so the resume
+        // re-queries the same page; already-synced records skip by signature.
+        if (overBudget()) { stopMidPage = true; break; }
+      }
+      if (stopMidPage) {
+        log.write({ t: "bounded_stop", processed, reason: `subrequest budget ${maxSubrequests} reached; carrying over cursor` });
+        exhausted = false;
+        break;
       }
       if (more) {
         cursor = page.next_cursor || null;
@@ -582,8 +606,11 @@ export async function runSync(options) {
       if (limit !== null && processed >= limit) { hitLimit = true; break; }
       // Bounded invocation: stop cleanly and carry over via the cursor so the
       // next run resumes exactly where this one stopped.
-      if (more && outOfTime()) {
-        log.write({ t: "bounded_stop", processed, reason: `time budget ${maxMs}ms reached; carrying over cursor` });
+      if (more && (outOfTime() || overBudget())) {
+        const reason = outOfTime()
+          ? `time budget ${maxMs}ms reached; carrying over cursor`
+          : `subrequest budget ${maxSubrequests} reached; carrying over cursor`;
+        log.write({ t: "bounded_stop", processed, reason });
         exhausted = false;
         break;
       }

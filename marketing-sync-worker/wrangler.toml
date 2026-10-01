@@ -62,6 +62,9 @@ GOOGLE_ADS_LOGIN_CUSTOMER_ID = "4572877507"
 # cadence (month M is finalised during M+1). Set SYNC_BEFORE_MODE = "none" to
 # rely only on the TotalAmount rule, or SYNC_BEFORE_FIXED = "YYYY-MM-DD" to pin.
 SYNC_BEFORE_MODE = "rolling-prev-month"
+# Outbound-call budget per Notion-sync invocation (core Notion/API fetches).
+# Keeps runs under the Workers subrequest cap; the hourly drain carries over.
+SYNC_MAX_SUBREQUESTS = "20"
 
 # Secrets — set with `npx wrangler secret put <NAME>` inside this directory.
 # NEVER put these in this file:

@@ -125,6 +125,12 @@ const GOOGLE_ADS_MAX_WINDOW_DAYS = 90;
 // Stop and carry over via the cursor before the platform can cut the run off
 // mid-record. Notion calls are throttled to ~350ms, so this is wall-clock bound.
 const DEFAULT_MAX_MS = 180_000;
+// Workers also cap subrequests per invocation (50 on the free plan, shared by
+// Notion calls, upsert POSTs, and D1 statements). Budget the core's outbound
+// HTTP calls well under that so the run bounded-stops instead of dying with
+// "Too many subrequests" (run 565, 2026-10-01). Headroom is left for the
+// worker's own D1 state/lock/cursor writes.
+const DEFAULT_MAX_SUBREQUESTS = 20;
 // Lock expiry must exceed the work budget so a slow run never loses its own
 // lock, but stay short enough that a crashed run frees the schedule quickly.
 const LOCK_TTL_MS = 600_000;
@@ -2308,6 +2314,10 @@ async function executeSync(env, trigger, overrides = {}) {
     },
   };
 
+  // Track the cursor as it is persisted mid-run so a hard failure does not
+  // overwrite carried-over progress with the stale pre-run value.
+  let lastSavedCursor = state.cursor || null;
+
   let result;
   let errorMessage = null;
   try {
@@ -2325,17 +2335,23 @@ async function executeSync(env, trigger, overrides = {}) {
       cursor: state.cursor || null,
       catalogIds: catalog.ids,
       maxMs: overrides.maxMs ?? DEFAULT_MAX_MS,
+      maxSubrequests:
+        overrides.maxSubrequests ??
+        clampInt(toInt(env.SYNC_MAX_SUBREQUESTS, DEFAULT_MAX_SUBREQUESTS), 5, 500),
       syncSource: SYNC_SOURCE,
       scenario: SCENARIO,
       log,
-      onCursor: (cursor) => saveCursor(db, cursor),
+      onCursor: (cursor) => {
+        lastSavedCursor = cursor;
+        return saveCursor(db, cursor);
+      },
       onEvent: ({ rec, parsed, action }) => audit.collect({ rec, parsed, action }),
     });
   } catch (e) {
     errorMessage = e.message;
     console.log(`MARKETING-SYNC: run failed â€” ${truncate(e.message, 300)}`);
     await finishRun(db, runRowId, { status: "failed", counts: {}, processed: 0, errorMessage });
-    await finishState(db, { cursor: state.cursor || null, status: "failed", processed: 0, synced: 0, failed: true });
+    await finishState(db, { cursor: lastSavedCursor, status: "failed", processed: 0, synced: 0, failed: true });
     await releaseLock(db, runId);
     return { ok: false, reason: truncate(e.message, 300) };
   }
@@ -2499,6 +2515,9 @@ export default {
       };
       if (beforeParam !== null) overrides.before = beforeParam === "none" ? null : beforeParam;
       if (url.searchParams.get("max-ms")) overrides.maxMs = Number(url.searchParams.get("max-ms"));
+      if (url.searchParams.get("max-subrequests")) {
+        overrides.maxSubrequests = clampInt(toInt(url.searchParams.get("max-subrequests"), DEFAULT_MAX_SUBREQUESTS), 5, 500);
+      }
 
       const out = await executeSync(env, "manual", overrides);
       return Response.json(out, { status: out.ok ? 200 : 500 });
