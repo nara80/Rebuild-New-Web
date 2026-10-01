@@ -100,3 +100,11 @@ Connect Etsy listing performance and sales signals to canonical MildMate product
 ## Reconciliation Note (2026-09-29)
 
 Status update: **DEPLOYED / READY FOR LIVE RECONCILIATION**. Migration `049_etsy_analytics.sql`, token-auth Etsy ingestion API (`/api/v1/etsy/*`), read endpoint (`/api/admin/analysis/etsy`), dashboard section, freshness wiring, and collector flow (`/etsy/run`, `/etsy/status`, shared Monday `0 4 * * 1` cron) are implemented and deployed. Etsy OAuth/shop secrets are configured. Remaining for full operational verification: run/confirm first live Etsy ingest and reconcile sampled listing totals plus revenue/order definitions against Etsy source exports/API.
+
+## Reconciliation Note (2026-10-01) — PRODUCTION VERIFIED
+
+Status update: **DEPLOYED / PRODUCTION VERIFIED**. First live production ingest completed after Etsy OAuth renewal (rotating refresh token now persisted in `oauth_token_state`):
+
+- Manual `/etsy/run` succeeded (sync_runs 590: 48 rows created, 0 rejected): 39 listings in `etsy_listing_master` (22 active / 17 inactive), 10 receipts in the 2026-09-17 → 2026-09-30 window; freshness healthy (latest report 2026-09-30, 1-day lag as configured, 0 errors in 7d).
+- Receipt reconciliation exact: 10 receipts fetched from the Etsy API = 10 order rows in `analysis_etsy_daily` across 9 order-days (12 units, ~$2,241 revenue in window).
+- Known caveats: (1) listing `views`/`favorites` are lifetime snapshots attributed to the latest sync date, not daily deltas; (2) `revenue_thb` stays 0 unless the optional THB conversion helper is configured — revenue is recorded in USD; (3) unified sales showed 0 Etsy orders in the window because the channel→Notion→D1 order pipeline lags (latest Etsy order in `sales_orders` was 2026-09-03) — an upstream ingestion-lag issue, not an Etsy analytics defect.

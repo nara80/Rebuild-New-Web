@@ -102,3 +102,13 @@ Add website traffic and funnel behavior to product/channel analysis.
 ## Reconciliation Note (2026-09-29)
 
 Status update: **DEPLOYED / READY FOR LIVE RECONCILIATION**. Migration `048_ga4_analytics.sql`, token-auth GA4 ingestion API (`/api/v1/ga4/*`), read endpoint (`/api/admin/analysis/ga4`), dashboard section, and weekly collector flow (`/ga4/run`, `/ga4/status`, shared Monday `0 4 * * 1` cron) are implemented and deployed. GA4 OAuth secrets are configured. Remaining for full operational verification: run/confirm first live GA4 ingest in production and reconcile sampled GA4 totals plus directional purchase counts against unified sales.
+
+## Reconciliation Note (2026-10-01) — PRODUCTION VERIFIED
+
+Status update: **DEPLOYED / PRODUCTION VERIFIED**. Live reconciliation completed against the GA4 Data API and unified sales:
+
+- Manual `/ga4/run` succeeded (sync_runs 564: 157 fetched, 26 created, 131 unchanged, 0 rejected); freshness healthy (2-day lag as configured, 0 collector errors in 7d at verification time).
+- Funnel events match the GA4 Data API exactly for the 2026-09-15 → 2026-09-28 sample window: view_item 4 = D1 product_views 4; add_to_cart 2 = 2; purchase 0 = 0.
+- Directional purchase check passed: 0 GA4 purchases = 0 website commercial orders in unified sales for the same window.
+- **Sessions inflation defect found and fixed (2026-10-01):** the traffic report was dimensioned by `pagePath`, inflating summed sessions ~3x (471 vs 158 `session_start`). Collector now fetches session-scoped metrics without `pagePath` (landing-page attribution preserved for product mapping). `ga4_funnel_daily` was purged and rebuilt with a 90-day backfill (900 rows, 2026-07-02 → 2026-09-29); post-fix window sessions = 173 vs 158 `session_start` (residual gap is GA4's own sessions-vs-session_start definitional difference).
+- Operational note: ingestion upserts cost ~2 D1 statements per row against a ~1000-subrequest ceiling; collector chunk size pinned to 400 (`GA4_UPSERT_CHUNK_SIZE`).
