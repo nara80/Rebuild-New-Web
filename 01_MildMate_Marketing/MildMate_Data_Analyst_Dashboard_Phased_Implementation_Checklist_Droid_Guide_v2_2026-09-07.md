@@ -1,6 +1,8 @@
 # MildMate Marketing Decision System
 ## Data Analyst Dashboard — Phased Implementation Checklist & Droid CLI Build Guide
 
+> **⚠️ AUTOMATION LAYER SUPERSEDED (2026-10-01).** This plan assigned ingestion/automation to Make.com. As built, all automation runs on Cloudflare Worker crons (`mildmate-marketing-sync`: Notion→D1 sales sync + GSC/GA4/Etsy/Google Ads collectors) and channel orders are entered into Notion manually by humans. Make.com is fully retired. Read Make.com references below as historical planning. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+
 **Prepared:** 2026-09-07  
 **Project:** MildMate Marketing Decision System  
 **Existing super-admin area:** `https://www.mildmate.com/super-admin/marketing/`  

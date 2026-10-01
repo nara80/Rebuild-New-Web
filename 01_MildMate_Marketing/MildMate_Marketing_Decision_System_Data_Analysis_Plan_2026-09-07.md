@@ -1,5 +1,7 @@
 # MildMate Marketing Decision System — Data Analysis & Marketing Decision Plan
 
+> **⚠️ AUTOMATION LAYER SUPERSEDED (2026-10-01).** This plan assigned integration/ETL to Make.com. As built, all automation runs on Cloudflare Worker crons (`mildmate-marketing-sync`) and channel orders are entered into Notion manually by humans. Make.com is fully retired. Read Make.com references below as historical planning. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+
 **Prepared:** 2026-09-07  
 **Purpose:** Practical implementation plan to turn MildMate's existing data infrastructure into a usable marketing analysis and decision system.
 

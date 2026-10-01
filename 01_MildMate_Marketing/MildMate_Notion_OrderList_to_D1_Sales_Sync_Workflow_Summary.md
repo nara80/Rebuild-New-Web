@@ -1,5 +1,7 @@
 # MildMate – Notion OrderList to D1 Sales Sync
 
+> **❌ OBSOLETE (2026-10-01).** This Make.com scenario was permanently retired without activation and superseded by the Phase 17 Worker (`mildmate-marketing-sync`), which reads Notion directly on cron `0 2 1,15 * *` + hourly drain. As of 2026-10-01, Make.com is fully retired across MildMate (including channel→Notion imports — now human-manual). Kept as a historical record of the validated scenario design. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+
 ## Purpose
 
 This Make.com scenario synchronizes mapped sales orders from the MildMate Notion **OrderList** into the MildMate D1 sales database through the production Sales API.

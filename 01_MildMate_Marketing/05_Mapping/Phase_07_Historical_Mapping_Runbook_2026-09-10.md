@@ -1,5 +1,7 @@
 # Phase 07/08 — Confirmed-Mapping Sync Runbook (v3, revised 2026-09-11)
 
+> **⚠️ MAKE.COM REFERENCES OUTDATED (2026-10-01).** Make.com is fully retired. Where this runbook says "Make.com" owns order import or mapping confirmation, read: **humans working directly in Notion** (manual order entry + manual `Product_Mapping_Status = Mapped` confirmation). The sync rules, eligibility gates, and tool behavior below remain accurate. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+
 **Utility:** `scripts/notion-product-mapper.mjs` (Node, no dependencies)
 **Design (approved 2026-09-11):** Make.com remains the only system that fixes and confirms product mappings in Notion. This tool never resolves or remaps anything — it syncs **confirmed** mappings into D1.
 

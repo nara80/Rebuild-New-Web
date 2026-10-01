@@ -57,6 +57,8 @@ Phases 01–07 were genuinely built and documented (a handoff exists in `09_Hand
 
 ## 6. Final pipeline architecture (user decision, 2026-09-19)
 
+> **⚠️ SUPERSEDED IN PART (2026-10-01).** Make.com is now **fully retired** — including the channel→Notion import scenarios marked "must stay active" below. Channel orders are entered into Notion OrderList manually by humans. See `Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+
 Make.com is **not** used for Notion→D1 sync — the Worker reads Notion directly.
 
 ```
@@ -85,7 +87,9 @@ Phase 09 is no longer "not started" in the repository:
 Current state is now **deployed/infrastructure-live** (updated 2026-09-25):
 - Migration 046 applied on remote D1 (`gsc_search_daily` + all `analysis_gsc_*` views confirmed in `sqlite_master`)
 - Pages runtime deployed with GSC dashboard/API changes (deployment URL observed: `https://31c3cbc3.mildmate-new.pages.dev`)
+- Weekly Cloudflare collector implemented in `marketing-sync-worker` (cron `0 3 * * 1`, OAuth refresh flow, overlap-window ingestion via `/api/v1/gsc/rows/upsert`)
 
 Remaining to reach "production-verified data quality":
-- Make.com scenario wiring is operator-side and still pending
+- Deploy updated `marketing-sync-worker` + set Google OAuth secrets (`GSC_CLIENT_ID`, `GSC_CLIENT_SECRET`, `GSC_REFRESH_TOKEN`)
+- Apply migration `047_gsc_freshness_sources.sql` on remote D1 (so freshness telemetry follows `source LIKE 'gsc-%'`)
 - First live GSC reconciliation (clicks/impressions vs sampled GSC reports) is still pending

@@ -2,7 +2,7 @@
 ## Google Search Console Analytics
 
 **Date:** 2026-09-25  
-**Status:** Deployed with migration applied (Phase 09 infra live), awaiting first live GSC ingest/reconciliation
+**Status:** Phase 09 infrastructure deployed; weekly Cloudflare collector implemented in repo, awaiting worker deploy + first live ingest/reconciliation
 
 ---
 
@@ -11,7 +11,9 @@
 Built the Phase 09 GSC analytics layer end-to-end in code:
 
 - D1 schema + analytical views (migration 046)
+- Freshness-source update migration (047)
 - Authenticated ingestion API (`/api/v1/gsc/*`)
+- Weekly Cloudflare collector in `marketing-sync-worker` (OAuth refresh + overlap window + cron/manual run)
 - Admin analysis read endpoint (`GET /api/admin/analysis/gsc`)
 - Data-quality GSC freshness block (`gsc_freshness`)
 - Data Analyst dashboard GSC section (summary + trend + top pages + top queries)
@@ -26,6 +28,7 @@ Guardrails preserved:
 ## 2) Files changed
 
 - `migrations/046_gsc_analytics.sql` **(new)**
+- `migrations/047_gsc_freshness_sources.sql` **(new)**
 - `workers/api/gsc.ts` **(new)**
 - `workers/api/admin-analysis.ts`
 - `workers/api/index.ts`
@@ -33,6 +36,8 @@ Guardrails preserved:
 - `public/super-admin/marketing/data-analyst/index.html`
 - `public/_worker.js` (rebuilt)
 - `public/index.js` (rebuilt)
+- `marketing-sync-worker/index.js`
+- `marketing-sync-worker/wrangler.toml`
 - `01_MildMate_Marketing/04_API/Phase_04_Analysis_API_Reference_2026-09-07.md`
 - `01_MildMate_Marketing/16_Phases/09_MildMate_Marketing_Decision_System_Phase_09_Google_Search_Console_Checklist.md`
 
@@ -57,6 +62,10 @@ Adds:
 Identity + idempotency guardrail:
 - UNIQUE key enforces stable source uniqueness at GSC row grain.
 
+### `047_gsc_freshness_sources.sql`
+
+Updates `analysis_gsc_freshness` to read sync health from any `sync_runs.source LIKE 'gsc-%'`, so freshness works for both legacy/manual source names and the new weekly Cloudflare collector source (`gsc-worker-cron`).
+
 ---
 
 ## 4) API routes added/updated
@@ -68,8 +77,14 @@ Identity + idempotency guardrail:
 Handler:
 - `workers/api/gsc.ts` via `functions/api/[[path]].ts` routing
 - Auth: Bearer token (`SALES_SYNC_API_TOKEN`)
-- Sync telemetry written to `sync_runs` with source default `gsc-make-collector`
+- Sync telemetry written to `sync_runs` (collector now posts with `sync_source = gsc-worker-cron`)
 - Upsert counters: created / updated / unchanged / rejected
+
+### Collector runtime (Cloudflare Worker)
+- `marketing-sync-worker` now includes GSC collector paths:
+  - Scheduled weekly cron trigger (`0 3 * * 1`)
+  - `POST /gsc/run` (manual run, optional `start/end/overlap/lag`)
+  - `GET /gsc/status` (freshness + lock + recent GSC sync runs)
 
 ### Admin analysis
 - `GET /api/admin/analysis/gsc`
@@ -113,18 +128,26 @@ Updated `public/super-admin/marketing/data-analyst/index.html`:
    - Parsed inline scripts and validated with `new Function(...)`.
    - Both inline script blocks parsed successfully.
 
+5. **Collector worker validation**
+   - `node --check marketing-sync-worker/index.js`
+   - `wrangler deploy --dry-run` in `marketing-sync-worker` succeeded (bindings/crons resolved).
+
+6. **Freshness migration validation (local D1)**
+   - `npx wrangler d1 execute DB --local --file migrations/047_gsc_freshness_sources.sql`
+   - Verified `analysis_gsc_freshness` now filters `sync_runs` with `source LIKE 'gsc-%'`.
+
 ---
 
 ## 7) Known limitations / remaining external steps
 
-1. **Make.com collector wiring is operator-side** (not performed in this repo session):
-   - Scenario must call `POST /api/v1/gsc/rows/upsert` with Bearer token.
+1. **Worker deploy + secrets step pending**:
+   - Deploy updated `marketing-sync-worker` and set `GSC_CLIENT_ID`, `GSC_CLIENT_SECRET`, `GSC_REFRESH_TOKEN` (plus confirm `GSC_SITE_URL`).
 
-2. **Live reconciliation pending**:
+2. **Migration 047 apply pending on remote D1**:
+   - Required so `analysis_gsc_freshness` tracks `gsc-worker-cron` runs.
+
+3. **Live reconciliation pending**:
    - Clicks/impressions must be cross-checked against sampled GSC reports after first live ingest.
-
-3. **First live data run not completed in this session**:
-   - Migration/deploy are complete, but no production `gsc-make-collector` ingest/reconciliation evidence yet.
 
 ---
 
