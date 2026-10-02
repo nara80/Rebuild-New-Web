@@ -214,9 +214,29 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="google-ads-products-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="profit-card">
+      <div class="card-header"><span>Profitability / Contribution Margin</span><span class="muted" style="font-size:0.75rem;font-weight:400">THB only; margins cover only orders with full cost inputs — missing cost is never zero; estimates stay labelled</span></div>
+      <div class="card-body">
+        <div id="profit-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+          <button type="button" id="profit-recalc-btn" onclick="recalcFormulaCosts()" style="font-size:0.75rem;padding:4px 10px;cursor:pointer">Recalculate formula costs</button>
+          <span id="profit-recalc-status" class="muted" style="font-size:0.75rem"></span>
+        </div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>By Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">covered revenue is each margin’s own base</span></div>
+      <div class="table-wrap"><div id="profit-channels-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Monthly Trend</span><span class="muted" style="font-size:0.75rem;font-weight:400">latest 24 months</span></div>
+      <div class="table-wrap"><div id="profit-monthly-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Product Margin (before order-level fees)</span><span class="muted" style="font-size:0.75rem;font-weight:400">EXACT line revenue − production cost; order-level fees/shipping are not line-attributed</span></div>
+      <div class="table-wrap"><div id="profit-products-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Contribution After Advertising</span><span class="muted" style="font-size:0.75rem;font-weight:400">month aggregate: contribution (before shipping) − Google Ads spend; never attributed per order</span></div>
+      <div class="table-wrap"><div id="profit-after-ads-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
+      Profitability (Phase 13): costs are ESTIMATED formula-derived unless marked VERIFIED; shipping is ESTIMATED_SHIPPING_COST (D1 charge ÷ 1.05); cost inputs managed via /api/admin/cost-model.
     </p>
   </div>
 </div>
@@ -912,6 +932,129 @@ async function loadGoogleAds(){
   }
 }
 
+// ── Profitability (Phase 13) ──
+
+async function loadProfitability(){
+  setState('profit-channels-table', '', 'Loading…');
+  setState('profit-monthly-table', '', 'Loading…');
+  setState('profit-products-table', '', 'Loading…');
+  setState('profit-after-ads-table', '', 'Loading…');
+  try {
+    var d = await api('/profitability?' + filterQS().slice(1));
+    var s = d.summary || {};
+    var cov = d.coverage || {};
+
+    var badges =
+      '<span class="badge">Revenue ' + fmtBaht(s.revenue) + '</span>' +
+      '<span class="badge badge-green">Gross margin ' + fmtBaht(s.gross_margin_thb) + (s.gross_margin_pct !== null && s.gross_margin_pct !== undefined ? ' (' + fmtPct(s.gross_margin_pct) + ')' : '') + '</span>' +
+      '<span class="badge">Contribution (before ship) ' + fmtBaht(s.contribution_before_shipping_thb) + (s.contribution_before_shipping_pct !== null && s.contribution_before_shipping_pct !== undefined ? ' (' + fmtPct(s.contribution_before_shipping_pct) + ')' : '') + '</span>' +
+      '<span class="badge">Contribution margin ' + fmtBaht(s.contribution_margin_thb) + (s.contribution_margin_pct !== null && s.contribution_margin_pct !== undefined ? ' (' + fmtPct(s.contribution_margin_pct) + ')' : '') + '</span>' +
+      '<span class="badge ' + (Number(s.full_cost_orders) === Number(s.orders) ? 'badge-green' : 'badge-amber') + '">Cost coverage ' + fmtNum(s.full_cost_orders) + '/' + fmtNum(s.orders) + ' orders</span>' +
+      (s.contains_estimates ? '<span class="badge badge-amber">contains estimates</span>' : '') +
+      '<span class="badge">Products with cost ' + fmtNum(cov.products_with_cost) + '/' + fmtNum(cov.active_products) + '</span>' +
+      '<span class="badge">Shipping config ' + fmtNum(cov.channels_with_shipping) + ' channel(s)</span>';
+    document.getElementById('profit-summary').innerHTML = badges;
+
+    if (!d.channels || !d.channels.length) {
+      setState('profit-channels-table', '', 'No commercial orders for the selected filters.');
+    } else {
+      var ch = '<table><thead><tr><th>Channel</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Full-cost orders</th><th class="num">Gross margin</th><th class="num">Covered rev.</th><th class="num">Contribution (b.ship)</th><th class="num">Contribution</th></tr></thead><tbody>';
+      d.channels.forEach(function(r){
+        ch += '<tr>' +
+          '<td>' + esc(r.channel_norm) + (r.shipping_missing ? ' <span class="badge badge-amber" title="No shipping estimate — contribution margin unavailable">no ship est.</span>' : '') + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue) + '</td>' +
+          '<td class="num">' + fmtNum(r.full_cost_orders) + '</td>' +
+          '<td class="num">' + fmtBaht(r.gross_margin_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.gross_covered_revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_before_shipping_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_margin_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-channels-table').innerHTML = ch + '</tbody></table>';
+    }
+
+    if (!d.monthly || !d.monthly.length) {
+      setState('profit-monthly-table', '', 'No monthly profitability rows for the selected filters.');
+    } else {
+      var mh = '<table><thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Revenue</th><th class="num">Gross margin</th><th class="num">Contribution (b.ship)</th><th class="num">Contribution</th><th>Estimates</th></tr></thead><tbody>';
+      d.monthly.forEach(function(r){
+        mh += '<tr>' +
+          '<td class="mono">' + esc(r.month) + '</td>' +
+          '<td class="num">' + fmtNum(r.orders) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.gross_margin_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_before_shipping_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_margin_thb) + '</td>' +
+          '<td>' + (r.contains_estimates ? '<span class="badge badge-amber">est.</span>' : '<span class="badge badge-green">exact</span>') + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-monthly-table').innerHTML = mh + '</tbody></table>';
+    }
+
+    if (!d.products || !d.products.length) {
+      setState('profit-products-table', '', 'No product rows for the selected filters.');
+    } else {
+      var ph = '<table><thead><tr><th>Product_ID</th><th>Product</th><th class="num">Units</th><th class="num">Exact revenue</th><th class="num">Production cost</th><th class="num">Margin (before fees)</th><th>Cost basis</th></tr></thead><tbody>';
+      d.products.forEach(function(r){
+        ph += '<tr>' +
+          '<td class="mono">' + (r.product_id === null ? '—' : esc(r.product_id)) + '</td>' +
+          '<td>' + esc(r.product_title) + '</td>' +
+          '<td class="num">' + fmtNum(r.units) + '</td>' +
+          '<td class="num">' + fmtBaht(r.exact_revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.production_cost_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.line_margin_before_fees_thb) + '</td>' +
+          '<td>' + (r.product_id === null ? '<span class="badge badge-red">unmapped</span>' : (r.costed_items ? (r.cost_is_estimate ? '<span class="badge badge-amber">estimate</span>' : '<span class="badge badge-green">verified</span>') : '<span class="badge badge-red">no cost</span>')) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-products-table').innerHTML = ph + '</tbody></table>';
+    }
+
+    if (!d.after_ads || !d.after_ads.length) {
+      setState('profit-after-ads-table', '', 'No monthly rows yet.');
+    } else {
+      var ah = '<table><thead><tr><th>Month</th><th class="num">Revenue</th><th class="num">Contribution (b.ship)</th><th class="num">Ads spend</th><th class="num">Contribution after ads</th></tr></thead><tbody>';
+      d.after_ads.forEach(function(r){
+        ah += '<tr>' +
+          '<td class="mono">' + esc(r.month) + '</td>' +
+          '<td class="num">' + fmtBaht(r.revenue) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_before_shipping_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.ads_cost_thb) + '</td>' +
+          '<td class="num">' + fmtBaht(r.contribution_after_ads_thb) + '</td>' +
+          '</tr>';
+      });
+      document.getElementById('profit-after-ads-table').innerHTML = ah + '</tbody></table>';
+    }
+  } catch(e) {
+    document.getElementById('profit-summary').innerHTML = '<span class="badge badge-red">Profitability unavailable</span>';
+    setState('profit-channels-table', 'error', 'Could not load profitability: ' + e.message);
+    setState('profit-monthly-table', 'error', e.status === 500 ? 'Apply migration 053_profitability_layer.sql first.' : ('Could not load: ' + e.message));
+    setState('profit-products-table', '', '—');
+    setState('profit-after-ads-table', '', '—');
+  }
+}
+
+async function recalcFormulaCosts(){
+  var btn = document.getElementById('profit-recalc-btn');
+  var status = document.getElementById('profit-recalc-status');
+  btn.disabled = true;
+  status.textContent = 'Recalculating…';
+  try {
+    var res = await fetch('/api/admin/cost-model/recalculate', { method: 'POST', headers: await authHeaders() });
+    var body = null;
+    try { body = await res.json(); } catch(e) {}
+    if (!res.ok || !body || body.success === false) {
+      throw new Error((body && (body.message || body.error_code)) || ('HTTP ' + res.status));
+    }
+    status.textContent = 'Done: ' + body.updated_count + ' product cost(s) refreshed, ' + body.skipped_count + ' skipped (need verified cost).';
+    loadProfitability();
+  } catch(e) {
+    status.textContent = 'Failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // ── Sales Detail ──
 
 async function loadSales(){
@@ -1034,11 +1177,11 @@ async function populateProductFilter(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds();
+  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadProfitability();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadProfitability(); populateProductFilter();
 }
 
 async function boot(){

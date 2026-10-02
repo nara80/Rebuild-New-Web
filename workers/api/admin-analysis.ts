@@ -11,6 +11,7 @@
 // GET /api/admin/analysis/ga4           ?start&end&product_id
 // GET /api/admin/analysis/etsy          ?start&end&product_id
 // GET /api/admin/analysis/google-ads    ?start&end&product_id
+// GET /api/admin/analysis/profitability ?start&end&channel
 //
 // Reads analysis_* views (plus selected supporting tables/products for titles).
 // Metric semantics: 01_MildMate_Marketing/02_Metric_Dictionary/Phase_02_Metric_Contract_2026-09-07.md
@@ -1830,6 +1831,152 @@ async function getExceptions(env: any, url: URL): Promise<Response> {
   });
 }
 
+// ── Profitability (Phase 13) ──────────────────────────────────────────────
+// Reads the migration-053 views. All amounts THB. Margins are NULL (never 0)
+// when cost/fee/shipping inputs are missing; every aggregate carries its own
+// covered-revenue base so percentages stay honest. Ad spend only appears in
+// the month-level after_ads block (aggregate, never per order).
+
+async function getProfitability(env: any, f: Filters): Promise<Response> {
+  const range = dayRangeWhere(f);
+  const binds: any[] = [...range.binds];
+  let channelSql = "";
+  if (f.channel) { channelSql = " AND channel_norm = ?"; binds.push(f.channel); }
+
+  try {
+    const summary: any = await env.DB.prepare(
+      `SELECT
+         COUNT(*)                                                   AS orders,
+         SUM(order_total)                                           AS revenue,
+         SUM(cost_coverage = 'FULL')                                AS full_cost_orders,
+         SUM(cost_coverage = 'PARTIAL')                             AS partial_cost_orders,
+         SUM(cost_coverage = 'NONE')                                AS no_cost_orders,
+         SUM(cost_coverage = 'ITEMLESS')                            AS itemless_orders,
+         SUM(CASE WHEN gross_margin_thb IS NOT NULL THEN order_total END) AS gross_covered_revenue,
+         SUM(CASE WHEN gross_margin_thb IS NOT NULL THEN production_cost_thb END) AS production_cost_thb,
+         SUM(gross_margin_thb)                                      AS gross_margin_thb,
+         SUM(CASE WHEN contribution_before_shipping_thb IS NOT NULL THEN fees_thb END) AS fees_thb,
+         SUM(CASE WHEN contribution_before_shipping_thb IS NOT NULL THEN order_total END) AS contrib_bs_covered_revenue,
+         SUM(contribution_before_shipping_thb)                      AS contribution_before_shipping_thb,
+         SUM(CASE WHEN contribution_margin_thb IS NOT NULL THEN shipping_cost_thb END) AS shipping_cost_thb,
+         SUM(CASE WHEN contribution_margin_thb IS NOT NULL THEN order_total END) AS contrib_covered_revenue,
+         SUM(contribution_margin_thb)                               AS contribution_margin_thb,
+         MAX(CASE WHEN estimate_cost_items > 0 OR fees_are_estimate = 1 OR shipping_is_estimate = 1 THEN 1 ELSE 0 END) AS contains_estimates
+       FROM analysis_profit_orders
+       WHERE 1=1${range.sql}${channelSql}`
+    ).bind(...binds).first();
+
+    const channels = await env.DB.prepare(
+      `SELECT
+         channel_norm,
+         COUNT(*)                        AS orders,
+         SUM(order_total)                AS revenue,
+         SUM(cost_coverage = 'FULL')     AS full_cost_orders,
+         SUM(CASE WHEN gross_margin_thb IS NOT NULL THEN order_total END) AS gross_covered_revenue,
+         SUM(gross_margin_thb)           AS gross_margin_thb,
+         SUM(CASE WHEN contribution_before_shipping_thb IS NOT NULL THEN order_total END) AS contrib_bs_covered_revenue,
+         SUM(contribution_before_shipping_thb) AS contribution_before_shipping_thb,
+         SUM(contribution_margin_thb)    AS contribution_margin_thb,
+         MAX(CASE WHEN shipping_cost_thb IS NULL THEN 1 ELSE 0 END) AS shipping_missing
+       FROM analysis_profit_orders
+       WHERE 1=1${range.sql}${channelSql}
+       GROUP BY channel_norm
+       ORDER BY revenue DESC`
+    ).bind(...binds).all();
+
+    const monthBinds: any[] = [];
+    let monthWhere = "";
+    if (f.start) { monthWhere += " AND month >= ?"; monthBinds.push(f.start.slice(0, 7)); }
+    if (f.end) { monthWhere += " AND month <= ?"; monthBinds.push(f.end.slice(0, 7)); }
+    let monthChannelSql = "";
+    if (f.channel) { monthChannelSql = " AND channel_norm = ?"; monthBinds.push(f.channel); }
+
+    const monthly = await env.DB.prepare(
+      `SELECT month,
+              SUM(orders) AS orders,
+              SUM(revenue) AS revenue,
+              SUM(gross_covered_revenue) AS gross_covered_revenue,
+              SUM(gross_margin_thb) AS gross_margin_thb,
+              SUM(contrib_bs_covered_revenue) AS contrib_bs_covered_revenue,
+              SUM(contribution_before_shipping_thb) AS contribution_before_shipping_thb,
+              SUM(contribution_margin_thb) AS contribution_margin_thb,
+              MAX(contains_estimates) AS contains_estimates
+       FROM analysis_profit_monthly
+       WHERE 1=1${monthWhere}${monthChannelSql}
+       GROUP BY month
+       ORDER BY month DESC
+       LIMIT 24`
+    ).bind(...monthBinds).all();
+
+    const prodBinds: any[] = [...range.binds];
+    let prodChannelSql = "";
+    if (f.channel) { prodChannelSql = " AND pi.channel_norm = ?"; prodBinds.push(f.channel); }
+
+    const products = await env.DB.prepare(
+      `SELECT
+         pi.product_id,
+         COALESCE(p.title_en, '(unmapped)') AS product_title,
+         p.slug AS product_slug,
+         COUNT(*) AS items,
+         SUM(pi.quantity) AS units,
+         SUM(CASE WHEN pi.revenue_status = 'EXACT' THEN pi.line_revenue END) AS exact_revenue,
+         SUM(pi.cost_status = 'COSTED') AS costed_items,
+         SUM(CASE WHEN pi.cost_status = 'COSTED' THEN pi.item_production_cost_thb END) AS production_cost_thb,
+         SUM(CASE WHEN pi.revenue_status = 'EXACT' AND pi.cost_status = 'COSTED'
+                  THEN pi.line_revenue - pi.item_production_cost_thb END) AS line_margin_before_fees_thb,
+         SUM(CASE WHEN pi.revenue_status = 'EXACT' AND pi.cost_status = 'COSTED'
+                  THEN pi.line_revenue END) AS line_margin_covered_revenue,
+         MAX(pi.cost_is_estimate) AS cost_is_estimate
+       FROM analysis_profit_items pi
+       LEFT JOIN products p ON p.id = pi.product_id
+       WHERE 1=1${range.sql.replace(/order_day/g, "pi.order_day")}${prodChannelSql}
+       GROUP BY pi.product_id, p.title_en, p.slug
+       ORDER BY line_margin_before_fees_thb DESC NULLS LAST`
+    ).bind(...prodBinds).all();
+
+    const afterAds = await env.DB.prepare(
+      `SELECT month, orders, revenue, contribution_before_shipping_thb,
+              contrib_bs_covered_revenue, ads_cost_thb, contribution_after_ads_thb
+       FROM analysis_profit_after_ads_monthly
+       WHERE 1=1${monthWhere}
+       ORDER BY month DESC
+       LIMIT 24`
+    ).bind(...monthBinds.slice(0, monthWhere.split("?").length - 1)).all();
+
+    const coverage: any = await env.DB.prepare("SELECT * FROM analysis_profit_coverage").first();
+
+    const pct = (num: any, base: any) => {
+      const n = Number(num), b = Number(base);
+      if (!Number.isFinite(n) || !Number.isFinite(b) || b <= 0) return null;
+      return Math.round((n / b) * 1000) / 10;
+    };
+
+    return json({
+      success: true,
+      filters: { start: f.start, end: f.end, channel: f.channel },
+      currency: "THB",
+      note: "Margins are computed only over covered orders; percentages use each metric's own covered-revenue base. Estimates are labelled. Ad spend is month-aggregate only (never per order).",
+      summary: {
+        ...summary,
+        gross_margin_pct: pct(summary?.gross_margin_thb, summary?.gross_covered_revenue),
+        contribution_before_shipping_pct: pct(summary?.contribution_before_shipping_thb, summary?.contrib_bs_covered_revenue),
+        contribution_margin_pct: pct(summary?.contribution_margin_thb, summary?.contrib_covered_revenue),
+      },
+      channels: channels.results || [],
+      monthly: monthly.results || [],
+      products: products.results || [],
+      after_ads: afterAds.results || [],
+      coverage,
+    });
+  } catch (e: any) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table") || msg.includes("no such view")) {
+      return err("PROFIT_VIEWS_MISSING", "Profitability views not found — apply migration 053_profitability_layer.sql first.", 500);
+    }
+    throw e;
+  }
+}
+
 // ── Router ────────────────────────────────────────────────────────────────
 
 export async function handleAdminAnalysis(request: Request, env: any): Promise<Response> {
@@ -1864,6 +2011,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/google-ads") return getGoogleAds(env, f);
+  if (sub === "/profitability") return getProfitability(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
