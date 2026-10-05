@@ -1,3 +1,13 @@
+// MildMate GA4 Ingestion API (Phase 10, multi-property extension 2026-10-02)
+// POST /api/v1/ga4/rows/upsert — Bearer-token GA4 fact upserts.
+//   Multi-property (migration 055): rows carry property_id + property_scope
+//   ('website' 366290587 | 'etsy' 533944293); the match/upsert key includes
+//   property_id so properties can never overwrite each other. Etsy rows get
+//   deterministic listing_id extraction + master/alias product mapping
+//   (never guessed); Etsy GA4 contributes traffic/demand only — the Etsy API
+//   stays authoritative for Etsy orders/revenue. Website rows with Etsy
+//   /listing/ paths are tagged 'stray_etsy_path' (safeguard, never mapped).
+
 const GA4_SERVICE_NAME = "mildmate-ga4-api";
 const GA4_SYNC_TOKEN_SECRET_NAME = "SALES_SYNC_API_TOKEN";
 
@@ -88,6 +98,70 @@ function extractProductSlug(path: string): string | null {
   } catch {
     return m[1].trim().toLowerCase();
   }
+}
+
+// Etsy landing paths are deterministic: /listing/{id}/... or /{country}/listing/{id}/...
+function extractEtsyListingId(path: string): string | null {
+  const m = String(path || "").match(/(?:^|\/)(?:[a-z]{2}(?:-[a-z]{2})?\/)?listing\/(\d{4,20})/i);
+  return m ? m[1] : null;
+}
+
+function isEtsyListingPath(path: string): boolean {
+  return extractEtsyListingId(path) !== null;
+}
+
+function parseProductIdsJson(raw: any): number[] {
+  if (raw === undefined || raw === null || raw === "") return [];
+  try {
+    const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(v)) return [];
+    return v.map((x) => Number(x)).filter((x) => Number.isInteger(x) && x > 0);
+  } catch {
+    return [];
+  }
+}
+
+// Deterministic Etsy listing → product resolution (never guesses):
+//   1) etsy_listing_master.product_id (canonical, human-confirmed mapping)
+//   2) product_mapping_aliases (match_scope='listing', verified=1, single product)
+// Unresolved → product_id NULL + explicit mapping_scope (never zero, never guessed).
+async function resolveEtsyListingProduct(
+  env: any,
+  listingId: string,
+  cache: Map<string, { productId: number | null; mappingScope: string }>
+): Promise<{ productId: number | null; mappingScope: string }> {
+  if (cache.has(listingId)) return cache.get(listingId)!;
+  let out: { productId: number | null; mappingScope: string } = { productId: null, mappingScope: "etsy_listing_unmapped" };
+  try {
+    const master: any = await env.DB.prepare(
+      `SELECT product_id FROM etsy_listing_master WHERE listing_id = ?1 LIMIT 1`
+    )
+      .bind(listingId)
+      .first();
+    if (master && master.product_id) {
+      out = { productId: Number(master.product_id), mappingScope: "etsy_listing_mapped" };
+    } else {
+      const norm = listingId.toLowerCase();
+      const alias: any = await env.DB.prepare(
+        `SELECT product_ids FROM product_mapping_aliases
+          WHERE match_scope = 'listing' AND verified = 1
+            AND (COALESCE(source_system, '') = '' OR lower(source_system) = 'etsy')
+            AND (listing_id = ?1 OR alias_norm = ?2)
+          ORDER BY id DESC LIMIT 1`
+      )
+        .bind(listingId, norm)
+        .first();
+      if (alias) {
+        const ids = parseProductIdsJson(alias.product_ids);
+        if (ids.length === 1) out = { productId: ids[0], mappingScope: "etsy_listing_mapped" };
+        else if (ids.length > 1) out = { productId: null, mappingScope: "etsy_alias_multi_product" };
+      }
+    }
+  } catch {
+    // Mapping tables not available in this environment — keep row unmapped.
+  }
+  cache.set(listingId, out);
+  return out;
 }
 
 function sameNullable(a: any, b: any): boolean {
@@ -205,9 +279,22 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
 
   const source = trimTo(body.sync_source, 80) || "ga4-manual-collector";
   const scenario = trimTo(body.scenario, 200) || "phase10-ga4-collector";
+
+  // Multi-property GA4 (migration 055): body-level default, per-row override.
+  // Default keeps the original single-property behavior (website 366290587).
+  const defaultPropertyId = trimTo(body.property_id ?? body.propertyId, 40) || "366290587";
+  const defaultPropertyScope = (trimTo(body.property_scope ?? body.propertyScope, 20) || "website").toLowerCase();
+  if (!/^\d{4,20}$/.test(defaultPropertyId)) {
+    return response({ success: false, error_code: "INVALID_PROPERTY", message: "property_id must be a numeric GA4 property id." }, 400);
+  }
+  if (defaultPropertyScope !== "website" && defaultPropertyScope !== "etsy") {
+    return response({ success: false, error_code: "INVALID_SCOPE", message: "property_scope must be 'website' or 'etsy'." }, 400);
+  }
+
   const runId = await createSyncRun(env, source, scenario, rowsRaw.length);
 
   const slugCache = new Map<string, number | null>();
+  const etsyCache = new Map<string, { productId: number | null; mappingScope: string }>();
   const nowIso = new Date().toISOString();
   let created = 0;
   let updated = 0;
@@ -239,32 +326,65 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
         if (purchaseRevenue !== null && purchaseRevenue < 0) throw new Error("purchase_revenue must be >= 0");
 
         const candidatePath = pagePath || landingPagePath;
-        const slug = extractProductSlug(candidatePath);
+        let slug: string | null = null;
         let productId: number | null = null;
         let mappingScope = "non_product";
-        if (slug) {
-          productId = await resolveProductIdBySlug(env, slug, slugCache);
-          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        let listingId: string | null = null;
+
+        // Per-row property override (validated against body defaults).
+        const rowPropertyId = (() => {
+          const v = trimTo(raw.property_id ?? raw.propertyId, 40) || defaultPropertyId;
+          if (!/^\d{4,20}$/.test(v)) throw new Error("property_id must be a numeric GA4 property id");
+          return v;
+        })();
+        const rowPropertyScope = (() => {
+          const v = (trimTo(raw.property_scope ?? raw.propertyScope, 20) || defaultPropertyScope).toLowerCase();
+          if (v !== "website" && v !== "etsy") throw new Error("property_scope must be 'website' or 'etsy'");
+          return v;
+        })();
+
+        if (rowPropertyScope === "etsy") {
+          // Etsy GA4: traffic/demand only. Resolve listing → product
+          // deterministically via the Etsy master/aliases; never guess.
+          listingId = extractEtsyListingId(candidatePath);
+          if (listingId) {
+            const res = await resolveEtsyListingProduct(env, listingId, etsyCache);
+            productId = res.productId;
+            mappingScope = res.mappingScope;
+          } else {
+            mappingScope = "non_listing_page";
+          }
+        } else {
+          // Website GA4: product-slug mapping. Etsy-pattern paths inside the
+          // website property are never mapped as products — they are tagged
+          // so website views can exclude them (stray-stream safeguard).
+          slug = extractProductSlug(candidatePath);
+          if (slug) {
+            productId = await resolveProductIdBySlug(env, slug, slugCache);
+            mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+          } else if (isEtsyListingPath(candidatePath)) {
+            mappingScope = "stray_etsy_path";
+          }
         }
 
         const existing: any = await env.DB.prepare(
           `SELECT id, sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout,
-                  purchases, purchase_revenue, product_id, mapping_scope
+                  purchases, purchase_revenue, product_id, listing_id, mapping_scope
              FROM ga4_funnel_daily
-            WHERE report_date = ?1 AND landing_page_path = ?2 AND page_path = ?3
+            WHERE report_date = ?1 AND property_id = ?9 AND landing_page_path = ?2 AND page_path = ?3
               AND source = ?4 AND medium = ?5 AND campaign = ?6 AND country = ?7 AND device = ?8
             LIMIT 1`
         )
-          .bind(reportDate, landingPagePath, pagePath, sourceDim, medium, campaign, country, device)
+          .bind(reportDate, landingPagePath, pagePath, sourceDim, medium, campaign, country, device, rowPropertyId)
           .first();
 
         if (!existing) {
           await env.DB.prepare(
             `INSERT INTO ga4_funnel_daily
-             (report_date, landing_page_path, page_path, source, medium, campaign, country, device,
+             (report_date, property_id, property_scope, landing_page_path, page_path, source, medium, campaign, country, device,
               sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout, purchases, purchase_revenue,
-              product_id, mapping_scope, source_updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)`
+              product_id, listing_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?9, ?10, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)`
           )
             .bind(
               reportDate,
@@ -275,6 +395,8 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
               campaign,
               country,
               device,
+              rowPropertyId,
+              rowPropertyScope,
               sessions,
               users,
               engagedSessions,
@@ -284,6 +406,7 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
               purchases,
               purchaseRevenue,
               productId,
+              listingId,
               mappingScope,
               nowIso
             )
@@ -302,6 +425,7 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
           Number(existing.purchases || 0) === purchases &&
           sameNullableNum(existing.purchase_revenue, purchaseRevenue) &&
           sameNullable(existing.product_id, productId) &&
+          sameNullable(existing.listing_id, listingId) &&
           sameNullable(existing.mapping_scope, mappingScope);
 
         if (noChange) {
@@ -320,10 +444,11 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
                   purchases = ?7,
                   purchase_revenue = ?8,
                   product_id = ?9,
-                  mapping_scope = ?10,
-                  source_updated_at = ?11,
+                  listing_id = ?10,
+                  mapping_scope = ?11,
+                  source_updated_at = ?12,
                   updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?12`
+            WHERE id = ?13`
         )
           .bind(
             sessions,
@@ -335,6 +460,7 @@ async function handleRowsUpsert(request: Request, env: any): Promise<Response> {
             purchases,
             purchaseRevenue,
             productId,
+            listingId,
             mappingScope,
             nowIso,
             Number(existing.id)

@@ -12,12 +12,15 @@
 // GET /api/admin/analysis/etsy          ?start&end&product_id
 // GET /api/admin/analysis/google-ads    ?start&end&product_id
 // GET /api/admin/analysis/profitability ?start&end&channel
+// GET  /api/admin/analysis/opportunity            — Phase 14 latest score snapshot (read-only)
+// POST /api/admin/analysis/opportunity/recompute  — Phase 14 recompute (dashboard button; cron uses the same core)
 //
 // Reads analysis_* views (plus selected supporting tables/products for titles).
 // Metric semantics: 01_MildMate_Marketing/02_Metric_Dictionary/Phase_02_Metric_Contract_2026-09-07.md
 // No PII: the unified sales tables carry no customer fields.
 
 import { verifyClerkJwt } from "./clerk-verify";
+import { getOpportunity, recomputeOpportunityHandler } from "./admin-opportunity";
 
 function json(body: any, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -668,6 +671,7 @@ async function getGsc(env: any, f: Filters): Promise<Response> {
 }
 
 async function getGa4(env: any, f: Filters): Promise<Response> {
+  const GA4_SCOPE_WHERE = " AND g.property_scope = 'website' AND g.landing_page_path NOT LIKE '%/listing/%'";
   const range = dayRangeWhere(f, "g.report_date");
   const binds: any[] = [...range.binds];
   let productSql = "";
@@ -703,7 +707,7 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
          END AS purchase_rate_pct,
          COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.sessions ELSE 0 END), 0) AS mapped_sessions
        FROM ga4_funnel_daily g
-       WHERE 1=1${range.sql}${productSql}`
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}`
     )
       .bind(...binds)
       .first();
@@ -726,7 +730,7 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
          END AS purchase_rate_pct
        FROM ga4_funnel_daily g
        LEFT JOIN products p ON p.id = g.product_id
-       WHERE 1=1${range.sql}${productSql}
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}
        GROUP BY g.landing_page_path, g.page_path, g.product_id, p.title_en
        ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
        LIMIT 15`
@@ -745,7 +749,7 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
          SUM(g.purchases) AS purchases,
          SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue
        FROM ga4_funnel_daily g
-       WHERE 1=1${range.sql}${productSql}
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}
        GROUP BY source_medium
        ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
        LIMIT 12`
@@ -802,7 +806,7 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
              COALESCE(SUM(g.purchases), 0) AS purchases,
              COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
            FROM ga4_funnel_daily g
-           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+           WHERE g.report_date >= ? AND g.report_date <= ?${GA4_SCOPE_WHERE}${productTrendSql}`
         )
           .bind(...curBinds)
           .first();
@@ -816,7 +820,7 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
              COALESCE(SUM(g.purchases), 0) AS purchases,
              COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
            FROM ga4_funnel_daily g
-           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+           WHERE g.report_date >= ? AND g.report_date <= ?${GA4_SCOPE_WHERE}${productTrendSql}`
         )
           .bind(...prevBinds)
           .first();
@@ -915,11 +919,15 @@ async function getGa4(env: any, f: Filters): Promise<Response> {
     });
   } catch (e: any) {
     const msg = String(e?.message || e);
-    if (msg.includes("no such table: ga4_funnel_daily") || msg.includes("no such table: analysis_ga4_freshness")) {
+    if (
+      msg.includes("no such table: ga4_funnel_daily") ||
+      msg.includes("no such table: analysis_ga4_freshness") ||
+      msg.includes("no such column: g.property_scope")
+    ) {
       return json({
         success: true,
         available: false,
-        message: "GA4 schema is not available in this environment yet. Apply migration 048_ga4_analytics.sql.",
+        message: "GA4 schema is not available in this environment yet. Apply migrations 048_ga4_analytics.sql and 055_ga4_multi_property.sql.",
         filters: { start: f.start, end: f.end, product_id: f.productId },
       });
     }
@@ -1984,17 +1992,20 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret",
       },
     });
   }
-  if (request.method !== "GET") return err("METHOD_NOT_ALLOWED", "Only GET is supported.", 405);
+  const url = new URL(request.url);
+  const isRecompute = request.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
+  if (request.method !== "GET" && !isRecompute) {
+    return err("METHOD_NOT_ALLOWED", "Only GET is supported (POST only on /opportunity/recompute).", 405);
+  }
 
   const auth = await authorizeAdmin(request, env);
   if (!auth.ok) return err("UNAUTHORIZED", auth.error, auth.status);
 
-  const url = new URL(request.url);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/analysis/, "") || "/";
 
   const productMatch = sub.match(/^\/product\/(\d+)$/);
@@ -2002,6 +2013,8 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
 
   if (sub === "/data-quality") return getDataQuality(env);
   if (sub === "/data-quality/exceptions") return getExceptions(env, url);
+  if (sub === "/opportunity") return getOpportunity(env);
+  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request, env);
 
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;

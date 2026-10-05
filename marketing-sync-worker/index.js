@@ -46,11 +46,18 @@ import {
   REPORT_EMAIL_TO_DEFAULT,
 } from "../scripts/notion-mapper-core.mjs";
 
+// Phase 14 — opportunity engine core (shared with the Pages manual recompute API).
+import { recomputeOpportunityScores } from "../scripts/opportunity-core.mjs";
+
 const STREAM = "notion-mapping-sync";
 const SYNC_SOURCE = "notion-mapping-sync";
 const SCENARIO = "phase17-scheduled-confirmed-mapping-sync";
 const MAIN_CRON = "0 2 1,15 * *";
 const DRAIN_CRON = "0 * * * *";
+
+const OPPORTUNITY_STREAM = "opportunity-weekly-recompute";
+const OPPORTUNITY_SYNC_SOURCE = "opportunity-cron";
+const OPPORTUNITY_WEEKLY_CRON = "0 5 * * 1"; // weekly Monday 05:00 UTC, after all collectors
 
 const GSC_STREAM = "gsc-weekly-sync";
 const GSC_SYNC_SOURCE = "gsc-worker-cron";
@@ -78,6 +85,53 @@ const GA4_DEFAULT_PAGE_SIZE = 20000;
 const GA4_DEFAULT_CHUNK_SIZE = 1000;
 const GA4_MAX_WINDOW_DAYS = 90;
 const GA4_MAX_PAGES_PER_REPORT = 200;
+
+// Multi-property GA4 (owner-approved 2026-10-02):
+//   366290587 = MildMate website → property_scope 'website'
+//   533944293 = Etsy Shop        → property_scope 'etsy'
+// Properties stay logically separate: property-aware uniqueness, per-property
+// locks, per-property sync/freshness telemetry. Etsy GA4 contributes
+// traffic/demand only — the Etsy API stays authoritative for Etsy
+// orders/revenue. GA4_PROPERTIES_JSON overrides this default.
+const GA4_PROPERTIES_DEFAULT = [
+  { property_id: "366290587", scope: "website" },
+  { property_id: "533944293", scope: "etsy" },
+];
+
+function resolveGa4Properties(env) {
+  const raw = String(env.GA4_PROPERTIES_JSON || "").trim();
+  let parsed = GA4_PROPERTIES_DEFAULT;
+  if (raw) {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      throw new Error("GA4_PROPERTIES_JSON is not valid JSON");
+    }
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("GA4_PROPERTIES_JSON must be a non-empty array of {property_id, scope}");
+  }
+  const seen = new Set();
+  const out = [];
+  for (const p of parsed) {
+    const propertyId = String(p?.property_id ?? p?.propertyId ?? "").trim();
+    const scope = String(p?.scope ?? "").trim().toLowerCase();
+    if (!/^\d{4,20}$/.test(propertyId)) throw new Error(`invalid GA4 property_id: '${truncate(propertyId, 40)}'`);
+    if (scope !== "website" && scope !== "etsy") throw new Error(`invalid GA4 property scope: '${scope}'`);
+    const key = `${propertyId}:${scope}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      property_id: propertyId,
+      scope,
+      stream: `${GA4_STREAM}:${scope}`,
+      sync_source: `${GA4_SYNC_SOURCE}:${scope}`,
+      scenario: `${GA4_SCENARIO}:${scope}`,
+    });
+  }
+  if (!out.length) throw new Error("no GA4 properties configured");
+  return out;
+}
 const GA4_DIMENSIONS = [
   "date",
   "landingPagePlusQueryString",
@@ -260,8 +314,8 @@ async function releaseGscLock(db, runId) {
     .run();
 }
 
-async function acquireGa4Lock(db, runId) {
-  await ensureLockRow(db, GA4_STREAM);
+async function acquireGa4Lock(db, runId, streamName = GA4_STREAM) {
+  await ensureLockRow(db, streamName);
   const until = new Date(Date.now() + GA4_LOCK_TTL_MS).toISOString();
   const res = await db
     .prepare(
@@ -270,19 +324,19 @@ async function acquireGa4Lock(db, runId) {
         WHERE name = ?
           AND (locked_until IS NULL OR locked_until < ?)`
     )
-    .bind(until, runId, nowIso(), GA4_STREAM, nowIso())
+    .bind(until, runId, nowIso(), streamName, nowIso())
     .run();
   return (res.meta?.changes ?? 0) === 1;
 }
 
-async function releaseGa4Lock(db, runId) {
+async function releaseGa4Lock(db, runId, streamName = GA4_STREAM) {
   await db
     .prepare(
       `UPDATE marketing_sync_lock
           SET locked_until = NULL, run_id = NULL, updated_at = ?
         WHERE name = ? AND run_id = ?`
     )
-    .bind(nowIso(), GA4_STREAM, runId)
+    .bind(nowIso(), streamName, runId)
     .run();
 }
 
@@ -813,11 +867,11 @@ function resolveGa4EventFilters(env) {
   ];
 }
 
-async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimensionFilter = null, dimensions = GA4_DIMENSIONS) {
-  const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
-  if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
+async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimensionFilter = null, dimensions = GA4_DIMENSIONS, propertyId = null) {
+  const propId = String(propertyId || env.GA4_PROPERTY_ID || "").trim();
+  if (!propId) throw new Error("GA4 property id is not configured");
 
-  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runReport`;
+  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propId)}:runReport`;
   const pageSize = clampInt(toInt(env.GA4_ROW_PAGE_SIZE, GA4_DEFAULT_PAGE_SIZE), 1000, 250000);
   const dimIndex = {};
   dimensions.forEach((name, i) => {
@@ -897,10 +951,10 @@ async function runGa4Report(env, accessToken, startDate, endDate, metrics, dimen
   return rows;
 }
 
-async function runGa4EventNameSummary(env, accessToken, startDate, endDate, limit = 25) {
-  const propertyId = String(env.GA4_PROPERTY_ID || "").trim();
-  if (!propertyId) throw new Error("GA4_PROPERTY_ID is not configured");
-  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propertyId)}:runReport`;
+async function runGa4EventNameSummary(env, accessToken, startDate, endDate, limit = 25, propertyId = null) {
+  const propId = String(propertyId || env.GA4_PROPERTY_ID || "").trim();
+  if (!propId) throw new Error("GA4 property id is not configured");
+  const endpoint = `https://analyticsdata.googleapis.com/v1beta/properties/${encodeURIComponent(propId)}:runReport`;
   const payload = {
     dateRanges: [{ startDate, endDate }],
     dimensions: [{ name: "eventName" }],
@@ -1223,15 +1277,16 @@ function ensureGa4AccumulatorRow(map, seed) {
   return map.get(key);
 }
 
-async function postGa4RowsChunk(env, rows, triggerTag) {
+async function postGa4RowsChunk(env, prop, rows, triggerTag) {
   const apiBase = String(env.GA4_API_BASE || env.MAPPER_API_BASE || "https://www.mildmate.com").replace(/\/+$/, "");
   const token = String(env.SALES_SYNC_API_TOKEN || "");
   if (!token) throw new Error("SALES_SYNC_API_TOKEN is not configured");
   const payload = {
-    sync_source: GA4_SYNC_SOURCE,
-    scenario: `${GA4_SCENARIO}:${triggerTag}`,
-    property: env.GA4_PROPERTY_ID || "",
-    rows,
+    sync_source: prop.sync_source,
+    scenario: `${prop.scenario}:${triggerTag}`,
+    property_id: prop.property_id,
+    property_scope: prop.scope,
+    rows: rows.map((r) => ({ ...r, property_id: prop.property_id, property_scope: prop.scope })),
   };
   const res = await fetch(apiBase + GA4_UPSERT_ROUTE, {
     method: "POST",
@@ -1809,15 +1864,39 @@ async function executeGscSync(env, trigger, overrides = {}) {
 }
 
 async function executeGa4Sync(env, trigger, overrides = {}) {
-  for (const required of ["SALES_SYNC_API_TOKEN", "GA4_PROPERTY_ID", "GA4_CLIENT_ID", "GA4_CLIENT_SECRET", "GA4_REFRESH_TOKEN"]) {
-    if (!env[required]) return { ok: false, reason: `${required} is not configured` };
+  // Multi-property GA4: each property syncs with its own lock, telemetry and
+  // property-scoped rows. dry=1 fetches and merges but never writes.
+  const properties = resolveGa4Properties(env);
+  const scopeFilter = String(overrides.scope || "").trim().toLowerCase();
+  const selected = scopeFilter ? properties.filter((p) => p.scope === scopeFilter) : properties;
+  const dry = overrides.dry === true;
+  const results = [];
+  for (const prop of selected) {
+    results.push(await executeGa4SyncProperty(env, prop, trigger, overrides, dry));
+  }
+  const allOk = results.every((r) => r.ok);
+  const website = results.find((r) => r.scope === "website") || results[0] || {};
+  return {
+    ok: allOk,
+    source: website.source || GA4_SYNC_SOURCE,
+    scenario: website.scenario || GA4_SCENARIO,
+    trigger,
+    properties_synced: results.length,
+    property_results: results,
+    ...website,
+  };
+}
+
+async function executeGa4SyncProperty(env, prop, trigger, overrides = {}, dry = false) {
+  for (const required of ["SALES_SYNC_API_TOKEN", "GA4_CLIENT_ID", "GA4_CLIENT_SECRET", "GA4_REFRESH_TOKEN"]) {
+    if (!env[required]) return { ok: false, scope: prop.scope, reason: `${required} is not configured` };
   }
 
   const db = env.DB;
-  const runId = `${GA4_STREAM}-${trigger}-${Date.now()}`;
-  if (!(await acquireGa4Lock(db, runId))) {
-    console.log("GA4-SYNC: previous run still active, skipping");
-    return { ok: true, skipped: "locked" };
+  const runId = `${prop.stream}-${trigger}-${Date.now()}`;
+  if (!(await acquireGa4Lock(db, runId, prop.stream))) {
+    console.log(`GA4-SYNC: ${prop.scope} previous run still active, skipping`);
+    return { ok: true, scope: prop.scope, property_id: prop.property_id, skipped: "locked" };
   }
 
   try {
@@ -1843,7 +1922,8 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
       window.end,
       ["sessions", "totalUsers", "engagedSessions"],
       null,
-      GA4_TRAFFIC_DIMENSIONS
+      GA4_TRAFFIC_DIMENSIONS,
+      prop.property_id
     );
     sessionRows.forEach((r) => {
       const row = ensureGa4AccumulatorRow(acc, r);
@@ -1867,7 +1947,9 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
               fieldName: "eventName",
               stringFilter: { matchType: "EXACT", value: eventName },
             },
-          }
+          },
+          undefined,
+          prop.property_id
         );
         rows.forEach((r) => {
           const row = ensureGa4AccumulatorRow(acc, r);
@@ -1899,9 +1981,29 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
       }));
 
     totals.fetched_rows = merged.length;
+
+    if (dry) {
+      console.log(
+        `GA4-SYNC: ${trigger} dry — property ${prop.property_id} (${prop.scope}) rows ${merged.length}, ` +
+        `listings ${merged.filter((r) => /(?:^|\/)(?:[a-z]{2}(?:-[a-z]{2})?\/)?listing\/\d{4,20}/i.test(r.landing_page_path || r.page_path)).length} (no writes)`
+      );
+      return {
+        ok: true,
+        scope: prop.scope,
+        property_id: prop.property_id,
+        source: prop.sync_source,
+        scenario: prop.scenario,
+        trigger,
+        dry: true,
+        window: { start: window.start, end: window.end, days: window.days.length, lag_days: window.lagDays, overlap_days: window.overlapDays },
+        event_filters: eventFilters,
+        totals: { ...totals, sent_rows: 0 },
+      };
+    }
+
     const chunks = chunkRows(merged, chunkSize);
     for (const chunk of chunks) {
-      const out = await postGa4RowsChunk(env, chunk, trigger);
+      const out = await postGa4RowsChunk(env, prop, chunk, trigger);
       totals.upsert_calls += 1;
       totals.sent_rows += Number(out?.totals?.received || 0);
       totals.created += Number(out?.totals?.created || 0);
@@ -1911,14 +2013,16 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
     }
 
     console.log(
-      `GA4-SYNC: ${trigger} done â€” rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
+      `GA4-SYNC: ${trigger} ${prop.scope} (${prop.property_id}) done — rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
       `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
     );
 
     return {
       ok: true,
-      source: GA4_SYNC_SOURCE,
-      scenario: GA4_SCENARIO,
+      scope: prop.scope,
+      property_id: prop.property_id,
+      source: prop.sync_source,
+      scenario: prop.scenario,
       trigger,
       window: { start: window.start, end: window.end, days: window.days.length, lag_days: window.lagDays, overlap_days: window.overlapDays },
       event_filters: eventFilters,
@@ -1926,10 +2030,10 @@ async function executeGa4Sync(env, trigger, overrides = {}) {
     };
   } catch (e) {
     const msg = truncate(e?.message || String(e), 280);
-    console.log(`GA4-SYNC: ${trigger} failed â€” ${msg}`);
-    return { ok: false, reason: msg };
+    console.log(`GA4-SYNC: ${trigger} ${prop.scope} failed — ${msg}`);
+    return { ok: false, scope: prop.scope, property_id: prop.property_id, reason: msg };
   } finally {
-    await releaseGa4Lock(db, runId);
+    await releaseGa4Lock(db, runId, prop.stream);
   }
 }
 
@@ -2416,6 +2520,23 @@ async function executeSync(env, trigger, overrides = {}) {
 
 export default {
   async scheduled(event, env, ctx) {
+    if (event.cron === OPPORTUNITY_WEEKLY_CRON) {
+      ctx.waitUntil(
+        (async () => {
+          try {
+            const report = await recomputeOpportunityScores(env, {});
+            console.log(
+              `OPPORTUNITY-RECOMPUTE: model=${report.model_version} date=${report.score_date} ` +
+              `rows=${report.rows_total} scored=${report.scored_count} insufficient=${report.insufficient_count}`
+            );
+          } catch (e) {
+            console.log(`OPPORTUNITY-RECOMPUTE: unhandled — ${truncate(e.message, 300)}`);
+          }
+        })()
+      );
+      return;
+    }
+
     if (event.cron === GA4_WEEKLY_CRON) {
       ctx.waitUntil((async () => {
         try {
@@ -2572,11 +2693,17 @@ export default {
     }
 
     if (url.pathname === "/ga4/status") {
-      let freshness = null;
+      let freshnessWebsite = null;
+      let freshnessEtsy = null;
       try {
-        freshness = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
+        freshnessWebsite = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness`).first();
       } catch {
-        freshness = null;
+        freshnessWebsite = null;
+      }
+      try {
+        freshnessEtsy = await env.DB.prepare(`SELECT * FROM analysis_ga4_freshness_etsy`).first();
+      } catch {
+        freshnessEtsy = null;
       }
       const runs = await env.DB.prepare(
         `SELECT id, source, scenario, started_at, finished_at, status,
@@ -2586,10 +2713,22 @@ export default {
           ORDER BY COALESCE(finished_at, started_at) DESC
           LIMIT 10`
       ).all();
-      const lock = await env.DB
-        .prepare(`SELECT locked_until, run_id FROM marketing_sync_lock WHERE name = ?`)
-        .bind(GA4_STREAM)
-        .first();
+      let properties = [];
+      try {
+        properties = resolveGa4Properties(env).map((p) => ({
+          property_id: p.property_id,
+          scope: p.scope,
+          stream: p.stream,
+          sync_source: p.sync_source,
+        }));
+      } catch (e) {
+        properties = [{ error: truncate(e?.message || String(e), 200) }];
+      }
+      const locks = {};
+      for (const p of Array.isArray(properties) && properties[0]?.property_id ? properties : []) {
+        locks[p.scope] =
+          (await env.DB.prepare(`SELECT locked_until, run_id FROM marketing_sync_lock WHERE name = ?`).bind(p.stream).first()) || null;
+      }
       let window = null;
       try {
         window = resolveGa4Window(env);
@@ -2602,8 +2741,10 @@ export default {
         scenario: GA4_SCENARIO,
         cron: GA4_WEEKLY_CRON,
         event_filters: resolveGa4EventFilters(env),
-        lock: lock || null,
-        freshness,
+        properties,
+        locks,
+        freshness_website: freshnessWebsite,
+        freshness_etsy: freshnessEtsy,
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
         recent_runs: runs.results || [],
       });
@@ -2709,11 +2850,16 @@ export default {
       const start = url.searchParams.get("start") || null;
       const end = url.searchParams.get("end") || null;
       const limit = url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 25;
+      const propertyOverride = url.searchParams.get("property_id") || null;
+      if (propertyOverride && !/^\d{4,20}$/.test(String(propertyOverride).trim())) {
+        return Response.json({ error: "invalid property_id" }, { status: 400 });
+      }
       const window = resolveGa4Window(env, { start, end });
       const accessToken = await getGa4AccessToken(env);
-      const events = await runGa4EventNameSummary(env, accessToken, window.start, window.end, limit);
+      const events = await runGa4EventNameSummary(env, accessToken, window.start, window.end, limit, propertyOverride ? String(propertyOverride).trim() : null);
       return Response.json({
         source: GA4_SYNC_SOURCE,
+        property_id: String(propertyOverride || env.GA4_PROPERTY_ID || "").trim(),
         window: { start: window.start, end: window.end, days: window.days.length },
         configured_event_filters: resolveGa4EventFilters(env),
         top_events: events,
@@ -2769,6 +2915,29 @@ export default {
       }
     }
 
+    if (url.pathname === "/ga4/tmp-delete-stream" && request.method === "POST") {
+      try {
+        const streamName = String(url.searchParams.get("name") || "").trim();
+        if (!/^properties\/\d+\/dataStreams\/\d+$/.test(streamName)) {
+          return Response.json({ error: "invalid stream name" }, { status: 400 });
+        }
+        const accessToken = await getGa4AccessToken(env);
+        const res = await fetch(`https://analyticsadmin.googleapis.com/v1beta/${streamName}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const bodyText = await res.text();
+        return Response.json({
+          ok: res.ok,
+          status: res.status,
+          deleted: streamName,
+          response: bodyText ? bodyText.slice(0, 300) : "(empty = success)",
+        });
+      } catch (e) {
+        return Response.json({ error: "delete_failed", message: truncate(e?.message || String(e), 280) }, { status: 500 });
+      }
+    }
+
     if (url.pathname === "/ga4/debug-property") {
       try {
         const measurementId = String(url.searchParams.get("measurement_id") || "").trim();
@@ -2809,6 +2978,11 @@ export default {
         end: url.searchParams.get("end") || null,
         overlapDays: url.searchParams.get("overlap") ? Number(url.searchParams.get("overlap")) : null,
         lagDays: url.searchParams.get("lag") ? Number(url.searchParams.get("lag")) : null,
+        // Multi-property controls:
+        //   scope=website|etsy — sync one property only
+        //   dry=1             — fetch + merge from GA4 but never write to D1
+        scope: url.searchParams.get("scope") || null,
+        dry: url.searchParams.get("dry") === "1",
       };
       const out = await executeGa4Sync(env, "manual", overrides);
       return Response.json(out, { status: out.ok ? 200 : 500 });

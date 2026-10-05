@@ -174,9 +174,15 @@ async function ensureTables(env: any): Promise<void> {
     id INTEGER PRIMARY KEY AUTOINCREMENT, product_id INTEGER NOT NULL,
     production_cost_thb REAL NOT NULL, cost_source TEXT NOT NULL DEFAULT 'formula',
     is_estimate INTEGER NOT NULL DEFAULT 1, effective_from TEXT NOT NULL DEFAULT (date('now')),
-    note TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    note TEXT, modeled_price_thb REAL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(product_id, effective_from, cost_source))`).run();
+  // Self-heal: table may pre-exist migration 054 without the modeled-price column.
+  try {
+    await env.DB.prepare("ALTER TABLE cost_model_products ADD COLUMN modeled_price_thb REAL").run();
+  } catch {
+    // column already exists
+  }
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cost_model_channel_fees (
     id INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT NOT NULL,
     marketplace_fee_pct REAL NOT NULL DEFAULT 0, payment_fee_pct REAL NOT NULL DEFAULT 0,
@@ -450,11 +456,50 @@ const REFERENCE_CONFIG: Record<string, RefConfig> = {
   "mattress-encasement-general":  { family: "encasement", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin — encasement pages use the fitted-sheet size list" },
   "rv-truck-mattress-encasement": { family: "encasement", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin — code gives encasement pages the fitted-sheet size list (flagged)" },
   "marine-fitted-sheet":          { family: "vberth", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175×FW100×L190×D20 — no stored marine geometry (owner-approved 2026-10-02)" },
-  "marine-mattress-protector":    { family: "vberth", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175×FW100×L190×D20 — marine template V-berth path (owner-approved 2026-10-02)" },
+  "marine-mattress-protector":    { family: "protector", dims: { w: 175, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION W175×L190×D20 — marine page prices via the protector formula (verified in configurator updateCustomPrice); owner-approved 2026-10-02" },
   "marine-top-sheet":              { family: "marine_top", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175×FW100×L190×D20 — no stored marine geometry (owner-approved 2026-10-02)" },
 };
 
-function deriveFormulaCost(p: CostParams, slug: string): { cost: number; family: string; dimsText: string; note: string } | null {
+// Margin-rate key per product, mirroring the live configurator's MARGIN_RATE
+// chain exactly (updateCustomPrice / size-price path). Used ONLY to derive the
+// MODELED reference selling price — never part of cost.
+const MARGIN_KEYS: Record<string, { key: string; fallback: number; derived?: boolean }> = {
+  "standard-fitted-sheet":          { key: "standard", fallback: 30 },
+  "deep-pocket-fitted-sheet":       { key: "standard", fallback: 30 },
+  "dorm-fitted-sheet":             { key: "standard", fallback: 30 },
+  "pet-owner-fitted-sheet":         { key: "standard", fallback: 30 },
+  "family-fitted-sheet":           { key: "family", fallback: 50 },
+  "rv-truck-fitted-sheet":         { key: "rv_truck", fallback: 45 },
+  "flat-sheet-standard":           { key: "standard", fallback: 30 },
+  "flat-sheet-extra-deep-pocket":  { key: "standard", fallback: 30 },
+  "co-sleeping-top-sheet":         { key: "family", fallback: 50 },
+  "3-sided-duvet":                 { key: "duvet", fallback: 30 },
+  "pet-owner-duvet-cover":          { key: "duvet", fallback: 30 },
+  "duvet-cover-marine":            { key: "duvet", fallback: 30 },
+  "duvet-cover-rv":                { key: "duvet", fallback: 30 },
+  "duvet-cover-dorm":              { key: "duvet", fallback: 30 },
+  "weighted-duvet-cover":          { key: "duvet", fallback: 30, derived: true },
+  "pillowcase-envelope":           { key: "pillow", fallback: 15 },
+  "pillowcase-zipper":             { key: "pillow", fallback: 15 },
+  "pillowcase-sham":               { key: "pillow", fallback: 15 },
+  "pillow-protector-general":      { key: "pillow_protector", fallback: 35 },
+  "mattress-protector-standard":   { key: "protector_standard", fallback: 15 },
+  "mattress-protector-deep-pocket":{ key: "protector_deep", fallback: 25 },
+  "pet-proof-mattress-protector":  { key: "protector_standard", fallback: 15 },
+  "mattress-protector-family":     { key: "family", fallback: 50 },
+  "custom-waterproof-cushion-protector": { key: "cushion_protector", fallback: 30 },
+  "mattress-encasement-general":   { key: "encasement", fallback: 50 },
+  "rv-truck-mattress-encasement":  { key: "rv_truck", fallback: 45 }, // client chain: rv-truck match precedes encasement
+  "marine-fitted-sheet":           { key: "marine", fallback: 680 },
+  "marine-top-sheet":              { key: "marine", fallback: 680 },
+  "marine-mattress-protector":     { key: "protector_standard", fallback: 15 }, // client chain: protector branch, protector_standard
+};
+
+function ceilTo100(v: number): number {
+  return Math.ceil(v / 100) * 100;
+}
+
+function deriveFormulaCost(p: CostParams, slug: string): { cost: number; modeledPrice: number | null; family: string; dimsText: string; note: string } | null {
   const cfg = REFERENCE_CONFIG[slug];
   if (!cfg) return null;
   const fabric = cfg.fabric || "cloudsoft";
@@ -483,6 +528,24 @@ function deriveFormulaCost(p: CostParams, slug: string): { cost: number; family:
   }
   if (!Number.isFinite(cost) || cost <= 0) return null;
 
+  // MODELED reference selling price (standard-size path): subtotal × markup,
+  // ceil-100 rounded exactly like the configurator. Weighted duvet applies the
+  // derived markup on top (applyDerivedMarkupToResult). Labeled ESTIMATED —
+  // never presented as a historical realized price.
+  let modeledPrice: number | null = null;
+  const mk = MARGIN_KEYS[slug];
+  if (mk) {
+    const marginRate = param(p, "margin_rate_" + mk.key, mk.fallback) / 100;
+    const opsRate = param(p, "ops_rate", 15) / 100;
+    const mktRate = param(p, "mkt_rate", 20) / 100;
+    let price = ceilTo100(cost * (1 + opsRate + mktRate + marginRate));
+    if (mk.derived) {
+      const derivedPct = param(p, "derived_markup_weighted-duvet-cover", 10);
+      price = ceilTo100(price * (1 + derivedPct / 100));
+    }
+    modeledPrice = price;
+  }
+
   const dimsText = cfg.dims.hw !== undefined
     ? `HW${cfg.dims.hw}xFW${cfg.dims.fw}xL${cfg.dims.l}xD${cfg.dims.d || 0}`
     : cfg.dims.d !== undefined && cfg.family !== "duvet" && cfg.family !== "pillowcase" && cfg.family !== "pillow_protector"
@@ -491,6 +554,7 @@ function deriveFormulaCost(p: CostParams, slug: string): { cost: number; family:
 
   return {
     cost: Math.round(cost * 100) / 100,
+    modeledPrice,
     family: cfg.family,
     dimsText,
     note: `ESTIMATED: formula pre-markup subtotal (fabric+sewing+zipper/accessories+packing+delivery) from live D1 pricing_params at reference size ${dimsText} cm. ${cfg.sizeNote}.`,
@@ -505,7 +569,7 @@ async function getCostModel(env: any): Promise<Response> {
 
   const products = await env.DB.prepare(`
     SELECT p.id AS product_id, p.slug, p.title_en, p.base_price_thb, p.is_active,
-           c.production_cost_thb, c.cost_source, c.is_estimate, c.effective_from, c.note
+           c.production_cost_thb, c.modeled_price_thb, c.cost_source, c.is_estimate, c.effective_from, c.note
     FROM products p
     LEFT JOIN cost_model_products c ON c.id = (
       SELECT c2.id FROM cost_model_products c2
@@ -636,17 +700,18 @@ async function recalculateFormulaCosts(env: any): Promise<Response> {
       continue;
     }
     await env.DB.prepare(`
-      INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note)
-      VALUES (?1, ?2, 'formula', 1, ?3, ?4)
+      INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note, modeled_price_thb)
+      VALUES (?1, ?2, 'formula', 1, ?3, ?4, ?5)
       ON CONFLICT(product_id, effective_from, cost_source)
-      DO UPDATE SET production_cost_thb = ?2, note = ?4, updated_at = CURRENT_TIMESTAMP
-    `).bind(p.id, derived.cost, FORMULA_EFFECTIVE_FROM, derived.note).run();
+      DO UPDATE SET production_cost_thb = ?2, note = ?4, modeled_price_thb = ?5, updated_at = CURRENT_TIMESTAMP
+    `).bind(p.id, derived.cost, FORMULA_EFFECTIVE_FROM, derived.note, derived.modeledPrice).run();
     updated.push({
       product_id: p.id,
       slug: p.slug,
       family: derived.family,
       reference_size: derived.dimsText,
       production_cost_thb: derived.cost,
+      modeled_price_thb: derived.modeledPrice,
     });
   }
 

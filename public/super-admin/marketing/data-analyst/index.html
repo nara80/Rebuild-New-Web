@@ -233,10 +233,26 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="profit-after-ads-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="opportunity-card">
+      <div class="card-header"><span>Opportunity Engine (Phase 14)</span><span class="muted" style="font-size:0.75rem;font-weight:400">product × channel ranking; MODELED margins (ESTIMATED); missing components redistribute weight, never zero</span></div>
+      <div class="card-body">
+        <div id="opp-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+          <button type="button" id="opp-recompute-btn" onclick="recomputeOpportunity()" style="font-size:0.75rem;padding:4px 10px;cursor:pointer">Recompute scores</button>
+          <span id="opp-recompute-status" class="muted" style="font-size:0.75rem"></span>
+        </div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Product Ranking (overall)</span><span class="muted" style="font-size:0.75rem;font-weight:400">score 0–100 · tier grades the score (HIGH ≥70 / MEDIUM ≥45 / LOW ≥25) · confidence ≥25 required to publish · reason</span></div>
+      <div class="table-wrap"><div id="opp-overall-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Product × Channel</span><span class="muted" style="font-size:0.75rem;font-weight:400">modeled contribution after effective-dated channel fees + ESTIMATED shipping; per-unit assumes a 1-unit order</span></div>
+      <div class="table-wrap"><div id="opp-channel-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
       Profitability (Phase 13): costs are ESTIMATED formula-derived unless marked VERIFIED; shipping is ESTIMATED_SHIPPING_COST (D1 charge ÷ 1.05); cost inputs managed via /api/admin/cost-model.
+      Opportunity (Phase 14): *Profit = MODELED margin (formula price − Phase 13 cost at the approved reference size), ESTIMATED — never realized per-product margin. Missing components redistribute weight (never zero); INSUFFICIENT_DATA rows carry no score by design. Weights v1: momentum 30 / profit 30 / channel fit 20 / demand 15 / strategic 5 (undefined) / conversion 0.
     </p>
   </div>
 </div>
@@ -1173,6 +1189,97 @@ async function populateProductFilter(){
   } catch(e) {}
 }
 
+// ── Opportunity Engine (Phase 14) ──
+
+function oppTierBadge(tier){
+  if (tier === 'HIGH') return '<span class="badge badge-green">HIGH</span>';
+  if (tier === 'MEDIUM') return '<span class="badge badge-amber">MEDIUM</span>';
+  if (tier === 'LOW') return '<span class="badge">LOW</span>';
+  return '<span class="badge badge-red">INSUFFICIENT_DATA</span>';
+}
+
+function oppComponentLine(c){
+  if (!c) return '—';
+  if (c.normalized === null || c.normalized === undefined) return '<span class="muted">missing' + (c.flags ? ' (' + esc(c.flags) + ')' : '') + '</span>';
+  return 'p' + fmtNum(c.normalized);
+}
+
+function renderOppRows(rows, withChannel){
+  if (!rows.length) return '<div class="state">No rows</div>';
+  var head = '<table><thead><tr>' +
+    (withChannel ? '<th>Channel</th>' : '') +
+    '<th>Rank</th><th>Product</th><th class="num">Score</th><th>Tier</th><th class="num">Confidence</th>' +
+    '<th class="num">Momentum</th><th class="num">Profit*</th><th class="num">ChannelFit</th><th class="num">Demand</th>' +
+    '<th>Available w</th><th>Missing</th><th>Reason</th></tr></thead><tbody>';
+  var body = rows.map(function(r){
+    var comps = {};
+    try { comps = JSON.parse(r.components_json || '{}'); } catch(e) {}
+    var missing = r.missing_components ? esc(r.missing_components) : '—';
+    return '<tr>' +
+      (withChannel ? '<td>' + esc(r.channel || '') + '</td>' : '') +
+      '<td>' + (r.rank === null || r.rank === undefined ? '—' : '#' + r.rank) + '</td>' +
+      '<td>' + esc(r.title_en || r.slug || ('#' + r.product_id)) + '</td>' +
+      '<td class="num">' + (r.score === null || r.score === undefined ? '—' : fmtNum(r.score)) + '</td>' +
+      '<td>' + oppTierBadge(r.tier) + '</td>' +
+      '<td class="num">' + fmtNum(r.confidence) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.momentum) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.profitability) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.channel_fit) + '</td>' +
+      '<td class="num">' + oppComponentLine(comps.demand) + '</td>' +
+      '<td>' + fmtNum(r.available_weight) + '</td>' +
+      '<td style="max-width:220px;font-size:0.6875rem">' + missing + '</td>' +
+      '<td style="max-width:340px;font-size:0.6875rem">' + esc(r.reasons || '') + '</td>' +
+      '</tr>';
+  }).join('');
+  return head + body + '</tbody></table>';
+}
+
+async function loadOpportunity(){
+  var summary = document.getElementById('opp-summary');
+  var overall = document.getElementById('opp-overall-table');
+  var channel = document.getElementById('opp-channel-table');
+  try {
+    var body = await api('/opportunity');
+    if (!body.latest_score_date) {
+      summary.innerHTML = '<span class="badge badge-amber">No snapshot yet</span><span class="muted" style="font-size:0.75rem">Click “Recompute scores” to generate the first snapshot (weekly cron also runs Monday 05:00 UTC).</span>';
+      overall.innerHTML = '<div class="state">No snapshot yet</div>';
+      channel.innerHTML = '<div class="state">No snapshot yet</div>';
+      return;
+    }
+    var badges = '<span class="badge">Model ' + esc(body.model_version) + '</span>' +
+      '<span class="badge">Snapshot ' + esc(body.latest_score_date) + '</span>' +
+      '<span class="badge">' + fmtNum(body.row_counts.total) + ' rows (' + fmtNum(body.row_counts.scored) + ' scored, ' + fmtNum(body.row_counts.insufficient) + ' insufficient)</span>';
+    summary.innerHTML = badges;
+    overall.innerHTML = renderOppRows(body.overall || [], false);
+    channel.innerHTML = renderOppRows(body.by_channel || [], true);
+  } catch(e) {
+    summary.innerHTML = '<span class="badge badge-red">error</span>';
+    overall.innerHTML = '<div class="state">Error: ' + esc(e.message) + '</div>';
+    channel.innerHTML = '<div class="state">Error</div>';
+  }
+}
+
+async function recomputeOpportunity(){
+  var btn = document.getElementById('opp-recompute-btn');
+  var status = document.getElementById('opp-recompute-status');
+  btn.disabled = true;
+  status.textContent = 'Recomputing…';
+  try {
+    var res = await fetch(API + '/opportunity/recompute', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({}) });
+    var body = null;
+    try { body = await res.json(); } catch(e) {}
+    if (!res.ok || !body || body.success === false) {
+      throw new Error((body && (body.message || body.error_code)) || ('HTTP ' + res.status));
+    }
+    status.textContent = 'Done: ' + body.scored_count + ' scored, ' + body.insufficient_count + ' insufficient of ' + body.rows_total + ' rows (model ' + body.model_version + ', ' + body.score_date + ').';
+    loadOpportunity();
+  } catch(e) {
+    status.textContent = 'Failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // ── Orchestration ──
 
 function applyFilters(){
@@ -1181,7 +1288,7 @@ function applyFilters(){
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadProfitability(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadProfitability(); loadOpportunity(); populateProductFilter();
 }
 
 async function boot(){

@@ -11,8 +11,10 @@ compatibility_date = "2026-06-18"
 # returns immediately unless the previous run stopped bounded with work left.
 # GSC runs weekly on Monday 03:00 UTC with an overlap window (configurable).
 # GA4, Etsy, and Google Ads run weekly on Monday 04:00 UTC with overlap windows (configurable).
+# Phase 14 opportunity scores recompute weekly on Monday 05:00 UTC (after all
+# collectors finish), using the shared engine scripts/opportunity-core.mjs.
 [triggers]
-crons = ["0 2 1,15 * *", "0 * * * *", "0 3 * * 1", "0 4 * * 1"]
+crons = ["0 2 1,15 * *", "0 * * * *", "0 3 * * 1", "0 4 * * 1", "0 5 * * 1"]
 
 # PRODUCTION D1 — this Worker reads/writes live sales tables (sales_orders,
 # sales_order_items, sync_runs, product_mapping_events, marketing_sync_*).
@@ -31,6 +33,12 @@ GSC_SEARCH_TYPE = "web"
 GSC_OVERLAP_DAYS = "14"
 GSC_DATA_LAG_DAYS = "3"
 GA4_API_BASE = "https://www.mildmate.com"
+# Multi-property GA4 (owner-approved 2026-10-02): website + Etsy Shop, kept
+# logically separate (property-aware uniqueness, locks and telemetry). Etsy
+# GA4 contributes traffic/demand only; the Etsy API stays authoritative for
+# Etsy orders/revenue.
+GA4_PROPERTIES_JSON = "[{\"property_id\":\"366290587\",\"scope\":\"website\"},{\"property_id\":\"533944293\",\"scope\":\"etsy\"}]"
+# Legacy single-property id: kept as the default for debug endpoints.
 GA4_PROPERTY_ID = "366290587"
 GA4_OVERLAP_DAYS = "14"
 GA4_DATA_LAG_DAYS = "2"
