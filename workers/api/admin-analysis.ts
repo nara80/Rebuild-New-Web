@@ -11,6 +11,7 @@
 // GET /api/admin/analysis/ga4           ?start&end&product_id
 // GET /api/admin/analysis/etsy          ?start&end&product_id
 // GET /api/admin/analysis/google-ads    ?start&end&product_id
+// GET /api/admin/analysis/growth-signals?start&end&channel&product_id
 // GET /api/admin/analysis/profitability ?start&end&channel
 // GET  /api/admin/analysis/opportunity            — Phase 14 latest score snapshot (read-only)
 // POST /api/admin/analysis/opportunity/recompute  — Phase 14 recompute (dashboard button; cron uses the same core)
@@ -1481,6 +1482,530 @@ async function getGoogleAds(env: any, f: Filters): Promise<Response> {
   }
 }
 
+// ── Growth signals (Phase 13) ────────────────────────────────────────────
+// Signal-only layer. No opportunity scoring/ranking is computed here.
+// Phase 14 remains the owner of model weights, scoring, and recommendations.
+
+async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
+  const now = new Date().toISOString().slice(0, 10);
+  const anchorDate = f.end || now;
+  const currentStart = shiftIsoDate(anchorDate, -27) || anchorDate;
+  const previousEnd = shiftIsoDate(anchorDate, -28) || anchorDate;
+  const previousStart = shiftIsoDate(anchorDate, -55) || anchorDate;
+
+  const pct = (num: any, den: any): number | null => {
+    const n = Number(num);
+    const d = Number(den);
+    if (!Number.isFinite(n) || !Number.isFinite(d) || d <= 0) return null;
+    return Math.round((n / d) * 1000) / 10;
+  };
+
+  const n = (v: any) => (v === null || v === undefined ? 0 : Number(v) || 0);
+  const days = (v: any): number | null => (v === null || v === undefined ? null : Number(v));
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  const firstOrNull = async (sql: string, binds: any[] = []): Promise<any | null> => {
+    try {
+      return await env.DB.prepare(sql).bind(...binds).first();
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      if (msg.includes("no such table") || msg.includes("no such view")) return null;
+      throw e;
+    }
+  };
+
+  const allOrNull = async (sql: string, binds: any[] = []): Promise<any[] | null> => {
+    try {
+      const out = await env.DB.prepare(sql).bind(...binds).all();
+      return out.results || [];
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      if (msg.includes("no such table") || msg.includes("no such view")) return null;
+      throw e;
+    }
+  };
+
+  // Optional filters that are valid for sales-based sources.
+  const productSql = f.productId !== null ? " AND product_id = ?" : "";
+  const productBind = f.productId !== null ? [f.productId] : [];
+  const salesChannelSql = f.channel ? " AND channel_norm = ?" : "";
+  const salesChannelBind = f.channel ? [f.channel] : [];
+
+  // GA4 (website scope) demand + conversion inputs.
+  const ga4Cur = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(sessions), 0) AS sessions,
+       COALESCE(SUM(add_to_cart), 0) AS add_to_cart,
+       COALESCE(SUM(begin_checkout), 0) AS begin_checkout,
+       COALESCE(SUM(purchases), 0) AS purchases
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const ga4Prev = await firstOrNull(
+    `SELECT COALESCE(SUM(sessions), 0) AS sessions
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?${productSql}`,
+    [previousStart, previousEnd, ...productBind]
+  );
+  const ga4Cov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(sessions), 0) AS total_sessions,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END), 0) AS mapped_sessions
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const ga4Fresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_ga4_freshness");
+
+  // GSC demand inputs.
+  const gscCur = await firstOrNull(
+    `SELECT COALESCE(SUM(clicks), 0) AS clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const gscPrev = await firstOrNull(
+    `SELECT COALESCE(SUM(clicks), 0) AS clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [previousStart, previousEnd, ...productBind]
+  );
+  const gscCov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(clicks), 0) AS total_clicks,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN clicks ELSE 0 END), 0) AS mapped_clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const gscFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_gsc_freshness");
+
+  // Etsy demand inputs (listing-id based; mapped by master table).
+  const etsyProductSql = f.productId !== null ? " AND m.product_id = ?" : "";
+  const etsyCur = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(e.views), 0) AS views,
+       COALESCE(SUM(e.orders), 0) AS orders,
+       COALESCE(SUM(CASE WHEN m.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?${etsyProductSql}`,
+    [currentStart, anchorDate, ...(f.productId !== null ? [f.productId] : [])]
+  );
+  const etsyPrev = await firstOrNull(
+    `SELECT COALESCE(SUM(e.views), 0) AS views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?${etsyProductSql}`,
+    [previousStart, previousEnd, ...(f.productId !== null ? [f.productId] : [])]
+  );
+  const etsyCov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(e.views), 0) AS total_views,
+       COALESCE(SUM(CASE WHEN m.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const etsyFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_etsy_freshness");
+
+  // Google Ads metadata only for Phase 13 (neutral if sparse/zero signal).
+  const adsCur = await firstOrNull(
+    `SELECT
+       COUNT(*) AS rows_n,
+       COALESCE(SUM(cost), 0) AS cost,
+       COALESCE(SUM(conversions), 0) AS conversions,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN cost ELSE 0 END), 0) AS mapped_cost
+     FROM google_ads_campaign_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const adsFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_google_ads_freshness");
+
+  // Sales-based momentum + channel context.
+  const salesCur = await firstOrNull(
+    `SELECT
+       COUNT(DISTINCT sales_order_id) AS orders,
+       COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
+    [currentStart, anchorDate, ...productBind, ...salesChannelBind]
+  );
+  const salesPrev = await firstOrNull(
+    `SELECT
+       COUNT(DISTINCT sales_order_id) AS orders,
+       COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
+    [previousStart, previousEnd, ...productBind, ...salesChannelBind]
+  );
+  const channelRows = await allOrNull(
+    `SELECT channel_norm, COUNT(DISTINCT sales_order_id) AS orders, COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}
+     GROUP BY channel_norm
+     ORDER BY units DESC, orders DESC`,
+    [currentStart, anchorDate, ...productBind, ...salesChannelBind]
+  );
+  const orderCov = await firstOrNull(
+    `SELECT COALESCE(SUM(mapped_orders), 0) AS mapped_orders, COALESCE(SUM(orders), 0) AS orders
+     FROM analysis_sales_daily
+     WHERE order_day >= ? AND order_day <= ?${f.channel ? " AND channel_norm = ?" : ""}`,
+    [currentStart, anchorDate, ...(f.channel ? [f.channel] : [])]
+  );
+
+  // Secondary profitability guardrail coverage (no ranking ownership here).
+  const profitCov = await firstOrNull("SELECT * FROM analysis_profit_coverage");
+
+  const ga4Sessions = n(ga4Cur?.sessions);
+  const ga4PrevSessions = n(ga4Prev?.sessions);
+  const gscClicks = n(gscCur?.clicks);
+  const gscPrevClicks = n(gscPrev?.clicks);
+  const etsyViews = n(etsyCur?.views);
+  const etsyPrevViews = n(etsyPrev?.views);
+
+  const ga4MappedPct = pct(ga4Cov?.mapped_sessions, ga4Cov?.total_sessions);
+  const gscMappedPct = pct(gscCov?.mapped_clicks, gscCov?.total_clicks);
+  const etsyMappedPct = pct(etsyCov?.mapped_views, etsyCov?.total_views);
+  const adsMappedPct = pct(adsCur?.mapped_cost, adsCur?.cost);
+  const orderMappedPct = pct(orderCov?.mapped_orders, orderCov?.orders);
+
+  const ga4Days = days(ga4Fresh?.days_since_latest_report);
+  const gscDays = days(gscFresh?.days_since_latest_report);
+  const etsyDays = days(etsyFresh?.days_since_latest_report);
+  const adsDays = days(adsFresh?.days_since_latest_report);
+
+  const signals: any = {};
+  const impacts: number[] = [];
+
+  // Demand
+  const ga4Growth = ga4PrevSessions > 0 ? Math.round(((ga4Sessions - ga4PrevSessions) * 1000) / ga4PrevSessions) / 10 : null;
+  const gscGrowth = gscPrevClicks > 0 ? Math.round(((gscClicks - gscPrevClicks) * 1000) / gscPrevClicks) / 10 : null;
+  const etsyGrowth = etsyPrevViews > 0 ? Math.round(((etsyViews - etsyPrevViews) * 1000) / etsyPrevViews) / 10 : null;
+  const growthPool = [ga4Growth, gscGrowth, etsyGrowth].filter((v) => v !== null) as number[];
+  const blendedGrowth = growthPool.length ? Math.round((growthPool.reduce((s, v) => s + v, 0) / growthPool.length) * 10) / 10 : null;
+
+  let demandStatus = "sufficient";
+  let demandImpact = 0;
+  const staleDemandSources: string[] = [];
+  if (ga4Sessions > 0 && ga4Days !== null && ga4Days > 10) staleDemandSources.push("ga4");
+  if (gscClicks > 0 && gscDays !== null && gscDays > 14) staleDemandSources.push("gsc");
+  if (etsyViews > 0 && etsyDays !== null && etsyDays > 7) staleDemandSources.push("etsy");
+  const hasDemandSignal = ga4Sessions > 0 || gscClicks > 0 || etsyViews > 0;
+  if (!hasDemandSignal) {
+    demandStatus = "insufficient_signal";
+    demandImpact -= 25;
+  } else if (staleDemandSources.length) {
+    demandStatus = "stale_source";
+    demandImpact -= 10;
+  } else if (
+    (ga4MappedPct !== null && ga4MappedPct < 50) ||
+    (gscMappedPct !== null && gscMappedPct < 50) ||
+    (etsyMappedPct !== null && etsyMappedPct < 50)
+  ) {
+    demandStatus = "mapping_gap";
+    demandImpact -= 10;
+  }
+  impacts.push(demandImpact);
+  signals.demand = {
+    value: {
+      ga4_sessions_28d: ga4Sessions,
+      gsc_clicks_28d: gscClicks,
+      etsy_views_28d: etsyViews,
+      blended_growth_pct: blendedGrowth,
+      ga4_growth_pct: ga4Growth,
+      gsc_growth_pct: gscGrowth,
+      etsy_growth_pct: etsyGrowth,
+    },
+    status: demandStatus,
+    coverage: {
+      ga4_mapped_session_pct: ga4MappedPct,
+      gsc_mapped_click_pct: gscMappedPct,
+      etsy_mapped_view_pct: etsyMappedPct,
+    },
+    freshness_days: { ga4: ga4Days, gsc: gscDays, etsy: etsyDays },
+    confidence_impact: demandImpact,
+    reason: !hasDemandSignal
+      ? "No measurable 28-day demand signal from GA4 website scope, GSC, or Etsy in the selected window."
+      : staleDemandSources.length
+        ? `Demand sources stale: ${staleDemandSources.join(", ")}.`
+        : demandStatus === "mapping_gap"
+          ? "Demand exists but mapped coverage is thin for at least one active source."
+          : "Demand signal is present and mapped coverage/freshness are acceptable.",
+  };
+
+  // Momentum
+  const curUnits = n(salesCur?.units);
+  const prevUnits = n(salesPrev?.units);
+  const curOrders = n(salesCur?.orders);
+  const prevOrders = n(salesPrev?.orders);
+  const unitGrowthPct = prevUnits > 0 ? Math.round(((curUnits - prevUnits) * 1000) / prevUnits) / 10 : null;
+  let momentumStatus = "sufficient";
+  let momentumImpact = 0;
+  if (curUnits + prevUnits <= 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 20;
+  } else if (prevUnits <= 0 && curUnits > 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 8;
+  }
+  impacts.push(momentumImpact);
+  signals.momentum = {
+    value: {
+      units_28d: curUnits,
+      units_prev_28d: prevUnits,
+      orders_28d: curOrders,
+      orders_prev_28d: prevOrders,
+      units_growth_pct: unitGrowthPct,
+    },
+    status: momentumStatus,
+    coverage: {
+      mapped_order_pct: orderMappedPct,
+      window_start: currentStart,
+      window_end: anchorDate,
+    },
+    freshness_days: null,
+    confidence_impact: momentumImpact,
+    reason:
+      curUnits + prevUnits <= 0
+        ? "No unit activity in current and previous windows."
+        : prevUnits <= 0
+          ? "Current activity exists but previous baseline is zero, so growth direction is weakly anchored."
+          : "Momentum uses comparable 28-day windows over mapped active items.",
+  };
+
+  // Conversion availability (availability only, not decision score logic).
+  const ga4Atc = n(ga4Cur?.add_to_cart);
+  const ga4Checkout = n(ga4Cur?.begin_checkout);
+  const ga4Purchases = n(ga4Cur?.purchases);
+  const ga4PurchaseRate = ga4Sessions > 0 ? Math.round((ga4Purchases * 1000) / ga4Sessions) / 10 : null;
+  let conversionStatus = "sufficient";
+  let conversionImpact = 0;
+  if (ga4Sessions <= 0) {
+    conversionStatus = "insufficient_signal";
+    conversionImpact -= 15;
+  } else if (ga4Atc + ga4Checkout + ga4Purchases <= 0) {
+    conversionStatus = "insufficient_signal";
+    conversionImpact -= 10;
+  } else if (ga4MappedPct !== null && ga4MappedPct < 50) {
+    conversionStatus = "mapping_gap";
+    conversionImpact -= 5;
+  }
+  impacts.push(conversionImpact);
+  signals.conversion_availability = {
+    value: {
+      sessions_28d: ga4Sessions,
+      add_to_cart_28d: ga4Atc,
+      begin_checkout_28d: ga4Checkout,
+      purchases_28d: ga4Purchases,
+      purchase_rate_pct: ga4PurchaseRate,
+    },
+    status: conversionStatus,
+    coverage: { ga4_mapped_session_pct: ga4MappedPct },
+    freshness_days: ga4Days,
+    confidence_impact: conversionImpact,
+    reason:
+      ga4Sessions <= 0
+        ? "No GA4 website sessions in the selected window."
+        : ga4Atc + ga4Checkout + ga4Purchases <= 0
+          ? "GA4 traffic exists but funnel events are sparse/absent."
+          : conversionStatus === "mapping_gap"
+            ? "Conversion events exist but product mapping coverage is limited."
+            : "GA4 funnel events are available for growth diagnostics.",
+  };
+
+  // Channel context
+  const channels = channelRows || [];
+  const totalChannelUnits = channels.reduce((s: number, r: any) => s + n(r.units), 0);
+  const topChannel = channels.length ? String(channels[0].channel_norm || "") : null;
+  const topChannelShare = totalChannelUnits > 0 ? Math.round((n(channels[0]?.units) * 1000) / totalChannelUnits) / 10 : null;
+  let channelStatus = "sufficient";
+  let channelImpact = 0;
+  if (!channels.length) {
+    channelStatus = "insufficient_signal";
+    channelImpact -= 10;
+  } else if (channels.length === 1) {
+    channelStatus = "neutral";
+    channelImpact -= 3;
+  }
+  impacts.push(channelImpact);
+  signals.channel_context = {
+    value: {
+      active_channels_28d: channels.length,
+      top_channel: topChannel,
+      top_channel_units_share_pct: topChannelShare,
+      channel_rows: channels.slice(0, 6),
+    },
+    status: channelStatus,
+    coverage: { channel_filter: f.channel || null },
+    freshness_days: null,
+    confidence_impact: channelImpact,
+    reason:
+      !channels.length
+        ? "No channel-level unit activity in the selected window."
+        : channels.length === 1
+          ? "Activity is concentrated in one channel; breadth signal is limited."
+          : "Multiple channels are active, enabling channel-opportunity comparisons.",
+  };
+
+  // Source freshness (cross-source observability).
+  const hasGa4Data = n(ga4Fresh?.total_rows) > 0 || ga4Sessions > 0;
+  const hasGscData = n(gscFresh?.total_rows) > 0 || gscClicks > 0;
+  const hasEtsyData = n(etsyFresh?.total_rows) > 0 || etsyViews > 0;
+  const hasAdsData = n(adsFresh?.total_rows) > 0 || n(adsCur?.rows_n) > 0 || n(adsCur?.cost) > 0;
+  const staleSources: string[] = [];
+  if (hasGa4Data && ga4Days !== null && ga4Days > 10) staleSources.push("ga4");
+  if (hasGscData && gscDays !== null && gscDays > 14) staleSources.push("gsc");
+  if (hasEtsyData && etsyDays !== null && etsyDays > 7) staleSources.push("etsy");
+  if (hasAdsData && adsDays !== null && adsDays > 4) staleSources.push("google_ads");
+  let freshnessStatus = "sufficient";
+  let freshnessImpact = 0;
+  if (!hasGa4Data && !hasGscData && !hasEtsyData) {
+    freshnessStatus = "insufficient_signal";
+    freshnessImpact -= 20;
+  } else if (staleSources.length) {
+    freshnessStatus = "stale_source";
+    freshnessImpact -= 10;
+  }
+  impacts.push(freshnessImpact);
+  const adsNeutral = !hasAdsData || n(adsCur?.cost) <= 0 || n(adsCur?.conversions) <= 0;
+  signals.source_freshness = {
+    value: {
+      ga4_days_since_latest: ga4Days,
+      gsc_days_since_latest: gscDays,
+      etsy_days_since_latest: etsyDays,
+      google_ads_days_since_latest: adsDays,
+    },
+    status: freshnessStatus,
+    coverage: {
+      ga4_available: hasGa4Data,
+      gsc_available: hasGscData,
+      etsy_available: hasEtsyData,
+      google_ads_available: hasAdsData,
+    },
+    freshness_days: { ga4: ga4Days, gsc: gscDays, etsy: etsyDays, google_ads: adsDays },
+    confidence_impact: freshnessImpact,
+    reason: !hasGa4Data && !hasGscData && !hasEtsyData
+      ? "Primary growth sources have no reported data rows yet."
+      : staleSources.length
+        ? `Source freshness warning: ${staleSources.join(", ")}.`
+        : adsNeutral
+          ? "Primary growth sources are fresh. Google Ads is operational but currently treated as neutral due to sparse/zero business signal."
+          : "Primary growth sources are fresh.",
+  };
+
+  // Mapping coverage (cross-source).
+  const coveragePool = [ga4MappedPct, gscMappedPct, etsyMappedPct].filter((v) => v !== null) as number[];
+  const mappedAvg = coveragePool.length ? Math.round((coveragePool.reduce((s, v) => s + v, 0) / coveragePool.length) * 10) / 10 : null;
+  let mappingStatus = "sufficient";
+  let mappingImpact = 0;
+  if (!coveragePool.length) {
+    mappingStatus = "insufficient_signal";
+    mappingImpact -= 15;
+  } else if (mappedAvg !== null && mappedAvg < 50) {
+    mappingStatus = "mapping_gap";
+    mappingImpact -= 15;
+  } else if (mappedAvg !== null && mappedAvg < 75) {
+    mappingStatus = "mapping_gap";
+    mappingImpact -= 8;
+  }
+  impacts.push(mappingImpact);
+  signals.mapping_coverage = {
+    value: { mapped_avg_pct: mappedAvg, order_mapped_pct_28d: orderMappedPct },
+    status: mappingStatus,
+    coverage: {
+      ga4_mapped_session_pct: ga4MappedPct,
+      gsc_mapped_click_pct: gscMappedPct,
+      etsy_mapped_view_pct: etsyMappedPct,
+      google_ads_mapped_cost_pct: adsMappedPct,
+    },
+    freshness_days: null,
+    confidence_impact: mappingImpact,
+    reason:
+      !coveragePool.length
+        ? "No mapped coverage baseline available from active growth sources in the current window."
+        : mappingStatus === "mapping_gap"
+          ? "Mapped coverage is below target for at least one growth source."
+          : "Mapped coverage is healthy for active growth sources.",
+  };
+
+  // Profitability guardrail (secondary only).
+  const grossCovPct = pct(profitCov?.gross_covered_revenue, profitCov?.total_revenue);
+  const contribCovPct = pct(profitCov?.contribution_covered_revenue, profitCov?.total_revenue);
+  const fullCostOrderPct = pct(profitCov?.full_cost_orders, profitCov?.commercial_orders);
+  let guardrailImpact = 0;
+  let guardrailStatus = "secondary_guardrail";
+  if (grossCovPct !== null && grossCovPct < 50) guardrailImpact -= 5;
+  impacts.push(guardrailImpact);
+  if (!profitCov) guardrailStatus = "insufficient_signal";
+  signals.profitability_guardrail = {
+    value: {
+      gross_covered_revenue_pct: grossCovPct,
+      contribution_covered_revenue_pct: contribCovPct,
+      full_cost_order_pct: fullCostOrderPct,
+      products_with_cost: profitCov ? n(profitCov.products_with_cost) : null,
+      active_products: profitCov ? n(profitCov.active_products) : null,
+    },
+    status: guardrailStatus,
+    coverage: profitCov
+      ? {
+          products_with_cost: n(profitCov.products_with_cost),
+          active_products: n(profitCov.active_products),
+          channels_with_fees: n(profitCov.channels_with_fees),
+          channels_with_shipping: n(profitCov.channels_with_shipping),
+        }
+      : null,
+    freshness_days: null,
+    confidence_impact: guardrailImpact,
+    reason: !profitCov
+      ? "Profitability coverage view unavailable in this environment."
+      : "Profitability is a secondary guardrail in Phase 13 and does not control opportunity ranking here.",
+  };
+
+  // Final confidence (metadata only).
+  const confidenceValue = clamp(Math.round((100 + impacts.reduce((s, v) => s + v, 0)) * 10) / 10, 0, 100);
+  signals.confidence = {
+    value: confidenceValue,
+    status: confidenceValue >= 75 ? "sufficient" : confidenceValue >= 50 ? "neutral" : "insufficient_signal",
+    coverage: {
+      signal_count: 7,
+      total_impact: impacts.reduce((s, v) => s + v, 0),
+    },
+    freshness_days: null,
+    confidence_impact: 0,
+    reason:
+      "Confidence summarizes signal quality/coverage and source freshness; missing or immature sources reduce confidence without forcing synthetic zero values.",
+  };
+
+  return json({
+    success: true,
+    growth_signal_contract: "v1",
+    objective:
+      "Build a sales-growth analytical layer that identifies demand, momentum, conversion, and channel opportunities across MildMate products and listings, while using profitability as a secondary guardrail.",
+    filters: { start: f.start, end: f.end, channel: f.channel, product_id: f.productId },
+    window: {
+      anchor_date: anchorDate,
+      current_start: currentStart,
+      current_end: anchorDate,
+      previous_start: previousStart,
+      previous_end: previousEnd,
+    },
+    google_ads_policy: {
+      infrastructure: "available",
+      business_signal: adsNeutral ? "insufficient_or_sparse" : "present",
+      scoring_effect: "neutral_in_phase13",
+      reason:
+        "Phase 13 treats Google Ads sparse/zero business signal as neutral and surfaces it via coverage/freshness/confidence metadata.",
+    },
+    signals,
+  });
+}
+
 async function getDataQuality(env: any): Promise<Response> {
   const dq: any = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
   if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
@@ -2024,6 +2549,7 @@ export async function handleAdminAnalysis(request: Request, env: any): Promise<R
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/google-ads") return getGoogleAds(env, f);
+  if (sub === "/growth-signals") return getGrowthSignals(env, f);
   if (sub === "/profitability") return getProfitability(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);

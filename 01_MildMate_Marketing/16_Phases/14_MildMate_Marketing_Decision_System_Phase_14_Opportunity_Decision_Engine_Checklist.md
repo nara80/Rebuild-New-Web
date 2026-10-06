@@ -23,6 +23,13 @@ Rank product/channel opportunities consistently using approved analytical inputs
 ## Prerequisites / Confirmed Baseline
 
 - [ ] Core sales, demand, conversion, channel, and profitability metrics available. *(requires Phases 10-13 implementation)*
+- [ ] Phase 13 Growth Signals Layer contract is available and stable (`growth_signal_contract: "v1"`), including neutral handling for immature paid-media signal coverage.
+
+## Phase Boundary Clarification (2026-10-06)
+
+- Phase 13 owns **growth signals and confidence/coverage metadata** only.
+- Phase 14 owns **decision/scoring/ranking/recommendation logic**.
+- Reuse `opportunity_scores` + recompute infrastructure; do not duplicate decision logic inside Phase 13.
 
 ## Task Checklist
 

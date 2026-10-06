@@ -214,6 +214,14 @@ td.num,th.num{text-align:right}
       <div class="table-wrap"><div id="google-ads-products-table"><div class="state">Loading…</div></div></div>
     </div>
 
+    <div class="card" id="growth-card">
+      <div class="card-header"><span>Sales Growth Signals (Phase 13)</span><span class="muted" style="font-size:0.75rem;font-weight:400">signal contract v1 (no ranking here): demand, momentum, conversion availability, channel context, freshness, mapping, confidence, profitability guardrail</span></div>
+      <div class="card-body">
+        <div id="growth-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="table-wrap"><div id="growth-signals-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <div class="card" id="profit-card">
       <div class="card-header"><span>Profitability / Contribution Margin</span><span class="muted" style="font-size:0.75rem;font-weight:400">THB only; margins cover only orders with full cost inputs — missing cost is never zero; estimates stay labelled</span></div>
       <div class="card-body">
@@ -251,6 +259,7 @@ td.num,th.num{text-align:right}
     <p class="muted" style="font-size:0.6875rem;margin:4px 0 24px">
       Metric definitions: Metric Contract 2026-09-07 (M1–M30). Commercial = paid/processing/shipped/completed, TEST- orders excluded.
       “—” means unknown (UNALLOCATED), never zero. Exact Revenue sums only real source line amounts.
+      Growth signals (Phase 13): `growth_signal_contract: "v1"` is signal-only and does not rank opportunities; Google Ads sparse/zero business signal is neutral and represented through coverage/freshness/confidence metadata.
       Profitability (Phase 13): costs are ESTIMATED formula-derived unless marked VERIFIED; shipping is ESTIMATED_SHIPPING_COST (D1 charge ÷ 1.05); cost inputs managed via /api/admin/cost-model.
       Opportunity (Phase 14): *Profit = MODELED margin (formula price − Phase 13 cost at the approved reference size), ESTIMATED — never realized per-product margin. Missing components redistribute weight (never zero); INSUFFICIENT_DATA rows carry no score by design. Weights v1: momentum 30 / profit 30 / channel fit 20 / demand 15 / strategic 5 (undefined) / conversion 0.
     </p>
@@ -948,6 +957,72 @@ async function loadGoogleAds(){
   }
 }
 
+// ── Sales Growth Signals (Phase 13) ──
+
+function growthStatusBadge(status){
+  if (status === 'sufficient') return '<span class="badge badge-green">SUFFICIENT</span>';
+  if (status === 'neutral') return '<span class="badge badge-grey">NEUTRAL</span>';
+  if (status === 'mapping_gap') return '<span class="badge badge-amber">MAPPING_GAP</span>';
+  if (status === 'stale_source') return '<span class="badge badge-amber">STALE_SOURCE</span>';
+  if (status === 'secondary_guardrail') return '<span class="badge badge-blue">SECONDARY_GUARDRAIL</span>';
+  return '<span class="badge badge-red">INSUFFICIENT_SIGNAL</span>';
+}
+
+function growthValueHtml(v){
+  if (v === null || v === undefined) return '<span class="muted">—</span>';
+  if (typeof v === 'number') return fmtNum(v);
+  if (typeof v === 'string') return esc(v);
+  if (Array.isArray(v)) return '<span class="mono">' + esc(JSON.stringify(v)) + '</span>';
+  if (typeof v === 'object') return '<span class="mono">' + esc(JSON.stringify(v)) + '</span>';
+  return esc(String(v));
+}
+
+async function loadGrowthSignals(){
+  setState('growth-signals-table', '', 'Loading…');
+  try {
+    var d = await api('/growth-signals?' + filterQS({withProduct:true}).slice(1));
+    var s = d.signals || {};
+    var policy = d.google_ads_policy || {};
+
+    document.getElementById('growth-summary').innerHTML =
+      '<span class="badge badge-blue">Contract: ' + esc(d.growth_signal_contract || 'v1') + '</span>' +
+      '<span class="badge badge-grey">Window: ' + esc((d.window && d.window.current_start) || '—') + ' → ' + esc((d.window && d.window.current_end) || '—') + '</span>' +
+      '<span class="badge badge-grey">Google Ads: ' + esc(policy.business_signal || 'insufficient_or_sparse') + ' (neutral)</span>' +
+      '<span class="badge badge-grey">Confidence: ' + fmtNum(s.confidence && s.confidence.value) + '</span>';
+
+    var rows = [
+      ['demand', s.demand],
+      ['momentum', s.momentum],
+      ['conversion availability', s.conversion_availability],
+      ['channel context', s.channel_context],
+      ['source freshness', s.source_freshness],
+      ['mapping coverage', s.mapping_coverage],
+      ['confidence', s.confidence],
+      ['profitability guardrail', s.profitability_guardrail]
+    ];
+
+    var h = '<table><thead><tr><th>Signal</th><th>Status</th><th>Value</th><th>Coverage</th><th>Freshness Days</th><th class="num">Confidence Impact</th><th>Reason</th></tr></thead><tbody>';
+    rows.forEach(function(pair){
+      var label = pair[0];
+      var sig = pair[1] || {};
+      h += '<tr>' +
+        '<td>' + esc(label) + '</td>' +
+        '<td>' + growthStatusBadge(sig.status || 'insufficient_signal') + '</td>' +
+        '<td style="max-width:260px">' + growthValueHtml(sig.value) + '</td>' +
+        '<td style="max-width:240px">' + growthValueHtml(sig.coverage) + '</td>' +
+        '<td style="max-width:180px">' + growthValueHtml(sig.freshness_days) + '</td>' +
+        '<td class="num">' + fmtNum(sig.confidence_impact) + '</td>' +
+        '<td style="max-width:360px;font-size:0.75rem">' + esc(sig.reason || '') + '</td>' +
+      '</tr>';
+    });
+    h += '</tbody></table>';
+    document.getElementById('growth-signals-table').innerHTML = h;
+  } catch(e) {
+    document.getElementById('growth-summary').innerHTML = '<span class="badge badge-red">Growth signals unavailable</span>';
+    setState('growth-signals-table', 'error', 'Could not load growth signals: ' + e.message);
+  }
+}
+
 // ── Profitability (Phase 13) ──
 
 async function loadProfitability(){
@@ -1284,11 +1359,11 @@ async function recomputeOpportunity(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadProfitability();
+  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadProfitability(); loadOpportunity(); populateProductFilter();
+  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability(); loadOpportunity(); populateProductFilter();
 }
 
 async function boot(){

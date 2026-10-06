@@ -1448,6 +1448,56 @@ function extractProductSlug2(path) {
   }
 }
 __name(extractProductSlug2, "extractProductSlug");
+function extractEtsyListingId(path) {
+  const m = String(path || "").match(/(?:^|\/)(?:[a-z]{2}(?:-[a-z]{2})?\/)?listing\/(\d{4,20})/i);
+  return m ? m[1] : null;
+}
+__name(extractEtsyListingId, "extractEtsyListingId");
+function isEtsyListingPath(path) {
+  return extractEtsyListingId(path) !== null;
+}
+__name(isEtsyListingPath, "isEtsyListingPath");
+function parseProductIdsJson2(raw) {
+  if (raw === void 0 || raw === null || raw === "") return [];
+  try {
+    const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(v)) return [];
+    return v.map((x) => Number(x)).filter((x) => Number.isInteger(x) && x > 0);
+  } catch {
+    return [];
+  }
+}
+__name(parseProductIdsJson2, "parseProductIdsJson");
+async function resolveEtsyListingProduct(env, listingId, cache) {
+  if (cache.has(listingId)) return cache.get(listingId);
+  let out = { productId: null, mappingScope: "etsy_listing_unmapped" };
+  try {
+    const master = await env.DB.prepare(
+      `SELECT product_id FROM etsy_listing_master WHERE listing_id = ?1 LIMIT 1`
+    ).bind(listingId).first();
+    if (master && master.product_id) {
+      out = { productId: Number(master.product_id), mappingScope: "etsy_listing_mapped" };
+    } else {
+      const norm = listingId.toLowerCase();
+      const alias = await env.DB.prepare(
+        `SELECT product_ids FROM product_mapping_aliases
+          WHERE match_scope = 'listing' AND verified = 1
+            AND (COALESCE(source_system, '') = '' OR lower(source_system) = 'etsy')
+            AND (listing_id = ?1 OR alias_norm = ?2)
+          ORDER BY id DESC LIMIT 1`
+      ).bind(listingId, norm).first();
+      if (alias) {
+        const ids = parseProductIdsJson2(alias.product_ids);
+        if (ids.length === 1) out = { productId: ids[0], mappingScope: "etsy_listing_mapped" };
+        else if (ids.length > 1) out = { productId: null, mappingScope: "etsy_alias_multi_product" };
+      }
+    }
+  } catch {
+  }
+  cache.set(listingId, out);
+  return out;
+}
+__name(resolveEtsyListingProduct, "resolveEtsyListingProduct");
 function sameNullable2(a, b) {
   const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
@@ -1542,8 +1592,17 @@ async function handleRowsUpsert2(request, env) {
   }
   const source = trimTo3(body.sync_source, 80) || "ga4-manual-collector";
   const scenario = trimTo3(body.scenario, 200) || "phase10-ga4-collector";
+  const defaultPropertyId = trimTo3(body.property_id ?? body.propertyId, 40) || "366290587";
+  const defaultPropertyScope = (trimTo3(body.property_scope ?? body.propertyScope, 20) || "website").toLowerCase();
+  if (!/^\d{4,20}$/.test(defaultPropertyId)) {
+    return response3({ success: false, error_code: "INVALID_PROPERTY", message: "property_id must be a numeric GA4 property id." }, 400);
+  }
+  if (defaultPropertyScope !== "website" && defaultPropertyScope !== "etsy") {
+    return response3({ success: false, error_code: "INVALID_SCOPE", message: "property_scope must be 'website' or 'etsy'." }, 400);
+  }
   const runId = await createSyncRun3(env, source, scenario, rowsRaw.length);
   const slugCache = /* @__PURE__ */ new Map();
+  const etsyCache = /* @__PURE__ */ new Map();
   const nowIso = (/* @__PURE__ */ new Date()).toISOString();
   let created = 0;
   let updated = 0;
@@ -1572,28 +1631,53 @@ async function handleRowsUpsert2(request, env) {
         const purchaseRevenue = toNum3(raw.purchase_revenue);
         if (purchaseRevenue !== null && purchaseRevenue < 0) throw new Error("purchase_revenue must be >= 0");
         const candidatePath = pagePath || landingPagePath;
-        const slug = extractProductSlug2(candidatePath);
+        let slug = null;
         let productId = null;
         let mappingScope = "non_product";
-        if (slug) {
-          productId = await resolveProductIdBySlug2(env, slug, slugCache);
-          mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+        let listingId = null;
+        const rowPropertyId = (() => {
+          const v = trimTo3(raw.property_id ?? raw.propertyId, 40) || defaultPropertyId;
+          if (!/^\d{4,20}$/.test(v)) throw new Error("property_id must be a numeric GA4 property id");
+          return v;
+        })();
+        const rowPropertyScope = (() => {
+          const v = (trimTo3(raw.property_scope ?? raw.propertyScope, 20) || defaultPropertyScope).toLowerCase();
+          if (v !== "website" && v !== "etsy") throw new Error("property_scope must be 'website' or 'etsy'");
+          return v;
+        })();
+        if (rowPropertyScope === "etsy") {
+          listingId = extractEtsyListingId(candidatePath);
+          if (listingId) {
+            const res = await resolveEtsyListingProduct(env, listingId, etsyCache);
+            productId = res.productId;
+            mappingScope = res.mappingScope;
+          } else {
+            mappingScope = "non_listing_page";
+          }
+        } else {
+          slug = extractProductSlug2(candidatePath);
+          if (slug) {
+            productId = await resolveProductIdBySlug2(env, slug, slugCache);
+            mappingScope = productId ? "mapped_product" : "unknown_product_slug";
+          } else if (isEtsyListingPath(candidatePath)) {
+            mappingScope = "stray_etsy_path";
+          }
         }
         const existing = await env.DB.prepare(
           `SELECT id, sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout,
-                  purchases, purchase_revenue, product_id, mapping_scope
+                  purchases, purchase_revenue, product_id, listing_id, mapping_scope
              FROM ga4_funnel_daily
-            WHERE report_date = ?1 AND landing_page_path = ?2 AND page_path = ?3
+            WHERE report_date = ?1 AND property_id = ?9 AND landing_page_path = ?2 AND page_path = ?3
               AND source = ?4 AND medium = ?5 AND campaign = ?6 AND country = ?7 AND device = ?8
             LIMIT 1`
-        ).bind(reportDate, landingPagePath, pagePath, sourceDim, medium, campaign, country, device).first();
+        ).bind(reportDate, landingPagePath, pagePath, sourceDim, medium, campaign, country, device, rowPropertyId).first();
         if (!existing) {
           await env.DB.prepare(
             `INSERT INTO ga4_funnel_daily
-             (report_date, landing_page_path, page_path, source, medium, campaign, country, device,
+             (report_date, property_id, property_scope, landing_page_path, page_path, source, medium, campaign, country, device,
               sessions, users, engaged_sessions, product_views, add_to_cart, begin_checkout, purchases, purchase_revenue,
-              product_id, mapping_scope, source_updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)`
+              product_id, listing_id, mapping_scope, source_updated_at)
+             VALUES (?1, ?9, ?10, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)`
           ).bind(
             reportDate,
             landingPagePath,
@@ -1603,6 +1687,8 @@ async function handleRowsUpsert2(request, env) {
             campaign,
             country,
             device,
+            rowPropertyId,
+            rowPropertyScope,
             sessions,
             users,
             engagedSessions,
@@ -1612,13 +1698,14 @@ async function handleRowsUpsert2(request, env) {
             purchases,
             purchaseRevenue,
             productId,
+            listingId,
             mappingScope,
             nowIso
           ).run();
           created++;
           continue;
         }
-        const noChange = Number(existing.sessions || 0) === sessions && Number(existing.users || 0) === users && Number(existing.engaged_sessions || 0) === engagedSessions && Number(existing.product_views || 0) === productViews && Number(existing.add_to_cart || 0) === addToCart && Number(existing.begin_checkout || 0) === beginCheckout && Number(existing.purchases || 0) === purchases && sameNullableNum2(existing.purchase_revenue, purchaseRevenue) && sameNullable2(existing.product_id, productId) && sameNullable2(existing.mapping_scope, mappingScope);
+        const noChange = Number(existing.sessions || 0) === sessions && Number(existing.users || 0) === users && Number(existing.engaged_sessions || 0) === engagedSessions && Number(existing.product_views || 0) === productViews && Number(existing.add_to_cart || 0) === addToCart && Number(existing.begin_checkout || 0) === beginCheckout && Number(existing.purchases || 0) === purchases && sameNullableNum2(existing.purchase_revenue, purchaseRevenue) && sameNullable2(existing.product_id, productId) && sameNullable2(existing.listing_id, listingId) && sameNullable2(existing.mapping_scope, mappingScope);
         if (noChange) {
           unchanged++;
           continue;
@@ -1634,10 +1721,11 @@ async function handleRowsUpsert2(request, env) {
                   purchases = ?7,
                   purchase_revenue = ?8,
                   product_id = ?9,
-                  mapping_scope = ?10,
-                  source_updated_at = ?11,
+                  listing_id = ?10,
+                  mapping_scope = ?11,
+                  source_updated_at = ?12,
                   updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?12`
+            WHERE id = ?13`
         ).bind(
           sessions,
           users,
@@ -1648,6 +1736,7 @@ async function handleRowsUpsert2(request, env) {
           purchases,
           purchaseRevenue,
           productId,
+          listingId,
           mappingScope,
           nowIso,
           Number(existing.id)
@@ -1780,7 +1869,7 @@ function inferActive(state) {
   return !KNOWN_INACTIVE_STATES.has(state);
 }
 __name(inferActive, "inferActive");
-function parseProductIdsJson2(raw) {
+function parseProductIdsJson3(raw) {
   try {
     const arr = JSON.parse(String(raw));
     if (!Array.isArray(arr)) return [];
@@ -1789,7 +1878,7 @@ function parseProductIdsJson2(raw) {
     return [];
   }
 }
-__name(parseProductIdsJson2, "parseProductIdsJson");
+__name(parseProductIdsJson3, "parseProductIdsJson");
 function sameNullable3(a, b) {
   const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
@@ -1881,7 +1970,7 @@ async function resolveListingAliasProduct(env, listingId) {
      LIMIT 1`
   ).bind(listingId, norm).first();
   if (!row) return { productId: null, mappingScope: "unmapped" };
-  const ids = parseProductIdsJson2(row.product_ids);
+  const ids = parseProductIdsJson3(row.product_ids);
   if (ids.length === 1) return { productId: ids[0], mappingScope: "alias_listing" };
   if (ids.length > 1) return { productId: null, mappingScope: "alias_multi_product" };
   return { productId: null, mappingScope: "unmapped" };
@@ -2247,7 +2336,7 @@ function normalizeAliasCandidates(v) {
   return Array.from(new Set(out));
 }
 __name(normalizeAliasCandidates, "normalizeAliasCandidates");
-function parseProductIdsJson3(raw) {
+function parseProductIdsJson4(raw) {
   try {
     const arr = JSON.parse(String(raw));
     if (!Array.isArray(arr)) return [];
@@ -2256,7 +2345,7 @@ function parseProductIdsJson3(raw) {
     return [];
   }
 }
-__name(parseProductIdsJson3, "parseProductIdsJson");
+__name(parseProductIdsJson4, "parseProductIdsJson");
 function sameNullable4(a, b) {
   const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
@@ -2353,7 +2442,7 @@ async function resolveAliasProduct(env, value) {
   if (!row) return { productId: null, mappingScope: "unmapped" };
   const sourceSystem = String(row.source_system || "").toLowerCase().trim();
   if (!GOOGLE_ADS_SOURCE_SYSTEMS.has(sourceSystem)) return { productId: null, mappingScope: "unmapped" };
-  const ids = parseProductIdsJson3(row.product_ids);
+  const ids = parseProductIdsJson4(row.product_ids);
   if (ids.length === 1) return { productId: ids[0], mappingScope: "alias" };
   if (ids.length > 1) return { productId: null, mappingScope: "alias_multi_product" };
   return { productId: null, mappingScope: "unmapped" };
@@ -3044,8 +3133,8 @@ async function onRequest2(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err3) {
-    console.error("Blog post TH error:", err3);
+  } catch (err4) {
+    console.error("Blog post TH error:", err4);
     return new Response("Server error", { status: 500 });
   }
 }
@@ -3355,8 +3444,8 @@ async function onRequest3(context) {
       } catch (e) {
         try {
           images = JSON.parse(product.images.replace(/\\"/g, '"'));
-        } catch (err3) {
-          console.error("Failed to parse product.images:", err3);
+        } catch (err4) {
+          console.error("Failed to parse product.images:", err4);
         }
       }
     }
@@ -3504,8 +3593,8 @@ async function onRequest3(context) {
         "Cache-Control": "public, max-age=60"
       }
     });
-  } catch (err3) {
-    console.error("Product SSR error:", err3);
+  } catch (err4) {
+    console.error("Product SSR error:", err4);
     return context.next();
   }
 }
@@ -4575,9 +4664,9 @@ async function sendEmail(env, options) {
       return { success: false, error: body?.message || `HTTP ${resp.status}` };
     }
     return { success: true, id: body?.id };
-  } catch (err3) {
-    console.error("Resend fetch failed:", err3.message || err3);
-    return { success: false, error: err3.message || "Network error" };
+  } catch (err4) {
+    console.error("Resend fetch failed:", err4.message || err4);
+    return { success: false, error: err4.message || "Network error" };
   }
 }
 __name(sendEmail, "sendEmail");
@@ -4772,8 +4861,8 @@ async function handleUnsubscribe(request, env) {
         }
       }
     );
-  } catch (err3) {
-    console.error("Unsubscribe error:", err3);
+  } catch (err4) {
+    console.error("Unsubscribe error:", err4);
     return new Response(
       JSON.stringify({ message: "Database error. Please try again later." }),
       {
@@ -5167,8 +5256,8 @@ async function handleQuote(request, env) {
       status: 201,
       headers: { "Content-Type": "application/json" }
     });
-  } catch (err3) {
-    console.error("Quote API error:", err3);
+  } catch (err4) {
+    console.error("Quote API error:", err4);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
@@ -7212,7 +7301,545 @@ async function handleAdminStats(request, env) {
 }
 __name(handleAdminStats, "handleAdminStats");
 
-// ../workers/api/admin-analysis.ts
+// ../scripts/opportunity-core.mjs
+var DEFAULT_MODEL_VERSION = "v1";
+var DEFAULT_WEIGHTS = { momentum: 30, profitability: 30, channel_fit: 20, demand: 15, strategic: 5, conversion: 0, demand_ga4: 80, demand_gsc: 20 };
+var CONF_MODEL = {
+  modeled_margin_basis: 15,
+  // flat: profitability is modeled, not realized
+  demand_mapping_max: 10,
+  // × (1 − mapped share) per demand source actually used
+  ga4_stale_after_days: 10,
+  // −5 if GA4 latest data older than this and GA4 was used
+  gsc_stale_after_days: 14,
+  // −5 if GSC latest data older than this and GSC was used
+  product_stale_block: 30,
+  // −5 per 30d since product's last order (cap 15)
+  low_volume_orders: 5,
+  // all-time orders-containing < 5 → −10; < 2 → −15
+  profitability_missing: 10
+  // modeled margin not derivable → −10 (never zero)
+};
+var TIER = { high: 70, medium: 45, low: 25 };
+function round1(v) {
+  return Math.round(v * 10) / 10;
+}
+__name(round1, "round1");
+function percentileMap(values) {
+  const n = values.length;
+  const map = /* @__PURE__ */ new Map();
+  if (!n) return map;
+  const sorted = [...values].sort((a, b) => a - b);
+  let i = 0;
+  while (i < n) {
+    let j = i;
+    while (j < n && sorted[j] === sorted[i]) j++;
+    const below = i;
+    const equal = j - i;
+    map.set(sorted[i], round1((below + equal / 2) / n * 100));
+    i = j;
+  }
+  return map;
+}
+__name(percentileMap, "percentileMap");
+function today() {
+  return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+}
+__name(today, "today");
+async function fetchInputs(env) {
+  const q = /* @__PURE__ */ __name(async (sql) => (await env.DB.prepare(sql).all()).results || [], "q");
+  const products = await q(
+    "SELECT id, slug, title_en FROM products WHERE is_active = 1 ORDER BY id"
+  );
+  const costRows = await q(
+    "SELECT product_id, production_cost_thb, modeled_price_thb, cost_source, is_estimate, effective_from FROM cost_model_products ORDER BY product_id, effective_from DESC, CASE WHEN cost_source = 'verified' THEN 1 ELSE 0 END DESC, id DESC"
+  );
+  const costByProduct = /* @__PURE__ */ new Map();
+  for (const r of costRows) {
+    if (!costByProduct.has(r.product_id)) costByProduct.set(r.product_id, r);
+  }
+  const salesByProduct = await q(
+    "SELECT product_id, COUNT(DISTINCT CASE WHEN order_day >= date('now','-90 day') THEN sales_order_id END) AS cur90_orders, SUM(CASE WHEN order_day >= date('now','-90 day') THEN quantity ELSE 0 END) AS cur90_units, COUNT(DISTINCT CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN sales_order_id END) AS prev90_orders, SUM(CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN quantity ELSE 0 END) AS prev90_units, COUNT(DISTINCT sales_order_id) AS all_orders, SUM(quantity) AS all_units, MAX(order_day) AS last_order_day FROM analysis_active_items WHERE product_id IS NOT NULL GROUP BY product_id"
+  );
+  const salesByChannel = await q(
+    "SELECT product_id, channel_norm AS channel, SUM(CASE WHEN order_day >= date('now','-90 day') THEN quantity ELSE 0 END) AS cur90_units, SUM(CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN quantity ELSE 0 END) AS prev90_units, SUM(quantity) AS all_units FROM analysis_active_items WHERE product_id IS NOT NULL GROUP BY product_id, channel_norm"
+  );
+  const channelTrend = await q(
+    "SELECT channel_norm AS channel, COUNT(DISTINCT CASE WHEN order_day >= date('now','-90 day') THEN id END) AS cur90_orders, COUNT(DISTINCT CASE WHEN order_day < date('now','-90 day') AND order_day >= date('now','-180 day') THEN id END) AS prev90_orders FROM analysis_commercial_orders GROUP BY channel_norm"
+  );
+  const ga4ByProduct = await q(
+    "SELECT product_id, SUM(sessions) AS sessions FROM ga4_funnel_daily WHERE property_scope = 'website' AND product_id IS NOT NULL AND report_date >= date('now','-28 day') GROUP BY product_id"
+  );
+  const ga4Health = (await q(
+    "SELECT MAX(report_date) AS max_date, SUM(sessions) AS total_sessions, SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END) AS mapped_sessions FROM ga4_funnel_daily WHERE property_scope = 'website'"
+  ))[0] || {};
+  const ga4EtsyByProduct = await q(
+    "SELECT m.product_id AS product_id, SUM(g.sessions) AS sessions FROM ga4_funnel_daily g JOIN etsy_listing_master m ON m.listing_id = g.listing_id WHERE g.property_scope = 'etsy' AND m.product_id IS NOT NULL AND g.report_date >= date('now','-28 day') GROUP BY m.product_id"
+  );
+  const ga4EtsyHealth = (await q(
+    "SELECT MAX(g.report_date) AS max_date, SUM(g.sessions) AS total_sessions, SUM(CASE WHEN m.product_id IS NOT NULL THEN g.sessions ELSE 0 END) AS mapped_sessions FROM ga4_funnel_daily g LEFT JOIN etsy_listing_master m ON m.listing_id = g.listing_id WHERE g.property_scope = 'etsy'"
+  ))[0] || {};
+  const gscByProduct = await q(
+    "SELECT product_id, SUM(clicks) AS clicks, SUM(impressions) AS impressions FROM gsc_search_daily WHERE product_id IS NOT NULL AND report_date >= date('now','-28 day') GROUP BY product_id"
+  );
+  const gscHealth = (await q(
+    "SELECT MAX(report_date) AS max_date, SUM(clicks) AS total_clicks, SUM(CASE WHEN product_id IS NOT NULL THEN clicks ELSE 0 END) AS mapped_clicks FROM gsc_search_daily"
+  ))[0] || {};
+  const feeRows = await q(
+    "SELECT channel, marketplace_fee_pct, payment_fee_pct, payment_fee_fixed_thb, other_fee_thb_per_order, effective_from FROM cost_model_channel_fees ORDER BY channel, effective_from DESC, id DESC"
+  );
+  const shipRows = await q(
+    "SELECT channel, avg_shipping_cost_thb, effective_from FROM cost_model_shipping ORDER BY channel, effective_from DESC, id DESC"
+  );
+  const feeByChannel = /* @__PURE__ */ new Map();
+  for (const r of feeRows) if (!feeByChannel.has(r.channel)) feeByChannel.set(r.channel, r);
+  const shipByChannel = /* @__PURE__ */ new Map();
+  for (const r of shipRows) if (!shipByChannel.has(r.channel)) shipByChannel.set(r.channel, r);
+  return {
+    products,
+    costByProduct,
+    salesByProduct,
+    salesByChannel,
+    channelTrend,
+    ga4ByProduct: new Map(ga4ByProduct.map((r) => [r.product_id, r.sessions || 0])),
+    ga4EtsyByProduct: new Map(ga4EtsyByProduct.map((r) => [r.product_id, r.sessions || 0])),
+    gscByProduct: new Map(gscByProduct.map((r) => [r.product_id, r.clicks || 0])),
+    ga4Health,
+    ga4EtsyHealth,
+    gscHealth,
+    feeByChannel,
+    shipByChannel
+  };
+}
+__name(fetchInputs, "fetchInputs");
+function daysSince(dateStr, now) {
+  if (!dateStr) return null;
+  const d = Math.floor((Date.parse(now + "T00:00:00Z") - Date.parse(dateStr + "T00:00:00Z")) / 864e5);
+  return Number.isFinite(d) ? d : null;
+}
+__name(daysSince, "daysSince");
+function buildReasons(row, scope) {
+  const parts = [];
+  const c = row.components_json;
+  if (row.score !== null && row.score !== void 0) {
+    parts.push(`Score ${round1(row.score)}/100 (rank ${row.rank} in scope ${scope}, available weight ${row.available_weight} of 100)`);
+  } else {
+    parts.push("INSUFFICIENT_DATA \u2014 no score issued");
+  }
+  if (c.momentum && c.momentum.raw !== null && c.momentum.raw !== void 0) {
+    parts.push(`momentum ${c.momentum.raw >= 0 ? "+" : ""}${round1(c.momentum.raw * 100)}% 90d units (w${c.momentum.weight}, p${c.momentum.normalized})`);
+  }
+  if (c.profitability && c.profitability.raw !== null && c.profitability.raw !== void 0) {
+    parts.push(`MODELED margin ${round1(c.profitability.raw)}% ESTIMATED (w${c.profitability.weight}, p${c.profitability.normalized})`);
+  }
+  if (c.channel_fit && c.channel_fit.raw !== null && c.channel_fit.raw !== void 0) {
+    parts.push(`channel fit ${c.channel_fit.raw_desc || c.channel_fit.raw} (w${c.channel_fit.weight}, p${c.channel_fit.normalized})`);
+  }
+  if (c.demand && c.demand.raw !== null && c.demand.raw !== void 0) {
+    parts.push(`demand p${c.demand.normalized} ${c.demand.sources || ""} (w${c.demand.weight})`);
+  }
+  if (row.missing_components) parts.push(`missing: ${row.missing_components} (weight redistributed, never zero)`);
+  parts.push(`confidence ${round1(row.confidence)} (${row.tier})`);
+  return parts.join("; ");
+}
+__name(buildReasons, "buildReasons");
+function confidenceScore(opts) {
+  let c = 100;
+  const notes = [];
+  c -= CONF_MODEL.modeled_margin_basis;
+  notes.push("modeled margin basis -15");
+  if (opts.usedGa4 && Number.isFinite(opts.ga4MappedShare)) {
+    const d = round1(CONF_MODEL.demand_mapping_max * (1 - opts.ga4MappedShare));
+    if (d > 0) {
+      c -= d;
+      notes.push(`GA4 unmapped -${d}`);
+    }
+  }
+  if (opts.usedGsc && Number.isFinite(opts.gscMappedShare)) {
+    const d = round1(CONF_MODEL.demand_mapping_max * (1 - opts.gscMappedShare));
+    if (d > 0) {
+      c -= d;
+      notes.push(`GSC unmapped -${d}`);
+    }
+  }
+  if (opts.usedGa4Etsy && Number.isFinite(opts.ga4EtsyMappedShare)) {
+    const d = round1(CONF_MODEL.demand_mapping_max * (1 - opts.ga4EtsyMappedShare));
+    if (d > 0) {
+      c -= d;
+      notes.push(`GA4 Etsy unmapped -${d}`);
+    }
+  }
+  if (opts.usedGa4 && opts.ga4AgeDays !== null && opts.ga4AgeDays > CONF_MODEL.ga4_stale_after_days) {
+    c -= 5;
+    notes.push(`GA4 stale ${opts.ga4AgeDays}d -5`);
+  }
+  if (opts.usedGa4Etsy && opts.ga4EtsyAgeDays !== null && opts.ga4EtsyAgeDays > CONF_MODEL.ga4_stale_after_days) {
+    c -= 5;
+    notes.push(`GA4 Etsy stale ${opts.ga4EtsyAgeDays}d -5`);
+  }
+  if (opts.usedGsc && opts.gscAgeDays !== null && opts.gscAgeDays > CONF_MODEL.gsc_stale_after_days) {
+    c -= 5;
+    notes.push(`GSC stale ${opts.gscAgeDays}d -5`);
+  }
+  const staleDays = daysSince(opts.lastOrderDay, opts.now);
+  if (staleDays !== null && staleDays > CONF_MODEL.product_stale_block) {
+    const d = Math.min(15, Math.floor(staleDays / CONF_MODEL.product_stale_block) * 5);
+    if (d > 0) {
+      c -= d;
+      notes.push(`last order ${staleDays}d ago -${d}`);
+    }
+  }
+  const ao = Number(opts.allOrders) || 0;
+  if (ao < 2) {
+    c -= 15;
+    notes.push("volume <2 orders -15");
+  } else if (ao < CONF_MODEL.low_volume_orders) {
+    c -= 10;
+    notes.push(`volume ${ao} orders -10`);
+  }
+  if (!opts.hasProfitability) {
+    c -= CONF_MODEL.profitability_missing;
+    notes.push("no modeled margin -10");
+  }
+  return { confidence: Math.max(0, Math.min(100, round1(c))), notes: notes.join(", ") };
+}
+__name(confidenceScore, "confidenceScore");
+function demandSubWeights(weights) {
+  const ga4 = Math.max(0, Math.min(1, (Number(weights?.demand_ga4) || 80) / 100));
+  const gscDefault = 100 - ga4 * 100;
+  const gsc = Math.max(0, Math.min(1, Number(weights?.demand_gsc ?? gscDefault) / 100));
+  return { ga4, gsc };
+}
+__name(demandSubWeights, "demandSubWeights");
+function scoreRows(inputs, weights, now) {
+  const W = weights;
+  const DW = demandSubWeights(W);
+  const ga4MappedShare = (Number(inputs.ga4Health.mapped_sessions) || 0) / Math.max(1, Number(inputs.ga4Health.total_sessions) || 1);
+  const gscMappedShare = (Number(inputs.gscHealth.mapped_clicks) || 0) / Math.max(1, Number(inputs.gscHealth.total_clicks) || 1);
+  const ga4AgeDays = daysSince((inputs.ga4Health.max_date || "").slice(0, 10), now);
+  const gscAgeDays = daysSince((inputs.gscHealth.max_date || "").slice(0, 10), now);
+  const ga4EtsyMappedShare = (Number(inputs.ga4EtsyHealth.mapped_sessions) || 0) / Math.max(1, Number(inputs.ga4EtsyHealth.total_sessions) || 1);
+  const ga4EtsyAgeDays = daysSince((inputs.ga4EtsyHealth.max_date || "").slice(0, 10), now);
+  const rows = [];
+  for (const p of inputs.products) {
+    const sales = inputs.salesByProduct.find((r) => r.product_id === p.id) || null;
+    const cost = inputs.costByProduct.get(p.id) || null;
+    const allUnits = Number(sales?.all_units) || 0;
+    const channels = inputs.salesByChannel.filter((r) => r.product_id === p.id && (Number(r.all_units) || 0) > 0);
+    const cur90 = Number(sales?.cur90_units) || 0;
+    const prev90 = Number(sales?.prev90_units) || 0;
+    let momentumRaw = null, momentumFlag = null;
+    if (prev90 > 0) momentumRaw = (cur90 - prev90) / prev90;
+    else if (cur90 > 0) momentumFlag = "insufficient_history";
+    else momentumFlag = "no_recent_sales";
+    let profitRaw = null;
+    const unitCost = Number(cost?.production_cost_thb) || 0;
+    const modeledPrice = Number(cost?.modeled_price_thb) || 0;
+    if (unitCost > 0 && modeledPrice > 0) profitRaw = (modeledPrice - unitCost) / modeledPrice * 100;
+    const channelCount = channels.length;
+    const channelFitRaw = channelCount > 0 ? channelCount : null;
+    const ga4Sessions = inputs.ga4ByProduct.get(p.id) || 0;
+    const gscClicks = inputs.gscByProduct.get(p.id) || 0;
+    const usedGa4 = ga4Sessions > 0;
+    const usedGsc = gscClicks > 0;
+    rows.push({
+      product_id: p.id,
+      slug: p.slug,
+      title: p.title_en,
+      channel: "",
+      _raw: {
+        momentum: momentumRaw,
+        momentumFlag,
+        profitability: profitRaw,
+        channel_fit: channelFitRaw,
+        channel_fit_desc: `${channelCount} channel(s)`,
+        demand_ga4: usedGa4 ? ga4Sessions : null,
+        demand_gsc: usedGsc ? gscClicks : null,
+        usedGa4,
+        usedGsc
+      },
+      _meta: {
+        all_orders: Number(sales?.all_orders) || 0,
+        last_order_day: sales?.last_order_day || null,
+        has_profitability: profitRaw !== null,
+        cur90,
+        prev90
+      }
+    });
+    for (const ch of channels) {
+      const cCur = Number(ch.cur90_units) || 0;
+      const cPrev = Number(ch.prev90_units) || 0;
+      let chMomentum = null, chMomentumFlag = null;
+      if (cPrev > 0) chMomentum = (cCur - cPrev) / cPrev;
+      else if (cCur > 0) chMomentumFlag = "insufficient_history";
+      else chMomentumFlag = "no_recent_sales";
+      let chProfit = null, chProfitFlag = null;
+      if (unitCost > 0 && modeledPrice > 0) {
+        const fee = inputs.feeByChannel.get(ch.channel);
+        const ship = inputs.shipByChannel.get(ch.channel);
+        if (fee && ship) {
+          const feesAbs = modeledPrice * ((Number(fee.marketplace_fee_pct) || 0) + (Number(fee.payment_fee_pct) || 0)) / 100 + (Number(fee.payment_fee_fixed_thb) || 0) + (Number(fee.other_fee_thb_per_order) || 0);
+          chProfit = (modeledPrice - unitCost - feesAbs - Number(ship.avg_shipping_cost_thb)) / modeledPrice * 100;
+        } else {
+          chProfitFlag = !fee ? "channel_fees_missing" : "channel_shipping_missing";
+        }
+      }
+      const etsySessions = inputs.ga4EtsyByProduct.get(p.id) || 0;
+      let chDemand = null;
+      let chDemandFlag = null;
+      let chUsedGa4Etsy = false;
+      if (ch.channel === "website") {
+        chDemand = usedGa4 ? ga4Sessions : null;
+      } else if (ch.channel === "etsy") {
+        if (etsySessions > 0) {
+          chDemand = etsySessions;
+          chUsedGa4Etsy = true;
+        } else {
+          chDemandFlag = "demand_etsy_unmapped";
+        }
+      } else {
+        chDemandFlag = "demand_not_tracked";
+      }
+      rows.push({
+        product_id: p.id,
+        slug: p.slug,
+        title: p.title_en,
+        channel: ch.channel,
+        _raw: {
+          momentum: chMomentum,
+          momentumFlag: chMomentumFlag,
+          profitability: chProfit,
+          profitabilityFlag: chProfitFlag,
+          channel_fit: cCur > 0 ? cCur : null,
+          channel_fit_desc: `${cCur} units 90d in ${ch.channel}`,
+          demand_ga4: chDemand,
+          demand_gsc: null,
+          usedGa4: ch.channel === "website" && chDemand !== null,
+          usedGa4Etsy: chUsedGa4Etsy,
+          usedGsc: false,
+          demandFlag: chDemandFlag
+        },
+        _meta: {
+          all_orders: Number(sales?.all_orders) || 0,
+          last_order_day: sales?.last_order_day || null,
+          has_profitability: chProfit !== null,
+          cur90: cCur,
+          prev90: cPrev
+        }
+      });
+    }
+  }
+  const pctPool = /* @__PURE__ */ __name((scopeFilter, getVal) => percentileMap(
+    rows.filter((r) => scopeFilter(r) && getVal(r) !== null && getVal(r) !== void 0).map(getVal)
+  ), "pctPool");
+  const pools = {};
+  for (const scope of ["overall", ...new Set(rows.map((r) => r.channel))]) {
+    const inScope = /* @__PURE__ */ __name((r) => scope === "overall" ? r.channel === "" : r.channel === scope, "inScope");
+    pools[scope] = {
+      momentum: pctPool(inScope, (r) => r._raw.momentum),
+      profitability: pctPool(inScope, (r) => r._raw.profitability),
+      channel_fit: pctPool(inScope, (r) => r._raw.channel_fit),
+      demand_ga4: pctPool(inScope, (r) => r._raw.demand_ga4),
+      demand_gsc: pctPool(inScope, (r) => r._raw.demand_gsc)
+    };
+  }
+  const scored = [];
+  for (const r of rows) {
+    const scope = r.channel === "" ? "overall" : r.channel;
+    const P = pools[scope];
+    const components = {};
+    const missing = [];
+    let availableWeight = 0;
+    let weighted = 0;
+    const addComponent = /* @__PURE__ */ __name((name, raw, normalized, flags2) => {
+      components[name] = { raw: raw === null ? null : round1(raw), normalized, weight: W[name], flags: flags2 || null };
+      if (normalized === null || normalized === void 0) {
+        missing.push(flags2 ? `${name}:${flags2}` : name);
+      } else {
+        availableWeight += W[name];
+        weighted += W[name] * normalized;
+      }
+    }, "addComponent");
+    if (r._raw.momentum !== null) {
+      addComponent("momentum", r._raw.momentum, P.momentum.get(r._raw.momentum) ?? null, null);
+    } else {
+      addComponent("momentum", null, null, r._raw.momentumFlag || "insufficient_data");
+    }
+    if (r._raw.profitability !== null) {
+      addComponent("profitability", r._raw.profitability, P.profitability.get(r._raw.profitability) ?? null, null);
+    } else {
+      addComponent("profitability", null, null, r._raw.profitabilityFlag || "not_derivable");
+    }
+    if (r._raw.channel_fit !== null) {
+      const norm = P.channel_fit.get(r._raw.channel_fit) ?? null;
+      components.channel_fit = { raw: r._raw.channel_fit, raw_desc: r._raw.channel_fit_desc, normalized: norm, weight: W.channel_fit, flags: null };
+      if (norm === null) missing.push("channel_fit");
+      else {
+        availableWeight += W.channel_fit;
+        weighted += W.channel_fit * norm;
+      }
+    } else {
+      components.channel_fit = { raw: null, normalized: null, weight: W.channel_fit, flags: "no_channel_data" };
+      missing.push("channel_fit:no_channel_data");
+    }
+    const demandParts = [];
+    let demandNorm = null;
+    if (r._raw.demand_ga4 !== null) {
+      const n = P.demand_ga4.get(r._raw.demand_ga4) ?? null;
+      if (n !== null) demandParts.push({ n, w: DW.ga4, src: r._raw.usedGa4Etsy ? "GA4_Etsy" : "GA4" });
+    }
+    if (r._raw.demand_gsc !== null && r.channel === "") {
+      const n = P.demand_gsc.get(r._raw.demand_gsc) ?? null;
+      if (n !== null) demandParts.push({ n, w: DW.gsc, src: "GSC" });
+    }
+    if (demandParts.length) {
+      const wsum = demandParts.reduce((s, x) => s + x.w, 0);
+      demandNorm = round1(demandParts.reduce((s, x) => s + x.n * x.w, 0) / wsum);
+      components.demand = {
+        raw: null,
+        normalized: demandNorm,
+        weight: W.demand,
+        sources: demandParts.map((x) => x.src).join("+"),
+        flags: null
+      };
+      availableWeight += W.demand;
+      weighted += W.demand * demandNorm;
+    } else {
+      components.demand = { raw: null, normalized: null, weight: W.demand, flags: r._raw.demandFlag || "no_demand_signal" };
+      missing.push(`demand:${r._raw.demandFlag || "no_demand_signal"}`);
+    }
+    components.strategic = { raw: null, normalized: null, weight: W.strategic, flags: "strategic_undefined" };
+    missing.push("strategic:strategic_undefined");
+    components.conversion = { raw: null, normalized: null, weight: W.conversion, flags: "conversion_weight_zero" };
+    if (W.conversion > 0) missing.push("conversion:not_tracked_v1");
+    const conf = confidenceScore({
+      usedGa4: r._raw.usedGa4,
+      usedGsc: r._raw.usedGsc,
+      usedGa4Etsy: r._raw.usedGa4Etsy,
+      ga4MappedShare,
+      gscMappedShare,
+      ga4AgeDays,
+      gscAgeDays,
+      ga4EtsyMappedShare,
+      ga4EtsyAgeDays,
+      lastOrderDay: r._meta.last_order_day,
+      now,
+      allOrders: r._meta.all_orders,
+      hasProfitability: r._meta.has_profitability
+    });
+    let score = null, tier = "INSUFFICIENT_DATA";
+    if (availableWeight > 0) {
+      score = round1(weighted / availableWeight);
+      if (conf.confidence < TIER.low) {
+        score = null;
+        tier = "INSUFFICIENT_DATA";
+      } else if (score >= TIER.high) tier = "HIGH";
+      else if (score >= TIER.medium) tier = "MEDIUM";
+      else tier = "LOW";
+    }
+    scored.push({
+      product_id: r.product_id,
+      slug: r.slug,
+      title: r.title,
+      channel: r.channel,
+      score,
+      tier,
+      confidence: conf.confidence,
+      confidence_notes: conf.notes,
+      components_json: components,
+      available_weight: availableWeight,
+      missing_components: missing.join(","),
+      scope,
+      _meta: r._meta
+    });
+  }
+  for (const scope of new Set(scored.map((r) => r.scope))) {
+    const inScope = scored.filter((r) => r.scope === scope).sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.product_id - b.product_id);
+    inScope.forEach((r, i) => {
+      r.rank = r.score !== null ? i + 1 : null;
+    });
+  }
+  return scored;
+}
+__name(scoreRows, "scoreRows");
+async function persistRow(env, row, scoreDate, modelVersion, computedAt) {
+  const compJson = JSON.stringify(row.components_json);
+  await env.DB.prepare(
+    "INSERT INTO opportunity_scores (score_date, score_model_version, product_id, channel, score, rank, tier, confidence, components_json, available_weight, missing_components, reasons, computed_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13) ON CONFLICT(score_date, score_model_version, product_id, channel) DO UPDATE SET score = ?5, rank = ?6, tier = ?7, confidence = ?8, components_json = ?9, available_weight = ?10, missing_components = ?11, reasons = ?12, computed_at = ?13, updated_at = CURRENT_TIMESTAMP"
+  ).bind(
+    scoreDate,
+    modelVersion,
+    row.product_id,
+    row.channel,
+    row.score,
+    row.rank,
+    row.tier,
+    row.confidence,
+    compJson,
+    row.available_weight,
+    row.missing_components,
+    row.reasons,
+    computedAt
+  ).run();
+}
+__name(persistRow, "persistRow");
+async function loadModel(env) {
+  const row = await env.DB.prepare(
+    "SELECT model_version, weights_json FROM opportunity_score_models ORDER BY created_at DESC, model_version DESC"
+  ).first();
+  if (row) {
+    try {
+      return { model_version: row.model_version, weights: { ...DEFAULT_WEIGHTS, ...JSON.parse(row.weights_json) } };
+    } catch {
+    }
+  }
+  return { model_version: DEFAULT_MODEL_VERSION, weights: DEFAULT_WEIGHTS };
+}
+__name(loadModel, "loadModel");
+async function recomputeOpportunityScores(env, opts = {}) {
+  const dryRun = !!opts.dryRun;
+  const now = today();
+  const computedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const model = await loadModel(env);
+  const inputs = await fetchInputs(env);
+  const scored = scoreRows(inputs, model.weights, now);
+  for (const r of scored) {
+    r.reasons = buildReasons(r, r.scope === "overall" ? "product overall" : r.scope);
+  }
+  if (!dryRun) {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS opportunity_scores (id INTEGER PRIMARY KEY AUTOINCREMENT, score_date TEXT NOT NULL, score_model_version TEXT NOT NULL, product_id INTEGER NOT NULL, channel TEXT NOT NULL DEFAULT '', score REAL, rank INTEGER, tier TEXT NOT NULL, confidence REAL, components_json TEXT NOT NULL DEFAULT '{}', available_weight REAL NOT NULL DEFAULT 0, missing_components TEXT NOT NULL DEFAULT '', reasons TEXT NOT NULL DEFAULT '', computed_at TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(score_date, score_model_version, product_id, channel))"
+    ).run();
+    for (const r of scored) await persistRow(env, r, now, model.model_version, computedAt);
+  }
+  const overall = scored.filter((r) => r.channel === "");
+  return {
+    ok: true,
+    dry_run: dryRun,
+    score_date: now,
+    computed_at: computedAt,
+    model_version: model.model_version,
+    weights: model.weights,
+    rows_total: scored.length,
+    overall_rows: overall.length,
+    channel_rows: scored.length - overall.length,
+    scored_count: scored.filter((r) => r.score !== null).length,
+    insufficient_count: scored.filter((r) => r.score === null).length,
+    source_health: {
+      ga4: { scope: "website", mapped_share: inputs.ga4Health.total_sessions ? Math.round(inputs.ga4Health.mapped_sessions / inputs.ga4Health.total_sessions * 1e3) / 10 : null, latest: inputs.ga4Health.max_date },
+      ga4_etsy: { scope: "etsy", mapped_share: inputs.ga4EtsyHealth.total_sessions ? Math.round(inputs.ga4EtsyHealth.mapped_sessions / inputs.ga4EtsyHealth.total_sessions * 1e3) / 10 : null, latest: inputs.ga4EtsyHealth.max_date },
+      gsc: { mapped_share: inputs.gscHealth.total_clicks ? Math.round(inputs.gscHealth.mapped_clicks / inputs.gscHealth.total_clicks * 1e3) / 10 : null, latest: inputs.gscHealth.max_date }
+    },
+    demand_sub_weights: {
+      ga4: Math.round(demandSubWeights(model.weights).ga4 * 100),
+      gsc: Math.round(demandSubWeights(model.weights).gsc * 100)
+    },
+    preview: dryRun ? scored : void 0
+  };
+}
+__name(recomputeOpportunityScores, "recomputeOpportunityScores");
+
+// ../workers/api/admin-opportunity.ts
 function json5(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -7227,6 +7854,74 @@ function err(code, message, status = 400) {
   return json5({ success: false, error_code: code, message }, status);
 }
 __name(err, "err");
+async function getOpportunity(env) {
+  const model = await loadModel(env);
+  let latest = null;
+  try {
+    latest = await env.DB.prepare(
+      "SELECT score_date, computed_at, COUNT(*) AS rows_n, SUM(CASE WHEN score IS NOT NULL THEN 1 ELSE 0 END) AS scored_n, SUM(CASE WHEN score IS NULL THEN 1 ELSE 0 END) AS insufficient_n FROM opportunity_scores WHERE score_model_version = ?1 GROUP BY score_date ORDER BY score_date DESC LIMIT 1"
+    ).bind(model.model_version).first();
+  } catch {
+    latest = null;
+  }
+  let rows = [];
+  if (latest) {
+    const res = await env.DB.prepare(
+      "SELECT o.product_id, p.slug, p.title_en, o.channel, o.score, o.rank, o.tier, o.confidence, o.components_json, o.available_weight, o.missing_components, o.reasons FROM opportunity_scores o JOIN products p ON p.id = o.product_id WHERE o.score_model_version = ?1 AND o.score_date = ?2 ORDER BY CASE WHEN o.channel = '' THEN 0 ELSE 1 END, o.channel, o.rank, o.product_id"
+    ).bind(model.model_version, latest.score_date).all();
+    rows = res.results || [];
+  }
+  const overall = rows.filter((r) => r.channel === "");
+  const byChannel = rows.filter((r) => r.channel !== "");
+  return json5({
+    success: true,
+    model_version: model.model_version,
+    weights: model.weights,
+    latest_score_date: latest ? latest.score_date : null,
+    computed_at: latest ? latest.computed_at : null,
+    row_counts: latest ? { total: latest.rows_n, scored: latest.scored_n, insufficient: latest.insufficient_n } : null,
+    note: "Scores are normalized per available component weight (missing components never count as zero). Profitability is MODELED margin (Phase 13 formula-derived, ESTIMATED) \u2014 never realized per-product margin. Tier grades the score (HIGH >=70, MEDIUM >=45, LOW >=25) and is issued only when confidence >= 25; otherwise INSUFFICIENT_DATA (no score).",
+    overall,
+    by_channel: byChannel
+  });
+}
+__name(getOpportunity, "getOpportunity");
+async function recomputeOpportunityHandler(request, env) {
+  let body = null;
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const dryRun = body && body.dry_run === true;
+  try {
+    const report = await recomputeOpportunityScores(env, { dryRun });
+    return json5({ success: true, ...report });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    if (msg.includes("no such table") || msg.includes("no such view")) {
+      return err("OPPORTUNITY_VIEWS_MISSING", "Opportunity engine inputs not found \u2014 apply migrations 042/046/048/053/054 first.", 500);
+    }
+    return err("RECOMPUTE_FAILED", msg, 500);
+  }
+}
+__name(recomputeOpportunityHandler, "recomputeOpportunityHandler");
+
+// ../workers/api/admin-analysis.ts
+function json6(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    }
+  });
+}
+__name(json6, "json");
+function err2(code, message, status = 400) {
+  return json6({ success: false, error_code: code, message }, status);
+}
+__name(err2, "err");
 function isProductionHost6(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -7331,7 +8026,7 @@ var MAPPING_STATUSES = /* @__PURE__ */ new Set(["Mapped", "Partial", "Unmapped",
 var MAX_LIMIT = 200;
 var DEFAULT_LIMIT = 50;
 function parseFilters(url) {
-  const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err(code, msg) }), "bad");
+  const bad = /* @__PURE__ */ __name((code, msg) => ({ ok: false, res: err2(code, msg) }), "bad");
   const start = (url.searchParams.get("start") || "").trim() || null;
   if (start && !DATE_RE5.test(start)) return bad("INVALID_START_DATE", "start must be YYYY-MM-DD.");
   const end = (url.searchParams.get("end") || "").trim() || null;
@@ -7416,7 +8111,7 @@ async function getSummary(env, f) {
   const orders = Number(row?.orders || 0);
   const revenue = row?.order_revenue === null || row?.order_revenue === void 0 ? null : Number(row.order_revenue);
   const items = Number(row?.exact_items || 0) + Number(row?.unallocated_items || 0);
-  return json5({
+  return json6({
     success: true,
     filters: { start: f.start, end: f.end, channel: f.channel },
     summary: {
@@ -7479,7 +8174,7 @@ async function getSales(env, f) {
      ORDER BY ai.order_day DESC, ai.sales_order_id DESC, ai.id
      LIMIT ? OFFSET ?`
   ).bind(...binds, f.limit, f.offset).all();
-  return json5({
+  return json6({
     success: true,
     filters: {
       start: f.start,
@@ -7547,7 +8242,7 @@ async function getProducts(env, f) {
       growth_vs_previous_28d: trendMap[k]?.growth_vs_previous ?? null
     };
   });
-  return json5({
+  return json6({
     success: true,
     filters: { start: f.start, end: f.end, channel: f.channel },
     products: out
@@ -7555,12 +8250,12 @@ async function getProducts(env, f) {
 }
 __name(getProducts, "getProducts");
 async function getProductDetail(env, idRaw) {
-  if (!/^\d{1,9}$/.test(idRaw)) return err("INVALID_PRODUCT_ID", "product id must be a positive integer.");
+  if (!/^\d{1,9}$/.test(idRaw)) return err2("INVALID_PRODUCT_ID", "product id must be a positive integer.");
   const pid = Number(idRaw);
   const product = await env.DB.prepare(
     `SELECT id, slug, title_en, product_type, is_active FROM products WHERE id = ?`
   ).bind(pid).first();
-  if (!product) return err("PRODUCT_NOT_FOUND", "No product with id " + pid + ".", 404);
+  if (!product) return err2("PRODUCT_NOT_FOUND", "No product with id " + pid + ".", 404);
   const participation = await env.DB.prepare(
     `SELECT orders_containing_product, quantity, exact_revenue, exact_items, total_items, channel_count
      FROM analysis_product_participation WHERE product_id = ?`
@@ -7586,7 +8281,7 @@ async function getProductDetail(env, idRaw) {
     ...r,
     attach_rate_pct: anchorOrders > 0 ? Math.round(Number(r.co_orders) / anchorOrders * 1e3) / 10 : null
   }));
-  return json5({
+  return json6({
     success: true,
     product,
     participation: participation || {
@@ -7620,7 +8315,7 @@ async function getChannels(env, f) {
      GROUP BY channel_norm
      ORDER BY orders DESC, order_revenue DESC`
   ).bind(...range.binds).all();
-  return json5({
+  return json6({
     success: true,
     filters: { start: f.start, end: f.end },
     channels: rows.results || []
@@ -7782,7 +8477,7 @@ async function getGsc(env, f) {
       if (gscDays !== null && gscDays > 4) freshnessStatus = "warning";
       if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
     }
-    return json5({
+    return json6({
       success: true,
       available: true,
       filters: { start: f.start, end: f.end, product_id: f.productId },
@@ -7814,18 +8509,19 @@ async function getGsc(env, f) {
   } catch (e) {
     const msg = String(e?.message || e);
     if (msg.includes("no such table: gsc_search_daily") || msg.includes("no such table: analysis_gsc_freshness")) {
-      return json5({
+      return json6({
         success: true,
         available: false,
         message: "GSC schema is not available in this environment yet. Apply migration 046_gsc_analytics.sql.",
         filters: { start: f.start, end: f.end, product_id: f.productId }
       });
     }
-    return err("GSC_QUERY_FAILED", msg, 500);
+    return err2("GSC_QUERY_FAILED", msg, 500);
   }
 }
 __name(getGsc, "getGsc");
 async function getGa4(env, f) {
+  const GA4_SCOPE_WHERE = " AND g.property_scope = 'website' AND g.landing_page_path NOT LIKE '%/listing/%'";
   const range = dayRangeWhere(f, "g.report_date");
   const binds = [...range.binds];
   let productSql = "";
@@ -7860,7 +8556,7 @@ async function getGa4(env, f) {
          END AS purchase_rate_pct,
          COALESCE(SUM(CASE WHEN g.product_id IS NOT NULL THEN g.sessions ELSE 0 END), 0) AS mapped_sessions
        FROM ga4_funnel_daily g
-       WHERE 1=1${range.sql}${productSql}`
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}`
     ).bind(...binds).first();
     const topPages = await env.DB.prepare(
       `SELECT
@@ -7880,7 +8576,7 @@ async function getGa4(env, f) {
          END AS purchase_rate_pct
        FROM ga4_funnel_daily g
        LEFT JOIN products p ON p.id = g.product_id
-       WHERE 1=1${range.sql}${productSql}
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}
        GROUP BY g.landing_page_path, g.page_path, g.product_id, p.title_en
        ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
        LIMIT 15`
@@ -7896,7 +8592,7 @@ async function getGa4(env, f) {
          SUM(g.purchases) AS purchases,
          SUM(COALESCE(g.purchase_revenue, 0)) AS purchase_revenue
        FROM ga4_funnel_daily g
-       WHERE 1=1${range.sql}${productSql}
+       WHERE 1=1${GA4_SCOPE_WHERE}${range.sql}${productSql}
        GROUP BY source_medium
        ORDER BY SUM(g.sessions) DESC, SUM(g.purchases) DESC
        LIMIT 12`
@@ -7947,7 +8643,7 @@ async function getGa4(env, f) {
              COALESCE(SUM(g.purchases), 0) AS purchases,
              COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
            FROM ga4_funnel_daily g
-           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+           WHERE g.report_date >= ? AND g.report_date <= ?${GA4_SCOPE_WHERE}${productTrendSql}`
         ).bind(...curBinds).first();
         const prev = await env.DB.prepare(
           `SELECT
@@ -7958,7 +8654,7 @@ async function getGa4(env, f) {
              COALESCE(SUM(g.purchases), 0) AS purchases,
              COALESCE(SUM(COALESCE(g.purchase_revenue, 0)), 0) AS purchase_revenue
            FROM ga4_funnel_daily g
-           WHERE g.report_date >= ? AND g.report_date <= ?${productTrendSql}`
+           WHERE g.report_date >= ? AND g.report_date <= ?${GA4_SCOPE_WHERE}${productTrendSql}`
         ).bind(...prevBinds).first();
         const prevSessions = Number(prev?.sessions || 0);
         const prevPurchases = Number(prev?.purchases || 0);
@@ -7998,7 +8694,7 @@ async function getGa4(env, f) {
       if (ga4Days !== null && ga4Days > 3) freshnessStatus = "warning";
       if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
     }
-    return json5({
+    return json6({
       success: true,
       available: true,
       filters: { start: f.start, end: f.end, product_id: f.productId },
@@ -8036,15 +8732,15 @@ async function getGa4(env, f) {
     });
   } catch (e) {
     const msg = String(e?.message || e);
-    if (msg.includes("no such table: ga4_funnel_daily") || msg.includes("no such table: analysis_ga4_freshness")) {
-      return json5({
+    if (msg.includes("no such table: ga4_funnel_daily") || msg.includes("no such table: analysis_ga4_freshness") || msg.includes("no such column: g.property_scope")) {
+      return json6({
         success: true,
         available: false,
-        message: "GA4 schema is not available in this environment yet. Apply migration 048_ga4_analytics.sql.",
+        message: "GA4 schema is not available in this environment yet. Apply migrations 048_ga4_analytics.sql and 055_ga4_multi_property.sql.",
         filters: { start: f.start, end: f.end, product_id: f.productId }
       });
     }
-    return err("GA4_QUERY_FAILED", msg, 500);
+    return err2("GA4_QUERY_FAILED", msg, 500);
   }
 }
 __name(getGa4, "getGa4");
@@ -8225,7 +8921,7 @@ async function getEtsy(env, f) {
       if (etsyDays !== null && etsyDays > 7) freshnessStatus = "warning";
       if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
     }
-    return json5({
+    return json6({
       success: true,
       available: true,
       filters: { start: f.start, end: f.end, product_id: f.productId },
@@ -8270,14 +8966,14 @@ async function getEtsy(env, f) {
   } catch (e) {
     const msg = String(e?.message || e);
     if (msg.includes("no such table: etsy_listing_daily") || msg.includes("no such table: etsy_listing_master") || msg.includes("no such table: analysis_etsy_freshness")) {
-      return json5({
+      return json6({
         success: true,
         available: false,
         message: "Etsy schema is not available in this environment yet. Apply migration 049_etsy_analytics.sql.",
         filters: { start: f.start, end: f.end, product_id: f.productId }
       });
     }
-    return err("ETSY_QUERY_FAILED", msg, 500);
+    return err2("ETSY_QUERY_FAILED", msg, 500);
   }
 }
 __name(getEtsy, "getEtsy");
@@ -8482,7 +9178,7 @@ async function getGoogleAds(env, f) {
       if (googleAdsDays !== null && googleAdsDays > 4) freshnessStatus = "warning";
       if (latestSyncStatus && ["failed", "partial", "error"].includes(latestSyncStatus)) freshnessStatus = "warning";
     }
-    return json5({
+    return json6({
       success: true,
       available: true,
       filters: { start: f.start, end: f.end, product_id: f.productId },
@@ -8520,20 +9216,455 @@ async function getGoogleAds(env, f) {
   } catch (e) {
     const msg = String(e?.message || e);
     if (msg.includes("no such table: google_ads_campaign_daily") || msg.includes("no such table: analysis_google_ads_freshness")) {
-      return json5({
+      return json6({
         success: true,
         available: false,
         message: "Google Ads schema is not available in this environment yet. Apply migration 050_google_ads_analytics.sql.",
         filters: { start: f.start, end: f.end, product_id: f.productId }
       });
     }
-    return err("GOOGLE_ADS_QUERY_FAILED", msg, 500);
+    return err2("GOOGLE_ADS_QUERY_FAILED", msg, 500);
   }
 }
 __name(getGoogleAds, "getGoogleAds");
+async function getGrowthSignals(env, f) {
+  const now = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const anchorDate = f.end || now;
+  const currentStart = shiftIsoDate(anchorDate, -27) || anchorDate;
+  const previousEnd = shiftIsoDate(anchorDate, -28) || anchorDate;
+  const previousStart = shiftIsoDate(anchorDate, -55) || anchorDate;
+  const pct = /* @__PURE__ */ __name((num, den) => {
+    const n2 = Number(num);
+    const d = Number(den);
+    if (!Number.isFinite(n2) || !Number.isFinite(d) || d <= 0) return null;
+    return Math.round(n2 / d * 1e3) / 10;
+  }, "pct");
+  const n = /* @__PURE__ */ __name((v) => v === null || v === void 0 ? 0 : Number(v) || 0, "n");
+  const days = /* @__PURE__ */ __name((v) => v === null || v === void 0 ? null : Number(v), "days");
+  const clamp = /* @__PURE__ */ __name((v, lo, hi) => Math.max(lo, Math.min(hi, v)), "clamp");
+  const firstOrNull = /* @__PURE__ */ __name(async (sql, binds = []) => {
+    try {
+      return await env.DB.prepare(sql).bind(...binds).first();
+    } catch (e) {
+      const msg = String(e?.message || e);
+      if (msg.includes("no such table") || msg.includes("no such view")) return null;
+      throw e;
+    }
+  }, "firstOrNull");
+  const allOrNull = /* @__PURE__ */ __name(async (sql, binds = []) => {
+    try {
+      const out = await env.DB.prepare(sql).bind(...binds).all();
+      return out.results || [];
+    } catch (e) {
+      const msg = String(e?.message || e);
+      if (msg.includes("no such table") || msg.includes("no such view")) return null;
+      throw e;
+    }
+  }, "allOrNull");
+  const productSql = f.productId !== null ? " AND product_id = ?" : "";
+  const productBind = f.productId !== null ? [f.productId] : [];
+  const salesChannelSql = f.channel ? " AND channel_norm = ?" : "";
+  const salesChannelBind = f.channel ? [f.channel] : [];
+  const ga4Cur = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(sessions), 0) AS sessions,
+       COALESCE(SUM(add_to_cart), 0) AS add_to_cart,
+       COALESCE(SUM(begin_checkout), 0) AS begin_checkout,
+       COALESCE(SUM(purchases), 0) AS purchases
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const ga4Prev = await firstOrNull(
+    `SELECT COALESCE(SUM(sessions), 0) AS sessions
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?${productSql}`,
+    [previousStart, previousEnd, ...productBind]
+  );
+  const ga4Cov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(sessions), 0) AS total_sessions,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN sessions ELSE 0 END), 0) AS mapped_sessions
+     FROM ga4_funnel_daily
+     WHERE property_scope = 'website'
+       AND report_date >= ? AND report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const ga4Fresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_ga4_freshness");
+  const gscCur = await firstOrNull(
+    `SELECT COALESCE(SUM(clicks), 0) AS clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const gscPrev = await firstOrNull(
+    `SELECT COALESCE(SUM(clicks), 0) AS clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [previousStart, previousEnd, ...productBind]
+  );
+  const gscCov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(clicks), 0) AS total_clicks,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN clicks ELSE 0 END), 0) AS mapped_clicks
+     FROM gsc_search_daily
+     WHERE report_date >= ? AND report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const gscFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_gsc_freshness");
+  const etsyProductSql = f.productId !== null ? " AND m.product_id = ?" : "";
+  const etsyCur = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(e.views), 0) AS views,
+       COALESCE(SUM(e.orders), 0) AS orders,
+       COALESCE(SUM(CASE WHEN m.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?${etsyProductSql}`,
+    [currentStart, anchorDate, ...f.productId !== null ? [f.productId] : []]
+  );
+  const etsyPrev = await firstOrNull(
+    `SELECT COALESCE(SUM(e.views), 0) AS views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?${etsyProductSql}`,
+    [previousStart, previousEnd, ...f.productId !== null ? [f.productId] : []]
+  );
+  const etsyCov = await firstOrNull(
+    `SELECT
+       COALESCE(SUM(e.views), 0) AS total_views,
+       COALESCE(SUM(CASE WHEN m.product_id IS NOT NULL THEN e.views ELSE 0 END), 0) AS mapped_views
+     FROM etsy_listing_daily e
+     LEFT JOIN etsy_listing_master m ON m.listing_id = e.listing_id
+     WHERE e.report_date >= ? AND e.report_date <= ?`,
+    [currentStart, anchorDate]
+  );
+  const etsyFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_etsy_freshness");
+  const adsCur = await firstOrNull(
+    `SELECT
+       COUNT(*) AS rows_n,
+       COALESCE(SUM(cost), 0) AS cost,
+       COALESCE(SUM(conversions), 0) AS conversions,
+       COALESCE(SUM(CASE WHEN product_id IS NOT NULL THEN cost ELSE 0 END), 0) AS mapped_cost
+     FROM google_ads_campaign_daily
+     WHERE report_date >= ? AND report_date <= ?${productSql}`,
+    [currentStart, anchorDate, ...productBind]
+  );
+  const adsFresh = await firstOrNull("SELECT latest_report_date, days_since_latest_report, total_rows FROM analysis_google_ads_freshness");
+  const salesCur = await firstOrNull(
+    `SELECT
+       COUNT(DISTINCT sales_order_id) AS orders,
+       COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
+    [currentStart, anchorDate, ...productBind, ...salesChannelBind]
+  );
+  const salesPrev = await firstOrNull(
+    `SELECT
+       COUNT(DISTINCT sales_order_id) AS orders,
+       COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
+    [previousStart, previousEnd, ...productBind, ...salesChannelBind]
+  );
+  const channelRows = await allOrNull(
+    `SELECT channel_norm, COUNT(DISTINCT sales_order_id) AS orders, COALESCE(SUM(quantity), 0) AS units
+     FROM analysis_active_items
+     WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}
+     GROUP BY channel_norm
+     ORDER BY units DESC, orders DESC`,
+    [currentStart, anchorDate, ...productBind, ...salesChannelBind]
+  );
+  const orderCov = await firstOrNull(
+    `SELECT COALESCE(SUM(mapped_orders), 0) AS mapped_orders, COALESCE(SUM(orders), 0) AS orders
+     FROM analysis_sales_daily
+     WHERE order_day >= ? AND order_day <= ?${f.channel ? " AND channel_norm = ?" : ""}`,
+    [currentStart, anchorDate, ...f.channel ? [f.channel] : []]
+  );
+  const profitCov = await firstOrNull("SELECT * FROM analysis_profit_coverage");
+  const ga4Sessions = n(ga4Cur?.sessions);
+  const ga4PrevSessions = n(ga4Prev?.sessions);
+  const gscClicks = n(gscCur?.clicks);
+  const gscPrevClicks = n(gscPrev?.clicks);
+  const etsyViews = n(etsyCur?.views);
+  const etsyPrevViews = n(etsyPrev?.views);
+  const ga4MappedPct = pct(ga4Cov?.mapped_sessions, ga4Cov?.total_sessions);
+  const gscMappedPct = pct(gscCov?.mapped_clicks, gscCov?.total_clicks);
+  const etsyMappedPct = pct(etsyCov?.mapped_views, etsyCov?.total_views);
+  const adsMappedPct = pct(adsCur?.mapped_cost, adsCur?.cost);
+  const orderMappedPct = pct(orderCov?.mapped_orders, orderCov?.orders);
+  const ga4Days = days(ga4Fresh?.days_since_latest_report);
+  const gscDays = days(gscFresh?.days_since_latest_report);
+  const etsyDays = days(etsyFresh?.days_since_latest_report);
+  const adsDays = days(adsFresh?.days_since_latest_report);
+  const signals = {};
+  const impacts = [];
+  const ga4Growth = ga4PrevSessions > 0 ? Math.round((ga4Sessions - ga4PrevSessions) * 1e3 / ga4PrevSessions) / 10 : null;
+  const gscGrowth = gscPrevClicks > 0 ? Math.round((gscClicks - gscPrevClicks) * 1e3 / gscPrevClicks) / 10 : null;
+  const etsyGrowth = etsyPrevViews > 0 ? Math.round((etsyViews - etsyPrevViews) * 1e3 / etsyPrevViews) / 10 : null;
+  const growthPool = [ga4Growth, gscGrowth, etsyGrowth].filter((v) => v !== null);
+  const blendedGrowth = growthPool.length ? Math.round(growthPool.reduce((s, v) => s + v, 0) / growthPool.length * 10) / 10 : null;
+  let demandStatus = "sufficient";
+  let demandImpact = 0;
+  const staleDemandSources = [];
+  if (ga4Sessions > 0 && ga4Days !== null && ga4Days > 10) staleDemandSources.push("ga4");
+  if (gscClicks > 0 && gscDays !== null && gscDays > 14) staleDemandSources.push("gsc");
+  if (etsyViews > 0 && etsyDays !== null && etsyDays > 7) staleDemandSources.push("etsy");
+  const hasDemandSignal = ga4Sessions > 0 || gscClicks > 0 || etsyViews > 0;
+  if (!hasDemandSignal) {
+    demandStatus = "insufficient_signal";
+    demandImpact -= 25;
+  } else if (staleDemandSources.length) {
+    demandStatus = "stale_source";
+    demandImpact -= 10;
+  } else if (ga4MappedPct !== null && ga4MappedPct < 50 || gscMappedPct !== null && gscMappedPct < 50 || etsyMappedPct !== null && etsyMappedPct < 50) {
+    demandStatus = "mapping_gap";
+    demandImpact -= 10;
+  }
+  impacts.push(demandImpact);
+  signals.demand = {
+    value: {
+      ga4_sessions_28d: ga4Sessions,
+      gsc_clicks_28d: gscClicks,
+      etsy_views_28d: etsyViews,
+      blended_growth_pct: blendedGrowth,
+      ga4_growth_pct: ga4Growth,
+      gsc_growth_pct: gscGrowth,
+      etsy_growth_pct: etsyGrowth
+    },
+    status: demandStatus,
+    coverage: {
+      ga4_mapped_session_pct: ga4MappedPct,
+      gsc_mapped_click_pct: gscMappedPct,
+      etsy_mapped_view_pct: etsyMappedPct
+    },
+    freshness_days: { ga4: ga4Days, gsc: gscDays, etsy: etsyDays },
+    confidence_impact: demandImpact,
+    reason: !hasDemandSignal ? "No measurable 28-day demand signal from GA4 website scope, GSC, or Etsy in the selected window." : staleDemandSources.length ? `Demand sources stale: ${staleDemandSources.join(", ")}.` : demandStatus === "mapping_gap" ? "Demand exists but mapped coverage is thin for at least one active source." : "Demand signal is present and mapped coverage/freshness are acceptable."
+  };
+  const curUnits = n(salesCur?.units);
+  const prevUnits = n(salesPrev?.units);
+  const curOrders = n(salesCur?.orders);
+  const prevOrders = n(salesPrev?.orders);
+  const unitGrowthPct = prevUnits > 0 ? Math.round((curUnits - prevUnits) * 1e3 / prevUnits) / 10 : null;
+  let momentumStatus = "sufficient";
+  let momentumImpact = 0;
+  if (curUnits + prevUnits <= 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 20;
+  } else if (prevUnits <= 0 && curUnits > 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 8;
+  }
+  impacts.push(momentumImpact);
+  signals.momentum = {
+    value: {
+      units_28d: curUnits,
+      units_prev_28d: prevUnits,
+      orders_28d: curOrders,
+      orders_prev_28d: prevOrders,
+      units_growth_pct: unitGrowthPct
+    },
+    status: momentumStatus,
+    coverage: {
+      mapped_order_pct: orderMappedPct,
+      window_start: currentStart,
+      window_end: anchorDate
+    },
+    freshness_days: null,
+    confidence_impact: momentumImpact,
+    reason: curUnits + prevUnits <= 0 ? "No unit activity in current and previous windows." : prevUnits <= 0 ? "Current activity exists but previous baseline is zero, so growth direction is weakly anchored." : "Momentum uses comparable 28-day windows over mapped active items."
+  };
+  const ga4Atc = n(ga4Cur?.add_to_cart);
+  const ga4Checkout = n(ga4Cur?.begin_checkout);
+  const ga4Purchases = n(ga4Cur?.purchases);
+  const ga4PurchaseRate = ga4Sessions > 0 ? Math.round(ga4Purchases * 1e3 / ga4Sessions) / 10 : null;
+  let conversionStatus = "sufficient";
+  let conversionImpact = 0;
+  if (ga4Sessions <= 0) {
+    conversionStatus = "insufficient_signal";
+    conversionImpact -= 15;
+  } else if (ga4Atc + ga4Checkout + ga4Purchases <= 0) {
+    conversionStatus = "insufficient_signal";
+    conversionImpact -= 10;
+  } else if (ga4MappedPct !== null && ga4MappedPct < 50) {
+    conversionStatus = "mapping_gap";
+    conversionImpact -= 5;
+  }
+  impacts.push(conversionImpact);
+  signals.conversion_availability = {
+    value: {
+      sessions_28d: ga4Sessions,
+      add_to_cart_28d: ga4Atc,
+      begin_checkout_28d: ga4Checkout,
+      purchases_28d: ga4Purchases,
+      purchase_rate_pct: ga4PurchaseRate
+    },
+    status: conversionStatus,
+    coverage: { ga4_mapped_session_pct: ga4MappedPct },
+    freshness_days: ga4Days,
+    confidence_impact: conversionImpact,
+    reason: ga4Sessions <= 0 ? "No GA4 website sessions in the selected window." : ga4Atc + ga4Checkout + ga4Purchases <= 0 ? "GA4 traffic exists but funnel events are sparse/absent." : conversionStatus === "mapping_gap" ? "Conversion events exist but product mapping coverage is limited." : "GA4 funnel events are available for growth diagnostics."
+  };
+  const channels = channelRows || [];
+  const totalChannelUnits = channels.reduce((s, r) => s + n(r.units), 0);
+  const topChannel = channels.length ? String(channels[0].channel_norm || "") : null;
+  const topChannelShare = totalChannelUnits > 0 ? Math.round(n(channels[0]?.units) * 1e3 / totalChannelUnits) / 10 : null;
+  let channelStatus = "sufficient";
+  let channelImpact = 0;
+  if (!channels.length) {
+    channelStatus = "insufficient_signal";
+    channelImpact -= 10;
+  } else if (channels.length === 1) {
+    channelStatus = "neutral";
+    channelImpact -= 3;
+  }
+  impacts.push(channelImpact);
+  signals.channel_context = {
+    value: {
+      active_channels_28d: channels.length,
+      top_channel: topChannel,
+      top_channel_units_share_pct: topChannelShare,
+      channel_rows: channels.slice(0, 6)
+    },
+    status: channelStatus,
+    coverage: { channel_filter: f.channel || null },
+    freshness_days: null,
+    confidence_impact: channelImpact,
+    reason: !channels.length ? "No channel-level unit activity in the selected window." : channels.length === 1 ? "Activity is concentrated in one channel; breadth signal is limited." : "Multiple channels are active, enabling channel-opportunity comparisons."
+  };
+  const hasGa4Data = n(ga4Fresh?.total_rows) > 0 || ga4Sessions > 0;
+  const hasGscData = n(gscFresh?.total_rows) > 0 || gscClicks > 0;
+  const hasEtsyData = n(etsyFresh?.total_rows) > 0 || etsyViews > 0;
+  const hasAdsData = n(adsFresh?.total_rows) > 0 || n(adsCur?.rows_n) > 0 || n(adsCur?.cost) > 0;
+  const staleSources = [];
+  if (hasGa4Data && ga4Days !== null && ga4Days > 10) staleSources.push("ga4");
+  if (hasGscData && gscDays !== null && gscDays > 14) staleSources.push("gsc");
+  if (hasEtsyData && etsyDays !== null && etsyDays > 7) staleSources.push("etsy");
+  if (hasAdsData && adsDays !== null && adsDays > 4) staleSources.push("google_ads");
+  let freshnessStatus = "sufficient";
+  let freshnessImpact = 0;
+  if (!hasGa4Data && !hasGscData && !hasEtsyData) {
+    freshnessStatus = "insufficient_signal";
+    freshnessImpact -= 20;
+  } else if (staleSources.length) {
+    freshnessStatus = "stale_source";
+    freshnessImpact -= 10;
+  }
+  impacts.push(freshnessImpact);
+  const adsNeutral = !hasAdsData || n(adsCur?.cost) <= 0 || n(adsCur?.conversions) <= 0;
+  signals.source_freshness = {
+    value: {
+      ga4_days_since_latest: ga4Days,
+      gsc_days_since_latest: gscDays,
+      etsy_days_since_latest: etsyDays,
+      google_ads_days_since_latest: adsDays
+    },
+    status: freshnessStatus,
+    coverage: {
+      ga4_available: hasGa4Data,
+      gsc_available: hasGscData,
+      etsy_available: hasEtsyData,
+      google_ads_available: hasAdsData
+    },
+    freshness_days: { ga4: ga4Days, gsc: gscDays, etsy: etsyDays, google_ads: adsDays },
+    confidence_impact: freshnessImpact,
+    reason: !hasGa4Data && !hasGscData && !hasEtsyData ? "Primary growth sources have no reported data rows yet." : staleSources.length ? `Source freshness warning: ${staleSources.join(", ")}.` : adsNeutral ? "Primary growth sources are fresh. Google Ads is operational but currently treated as neutral due to sparse/zero business signal." : "Primary growth sources are fresh."
+  };
+  const coveragePool = [ga4MappedPct, gscMappedPct, etsyMappedPct].filter((v) => v !== null);
+  const mappedAvg = coveragePool.length ? Math.round(coveragePool.reduce((s, v) => s + v, 0) / coveragePool.length * 10) / 10 : null;
+  let mappingStatus = "sufficient";
+  let mappingImpact = 0;
+  if (!coveragePool.length) {
+    mappingStatus = "insufficient_signal";
+    mappingImpact -= 15;
+  } else if (mappedAvg !== null && mappedAvg < 50) {
+    mappingStatus = "mapping_gap";
+    mappingImpact -= 15;
+  } else if (mappedAvg !== null && mappedAvg < 75) {
+    mappingStatus = "mapping_gap";
+    mappingImpact -= 8;
+  }
+  impacts.push(mappingImpact);
+  signals.mapping_coverage = {
+    value: { mapped_avg_pct: mappedAvg, order_mapped_pct_28d: orderMappedPct },
+    status: mappingStatus,
+    coverage: {
+      ga4_mapped_session_pct: ga4MappedPct,
+      gsc_mapped_click_pct: gscMappedPct,
+      etsy_mapped_view_pct: etsyMappedPct,
+      google_ads_mapped_cost_pct: adsMappedPct
+    },
+    freshness_days: null,
+    confidence_impact: mappingImpact,
+    reason: !coveragePool.length ? "No mapped coverage baseline available from active growth sources in the current window." : mappingStatus === "mapping_gap" ? "Mapped coverage is below target for at least one growth source." : "Mapped coverage is healthy for active growth sources."
+  };
+  const grossCovPct = pct(profitCov?.gross_covered_revenue, profitCov?.total_revenue);
+  const contribCovPct = pct(profitCov?.contribution_covered_revenue, profitCov?.total_revenue);
+  const fullCostOrderPct = pct(profitCov?.full_cost_orders, profitCov?.commercial_orders);
+  let guardrailImpact = 0;
+  let guardrailStatus = "secondary_guardrail";
+  if (grossCovPct !== null && grossCovPct < 50) guardrailImpact -= 5;
+  impacts.push(guardrailImpact);
+  if (!profitCov) guardrailStatus = "insufficient_signal";
+  signals.profitability_guardrail = {
+    value: {
+      gross_covered_revenue_pct: grossCovPct,
+      contribution_covered_revenue_pct: contribCovPct,
+      full_cost_order_pct: fullCostOrderPct,
+      products_with_cost: profitCov ? n(profitCov.products_with_cost) : null,
+      active_products: profitCov ? n(profitCov.active_products) : null
+    },
+    status: guardrailStatus,
+    coverage: profitCov ? {
+      products_with_cost: n(profitCov.products_with_cost),
+      active_products: n(profitCov.active_products),
+      channels_with_fees: n(profitCov.channels_with_fees),
+      channels_with_shipping: n(profitCov.channels_with_shipping)
+    } : null,
+    freshness_days: null,
+    confidence_impact: guardrailImpact,
+    reason: !profitCov ? "Profitability coverage view unavailable in this environment." : "Profitability is a secondary guardrail in Phase 13 and does not control opportunity ranking here."
+  };
+  const confidenceValue = clamp(Math.round((100 + impacts.reduce((s, v) => s + v, 0)) * 10) / 10, 0, 100);
+  signals.confidence = {
+    value: confidenceValue,
+    status: confidenceValue >= 75 ? "sufficient" : confidenceValue >= 50 ? "neutral" : "insufficient_signal",
+    coverage: {
+      signal_count: 7,
+      total_impact: impacts.reduce((s, v) => s + v, 0)
+    },
+    freshness_days: null,
+    confidence_impact: 0,
+    reason: "Confidence summarizes signal quality/coverage and source freshness; missing or immature sources reduce confidence without forcing synthetic zero values."
+  };
+  return json6({
+    success: true,
+    growth_signal_contract: "v1",
+    objective: "Build a sales-growth analytical layer that identifies demand, momentum, conversion, and channel opportunities across MildMate products and listings, while using profitability as a secondary guardrail.",
+    filters: { start: f.start, end: f.end, channel: f.channel, product_id: f.productId },
+    window: {
+      anchor_date: anchorDate,
+      current_start: currentStart,
+      current_end: anchorDate,
+      previous_start: previousStart,
+      previous_end: previousEnd
+    },
+    google_ads_policy: {
+      infrastructure: "available",
+      business_signal: adsNeutral ? "insufficient_or_sparse" : "present",
+      scoring_effect: "neutral_in_phase13",
+      reason: "Phase 13 treats Google Ads sparse/zero business signal as neutral and surfaces it via coverage/freshness/confidence metadata."
+    },
+    signals
+  });
+}
+__name(getGrowthSignals, "getGrowthSignals");
 async function getDataQuality(env) {
   const dq = await env.DB.prepare(`SELECT * FROM analysis_data_quality`).first();
-  if (!dq) return err("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
+  if (!dq) return err2("DATA_QUALITY_UNAVAILABLE", "analysis_data_quality returned no row.", 500);
   const zeroRow = await env.DB.prepare(
     `SELECT COUNT(*) AS n FROM analysis_commercial_orders WHERE order_total IS NULL OR order_total <= 0`
   ).first();
@@ -8682,7 +9813,7 @@ async function getDataQuality(env) {
   }
   const commercialOrders = Number(dq.commercial_orders || 0);
   const activeItems = Number(dq.active_items || 0);
-  return json5({
+  return json6({
     success: true,
     data_quality: {
       ...dq,
@@ -8838,10 +9969,10 @@ async function getExceptions(env, url) {
   const type = (url.searchParams.get("type") || "").trim();
   const def = EXCEPTION_TYPES[type];
   if (!def) {
-    return err("INVALID_EXCEPTION_TYPE", "type must be one of: " + Object.keys(EXCEPTION_TYPES).join(", "));
+    return err2("INVALID_EXCEPTION_TYPE", "type must be one of: " + Object.keys(EXCEPTION_TYPES).join(", "));
   }
   const rows = await env.DB.prepare(def.sql + " LIMIT 100").all();
-  return json5({
+  return json6({
     success: true,
     type,
     description: def.description,
@@ -8970,7 +10101,7 @@ async function getProfitability(env, f) {
       if (!Number.isFinite(n) || !Number.isFinite(b) || b <= 0) return null;
       return Math.round(n / b * 1e3) / 10;
     }, "pct");
-    return json5({
+    return json6({
       success: true,
       filters: { start: f.start, end: f.end, channel: f.channel },
       currency: "THB",
@@ -8990,7 +10121,7 @@ async function getProfitability(env, f) {
   } catch (e) {
     const msg = String(e?.message || e);
     if (msg.includes("no such table") || msg.includes("no such view")) {
-      return err("PROFIT_VIEWS_MISSING", "Profitability views not found \u2014 apply migration 053_profitability_layer.sql first.", 500);
+      return err2("PROFIT_VIEWS_MISSING", "Profitability views not found \u2014 apply migration 053_profitability_layer.sql first.", 500);
     }
     throw e;
   }
@@ -9001,20 +10132,25 @@ async function handleAdminAnalysis(request, env) {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
       }
     });
   }
-  if (request.method !== "GET") return err("METHOD_NOT_ALLOWED", "Only GET is supported.", 405);
-  const auth = await authorizeAdmin5(request, env);
-  if (!auth.ok) return err("UNAUTHORIZED", auth.error, auth.status);
   const url = new URL(request.url);
+  const isRecompute = request.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
+  if (request.method !== "GET" && !isRecompute) {
+    return err2("METHOD_NOT_ALLOWED", "Only GET is supported (POST only on /opportunity/recompute).", 405);
+  }
+  const auth = await authorizeAdmin5(request, env);
+  if (!auth.ok) return err2("UNAUTHORIZED", auth.error, auth.status);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/analysis/, "") || "/";
   const productMatch = sub.match(/^\/product\/(\d+)$/);
   if (productMatch) return getProductDetail(env, productMatch[1]);
   if (sub === "/data-quality") return getDataQuality(env);
   if (sub === "/data-quality/exceptions") return getExceptions(env, url);
+  if (sub === "/opportunity") return getOpportunity(env);
+  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request, env);
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
@@ -9022,17 +10158,18 @@ async function handleAdminAnalysis(request, env) {
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/google-ads") return getGoogleAds(env, f);
+  if (sub === "/growth-signals") return getGrowthSignals(env, f);
   if (sub === "/profitability") return getProfitability(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
   if (sub === "/sales") return getSales(env, f);
   if (sub === "/products") return getProducts(env, f);
   if (sub === "/channels") return getChannels(env, f);
-  return err("ROUTE_NOT_FOUND", "Unknown analysis route: " + sub, 404);
+  return err2("ROUTE_NOT_FOUND", "Unknown analysis route: " + sub, 404);
 }
 __name(handleAdminAnalysis, "handleAdminAnalysis");
 
 // ../workers/api/admin-cost-model.ts
-function json6(body, status = 200) {
+function json7(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -9041,11 +10178,11 @@ function json6(body, status = 200) {
     }
   });
 }
-__name(json6, "json");
-function err2(code, message, status = 400) {
-  return json6({ success: false, error_code: code, message }, status);
+__name(json7, "json");
+function err3(code, message, status = 400) {
+  return json7({ success: false, error_code: code, message }, status);
 }
-__name(err2, "err");
+__name(err3, "err");
 function isProductionHost7(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -9163,9 +10300,13 @@ async function ensureTables(env) {
     id INTEGER PRIMARY KEY AUTOINCREMENT, product_id INTEGER NOT NULL,
     production_cost_thb REAL NOT NULL, cost_source TEXT NOT NULL DEFAULT 'formula',
     is_estimate INTEGER NOT NULL DEFAULT 1, effective_from TEXT NOT NULL DEFAULT (date('now')),
-    note TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    note TEXT, modeled_price_thb REAL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(product_id, effective_from, cost_source))`).run();
+  try {
+    await env.DB.prepare("ALTER TABLE cost_model_products ADD COLUMN modeled_price_thb REAL").run();
+  } catch {
+  }
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cost_model_channel_fees (
     id INTEGER PRIMARY KEY AUTOINCREMENT, channel TEXT NOT NULL,
     marketplace_fee_pct REAL NOT NULL DEFAULT 0, payment_fee_pct REAL NOT NULL DEFAULT 0,
@@ -9401,9 +10542,46 @@ var REFERENCE_CONFIG = {
   "mattress-encasement-general": { family: "encasement", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 encasement pages use the fitted-sheet size list" },
   "rv-truck-mattress-encasement": { family: "encasement", dims: { w: 99, l: 191, d: 30 }, sizeNote: "US Twin \u2014 code gives encasement pages the fitted-sheet size list (flagged)" },
   "marine-fitted-sheet": { family: "vberth", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175\xD7FW100\xD7L190\xD7D20 \u2014 no stored marine geometry (owner-approved 2026-10-02)" },
-  "marine-mattress-protector": { family: "vberth", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175\xD7FW100\xD7L190\xD7D20 \u2014 marine template V-berth path (owner-approved 2026-10-02)" },
+  "marine-mattress-protector": { family: "protector", dims: { w: 175, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION W175\xD7L190\xD7D20 \u2014 marine page prices via the protector formula (verified in configurator updateCustomPrice); owner-approved 2026-10-02" },
   "marine-top-sheet": { family: "marine_top", dims: { hw: 175, fw: 100, l: 190, d: 20 }, sizeNote: "CONTROLLED ASSUMPTION HW175\xD7FW100\xD7L190\xD7D20 \u2014 no stored marine geometry (owner-approved 2026-10-02)" }
 };
+var MARGIN_KEYS = {
+  "standard-fitted-sheet": { key: "standard", fallback: 30 },
+  "deep-pocket-fitted-sheet": { key: "standard", fallback: 30 },
+  "dorm-fitted-sheet": { key: "standard", fallback: 30 },
+  "pet-owner-fitted-sheet": { key: "standard", fallback: 30 },
+  "family-fitted-sheet": { key: "family", fallback: 50 },
+  "rv-truck-fitted-sheet": { key: "rv_truck", fallback: 45 },
+  "flat-sheet-standard": { key: "standard", fallback: 30 },
+  "flat-sheet-extra-deep-pocket": { key: "standard", fallback: 30 },
+  "co-sleeping-top-sheet": { key: "family", fallback: 50 },
+  "3-sided-duvet": { key: "duvet", fallback: 30 },
+  "pet-owner-duvet-cover": { key: "duvet", fallback: 30 },
+  "duvet-cover-marine": { key: "duvet", fallback: 30 },
+  "duvet-cover-rv": { key: "duvet", fallback: 30 },
+  "duvet-cover-dorm": { key: "duvet", fallback: 30 },
+  "weighted-duvet-cover": { key: "duvet", fallback: 30, derived: true },
+  "pillowcase-envelope": { key: "pillow", fallback: 15 },
+  "pillowcase-zipper": { key: "pillow", fallback: 15 },
+  "pillowcase-sham": { key: "pillow", fallback: 15 },
+  "pillow-protector-general": { key: "pillow_protector", fallback: 35 },
+  "mattress-protector-standard": { key: "protector_standard", fallback: 15 },
+  "mattress-protector-deep-pocket": { key: "protector_deep", fallback: 25 },
+  "pet-proof-mattress-protector": { key: "protector_standard", fallback: 15 },
+  "mattress-protector-family": { key: "family", fallback: 50 },
+  "custom-waterproof-cushion-protector": { key: "cushion_protector", fallback: 30 },
+  "mattress-encasement-general": { key: "encasement", fallback: 50 },
+  "rv-truck-mattress-encasement": { key: "rv_truck", fallback: 45 },
+  // client chain: rv-truck match precedes encasement
+  "marine-fitted-sheet": { key: "marine", fallback: 680 },
+  "marine-top-sheet": { key: "marine", fallback: 680 },
+  "marine-mattress-protector": { key: "protector_standard", fallback: 15 }
+  // client chain: protector branch, protector_standard
+};
+function ceilTo100(v) {
+  return Math.ceil(v / 100) * 100;
+}
+__name(ceilTo100, "ceilTo100");
 function deriveFormulaCost(p, slug) {
   const cfg = REFERENCE_CONFIG[slug];
   if (!cfg) return null;
@@ -9441,9 +10619,23 @@ function deriveFormulaCost(p, slug) {
       return null;
   }
   if (!Number.isFinite(cost) || cost <= 0) return null;
+  let modeledPrice = null;
+  const mk = MARGIN_KEYS[slug];
+  if (mk) {
+    const marginRate = param(p, "margin_rate_" + mk.key, mk.fallback) / 100;
+    const opsRate = param(p, "ops_rate", 15) / 100;
+    const mktRate = param(p, "mkt_rate", 20) / 100;
+    let price = ceilTo100(cost * (1 + opsRate + mktRate + marginRate));
+    if (mk.derived) {
+      const derivedPct = param(p, "derived_markup_weighted-duvet-cover", 10);
+      price = ceilTo100(price * (1 + derivedPct / 100));
+    }
+    modeledPrice = price;
+  }
   const dimsText = cfg.dims.hw !== void 0 ? `HW${cfg.dims.hw}xFW${cfg.dims.fw}xL${cfg.dims.l}xD${cfg.dims.d || 0}` : cfg.dims.d !== void 0 && cfg.family !== "duvet" && cfg.family !== "pillowcase" && cfg.family !== "pillow_protector" ? `${cfg.dims.w}x${cfg.dims.l}x${cfg.dims.d}` : `${cfg.dims.w}x${cfg.dims.l}`;
   return {
     cost: Math.round(cost * 100) / 100,
+    modeledPrice,
     family: cfg.family,
     dimsText,
     note: `ESTIMATED: formula pre-markup subtotal (fabric+sewing+zipper/accessories+packing+delivery) from live D1 pricing_params at reference size ${dimsText} cm. ${cfg.sizeNote}.`
@@ -9452,10 +10644,10 @@ function deriveFormulaCost(p, slug) {
 __name(deriveFormulaCost, "deriveFormulaCost");
 async function getCostModel(env) {
   await ensureTables(env);
-  const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  const today2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
   const products = await env.DB.prepare(`
     SELECT p.id AS product_id, p.slug, p.title_en, p.base_price_thb, p.is_active,
-           c.production_cost_thb, c.cost_source, c.is_estimate, c.effective_from, c.note
+           c.production_cost_thb, c.modeled_price_thb, c.cost_source, c.is_estimate, c.effective_from, c.note
     FROM products p
     LEFT JOIN cost_model_products c ON c.id = (
       SELECT c2.id FROM cost_model_products c2
@@ -9467,7 +10659,7 @@ async function getCostModel(env) {
     )
     WHERE p.is_active = 1
     ORDER BY p.id
-  `).bind(today).all();
+  `).bind(today2).all();
   const costRows = await env.DB.prepare(
     "SELECT * FROM cost_model_products ORDER BY product_id, effective_from DESC"
   ).all();
@@ -9482,7 +10674,7 @@ async function getCostModel(env) {
     coverage = await env.DB.prepare("SELECT * FROM analysis_profit_coverage").first();
   } catch {
   }
-  return json6({
+  return json7({
     success: true,
     products: products.results || [],
     cost_rows: costRows.results || [],
@@ -9495,36 +10687,36 @@ __name(getCostModel, "getCostModel");
 async function putProductCost(env, body) {
   await ensureTables(env);
   const productId = Number(body?.product_id);
-  if (!Number.isInteger(productId) || productId < 1) return err2("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
+  if (!Number.isInteger(productId) || productId < 1) return err3("INVALID_PRODUCT_ID", "product_id must be a positive integer.");
   const cost = parseMoney(body?.production_cost_thb, 0.01, 1e6);
-  if (cost === null) return err2("INVALID_COST", "production_cost_thb must be a positive THB amount.");
+  if (cost === null) return err3("INVALID_COST", "production_cost_thb must be a positive THB amount.");
   const effectiveFrom = parseDateOrToday(body?.effective_from);
-  if (!effectiveFrom) return err2("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
   const note = String(body?.note || "").trim().slice(0, 500) || null;
   const isEstimate = body?.is_estimate === void 0 ? 0 : body.is_estimate ? 1 : 0;
   const product = await env.DB.prepare("SELECT id, slug FROM products WHERE id = ?1").bind(productId).first();
-  if (!product) return err2("UNKNOWN_PRODUCT", "No product with id " + productId, 404);
+  if (!product) return err3("UNKNOWN_PRODUCT", "No product with id " + productId, 404);
   await env.DB.prepare(`
     INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note)
     VALUES (?1, ?2, 'verified', ?3, ?4, ?5)
     ON CONFLICT(product_id, effective_from, cost_source)
     DO UPDATE SET production_cost_thb = ?2, is_estimate = ?3, note = ?5, updated_at = CURRENT_TIMESTAMP
   `).bind(productId, cost, isEstimate, effectiveFrom, note).run();
-  return json6({ success: true, product_id: productId, slug: product.slug, production_cost_thb: cost, effective_from: effectiveFrom, cost_source: "verified", is_estimate: isEstimate });
+  return json7({ success: true, product_id: productId, slug: product.slug, production_cost_thb: cost, effective_from: effectiveFrom, cost_source: "verified", is_estimate: isEstimate });
 }
 __name(putProductCost, "putProductCost");
 async function putChannelFees(env, body) {
   await ensureTables(env);
   const channel = String(body?.channel || "").trim().toLowerCase();
-  if (!CHANNEL_RE2.test(channel)) return err2("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  if (!CHANNEL_RE2.test(channel)) return err3("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
   const marketplacePct = parseMoney(body?.marketplace_fee_pct ?? 0, 0, 50);
   const paymentPct = parseMoney(body?.payment_fee_pct ?? 0, 0, 50);
   const paymentFixed = parseMoney(body?.payment_fee_fixed_thb ?? 0, 0, 1e4);
   const otherFee = parseMoney(body?.other_fee_thb_per_order ?? 0, 0, 1e4);
-  if (marketplacePct === null || paymentPct === null) return err2("INVALID_FEE_PCT", "Fee percentages must be between 0 and 50.");
-  if (paymentFixed === null || otherFee === null) return err2("INVALID_FEE_THB", "Fixed fees must be between 0 and 10000 THB.");
+  if (marketplacePct === null || paymentPct === null) return err3("INVALID_FEE_PCT", "Fee percentages must be between 0 and 50.");
+  if (paymentFixed === null || otherFee === null) return err3("INVALID_FEE_THB", "Fixed fees must be between 0 and 10000 THB.");
   const effectiveFrom = parseDateOrToday(body?.effective_from);
-  if (!effectiveFrom) return err2("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
   const note = String(body?.note || "").trim().slice(0, 500) || null;
   const isEstimate = body?.is_estimate === void 0 ? 1 : body.is_estimate ? 1 : 0;
   await env.DB.prepare(`
@@ -9535,17 +10727,17 @@ async function putChannelFees(env, body) {
     DO UPDATE SET marketplace_fee_pct = ?2, payment_fee_pct = ?3, payment_fee_fixed_thb = ?4,
                   other_fee_thb_per_order = ?5, is_estimate = ?6, note = ?8, updated_at = CURRENT_TIMESTAMP
   `).bind(channel, marketplacePct, paymentPct, paymentFixed, otherFee, isEstimate, effectiveFrom, note).run();
-  return json6({ success: true, channel, effective_from: effectiveFrom });
+  return json7({ success: true, channel, effective_from: effectiveFrom });
 }
 __name(putChannelFees, "putChannelFees");
 async function putShipping(env, body) {
   await ensureTables(env);
   const channel = String(body?.channel || "").trim().toLowerCase();
-  if (!CHANNEL_RE2.test(channel)) return err2("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
+  if (!CHANNEL_RE2.test(channel)) return err3("INVALID_CHANNEL", "channel must be lowercase letters, digits, or hyphens.");
   const cost = parseMoney(body?.avg_shipping_cost_thb, 0, 1e5);
-  if (cost === null) return err2("INVALID_SHIPPING_COST", "avg_shipping_cost_thb must be between 0 and 100000 THB.");
+  if (cost === null) return err3("INVALID_SHIPPING_COST", "avg_shipping_cost_thb must be between 0 and 100000 THB.");
   const effectiveFrom = parseDateOrToday(body?.effective_from);
-  if (!effectiveFrom) return err2("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
+  if (!effectiveFrom) return err3("INVALID_EFFECTIVE_FROM", "effective_from must be YYYY-MM-DD.");
   const note = String(body?.note || "").trim().slice(0, 500) || null;
   const isEstimate = body?.is_estimate === void 0 ? 1 : body.is_estimate ? 1 : 0;
   await env.DB.prepare(`
@@ -9554,7 +10746,7 @@ async function putShipping(env, body) {
     ON CONFLICT(channel, effective_from)
     DO UPDATE SET avg_shipping_cost_thb = ?2, is_estimate = ?3, note = ?5, updated_at = CURRENT_TIMESTAMP
   `).bind(channel, cost, isEstimate, effectiveFrom, note).run();
-  return json6({ success: true, channel, avg_shipping_cost_thb: cost, effective_from: effectiveFrom });
+  return json7({ success: true, channel, avg_shipping_cost_thb: cost, effective_from: effectiveFrom });
 }
 __name(putShipping, "putShipping");
 async function recalculateFormulaCosts(env) {
@@ -9573,20 +10765,21 @@ async function recalculateFormulaCosts(env) {
       continue;
     }
     await env.DB.prepare(`
-      INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note)
-      VALUES (?1, ?2, 'formula', 1, ?3, ?4)
+      INSERT INTO cost_model_products (product_id, production_cost_thb, cost_source, is_estimate, effective_from, note, modeled_price_thb)
+      VALUES (?1, ?2, 'formula', 1, ?3, ?4, ?5)
       ON CONFLICT(product_id, effective_from, cost_source)
-      DO UPDATE SET production_cost_thb = ?2, note = ?4, updated_at = CURRENT_TIMESTAMP
-    `).bind(p.id, derived.cost, FORMULA_EFFECTIVE_FROM, derived.note).run();
+      DO UPDATE SET production_cost_thb = ?2, note = ?4, modeled_price_thb = ?5, updated_at = CURRENT_TIMESTAMP
+    `).bind(p.id, derived.cost, FORMULA_EFFECTIVE_FROM, derived.note, derived.modeledPrice).run();
     updated.push({
       product_id: p.id,
       slug: p.slug,
       family: derived.family,
       reference_size: derived.dimsText,
-      production_cost_thb: derived.cost
+      production_cost_thb: derived.cost,
+      modeled_price_thb: derived.modeledPrice
     });
   }
-  return json6({
+  return json7({
     success: true,
     effective_from: FORMULA_EFFECTIVE_FROM,
     params_source: "live D1 pricing_params (+ configurator constants where D1 lacks the key)",
@@ -9606,10 +10799,10 @@ async function deleteRow(env, url) {
     fees: "cost_model_channel_fees",
     shipping: "cost_model_shipping"
   };
-  if (!tables[table]) return err2("INVALID_TABLE", "table must be products, fees, or shipping.");
-  if (!Number.isInteger(id) || id < 1) return err2("INVALID_ID", "id must be a positive integer.");
+  if (!tables[table]) return err3("INVALID_TABLE", "table must be products, fees, or shipping.");
+  if (!Number.isInteger(id) || id < 1) return err3("INVALID_ID", "id must be a positive integer.");
   const result = await env.DB.prepare("DELETE FROM " + tables[table] + " WHERE id = ?1").bind(id).run();
-  return json6({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
+  return json7({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
 }
 __name(deleteRow, "deleteRow");
 async function handleAdminCostModel(request, env) {
@@ -9623,7 +10816,7 @@ async function handleAdminCostModel(request, env) {
     });
   }
   const auth = await authorizeAdmin6(request, env);
-  if (!auth.ok) return err2("UNAUTHORIZED", auth.error, auth.status);
+  if (!auth.ok) return err3("UNAUTHORIZED", auth.error, auth.status);
   const url = new URL(request.url);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/cost-model/, "") || "/";
   let body = null;
@@ -9631,7 +10824,7 @@ async function handleAdminCostModel(request, env) {
     try {
       body = await request.json();
     } catch {
-      return err2("INVALID_JSON", "Request body must be valid JSON.");
+      return err3("INVALID_JSON", "Request body must be valid JSON.");
     }
   }
   if (request.method === "GET" && sub === "/") return getCostModel(env);
@@ -9640,14 +10833,14 @@ async function handleAdminCostModel(request, env) {
   if (request.method === "PUT" && sub === "/shipping") return putShipping(env, body);
   if (request.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
   if (request.method === "DELETE" && sub === "/row") return deleteRow(env, url);
-  return err2("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
+  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
 }
 __name(handleAdminCostModel, "handleAdminCostModel");
 
 // ../workers/api/shipping.ts
 var shippingSchemaReady = false;
 var shippingSchemaPromise = null;
-function json7(body, status = 200) {
+function json8(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -9656,7 +10849,7 @@ function json7(body, status = 200) {
     }
   });
 }
-__name(json7, "json");
+__name(json8, "json");
 function toAmount(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 0) return 0;
@@ -9997,7 +11190,7 @@ async function handleShippingCalculate(request, env) {
     });
   }
   if (request.method !== "GET" && request.method !== "POST") {
-    return json7({ error: "Method not allowed" }, 405);
+    return json8({ error: "Method not allowed" }, 405);
   }
   try {
     let country = "";
@@ -10033,15 +11226,15 @@ async function handleShippingCalculate(request, env) {
       totalQty: qty,
       items
     });
-    return json7({ ok: true, ...quote });
+    return json8({ ok: true, ...quote });
   } catch (e) {
-    return json7({ error: e?.message || "Shipping quote unavailable" }, 500);
+    return json8({ error: e?.message || "Shipping quote unavailable" }, 500);
   }
 }
 __name(handleShippingCalculate, "handleShippingCalculate");
 
 // ../workers/api/admin-shipping.ts
-function json8(body, status = 200) {
+function json9(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -10050,7 +11243,7 @@ function json8(body, status = 200) {
     }
   });
 }
-__name(json8, "json");
+__name(json9, "json");
 function toAmount2(v) {
   return toAmount(v);
 }
@@ -10172,7 +11365,7 @@ async function getUsdRatePerThb(env) {
 __name(getUsdRatePerThb, "getUsdRatePerThb");
 async function handleAdminShippingRates(request, env) {
   const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json8({ error: auth.error }, auth.status);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -10216,19 +11409,19 @@ async function handleAdminShippingRates(request, env) {
         updated_at: r.updated_at
       };
     });
-    return json8({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
+    return json9({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json8({ error: "Invalid JSON body" }, 400);
+      return json9({ error: "Invalid JSON body" }, 400);
     }
     const countryCode = normalizeCountryCode(body.country_code || body.country || "");
     const serviceLevel = normalizeServiceLevel(body.service_level || "express");
     if (!countryCode) {
-      return json8({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
+      return json9({ error: "country_code is required (ISO-2 or OTHER)" }, 400);
     }
     const countryName = normalizeCountryName(body.country_name, countryCode);
     const t1f = toAmount2(body.tier1_first_thb || body.tier1_first || 0);
@@ -10256,7 +11449,7 @@ async function handleAdminShippingRates(request, env) {
         is_active = excluded.is_active,
         updated_at = datetime('now')`
     ).bind(countryCode, serviceLevel, countryName, t1f, t2f, t3f, etaMinDays, etaMaxDays, etaNote, isActive).run();
-    return json8({
+    return json9({
       success: true,
       rate: {
         service_level: serviceLevel,
@@ -10276,17 +11469,17 @@ async function handleAdminShippingRates(request, env) {
     const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
     const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
-    if (!countryCode) return json8({ error: "country query param is required" }, 400);
-    if (countryCode === "OTHER") return json8({ error: "OTHER cannot be deleted" }, 400);
+    if (!countryCode) return json9({ error: "country query param is required" }, 400);
+    if (countryCode === "OTHER") return json9({ error: "OTHER cannot be deleted" }, 400);
     await env.DB.prepare("DELETE FROM shipping_service_rates WHERE country_code = ?1 AND service_level = ?2").bind(countryCode, serviceLevel).run();
-    return json8({ success: true, country_code: countryCode, service_level: serviceLevel });
+    return json9({ success: true, country_code: countryCode, service_level: serviceLevel });
   }
-  return json8({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
 async function handleAdminShippingProductTiers(request, env) {
   const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json8({ error: auth.error }, auth.status);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -10310,19 +11503,19 @@ async function handleAdminShippingProductTiers(request, env) {
       category: String(r.category || ""),
       tier: Number(r.tier || 2)
     }));
-    return json8({ product_tiers: tiers });
+    return json9({ product_tiers: tiers });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json8({ error: "Invalid JSON" }, 400);
+      return json9({ error: "Invalid JSON" }, 400);
     }
     const slug = String(body.product_slug || "").trim();
     const tier = Number(body.tier);
-    if (!slug) return json8({ error: "product_slug required" }, 400);
-    if (![1, 2, 3].includes(tier)) return json8({ error: "tier must be 1, 2, or 3" }, 400);
+    if (!slug) return json9({ error: "product_slug required" }, 400);
+    if (![1, 2, 3].includes(tier)) return json9({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_product_tiers (product_slug, tier, updated_at)
        VALUES (?1, ?2, datetime('now'))
@@ -10330,14 +11523,14 @@ async function handleAdminShippingProductTiers(request, env) {
          tier = excluded.tier,
          updated_at = datetime('now')`
     ).bind(slug, tier).run();
-    return json8({ success: true, product_slug: slug, tier });
+    return json9({ success: true, product_slug: slug, tier });
   }
-  return json8({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
 async function handleAdminShippingAddRates(request, env) {
   const auth = await authorizeAdmin7(request, env);
-  if (!auth.ok) return json8({ error: auth.error }, auth.status);
+  if (!auth.ok) return json9({ error: auth.error }, auth.status);
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -10365,34 +11558,34 @@ async function handleAdminShippingAddRates(request, env) {
       const thb = toAmount2(r.add_thb);
       addRates[t] = { add_thb: thb, add_usd: toAmount2(thb * usdRate) };
     }
-    return json8({ add_rates: addRates, usd_rate_per_thb: usdRate });
+    return json9({ add_rates: addRates, usd_rate_per_thb: usdRate });
   }
   if (request.method === "PUT") {
     let body;
     try {
       body = await request.json();
     } catch {
-      return json8({ error: "Invalid JSON" }, 400);
+      return json9({ error: "Invalid JSON" }, 400);
     }
     const tier = Number(body.tier);
     const addThb = toAmount2(body.add_thb);
-    if (![1, 2, 3].includes(tier)) return json8({ error: "tier must be 1, 2, or 3" }, 400);
+    if (![1, 2, 3].includes(tier)) return json9({ error: "tier must be 1, 2, or 3" }, 400);
     await env.DB.prepare(
       `INSERT INTO shipping_add_rates (tier, add_thb, updated_at)
        VALUES (?1, ?2, datetime('now'))
        ON CONFLICT(tier) DO UPDATE SET
          add_thb = excluded.add_thb, updated_at = datetime('now')`
     ).bind(tier, addThb).run();
-    return json8({ success: true, tier, add_thb: addThb });
+    return json9({ success: true, tier, add_thb: addThb });
   }
-  return json8({ error: "Method not allowed" }, 405);
+  return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingAddRates, "handleAdminShippingAddRates");
 
 // ../workers/api/admin-quotes.ts
 var quoteSchemaReady = false;
 var quoteSchemaPromise = null;
-function json9(body, status = 200) {
+function json10(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -10403,7 +11596,7 @@ function json9(body, status = 200) {
     }
   });
 }
-__name(json9, "json");
+__name(json10, "json");
 function isProductionHost9(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -10740,9 +11933,9 @@ Need help or have a measurement question? Simply reply to this email \u2014 we'r
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
 async function handleAdminQuotes(request, env) {
-  if (request.method === "OPTIONS") return json9({ ok: true });
+  if (request.method === "OPTIONS") return json10({ ok: true });
   const auth = await authorizeAdmin8(request, env);
-  if (!auth.ok) return json9({ error: auth.error }, auth.status);
+  if (!auth.ok) return json10({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
   const url = new URL(request.url);
@@ -10804,7 +11997,7 @@ async function handleAdminQuotes(request, env) {
         quote_url: buildQuoteLink(request, r.quote_id)
       };
     });
-    return json9({
+    return json10({
       quotes,
       page,
       total: totalRow?.cnt || 0,
@@ -10816,7 +12009,7 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON" }, 400);
+      return json10({ error: "Invalid JSON" }, 400);
     }
     const customerName = String(body.customer_name || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
@@ -10852,15 +12045,15 @@ async function handleAdminQuotes(request, env) {
     }
     const expiresAt = normalizeDateInput(body.expires_at);
     const sendEmailNow = !!body.send_email;
-    if (!customerName) return json9({ error: "customer_name is required" }, 400);
-    if (!email || !email.includes("@")) return json9({ error: "Valid email is required" }, 400);
-    if (!productSlug) return json9({ error: "product_slug is required" }, 400);
-    if (!dimensions) return json9({ error: "dimensions or size_text is required" }, 400);
+    if (!customerName) return json10({ error: "customer_name is required" }, 400);
+    if (!email || !email.includes("@")) return json10({ error: "Valid email is required" }, 400);
+    if (!productSlug) return json10({ error: "product_slug is required" }, 400);
+    if (!dimensions) return json10({ error: "dimensions or size_text is required" }, 400);
     if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) {
-      return json9({ error: "Invalid status" }, 400);
+      return json10({ error: "Invalid status" }, 400);
     }
     if (status === "approved" && (!quotedPriceThb || quotedPriceThb <= 0)) {
-      return json9({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json10({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
     const quoteId = await generateQuoteId(db);
     await db.prepare(
@@ -10897,7 +12090,7 @@ async function handleAdminQuotes(request, env) {
         expires_at: expiresAt
       });
     }
-    return json9({
+    return json10({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
@@ -10910,21 +12103,21 @@ async function handleAdminQuotes(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json9({ error: "Invalid JSON" }, 400);
+      return json10({ error: "Invalid JSON" }, 400);
     }
     const quoteId = String(body.quote_id || "").trim();
-    if (!quoteId) return json9({ error: "quote_id is required" }, 400);
+    if (!quoteId) return json10({ error: "quote_id is required" }, 400);
     const current = await db.prepare(
       `SELECT quote_id, dimensions, status, quoted_price, quoted_price_usd
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!current) return json9({ error: "Quote not found" }, 404);
+    if (!current) return json10({ error: "Quote not found" }, 404);
     const updates = [];
     const binds = [];
     const status = body.status != null ? String(body.status).trim().toLowerCase() : null;
     if (status != null) {
-      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json9({ error: "Invalid status" }, 400);
+      if (!["pending", "approved", "rejected", "expired", "archived"].includes(status)) return json10({ error: "Invalid status" }, 400);
       updates.push("status = ?");
       binds.push(status);
     }
@@ -10934,7 +12127,7 @@ async function handleAdminQuotes(request, env) {
     const isUsdUpdate = quoteCurrency === "USD";
     if (isUsdUpdate && body.quoted_price_usd != null && body.quoted_price_usd !== "") {
       priceUsd = Math.round(Number(body.quoted_price_usd));
-      if (!priceUsd || priceUsd <= 0) return json9({ error: "quoted_price_usd must be a positive number" }, 400);
+      if (!priceUsd || priceUsd <= 0) return json10({ error: "quoted_price_usd must be a positive number" }, 400);
       const rate = await getUsdRate(db);
       priceThb = Math.round(priceUsd * rate);
       updates.push("quoted_price = ?");
@@ -10943,7 +12136,7 @@ async function handleAdminQuotes(request, env) {
       binds.push(priceUsd);
     } else if (body.quoted_price_thb != null && body.quoted_price_thb !== "") {
       priceThb = Math.round(Number(body.quoted_price_thb));
-      if (!priceThb || priceThb <= 0) return json9({ error: "quoted_price_thb must be a positive number" }, 400);
+      if (!priceThb || priceThb <= 0) return json10({ error: "quoted_price_thb must be a positive number" }, 400);
       updates.push("quoted_price = ?");
       binds.push(priceThb);
       updates.push("quoted_price_usd = NULL");
@@ -10973,7 +12166,7 @@ async function handleAdminQuotes(request, env) {
           try {
             dims = JSON.parse(body.dimensions);
           } catch {
-            return json9({ error: "Invalid dimensions JSON" }, 400);
+            return json10({ error: "Invalid dimensions JSON" }, 400);
           }
         } else if (body.dimensions && typeof body.dimensions === "object") {
           dims = body.dimensions;
@@ -10998,9 +12191,9 @@ async function handleAdminQuotes(request, env) {
     const targetStatus = status || String(current.status || "pending").toLowerCase();
     const finalPriceThb = priceThb != null ? priceThb : Number(current.quoted_price || 0);
     if (targetStatus === "approved" && (!finalPriceThb || finalPriceThb <= 0)) {
-      return json9({ error: "A price (THB or USD) is required for approved status" }, 400);
+      return json10({ error: "A price (THB or USD) is required for approved status" }, 400);
     }
-    if (!updates.length && !body.send_email) return json9({ error: "No update fields provided" }, 400);
+    if (!updates.length && !body.send_email) return json10({ error: "No update fields provided" }, 400);
     if (updates.length) {
       await db.prepare(`UPDATE custom_quotes SET ${updates.join(", ")} WHERE quote_id = ?`).bind(...binds, quoteId).run();
     }
@@ -11009,25 +12202,25 @@ async function handleAdminQuotes(request, env) {
        FROM custom_quotes
        WHERE quote_id = ?1`
     ).bind(quoteId).first();
-    if (!row) return json9({ error: "Quote not found" }, 404);
+    if (!row) return json10({ error: "Quote not found" }, 404);
     let emailStatus = { success: false, skipped: true };
     if (body.send_email) {
       emailStatus = await sendMagicLinkEmail(env, request, row);
       if (!emailStatus.success) {
-        return json9({
+        return json10({
           error: emailStatus.error || "Failed to send quote email",
           quote_id: quoteId
         }, 400);
       }
     }
-    return json9({
+    return json10({
       success: true,
       quote_id: quoteId,
       quote_url: buildQuoteLink(request, quoteId),
       email_sent: !!emailStatus.success
     });
   }
-  return json9({ error: "Method not allowed" }, 405);
+  return json10({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminQuotes, "handleAdminQuotes");
 
@@ -11189,7 +12382,7 @@ async function handleDiscountClaim(request, env) {
 __name(handleDiscountClaim, "handleDiscountClaim");
 
 // ../workers/api/admin-contacts.ts
-function json10(body, status = 200) {
+function json11(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -11198,7 +12391,7 @@ function json10(body, status = 200) {
     }
   });
 }
-__name(json10, "json");
+__name(json11, "json");
 function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -11287,7 +12480,7 @@ async function authorizeAdmin9(request, env) {
 __name(authorizeAdmin9, "authorizeAdmin");
 async function handleAdminContacts(request, env) {
   const auth = await authorizeAdmin9(request, env);
-  if (!auth.ok) return json10({ error: auth.error }, auth.status);
+  if (!auth.ok) return json11({ error: auth.error }, auth.status);
   const url = new URL(request.url);
   const method = request.method;
   const db = env.DB;
@@ -11303,7 +12496,7 @@ async function handleAdminContacts(request, env) {
     const totalRow = await db.prepare(
       "SELECT COUNT(*) as cnt FROM contacts" + (onlySubscribed ? " WHERE is_subscribed = 1" : "")
     ).first();
-    return json10({
+    return json11({
       contacts: results,
       total: totalRow?.cnt || 0,
       page,
@@ -11315,21 +12508,21 @@ async function handleAdminContacts(request, env) {
     try {
       body = await request.json();
     } catch {
-      return json10({ error: "Invalid JSON" }, 400);
+      return json11({ error: "Invalid JSON" }, 400);
     }
     const email = (body.email || "").trim().toLowerCase();
-    if (!email) return json10({ error: "Email required" }, 400);
+    if (!email) return json11({ error: "Email required" }, 400);
     if (body.unsubscribe !== void 0 && body.unsubscribe) {
       await db.prepare("UPDATE contacts SET is_subscribed = 0, sources = TRIM(REPLACE(REPLACE(REPLACE(sources, ',subscribe', ''), 'subscribe,', ''), 'subscribe', ''), ','), last_seen = datetime('now') WHERE email = ?").bind(email).run();
-      return json10({ success: true, message: "Unsubscribed" });
+      return json11({ success: true, message: "Unsubscribed" });
     }
     if (body.name) {
       await db.prepare("UPDATE contacts SET name = ?, last_seen = datetime('now') WHERE email = ?").bind(body.name, email).run();
-      return json10({ success: true });
+      return json11({ success: true });
     }
-    return json10({ error: "No valid update field" }, 400);
+    return json11({ error: "No valid update field" }, 400);
   }
-  return json10({ error: "Method not allowed" }, 405);
+  return json11({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminContacts, "handleAdminContacts");
 
@@ -12926,11 +14119,11 @@ async function handleAdminThankyouDispatch(request, env) {
       if (sentItems.length < 30) sentItems.push({ id: queueId, order_id: orderId, email, code, discount_pct: pct });
     } else {
       failed++;
-      const err3 = rs.error || "unknown error";
+      const err4 = rs.error || "unknown error";
       failedEmails.push(email);
-      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err3.slice(0, 500), queueId).run();
-      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err3 });
-      if (errors.length < 10) errors.push(`id ${queueId}: ${err3}`);
+      await env.DB.prepare("UPDATE thankyou_queue SET last_error = ?1 WHERE id = ?2").bind(err4.slice(0, 500), queueId).run();
+      if (failedItems.length < 30) failedItems.push({ id: queueId, order_id: orderId, email, code, error: err4 });
+      if (errors.length < 10) errors.push(`id ${queueId}: ${err4}`);
     }
   }
   return new Response(JSON.stringify({
@@ -13529,7 +14722,7 @@ __name(handleAdminColorInventory, "handleAdminColorInventory");
 // ../workers/api/favorites.ts
 var favoritesSchemaReady = false;
 var favoritesSchemaPromise = null;
-function json11(body, status = 200) {
+function json12(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
@@ -13538,7 +14731,7 @@ function json11(body, status = 200) {
     }
   });
 }
-__name(json11, "json");
+__name(json12, "json");
 async function ensureFavoritesSchema(env) {
   if (favoritesSchemaReady) return;
   if (!favoritesSchemaPromise) {
@@ -13690,10 +14883,10 @@ async function handleFavorites(request, env) {
       await ensureFavoritesSchema(env);
     } catch (e) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
-      return json11({ error: "Favorites storage unavailable" }, 500);
+      return json12({ error: "Favorites storage unavailable" }, 500);
     }
     const auth = await authorizeAdmin18(request, env);
-    if (!auth.ok) return json11({ error: auth.error }, auth.status);
+    if (!auth.ok) return json12({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
       `SELECT 
@@ -13727,22 +14920,22 @@ async function handleFavorites(request, env) {
        ORDER BY favorite_count DESC, last_favorited_at DESC
        LIMIT ?1`
     ).bind(limit).all();
-    return json11({
+    return json12({
       totals: totals || { total_favorites: 0, total_users: 0, total_products: 0 },
       topProducts: topProducts.results || [],
       topUsers: topUsers.results || []
     });
   }
   if (path !== "/api/favorites") {
-    return json11({ error: "Not found" }, 404);
+    return json12({ error: "Not found" }, 404);
   }
   const user = await getUserContext(request, env);
-  if (!user.ok) return json11({ error: user.error }, user.status);
+  if (!user.ok) return json12({ error: user.error }, user.status);
   try {
     await ensureFavoritesSchema(env);
   } catch (e) {
     console.error("favorites schema init failed:", e?.message || e);
-    return json11({ error: "Favorites storage unavailable" }, 500);
+    return json12({ error: "Favorites storage unavailable" }, 500);
   }
   if (method === "GET") {
     const rows = await env.DB.prepare(
@@ -13765,31 +14958,31 @@ async function handleFavorites(request, env) {
        ORDER BY MAX(f.created_at) DESC
        LIMIT 100`
     ).bind(user.userId, user.email).all();
-    return json11({ favorites: rows.results || [] });
+    return json12({ favorites: rows.results || [] });
   }
   if (method === "POST") {
     let body = {};
     try {
       body = await request.json();
     } catch {
-      return json11({ error: "Invalid JSON body" }, 400);
+      return json12({ error: "Invalid JSON body" }, 400);
     }
     const productSlug = String(body.productSlug || body.slug || "").trim();
-    if (!productSlug) return json11({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json12({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id, slug, title_en, image_url, base_price_usd AS price_usd, base_price_thb AS price_thb
        FROM products
        WHERE slug = ?1
        LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json11({ error: "Product not found" }, 404);
+    if (!product) return json12({ error: "Product not found" }, 404);
     const existing = await env.DB.prepare(
       `SELECT id FROM favorites
        WHERE product_id = ?1 AND (user_id = ?2 OR LOWER(email) = ?3)
        LIMIT 1`
     ).bind(product.id, user.userId, user.email).first();
     if (existing) {
-      return json11({
+      return json12({
         success: true,
         isFavorite: true,
         created: false,
@@ -13800,7 +14993,7 @@ async function handleFavorites(request, env) {
       `INSERT OR IGNORE INTO favorites (user_id, email, product_id, created_at)
        VALUES (?1, ?2, ?3, datetime('now'))`
     ).bind(user.userId, user.email, product.id).run();
-    return json11({
+    return json12({
       success: true,
       isFavorite: true,
       created: Number(result.meta?.changes || 0) > 0,
@@ -13816,23 +15009,23 @@ async function handleFavorites(request, env) {
       } catch {
       }
     }
-    if (!productSlug) return json11({ error: "productSlug is required" }, 400);
+    if (!productSlug) return json12({ error: "productSlug is required" }, 400);
     const product = await env.DB.prepare(
       `SELECT id FROM products WHERE slug = ?1 LIMIT 1`
     ).bind(productSlug).first();
-    if (!product) return json11({ success: true, isFavorite: false, removed: false });
+    if (!product) return json12({ success: true, isFavorite: false, removed: false });
     const result = await env.DB.prepare(
       `DELETE FROM favorites
        WHERE product_id = ?1
          AND (user_id = ?2 OR LOWER(email) = ?3)`
     ).bind(product.id, user.userId, user.email).run();
-    return json11({
+    return json12({
       success: true,
       isFavorite: false,
       removed: Number(result.meta?.changes || 0) > 0
     });
   }
-  return json11({ error: "Method not allowed" }, 405);
+  return json12({ error: "Method not allowed" }, 405);
 }
 __name(handleFavorites, "handleFavorites");
 
@@ -14507,8 +15700,8 @@ async function handleStripeWebhook(request, env) {
       if (!teamMail.success) {
         console.error("Refund alert email failed:", teamMail.error || "unknown error");
       }
-    } catch (err3) {
-      console.error("Refund alert exception:", err3?.message || err3);
+    } catch (err4) {
+      console.error("Refund alert exception:", err4?.message || err4);
     }
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
@@ -14545,8 +15738,8 @@ async function handleStripeWebhook(request, env) {
       if (!teamMail.success) {
         console.error("Dispute alert email failed:", teamMail.error || "unknown error");
       }
-    } catch (err3) {
-      console.error("Dispute alert exception:", err3?.message || err3);
+    } catch (err4) {
+      console.error("Dispute alert exception:", err4?.message || err4);
     }
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
@@ -14785,8 +15978,8 @@ async function handleStripeWebhook(request, env) {
               "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
             ).bind(addrHash, metadata.discount_code).run();
           }
-        } catch (err3) {
-          console.error("Discount claim failed:", err3?.message || err3);
+        } catch (err4) {
+          console.error("Discount claim failed:", err4?.message || err4);
         }
       }
     } catch (e) {
@@ -14860,8 +16053,8 @@ We'll notify you when your order ships.
       if (!customerMail.success) {
         console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
       }
-    } catch (err3) {
-      console.error("Customer email exception:", err3?.message || err3, "to:", email);
+    } catch (err4) {
+      console.error("Customer email exception:", err4?.message || err4, "to:", email);
     }
     const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
     try {
@@ -14887,8 +16080,8 @@ Total: ${total}${dutyTaxTeamLine}`
       if (!teamMail.success) {
         console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
       }
-    } catch (err3) {
-      console.error("Team email exception:", err3?.message || err3, "to:", teamEmail);
+    } catch (err4) {
+      console.error("Team email exception:", err4?.message || err4, "to:", teamEmail);
     }
   }
   if (email) {
@@ -15601,10 +16794,10 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     const res = await handleProducts(request, env);
     const body = await res.text();
     try {
-      const json12 = JSON.parse(body);
-      if (json12.product) json12.product = r2Product3(json12.product);
-      if (Array.isArray(json12.products)) json12.products = json12.products.map(r2Product3);
-      return new Response(JSON.stringify(json12), {
+      const json13 = JSON.parse(body);
+      if (json13.product) json13.product = r2Product3(json13.product);
+      if (Array.isArray(json13.products)) json13.products = json13.products.map(r2Product3);
+      return new Response(JSON.stringify(json13), {
         headers: { "Content-Type": "application/json" }
       });
     } catch (_) {
@@ -15826,8 +17019,8 @@ async function onRequest5(context) {
         "X-Robots-Tag": "index, follow"
       }
     });
-  } catch (err3) {
-    console.error("Blog post error:", err3);
+  } catch (err4) {
+    console.error("Blog post error:", err4);
     return new Response("Server error", { status: 500 });
   }
 }
@@ -17381,7 +18574,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-wawDS2/functionsRoutes-0.9066300351666162.mjs
+// ../.wrangler/tmp/pages-jR4pMp/functionsRoutes-0.3822606291647892.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

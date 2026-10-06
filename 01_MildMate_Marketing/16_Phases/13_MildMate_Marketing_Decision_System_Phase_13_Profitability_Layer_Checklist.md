@@ -1,6 +1,11 @@
 # MildMate Marketing Decision System — Phase 13
 ## Profitability & Contribution Margin Layer
 
+> **Superseded for active Phase 13 execution (2026-10-06).**  
+> This profitability checklist is preserved as historical context.  
+> Active Phase 13 spec: `13_MildMate_Marketing_Decision_System_Phase_13_Sales_Growth_Layer_Checklist.md`  
+> Profitability remains in the system as a secondary guardrail input for growth analysis.
+
 **Project root:** `D:/00_Mildmate/Re-build_web/`  
 **Planning / handoff folder:** `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`  
 **Git branch:** `feature/marketing-data-analyst`  
