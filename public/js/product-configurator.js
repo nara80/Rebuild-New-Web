@@ -1510,7 +1510,9 @@
         focusFirstDimInput();
         alert((isDuvet || isPillowProtector || isPillowcase)
           ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
-          : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+          : isCushionProtector
+            ? 'Please enter your cushion dimensions (Length, Width, Thickness) before requesting a quote.'
+            : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
         if (dimW) dimW.focus();
         return;
       }
@@ -1573,7 +1575,9 @@
       focusFirstDimInput();
       alert((isDuvet || isPillowProtector || isPillowcase)
         ? 'Please enter your dimensions (W \u00D7 L) before submitting the quote.'
-        : 'Please enter your mattress dimensions (W \u00D7 L \u00D7 D) before submitting the quote. Click "Custom Size" first.');
+        : isCushionProtector
+          ? 'Please enter your cushion dimensions (L \u00D7 W \u00D7 T) before submitting the quote. Click "Custom Size" first.'
+          : 'Please enter your mattress dimensions (W \u00D7 L \u00D7 D) before submitting the quote. Click "Custom Size" first.');
       return;
     }
     dimDisplay = (isDuvet || isPillowProtector || isPillowcase)
@@ -1677,7 +1681,9 @@
           focusFirstDimInput();
           alert((isDuvet || isPillowProtector || isPillowcase)
             ? 'Please enter your dimensions (Width, Length) before requesting a quote.'
-            : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
+            : isCushionProtector
+              ? 'Please enter your cushion dimensions (Length, Width, Thickness) before requesting a quote.'
+              : 'Please enter your mattress dimensions (Width, Length, Depth) before requesting a quote.');
           return;
         }
         quoteOverlay.classList.add('open');

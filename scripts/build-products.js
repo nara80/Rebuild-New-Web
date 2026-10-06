@@ -375,6 +375,16 @@ function buildCustomizable(slug, p, prod) {
     replacements['{{DIM_INPUTS_CLASS}}'] = '';
   }
 
+  // Cushion protector keeps fitted-sheet pricing logic but needs cushion wording in UI.
+  if (slug === 'custom-waterproof-cushion-protector') {
+    replacements['{{SIZE_LABEL}}'] = 'Select Cushion Size';
+    replacements['{{DIM_LABEL}}'] = 'cushion';
+    replacements['{{DIM_DIAGRAM_IMG}}'] = '/images/products/common/measure-cushion-diagram-01.png';
+    replacements['{{DIM_DIAGRAM_ALT}}'] = 'Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)';
+    replacements['{{DIM_DIAGRAM_CAPTION}}'] = 'Measure your cushion at its longest, widest, and thickest points';
+    replacements['{{DEPTH_FIELD_HTML}}'] = replacements['{{DEPTH_FIELD_HTML}}'].replace('Depth (D)', 'Thickness (T)');
+  }
+
   for (const [key, value] of Object.entries(replacements)) {
     html = html.split(key).join(value);
   }

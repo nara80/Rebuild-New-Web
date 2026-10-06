@@ -272,14 +272,23 @@ const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
 function applyThaiProductUiLocalization(html: string, tagline: string, slug: string): string {
   const safeTagline = String(tagline || '').trim();
   const isWeightedDuvet = slug === 'weighted-duvet-cover';
-  const sizeLabel = isWeightedDuvet ? 'เลือกขนาดผ้าห่มถ่วงน้ำหนัก' : 'เลือกขนาดที่นอน';
+  const isCushionProtector = slug === 'custom-waterproof-cushion-protector';
+  const sizeLabel = isWeightedDuvet
+    ? 'เลือกขนาดผ้าห่มถ่วงน้ำหนัก'
+    : isCushionProtector
+      ? 'เลือกขนาดเบาะ / ขนาดสั่งทำ'
+      : 'เลือกขนาดที่นอน';
   const customPrompt = isWeightedDuvet
     ? 'กรอกขนาดผ้าห่มถ่วงน้ำหนักจริงของคุณ'
-    : 'กรอกขนาดที่นอนจริงของคุณ';
+    : isCushionProtector
+      ? 'กรอกขนาดเบาะของคุณ (ยาว × กว้าง × สูง)'
+      : 'กรอกขนาดที่นอนจริงของคุณ';
   const sizeHintText = isWeightedDuvet ? 'ดูวิธีวัดขนาดผ้าห่ม' : 'ดูคู่มือขนาด';
   const customTabNote = isWeightedDuvet
     ? 'วัดจากผ้าห่มถ่วงน้ำหนักจริง (กว้าง × ยาว) ไม่ใช่ขนาดที่นอน'
-    : 'วัดจากขนาดที่นอนจริงของคุณ';
+    : isCushionProtector
+      ? 'วัดจากเบาะจริงที่จุดยาวที่สุด กว้างที่สุด และสูงที่สุด'
+      : 'วัดจากขนาดที่นอนจริงของคุณ';
   const localized = html
     .replace(
       /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
@@ -304,8 +313,34 @@ function applyThaiProductUiLocalization(html: string, tagline: string, slug: str
     .replace(/>\s*Custom Fit\s*<\/div>/i, '>ตัดเย็บตามขนาด</div>')
     .replace(/>\s*Human Safe\s*<\/div>/i, '>ปลอดภัยต่อการใช้งาน</div>')
     .replace(/>\s*Pet Resist\s*<\/div>/i, '>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>');
+  if (isCushionProtector) {
+    return localized
+      .replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">ความสูง (H)</label>')
+      .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="แผนภาพวัดขนาดเบาะ: ความยาว (L), ความกว้าง (W), ความสูง (H)"');
+  }
   if (!safeTagline) return localized;
   return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+
+function applyCushionProtectorUiLocalization(html: string, isTh: boolean): string {
+  if (isTh) {
+    return html
+      .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">เลือกขนาดเบาะ / ขนาดสั่งทำ</div>')
+      .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">กรอกขนาดเบาะของคุณ</strong>')
+      .replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">วัดจากเบาะจริงที่จุดยาวที่สุด กว้างที่สุด และสูงที่สุด</p>')
+      .replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">ความหนา (T)</label>')
+      .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="แผนภาพการวัดเบาะ แสดง Width (W), Length (L), และ Thickness (T)"')
+      .replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="แผนภาพการวัดเบาะ แสดง Width (W), Length (L), และ Thickness (T)">')
+      .replace(/<div class="size-hint"><a href="\/th\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/th/sizeguide/">ดูคู่มือขนาด</a><br><span style="display:block;margin-top:6px;">ทรงไม่มาตรฐาน? ส่งรูปถ่ายหรือสเก็ตช์ขนาดเพื่อขอใบเสนอราคาแบบสั่งทำ</span></div>');
+  }
+  return html
+    .replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">Select Cushion Size</div>')
+    .replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">Enter your exact cushion dimensions</strong>')
+    .replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">Measure your cushion at its longest, widest, and thickest points</p>')
+    .replace(/<label for="dim-depth">Depth \(D\)<\/label>/i, '<label for="dim-depth">Thickness (T)</label>')
+    .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)"')
+    .replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)">')
+    .replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/sizeguide/">View full size guide</a><br><span style="display:block;margin-top:6px;">Irregular shape? Send us a photo or measurement sketch for a custom quote.</span></div>');
 }
 
 function applyFlatSheetExtraDeepPocketGuardrails(html: string, isTh: boolean): string {
@@ -383,6 +418,9 @@ export async function onRequest(context: any): Promise<Response> {
     }
     if (slug === 'flat-sheet-extra-deep-pocket') {
       html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
+    }
+    if (slug === 'custom-waterproof-cushion-protector') {
+      html = applyCushionProtectorUiLocalization(html, isTh);
     }
 
     // Extract mainImage BEFORE the if block so it's in scope for JSON-LD
