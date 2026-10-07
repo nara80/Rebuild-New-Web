@@ -1207,6 +1207,27 @@
     sendGa4Event('add_to_cart', payload);
   }
 
+  function trackQuoteRequest(meta) {
+    if (!meta || !meta.quote_id) return;
+    var currency = getGa4Currency();
+    var unitPrice = currency === 'THB'
+      ? Number(meta.price_thb || 0)
+      : Number(meta.price_usd || 0);
+    var payload = {
+      quote_id: String(meta.quote_id),
+      product_name: meta.product_name || getProductName(),
+      currency: currency,
+      value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+      items: [{
+        item_id: meta.product_slug || getProductSlug(),
+        item_name: meta.product_name || getProductName(),
+        price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        quantity: 1
+      }]
+    };
+    sendGa4Event('quote_request', payload);
+  }
+
   function applyDerivedMarkupToResult(result) {
     if (!result || !DERIVED_MARKUP_PCT) return result;
     var factor = 1 + (DERIVED_MARKUP_PCT / 100);
@@ -1589,6 +1610,7 @@
       : state.fabric;
 
     var productSlug = window.location.pathname.split('/').filter(Boolean).slice(-1)[0] || 'fitted-sheet';
+    var productName = getProductName();
     var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
     if (!turnstileToken) {
       alert('Please complete the security check.');
@@ -1637,6 +1659,13 @@
       submitBtn.textContent = 'Submit';
 
       if (data.success) {
+        trackQuoteRequest({
+          quote_id: data.quote_id,
+          product_slug: productSlug,
+          product_name: productName,
+          price_usd: state.quotePriceUsd,
+          price_thb: state.quotePriceThb
+        });
         quoteOverlay.classList.remove('open');
         if (window.turnstile && typeof window.turnstile.reset === 'function') window.turnstile.reset();
         document.getElementById('confirm-text').innerHTML =

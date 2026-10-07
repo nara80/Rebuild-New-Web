@@ -87,6 +87,7 @@ export const onRequest: PagesFunction<{
     is_quote: true,
     quote_id: quoteId,
     free_shipping: Number(quote.free_shipping || 0) === 1,
+    quote_currency: isUsdQuoted ? "USD" : "THB",
     price_thb: priceThb,
     price_usd: priceUsd,
   } : null;
@@ -297,8 +298,72 @@ export const onRequest: PagesFunction<{
   <script id="quote-cart-data" type="application/json">${cartItemJson}</script>
   <script src="/js/cart.js"></script>
   <script>
+    function ensureGa4Stub() {
+      window.dataLayer = window.dataLayer || [];
+      if (typeof window.gtag !== 'function') {
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+      }
+    }
+
+    function sendGa4Event(name, params) {
+      try {
+        ensureGa4Stub();
+        window.gtag('event', name, params || {});
+      } catch (e) {}
+    }
+
+    function trackViewQuote(meta) {
+      if (!meta || !meta.quote_id) return;
+      var dedupeKey = 'mildmate-view-quote-' + meta.quote_id;
+      try {
+        if (sessionStorage.getItem(dedupeKey) === '1') return;
+      } catch (e) {}
+      var payload = {
+        quote_id: meta.quote_id,
+        product_name: meta.product_name || 'Custom Product',
+        currency: meta.currency || 'USD',
+        value: Math.round((Number(meta.value || 0) || 0) * 100) / 100
+      };
+      sendGa4Event('view_quote', payload);
+      try {
+        sessionStorage.setItem(dedupeKey, '1');
+      } catch (e2) {}
+    }
+
+    function trackQuoteAddToCart(item) {
+      if (!item || !item.quote_id) return;
+      var currency = item.quote_currency === 'THB' ? 'THB' : 'USD';
+      var unitPrice = currency === 'THB'
+        ? Number(item.price_thb || 0)
+        : Number(item.price_usd || 0);
+      var payload = {
+        quote_id: String(item.quote_id),
+        currency: currency,
+        value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        items: [{
+          item_id: item.product_slug || 'custom-quote',
+          item_name: item.product_name || item.title || 'Custom Quote',
+          price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+          quantity: Number(item.qty || 1) || 1
+        }]
+      };
+      sendGa4Event('add_to_cart', payload);
+    }
+
     var _quoteCartItem = null;
     var _quoteIsAdded = false;
+    var _quoteEventMeta = ${JSON.stringify(
+      quote
+        ? {
+            quote_id: String(quoteId),
+            product_name: productTitle,
+            currency: isUsdQuoted ? "USD" : "THB",
+            value: isUsdQuoted ? Number(priceUsd || 0) : Number(priceThb || 0),
+          }
+        : null
+    )};
     try {
       var _dataEl = document.getElementById('quote-cart-data');
       _quoteCartItem = _dataEl ? JSON.parse(_dataEl.textContent || 'null') : null;
@@ -325,6 +390,7 @@ export const onRequest: PagesFunction<{
           else cart.items.push(_quoteCartItem);
           localStorage.setItem(key, JSON.stringify(cart));
         }
+        trackQuoteAddToCart(_quoteCartItem);
         _quoteIsAdded = true;
         showToast('Added to cart. Redirecting...');
         var btn = document.getElementById('quote-cta');
@@ -358,6 +424,7 @@ export const onRequest: PagesFunction<{
 
     var _cta = document.getElementById('quote-cta');
     if (_cta) _cta.addEventListener('click', window.addQuoteToCart);
+    if (_quoteEventMeta && _quoteEventMeta.quote_id) trackViewQuote(_quoteEventMeta);
 
   </script>
 </body>

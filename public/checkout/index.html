@@ -751,7 +751,7 @@
         });
       }
 
-      function trackBeginCheckoutOnce() {
+      function trackBeginCheckoutOnSessionCreate(sessionId) {
         if (ga4BeginCheckoutSent) return;
         var currency = getActiveCurrency();
         var items = buildGa4Items(currency);
@@ -764,6 +764,7 @@
           value: Math.round(value * 100) / 100,
           items: items
         };
+        if (sessionId) payload.checkout_session_id = String(sessionId);
         sendGa4Event('begin_checkout', payload);
         ga4BeginCheckoutSent = true;
       }
@@ -1849,7 +1850,6 @@
             });
           }
           populateStep2Summary();
-          trackBeginCheckoutOnce();
         }
         if (step === 3) renderStep3();
         if (step === 3) updatePolicyConsentGate();
@@ -2002,7 +2002,10 @@
           }
 
           if (resp.ok && data.url) {
-            window.location.href = data.url;
+            trackBeginCheckoutOnSessionCreate(data.session_id || '');
+            setTimeout(function() {
+              window.location.href = data.url;
+            }, 120);
           } else {
             // Humanize known Stripe error messages
             var errMsg = data.error || 'Payment setup failed. Please try again.';
