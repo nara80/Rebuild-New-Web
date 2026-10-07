@@ -1,11 +1,622 @@
-# MildMate GTM / Google Ads Tracking — Status Update
+# MildMate — Google Ads + GTM Conversion Tracking Handoff
 Date: 2026-10-07
 
-Your summary is clear and correct, and the current state is exactly where it should be:
+## Objective
 
-- Event/data layer foundation is in place.
-- New variables and custom-event triggers are created.
-- `quote_request` has been verified in Preview with correct typing and payload shape.
-- Ads conversion tags and Conversion Linker are the remaining setup.
-- Full end-to-end QA and publish are still pending.
-- Legacy GTM objects are explicitly out of scope until separate cleanup.
+Set up reliable Google Ads purchase conversion tracking for:
+
+- Website: https://www.mildmate.com
+- Existing GTM container
+- Existing GA4 ecommerce/dataLayer implementation
+- Google Ads account
+- Stripe production checkout
+
+The implementation should use the existing ecommerce `dataLayer` events rather than URL/page-load guessing.
+
+---
+
+# 1. Google Tag Manager
+
+## Active GTM container
+
+- Account: MildMate
+- GTM Account ID: `6006330621`
+- Container: `www.mildmate.com`
+- Container ID: `GTM-KLJZZM9`
+- Internal container ID visible in GTM URL: `61635819`
+
+The container is installed on the live MildMate website.
+
+---
+
+# 2. GTM permissions issue — resolved
+
+Originally:
+
+- `nara19080@gmail.com` owned/administered the GTM container.
+- `mildmateshop@gmail.com` was being used for Google Ads.
+- Google Ads → “Set up in Google Tag Manager” initially returned:
+  `No containers to select.`
+
+We added:
+
+- `mildmateshop@gmail.com`
+
+as an administrator of the MildMate GTM account/container.
+
+Confirmed container permissions:
+
+- Publish ✅
+- Approve ✅
+- Edit ✅
+- Read ✅
+
+After this, Google Ads could correctly locate:
+
+`www.mildmate.com (GTM-KLJZZM9)`
+
+---
+
+# 3. Existing GA4 Google Tag
+
+There was already an existing Google Tag in GTM:
+
+Tag:
+`Universal Analytics GA4`
+
+Type:
+`Google Tag`
+
+Tag ID:
+`G-0GWVSPJLVJ`
+
+Trigger:
+`All Pages`
+
+Configuration:
+`send_page_view = true`
+
+This existing GA4 tag remains in place.
+
+Do NOT replace or remove it as part of the Ads work.
+
+There are also several legacy Universal Analytics / old click-tracking tags in the container. They were not cleaned up during this task.
+
+---
+
+# 4. Google Ads conversion action created
+
+A new Google Ads website conversion action was created.
+
+Conversion category:
+`Purchase`
+
+Conversion name:
+`Purchase - GTM`
+
+Implementation:
+`Manual with code / Google Tag Manager`
+
+Google Ads Conversion ID:
+`18373693725`
+
+Google Tag destination:
+`AW-18373693725`
+
+The conversion was intentionally configured as:
+
+- Secondary action
+- Not used for bidding optimization yet
+
+Reason:
+We want to validate data quality first before allowing Google Ads automated bidding to optimize against it.
+
+Purchase settings selected:
+
+- Different value for each conversion
+- Count: Every
+- Click-through window: 90 days
+- Engaged-view window: 3 days
+- View-through window: 1 day
+- Attribution: Data-driven
+- Enhanced conversions: not configured yet
+
+Do not change this conversion to Primary until tracking is validated with a genuine successful purchase.
+
+---
+
+# 5. Google Ads base Google Tag created in GTM
+
+Created:
+
+`Google Tag AW-18373693725`
+
+Type:
+`Google Tag`
+
+Tag ID:
+`AW-18373693725`
+
+Trigger:
+`Initialization - All Pages`
+
+Purpose:
+
+Provide the Google Ads destination/configuration required by the Google Ads conversion tracking tag.
+
+Before adding this tag, the Purchase tag showed:
+
+`No Google tag found in this container`
+
+After adding it, GTM correctly showed:
+
+`Google tag found in this container`
+
+and:
+
+`This tag will use the configuration of Google tag MildMate.`
+
+This issue is therefore resolved.
+
+---
+
+# 6. Conversion Linker created
+
+Created GTM tag:
+
+`Conversion Linker - All Pages`
+
+Type:
+`Conversion Linker`
+
+Trigger:
+`All Pages`
+
+Default linker options were retained.
+
+Purpose:
+
+Preserve Google Ads click information such as GCLID and allow conversion attribution back to an ad click.
+
+---
+
+# 7. Purchase Google Ads tag
+
+Created/imported:
+
+`Purchase - GTM`
+
+Type:
+`Google Ads Conversion Tracking`
+
+Google Ads Conversion ID:
+`18373693725`
+
+Conversion label:
+Configured from the Google Ads conversion action.
+
+Trigger:
+`CE - purchase`
+
+Tag firing:
+Once per event.
+
+Dynamic ecommerce fields are configured as:
+
+Conversion Value:
+`{{DLV - Value}}`
+
+Transaction ID:
+`{{DLV - Transaction ID}}`
+
+Currency Code:
+`{{DLV - Currency}}`
+
+Conversion Linking:
+`true`
+
+Therefore the intended flow is:
+
+Website
+→ dataLayer `purchase`
+→ GTM `CE - purchase`
+→ `Purchase - GTM`
+→ Google Ads `AW-18373693725`
+
+Transaction ID is intentionally passed to Google Ads to help prevent duplicate purchase conversions.
+
+---
+
+# 8. Ecommerce GTM triggers
+
+The following Custom Event triggers exist:
+
+- `CE - add_to_cart`
+- `CE - begin_checkout`
+- `CE - purchase`
+- `CE - quote_request`
+
+These correspond to ecommerce/application events generated by the MildMate site.
+
+---
+
+# 9. Data Layer Variables
+
+Confirmed data-layer variables include:
+
+- `DLV - Value`
+- `DLV - Currency`
+- `DLV - Transaction ID`
+- `DLV - Items`
+- `DLV - Quote ID`
+
+These were added as part of the ecommerce measurement work and are now included in the published GTM version.
+
+Most important for Google Ads Purchase:
+
+- `DLV - Value`
+- `DLV - Currency`
+- `DLV - Transaction ID`
+
+---
+
+# 10. Tested ecommerce events
+
+Using GTM Preview / Tag Assistant, we successfully observed real website events including:
+
+### Product page
+
+`view_item`
+
+was visible in Tag Assistant.
+
+### Custom quote flow
+
+A test Custom Waterproof Cushion Protector quote was submitted.
+
+Tag Assistant showed:
+
+`quote_request`
+
+The website also displayed:
+
+`Quote Submitted`
+
+Therefore the quote event/dataLayer flow is working.
+
+### Checkout flow
+
+Proceeding from the site to checkout generated:
+
+`begin_checkout`
+
+in Tag Assistant.
+
+This confirms the site → GTM event pipeline is functioning through checkout initiation.
+
+---
+
+# 11. Purchase event has NOT been intentionally test-paid
+
+Important:
+
+Stripe is currently production/live checkout.
+
+During testing we reached:
+
+`checkout.stripe.com`
+
+with a real checkout/payment screen.
+
+We deliberately DID NOT complete a real payment merely to test GTM.
+
+Therefore:
+
+- `view_item` ✅ observed
+- `quote_request` ✅ observed
+- `begin_checkout` ✅ observed
+- successful `purchase` event ⏳ not yet end-to-end verified with a genuine completed payment
+- `Purchase - GTM` successful firing on a real purchase ⏳ still requires future validation
+
+Do NOT create fake purchases in production merely for tracking verification.
+
+The next real customer/payment can be used for final purchase validation.
+
+---
+
+# 12. CSP problem discovered and fixed
+
+GTM initially reported:
+
+`Container quality: Urgent`
+
+because the MildMate Content Security Policy was blocking Google measurement/tag resources.
+
+Affected routes included at least:
+
+- `/`
+- `/checkout/`
+
+Further audit covered:
+
+- `/`
+- `/checkout/`
+- `/product/standard-fitted-sheet/`
+- `/quote/QT-TEST-HEADER/`
+- `/order-confirmed/`
+
+There are two effective CSP sources:
+
+### Static Pages
+`public/_headers`
+
+### Dynamic Worker responses
+`public/_worker.js`
+
+with mirrored implementation in:
+
+`public/index.js`
+
+All three were updated.
+
+---
+
+# 13. Final Google measurement CSP support
+
+The CSP was updated to support:
+
+- GTM
+- GTM Preview Mode
+- GA4
+- Google Ads Conversion Tracking
+- Conversion Linker
+
+without adding `*`, removing CSP, or introducing additional unsafe directives.
+
+Final relevant Google resources include:
+
+## script-src
+
+- `https://www.googletagmanager.com`
+- `https://tagmanager.google.com`
+- `https://www.googleadservices.com`
+- `https://www.google.com`
+
+## style-src
+
+- `https://www.googletagmanager.com`
+- `https://tagmanager.google.com`
+
+## img-src
+
+- `https://www.googletagmanager.com`
+- `https://ssl.gstatic.com`
+- `https://www.gstatic.com`
+- `https://www.google-analytics.com`
+- `https://www.googleadservices.com`
+- `https://googleads.g.doubleclick.net`
+- `https://pagead2.googlesyndication.com`
+- `https://www.google.com`
+
+## connect-src
+
+- `https://www.google-analytics.com`
+- `https://region1.google-analytics.com`
+- `https://www.googletagmanager.com`
+- `https://tagmanager.google.com`
+- `https://www.googleadservices.com`
+- `https://googleads.g.doubleclick.net`
+- `https://pagead2.googlesyndication.com`
+- `https://www.google.com`
+- `https://ad.doubleclick.net`
+
+## frame-src
+
+- `https://www.googletagmanager.com`
+
+## font-src
+
+- `data:`
+
+Existing non-Google CSP rules were preserved.
+
+---
+
+# 14. GTM Preview / Tag Assistant verification
+
+Initially GTM Preview could not connect:
+
+- `0 Google tags found`
+- timeout connecting to mildmate.com
+
+Two causes were addressed:
+
+1. CSP Google/GTM Preview resources were incomplete.
+2. Brave Shields/tracker blocking interfered with debugging.
+
+After:
+
+- updating CSP
+- turning Brave Shields OFF for Tag Assistant / MildMate during debugging
+
+Tag Assistant successfully showed:
+
+`Connected`
+
+and:
+
+`Tag Assistant Connected`
+
+It detected multiple Google tags, including:
+
+- `GTM-KLJZZM9`
+- `AW-18373693725`
+- existing Google Analytics destinations
+
+Therefore GTM Preview connectivity is now working.
+
+Brave Shields only needed to be disabled for debugging; this is not a website production requirement.
+
+---
+
+# 15. GTM Version 16 published
+
+The GTM workspace was successfully published.
+
+Version:
+`16`
+
+Version name:
+`Google Ads Purchase Conversion Tracking`
+
+Published:
+`2026-10-07 11:30 AM`
+
+Published by:
+`mildmateshop@gmail.com`
+
+Status:
+`Live, Latest`
+
+Version description:
+
+> Added Google Ads tag AW-18373693725, Conversion Linker,
+> Purchase - GTM conversion tag, ecommerce data layer
+> variables/triggers, and CSP support for Google Ads/GTM.
+
+The published version includes the Ads/GTM changes discussed above.
+
+The workspace therefore no longer contains these as unpublished-only changes.
+
+---
+
+# 16. Current architecture
+
+Current measurement path:
+
+User
+→ mildmate.com
+→ website ecommerce/dataLayer event
+→ GTM-KLJZZM9
+→ Google Tags
+
+Analytics path:
+
+dataLayer ecommerce events
+→ GTM
+→ GA4
+
+Ads attribution path:
+
+Google Ads click/GCLID
+→ Google Tag AW-18373693725
+→ Conversion Linker
+→ purchase event
+→ CE - purchase
+→ Purchase - GTM
+→ Google Ads Purchase conversion
+
+Dynamic purchase data:
+
+`value`
+→ `DLV - Value`
+
+`currency`
+→ `DLV - Currency`
+
+`transaction_id`
+→ `DLV - Transaction ID`
+
+---
+
+# 17. Current state
+
+## Completed
+
+✅ Google Ads Purchase conversion created
+
+✅ GTM permissions/account mismatch resolved
+
+✅ Google Ads base Google Tag added
+
+✅ Conversion Linker added
+
+✅ Google Ads Purchase conversion tag added
+
+✅ Purchase tag uses dynamic value
+
+✅ Purchase tag uses dynamic currency
+
+✅ Purchase tag uses transaction ID
+
+✅ Purchase trigger uses ecommerce `purchase` custom event
+
+✅ Ecommerce triggers/variables published
+
+✅ CSP updated for GTM/GA4/Google Ads/Preview Mode
+
+✅ Tag Assistant connects successfully
+
+✅ `view_item` observed
+
+✅ `quote_request` observed
+
+✅ `begin_checkout` observed
+
+✅ GTM Version 16 published and Live
+
+## Still pending
+
+⏳ End-to-end successful `purchase` event validation
+
+⏳ Verify `Purchase - GTM` fires exactly once after a real successful Stripe payment
+
+⏳ Verify actual transaction ID/value/currency arriving in Google Ads
+
+⏳ Verify Google Ads conversion diagnostic/status after real conversion data arrives
+
+⏳ Consider promoting `Purchase - GTM` from Secondary → Primary only after validation
+
+⏳ Enhanced Conversions can be evaluated later; not required for current base setup
+
+---
+
+# 18. Important instruction for next work
+
+Do NOT redesign the GTM architecture unless a concrete failure is found.
+
+Do NOT:
+
+- create a duplicate Google Ads Purchase conversion
+- create another AW-18373693725 base tag
+- create another Conversion Linker
+- fire Purchase from a thank-you-page URL alone
+- remove transaction ID
+- replace the existing GA4 Google Tag
+- make `Purchase - GTM` Primary before validation
+
+Next work should be verification/reconciliation, not rebuilding.
+
+Primary next step:
+
+Check Google Ads:
+
+Goals
+→ Conversions
+→ Summary
+
+and confirm the state of:
+
+`Purchase - GTM`
+
+Then use the next genuine completed Stripe order to verify:
+
+1. website emits `purchase`
+2. `CE - purchase` activates
+3. `Purchase - GTM` fires once
+4. `value` is populated
+5. `currency` is populated
+6. `transaction_id` is populated
+7. Google Ads eventually records the conversion
+
+Do not require a production payment solely for testing.
