@@ -3368,10 +3368,11 @@ var TH_STATIC_HTML_REPLACEMENTS = [
 function applyThaiProductUiLocalization(html, tagline, slug) {
   const safeTagline = String(tagline || "").trim();
   const isWeightedDuvet = slug === "weighted-duvet-cover";
-  const sizeLabel = isWeightedDuvet ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01" : "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19";
-  const customPrompt = isWeightedDuvet ? "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
+  const isCushionProtector = slug === "custom-waterproof-cushion-protector";
+  const sizeLabel = isWeightedDuvet ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01" : isCushionProtector ? "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30 / \u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33" : "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19";
+  const customPrompt = isWeightedDuvet ? "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13" : isCushionProtector ? "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13 (\u0E22\u0E32\u0E27 \xD7 \u0E01\u0E27\u0E49\u0E32\u0E07 \xD7 \u0E2A\u0E39\u0E07)" : "\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
   const sizeHintText = isWeightedDuvet ? "\u0E14\u0E39\u0E27\u0E34\u0E18\u0E35\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21" : "\u0E14\u0E39\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14";
-  const customTabNote = isWeightedDuvet ? "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07 (\u0E01\u0E27\u0E49\u0E32\u0E07 \xD7 \u0E22\u0E32\u0E27) \u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19" : "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
+  const customTabNote = isWeightedDuvet ? "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E1C\u0E49\u0E32\u0E2B\u0E48\u0E21\u0E16\u0E48\u0E27\u0E07\u0E19\u0E49\u0E33\u0E2B\u0E19\u0E31\u0E01\u0E08\u0E23\u0E34\u0E07 (\u0E01\u0E27\u0E49\u0E32\u0E07 \xD7 \u0E22\u0E32\u0E27) \u0E44\u0E21\u0E48\u0E43\u0E0A\u0E48\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19" : isCushionProtector ? "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E40\u0E1A\u0E32\u0E30\u0E08\u0E23\u0E34\u0E07\u0E17\u0E35\u0E48\u0E08\u0E38\u0E14\u0E22\u0E32\u0E27\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E01\u0E27\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E41\u0E25\u0E30\u0E2A\u0E39\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14" : "\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13";
   const localized = html.replace(
     /<button class="config-tab active" data-tab="standard">[\s\S]*?<\/button>/i,
     '<button class="config-tab active" data-tab="standard">\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19</button>'
@@ -3379,10 +3380,20 @@ function applyThaiProductUiLocalization(html, tagline, slug) {
     /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
     '<button class="config-tab" data-tab="custom">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>'
   ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<div class="panel-label">\s*Select Duvet Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact duvet dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, `<div class="size-hint"><a href="/th/sizeguide/">${sizeHintText}</a></div>`).replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, `<p class="dim-diagram-caption">${customTabNote}</p>`).replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
+  if (isCushionProtector) {
+    return localized.replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30: \u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L), \u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W), \u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)"');
+  }
   if (!safeTagline) return localized;
   return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 __name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
+function applyCushionProtectorUiLocalization(html, isTh) {
+  if (isTh) {
+    return html.replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30 / \u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13</strong>').replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">\u0E27\u0E31\u0E14\u0E08\u0E32\u0E01\u0E40\u0E1A\u0E32\u0E30\u0E08\u0E23\u0E34\u0E07\u0E17\u0E35\u0E48\u0E08\u0E38\u0E14\u0E22\u0E32\u0E27\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E01\u0E27\u0E49\u0E32\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14 \u0E41\u0E25\u0E30\u0E2A\u0E39\u0E07\u0E17\u0E35\u0E48\u0E2A\u0E38\u0E14</p>').replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E2B\u0E19\u0E32 (T)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14\u0E40\u0E1A\u0E32\u0E30 \u0E41\u0E2A\u0E14\u0E07 Width (W), Length (L), \u0E41\u0E25\u0E30 Thickness (T)"').replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E01\u0E32\u0E23\u0E27\u0E31\u0E14\u0E40\u0E1A\u0E32\u0E30 \u0E41\u0E2A\u0E14\u0E07 Width (W), Length (L), \u0E41\u0E25\u0E30 Thickness (T)">').replace(/<div class="size-hint"><a href="\/th\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/th/sizeguide/">\u0E14\u0E39\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a><br><span style="display:block;margin-top:6px;">\u0E17\u0E23\u0E07\u0E44\u0E21\u0E48\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19? \u0E2A\u0E48\u0E07\u0E23\u0E39\u0E1B\u0E16\u0E48\u0E32\u0E22\u0E2B\u0E23\u0E37\u0E2D\u0E2A\u0E40\u0E01\u0E47\u0E15\u0E0A\u0E4C\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E02\u0E2D\u0E43\u0E1A\u0E40\u0E2A\u0E19\u0E2D\u0E23\u0E32\u0E04\u0E32\u0E41\u0E1A\u0E1A\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</span></div>');
+  }
+  return html.replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, '<div class="panel-label">Select Cushion Size</div>').replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, '<strong style="font-size:0.9375rem;">Enter your exact cushion dimensions</strong>').replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, '<p class="dim-diagram-caption">Measure your cushion at its longest, widest, and thickest points</p>').replace(/<label for="dim-depth">Depth \(D\)<\/label>/i, '<label for="dim-depth">Thickness (T)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)"').replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)">').replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/sizeguide/">View full size guide</a><br><span style="display:block;margin-top:6px;">Irregular shape? Send us a photo or measurement sketch for a custom quote.</span></div>').replace(/>\s*Pet Resist\s*<\/div>/gi, ">Pet Accident Protection</div>").replace(/Measure the cushion itself and provide width,\s*length,\s*and thickness\.\s*Do not use mattress dimensions\./gi, "Measure the cushion itself and provide width, length, and thickness.");
+}
+__name(applyCushionProtectorUiLocalization, "applyCushionProtectorUiLocalization");
 function applyFlatSheetExtraDeepPocketGuardrails(html, isTh) {
   if (isTh) return html;
   return html.replace(
@@ -3436,6 +3447,9 @@ async function onRequest3(context) {
     }
     if (slug === "flat-sheet-extra-deep-pocket") {
       html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
+    }
+    if (slug === "custom-waterproof-cushion-protector") {
+      html = applyCushionProtectorUiLocalization(html, isTh);
     }
     let images = [];
     if (product && product.images) {
@@ -3590,7 +3604,8 @@ async function onRequest3(context) {
       status: 200,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=60"
+        "Cache-Control": "public, max-age=60",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;"
       }
     });
   } catch (err4) {
@@ -17305,6 +17320,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     is_quote: true,
     quote_id: quoteId,
     free_shipping: Number(quote.free_shipping || 0) === 1,
+    quote_currency: isUsdQuoted ? "USD" : "THB",
     price_thb: priceThb,
     price_usd: priceUsd
   } : null;
@@ -17504,8 +17520,70 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   <script id="quote-cart-data" type="application/json">${cartItemJson}<\/script>
   <script src="/js/cart.js"><\/script>
   <script>
+    function ensureGa4Stub() {
+      window.dataLayer = window.dataLayer || [];
+      if (typeof window.gtag !== 'function') {
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+      }
+    }
+
+    function sendGa4Event(name, params) {
+      try {
+        ensureGa4Stub();
+        window.gtag('event', name, params || {});
+      } catch (e) {}
+    }
+
+    function trackViewQuote(meta) {
+      if (!meta || !meta.quote_id) return;
+      var dedupeKey = 'mildmate-view-quote-' + meta.quote_id;
+      try {
+        if (sessionStorage.getItem(dedupeKey) === '1') return;
+      } catch (e) {}
+      var payload = {
+        quote_id: meta.quote_id,
+        product_name: meta.product_name || 'Custom Product',
+        currency: meta.currency || 'USD',
+        value: Math.round((Number(meta.value || 0) || 0) * 100) / 100
+      };
+      sendGa4Event('view_quote', payload);
+      try {
+        sessionStorage.setItem(dedupeKey, '1');
+      } catch (e2) {}
+    }
+
+    function trackQuoteAddToCart(item) {
+      if (!item || !item.quote_id) return;
+      var currency = item.quote_currency === 'THB' ? 'THB' : 'USD';
+      var unitPrice = currency === 'THB'
+        ? Number(item.price_thb || 0)
+        : Number(item.price_usd || 0);
+      var payload = {
+        quote_id: String(item.quote_id),
+        currency: currency,
+        value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        items: [{
+          item_id: item.product_slug || 'custom-quote',
+          item_name: item.product_name || item.title || 'Custom Quote',
+          price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+          quantity: Number(item.qty || 1) || 1
+        }]
+      };
+      sendGa4Event('add_to_cart', payload);
+    }
+
     var _quoteCartItem = null;
     var _quoteIsAdded = false;
+    var _quoteEventMeta = ${JSON.stringify(
+    quote ? {
+      quote_id: String(quoteId),
+      product_name: productTitle,
+      currency: isUsdQuoted ? "USD" : "THB",
+      value: isUsdQuoted ? Number(priceUsd || 0) : Number(priceThb || 0)
+    } : null
+  )};
     try {
       var _dataEl = document.getElementById('quote-cart-data');
       _quoteCartItem = _dataEl ? JSON.parse(_dataEl.textContent || 'null') : null;
@@ -17532,6 +17610,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
           else cart.items.push(_quoteCartItem);
           localStorage.setItem(key, JSON.stringify(cart));
         }
+        trackQuoteAddToCart(_quoteCartItem);
         _quoteIsAdded = true;
         showToast('Added to cart. Redirecting...');
         var btn = document.getElementById('quote-cta');
@@ -17549,9 +17628,9 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^\/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^\/th/, '') || '/';
       }
     };
 
@@ -17565,6 +17644,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
 
     var _cta = document.getElementById('quote-cta');
     if (_cta) _cta.addEventListener('click', window.addQuoteToCart);
+    if (_quoteEventMeta && _quoteEventMeta.quote_id) trackViewQuote(_quoteEventMeta);
 
   <\/script>
 </body>
@@ -17572,7 +17652,8 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   return new Response(html, {
     headers: {
       "Content-Type": "text/html;charset=utf-8",
-      "Cache-Control": "no-cache"
+      "Cache-Control": "no-cache",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;"
     }
   });
 }, "onRequest");
@@ -17812,6 +17893,7 @@ __name(escHtml3, "escHtml");
 // _middleware.ts
 var CACHE_TTL = 5 * 60 * 1e3;
 var _cache = { fetchedAt: 0 };
+var CSP_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
 var FALLBACK_HEADER = `<header class="site-header">
     <div class="container header-inner">
 
@@ -18570,11 +18652,15 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response6.status, headers: response6.headers });
+  const nextHeaders = new Headers(response6.headers);
+  if (!nextHeaders.has("Content-Security-Policy")) {
+    nextHeaders.set("Content-Security-Policy", CSP_POLICY);
+  }
+  return new Response(html, { status: response6.status, headers: nextHeaders });
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-jR4pMp/functionsRoutes-0.3822606291647892.mjs
+// ../.wrangler/tmp/pages-UkiWMB/functionsRoutes-0.11968157990306594.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
