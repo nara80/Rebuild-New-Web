@@ -50,6 +50,8 @@ const NICHE_DISPLAY: Record<string, string> = {
   'rv-truck': 'RV & Truck Cab'
 };
 
+const SECURITY_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
+
 function hasToken(slug: string, token: string): boolean {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -340,7 +342,9 @@ function applyCushionProtectorUiLocalization(html: string, isTh: boolean): strin
     .replace(/<label for="dim-depth">Depth \(D\)<\/label>/i, '<label for="dim-depth">Thickness (T)</label>')
     .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)"')
     .replace(/<img src="\/images\/products\/common\/measure-mattress-diagram-01\.png" alt="[^"]*">/i, '<img src="/images/products/common/measure-cushion-diagram-01.png" alt="Cushion measurement diagram showing Width (W), Length (L), and Thickness (T)">')
-    .replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/sizeguide/">View full size guide</a><br><span style="display:block;margin-top:6px;">Irregular shape? Send us a photo or measurement sketch for a custom quote.</span></div>');
+    .replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, '<div class="size-hint"><a href="/sizeguide/">View full size guide</a><br><span style="display:block;margin-top:6px;">Irregular shape? Send us a photo or measurement sketch for a custom quote.</span></div>')
+    .replace(/>\s*Pet Resist\s*<\/div>/gi, '>Pet Accident Protection</div>')
+    .replace(/Measure the cushion itself and provide width,\s*length,\s*and thickness\.\s*Do not use mattress dimensions\./gi, 'Measure the cushion itself and provide width, length, and thickness.');
 }
 
 function applyFlatSheetExtraDeepPocketGuardrails(html: string, isTh: boolean): string {
@@ -629,6 +633,7 @@ export async function onRequest(context: any): Promise<Response> {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=60',
+        'Content-Security-Policy': SECURITY_CSP,
       },
     });
   } catch (err) {

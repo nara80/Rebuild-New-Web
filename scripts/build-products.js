@@ -389,6 +389,12 @@ function buildCustomizable(slug, p, prod) {
     html = html.split(key).join(value);
   }
 
+  if (slug === 'custom-waterproof-cushion-protector') {
+    html = html
+      .replace(/>\s*Pet Resist\s*<\/div>/gi, '>Pet Accident Protection</div>')
+      .replace(/Measure the cushion itself and provide width,\s*length,\s*and thickness\.\s*Do not use mattress dimensions\./gi, 'Measure the cushion itself and provide width, length, and thickness.');
+  }
+
   return normalizeMojibake(html);
 }
 
