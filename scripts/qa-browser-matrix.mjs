@@ -67,6 +67,13 @@ async function dataLayerEvents(page) {
     .map((e) => e.event));
 }
 
+async function getConsentCookie(page) {
+  return page.evaluate(() => {
+    const m = document.cookie.match(/(?:^|;\s*)mm-consent=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  });
+}
+
 const browser = await chromium.launch({ executablePath: EDGE, headless: true });
 try {
   // 1. Consent granted (pre-set) on EN homepage -> GTM loads with staging ID exactly once.
@@ -108,6 +115,7 @@ try {
     record('th-mobile accept: GTM requested once with staging ID', gtmRequests.length === 1 && gtmRequests[0].includes('GTM-M9DMRGCD'), gtmRequests.join(',') || 'none');
     record('th-mobile accept: banner hidden', !(await page.locator('#cookie-banner').isVisible().catch(() => false)));
     record('th-mobile accept: consent_update + gtm.js', evts.includes('mildmate_consent_update') && evts.includes('gtm.js'), evts.join(','));
+    record('th-mobile accept: consent cookie mirrored', (await getConsentCookie(page)).includes('analytics:granted') && (await getConsentCookie(page)).includes('marketing:granted'), await getConsentCookie(page));
     await ctx.close();
   }
 
@@ -162,6 +170,62 @@ try {
     await page.waitForTimeout(1500);
     const evts = await dataLayerEvents(page);
     record('isolation: prod IDs blocked on localhost', gtmRequests.length === 0 && !evts.includes('gtm.js'), gtmRequests.join(',') || 'none');
+    await ctx.close();
+  }
+
+  // 8. GTM-template consent bridge: mm-consent cookie for the template to read
+  //    at Consent Initialization, listener registry, mid-page marketing opt-in
+  //    transition event (no analytics transition -> no refire event).
+  {
+    const { ctx, page } = await newPage(browser, {
+      consent: { essential: true, analytics: true, timestamp: Date.now() }
+    });
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+    const cookie = await getConsentCookie(page);
+    record('bridge: mm-consent cookie exposed before GTM state application',
+      cookie.includes('analytics:granted') && cookie.includes('marketing:denied'), cookie);
+    record('bridge: __mildmateAddConsentListener registered', await page.evaluate(() => typeof window.__mildmateAddConsentListener === 'function'));
+    record('bridge: site emitted zero gtag consent commands', await page.evaluate(() =>
+      (window.dataLayer || []).filter((e) => e && e[0] === 'consent').length === 0));
+    await page.evaluate(() => {
+      window.__listenerPayload = null;
+      window.__mildmateAddConsentListener(function (p) { window.__listenerPayload = p; });
+      window.__mildmateSaveConsent({ essential: true, analytics: true, marketing: true });
+    });
+    await page.waitForTimeout(500);
+    const evts = await dataLayerEvents(page);
+    record('bridge: marketing opt-in fires mildmate_marketing_granted (GTM loaded)',
+      evts.includes('mildmate_marketing_granted') && !evts.includes('mildmate_analytics_granted'), evts.join(','));
+    record('bridge: listener received template-shaped payload', await page.evaluate(() => {
+      const p = window.__listenerPayload;
+      return !!p && p.analyticsConsentGranted === true && p.adConsentGranted === true && p.adUserDataConsentGranted === true && p.adPersonalizationConsentGranted === true;
+    }), JSON.stringify(await page.evaluate(() => window.__listenerPayload)));
+    await ctx.close();
+  }
+
+  // 9. Withdrawal without reload on a loaded container: analytics_revoked
+  //    transition event + denied listener payload; container stays loaded.
+  {
+    const { ctx, page } = await newPage(browser, {
+      consent: { essential: true, analytics: true, timestamp: Date.now() }
+    });
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+    await page.evaluate(() => {
+      window.__listenerPayload = null;
+      window.__mildmateAddConsentListener(function (p) { window.__listenerPayload = p; });
+      window.__mildmateSaveConsent({ essential: true, analytics: false, marketing: false });
+    });
+    await page.waitForTimeout(500);
+    const evts = await dataLayerEvents(page);
+    record('withdraw: mildmate_analytics_revoked pushed (no analytics_granted)', evts.includes('mildmate_analytics_revoked') && !evts.includes('mildmate_analytics_granted'), evts.join(','));
+    record('withdraw: listener payload fully denied', await page.evaluate(() => {
+      const p = window.__listenerPayload;
+      return !!p && p.analyticsConsentGranted === false && p.adConsentGranted === false && p.adUserDataConsentGranted === false && p.adPersonalizationConsentGranted === false;
+    }), JSON.stringify(await page.evaluate(() => window.__listenerPayload)));
+    const cookie = await getConsentCookie(page);
+    record('withdraw: consent cookie now fully denied', cookie.includes('analytics:denied') && cookie.includes('marketing:denied'), cookie);
     await ctx.close();
   }
 } finally {

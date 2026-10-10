@@ -57,27 +57,19 @@
     }
   }
 
-  // Consent Mode v2 (Basic) — consent ownership:
-  //   DEFAULT state is owned by the GTM consent template
-  //   (setDefaultConsentState on the "Consent Initialization - All Pages"
-  //   trigger). Queued gtag('consent','default') commands from a deferred
-  //   loader are replayed only AFTER GTM's Initialization triggers, so tags
-  //   would read consent before a default existed — do NOT set defaults here.
-  //   UPDATES are owned by this page: gtag('consent','update') reflects the
-  //   user's stored choice; the template sandbox cannot read localStorage.
-  // Reflect the user's actual choices on top of the GTM-set defaults. Analytics
-  // acceptance never grants advertising signals and vice versa.
-  function pushConsentUpdate() {
-    ensureDataLayerAndGtag();
-    var analytics = hasAnalyticsConsent();
-    var marketing = hasMarketingConsent();
-    global.gtag('consent', 'update', {
-      analytics_storage: analytics ? 'granted' : 'denied',
-      ad_storage: marketing ? 'granted' : 'denied',
-      ad_user_data: marketing ? 'granted' : 'denied',
-      ad_personalization: marketing ? 'granted' : 'denied'
-    });
-  }
+  // Consent Mode v2 (Basic) — consent ownership (full GTM template model):
+  //   The GTM consent template owns BOTH the default state
+  //   (setDefaultConsentState) and all updates (updateConsentState). The
+  //   site never queues gtag('consent', ...) commands: queued consent
+  //   commands from a deferred loader are replayed only AFTER GTM's
+  //   Initialization triggers, so tags would evaluate before the state was
+  //   applied (the Tag Assistant "Consent not configured" failure).
+  //   Instead, the site (cookie-consent.js) exposes the current choice via
+  //   (1) a first-party cookie `mm-consent` the template reads at Consent
+  //   Initialization, and (2) a listener registry `__mildmateAddConsentListener`
+  //   the template registers so changes and withdrawals apply live via
+  //   updateConsentState. Analytics acceptance never grants advertising
+  //   signals and vice versa (marketing defaults denied, never inferred).
 
   function resolveMildMateAnalyticsConfig(input) {
     var host = norm(input && input.hostname ? input.hostname : (global.location && global.location.hostname) || '').toLowerCase();
@@ -139,7 +131,6 @@
     if (global.__mildmateAnalyticsLoaded) return true;
 
     ensureDataLayerAndGtag();
-    pushConsentUpdate();
     global.__mildmateAnalyticsLoaded = true;
     global.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
 
@@ -186,16 +177,9 @@
       return loadAnalytics({ gtmId: gtmId, noscriptId: norm(opts.noscriptId) || 'gtm-noscript' });
     };
 
-    // Re-push consent state onto an already-loaded container (e.g. withdrawal
-    // or a later opt-in). No-op before the container exists.
-    global.__mildmateUpdateConsent = function () {
-      if (!global.__mildmateAnalyticsLoaded) return false;
-      pushConsentUpdate();
-      return true;
-    };
-
-    // Load when EITHER measured category is granted; individual tag behavior
-    // is governed by the consent signals pushed above.
+    // Load when EITHER measured category is granted; per-tag behavior is
+    // governed by the GTM consent template (consent state) plus tag-level
+    // trigger conditions on the consent cookie (Basic Consent policy).
     var consentGranted = hasAnalyticsConsent() || hasMarketingConsent();
     if (!consentGranted) return false;
 

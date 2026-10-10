@@ -14,8 +14,6 @@ declare global {
   // eslint-disable-next-line no-var
   var __mildmateLoadAnalytics: () => boolean;
   // eslint-disable-next-line no-var
-  var __mildmateUpdateConsent: () => boolean;
-  // eslint-disable-next-line no-var
   var dataLayer: any[];
 }
 
@@ -102,7 +100,7 @@ describe("GA4 dataLayer contract (GTM eventModel compatibility)", () => {
     expect(gtmStart).toBeUndefined();
   });
 
-  it("site pushes exactly one consent command (update) before gtm.js; default is owned by the GTM consent template", () => {
+  it("site emits ZERO gtag consent commands — default AND update are owned by the GTM consent template", () => {
     mockStorage["mildmate-cookie-consent"] = JSON.stringify({ essential: true, analytics: true, timestamp: Date.now() });
     (globalThis as any).__MILDMATE_ANALYTICS_CONFIG = { nonProductionApproved: true, gtmId: "GTM-LOCALTEST", ga4Id: "G-LOCALTEST", environment: "staging" };
     (globalThis as any).location = { hostname: "localhost" };
@@ -110,22 +108,17 @@ describe("GA4 dataLayer contract (GTM eventModel compatibility)", () => {
       globalThis.__mildmateInitAnalytics({ mobileLazy: false });
     } catch (e) {
       // Node has no document; the gtm.js script-tag creation throws after the
-      // consent + gtm.start pushes we want to assert on.
+      // gtm.start push we want to assert on.
     }
     const dl = globalThis.dataLayer;
-    const defaults = dl.filter((e) => e && e[0] === "consent" && e[1] === "default");
-    // Single consent owner: the GTM consent template owns the default.
-    expect(defaults.length).toBe(0);
-    const updateIdx = dl.findIndex((e) => e && e[0] === "consent" && e[1] === "update");
+    // The GTM consent template (Consent Initialization - All Pages) is the
+    // single consent owner: it applies the default and reads the mm-consent
+    // cookie + listener registry. Queued site-side consent commands would be
+    // replayed AFTER Initialization triggers, so the site must never send any.
+    const consentCommands = dl.filter((e) => e && e[0] === "consent");
+    expect(consentCommands.length).toBe(0);
     const gtmIdx = dl.findIndex((e) => e && e.event === "gtm.js");
-    expect(updateIdx).toBeGreaterThanOrEqual(0);
-    expect(gtmIdx).toBeGreaterThan(updateIdx);
-    const u = dl[updateIdx][2];
-    expect(u.analytics_storage).toBe("granted");
-    // Analytics-only acceptance must NOT grant advertising signals.
-    expect(u.ad_storage).toBe("denied");
-    expect(u.ad_user_data).toBe("denied");
-    expect(u.ad_personalization).toBe("denied");
+    expect(gtmIdx).toBeGreaterThanOrEqual(0);
   });
 
   it("marketing consent is independent: legacy analytics-only records do not grant Ads", () => {
@@ -134,7 +127,7 @@ describe("GA4 dataLayer contract (GTM eventModel compatibility)", () => {
     expect(resolverModule.hasMarketingConsent()).toBe(false);
   });
 
-  it("marketing-only consent loads the container with ads granted and analytics denied", () => {
+  it("marketing-only consent still boots the container (Ads tags gate on marketing consent in GTM)", () => {
     mockStorage["mildmate-cookie-consent"] = JSON.stringify({ essential: true, marketing: true, timestamp: Date.now() });
     (globalThis as any).__MILDMATE_ANALYTICS_CONFIG = { nonProductionApproved: true, gtmId: "GTM-LOCALTEST", ga4Id: "G-LOCALTEST", environment: "staging" };
     (globalThis as any).location = { hostname: "localhost" };
@@ -142,30 +135,12 @@ describe("GA4 dataLayer contract (GTM eventModel compatibility)", () => {
     try {
       booted = globalThis.__mildmateInitAnalytics({ mobileLazy: false });
     } catch (e) {
-      // Node has no document; the throw happens after consent/gtm.start pushes.
+      // Node has no document; the throw happens after the gtm.start push.
       booted = true;
     }
     expect(booted).toBe(true);
-    const update = globalThis.dataLayer.find((e) => e && e[0] === "consent" && e[1] === "update")[2];
-    expect(update.ad_storage).toBe("granted");
-    expect(update.ad_user_data).toBe("granted");
-    expect(update.ad_personalization).toBe("granted");
-    expect(update.analytics_storage).toBe("denied");
-  });
-
-  it("withdrawal updates consent state in place on a loaded container", () => {
-    mockStorage["mildmate-cookie-consent"] = JSON.stringify({ essential: true, analytics: true, timestamp: Date.now() });
-    (globalThis as any).__MILDMATE_ANALYTICS_CONFIG = { nonProductionApproved: true, gtmId: "GTM-LOCALTEST", ga4Id: "G-LOCALTEST", environment: "staging" };
-    (globalThis as any).location = { hostname: "localhost" };
-    try {
-      globalThis.__mildmateInitAnalytics({ mobileLazy: false });
-    } catch (e) { /* document undefined in Node */ }
-    (globalThis as any).__mildmateAnalyticsLoaded = true;
-    mockStorage["mildmate-cookie-consent"] = JSON.stringify({ essential: true, analytics: false, marketing: false, timestamp: Date.now() });
-    expect(globalThis.__mildmateUpdateConsent()).toBe(true);
-    const updates = globalThis.dataLayer.filter((e) => e && e[0] === "consent" && e[1] === "update");
-    const last = updates[updates.length - 1][2];
-    expect(last.analytics_storage).toBe("denied");
-    expect(last.ad_storage).toBe("denied");
+    expect(globalThis.dataLayer.find((e) => e && e.event === "gtm.js")).toBeDefined();
+    // No site-side consent commands under the template-owned model.
+    expect(globalThis.dataLayer.filter((e) => e && e[0] === "consent").length).toBe(0);
   });
 });
