@@ -5,7 +5,10 @@ import { chromium } from 'playwright-core';
 
 const BASE = 'http://127.0.0.1:8799';
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const STAGE = { nonProductionApproved: true, gtmId: 'GTM-LOCALTEST', ga4Id: 'G-LOCALTEST', environment: 'staging' };
+// Owner-authorized staging QA identifiers (2026-10-10); production IDs are
+// never used here — the isolation scenario intentionally passes prod IDs to
+// prove the resolver blocks them.
+const STAGE = { nonProductionApproved: true, gtmId: 'GTM-M9DMRGCD', ga4Id: 'G-E8W6FZE6LP', environment: 'staging' };
 
 const results = [];
 function record(name, pass, detail) {
@@ -74,7 +77,7 @@ try {
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2500);
     const evts = await dataLayerEvents(page);
-    record('granted: GTM script requested', gtmRequests.length === 1 && gtmRequests[0].includes('GTM-LOCALTEST'), gtmRequests.join(',') || 'none');
+    record('granted: GTM script requested', gtmRequests.length === 1 && gtmRequests[0].includes('GTM-M9DMRGCD'), gtmRequests.join(',') || 'none');
     record('granted: gtm.js in dataLayer', evts.includes('gtm.js'), evts.join(','));
     record('granted: no consent banner', !(await page.locator('#cookie-banner').isVisible().catch(() => false)));
     await ctx.close();
@@ -102,7 +105,7 @@ try {
     await page.click('#cookie-btn-accept');
     await page.waitForTimeout(1500);
     const evts = await dataLayerEvents(page);
-    record('th-mobile accept: GTM requested once with staging ID', gtmRequests.length === 1 && gtmRequests[0].includes('GTM-LOCALTEST'), gtmRequests.join(',') || 'none');
+    record('th-mobile accept: GTM requested once with staging ID', gtmRequests.length === 1 && gtmRequests[0].includes('GTM-M9DMRGCD'), gtmRequests.join(',') || 'none');
     record('th-mobile accept: banner hidden', !(await page.locator('#cookie-banner').isVisible().catch(() => false)));
     record('th-mobile accept: consent_update + gtm.js', evts.includes('mildmate_consent_update') && evts.includes('gtm.js'), evts.join(','));
     await ctx.close();

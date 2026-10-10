@@ -45,7 +45,14 @@ D1_ENV_LABEL = "staging"
 STRIPE_ENV_MODE = "test"
 NON_PROD_STRIPE_ALLOWED = "true"
 NON_PROD_EMAIL_ALLOWED = "false"
-ANALYTICS_NON_PROD_ENABLED = "false"
+# Staging QA analytics (owner-authorized 2026-10-10): GTM-M9DMRGCD / G-E8W6FZE6LP.
+# Deployment-scoped: applies only to preview deployments made from a branch
+# carrying this toml. functions/_middleware.ts additionally restricts
+# non-production analytics activation to the staging branch (CF_PAGES_BRANCH),
+# so unrelated preview deployments stay analytics-disabled even after merge.
+ANALYTICS_NON_PROD_ENABLED = "true"
+ANALYTICS_NON_PROD_GTM_ID = "GTM-M9DMRGCD"
+ANALYTICS_NON_PROD_GA4_ID = "G-E8W6FZE6LP"
 
 # NOTE ON SECRETS:
 # Stripe API keys (STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET)

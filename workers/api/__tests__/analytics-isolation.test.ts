@@ -60,6 +60,44 @@ describe("analytics environment isolation", () => {
     expect(cfg.ga4Id).not.toBe("G-ESL161CNBV");
   });
 
+  it("authorized staging IDs (GTM-M9DMRGCD / G-E8W6FZE6LP) resolve to an isolated staging config", () => {
+    const cfg = resolveMildMateAnalyticsConfig({
+      hostname: "staging-qa.mildmate-new.pages.dev",
+      override: { environment: "staging", nonProductionApproved: true, gtmId: "GTM-M9DMRGCD", ga4Id: "G-E8W6FZE6LP", enabled: true }
+    });
+    expect(cfg.enabled).toBe(true);
+    expect(cfg.gtmId).toBe("GTM-M9DMRGCD");
+    expect(cfg.ga4Id).toBe("G-E8W6FZE6LP");
+    // Staging is never allowed to send Ads conversions.
+    expect(cfg.allowAdsConversions).toBe(false);
+    expect(["GTM-KLJZZM9", "G-0GWVSPJLVJ", "G-ESL161CNBV"]).not.toContain(cfg.gtmId);
+    expect(["GTM-KLJZZM9", "G-0GWVSPJLVJ", "G-ESL161CNBV"]).not.toContain(cfg.ga4Id);
+  });
+
+  it("middleware branch guard: non-production analytics activates only on the staging branch", () => {
+    const mw = readFileSync(new URL("../../../functions/_middleware.ts", import.meta.url), "utf8");
+    expect(mw.includes("ANALYTICS_STAGING_BRANCHES")).toBe(true);
+    expect(mw.includes("'ga4/remediation-isolated'")).toBe(true);
+    expect(mw.includes("CF_PAGES_BRANCH")).toBe(true);
+  });
+
+  it("wrangler.toml: staging analytics vars are preview-scoped, production block untouched", () => {
+    const toml = readFileSync(new URL("../../../wrangler.toml", import.meta.url), "utf8");
+    const previewBlock = toml.slice(toml.indexOf("[env.preview.vars]"), toml.indexOf("[" , toml.indexOf("[env.preview.vars]") + 1));
+    expect(previewBlock.includes('ANALYTICS_NON_PROD_ENABLED = "true"')).toBe(true);
+    expect(previewBlock.includes('ANALYTICS_NON_PROD_GTM_ID = "GTM-M9DMRGCD"')).toBe(true);
+    expect(previewBlock.includes('ANALYTICS_NON_PROD_GA4_ID = "G-E8W6FZE6LP"')).toBe(true);
+    // Stripe staging safeguards unchanged.
+    expect(previewBlock.includes('STRIPE_ENV_MODE = "test"')).toBe(true);
+    expect(previewBlock.includes('NON_PROD_STRIPE_ALLOWED = "true"')).toBe(true);
+    expect(previewBlock.includes('NON_PROD_EMAIL_ALLOWED = "false"')).toBe(true);
+    // Production env block must not carry analytics overrides.
+    const productionBlock = toml.slice(toml.indexOf("[env.production.vars]"), toml.indexOf("[", toml.indexOf("[env.production.vars]") + 1));
+    expect(productionBlock.includes("ANALYTICS_NON_PROD")).toBe(false);
+    // Production D1 binding untouched.
+    expect(toml.includes('database_name = "mildmate-db-prod"')).toBe(true);
+  });
+
   it("checkout and order-confirmed load resolver script, consent script and gtm-noscript placeholder", () => {
     const checkoutHtml = readFileSync(new URL("../../../public/checkout/index.html", import.meta.url), "utf8");
     const confirmedHtml = readFileSync(new URL("../../../public/order-confirmed/index.html", import.meta.url), "utf8");

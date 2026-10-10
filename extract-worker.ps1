@@ -16,13 +16,17 @@ function Normalize-BundleText([string]$text) {
 }
 
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '.')).Path
-$approvedRoot = 'D:\00_mildmate\re-build_web_rc'
+# Approved build roots: the RC worktree plus git worktrees created for isolated
+# release preparation (e.g. the GA4 remediation worktree).
+$approvedRoots = @(
+    'D:\00_mildmate\re-build_web_rc',
+    'D:\00_mildmate\re-build_web_ga4_iso'
+) | ForEach-Object { Normalize-AbsPath $_ }
 $projectRootNorm = Normalize-AbsPath $projectRoot
-$approvedRootNorm = Normalize-AbsPath $approvedRoot
 
 Write-Host "Resolved project root: $projectRoot"
-if ($projectRootNorm -ne $approvedRootNorm) {
-    Write-Error "Build root assertion failed. Expected: $approvedRoot ; Resolved: $projectRoot"
+if ($approvedRoots -notcontains $projectRootNorm) {
+    Write-Error "Build root assertion failed. Approved: $($approvedRoots -join ', ') ; Resolved: $projectRoot"
     exit 1
 }
 

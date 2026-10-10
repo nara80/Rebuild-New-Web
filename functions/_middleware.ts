@@ -383,18 +383,29 @@ function isProductionHost(hostname: string): boolean {
   return host === 'www.mildmate.com' || host === 'mildmate.com';
 }
 
+// Staging QA analytics is branch-scoped. Cloudflare Pages Preview environment
+// configuration (dashboard vars, and wrangler.toml [env.preview.vars] once
+// merged to the production branch) applies to ALL preview deployments in the
+// project — so non-production analytics may only activate on the dedicated
+// staging branch, regardless of env vars.
+const ANALYTICS_STAGING_BRANCHES = new Set([
+  'ga4/remediation-isolated'
+]);
+
 function buildAnalyticsRuntimeConfigScript(request: Request, env: any): string {
   const host = new URL(request.url).hostname;
   const prodHost = isProductionHost(host);
   const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? 'production' : 'staging')).trim().toLowerCase();
   const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || '').trim().toLowerCase() === 'true';
+  const branch = String(env?.CF_PAGES_BRANCH || '').trim();
+  const stagingAnalyticsActive = nonProdEnabled && !prodHost && ANALYTICS_STAGING_BRANCHES.has(branch);
   const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || '').trim();
   const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || '').trim();
 
   const cfg: any = { environment: runtimeEnv };
   if (!prodHost) {
-    cfg.nonProductionApproved = nonProdEnabled;
-    if (nonProdEnabled) {
+    cfg.nonProductionApproved = stagingAnalyticsActive;
+    if (stagingAnalyticsActive) {
       if (nonProdGtm) cfg.gtmId = nonProdGtm;
       if (nonProdGa4) cfg.ga4Id = nonProdGa4;
       cfg.enabled = true;
