@@ -74,19 +74,25 @@ describe("analytics environment isolation", () => {
     expect(["GTM-KLJZZM9", "G-0GWVSPJLVJ", "G-ESL161CNBV"]).not.toContain(cfg.ga4Id);
   });
 
-  it("middleware branch guard: non-production analytics activates only on the staging branch", () => {
+  it("middleware branch guard: staging analytics is code-gated to the staging branch with authorized IDs", () => {
     const mw = readFileSync(new URL("../../../functions/_middleware.ts", import.meta.url), "utf8");
     expect(mw.includes("ANALYTICS_STAGING_BRANCHES")).toBe(true);
     expect(mw.includes("'ga4/remediation-isolated'")).toBe(true);
     expect(mw.includes("CF_PAGES_BRANCH")).toBe(true);
+    // Owner-authorized staging IDs live in the middleware, never in env config.
+    expect(mw.includes("'GTM-M9DMRGCD'")).toBe(true);
+    expect(mw.includes("'G-E8W6FZE6LP'")).toBe(true);
+    // Fail closed: empty branch identity must not activate.
+    expect(mw.includes("branch !== ''")).toBe(true);
   });
 
-  it("wrangler.toml: staging analytics vars are preview-scoped, production block untouched", () => {
+  it("wrangler.toml: preview config stays at the approved baseline (no staging analytics in shared Preview config)", () => {
     const toml = readFileSync(new URL("../../../wrangler.toml", import.meta.url), "utf8");
     const previewBlock = toml.slice(toml.indexOf("[env.preview.vars]"), toml.indexOf("[" , toml.indexOf("[env.preview.vars]") + 1));
-    expect(previewBlock.includes('ANALYTICS_NON_PROD_ENABLED = "true"')).toBe(true);
-    expect(previewBlock.includes('ANALYTICS_NON_PROD_GTM_ID = "GTM-M9DMRGCD"')).toBe(true);
-    expect(previewBlock.includes('ANALYTICS_NON_PROD_GA4_ID = "G-E8W6FZE6LP"')).toBe(true);
+    expect(previewBlock.includes('ANALYTICS_NON_PROD_ENABLED = "false"')).toBe(true);
+    // Staging identifiers must NOT appear anywhere in wrangler.toml.
+    expect(toml.includes("GTM-M9DMRGCD")).toBe(false);
+    expect(toml.includes("G-E8W6FZE6LP")).toBe(false);
     // Stripe staging safeguards unchanged.
     expect(previewBlock.includes('STRIPE_ENV_MODE = "test"')).toBe(true);
     expect(previewBlock.includes('NON_PROD_STRIPE_ALLOWED = "true"')).toBe(true);

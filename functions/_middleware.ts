@@ -383,31 +383,33 @@ function isProductionHost(hostname: string): boolean {
   return host === 'www.mildmate.com' || host === 'mildmate.com';
 }
 
-// Staging QA analytics is branch-scoped. Cloudflare Pages Preview environment
-// configuration (dashboard vars, and wrangler.toml [env.preview.vars] once
-// merged to the production branch) applies to ALL preview deployments in the
-// project — so non-production analytics may only activate on the dedicated
-// staging branch, regardless of env vars.
+// Staging QA analytics is branch-scoped IN CODE. Cloudflare Pages applies
+// Preview environment configuration to ALL preview deployments and does not
+// support branch-based configuration — so staging analytics must not be
+// driven by env vars. Activation requires BOTH:
+//   1. a non-production host, and
+//   2. a verified deployment branch identity (CF_PAGES_BRANCH).
+// Unknown/missing branch identity fails CLOSED (analytics disabled).
 const ANALYTICS_STAGING_BRANCHES = new Set([
   'ga4/remediation-isolated'
 ]);
+// Owner-authorized staging QA identifiers (2026-10-10). Never production IDs.
+const ANALYTICS_STAGING_GTM_ID = 'GTM-M9DMRGCD';
+const ANALYTICS_STAGING_GA4_ID = 'G-E8W6FZE6LP';
 
 function buildAnalyticsRuntimeConfigScript(request: Request, env: any): string {
   const host = new URL(request.url).hostname;
   const prodHost = isProductionHost(host);
   const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? 'production' : 'staging')).trim().toLowerCase();
-  const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || '').trim().toLowerCase() === 'true';
   const branch = String(env?.CF_PAGES_BRANCH || '').trim();
-  const stagingAnalyticsActive = nonProdEnabled && !prodHost && ANALYTICS_STAGING_BRANCHES.has(branch);
-  const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || '').trim();
-  const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || '').trim();
+  const stagingAnalyticsActive = !prodHost && branch !== '' && ANALYTICS_STAGING_BRANCHES.has(branch);
 
   const cfg: any = { environment: runtimeEnv };
   if (!prodHost) {
     cfg.nonProductionApproved = stagingAnalyticsActive;
     if (stagingAnalyticsActive) {
-      if (nonProdGtm) cfg.gtmId = nonProdGtm;
-      if (nonProdGa4) cfg.ga4Id = nonProdGa4;
+      cfg.gtmId = ANALYTICS_STAGING_GTM_ID;
+      cfg.ga4Id = ANALYTICS_STAGING_GA4_ID;
       cfg.enabled = true;
     }
   }

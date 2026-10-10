@@ -18965,21 +18965,20 @@ __name(isProductionHost23, "isProductionHost");
 var ANALYTICS_STAGING_BRANCHES = /* @__PURE__ */ new Set([
   "ga4/remediation-isolated"
 ]);
+var ANALYTICS_STAGING_GTM_ID = "GTM-M9DMRGCD";
+var ANALYTICS_STAGING_GA4_ID = "G-E8W6FZE6LP";
 function buildAnalyticsRuntimeConfigScript(request, env) {
   const host = new URL(request.url).hostname;
   const prodHost = isProductionHost23(host);
   const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? "production" : "staging")).trim().toLowerCase();
-  const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || "").trim().toLowerCase() === "true";
   const branch = String(env?.CF_PAGES_BRANCH || "").trim();
-  const stagingAnalyticsActive = nonProdEnabled && !prodHost && ANALYTICS_STAGING_BRANCHES.has(branch);
-  const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || "").trim();
-  const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || "").trim();
+  const stagingAnalyticsActive = !prodHost && branch !== "" && ANALYTICS_STAGING_BRANCHES.has(branch);
   const cfg = { environment: runtimeEnv };
   if (!prodHost) {
     cfg.nonProductionApproved = stagingAnalyticsActive;
     if (stagingAnalyticsActive) {
-      if (nonProdGtm) cfg.gtmId = nonProdGtm;
-      if (nonProdGa4) cfg.ga4Id = nonProdGa4;
+      cfg.gtmId = ANALYTICS_STAGING_GTM_ID;
+      cfg.ga4Id = ANALYTICS_STAGING_GA4_ID;
       cfg.enabled = true;
     }
   }
