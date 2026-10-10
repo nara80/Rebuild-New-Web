@@ -44,6 +44,45 @@
     }
   }
 
+  // Marketing consent is independent of analytics consent. Absent key on
+  // historical records (analytics-only acceptance) means NOT granted.
+  function hasMarketingConsent() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(CONSENT_STORAGE_KEY) : null;
+      if (!raw) return false;
+      var parsed = JSON.parse(raw);
+      return !!(parsed && parsed.marketing === true);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Consent Mode v2 (Basic): all four signals default to denied BEFORE any
+  // Google tag executes (GTM loads only after this, so order is guaranteed).
+  function pushConsentDefault() {
+    ensureDataLayerAndGtag();
+    global.gtag('consent', 'default', {
+      analytics_storage: 'denied',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied'
+    });
+  }
+
+  // Reflect the user's actual choices on top of the defaults. Analytics
+  // acceptance never grants advertising signals and vice versa.
+  function pushConsentUpdate() {
+    ensureDataLayerAndGtag();
+    var analytics = hasAnalyticsConsent();
+    var marketing = hasMarketingConsent();
+    global.gtag('consent', 'update', {
+      analytics_storage: analytics ? 'granted' : 'denied',
+      ad_storage: marketing ? 'granted' : 'denied',
+      ad_user_data: marketing ? 'granted' : 'denied',
+      ad_personalization: marketing ? 'granted' : 'denied'
+    });
+  }
+
   function resolveMildMateAnalyticsConfig(input) {
     var host = norm(input && input.hostname ? input.hostname : (global.location && global.location.hostname) || '').toLowerCase();
     var override = (input && input.override) || global.__MILDMATE_ANALYTICS_CONFIG || {};
@@ -104,6 +143,8 @@
     if (global.__mildmateAnalyticsLoaded) return true;
 
     ensureDataLayerAndGtag();
+    pushConsentDefault();
+    pushConsentUpdate();
     global.__mildmateAnalyticsLoaded = true;
     global.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
 
@@ -150,7 +191,17 @@
       return loadAnalytics({ gtmId: gtmId, noscriptId: norm(opts.noscriptId) || 'gtm-noscript' });
     };
 
-    var consentGranted = hasAnalyticsConsent();
+    // Re-push consent state onto an already-loaded container (e.g. withdrawal
+    // or a later opt-in). No-op before the container exists.
+    global.__mildmateUpdateConsent = function () {
+      if (!global.__mildmateAnalyticsLoaded) return false;
+      pushConsentUpdate();
+      return true;
+    };
+
+    // Load when EITHER measured category is granted; individual tag behavior
+    // is governed by the consent signals pushed above.
+    var consentGranted = hasAnalyticsConsent() || hasMarketingConsent();
     if (!consentGranted) return false;
 
     var mobileLazy = opts.mobileLazy !== false;
@@ -183,6 +234,7 @@
   }
 
   global.__mildmateHasAnalyticsConsent = hasAnalyticsConsent;
+  global.__mildmateHasMarketingConsent = hasMarketingConsent;
   global.__mildmateTrackEvent = trackEvent;
   global.__mildmateInitAnalytics = initAnalytics;
   global.__resolveMildMateAnalyticsConfig = resolveMildMateAnalyticsConfig;
@@ -190,7 +242,8 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       resolveMildMateAnalyticsConfig: resolveMildMateAnalyticsConfig,
-      hasAnalyticsConsent: hasAnalyticsConsent
+      hasAnalyticsConsent: hasAnalyticsConsent,
+      hasMarketingConsent: hasMarketingConsent
     };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -8,10 +8,13 @@
 
   const STORAGE_KEY = 'mildmate-cookie-consent';
 
-  // Default consent state (nothing accepted until user chooses)
+  // Default consent state (nothing accepted until user chooses).
+  // marketing is independent of analytics; historical records without the
+  // marketing key are treated as marketing: false (never auto-granted).
   const defaultConsent = {
     essential: true,
     analytics: false,
+    marketing: false,
     timestamp: 0,
   };
 
@@ -81,6 +84,19 @@
           </div>
         </div>
 
+        <div class="cookie-category">
+          <div class="cookie-category-header">
+            <div>
+              <h3>Marketing</h3>
+              <p class="cookie-category-desc">Measure advertising performance, such as purchases from Google Ads. Not enabled by Analytics acceptance.</p>
+            </div>
+            <label class="cookie-toggle">
+              <input type="checkbox" id="cookie-toggle-marketing">
+              <span class="cookie-toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
         <div class="cookie-modal-actions">
           <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-modal-save">Save Preferences</button>
           <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-modal-accept-all">Accept All</button>
@@ -125,6 +141,8 @@
       // Set toggles to current consent state
       const analyticsToggle = document.getElementById('cookie-toggle-analytics');
       if (analyticsToggle) analyticsToggle.checked = consent.analytics;
+      const marketingToggle = document.getElementById('cookie-toggle-marketing');
+      if (marketingToggle) marketingToggle.checked = consent.marketing;
     }
   }
 
@@ -158,10 +176,16 @@
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
       event: 'mildmate_consent_update',
-      analytics_consent: consent.analytics === true ? 'granted' : 'denied'
+      analytics_consent: consent.analytics === true ? 'granted' : 'denied',
+      marketing_consent: consent.marketing === true ? 'granted' : 'denied'
     });
 
-    if (consent.analytics && typeof window.__mildmateLoadAnalytics === 'function') {
+    if (typeof window.__mildmateUpdateConsent === 'function' && window.__mildmateUpdateConsent()) {
+      // Container already loaded: Consent Mode v2 state updated in place.
+      return;
+    }
+    if ((consent.analytics === true || consent.marketing === true) &&
+        typeof window.__mildmateLoadAnalytics === 'function') {
       window.__mildmateLoadAnalytics();
     }
   }
@@ -180,12 +204,12 @@
     }
     if (btnReject) {
       btnReject.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: false });
+        saveConsent({ essential: true, analytics: false, marketing: false });
       });
     }
     if (btnAccept) {
       btnAccept.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: true });
+        saveConsent({ essential: true, analytics: true, marketing: true });
       });
     }
 
@@ -200,15 +224,17 @@
     if (modalSave) {
       modalSave.addEventListener('click', () => {
         const analytics = document.getElementById('cookie-toggle-analytics');
+        const marketing = document.getElementById('cookie-toggle-marketing');
         saveConsent({
           essential: true,
           analytics: analytics ? analytics.checked : false,
+          marketing: marketing ? marketing.checked : false
         });
       });
     }
     if (modalAcceptAll) {
       modalAcceptAll.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: true });
+        saveConsent({ essential: true, analytics: true, marketing: true });
       });
     }
 

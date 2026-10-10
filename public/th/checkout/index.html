@@ -596,6 +596,7 @@
       var geoDetectBound = false;
       var countrySelectsInitialized = false;
       var ga4BeginCheckoutSent = false;
+      var ga4ViewCartKey = '';
 
       function loadScriptOnce(src) {
         if (externalScriptPromises[src]) return externalScriptPromises[src];
@@ -685,6 +686,25 @@
             quantity: qty
           };
         });
+      }
+
+      function trackViewCartOnce() {
+        var currency = getActiveCurrency();
+        var items = buildGa4Items(currency);
+        if (!items.length) return;
+        var sig = items.map(function(it) {
+          return [it.item_id, it.price, it.quantity].join(':');
+        }).join('|') + '|' + currency;
+        if (sig === ga4ViewCartKey) return;
+        var value = items.reduce(function(sum, it) {
+          return sum + ((Number(it.price || 0) || 0) * (Number(it.quantity || 1) || 1));
+        }, 0);
+        sendGa4Event('view_cart', {
+          currency: currency,
+          value: Math.round(value * 100) / 100,
+          items: items
+        });
+        ga4ViewCartKey = sig;
       }
 
       function trackBeginCheckoutOnSessionCreate(sessionId) {
@@ -1507,6 +1527,7 @@
         var layout = document.getElementById('layout-step1');
 
         if (!cart.items || cart.items.length === 0) {
+          ga4ViewCartKey = '';
           container.innerHTML = '';
           emptyEl.style.display = 'block';
           totalsEl.style.display = 'none';
@@ -1589,6 +1610,7 @@
           bar.classList.add('visible');
           if (barBtn) barBtn.disabled = false;
         }
+        trackViewCartOnce();
         applyTotalsFromState();
       }
 
