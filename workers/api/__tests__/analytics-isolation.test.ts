@@ -1,17 +1,20 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const resolverModule = require("D:\\00_mildmate\\re-build_web\\public\\js\\analytics-env.js");
+// Relative to this test file so the suite validates the working tree it runs in.
+const analyticsEnvPath = fileURLToPath(new URL("../../../public/js/analytics-env.js", import.meta.url));
+const resolverModule = require(analyticsEnvPath);
 const resolveMildMateAnalyticsConfig = resolverModule.resolveMildMateAnalyticsConfig as (input: any) => any;
 
 describe("analytics environment isolation", () => {
-  it("keeps production analytics enabled on production host", () => {
+  it("keeps production analytics enabled on production host with canonical GA4 ID", () => {
     const cfg = resolveMildMateAnalyticsConfig({ hostname: "www.mildmate.com" });
     expect(cfg.enabled).toBe(true);
     expect(cfg.gtmId).toBe("GTM-KLJZZM9");
-    expect(cfg.ga4Id).toBe("G-ESL161CNBV");
+    expect(cfg.ga4Id).toBe("G-0GWVSPJLVJ");
     expect(cfg.allowAdsConversions).toBe(true);
   });
 
@@ -45,19 +48,27 @@ describe("analytics environment isolation", () => {
         nonProductionApproved: true,
         enabled: true,
         gtmId: "GTM-KLJZZM9",
-        ga4Id: "G-ESL161CNBV",
+        ga4Id: "G-0GWVSPJLVJ",
       },
     });
     expect(cfg.enabled).toBe(false);
     expect(cfg.reason).toBe("non_production_ids_match_production_blocked");
   });
 
-  it("checkout and order-confirmed load resolver script and avoid hardcoded noscript GTM id", () => {
-    const checkoutHtml = readFileSync("D:\\00_mildmate\\re-build_web\\public\\checkout\\index.html", "utf8");
-    const confirmedHtml = readFileSync("D:\\00_mildmate\\re-build_web\\public\\order-confirmed\\index.html", "utf8");
-    expect(checkoutHtml.includes('/js/analytics-env.js')).toBe(true);
-    expect(confirmedHtml.includes('/js/analytics-env.js')).toBe(true);
-    expect(checkoutHtml.includes('<noscript id="gtm-noscript"></noscript>')).toBe(true);
-    expect(confirmedHtml.includes('<noscript id="gtm-noscript"></noscript>')).toBe(true);
+  it("legacy GA4 ID is rejected as the production measurement ID", () => {
+    const cfg = resolveMildMateAnalyticsConfig({ hostname: "www.mildmate.com" });
+    expect(cfg.ga4Id).not.toBe("G-ESL161CNBV");
+  });
+
+  it("checkout and order-confirmed load resolver script, consent script and gtm-noscript placeholder", () => {
+    const checkoutHtml = readFileSync(new URL("../../../public/checkout/index.html", import.meta.url), "utf8");
+    const confirmedHtml = readFileSync(new URL("../../../public/order-confirmed/index.html", import.meta.url), "utf8");
+    for (const html of [checkoutHtml, confirmedHtml]) {
+      expect(html.includes('/js/analytics-env.js')).toBe(true);
+      expect(html.includes('/js/cookie-consent.js')).toBe(true);
+      expect(html.includes('<noscript id="gtm-noscript"></noscript>')).toBe(true);
+      expect(html.includes('__mildmateInitAnalytics')).toBe(true);
+      expect(html.includes('G-ESL161CNBV')).toBe(false);
+    }
   });
 });
