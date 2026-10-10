@@ -7,7 +7,6 @@
   'use strict';
 
   const STORAGE_KEY = 'mildmate-cookie-consent';
-  const GA4_ID = 'G-ESL161CNBV';
 
   // Default consent state (nothing accepted until user chooses)
   const defaultConsent = {
@@ -156,36 +155,15 @@
 
   // Apply consent (load/unload scripts)
   function applyConsent() {
-    // Analytics: Google Analytics 4
-    if (consent.analytics) {
-      if (typeof window.__mildmateLoadAnalytics === 'function') {
-        window.__mildmateLoadAnalytics();
-        return;
-      }
-      if (!window.gtag) {
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () { window.dataLayer.push(arguments); };
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-      } else {
-        window.gtag('config', GA4_ID);
-      }
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'mildmate_consent_update',
+      analytics_consent: consent.analytics === true ? 'granted' : 'denied'
+    });
+
+    if (consent.analytics && typeof window.__mildmateLoadAnalytics === 'function') {
+      window.__mildmateLoadAnalytics();
     }
-
-    // Advertising: Facebook Pixel — disabled until needed
-    // if (consent.advertising) { ... }
-
-    // If consent withdrawn, we can't unload scripts that are already injected,
-    // but we can prevent future events by checking consent before tracking calls.
-  }
-
-  // Helper: inject script tag
-  function loadScript(src, async) {
-    const s = document.createElement('script');
-    s.src = src;
-    if (async) s.async = true;
-    document.head.appendChild(s);
   }
 
   // Initialize

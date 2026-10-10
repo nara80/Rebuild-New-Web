@@ -6,7 +6,15 @@
     'mildmate.com': true
   };
   var PROD_GTM_ID = 'GTM-KLJZZM9';
-  var PROD_GA4_ID = 'G-ESL161CNBV';
+  var PROD_GA4_ID = 'G-0GWVSPJLVJ';
+  var CONSENT_STORAGE_KEY = 'mildmate-cookie-consent';
+  var ECOM_EVENTS = {
+    view_item: true,
+    add_to_cart: true,
+    view_cart: true,
+    begin_checkout: true,
+    purchase: true
+  };
 
   function norm(s) {
     return String(s || '').trim();
@@ -14,6 +22,26 @@
 
   function isProdHost(hostname) {
     return !!PROD_HOSTS[norm(hostname).toLowerCase()];
+  }
+
+  function ensureDataLayerAndGtag() {
+    global.dataLayer = global.dataLayer || [];
+    if (typeof global.gtag !== 'function') {
+      global.gtag = function () {
+        global.dataLayer.push(arguments);
+      };
+    }
+  }
+
+  function hasAnalyticsConsent() {
+    try {
+      var raw = global.localStorage ? global.localStorage.getItem(CONSENT_STORAGE_KEY) : null;
+      if (!raw) return false;
+      var parsed = JSON.parse(raw);
+      return !!(parsed && parsed.analytics === true);
+    } catch (e) {
+      return false;
+    }
   }
 
   function resolveMildMateAnalyticsConfig(input) {
@@ -69,9 +97,100 @@
     return config;
   }
 
+  function loadAnalytics(options) {
+    var opts = options || {};
+    var gtmId = norm(opts.gtmId);
+    if (!gtmId) return false;
+    if (global.__mildmateAnalyticsLoaded) return true;
+
+    ensureDataLayerAndGtag();
+    global.__mildmateAnalyticsLoaded = true;
+    global.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+
+    var s = document.createElement('script');
+    s.src = 'https://www.googletagmanager.com/gtm.js?id=' + gtmId;
+    s.async = true;
+    document.head.appendChild(s);
+
+    var noscriptId = norm(opts.noscriptId);
+    if (noscriptId) {
+      var ns = document.getElementById(noscriptId);
+      if (ns && !ns.innerHTML) {
+        ns.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=' + gtmId + '" height="0" width="0" style="display:none;visibility:hidden"></iframe>';
+      }
+    }
+    return true;
+  }
+
+  function trackEvent(name, params) {
+    var eventName = norm(name);
+    if (!eventName) return;
+    ensureDataLayerAndGtag();
+    var payload = params && typeof params === 'object' ? params : {};
+    var eventObj = {
+      event: eventName,
+      eventModel: payload
+    };
+    if (ECOM_EVENTS[eventName]) {
+      eventObj.ecommerce = payload;
+    }
+    global.dataLayer.push(eventObj);
+  }
+
+  function initAnalytics(options) {
+    var opts = options || {};
+    var resolver = global.__resolveMildMateAnalyticsConfig || resolveMildMateAnalyticsConfig;
+    var cfg = resolver({ hostname: global.location && global.location.hostname });
+    if (!cfg || cfg.enabled !== true) return false;
+
+    var gtmId = norm(cfg.gtmId);
+    if (!gtmId) return false;
+
+    global.__mildmateLoadAnalytics = function () {
+      return loadAnalytics({ gtmId: gtmId, noscriptId: norm(opts.noscriptId) || 'gtm-noscript' });
+    };
+
+    var consentGranted = hasAnalyticsConsent();
+    if (!consentGranted) return false;
+
+    var mobileLazy = opts.mobileLazy !== false;
+    var isMobile = global.matchMedia && global.matchMedia('(max-width: 768px)').matches;
+    if (!mobileLazy || !isMobile) {
+      global.__mildmateLoadAnalytics();
+      return true;
+    }
+
+    var started = false;
+    var startOnce = function () {
+      if (started) return;
+      started = true;
+      global.removeEventListener('pointerdown', startOnce, true);
+      global.removeEventListener('keydown', startOnce, true);
+      global.removeEventListener('touchstart', startOnce, true);
+      global.__mildmateLoadAnalytics();
+    };
+
+    global.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
+    global.addEventListener('keydown', startOnce, { once: true, capture: true });
+    global.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
+
+    if (document.readyState === 'complete') {
+      setTimeout(startOnce, 6000);
+    } else {
+      global.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+    }
+    return true;
+  }
+
+  global.__mildmateHasAnalyticsConsent = hasAnalyticsConsent;
+  global.__mildmateTrackEvent = trackEvent;
+  global.__mildmateInitAnalytics = initAnalytics;
   global.__resolveMildMateAnalyticsConfig = resolveMildMateAnalyticsConfig;
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { resolveMildMateAnalyticsConfig: resolveMildMateAnalyticsConfig };
+    module.exports = {
+      resolveMildMateAnalyticsConfig: resolveMildMateAnalyticsConfig,
+      hasAnalyticsConsent: hasAnalyticsConsent
+    };
   }
 })(typeof window !== 'undefined' ? window : globalThis);

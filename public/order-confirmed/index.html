@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Order Confirmed — MildMate">
-  <title>Order Confirmed — MildMate</title>
+  <meta name="description" content="Order Confirmed â€” MildMate">
+  <title>Order Confirmed â€” MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -52,79 +52,28 @@
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
-  <meta property="og:title" content="Order Confirmed — MildMate">
-  <meta property="og:description" content="Order Confirmed — MildMate">
+  <meta property="og:title" content="Order Confirmed â€” MildMate">
+  <meta property="og:description" content="Order Confirmed â€” MildMate">
   <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com/order-confirmed/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Order Confirmed — MildMate">
-  <meta name="twitter:description" content="Order Confirmed — MildMate">
+  <meta name="twitter:title" content="Order Confirmed â€” MildMate">
+  <meta name="twitter:description" content="Order Confirmed â€” MildMate">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <script src="/js/analytics-env.js"></script>
-    <script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
     (function () {
-      var resolver = window.__resolveMildMateAnalyticsConfig;
-      var analyticsConfig = resolver ? resolver({ hostname: window.location.hostname }) : null;
-      if (!analyticsConfig || analyticsConfig.enabled !== true) {
-        return;
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-      var GTM_ID = String(analyticsConfig.gtmId || '').trim();
-      var GA4_ID = String(analyticsConfig.ga4Id || '').trim();
-      if (!GTM_ID || !GA4_ID) {
-        return;
-      }
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
-      }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-        var ns = document.getElementById('gtm-noscript');
-        if (ns && !ns.innerHTML) {
-          ns.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=' + GTM_ID + '" height="0" width="0" style="display:none;visibility:hidden"></iframe>';
-        }
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
@@ -211,8 +160,13 @@
 
       function sendGa4Event(name, params) {
         try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
           ensureGa4Stub();
-          window.gtag('event', name, params || {});
+          window.gtag('event', name, payload);
         } catch (e) {}
       }
 
@@ -404,4 +358,7 @@
   </script>
 </body>
 </html>
+
+
+
 

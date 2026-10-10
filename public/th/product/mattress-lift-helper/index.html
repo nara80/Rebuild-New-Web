@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
@@ -27,7 +27,7 @@
     .carousel-slide-video .yt-play-circle svg { width: 24px; height: 24px; fill: #fff; }
     .carousel-slide-video iframe { width: 100%; height: 100%; border: none; display: block; }
     .carousel-thumb.thumb-video { position: relative; }
-    .carousel-thumb.thumb-video::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
+    .carousel-thumb.thumb-video::after { content: "â–¶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
     .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: background 0.15s; }
     .carousel-prev:hover, .carousel-next:hover { background: #fff; }
     .carousel-prev { left: 10px; }
@@ -226,56 +226,17 @@
   <meta name="twitter:title" content="Easy Bed Maker & Mattress Lifter — MildMate">
   <meta name="twitter:description" content="MildMate Easy Bed Maker & Mattress Lifter. Ergonomic ABS design lifts and holds heavy mattresses. Reduce back strain and tuck sheets effortlessly. Ships worldwide.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-    <script>
+  <script src="/js/analytics-env.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
@@ -285,7 +246,7 @@
 </head>
 <body class="product-page">
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <!-- __HEADER__ -->
   <main>
     <div class="container" style="padding-top:24px;">
@@ -316,7 +277,7 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">Easy Bed Maker & Mattress Lifter</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">Lift heavy mattresses effortlessly. No more back strain — ergonomic ABS wedge design for seniors and caregivers.</p>
@@ -354,7 +315,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">★★★★★</div>
+            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -431,7 +392,7 @@
           textObserver.observe(desktopBtn, { childList: true, characterData: true, subtree: true });
           mobileBtn.innerHTML = desktopBtn.innerHTML;
         }
-        // 4. Mobile CTA click → trigger desktop Add to Cart
+        // 4. Mobile CTA click â†’ trigger desktop Add to Cart
         if (mobileBtn && desktopBtn) {
           mobileBtn.addEventListener('click', function() {
             desktopBtn.click();
@@ -440,7 +401,7 @@
       })();
 
 
-      // ── Favorite + Sale ──
+      // â”€â”€ Favorite + Sale â”€â”€
       var productSlug = 'mattress-lift-helper';
       var productName = 'Easy Bed Maker & Mattress Lifter';
 
@@ -448,7 +409,7 @@
         var btn = document.getElementById('fav-btn');
         if (!btn) return;
         var isFav = MildMateCampaigns.isFavorite(productSlug);
-        btn.innerHTML = isFav ? '♥' : '♡';
+        btn.innerHTML = isFav ? 'â™¥' : 'â™¡';
         btn.className = isFav ? 'favorite-btn active' : 'favorite-btn';
         btn.title = isFav ? 'Remove from favorites' : 'Save to favorites';
       }
@@ -461,7 +422,7 @@
         if (toast) {
           if (isFav) {
             var offer = MildMateCampaigns.getOffers().favorite || 15;
-            toast.textContent = '♥ Saved!';
+            toast.textContent = 'â™¥ Saved!';
             toast.style.color = '#dc2626';
           } else { toast.textContent = ''; }
         }
@@ -516,7 +477,7 @@
       window.addEventListener('clerk:signed-out', updateFavUI);
       updateSaleDisplay();
 
-      // ── Add to Cart (Phase 5) ──
+      // â”€â”€ Add to Cart (Phase 5) â”€â”€
       window.addToCart = function(item) {
         var dimensions = {};
         var sizeLabel = '';
@@ -562,7 +523,7 @@
         }
       };
 
-      // ── YouTube Video + Carousel Builder ──
+      // â”€â”€ YouTube Video + Carousel Builder â”€â”€
       (function() {
         var slug = location.pathname.split('/').filter(Boolean).pop();
         var currentSlide = 0;
@@ -735,5 +696,7 @@
     </script>
 </body>
 </html>
+
+
 
 

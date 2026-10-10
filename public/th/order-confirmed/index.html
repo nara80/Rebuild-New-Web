@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ยืนยันคำสั่งซื้อ — MildMate">
-  <title>ยืนยันคำสั่งซื้อ — MildMate</title>
+  <meta name="description" content="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸„à¸³à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­ â€” MildMate">
+  <title>à¸¢à¸·à¸™à¸¢à¸±à¸™à¸„à¸³à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­ â€” MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -52,73 +52,35 @@
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
-  <meta property="og:title" content="Order Confirmed — MildMate">
-  <meta property="og:description" content="Order Confirmed — MildMate">
+  <meta property="og:title" content="Order Confirmed â€” MildMate">
+  <meta property="og:description" content="Order Confirmed â€” MildMate">
   <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com/order-confirmed/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Order Confirmed — MildMate">
-  <meta name="twitter:description" content="Order Confirmed — MildMate">
+  <meta name="twitter:title" content="Order Confirmed â€” MildMate">
+  <meta name="twitter:description" content="Order Confirmed â€” MildMate">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-    <script>
+  <script src="/js/analytics-env.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
       } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
+        bootMildmateAnalytics();
       }
     })();
   </script>
 </head>
 <body>
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <!-- __HEADER__ -->
 
   <main>
@@ -198,19 +160,35 @@
 
       function sendGa4Event(name, params) {
         try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
           ensureGa4Stub();
-          window.gtag('event', name, params || {});
+          window.gtag('event', name, payload);
         } catch (e) {}
+      }
+
+      function isPurchaseReportableStatus(status) {
+        var s = String(status || '').toLowerCase();
+        return s === 'confirmed' || s === 'processing' || s === 'shipped' || s === 'delivered';
       }
 
       function trackPurchaseOnce(data, currencyCode, totalValue) {
         if (!data || !data.session_id || !data.orders || !data.orders.length) return;
-        var dedupeKey = 'mildmate_ga4_purchase_' + data.session_id;
+        if (data.payment_verified !== true || data.purchase_reportable !== true) return;
+        var dedupeKey = '**********************' + data.session_id;
         try {
           if (localStorage.getItem(dedupeKey) === '1') return;
         } catch (e) {}
 
-        var items = data.orders.map(function(o) {
+        var reportableOrders = data.orders.filter(function(o) {
+          return isPurchaseReportableStatus(o && o.status);
+        });
+        if (!reportableOrders.length) return;
+
+        var items = reportableOrders.map(function(o) {
           var qty = Number(o.quantity || 1) || 1;
           var unitPrice = currencyCode === 'THB'
             ? Number(o.price_thb || o.price_usd || 0)
@@ -226,7 +204,7 @@
         var payload = {
           transaction_id: data.session_id,
           currency: currencyCode,
-          value: Math.round((Number(totalValue || 0) || 0) * 100) / 100,
+          value: Math.round((Number(data.purchase_reportable_value || totalValue || 0) || 0) * 100) / 100,
           items: items
         };
         sendGa4Event('purchase', payload);
@@ -374,4 +352,7 @@
   </script>
 </body>
 </html>
+
+
+
 

@@ -1117,8 +1117,13 @@
 
   function sendGa4Event(name, params) {
     try {
+      var payload = params || {};
+      if (typeof window.__mildmateTrackEvent === 'function') {
+        window.__mildmateTrackEvent(name, payload);
+        return;
+      }
       ensureGa4Stub();
-      window.gtag('event', name, params || {});
+      window.gtag('event', name, payload);
     } catch (e) {}
   }
 
