@@ -102,7 +102,7 @@ describe("GA4 dataLayer contract (GTM eventModel compatibility)", () => {
     expect(gtmStart).toBeUndefined();
   });
 
-  it("consent default (all denied) is pushed before gtm.js, then update reflects stored choice", () => {
+  it("site pushes exactly one consent command (update) before gtm.js; default is owned by the GTM consent template", () => {
     mockStorage["mildmate-cookie-consent"] = JSON.stringify({ essential: true, analytics: true, timestamp: Date.now() });
     (globalThis as any).__MILDMATE_ANALYTICS_CONFIG = { nonProductionApproved: true, gtmId: "GTM-LOCALTEST", ga4Id: "G-LOCALTEST", environment: "staging" };
     (globalThis as any).location = { hostname: "localhost" };
@@ -113,19 +113,13 @@ describe("GA4 dataLayer contract (GTM eventModel compatibility)", () => {
       // consent + gtm.start pushes we want to assert on.
     }
     const dl = globalThis.dataLayer;
-    const defaultIdx = dl.findIndex((e) => e && e[0] === "consent" && e[1] === "default");
+    const defaults = dl.filter((e) => e && e[0] === "consent" && e[1] === "default");
+    // Single consent owner: the GTM consent template owns the default.
+    expect(defaults.length).toBe(0);
     const updateIdx = dl.findIndex((e) => e && e[0] === "consent" && e[1] === "update");
     const gtmIdx = dl.findIndex((e) => e && e.event === "gtm.js");
-    expect(defaultIdx).toBeGreaterThanOrEqual(0);
-    expect(updateIdx).toBeGreaterThan(defaultIdx);
+    expect(updateIdx).toBeGreaterThanOrEqual(0);
     expect(gtmIdx).toBeGreaterThan(updateIdx);
-    const d = dl[defaultIdx][2];
-    expect(d).toEqual({
-      analytics_storage: "denied",
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied"
-    });
     const u = dl[updateIdx][2];
     expect(u.analytics_storage).toBe("granted");
     // Analytics-only acceptance must NOT grant advertising signals.

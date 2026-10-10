@@ -57,19 +57,15 @@
     }
   }
 
-  // Consent Mode v2 (Basic): all four signals default to denied BEFORE any
-  // Google tag executes (GTM loads only after this, so order is guaranteed).
-  function pushConsentDefault() {
-    ensureDataLayerAndGtag();
-    global.gtag('consent', 'default', {
-      analytics_storage: 'denied',
-      ad_storage: 'denied',
-      ad_user_data: 'denied',
-      ad_personalization: 'denied'
-    });
-  }
-
-  // Reflect the user's actual choices on top of the defaults. Analytics
+  // Consent Mode v2 (Basic) — consent ownership:
+  //   DEFAULT state is owned by the GTM consent template
+  //   (setDefaultConsentState on the "Consent Initialization - All Pages"
+  //   trigger). Queued gtag('consent','default') commands from a deferred
+  //   loader are replayed only AFTER GTM's Initialization triggers, so tags
+  //   would read consent before a default existed — do NOT set defaults here.
+  //   UPDATES are owned by this page: gtag('consent','update') reflects the
+  //   user's stored choice; the template sandbox cannot read localStorage.
+  // Reflect the user's actual choices on top of the GTM-set defaults. Analytics
   // acceptance never grants advertising signals and vice versa.
   function pushConsentUpdate() {
     ensureDataLayerAndGtag();
@@ -143,7 +139,6 @@
     if (global.__mildmateAnalyticsLoaded) return true;
 
     ensureDataLayerAndGtag();
-    pushConsentDefault();
     pushConsentUpdate();
     global.__mildmateAnalyticsLoaded = true;
     global.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
