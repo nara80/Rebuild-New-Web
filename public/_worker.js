@@ -3190,7 +3190,7 @@ var NICHE_DISPLAY = {
   "boarding-dorm": "Boarding Dorm",
   "rv-truck": "RV & Truck Cab"
 };
-var SECURITY_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
+var SECURITY_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
 function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -9385,6 +9385,14 @@ async function getGrowthSignals(env, f) {
      WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
     [previousStart, previousEnd, ...productBind, ...salesChannelBind]
   );
+  const salesObserved = await firstOrNull(
+    `SELECT
+       MAX(order_day) AS observed_latest_order_day,
+       COUNT(DISTINCT sales_order_id) AS observed_distinct_orders
+     FROM analysis_active_items
+     WHERE 1=1${productSql}${salesChannelSql}`,
+    [...productBind, ...salesChannelBind]
+  );
   const channelRows = await allOrNull(
     `SELECT channel_norm, COUNT(DISTINCT sales_order_id) AS orders, COALESCE(SUM(quantity), 0) AS units
      FROM analysis_active_items
@@ -9398,6 +9406,24 @@ async function getGrowthSignals(env, f) {
      FROM analysis_sales_daily
      WHERE order_day >= ? AND order_day <= ?${f.channel ? " AND channel_norm = ?" : ""}`,
     [currentStart, anchorDate, ...f.channel ? [f.channel] : []]
+  );
+  const salesSyncLatest = await firstOrNull(
+    `SELECT id, source, scenario, status, started_at, finished_at,
+            records_received, records_created, records_updated, records_unchanged, records_rejected, error_message
+     FROM sync_runs
+     WHERE source = 'notion-mapping-sync'
+     ORDER BY COALESCE(finished_at, started_at, created_at) DESC
+     LIMIT 1`
+  );
+  const salesSyncState = await firstOrNull(
+    `SELECT name, cursor, last_run_at, last_success_at, last_status, last_processed, last_synced, consecutive_failures
+     FROM marketing_sync_state
+     WHERE name = 'notion-mapping-sync'`
+  );
+  const salesCoverageWatermark = await firstOrNull(
+    `SELECT coverage_through_day, watermark_source, reliability
+     FROM analysis_sales_coverage_watermark
+     LIMIT 1`
   );
   const profitCov = await firstOrNull("SELECT * FROM analysis_profit_coverage");
   const ga4Sessions = n(ga4Cur?.sessions);
@@ -9464,15 +9490,44 @@ async function getGrowthSignals(env, f) {
   const prevUnits = n(salesPrev?.units);
   const curOrders = n(salesCur?.orders);
   const prevOrders = n(salesPrev?.orders);
-  const unitGrowthPct = prevUnits > 0 ? Math.round((curUnits - prevUnits) * 1e3 / prevUnits) / 10 : null;
+  const computedUnitGrowthPct = prevUnits > 0 ? Math.round((curUnits - prevUnits) * 1e3 / prevUnits) / 10 : null;
+  const watermarkDayRaw = String(salesCoverageWatermark?.coverage_through_day || "").trim();
+  const watermarkDay = /^\d{4}-\d{2}-\d{2}$/.test(watermarkDayRaw) ? watermarkDayRaw : null;
+  const watermarkReliabilityRaw = String(salesCoverageWatermark?.reliability || "").trim().toLowerCase();
+  const hasReliableCoverageWatermark = Boolean(watermarkDay && (!watermarkReliabilityRaw || watermarkReliabilityRaw === "reliable"));
+  let coverageState = "unverified";
+  if (hasReliableCoverageWatermark) {
+    if (watermarkDay >= anchorDate) coverageState = "verified_current_window";
+    else if (watermarkDay < currentStart) coverageState = "stale_before_window";
+    else coverageState = "partial_current_window";
+  }
+  const observedLatestOrderDayRaw = String(salesObserved?.observed_latest_order_day || "").trim();
+  const observedLatestOrderDay = /^\d{4}-\d{2}-\d{2}$/.test(observedLatestOrderDayRaw) ? observedLatestOrderDayRaw : null;
+  const sourceLastStatus = String(salesSyncLatest?.status || salesSyncState?.last_status || "").trim().toLowerCase() || null;
+  const sourceLastSuccessAt = salesSyncState?.last_success_at || salesSyncLatest?.finished_at || null;
+  const sourceRunAt = salesSyncLatest?.finished_at || salesSyncLatest?.started_at || salesSyncState?.last_run_at || null;
+  let unitGrowthPct = computedUnitGrowthPct;
   let momentumStatus = "sufficient";
   let momentumImpact = 0;
-  if (curUnits + prevUnits <= 0) {
+  let momentumReason = "Momentum uses comparable 28-day windows over mapped active items.";
+  if (coverageState === "stale_before_window" || coverageState === "partial_current_window") {
+    momentumStatus = "stale_source";
+    momentumImpact -= 10;
+    unitGrowthPct = null;
+    momentumReason = coverageState === "stale_before_window" ? "Sales coverage watermark is older than the current 28-day window; zero current-window units are not interpreted as confirmed decline." : "Sales coverage watermark only partially overlaps the current 28-day window; growth direction is withheld until coverage is complete.";
+  } else if (!hasReliableCoverageWatermark) {
     momentumStatus = "insufficient_signal";
     momentumImpact -= 20;
+    unitGrowthPct = null;
+    momentumReason = "Sales coverage watermark is unavailable in this environment; current-window zero units are treated as unverified rather than confirmed decline.";
+  } else if (curUnits + prevUnits <= 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 20;
+    momentumReason = "No unit activity in current and previous windows.";
   } else if (prevUnits <= 0 && curUnits > 0) {
     momentumStatus = "insufficient_signal";
     momentumImpact -= 8;
+    momentumReason = "Current activity exists but previous baseline is zero, so growth direction is weakly anchored.";
   }
   impacts.push(momentumImpact);
   signals.momentum = {
@@ -9487,11 +9542,24 @@ async function getGrowthSignals(env, f) {
     coverage: {
       mapped_order_pct: orderMappedPct,
       window_start: currentStart,
-      window_end: anchorDate
+      window_end: anchorDate,
+      sales_coverage: {
+        source: "notion-mapping-sync",
+        state: coverageState,
+        coverage_watermark_day: watermarkDay,
+        coverage_watermark_reliable: hasReliableCoverageWatermark,
+        coverage_watermark_source: salesCoverageWatermark?.watermark_source || null,
+        observed_latest_order_day: observedLatestOrderDay,
+        observed_distinct_orders: n(salesObserved?.observed_distinct_orders),
+        source_last_status: sourceLastStatus,
+        source_last_success_at: sourceLastSuccessAt,
+        source_last_run_at: sourceRunAt,
+        source_latest_run_id: salesSyncLatest?.id ?? null
+      }
     },
     freshness_days: null,
     confidence_impact: momentumImpact,
-    reason: curUnits + prevUnits <= 0 ? "No unit activity in current and previous windows." : prevUnits <= 0 ? "Current activity exists but previous baseline is zero, so growth direction is weakly anchored." : "Momentum uses comparable 28-day windows over mapped active items."
+    reason: momentumReason
   };
   const ga4Atc = n(ga4Cur?.add_to_cart);
   const ga4Checkout = n(ga4Cur?.begin_checkout);
@@ -17301,7 +17369,6 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const priceUsd = isUsdQuoted ? explicitPriceUsd : priceThb ? Math.round(priceThb / usdRate) : null;
   const hasPrice = !!(priceThb && priceThb > 0 || priceUsd && priceUsd > 0);
   const isCheckoutReady = !isExpired && hasPrice;
-  const securityCsp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
   function esc(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -17630,9 +17697,9 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^\/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^\/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^/th/, '') || '/';
       }
     };
 
@@ -17654,8 +17721,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   return new Response(html, {
     headers: {
       "Content-Type": "text/html;charset=utf-8",
-      "Cache-Control": "no-cache",
-      "Content-Security-Policy": securityCsp
+      "Cache-Control": "no-cache"
     }
   });
 }, "onRequest");
@@ -18657,7 +18723,7 @@ ${JSON_LD_WEBSITE}
 }
 __name(onRequest12, "onRequest");
 
-// ../.wrangler/tmp/pages-tgHhBf/functionsRoutes-0.7183684520515164.mjs
+// ../.wrangler/tmp/pages-<normalized>/functionsRoutes-<normalized>.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -18759,7 +18825,7 @@ var routes = [
   }
 ];
 
-// ../node_modules/path-to-regexp/dist.es2015/index.js
+// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -19085,7 +19151,7 @@ function pathToRegexp(path, keys, options) {
 }
 __name(pathToRegexp, "pathToRegexp");
 
-// ../node_modules/wrangler/templates/pages-template-worker.ts
+// C:/Users/Lenovo T14s Gen 2/AppData/Roaming/npm/node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;

@@ -977,6 +977,15 @@ function growthValueHtml(v){
   return esc(String(v));
 }
 
+function momentumCoverageBadge(momentum){
+  var cov = momentum && momentum.coverage && momentum.coverage.sales_coverage;
+  if (!cov || !cov.state) return '<span class="badge badge-grey">Momentum coverage: unreported</span>';
+  if (cov.state === 'verified_current_window') return '<span class="badge badge-green">Momentum coverage: verified</span>';
+  if (cov.state === 'stale_before_window') return '<span class="badge badge-amber">Momentum coverage: stale before window</span>';
+  if (cov.state === 'partial_current_window') return '<span class="badge badge-amber">Momentum coverage: partial window</span>';
+  return '<span class="badge badge-red">Momentum coverage: unverified</span>';
+}
+
 async function loadGrowthSignals(){
   setState('growth-signals-table', '', 'Loading…');
   try {
@@ -988,6 +997,7 @@ async function loadGrowthSignals(){
       '<span class="badge badge-blue">Contract: ' + esc(d.growth_signal_contract || 'v1') + '</span>' +
       '<span class="badge badge-grey">Window: ' + esc((d.window && d.window.current_start) || '—') + ' → ' + esc((d.window && d.window.current_end) || '—') + '</span>' +
       '<span class="badge badge-grey">Google Ads: ' + esc(policy.business_signal || 'insufficient_or_sparse') + ' (neutral)</span>' +
+      momentumCoverageBadge(s.momentum || {}) +
       '<span class="badge badge-grey">Confidence: ' + fmtNum(s.confidence && s.confidence.value) + '</span>';
 
     var rows = [

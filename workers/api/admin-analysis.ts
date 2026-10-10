@@ -1644,6 +1644,14 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
      WHERE order_day >= ? AND order_day <= ?${productSql}${salesChannelSql}`,
     [previousStart, previousEnd, ...productBind, ...salesChannelBind]
   );
+  const salesObserved = await firstOrNull(
+    `SELECT
+       MAX(order_day) AS observed_latest_order_day,
+       COUNT(DISTINCT sales_order_id) AS observed_distinct_orders
+     FROM analysis_active_items
+     WHERE 1=1${productSql}${salesChannelSql}`,
+    [...productBind, ...salesChannelBind]
+  );
   const channelRows = await allOrNull(
     `SELECT channel_norm, COUNT(DISTINCT sales_order_id) AS orders, COALESCE(SUM(quantity), 0) AS units
      FROM analysis_active_items
@@ -1657,6 +1665,25 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
      FROM analysis_sales_daily
      WHERE order_day >= ? AND order_day <= ?${f.channel ? " AND channel_norm = ?" : ""}`,
     [currentStart, anchorDate, ...(f.channel ? [f.channel] : [])]
+  );
+  const salesSyncLatest = await firstOrNull(
+    `SELECT id, source, scenario, status, started_at, finished_at,
+            records_received, records_created, records_updated, records_unchanged, records_rejected, error_message
+     FROM sync_runs
+     WHERE source = 'notion-mapping-sync'
+     ORDER BY COALESCE(finished_at, started_at, created_at) DESC
+     LIMIT 1`
+  );
+  const salesSyncState = await firstOrNull(
+    `SELECT name, cursor, last_run_at, last_success_at, last_status, last_processed, last_synced, consecutive_failures
+     FROM marketing_sync_state
+     WHERE name = 'notion-mapping-sync'`
+  );
+  // Optional coverage watermark view (not available in current production schema).
+  const salesCoverageWatermark = await firstOrNull(
+    `SELECT coverage_through_day, watermark_source, reliability
+     FROM analysis_sales_coverage_watermark
+     LIMIT 1`
   );
 
   // Secondary profitability guardrail coverage (no ranking ownership here).
@@ -1744,15 +1771,50 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
   const prevUnits = n(salesPrev?.units);
   const curOrders = n(salesCur?.orders);
   const prevOrders = n(salesPrev?.orders);
-  const unitGrowthPct = prevUnits > 0 ? Math.round(((curUnits - prevUnits) * 1000) / prevUnits) / 10 : null;
+  const computedUnitGrowthPct = prevUnits > 0 ? Math.round(((curUnits - prevUnits) * 1000) / prevUnits) / 10 : null;
+  const watermarkDayRaw = String(salesCoverageWatermark?.coverage_through_day || "").trim();
+  const watermarkDay = /^\d{4}-\d{2}-\d{2}$/.test(watermarkDayRaw) ? watermarkDayRaw : null;
+  const watermarkReliabilityRaw = String(salesCoverageWatermark?.reliability || "").trim().toLowerCase();
+  const hasReliableCoverageWatermark = Boolean(watermarkDay && (!watermarkReliabilityRaw || watermarkReliabilityRaw === "reliable"));
+  let coverageState: "verified_current_window" | "stale_before_window" | "partial_current_window" | "unverified" = "unverified";
+  if (hasReliableCoverageWatermark) {
+    if (watermarkDay! >= anchorDate) coverageState = "verified_current_window";
+    else if (watermarkDay! < currentStart) coverageState = "stale_before_window";
+    else coverageState = "partial_current_window";
+  }
+  const observedLatestOrderDayRaw = String(salesObserved?.observed_latest_order_day || "").trim();
+  const observedLatestOrderDay = /^\d{4}-\d{2}-\d{2}$/.test(observedLatestOrderDayRaw) ? observedLatestOrderDayRaw : null;
+  const sourceLastStatus = String(salesSyncLatest?.status || salesSyncState?.last_status || "").trim().toLowerCase() || null;
+  const sourceLastSuccessAt = salesSyncState?.last_success_at || salesSyncLatest?.finished_at || null;
+  const sourceRunAt = salesSyncLatest?.finished_at || salesSyncLatest?.started_at || salesSyncState?.last_run_at || null;
+
+  let unitGrowthPct = computedUnitGrowthPct;
   let momentumStatus = "sufficient";
   let momentumImpact = 0;
-  if (curUnits + prevUnits <= 0) {
+  let momentumReason = "Momentum uses comparable 28-day windows over mapped active items.";
+
+  if (coverageState === "stale_before_window" || coverageState === "partial_current_window") {
+    momentumStatus = "stale_source";
+    momentumImpact -= 10;
+    unitGrowthPct = null;
+    momentumReason =
+      coverageState === "stale_before_window"
+        ? "Sales coverage watermark is older than the current 28-day window; zero current-window units are not interpreted as confirmed decline."
+        : "Sales coverage watermark only partially overlaps the current 28-day window; growth direction is withheld until coverage is complete.";
+  } else if (!hasReliableCoverageWatermark) {
     momentumStatus = "insufficient_signal";
     momentumImpact -= 20;
+    unitGrowthPct = null;
+    momentumReason =
+      "Sales coverage watermark is unavailable in this environment; current-window zero units are treated as unverified rather than confirmed decline.";
+  } else if (curUnits + prevUnits <= 0) {
+    momentumStatus = "insufficient_signal";
+    momentumImpact -= 20;
+    momentumReason = "No unit activity in current and previous windows.";
   } else if (prevUnits <= 0 && curUnits > 0) {
     momentumStatus = "insufficient_signal";
     momentumImpact -= 8;
+    momentumReason = "Current activity exists but previous baseline is zero, so growth direction is weakly anchored.";
   }
   impacts.push(momentumImpact);
   signals.momentum = {
@@ -1768,15 +1830,23 @@ async function getGrowthSignals(env: any, f: Filters): Promise<Response> {
       mapped_order_pct: orderMappedPct,
       window_start: currentStart,
       window_end: anchorDate,
+      sales_coverage: {
+        source: "notion-mapping-sync",
+        state: coverageState,
+        coverage_watermark_day: watermarkDay,
+        coverage_watermark_reliable: hasReliableCoverageWatermark,
+        coverage_watermark_source: salesCoverageWatermark?.watermark_source || null,
+        observed_latest_order_day: observedLatestOrderDay,
+        observed_distinct_orders: n(salesObserved?.observed_distinct_orders),
+        source_last_status: sourceLastStatus,
+        source_last_success_at: sourceLastSuccessAt,
+        source_last_run_at: sourceRunAt,
+        source_latest_run_id: salesSyncLatest?.id ?? null,
+      },
     },
     freshness_days: null,
     confidence_impact: momentumImpact,
-    reason:
-      curUnits + prevUnits <= 0
-        ? "No unit activity in current and previous windows."
-        : prevUnits <= 0
-          ? "Current activity exists but previous baseline is zero, so growth direction is weakly anchored."
-          : "Momentum uses comparable 28-day windows over mapped active items.",
+    reason: momentumReason,
   };
 
   // Conversion availability (availability only, not decision score logic).

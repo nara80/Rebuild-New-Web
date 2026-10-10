@@ -1,0 +1,58 @@
+{
+  "manifest": "phase13-closeout-release",
+  "created_utc": "2026-10-10",
+  "mode": "local build preparation only — production deployment NOT approved at manifest time",
+  "base_commit": "dfd6d3e",
+  "base_commit_note": "master == origin/master == phase13-closeout base == production Pages deployment baseline",
+  "production_baseline_deployment": "0c312ff7-3ad6-4d57-a0a3-fa0ec6658c68",
+  "worktree": "D:\\00_mildmate\\re-build_web_phase13_closeout",
+  "isolation": {
+    "build_script_fix": "extract-worker.ps1 now resolves $PSScriptRoot, asserts project root == re-build_web_phase13_closeout, builds to worktree-local .tmp, and normalizes the wrangler functionsRoutes comment for deterministic output",
+    "primary_workspace_used": false,
+    "verified_scope_vs_base": [
+      "extract-worker.ps1",
+      "public/_worker.js",
+      "public/index.js",
+      "public/super-admin/marketing/data-analyst/index.html",
+      "workers/api/admin-analysis.ts"
+    ],
+    "untracked_artifacts": [
+      "01_MildMate_Marketing/09_Handoffs/Phase_13_Closeout_Handoff.md",
+      "01_MildMate_Marketing/09_Handoffs/Phase_13_Growth_Signal_Contract_v1.md",
+      "01_MildMate_Marketing/09_Handoffs/Phase_13_Validation_and_Reconciliation_Report.md",
+      "workers/api/tests/phase13-growth-signals.contract.test.mjs",
+      "release-manifest-phase13-closeout.json"
+    ]
+  },
+  "artifacts": {
+    "public/_worker.js": {
+      "sha256": "C00C03E998A8374E690C26352DEF2486D6B5361DE2A6F18B23204C8650FB55B1",
+      "sha256_before": "20381753E2A9C73876C299D031CADC70210EDD587CAEE14B58FCFC4580819831",
+      "built_by": "extract-worker.ps1 (wrangler pages functions build, formdata-extracted)",
+      "contains_guard": true,
+      "node_check": "pass"
+    },
+    "public/index.js": {
+      "sha256": "6964622911F09553B80B899225EB5F9B5413BE5F5E8A642874318A80D8BBF467",
+      "sha256_before": "5E02D26D1D2627FB54A9B9C6056382AAEF31130EBC061CA89DBE3CCF39E7D1C9",
+      "built_by": "hand-mirror per AGENTS.md runtime-parity convention (esbuild regeneration blocked by pre-existing unrelated admin-templates.ts -> clerk-verify.ts import break)",
+      "contains_guard": true,
+      "node_check": "pass"
+    }
+  },
+  "tests": {
+    "suite": "workers/api/tests/phase13-growth-signals.contract.test.mjs",
+    "against_fresh_esbuild_bundle": "17/17 pass",
+    "against_shipped_public_index_js": "17/17 pass",
+    "added_this_session": "zero units in both windows under complete coverage returns insufficient_signal, never -100 (incl. confidence reconciliation assertion)"
+  },
+  "expected_production_behavior_change": {
+    "momentum": "unverified coverage -> status insufficient_signal, units_growth_pct null (was: -100 with status sufficient)",
+    "confidence": "production confidence 72 -> ~52 (new -20 momentum impact); expected, not a regression",
+    "contract": "growth_signal_contract stays v1; all 8 envelopes; momentum gains coverage.sales_coverage sub-object"
+  },
+  "rollback": {
+    "d1_changes": "none (no migration 057 or any D1 write involved)",
+    "pages_rollback": "Cloudflare Pages -> deployment 0c312ff7-3ad6-4d57-a0a3-fa0ec6658c68 -> Rollback"
+  }
+}
