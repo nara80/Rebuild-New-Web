@@ -24,7 +24,7 @@ import { chromium } from 'playwright-core';
 const PROD_IDS = ['GTM-KLJZZM9', 'G-0GWVSPJLVJ', 'G-ESL161CNBV'];
 const GTM_TEST_ID = process.env.GTM_TEST_ID || '';
 const GA4_TEST_ID = process.env.GA4_TEST_ID || '';
-const BASE = 'http://127.0.0.1:8799';
+const BASE = process.env.QA_BASE || 'http://127.0.0.1:8799';
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 
 if (!GTM_TEST_ID || !GTM_TEST_ID.startsWith('GTM-')) {

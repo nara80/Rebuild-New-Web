@@ -3,7 +3,7 @@
 // GTM network calls are intercepted (staging IDs) and never reach Google.
 import { chromium } from 'playwright-core';
 
-const BASE = 'http://127.0.0.1:8799';
+const BASE = process.env.QA_BASE || 'http://127.0.0.1:8799';
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 // Owner-authorized staging QA identifiers (2026-10-10); production IDs are
 // never used here — the isolation scenario intentionally passes prod IDs to
