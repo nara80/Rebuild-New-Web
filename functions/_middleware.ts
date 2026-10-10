@@ -5,6 +5,7 @@
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 let _cache: { header?: string; footer?: string; fetchedAt: number } = { fetchedAt: 0 };
 
+
 const FALLBACK_HEADER = `<header class="site-header">
     <div class="container header-inner">
 
@@ -376,6 +377,32 @@ const SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 const SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
 const LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"></script>`;
+
+function isProductionHost(hostname: string): boolean {
+  const host = String(hostname || '').toLowerCase();
+  return host === 'www.mildmate.com' || host === 'mildmate.com';
+}
+
+function buildAnalyticsRuntimeConfigScript(request: Request, env: any): string {
+  const host = new URL(request.url).hostname;
+  const prodHost = isProductionHost(host);
+  const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? 'production' : 'staging')).trim().toLowerCase();
+  const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || '').trim().toLowerCase() === 'true';
+  const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || '').trim();
+  const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || '').trim();
+
+  const cfg: any = { environment: runtimeEnv };
+  if (!prodHost) {
+    cfg.nonProductionApproved = nonProdEnabled;
+    if (nonProdEnabled) {
+      if (nonProdGtm) cfg.gtmId = nonProdGtm;
+      if (nonProdGa4) cfg.ga4Id = nonProdGa4;
+      cfg.enabled = true;
+    }
+  }
+  const json = JSON.stringify(cfg);
+  return `<script id="runtime-analytics-config">window.__MILDMATE_ANALYTICS_CONFIG = ${json};</script>`;
+}
 
 async function ensureCache(db: any): Promise<void> {
   const now = Date.now();
@@ -901,6 +928,11 @@ export async function onRequest(context: any): Promise<Response> {
   const isFaq = path === '/faq/' || path === '/faq';
   if (isFaq && !html.includes('id="json-ld-faq"')) {
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}\n</head>`);
+  }
+
+  if (!html.includes('id="runtime-analytics-config"')) {
+    const analyticsRuntimeScript = buildAnalyticsRuntimeConfigScript(context.request, context.env || {});
+    html = html.replace(/<\/head>/i, `${analyticsRuntimeScript}\n</head>`);
   }
 
   return new Response(html, { status: response.status, headers: response.headers });

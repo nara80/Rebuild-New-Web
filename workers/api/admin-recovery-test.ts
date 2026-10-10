@@ -1,25 +1,18 @@
 // Admin Recovery Test — manually triggers abandoned cart recovery email
 // POST /api/admin/recovery-test?email=test@example.com
 
+import { sendEmail } from "./email";
+
 async function sendRecoveryEmail(env: any, to: string, subject: string, html: string): Promise<boolean> {
-  try {
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || 'MildMate <orders@mildmate.com>',
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
-    });
-    return resp.ok;
-  } catch (e: any) {
-    return false;
-  }
+  const text = `You left something behind — your MildMate cart is waiting.\nReturn to your cart: https://mildmate-new.pages.dev/checkout/`;
+  const result = await sendEmail(env, {
+    to,
+    from: env.ORDER_FROM_EMAIL || 'MildMate <orders@mildmate.com>',
+    subject,
+    text,
+    html,
+  });
+  return result.success;
 }
 
 function escHtml(s: string): string {

@@ -62,10 +62,19 @@
   <meta name="twitter:title" content="Order Confirmed — MildMate">
   <meta name="twitter:description" content="Order Confirmed — MildMate">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <script src="/js/analytics-env.js"></script>
     <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
+      var resolver = window.__resolveMildMateAnalyticsConfig;
+      var analyticsConfig = resolver ? resolver({ hostname: window.location.hostname }) : null;
+      if (!analyticsConfig || analyticsConfig.enabled !== true) {
+        return;
+      }
+      var GTM_ID = String(analyticsConfig.gtmId || '').trim();
+      var GA4_ID = String(analyticsConfig.ga4Id || '').trim();
+      if (!GTM_ID || !GA4_ID) {
+        return;
+      }
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -84,6 +93,10 @@
         window.gtag('config', GA4_ID);
         loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+        var ns = document.getElementById('gtm-noscript');
+        if (ns && !ns.innerHTML) {
+          ns.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=' + GTM_ID + '" height="0" width="0" style="display:none;visibility:hidden"></iframe>';
+        }
       }
 
       window.__mildmateLoadAnalytics = loadAnalytics;
@@ -118,7 +131,7 @@
 </head>
 <body>
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <!-- __HEADER__ -->
 
   <main>
@@ -203,14 +216,25 @@
         } catch (e) {}
       }
 
+      function isPurchaseReportableStatus(status) {
+        var s = String(status || '').toLowerCase();
+        return s === 'confirmed' || s === 'processing' || s === 'shipped' || s === 'delivered';
+      }
+
       function trackPurchaseOnce(data, currencyCode, totalValue) {
         if (!data || !data.session_id || !data.orders || !data.orders.length) return;
+        if (data.payment_verified !== true || data.purchase_reportable !== true) return;
         var dedupeKey = 'mildmate_ga4_purchase_' + data.session_id;
         try {
           if (localStorage.getItem(dedupeKey) === '1') return;
         } catch (e) {}
 
-        var items = data.orders.map(function(o) {
+        var reportableOrders = data.orders.filter(function(o) {
+          return isPurchaseReportableStatus(o && o.status);
+        });
+        if (!reportableOrders.length) return;
+
+        var items = reportableOrders.map(function(o) {
           var qty = Number(o.quantity || 1) || 1;
           var unitPrice = currencyCode === 'THB'
             ? Number(o.price_thb || o.price_usd || 0)
@@ -226,7 +250,7 @@
         var payload = {
           transaction_id: data.session_id,
           currency: currencyCode,
-          value: Math.round((Number(totalValue || 0) || 0) * 100) / 100,
+          value: Math.round((Number(data.purchase_reportable_value || totalValue || 0) || 0) * 100) / 100,
           items: items
         };
         sendGa4Event('purchase', payload);
@@ -298,7 +322,7 @@
             document.getElementById('pending-state').style.display = 'block';
             return false;
           }
-          if (data.orders && data.orders.length > 0) {
+          if (data.payment_verified === true && data.orders && data.orders.length > 0) {
             showConfirmed(data);
             return true;
           }
@@ -344,6 +368,7 @@
 
         var html = '';
         var total = 0;
+        var reportableTotal = 0;
         var currency = data.orders && data.orders[0] && data.orders[0].currency
           ? String(data.orders[0].currency).toLowerCase() : 'usd';
         var currencyCode = currency === 'thb' ? 'THB' : 'USD';
@@ -356,13 +381,18 @@
           var meta = [o.fabric, o.color, dims].filter(Boolean).join(' | ');
           var unitPrice = currency === 'thb' ? (o.price_thb || o.price_usd || 0) : (o.price_usd || 0);
           total += unitPrice * (o.quantity || 1);
+          if (isPurchaseReportableStatus(o.status)) {
+            reportableTotal += unitPrice * (o.quantity || 1);
+          }
           html += '<div class="order-item">' +
             '<div style="font-weight:700">' + escHtml(o.product_title_en || 'Custom Order') + '</div>' +
             '<div class="order-meta">' + escHtml(meta) + ' | Qty: ' + (o.quantity || 1) + '</div>' +
             '<div style="margin-top:4px">' + formatMoney(unitPrice) + '</div>' +
           '</div>';
         });
-        trackPurchaseOnce(data, currencyCode, total);
+        if (data && data.payment_verified === true && data.purchase_reportable === true) {
+          trackPurchaseOnce(data, currencyCode, reportableTotal);
+        }
         document.getElementById('order-items').innerHTML = html;
         document.getElementById('order-total').textContent = formatMoney(total);
       }

@@ -299,10 +299,19 @@
   <meta name="twitter:title" content="Checkout — MildMate">
   <meta name="twitter:description" content="MildMate Checkout — Complete your custom bedding order.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <script src="/js/analytics-env.js"></script>
     <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
+      var resolver = window.__resolveMildMateAnalyticsConfig;
+      var analyticsConfig = resolver ? resolver({ hostname: window.location.hostname }) : null;
+      if (!analyticsConfig || analyticsConfig.enabled !== true) {
+        return;
+      }
+      var GTM_ID = String(analyticsConfig.gtmId || '').trim();
+      var GA4_ID = String(analyticsConfig.ga4Id || '').trim();
+      if (!GTM_ID || !GA4_ID) {
+        return;
+      }
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -321,6 +330,10 @@
         window.gtag('config', GA4_ID);
         loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+        var ns = document.getElementById('gtm-noscript');
+        if (ns && !ns.innerHTML) {
+          ns.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=' + GTM_ID + '" height="0" width="0" style="display:none;visibility:hidden"></iframe>';
+        }
       }
 
       window.__mildmateLoadAnalytics = loadAnalytics;
@@ -355,7 +368,7 @@
 </head>
 <body>
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
   <header class="checkout-header">
     <div class="checkout-header-inner">
       <span class="checkout-trust">

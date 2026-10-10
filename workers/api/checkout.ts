@@ -21,6 +21,50 @@ interface CartItem {
   is_quote?: boolean;
 }
 
+function isProductionHost(request: Request): boolean {
+  try {
+    const host = new URL(request.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+
+function inferStripeSecretMode(secret: string): "live" | "test" | "unknown" {
+  if (secret.startsWith("sk_live_")) return "live";
+  if (secret.startsWith("sk_test_")) return "test";
+  return "unknown";
+}
+
+function assertStripeRuntimeSafety(request: Request, env: any, stripeKey: string): string | null {
+  const prodHost = isProductionHost(request);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeMode = inferStripeSecretMode(stripeKey);
+
+  if (prodHost) {
+    if (stripeMode === "test") return "Production host cannot use Stripe test secret key";
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    return null;
+  }
+
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production checkout disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeMode !== "test") {
+    return "Non-production checkout requires Stripe test secret key";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+
 function humanizeSlug(slug: string): string {
   return String(slug || "")
     .split("-")
@@ -97,6 +141,13 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   const stripeKey = env.STRIPE_SECRET_KEY;
   if (!stripeKey) {
     return new Response(JSON.stringify({ error: "Payment not configured" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  const stripeSafetyError = assertStripeRuntimeSafety(request, env, stripeKey);
+  if (stripeSafetyError) {
+    return new Response(JSON.stringify({ error: stripeSafetyError }), {
       status: 503,
       headers: { "Content-Type": "application/json" },
     });

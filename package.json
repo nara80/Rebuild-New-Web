@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint \"public/js/**/*.js\" \"scripts/**/*.js\"",
-    "deploy": "next build && wrangler pages deploy out"
+    "deploy": "next build && wrangler pages deploy out",
+    "test": "vitest run"
   },
   "dependencies": {
     "framer-motion": "^11.0.0",
@@ -30,6 +31,7 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.0",
     "typescript": "latest",
+    "vitest": "^3.2.4",
     "wrangler": "^4.100.0"
   }
 }

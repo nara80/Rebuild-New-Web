@@ -5,6 +5,8 @@
 // Stage 2 (72h): Discount offer — only if cart total >= basket_threshold_usd
 // Stage 3 (7d):  Last chance — same discount code, urgency
 
+import { sendEmail } from "../workers/api/email";
+
 interface Env {
   DB: D1Database;
   RESEND_API_KEY: string;
@@ -254,26 +256,20 @@ async function sendRecoveryEmail(
   html: string
 ): Promise<boolean> {
   try {
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || 'MildMate <orders@mildmate.com>',
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
+    const text = `${subject}\n\nPlease view this email in an HTML-capable client.\nShop: https://mildmate-new.pages.dev/`;
+    const resp = await sendEmail(env, {
+      to,
+      from: env.ORDER_FROM_EMAIL || 'MildMate <orders@mildmate.com>',
+      subject,
+      text,
+      html,
     });
-    if (!resp.ok) {
-      const errBody = await resp.text().catch(() => '');
-      console.error(`CRON: Resend ${resp.status} for ${to}: ${errBody.substring(0, 200)}`);
+    if (!resp.success) {
+      console.error(`CRON: email suppressed/failed: ${String(resp.error || "unknown").slice(0, 120)}`);
     }
-    return resp.ok;
+    return resp.success;
   } catch (e: any) {
-    console.error(`CRON: Resend error for ${to}: ${e.message}`);
+    console.error(`CRON: email send exception: ${e.message}`);
     return false;
   }
 }
