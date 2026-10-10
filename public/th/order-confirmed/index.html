@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="à¸¢à¸·à¸™à¸¢à¸±à¸™à¸„à¸³à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­ â€” MildMate">
-  <title>à¸¢à¸·à¸™à¸¢à¸±à¸™à¸„à¸³à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­ â€” MildMate</title>
+  <meta name="description" content="ยืนยันคำสั่งซื้อ — MildMate">
+  <title>ยืนยันคำสั่งซื้อ — MildMate</title>
   <link href="/css/fonts.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
   <style>
@@ -52,17 +52,17 @@
   <!-- Phase 8: Tracking + OG -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="MildMate">
-  <meta property="og:title" content="Order Confirmed â€” MildMate">
-  <meta property="og:description" content="Order Confirmed â€” MildMate">
+  <meta property="og:title" content="Order Confirmed — MildMate">
+  <meta property="og:description" content="Order Confirmed — MildMate">
   <meta property="og:image" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:secure_url" content="https://www.mildmate.com/images/MildMate_OG.png">
   <meta property="og:image:alt" content="MildMate custom bedding">
   <meta property="og:url" content="https://www.mildmate.com/order-confirmed/">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Order Confirmed â€” MildMate">
-  <meta name="twitter:description" content="Order Confirmed â€” MildMate">
+  <meta name="twitter:title" content="Order Confirmed — MildMate">
+  <meta name="twitter:description" content="Order Confirmed — MildMate">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-  <script src="/js/analytics-env.js"></script>
+      <script src="/js/analytics-env.js"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
     (function () {
@@ -160,13 +160,8 @@
 
       function sendGa4Event(name, params) {
         try {
-          var payload = params || {};
-          if (typeof window.__mildmateTrackEvent === 'function') {
-            window.__mildmateTrackEvent(name, payload);
-            return;
-          }
           ensureGa4Stub();
-          window.gtag('event', name, payload);
+          window.gtag('event', name, params || {});
         } catch (e) {}
       }
 
@@ -352,7 +347,4 @@
   </script>
 </body>
 </html>
-
-
-
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
@@ -27,7 +27,7 @@
     .carousel-slide-video .yt-play-circle svg { width: 24px; height: 24px; fill: #fff; }
     .carousel-slide-video iframe { width: 100%; height: 100%; border: none; display: block; }
     .carousel-thumb.thumb-video { position: relative; }
-    .carousel-thumb.thumb-video::after { content: "â–¶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
+    .carousel-thumb.thumb-video::after { content: "▶"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); color: #fff; font-size: 1.25rem; }
     .carousel-prev, .carousel-next { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.88); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transition: background 0.15s; }
     .carousel-prev:hover, .carousel-next:hover { background: #fff; }
     .carousel-prev { left: 10px; }
@@ -226,7 +226,7 @@
   <meta name="twitter:title" content="Duvet Insert — MildMate">
   <meta name="twitter:description" content="Duvet Insert by MildMate — Microfiber 200g/m² filling, hypoallergenic, quick-dry. Thai standard sizes (3FT–9.5FT). Thailand only. Made in Thailand.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-  <script src="/js/analytics-env.js"></script>
+      <script src="/js/analytics-env.js"></script>
   <script>
     (function () {
       function bootMildmateAnalytics() {
@@ -277,7 +277,7 @@
       <div class="product-info">
         <div class="product-title-row">
           <h1 class="product-title">Duvet Insert</h1>
-          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">â™¡</button>
+          <button class="favorite-btn" id="fav-btn" onclick="toggleFavoriteProduct()" title="Save to favorites">♡</button>
         </div>
         <p class="favorite-toast" id="fav-toast"></p>
         <p class="product-tagline">Microfiber 200g/m² fill — light, warm, made for Thailand. Standard Thai duvet sizes.</p>
@@ -315,7 +315,7 @@
         <div class="reviews-summary" id="product-review-summary">
           <div class="summary-score" id="product-review-score">5.0</div>
           <div class="summary-detail">
-            <div class="summary-stars" id="product-review-stars">â˜…â˜…â˜…â˜…â˜…</div>
+            <div class="summary-stars" id="product-review-stars">★★★★★</div>
             <div class="summary-text" id="product-review-count">Loading reviews...</div>
           </div>
         </div>
@@ -392,7 +392,7 @@
           textObserver.observe(desktopBtn, { childList: true, characterData: true, subtree: true });
           mobileBtn.innerHTML = desktopBtn.innerHTML;
         }
-        // 4. Mobile CTA click â†’ trigger desktop Add to Cart
+        // 4. Mobile CTA click → trigger desktop Add to Cart
         if (mobileBtn && desktopBtn) {
           mobileBtn.addEventListener('click', function() {
             desktopBtn.click();
@@ -401,7 +401,7 @@
       })();
 
 
-      // â”€â”€ Favorite + Sale â”€â”€
+      // ── Favorite + Sale ──
       var productSlug = 'duvet-insert';
       var productName = 'Duvet Insert';
 
@@ -409,7 +409,7 @@
         var btn = document.getElementById('fav-btn');
         if (!btn) return;
         var isFav = MildMateCampaigns.isFavorite(productSlug);
-        btn.innerHTML = isFav ? 'â™¥' : 'â™¡';
+        btn.innerHTML = isFav ? '♥' : '♡';
         btn.className = isFav ? 'favorite-btn active' : 'favorite-btn';
         btn.title = isFav ? 'Remove from favorites' : 'Save to favorites';
       }
@@ -422,7 +422,7 @@
         if (toast) {
           if (isFav) {
             var offer = MildMateCampaigns.getOffers().favorite || 15;
-            toast.textContent = 'â™¥ Saved!';
+            toast.textContent = '♥ Saved!';
             toast.style.color = '#dc2626';
           } else { toast.textContent = ''; }
         }
@@ -477,7 +477,7 @@
       window.addEventListener('clerk:signed-out', updateFavUI);
       updateSaleDisplay();
 
-      // â”€â”€ Add to Cart (Phase 5) â”€â”€
+      // ── Add to Cart (Phase 5) ──
       window.addToCart = function(item) {
         var dimensions = {};
         var sizeLabel = '';
@@ -523,7 +523,7 @@
         }
       };
 
-      // â”€â”€ YouTube Video + Carousel Builder â”€â”€
+      // ── YouTube Video + Carousel Builder ──
       (function() {
         var slug = location.pathname.split('/').filter(Boolean).pop();
         var currentSlide = 0;
@@ -696,7 +696,5 @@
     </script>
 </body>
 </html>
-
-
 
 
