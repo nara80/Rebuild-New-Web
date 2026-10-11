@@ -228,6 +228,33 @@ try {
     record('withdraw: consent cookie now fully denied', cookie.includes('analytics:denied') && cookie.includes('marketing:denied'), cookie);
     await ctx.close();
   }
+
+  // 10. Permanent Cookie Settings entry: returning users can reopen the
+  //     preferences modal and change consent without a page reload.
+  {
+    const { ctx, page, gtmRequests } = await newPage(browser, {
+      consent: { essential: true, analytics: true, timestamp: Date.now() }
+    });
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#cookie-settings-entry', { timeout: 8000 });
+    await page.click('#cookie-settings-entry');
+    await page.waitForTimeout(600);
+    const modalVisible = await page.locator('#cookie-modal').isVisible().catch(() => false);
+    // Change consent via the modal: toggle analytics off, save.
+    if (modalVisible) {
+      // The styled checkbox input is visually hidden behind the slider; click
+      // the wrapping label to toggle it the way a user does.
+      await page.locator('label.cookie-toggle').filter({ has: page.locator('#cookie-toggle-analytics') }).click();
+      await page.click('#cookie-modal-save');
+      await page.waitForTimeout(600);
+    }
+    const cookie = await getConsentCookie(page);
+    const evts = await dataLayerEvents(page);
+    record('settings: entry opens modal for returning user', modalVisible);
+    record('settings: modal save persists withdrawal without reload',
+      modalVisible && cookie.includes('analytics:denied') && evts.includes('mildmate_analytics_revoked'), cookie);
+    await ctx.close();
+  }
 } finally {
   await browser.close();
 }

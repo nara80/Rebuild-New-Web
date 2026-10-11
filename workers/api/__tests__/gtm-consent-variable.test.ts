@@ -92,7 +92,7 @@ describe("GTM consent signal variable template (MildMate Consent Signal)", () =>
     // natural-language header cannot trip keyword checks.
     const codeOnly = templateCode
       .split("\n")
-      .map((line) => line.replace(/\/\/.*$/, ""))
+      .map((line) => line.replace(/\/\/.*/, "")) // no $ anchor: `.` cannot match \r (CRLF checkouts)
       .join("\n");
 
     it("contains no exception-handling blocks", () => {

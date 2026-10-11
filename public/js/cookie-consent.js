@@ -227,6 +227,31 @@
     }
   }
 
+  // Permanent Cookie Settings entry point — returning users must be able to
+  // reopen preferences and change/withdraw consent without a page reload.
+  // Injected at runtime into the site footer (bilingual label), with a
+  // fixed-position fallback when no footer exists. Inline styles only: the
+  // shared stylesheet is minified and page CSP allows inline styles.
+  function injectSettingsEntry() {
+    if (document.getElementById('cookie-settings-entry')) return;
+    const isThai = (document.documentElement && document.documentElement.lang || '').toLowerCase() === 'th';
+    const entry = document.createElement('button');
+    entry.type = 'button';
+    entry.id = 'cookie-settings-entry';
+    entry.textContent = isThai ? 'ตั้งค่าคุกกี้' : 'Cookie Settings';
+    entry.setAttribute('aria-haspopup', 'dialog');
+    entry.style.cssText = 'display:block;margin:12px auto 0;padding:0;background:none;border:none;' +
+      'color:#64748b;font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;';
+    entry.addEventListener('click', showModal);
+    const footer = document.querySelector('footer');
+    if (footer) {
+      footer.appendChild(entry);
+    } else {
+      entry.style.cssText += 'position:fixed;left:12px;bottom:12px;z-index:9998;';
+      document.body.appendChild(entry);
+    }
+  }
+
   // Save consent to localStorage + first-party consent cookie
   function saveConsent(newConsent) {
     consent = { ...newConsent, timestamp: Date.now() };
@@ -269,6 +294,7 @@
   // Initialize
   function init() {
     injectUI();
+    injectSettingsEntry();
 
     // Bind banner buttons
     const btnSettings = document.getElementById('cookie-btn-settings');

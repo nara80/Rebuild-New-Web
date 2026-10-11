@@ -188,7 +188,7 @@ describe("GTM consent template (MildMate Consent Bridge)", () => {
     // natural-language header cannot trip keyword checks.
     const templateCodeOnly = templateCode
       .split("\n")
-      .map((line) => line.replace(/\/\/.*$/, ""))
+      .map((line) => line.replace(/\/\/.*/, "")) // no $ anchor: `.` cannot match \r (CRLF checkouts)
       .join("\n");
 
     it("contains no exception-handling blocks", () => {
