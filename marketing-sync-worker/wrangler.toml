@@ -37,9 +37,12 @@ GA4_API_BASE = "https://www.mildmate.com"
 # logically separate (property-aware uniqueness, locks and telemetry). Etsy
 # GA4 contributes traffic/demand only; the Etsy API stays authoritative for
 # Etsy orders/revenue.
-GA4_PROPERTIES_JSON = "[{\"property_id\":\"366290587\",\"scope\":\"website\"},{\"property_id\":\"533944293\",\"scope\":\"etsy\"}]"
+# Canonical website property (owner-verified 2026-10 via GA4 Admin):
+#   Property 308922589 "MildMate GA4", web stream 3376637775, G-0GWVSPJLVJ.
+# Supersedes legacy website property 366290587 (historical rows preserved in D1).
+GA4_PROPERTIES_JSON = "[{\"property_id\":\"308922589\",\"scope\":\"website\"},{\"property_id\":\"533944293\",\"scope\":\"etsy\"}]"
 # Legacy single-property id: kept as the default for debug endpoints.
-GA4_PROPERTY_ID = "366290587"
+GA4_PROPERTY_ID = "308922589"
 GA4_OVERLAP_DAYS = "14"
 GA4_DATA_LAG_DAYS = "2"
 # Each upserted row costs ~2 D1 statements in the Pages ingestion API, which is

@@ -780,24 +780,24 @@
   <meta name="twitter:title" content="MildMate  -  เครื่องนอนสั่งทำจากประเทศไทย">
   <meta name="twitter:description" content="MildMate  -  เครื่องนอนสั่งทำจากประเทศไทย พอดีสำหรับทุกที่นอน ตั้งแต่ V-Berth เรือไปจนถึงเตียงครอบครัวขนาดใหญ่">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_Banner.png">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ESL161CNBV"></script>
+    <script src="/js/analytics-env.js"></script>
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-ESL161CNBV');
-  </script>
-  <script>
-    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KLJZZM9');
+    (function () {
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
+      }
+    })();
   </script>
 </head>
 <body class="home-page">
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
 
   <!-- ===== HEADER ===== -->
   <!-- __HEADER__ -->

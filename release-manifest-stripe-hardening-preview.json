@@ -1,0 +1,129 @@
+﻿{
+    "generated_at":  "2026-10-10T10:58:08",
+    "rc_path":  "D:\\00_mildmate\\re-build_web_rc",
+    "source_workspace":  "D:\\00_mildmate\\re-build_web",
+    "branch":  "rc/stripe-preview",
+    "head":  "dfd6d3e762b1c52c1afbec1f41ad509b06533e78",
+    "worker_bundle_sha256":  "2173DF68AE551ED36BD26EEE3F81DC6D170DFC4F1DC0B86706A0AC2357596905",
+    "approved_file_sha256":  [
+                                 {
+                                     "file":  "functions/_middleware.ts",
+                                     "sha256":  "34393A32CD990D7589186B3D19E597E2118B490850B70CAEC1A434AF6403B1DC"
+                                 },
+                                 {
+                                     "file":  "functions/cron.ts",
+                                     "sha256":  "223EC519BA2F1B0A68D597F8E99C73C83EB122B77EB3642FF7142C360F77BCCD"
+                                 },
+                                 {
+                                     "file":  "public/checkout/index.html",
+                                     "sha256":  "67DD0A6E3B959536B7BA2F2B0CC8CA3A6028F48F83693C0CA6BD11ED5ADC8D9D"
+                                 },
+                                 {
+                                     "file":  "public/order-confirmed/index.html",
+                                     "sha256":  "B079E3DE2AB4106677CFCD8F347518E91BD6C56CC75932087795D0467D70027E"
+                                 },
+                                 {
+                                     "file":  "public/js/analytics-env.js",
+                                     "sha256":  "AB72DCE0143885B88E3F40D9332D3BF9205EF653C1EC71672B2B0F25676B9740"
+                                 },
+                                 {
+                                     "file":  "workers/api/checkout.ts",
+                                     "sha256":  "4C5318B5FE47D3A1D4CEFE362CBAC2AE6BD1C190211D779660AA9F8CE01E9A56"
+                                 },
+                                 {
+                                     "file":  "workers/api/webhook.ts",
+                                     "sha256":  "0DE81156608E0CD5F43444BA6132592823DC99B5ABFF98ADA04C5762F658694B"
+                                 },
+                                 {
+                                     "file":  "workers/api/order-confirmed.ts",
+                                     "sha256":  "7E4D8645AF0942CC2F7F11CDA54B59EA8FAFF3A8BD1FF413D84EDD76B6F9397D"
+                                 },
+                                 {
+                                     "file":  "workers/api/email.ts",
+                                     "sha256":  "1207207DADBDB440BF0CAF063B7D98EFD8995DFCB4D996D1C5D281ED3FFBAEC3"
+                                 },
+                                 {
+                                     "file":  "workers/api/admin-thankyou-dispatch.ts",
+                                     "sha256":  "713F33732C634F73A2D6F2E5893C64A3836F9255A81B52DD659C5DCDCC982D7A"
+                                 },
+                                 {
+                                     "file":  "workers/api/admin-recovery-test.ts",
+                                     "sha256":  "FA07139BCFC0B703635AF19E76D87EEA6981C76DF5FF95C9A7746578EF59C7EA"
+                                 },
+                                 {
+                                     "file":  "workers/api/__tests__/analytics-isolation.test.ts",
+                                     "sha256":  "AC6D0D3A0259C6681710C316D8D7CFD4F27FE99EF7F098A8A9DD2DDC5EED8B06"
+                                 },
+                                 {
+                                     "file":  "workers/api/__tests__/stripe-purchase-hardening.test.ts",
+                                     "sha256":  "9CC6848D5A9D7F7FF9CCB90B86905BCCB139FCA17B61EDEF8DD059660AA65ACF"
+                                 },
+                                 {
+                                     "file":  "workers/api/__tests__/email-safety-hardening.test.ts",
+                                     "sha256":  "936E558E5A76B04A5956A623E824982DE5EEBF55F65DE12701058F5F39DB1F53"
+                                 },
+                                 {
+                                     "file":  "migrations/057_stripe_payment_idempotency.sql",
+                                     "sha256":  "3246A5CAC5AB70FD06C14B61873D814F56E50D8B89A41C99D0FB7E98EF2A8120"
+                                 },
+                                 {
+                                     "file":  "wrangler.toml",
+                                     "sha256":  "79C48440D8EF96E365C211DD02123D1E7A071F892AA2D8B7254543998A076E8A"
+                                 },
+                                 {
+                                     "file":  "vitest.config.ts",
+                                     "sha256":  "9E5B4369A397964C541699FA1167E05FD02169F15F44261F951AF9A56496A927"
+                                 },
+                                 {
+                                     "file":  "package.json",
+                                     "sha256":  "E0856633D4E77CCCD1ABC001A87669AB95537BF748FEA6308996F52EA46EDA9D"
+                                 },
+                                 {
+                                     "file":  "extract-worker.ps1",
+                                     "sha256":  "0088095203FC0E18524D758FE901CDF51A5D1B1E297A0B1A4E285D64C7E4B957"
+                                 }
+                             ],
+    "route_inventory":  [
+                            "/api/checkout",
+                            "/api/webhook/stripe",
+                            "/api/order-confirmed",
+                            "/api/admin/thankyou-dispatch",
+                            "/api/admin/recovery-test"
+                        ],
+    "test_results":  {
+                         "suite":  "npm test",
+                         "files_passed":  3,
+                         "tests_failed":  0,
+                         "tests_passed":  40
+                     },
+    "determinism":  {
+                        "match":  true,
+                        "build2_sha256":  "2173DF68AE551ED36BD26EEE3F81DC6D170DFC4F1DC0B86706A0AC2357596905",
+                        "build1_sha256":  "2173DF68AE551ED36BD26EEE3F81DC6D170DFC4F1DC0B86706A0AC2357596905"
+                    },
+    "excluded_unrelated_changes":  [
+                                       " D 00_Issue/MarketingDashboard01.png",
+                                       " D 00_Issue/MarketingDashboard02.png",
+                                       " D 00_Issue/MildMate_GTM_GoogleAds_Status_2026-10-07.md",
+                                       " M 01_MildMate_Marketing/09_Handoffs/Phase_12_Handoff_Google_Ads_Analytics_2026-09-27.md",
+                                       " M functions/quote/[[path]].ts",
+                                       " M marketing-sync-worker/index.js",
+                                       " M marketing-sync-worker/wrangler.toml",
+                                       "?? 00_Issue/MildMate_GoogleAds_Stripe_Conversion_Hardening_Handoff_2026-10-10.md",
+                                       "?? 01_MildMate_Marketing/09_Handoffs/MildMate_Marketing_GoogleAds_Validation_Handoff_2026-10-08.md",
+                                       "?? marketing-sync-worker/apply_etsy_mapping_17.sql",
+                                       "?? marketing-sync-worker/backup_before_etsy_mapping_17_bookmark.txt",
+                                       "?? marketing-sync-worker/backup_before_first_etsy_ga4_sync_bookmark.txt",
+                                       "?? marketing-sync-worker/backup_etsy_listing_master_before_mapping_17.json",
+                                       "?? marketing-sync-worker/backup_mildmate_db_before_056.sql",
+                                       "?? marketing-sync-worker/backup_mildmate_db_before_056_bookmark.txt",
+                                       "?? marketing-sync-worker/ga4_before_056_metrics.json",
+                                       "?? marketing-sync-worker/migrations/057_ga4_freshness_etsy_master_mapped_sessions.sql",
+                                       "?? marketing-sync-worker/tests/fixtures/google-ads-error-fixtures.json",
+                                       "?? marketing-sync-worker/tests/google-ads-diagnostics.test.mjs",
+                                       "?? migrations/056_ga4_property_unique_rebuild.sql",
+                                       "?? public/images/products/common/measure-cushion-diagram-01.svg",
+                                       "?? scripts/apply-055-remaining.ps1",
+                                       "?? scripts/apply-migrations-054-055.ps1"
+                                   ]
+}

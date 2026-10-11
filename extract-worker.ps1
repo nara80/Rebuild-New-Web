@@ -15,17 +15,20 @@ function Normalize-BundleText([string]$text) {
     )
 }
 
-# Build-isolation guard (Phase 13 closeout): always build from THIS worktree.
-# The previous version hardcoded `cd D:\00_mildmate\Re-Build_web`, which made a
-# purported isolated build silently consume the dirty primary workspace sources.
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '.')).Path
-$approvedRoot = 'D:\00_mildmate\re-build_web_phase13_closeout'
+# Approved build roots: isolated git worktrees created for release preparation.
+# Always build from the worktree that owns the sources (never a shared/dirty
+# primary workspace).
+$approvedRoots = @(
+    'D:\00_mildmate\re-build_web_rc',
+    'D:\00_mildmate\re-build_web_ga4_iso',
+    'D:\00_mildmate\re-build_web_ga4_prod'
+) | ForEach-Object { Normalize-AbsPath $_ }
 $projectRootNorm = Normalize-AbsPath $projectRoot
-$approvedRootNorm = Normalize-AbsPath $approvedRoot
 
 Write-Host "Resolved project root: $projectRoot"
-if ($projectRootNorm -ne $approvedRootNorm) {
-    Write-Error "Build root assertion failed. Expected: $approvedRoot ; Resolved: $projectRoot"
+if ($approvedRoots -notcontains $projectRootNorm) {
+    Write-Error "Build root assertion failed. Approved: $($approvedRoots -join ', ') ; Resolved: $projectRoot"
     exit 1
 }
 

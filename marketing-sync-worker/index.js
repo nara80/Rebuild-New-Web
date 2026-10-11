@@ -86,15 +86,18 @@ const GA4_DEFAULT_CHUNK_SIZE = 1000;
 const GA4_MAX_WINDOW_DAYS = 90;
 const GA4_MAX_PAGES_PER_REPORT = 200;
 
-// Multi-property GA4 (owner-approved 2026-10-02):
-//   366290587 = MildMate website → property_scope 'website'
-//   533944293 = Etsy Shop        → property_scope 'etsy'
-// Properties stay logically separate: property-aware uniqueness, per-property
-// locks, per-property sync/freshness telemetry. Etsy GA4 contributes
-// traffic/demand only — the Etsy API stays authoritative for Etsy
-// orders/revenue. GA4_PROPERTIES_JSON overrides this default.
+// Multi-property GA4 (owner-approved 2026-10-02; website property updated
+// 2026-10 to owner-verified canonical property):
+//   308922589 = MildMate GA4 (canonical website) → property_scope 'website'
+//   533944293 = Etsy Shop                        → property_scope 'etsy'
+// Legacy website property 366290587 is retired; its historical D1 rows are
+// preserved and remain queryable by property_id. Properties stay logically
+// separate: property-aware uniqueness, per-property locks, per-property
+// sync/freshness telemetry. Etsy GA4 contributes traffic/demand only — the
+// Etsy API stays authoritative for Etsy orders/revenue.
+// GA4_PROPERTIES_JSON overrides this default.
 const GA4_PROPERTIES_DEFAULT = [
-  { property_id: "366290587", scope: "website" },
+  { property_id: "308922589", scope: "website" },
   { property_id: "533944293", scope: "etsy" },
 ];
 

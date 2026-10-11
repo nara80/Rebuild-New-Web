@@ -7,12 +7,20 @@
   'use strict';
 
   const STORAGE_KEY = 'mildmate-cookie-consent';
-  const GA4_ID = 'G-ESL161CNBV';
 
-  // Default consent state (nothing accepted until user chooses)
+  // First-party mirror of the current choice, read by the GTM consent
+  // template at Consent Initialization (the template sandbox cannot read
+  // localStorage). Plain ASCII so no URI encoding is needed:
+  //   mm-consent=analytics:granted,marketing:denied
+  const CONSENT_COOKIE = 'mm-consent';
+
+  // Default consent state (nothing accepted until user chooses).
+  // marketing is independent of analytics; historical records without the
+  // marketing key are treated as marketing: false (never auto-granted).
   const defaultConsent = {
     essential: true,
     analytics: false,
+    marketing: false,
     timestamp: 0,
   };
 
@@ -31,8 +39,71 @@
     // Ignore parsing errors
   }
 
+  // Mirror any existing saved choice into the consent cookie immediately at
+  // script scope — historical users have localStorage only, and the GTM
+  // consent template must see their preferences BEFORE Initialization tags
+  // fire (returning-user requirement).
+  writeConsentCookie();
+
   // Only show banner if no valid consent exists
   const hasConsent = consent.timestamp > 0;
+
+  // Last consent state actually applied — drives transition events pushed to
+  // the dataLayer so GTM tags can re-fire after a mid-page consent change
+  // (blocked tags do not re-fire on their own).
+  let lastAnalyticsState = consent.analytics === true;
+  let lastMarketingState = consent.marketing === true;
+
+  // Listener registry the GTM consent template hooks into via callInWindow.
+  // Defined at script scope (NOT inside DOMContentLoaded init) so it exists
+  // before GTM loads, whenever GTM's Consent Initialization runs.
+  const consentListeners = [];
+  window.__mildmateAddConsentListener = function (cb) {
+    if (typeof cb === 'function' && consentListeners.indexOf(cb) === -1) {
+      consentListeners.push(cb);
+    }
+  };
+
+  function writeConsentCookie() {
+    try {
+      const value =
+        'analytics:' + (consent.analytics === true ? 'granted' : 'denied') +
+        ',marketing:' + (consent.marketing === true ? 'granted' : 'denied');
+      document.cookie = CONSENT_COOKIE + '=' + value +
+        ';path=/;max-age=31536000;SameSite=Lax;Secure';
+    } catch (e) {
+      // Cookies unavailable — GTM template falls back to the denied default.
+    }
+  }
+
+  function notifyConsentListeners() {
+    const payload = {
+      analyticsConsentGranted: consent.analytics === true,
+      adConsentGranted: consent.marketing === true,
+      adUserDataConsentGranted: consent.marketing === true,
+      adPersonalizationConsentGranted: consent.marketing === true
+    };
+    for (let i = 0; i < consentListeners.length; i++) {
+      try { consentListeners[i](payload); } catch (e) { /* listener errors must not break the UI */ }
+    }
+  }
+
+  // Transition events only fire while the container is already loaded; when
+  // it is not, the GTM consent template reads the fresh cookie at Consent
+  // Initialization instead, which produces exactly one clean tag firing.
+  function pushTransitionEvents() {
+    if (!window.__mildmateAnalyticsLoaded) return;
+    if (lastAnalyticsState !== true && consent.analytics === true) {
+      window.dataLayer.push({ event: 'mildmate_analytics_granted' });
+    } else if (lastAnalyticsState === true && consent.analytics !== true) {
+      window.dataLayer.push({ event: 'mildmate_analytics_revoked' });
+    }
+    if (lastMarketingState !== true && consent.marketing === true) {
+      window.dataLayer.push({ event: 'mildmate_marketing_granted' });
+    } else if (lastMarketingState === true && consent.marketing !== true) {
+      window.dataLayer.push({ event: 'mildmate_marketing_revoked' });
+    }
+  }
 
   // Banner HTML
   const bannerHTML = `
@@ -82,6 +153,19 @@
           </div>
         </div>
 
+        <div class="cookie-category">
+          <div class="cookie-category-header">
+            <div>
+              <h3>Marketing</h3>
+              <p class="cookie-category-desc">Measure advertising performance, such as purchases from Google Ads. Not enabled by Analytics acceptance.</p>
+            </div>
+            <label class="cookie-toggle">
+              <input type="checkbox" id="cookie-toggle-marketing">
+              <span class="cookie-toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
         <div class="cookie-modal-actions">
           <button type="button" class="cookie-btn cookie-btn-settings" id="cookie-modal-save">Save Preferences</button>
           <button type="button" class="cookie-btn cookie-btn-accept" id="cookie-modal-accept-all">Accept All</button>
@@ -126,6 +210,8 @@
       // Set toggles to current consent state
       const analyticsToggle = document.getElementById('cookie-toggle-analytics');
       if (analyticsToggle) analyticsToggle.checked = consent.analytics;
+      const marketingToggle = document.getElementById('cookie-toggle-marketing');
+      if (marketingToggle) marketingToggle.checked = consent.marketing;
     }
   }
 
@@ -141,7 +227,7 @@
     }
   }
 
-  // Save consent to localStorage
+  // Save consent to localStorage + first-party consent cookie
   function saveConsent(newConsent) {
     consent = { ...newConsent, timestamp: Date.now() };
     try {
@@ -149,43 +235,35 @@
     } catch (e) {
       // localStorage might be disabled
     }
+    writeConsentCookie();
     applyConsent();
     hideBanner();
     hideModal();
   }
 
-  // Apply consent (load/unload scripts)
+  // Apply consent (notify GTM, load scripts)
   function applyConsent() {
-    // Analytics: Google Analytics 4
-    if (consent.analytics) {
-      if (typeof window.__mildmateLoadAnalytics === 'function') {
-        window.__mildmateLoadAnalytics();
-        return;
-      }
-      if (!window.gtag) {
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () { window.dataLayer.push(arguments); };
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-      } else {
-        window.gtag('config', GA4_ID);
-      }
+    pushTransitionEvents();
+    lastAnalyticsState = consent.analytics === true;
+    lastMarketingState = consent.marketing === true;
+
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'mildmate_consent_update',
+      analytics_consent: consent.analytics === true ? 'granted' : 'denied',
+      marketing_consent: consent.marketing === true ? 'granted' : 'denied'
+    });
+
+    if ((consent.analytics === true || consent.marketing === true) &&
+        typeof window.__mildmateLoadAnalytics === 'function') {
+      window.__mildmateLoadAnalytics();
     }
 
-    // Advertising: Facebook Pixel — disabled until needed
-    // if (consent.advertising) { ... }
-
-    // If consent withdrawn, we can't unload scripts that are already injected,
-    // but we can prevent future events by checking consent before tracking calls.
-  }
-
-  // Helper: inject script tag
-  function loadScript(src, async) {
-    const s = document.createElement('script');
-    s.src = src;
-    if (async) s.async = true;
-    document.head.appendChild(s);
+    // GTM consent template (registered via __mildmateAddConsentListener)
+    // applies the new state with updateConsentState — no site-side
+    // gtag('consent', ...) commands, so ordering with queued messages can
+    // never desync.
+    notifyConsentListeners();
   }
 
   // Initialize
@@ -202,12 +280,12 @@
     }
     if (btnReject) {
       btnReject.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: false });
+        saveConsent({ essential: true, analytics: false, marketing: false });
       });
     }
     if (btnAccept) {
       btnAccept.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: true });
+        saveConsent({ essential: true, analytics: true, marketing: true });
       });
     }
 
@@ -222,15 +300,17 @@
     if (modalSave) {
       modalSave.addEventListener('click', () => {
         const analytics = document.getElementById('cookie-toggle-analytics');
+        const marketing = document.getElementById('cookie-toggle-marketing');
         saveConsent({
           essential: true,
           analytics: analytics ? analytics.checked : false,
+          marketing: marketing ? marketing.checked : false
         });
       });
     }
     if (modalAcceptAll) {
       modalAcceptAll.addEventListener('click', () => {
-        saveConsent({ essential: true, analytics: true });
+        saveConsent({ essential: true, analytics: true, marketing: true });
       });
     }
 
@@ -252,6 +332,11 @@
       applyConsent();
     }
   }
+
+  // Programmatic consent change (future "Cookie Settings" footer link, QA
+  // harnesses). Same path as the UI: persists, notifies GTM, fires
+  // transitions, notifies listeners — no reload required.
+  window.__mildmateSaveConsent = saveConsent;
 
   // Wait for DOM ready
   if (document.readyState === 'loading') {
