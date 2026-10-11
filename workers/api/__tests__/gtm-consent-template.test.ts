@@ -182,4 +182,50 @@ describe("GTM consent template (MildMate Consent Bridge)", () => {
       expect(templateCode).toContain("const CONSENT_COOKIE = 'mm-consent';");
     });
   });
+
+  describe("Sandboxed-JavaScript syntax gate (no unsupported constructs)", () => {
+    // The gate applies to executable code only; comments are stripped so the
+    // natural-language header cannot trip keyword checks.
+    const templateCodeOnly = templateCode
+      .split("\n")
+      .map((line) => line.replace(/\/\/.*$/, ""))
+      .join("\n");
+
+    it("contains no exception-handling blocks", () => {
+      expect(templateCodeOnly).not.toMatch(/\btry\b/);
+      expect(templateCodeOnly).not.toMatch(/\bcatch\b/);
+      expect(templateCodeOnly).not.toMatch(/\bfinally\b/);
+      expect(templateCodeOnly).not.toMatch(/\bthrow\b/);
+    });
+
+    it("contains no regular expressions (literals or RegExp constructor)", () => {
+      expect(templateCodeOnly).not.toMatch(/\bRegExp\b/);
+      expect(templateCodeOnly).not.toMatch(/\.match\(/);
+      expect(templateCodeOnly).not.toMatch(/\.search\(/);
+      expect(templateCodeOnly).not.toMatch(/\.replace\(/);
+      expect(templateCodeOnly).not.toMatch(/\.replaceAll\(/);
+      expect(templateCodeOnly).not.toMatch(/\.test\(/);
+      expect(templateCodeOnly).not.toMatch(/\.exec\(/);
+      // Parser must be built on sandbox-safe string primitives instead.
+      expect(templateCodeOnly).toContain("indexOf(':')");
+      expect(templateCodeOnly).toContain(".slice(");
+    });
+
+    it("contains no other restricted syntax (arrows, template literals, constructors, eval, this)", () => {
+      expect(templateCodeOnly).not.toMatch(/=>/);
+      expect(templateCodeOnly).not.toMatch(/`/);
+      expect(templateCodeOnly).not.toMatch(/\bnew\b/);
+      expect(templateCodeOnly).not.toMatch(/\bthis\b/);
+      expect(templateCodeOnly).not.toMatch(/\beval\b/);
+      expect(templateCodeOnly).not.toMatch(/\basync\b/);
+      expect(templateCodeOnly).not.toMatch(/\bawait\b/);
+    });
+
+    it("executes end-to-end without exceptions under the API stubs (implicit no-throw gate)", () => {
+      // runTemplate throws if the template body throws for any input shape.
+      for (const cookie of [null, "", "analytics:granted,marketing:denied", "bogus"]) {
+        expect(() => runTemplate(cookie)).not.toThrow();
+      }
+    });
+  });
 });

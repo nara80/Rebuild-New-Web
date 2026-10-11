@@ -1,7 +1,15 @@
-// MildMate Consent Bridge — GTM Custom Tag Template (sandboxed JavaScript).
+// MildMate Consent Bridge — GTM Custom Tag Template (Sandboxed JavaScript).
 // Single source of truth for the staging container GTM-M9DMRGCD consent
 // template. Tested by workers/api/__tests__/gtm-consent-template.test.ts:
 // edit this file, re-run vitest, then paste the final version into GTM.
+//
+// Sandboxed-JavaScript compatibility notes:
+//   - No regular-expression literals or RegExp: parsing uses indexOf/slice
+//     with exact string comparisons only.
+//   - No exception-handling blocks: absent cookies are handled with plain
+//     conditional checks (getCookieValues returns an empty array when the
+//     cookie is missing — documented behavior, it does not throw).
+//   - No arrow functions, template literals, object spread, or constructors.
 //
 // Required template permissions (GTM Permissions tab — nothing else):
 //   Accesses consent state — Write on ad_storage, ad_user_data,
@@ -30,7 +38,20 @@ setDefaultConsentState({
   analytics_storage: 'denied'
 });
 
-// Strict parser for the site's consent cookie. Accepts exactly
+// Strict cookie-segment parser. Accepts exactly 'analytics:<granted|denied>'
+// or 'marketing:<granted|denied>' — exact string comparisons only, no
+// regular expressions. Returns {key, value} or null for anything else.
+function parseConsentSegment(segment) {
+  const sep = segment.indexOf(':');
+  if (sep === -1) return null;
+  const key = segment.slice(0, sep);
+  const value = segment.slice(sep + 1);
+  if (key !== 'analytics' && key !== 'marketing') return null;
+  if (value !== 'granted' && value !== 'denied') return null;
+  return { key: key, value: value };
+}
+
+// Strict parser for the full consent-cookie value. Accepts exactly
 // 'analytics:<granted|denied>,marketing:<granted|denied>' (either segment
 // order, no whitespace, no duplicates, no extra segments, no other keys).
 // Returns {analytics, marketing} or null for anything else — null must
@@ -41,10 +62,9 @@ function parseConsentCookie(raw) {
   if (parts.length !== 2) return null;
   const parsed = {};
   for (let i = 0; i < 2; i++) {
-    const m = parts[i].match(/^(analytics|marketing):(granted|denied)$/);
-    if (!m) return null;
-    if (parsed[m[1]] !== undefined) return null; // duplicated key
-    parsed[m[1]] = m[2];
+    const segment = parseConsentSegment(parts[i]);
+    if (!segment || parsed[segment.key] !== undefined) return null; // duplicate
+    parsed[segment.key] = segment.value;
   }
   return parsed;
 }
@@ -59,34 +79,37 @@ function updateFromChoice(choice) {
 }
 
 // 2. UPDATE for returning users — applied DURING Consent Initialization,
-//    before any Initialization-phase tag fires. Malformed or missing
-//    cookies intentionally keep the denied default (no update call).
-try {
-  const values = getCookieValues(CONSENT_COOKIE);
-  if (values && values.length > 0) {
-    const choice = parseConsentCookie(values[0]);
-    if (choice) {
-      updateFromChoice(choice);
-    }
+//    before any Initialization-phase tag fires. Conditional checks only:
+//    a missing cookie yields an empty array (documented getCookieValues
+//    behavior), and a malformed value parses to null — both keep the
+//    denied default as the operative state (no update call).
+const savedValues = getCookieValues(CONSENT_COOKIE);
+if (savedValues && savedValues.length > 0) {
+  const choice = parseConsentCookie(savedValues[0]);
+  if (choice) {
+    updateFromChoice(choice);
   }
-} catch (e) {
-  // Cookie unreadable — denied default stands.
 }
 
 // 3. Live updates (mid-page opt-in / withdrawal) — the site invokes the
 //    registered callback on every consent change. The payload shape is
 //    owned by public/js/cookie-consent.js (notifyConsentListeners).
-try {
-  callInWindow(CONSENT_LISTENER_KEY, function (payload) {
-    updateConsentState({
-      analytics_storage: payload && payload.analyticsConsentGranted === true ? 'granted' : 'denied',
-      ad_storage: payload && payload.adConsentGranted === true ? 'granted' : 'denied',
-      ad_user_data: payload && payload.adUserDataConsentGranted === true ? 'granted' : 'denied',
-      ad_personalization: payload && payload.adPersonalizationConsentGranted === true ? 'granted' : 'denied'
-    });
+//
+//    Fail-safe note (replaces a guarded call): the site script defines
+//    window.__mildmateAddConsentListener at script scope, and analytics
+//    can only load through that script, so the registry exists whenever
+//    this template runs. If it were ever absent, GTM would fail the tag
+//    AFTER the default and any saved update were applied — the denied
+//    default remains the operative state, which is the safe direction.
+//    Gating the call on window state would require access_globals Read
+//    (copyFromWindow), which the permission model forbids.
+callInWindow(CONSENT_LISTENER_KEY, function (payload) {
+  updateConsentState({
+    analytics_storage: payload && payload.analyticsConsentGranted === true ? 'granted' : 'denied',
+    ad_storage: payload && payload.adConsentGranted === true ? 'granted' : 'denied',
+    ad_user_data: payload && payload.adUserDataConsentGranted === true ? 'granted' : 'denied',
+    ad_personalization: payload && payload.adPersonalizationConsentGranted === true ? 'granted' : 'denied'
   });
-} catch (e) {
-  // Registry absent (e.g. site script blocked) — denied default stands.
-}
+});
 
 data.gtmOnSuccess();

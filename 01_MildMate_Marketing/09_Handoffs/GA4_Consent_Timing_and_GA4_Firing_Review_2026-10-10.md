@@ -30,7 +30,7 @@ Key invariants (test-asserted):
 
 ### 2a. Custom consent template (Template → New, name "MildMate Consent Bridge")
 
-**Correction (2026-10-11):** (1) `callInWindow` requires the `access_globals` permission with **Execute** on `__mildmateAddConsentListener` — added, narrowly scoped to that one key, no read/write. (2) Substring-based cookie parsing replaced with strict validation of the exact two-segment format; missing, duplicated, malformed, or unrecognized values keep the denied default. Canonical source: `gtm-templates/mildmate-consent-bridge.js`, executed under stubbed template APIs by `workers/api/__tests__/gtm-consent-template.test.ts` (vitest 83/83).
+**Corrections (2026-10-11):** (1) `callInWindow` requires the `access_globals` permission with **Execute** on `__mildmateAddConsentListener` — added, narrowly scoped to that one key, no read/write. (2) Substring-based cookie parsing replaced with strict validation of the exact two-segment format via `indexOf`/`slice` string comparisons; missing, duplicated, malformed, or unrecognized values keep the denied default. (3) Sandboxed-JavaScript compatibility gate applied: no regular-expression literals (parsing uses exact string comparisons), no exception-handling blocks (absent cookies are handled with conditional checks per the documented `getCookieValues` empty-array behavior; the live-update call follows Google's documented unguarded consent-template pattern with a structural fail-safe — see note in the code), no arrow functions, template literals, constructors, or `this`. Canonical source: `gtm-templates/mildmate-consent-bridge.js`, executed under stubbed template APIs plus a syntax gate by `workers/api/__tests__/gtm-consent-template.test.ts` (vitest 87/87).
 
 Template code (paste exactly; the repo file is the single source of truth):
 
@@ -51,7 +51,20 @@ setDefaultConsentState({
   analytics_storage: 'denied'
 });
 
-// Strict parser for the site's consent cookie. Accepts exactly
+// Strict cookie-segment parser. Accepts exactly 'analytics:<granted|denied>'
+// or 'marketing:<granted|denied>' — exact string comparisons only, no
+// regular expressions. Returns {key, value} or null for anything else.
+function parseConsentSegment(segment) {
+  const sep = segment.indexOf(':');
+  if (sep === -1) return null;
+  const key = segment.slice(0, sep);
+  const value = segment.slice(sep + 1);
+  if (key !== 'analytics' && key !== 'marketing') return null;
+  if (value !== 'granted' && value !== 'denied') return null;
+  return { key: key, value: value };
+}
+
+// Strict parser for the full consent-cookie value. Accepts exactly
 // 'analytics:<granted|denied>,marketing:<granted|denied>' (either segment
 // order, no whitespace, no duplicates, no extra segments, no other keys).
 // Returns {analytics, marketing} or null for anything else — null must
@@ -62,10 +75,9 @@ function parseConsentCookie(raw) {
   if (parts.length !== 2) return null;
   const parsed = {};
   for (let i = 0; i < 2; i++) {
-    const m = parts[i].match(/^(analytics|marketing):(granted|denied)$/);
-    if (!m) return null;
-    if (parsed[m[1]] !== undefined) return null; // duplicated key
-    parsed[m[1]] = m[2];
+    const segment = parseConsentSegment(parts[i]);
+    if (!segment || parsed[segment.key] !== undefined) return null; // duplicate
+    parsed[segment.key] = segment.value;
   }
   return parsed;
 }
@@ -80,38 +92,48 @@ function updateFromChoice(choice) {
 }
 
 // 2. UPDATE for returning users — applied DURING Consent Initialization,
-//    before any Initialization-phase tag fires. Malformed or missing
-//    cookies intentionally keep the denied default (no update call).
-try {
-  const values = getCookieValues(CONSENT_COOKIE);
-  if (values && values.length > 0) {
-    const choice = parseConsentCookie(values[0]);
-    if (choice) {
-      updateFromChoice(choice);
-    }
+//    before any Initialization-phase tag fires. Conditional checks only:
+//    a missing cookie yields an empty array (documented getCookieValues
+//    behavior), and a malformed value parses to null — both keep the
+//    denied default as the operative state (no update call).
+const savedValues = getCookieValues(CONSENT_COOKIE);
+if (savedValues && savedValues.length > 0) {
+  const choice = parseConsentCookie(savedValues[0]);
+  if (choice) {
+    updateFromChoice(choice);
   }
-} catch (e) {
-  // Cookie unreadable — denied default stands.
 }
 
 // 3. Live updates (mid-page opt-in / withdrawal) — the site invokes the
 //    registered callback on every consent change. The payload shape is
 //    owned by public/js/cookie-consent.js (notifyConsentListeners).
-try {
-  callInWindow(CONSENT_LISTENER_KEY, function (payload) {
-    updateConsentState({
-      analytics_storage: payload && payload.analyticsConsentGranted === true ? 'granted' : 'denied',
-      ad_storage: payload && payload.adConsentGranted === true ? 'granted' : 'denied',
-      ad_user_data: payload && payload.adUserDataConsentGranted === true ? 'granted' : 'denied',
-      ad_personalization: payload && payload.adPersonalizationConsentGranted === true ? 'granted' : 'denied'
-    });
+//
+//    Fail-safe note (replaces a guarded call): the site script defines
+//    window.__mildmateAddConsentListener at script scope, and analytics
+//    can only load through that script, so the registry exists whenever
+//    the template runs. If it were ever absent, GTM would fail the tag
+//    AFTER the default and any saved update were applied — the denied
+//    default remains the operative state, which is the safe direction.
+//    Gating the call on window state would require access_globals Read
+//    (copyFromWindow), which the permission model forbids.
+callInWindow(CONSENT_LISTENER_KEY, function (payload) {
+  updateConsentState({
+    analytics_storage: payload && payload.analyticsConsentGranted === true ? 'granted' : 'denied',
+    ad_storage: payload && payload.adConsentGranted === true ? 'granted' : 'denied',
+    ad_user_data: payload && payload.adUserDataConsentGranted === true ? 'granted' : 'denied',
+    ad_personalization: payload && payload.adPersonalizationConsentGranted === true ? 'granted' : 'denied'
   });
-} catch (e) {
-  // Registry absent (e.g. site script blocked) — denied default stands.
-}
+});
 
 data.gtmOnSuccess();
 ```
+
+**Sandboxed-JavaScript compatibility verification.** Verified against Google's Sandboxed-JavaScript restrictions statically (syntax-gate tests) and against the documented API surface: only the four whitelisted template APIs are used; no regex, exception handling, arrow functions, template literals, constructors, or `this`. Behaviors that still require validation in **GTM's actual Template Editor** (cannot be reproduced locally):
+
+1. **Permission auto-detection prompts:** the editor must derive exactly `access_consent` (Write ×4), `get_cookies` (`mm-consent`), and `access_globals` (`__mildmateAddConsentListener`, Execute) — confirm no additional permission is auto-suggested.
+2. **`callInWindow` with the registry absent:** confirm the tag fails cleanly and consent state (default + saved update) is preserved — the fail-safe direction asserted above; locally only simulated.
+3. **`getCookieValues` return shape** for a present-but-empty cookie value on this GTM container version.
+4. Template Editor's **Run Tests / unit-test tab** on the pasted code (the local harness is behaviorally equivalent but not the sandbox engine itself).
 
 **Template permissions (complete set — nothing else):**
 
@@ -167,8 +189,9 @@ Absent cookie ⇒ `'denied'` (fail-closed).
 
 ## 4. Test coverage (consent initialization + update timing)
 
-- **vitest 83/83** (`0edb380` tree + template suite). Contract suite asserts: zero site-side consent commands (default and update) with the container booted on stored consent; `gtm.js` still gated on consent; marketing independence for legacy analytics-only records; marketing-only still boots the container (Ads gating lives in GTM).
-- **GTM template suite (2026-10-11 correction):** the template source (`gtm-templates/mildmate-consent-bridge.js`) is executed under stubbed `setDefaultConsentState` / `updateConsentState` / `getCookieValues` / `callInWindow` APIs: all four valid cookie combinations map exactly; 13 malformed-cookie cases (empty, garbage, single segment, extra segment, duplicated key, unrecognized value, wrong separator, whitespace, uppercase, unknown key, trailing comma) plus absent cookie produce **no** `updateConsentState` call (denied default stands); listener payload mapping, withdrawal, partial/null payload denial; static assertions pin the required template APIs to exactly the four documented ones, `callInWindow` to the single key `__mildmateAddConsentListener`, and the cookie read to `mm-consent`.
+- **vitest 87/87** (`0edb380` tree + template suite + sandbox syntax gate). Contract suite asserts: zero site-side consent commands (default and update) with the container booted on stored consent; `gtm.js` still gated on consent; marketing independence for legacy analytics-only records; marketing-only still boots the container (Ads gating lives in GTM).
+- **GTM template suite (2026-10-11 corrections):** the template source (`gtm-templates/mildmate-consent-bridge.js`) is executed under stubbed `setDefaultConsentState` / `updateConsentState` / `getCookieValues` / `callInWindow` APIs: all four valid cookie combinations map exactly; 13 malformed-cookie cases (empty, garbage, single segment, extra segment, duplicated key, unrecognized value, wrong separator, whitespace, uppercase, unknown key, trailing comma) plus absent cookie produce **no** `updateConsentState` call (denied default stands); listener payload mapping, withdrawal, partial/null payload denial; static assertions pin the required template APIs to exactly the four documented ones, `callInWindow` to the single key `__mildmateAddConsentListener`, and the cookie read to `mm-consent`.
+- **Sandbox syntax gate:** comment-stripped template source must contain no exception-handling keywords, no regular-expression usage (`RegExp`, `.match(`, `.search(`, `.replace(`, `.test(`, `.exec(`), no arrow functions, template literals, constructors (`new`), `this`, `eval`, or async syntax; parser verified to use `indexOf`/`slice` string comparisons; and the template body must execute without throwing for null/empty/valid/bogus cookie inputs.
 - **Browser matrix 23/23** (was 14) — new checks:
   - `mm-consent` cookie exposed before GTM state application (`analytics:granted,marketing:denied` for an analytics-only history) and fully denied after withdrawal;
   - `__mildmateAddConsentListener` registered and receives the exact template-shaped payload on change;
@@ -204,7 +227,7 @@ The refire claim for #7 (GA4 initializes on the `mildmate_analytics_granted` eve
 ## 7. Commits (local only, `ga4/remediation-isolated`)
 
 - `0edb380` — GA4 consent ownership: GTM template owns default and update (site code + contract tests + matrix 23/23).
-- 2026-10-11 corrections commit (see git log): strict cookie parsing + `access_globals` Execute permission on `__mildmateAddConsentListener`; canonical template file `gtm-templates/mildmate-consent-bridge.js`; template test suite (vitest 83/83).
+- 2026-10-11 corrections commit (see git log): strict cookie parsing via exact string comparisons + `access_globals` Execute permission on `__mildmateAddConsentListener`; sandboxed-JavaScript compatibility gate (no regex, no exception handling, no restricted syntax); canonical template file `gtm-templates/mildmate-consent-bridge.js`; template test suite (vitest 87/87).
 - Prior chain unchanged: `429d996` (site default removal, superseded by `0edb380`) ← `685aa85` (deployment evidence) ← …
 - This report + staging-plan consent section updated in the follow-up commit (recorded in the handoff folder).
 
