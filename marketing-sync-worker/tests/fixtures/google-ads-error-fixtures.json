@@ -1,0 +1,109 @@
+{
+  "object_root_with_subtype": {
+    "body": {
+      "error": {
+        "message": "Object root permission denied",
+        "details": [
+          {
+            "errors": [
+              {
+                "errorCode": {
+                  "authorizationError": "CUSTOMER_NOT_ENABLED"
+                },
+                "message": "No access to customer"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "header_request_id": "req-object-123",
+    "expected_subtype": "authorizationError.CUSTOMER_NOT_ENABLED",
+    "expected_message_fragment": "Object root permission denied"
+  },
+  "array_wrapped_with_subtype": {
+    "body": [
+      {
+        "error": {
+          "message": "Array wrapped permission denied",
+          "details": [
+            {
+              "errors": [
+                {
+                  "errorCode": {
+                    "authenticationError": "NOT_ADS_USER"
+                  },
+                  "message": "User is not an Ads user"
+                }
+              ],
+              "requestId": "req-detail-array-1"
+            }
+          ]
+        }
+      }
+    ],
+    "header_request_id": "req-array-123",
+    "expected_subtype": "authenticationError.NOT_ADS_USER",
+    "expected_message_fragment": "Array wrapped permission denied"
+  },
+  "generic_permission_denied_no_subtype": {
+    "body": {
+      "error": {
+        "code": 403,
+        "status": "PERMISSION_DENIED",
+        "message": "The caller does not have permission"
+      }
+    },
+    "expected_subtype": null,
+    "expected_message_fragment": "The caller does not have permission"
+  },
+  "missing_request_id": {
+    "body": {
+      "error": {
+        "message": "Missing request id sample",
+        "details": [
+          {
+            "errors": [
+              {
+                "errorCode": {
+                  "authorizationError": "USER_PERMISSION_DENIED"
+                },
+                "message": "Permission denied for user"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "expected_subtype": "authorizationError.USER_PERMISSION_DENIED",
+    "expected_request_id": null
+  },
+  "multiple_nested_details": {
+    "body": {
+      "error": {
+        "message": "Multiple details wrapper",
+        "details": [
+          {
+            "errors": [
+              {
+                "message": "No subtype in first detail"
+              }
+            ]
+          },
+          {
+            "errors": [
+              {
+                "errorCode": {
+                  "quotaError": "RESOURCE_EXHAUSTED"
+                },
+                "message": "Quota exhausted"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "expected_subtype": "quotaError.RESOURCE_EXHAUSTED",
+    "expected_message_fragment": "Multiple details wrapper"
+  }
+}
