@@ -57,6 +57,16 @@ td.num,th.num{text-align:right}
 .pager{display:flex;align-items:center;gap:10px;font-size:0.75rem;color:var(--c-muted)}
 .mono{font-family:ui-monospace,Consolas,monospace;font-size:0.75rem}
 .muted{color:var(--c-muted)}
+/* ── Phase 13 Growth Signals table readability (presentation-layer only; scoped, no global table changes) ── */
+#growth-signals-table td{white-space:normal;vertical-align:top}
+#growth-signals-table td.wrap-json{max-width:260px}
+#growth-signals-table td.gs-reason{max-width:360px;font-size:0.75rem;word-break:break-word;overflow-wrap:anywhere}
+#growth-signals-table .gs-summary{font-size:0.75rem;line-height:1.45;word-break:break-word;overflow-wrap:anywhere}
+#growth-signals-table .gs-details{margin-top:4px}
+#growth-signals-table .gs-details summary{cursor:pointer;color:var(--c-blue);font-size:0.6875rem;font-weight:600;user-select:none}
+#growth-signals-table .gs-details summary:hover{color:var(--c-dark)}
+#growth-signals-table .gs-details summary:focus-visible{outline:2px solid var(--c-blue);outline-offset:2px}
+#growth-signals-table .gs-details pre{margin:6px 0 0;padding:8px 10px;background:#fff;border:1px solid var(--c-border);border-radius:6px;font-family:ui-monospace,Consolas,monospace;font-size:0.6875rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-height:260px;overflow-y:auto}
 .gate{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;padding:24px;text-align:center}
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stats-grid{grid-template-columns:1fr}.content{padding:14px}.toolbar{padding:12px 14px}}
@@ -972,9 +982,39 @@ function growthValueHtml(v){
   if (v === null || v === undefined) return '<span class="muted">—</span>';
   if (typeof v === 'number') return fmtNum(v);
   if (typeof v === 'string') return esc(v);
-  if (Array.isArray(v)) return '<span class="mono">' + esc(JSON.stringify(v)) + '</span>';
-  if (typeof v === 'object') return '<span class="mono">' + esc(JSON.stringify(v)) + '</span>';
+  if (typeof v === 'object') return growthStructuredHtml(v);
   return esc(String(v));
+}
+
+// Presentation-layer only: renders a short readable summary plus a native
+// <details> disclosure holding the FULL JSON payload (exact values preserved).
+// Read-only over the API response — never mutates the signal object.
+function growthScalarText(val){
+  if (val === null || val === undefined) return '<span class="muted">—</span>';
+  if (typeof val === 'number') return fmtNum(val);
+  if (typeof val === 'boolean') return val ? 'true' : 'false';
+  if (typeof val === 'string') return val === '' ? '<span class="muted">(empty)</span>' : esc(val);
+  return '<span class="muted">{…}</span>'; // nested structures stay collapsed in the summary; full JSON below
+}
+
+function growthStructuredHtml(v){
+  var isArray = Array.isArray(v);
+  var keys = isArray ? v.map(function(_, i){ return String(i); }) : Object.keys(v);
+  var summary;
+  if (!keys.length) {
+    summary = '<span class="muted">' + (isArray ? '(empty list)' : '{}') + '</span>';
+  } else {
+    var parts = keys.slice(0, 4).map(function(k){
+      var val = isArray ? v[Number(k)] : v[k];
+      return '<span class="muted">' + esc(k) + ':</span> ' + growthScalarText(val);
+    });
+    summary = parts.join(' · ');
+    if (keys.length > 4) summary += ' · <span class="muted">+' + (keys.length - 4) + ' more</span>';
+  }
+  var label = isArray ? keys.length + ' items' : keys.length + ' keys';
+  return '<div class="gs-summary">' + summary + '</div>' +
+    '<details class="gs-details"><summary>Full JSON (' + label + ')</summary>' +
+    '<pre>' + esc(JSON.stringify(v, null, 2)) + '</pre></details>';
 }
 
 function momentumCoverageBadge(momentum){
@@ -1018,11 +1058,11 @@ async function loadGrowthSignals(){
       h += '<tr>' +
         '<td>' + esc(label) + '</td>' +
         '<td>' + growthStatusBadge(sig.status || 'insufficient_signal') + '</td>' +
-        '<td style="max-width:260px">' + growthValueHtml(sig.value) + '</td>' +
-        '<td style="max-width:240px">' + growthValueHtml(sig.coverage) + '</td>' +
-        '<td style="max-width:180px">' + growthValueHtml(sig.freshness_days) + '</td>' +
+        '<td class="wrap-json">' + growthValueHtml(sig.value) + '</td>' +
+        '<td class="wrap-json">' + growthValueHtml(sig.coverage) + '</td>' +
+        '<td class="wrap-json">' + growthValueHtml(sig.freshness_days) + '</td>' +
         '<td class="num">' + fmtNum(sig.confidence_impact) + '</td>' +
-        '<td style="max-width:360px;font-size:0.75rem">' + esc(sig.reason || '') + '</td>' +
+        '<td class="gs-reason">' + (sig.reason ? esc(sig.reason) : '<span class="muted">—</span>') + '</td>' +
       '</tr>';
     });
     h += '</tbody></table>';
