@@ -46,7 +46,7 @@ const FIXTURE = {
       { state: "verified_current_window" }, 2, 0, "All collectors fresh."),
     mapping_coverage: sig("mapping_gap", { mapped_listings: 14, unmapped_listings: 2 },
       { state: "partial_current_window" }, 1, -5, "2 Etsy listings not mapped to canonical products."),
-    confidence: sig("sufficient", { value: 30, basis: "coverage + freshness + mapping" },
+    confidence: sig("sufficient", 30,
       { state: "verified_current_window" }, 2, 0, "Confidence reflects unverified sales coverage."),
     profitability_guardrail: sig("secondary_guardrail", { ads_spend_28d_thb: 360, model: "phase13-cost-model" },
       { state: "verified_current_window" }, 2, 0, "Google Ads remains neutral in Phase 13."),
@@ -166,6 +166,7 @@ test("3+4: long JSON lives in a details/pre disclosure; no raw minified blob in 
     FIXTURE.signals.profitability_guardrail.value, FIXTURE.signals.profitability_guardrail.coverage,
   ];
   for (const exp of expectedStructured) {
+    if (exp === null || typeof exp !== "object") continue; // primitives render inline, nothing to disclose
     assert.ok(decoded.some((d) => deepEqual(d, exp)), "full JSON payload must be preserved exactly and inspectable");
   }
 });
@@ -304,4 +305,72 @@ test("16: XSS safety — every API-provided string is escaped before HTML insert
   // Reason text fully escaped, no raw tag injection.
   assert.match(html, /&lt;script&gt;alert\('reason-xss'\)&lt;\/script&gt;/, "reason must be escaped");
   assert.match(html, /Malformed reason with &lt;&lt;&lt;&lt; &gt;&gt;&gt;&gt; &amp;&amp;&amp;&amp;/, "malformed reason must be escaped");
+});
+
+// ── Confidence summary badge (fail-safe rendering) ──
+function withConfidence(confValue) {
+  const f = JSON.parse(JSON.stringify(FIXTURE));
+  if (confValue === null || confValue === undefined) {
+    delete f.signals.confidence;
+  } else {
+    f.signals.confidence.value = confValue;
+  }
+  return f;
+}
+async function summaryBadge(fixture) {
+  const run = runPage(fixture);
+  await painted(run);
+  const summaryEl = run.sandbox.__elements.get("growth-summary");
+  assert.ok(summaryEl, "growth-summary element must exist after render");
+  const html = summaryEl.innerHTML;
+  const m = html.match(/Confidence: ([\s\S]*)$/);
+  return m ? m[1].replace(/<\/span>\s*$/, "") : "(badge not found)";
+}
+
+test("17a: confidence badge renders a valid numeric score", async () => {
+  const badge = await summaryBadge(withConfidence(42));
+  assert.equal(badge, "42");
+  assert.doesNotMatch(badge, /NaN/i);
+});
+
+test("17b: confidence badge preserves zero (distinct from null)", async () => {
+  const badge = await summaryBadge(withConfidence(0));
+  assert.equal(badge, "0");
+  assert.doesNotMatch(badge, /NaN/i);
+});
+
+test("17c: confidence badge shows em-dash for null", async () => {
+  const badge = await summaryBadge(withConfidence(null));
+  assert.match(badge, /muted">—<\/span>/);
+  assert.doesNotMatch(badge, /NaN/i);
+});
+
+test("17d: confidence badge shows em-dash when the confidence signal is missing", async () => {
+  const badge = await summaryBadge(withConfidence(undefined));
+  assert.match(badge, /muted">—<\/span>/);
+  assert.doesNotMatch(badge, /NaN/i);
+});
+
+test("17e: confidence badge shows em-dash for non-numeric strings — never NaN", async () => {
+  for (const bad of ["abc", "N/A", ""]) {
+    const badge = await summaryBadge(withConfidence(bad));
+    assert.doesNotMatch(badge, /NaN/i, `"${bad}" must never render as NaN`);
+    assert.match(badge, /muted">—<\/span>/, `"${bad}" must render as em-dash`);
+  }
+});
+
+test("17f: confidence badge reads a primitive from an envelope object; ambiguous nesting fails safe", async () => {
+  // Envelope shape (conf.value primitive — the real API shape): read .value.
+  const f = JSON.parse(JSON.stringify(FIXTURE));
+  f.signals.confidence = { status: "sufficient", value: 30, coverage: { state: "verified_current_window" }, confidence_impact: 0, reason: "" };
+  const badge = await summaryBadge(f);
+  assert.equal(badge, "30");
+  assert.doesNotMatch(badge, /NaN/i);
+  // Ambiguous nesting (value is itself an object): fail safe as em-dash, never a guessed score.
+  const nested = await summaryBadge(withConfidence({ value: 30, basis: "coverage + freshness + mapping" }));
+  assert.doesNotMatch(nested, /NaN/i, "ambiguous nested value must never render as NaN");
+  assert.match(nested, /muted">—<\/span>/, "ambiguous nested value must render as em-dash");
+  // The main fixture's nested confidence shape must likewise never produce NaN.
+  const mainBadge = await summaryBadge(FIXTURE);
+  assert.doesNotMatch(mainBadge, /NaN/i, "main fixture must never render NaN in the confidence badge");
 });

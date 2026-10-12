@@ -1026,6 +1026,17 @@ function momentumCoverageBadge(momentum){
   return '<span class="badge badge-red">Momentum coverage: unverified</span>';
 }
 
+// Fail-safe confidence summary for the growth-summary badge: accepts either a
+// primitive score or an envelope ({value: N, …}); renders — for null, missing,
+// or non-numeric values. Never displays NaN. Presentation only — read-only.
+function confidenceSummaryHtml(conf){
+  var v = (conf && typeof conf === 'object') ? conf.value : conf;
+  if (v === null || v === undefined) return '<span class="muted">—</span>';
+  if (typeof v === 'number' && isFinite(v)) return fmtNum(v);
+  if (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v))) return fmtNum(Number(v));
+  return '<span class="muted">—</span>';
+}
+
 async function loadGrowthSignals(){
   setState('growth-signals-table', '', 'Loading…');
   try {
@@ -1038,7 +1049,7 @@ async function loadGrowthSignals(){
       '<span class="badge badge-grey">Window: ' + esc((d.window && d.window.current_start) || '—') + ' → ' + esc((d.window && d.window.current_end) || '—') + '</span>' +
       '<span class="badge badge-grey">Google Ads: ' + esc(policy.business_signal || 'insufficient_or_sparse') + ' (neutral)</span>' +
       momentumCoverageBadge(s.momentum || {}) +
-      '<span class="badge badge-grey">Confidence: ' + fmtNum(s.confidence && s.confidence.value) + '</span>';
+      '<span class="badge badge-grey">Confidence: ' + confidenceSummaryHtml(s.confidence) + '</span>';
 
     var rows = [
       ['demand', s.demand],

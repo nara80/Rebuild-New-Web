@@ -35,7 +35,7 @@ const FIXTURE = {
       { state: "verified_current_window" }, 2, 0, "All collectors fresh."),
     mapping_coverage: sig("mapping_gap", { mapped_listings: 14, unmapped_listings: 2 },
       { state: "partial_current_window" }, 1, -5, "2 Etsy listings not mapped to canonical products."),
-    confidence: sig("sufficient", { value: 30, basis: "coverage + freshness + mapping" },
+    confidence: sig("sufficient", 30,
       { state: "verified_current_window" }, 2, 0, "Confidence reflects unverified sales coverage."),
     profitability_guardrail: sig("secondary_guardrail", { ads_spend_28d_thb: 360, model: "phase13-cost-model" },
       { state: "verified_current_window" }, 2, 0, "Google Ads remains neutral in Phase 13."),
