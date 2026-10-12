@@ -81,10 +81,13 @@ function updateFromChoice(choice) {
 // 2. UPDATE for returning users — applied DURING Consent Initialization,
 //    before any Initialization-phase tag fires. Conditional checks only:
 //    a missing cookie yields an empty array (documented getCookieValues
-//    behavior), and a malformed value parses to null — both keep the
-//    denied default as the operative state (no update call).
+//    behavior), a malformed value parses to null, and a duplicate
+//    mm-consent cookie yields more than one array entry — all three keep
+//    the denied default as the operative state (no update call). The
+//    single-cookie requirement matches the MildMate Consent Signal
+//    variable template: an ambiguous cookie state must fail closed.
 const savedValues = getCookieValues(CONSENT_COOKIE);
-if (savedValues && savedValues.length > 0) {
+if (savedValues && savedValues.length === 1) {
   const choice = parseConsentCookie(savedValues[0]);
   if (choice) {
     updateFromChoice(choice);

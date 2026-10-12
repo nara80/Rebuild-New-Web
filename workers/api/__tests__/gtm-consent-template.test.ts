@@ -17,7 +17,7 @@ const ALL_DENIED = {
 type ConsentState = Record<string, string>;
 type Listener = (payload: Record<string, boolean>) => void;
 
-function runTemplate(cookieValue: string | null) {
+function runTemplate(cookieValue: string | string[] | null) {
   const defaults: ConsentState[] = [];
   const updates: ConsentState[] = [];
   let listener: Listener | null = null;
@@ -32,7 +32,7 @@ function runTemplate(cookieValue: string | null) {
       case "updateConsentState":
         return (state: ConsentState) => updates.push(state);
       case "getCookieValues":
-        return () => (cookieValue === null ? [] : [cookieValue]);
+        return () => (cookieValue === null ? [] : Array.isArray(cookieValue) ? cookieValue : [cookieValue]);
       case "callInWindow":
         return (key: string, cb: Listener) => {
           callInWindowKeys.push(key);
@@ -105,6 +105,48 @@ describe("GTM consent template (MildMate Consent Bridge)", () => {
     const { defaults, updates } = runTemplate(null);
     expect(defaults).toEqual([ALL_DENIED]);
     expect(updates.length).toBe(0);
+  });
+
+  describe("duplicate / conflicting mm-consent cookies (fail closed)", () => {
+    // getCookieValues returns one entry per matching cookie; more than one
+    // means an ambiguous cookie state. The bridge must deny (no update) —
+    // matching the MildMate Consent Signal variable template.
+    it("two conflicting cookies make no update call (previously values[0] won)", () => {
+      const { defaults, updates } = runTemplate([
+        "analytics:granted,marketing:denied",
+        "analytics:denied,marketing:granted"
+      ]);
+      expect(defaults).toEqual([ALL_DENIED]);
+      expect(updates.length).toBe(0);
+    });
+
+    it("two identical cookies still fail closed (strict single-cookie rule)", () => {
+      const { defaults, updates } = runTemplate([
+        "analytics:granted,marketing:denied",
+        "analytics:granted,marketing:denied"
+      ]);
+      expect(defaults).toEqual([ALL_DENIED]);
+      expect(updates.length).toBe(0);
+    });
+
+    it("three conflicting cookies make no update call", () => {
+      const { defaults, updates } = runTemplate([
+        "analytics:granted,marketing:granted",
+        "analytics:denied,marketing:granted",
+        "analytics:denied,marketing:denied"
+      ]);
+      expect(defaults).toEqual([ALL_DENIED]);
+      expect(updates.length).toBe(0);
+    });
+
+    it("duplicate cookies plus a malformed value make no update call", () => {
+      const { defaults, updates } = runTemplate([
+        "analytics:granted,marketing:denied",
+        "garbage"
+      ]);
+      expect(defaults).toEqual([ALL_DENIED]);
+      expect(updates.length).toBe(0);
+    });
   });
 
   describe("live listener (callInWindow)", () => {
