@@ -164,3 +164,77 @@ test("Phase 14 boundary: opportunity recompute wiring untouched by this patch", 
   // Friday routing preserved (covered functionally above), weights live in scripts/opportunity-core.mjs — not in the worker.
   assert.doesNotMatch(src, /"momentum":\s*30/, "scoring weights must not move into the worker source");
 });
+
+// ── Notion scheduler restore (2026-10-12) ──────────────────────────────────
+// The historical 1st/15th main + hourly-drain design needed five cron
+// triggers, which the Cloudflare schedules cap rejected. The restore dispatches
+// Notion from the single daily cron instead, without touching weekday routing.
+
+// 01:00 UTC trigger → +7h = 08:00 ICT same calendar date.
+function utcMsForThaiDate(y, m, d) {
+  return Date.UTC(y, m - 1, d, 1, 0, 0);
+}
+
+test("notion scheduling flags: main on 1st/15th, drain on Saturday, weekday routing untouched", () => {
+  // 2026-10-15 Thursday → main, and weekday collector (gsc) still selected.
+  const thu15 = resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 10, 15));
+  assert.equal(thu15.business_date, "2026-10-15");
+  assert.equal(thu15.selected_job, "gsc", "Thursday collector must stay selected on a main day");
+  assert.equal(thu15.notion_main, true);
+  assert.equal(thu15.notion_drain, false);
+
+  // 2026-11-01 Sunday → main.
+  const sun1 = resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 11, 1));
+  assert.equal(sun1.selected_job, "noop");
+  assert.equal(sun1.notion_main, true);
+  assert.equal(sun1.notion_drain, false);
+
+  // 2026-10-17 Saturday → drain only.
+  const sat17 = resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 10, 17));
+  assert.equal(sat17.selected_job, "noop");
+  assert.equal(sat17.notion_main, false);
+  assert.equal(sat17.notion_drain, true);
+
+  // 2026-10-14 Wednesday (Ads verification day) → neither flag; collector only.
+  const wed14 = resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 10, 14));
+  assert.equal(wed14.selected_job, "google_ads");
+  assert.equal(wed14.notion_main, false);
+  assert.equal(wed14.notion_drain, false);
+
+  // A plain weekday mid-fortnight: 2026-10-20 Tuesday → neither flag.
+  const tue20 = resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 10, 20));
+  assert.equal(tue20.selected_job, "etsy");
+  assert.equal(tue20.notion_main, false);
+  assert.equal(tue20.notion_drain, false);
+
+  // 2026-11-15 Sunday → main; 2026-12-01 Tuesday → main + weekday collector.
+  assert.equal(resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 11, 15)).notion_main, true);
+  const dec1 = resolveScheduledDispatcherJob(utcMsForThaiDate(2026, 12, 1));
+  assert.equal(dec1.selected_job, "etsy");
+  assert.equal(dec1.notion_main, true);
+});
+
+test("notion scheduling: scheduled() wires main (guarded) + drain triggers; drain guard intact", () => {
+  const src = readFileSync(workerPath, "utf8");
+  // Main pass uses the scheduled-main trigger and skips when the stream state
+  // already shows an exhausted scan on this Thailand date.
+  assert.match(src, /executeSync\(env, "scheduled-main", \{\}\)/);
+  assert.match(src, /hasExhaustedNotionRunOnThailandDate/);
+  assert.match(src, /skip Notion main \(already exhausted/);
+  // Drain keeps the historical trigger name whose guard refuses to start a
+  // fresh scan (drain only continues a partial pass).
+  assert.match(src, /executeSync\(env, "drain", \{\}\)/);
+  assert.match(src, /trigger === "drain" && state\.last_status !== "partial"/);
+  // Guard queries the stream state, not sync_runs, so a bounded partial pass
+  // is never mistaken for a completed backlog.
+  assert.match(src, /FROM marketing_sync_state[\s\S]*?last_status = 'success'/);
+});
+
+test("notion scheduling: rolling-prev-month cutoff untouched; wrangler.toml still single cron", () => {
+  const src = readFileSync(workerPath, "utf8");
+  assert.match(src, /SYNC_BEFORE_MODE/, "rolling-prev-month policy must remain configurable and default");
+  assert.match(src, /getUTCFullYear\(\), now\.getUTCMonth\(\) - 1, 1/, "cutoff = first day of previous month");
+  const toml = readFileSync(fileURLToPath(new URL("../wrangler.toml", import.meta.url)), "utf8");
+  const cronLine = toml.match(/^crons\s*=\s*\[(.*)\]$/m);
+  assert.deepEqual(cronLine[1].match(/"[^"]+"/g), ['"0 1 * * *"'], "no new cron triggers added");
+});

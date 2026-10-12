@@ -280,7 +280,24 @@ export function resolveScheduledDispatcherJob(scheduledTimeMs) {
     default:
       selectedJob = "noop"; // Saturday / Sunday
   }
-  return { ...context, selected_job: selectedJob, is_noop_day: THAILAND_WEEKDAY_NOOP.has(context.business_weekday) };
+  // Notion sales-detail sync rides the same daily trigger (Phase 17 restore,
+  // 2026-10-12): the historical 1st/15th main + hourly-drain design needed
+  // multiple cron triggers, which the Cloudflare schedules cap rejected, so
+  // both are dispatched from the single daily cron instead:
+  //   - notion_main:  Thailand business date is the 1st or 15th
+  //   - notion_drain: Saturday (weekly bounded continuation of partial passes)
+  // Both may coincide with a weekday collector; the scheduled() handler runs
+  // them sequentially after the collector finishes.
+  const dayOfMonth = Number(context.business_date.slice(8, 10));
+  const notion_main = dayOfMonth === 1 || dayOfMonth === 15;
+  const notion_drain = context.business_weekday === 6; // Saturday
+  return {
+    ...context,
+    selected_job: selectedJob,
+    is_noop_day: THAILAND_WEEKDAY_NOOP.has(context.business_weekday),
+    notion_main,
+    notion_drain,
+  };
 }
 
 async function hasSuccessfulRunOnThailandDate(db, source, thailandDate) {
@@ -304,6 +321,27 @@ async function hasCompleteGa4SuccessOnThailandDate(db, thailandDate, properties)
     if (!(await hasSuccessfulRunOnThailandDate(db, p.sync_source, thailandDate))) return false;
   }
   return true;
+}
+
+// Notion main passes do not use the sync_runs success guard the collectors
+// use: a bounded pass finishes as 'partial' (more backlog remains) and only a
+// fully-scanned pass is 'success' with a reset cursor. Skipping on any
+// success would strand the backlog until the next fortnight, so the guard
+// instead checks the stream state: last_status 'success' (exhausted scan)
+// already recorded on this Thailand date means a rescan today is redundant.
+async function hasExhaustedNotionRunOnThailandDate(db, thailandDate) {
+  const row = await db
+    .prepare(
+      `SELECT 1
+         FROM marketing_sync_state
+        WHERE name = ?1
+          AND last_status = 'success'
+          AND date(last_run_at, '+7 hours') = ?2
+        LIMIT 1`
+    )
+    .bind(STREAM, thailandDate)
+    .first();
+  return !!row;
 }
 
 /**
@@ -2882,53 +2920,66 @@ export default {
             const properties = resolveGa4Properties(env);
             if (await hasCompleteGa4SuccessOnThailandDate(env.DB, route.business_date, properties)) {
               console.log(`SCHEDULER: skip GA4 (already successful for ${route.business_date})`);
-              return;
+            } else {
+              await executeGa4Sync(env, "scheduled-weekly");
             }
-            await executeGa4Sync(env, "scheduled-weekly");
-            return;
-          }
-
-          if (route.selected_job === "etsy") {
+          } else if (route.selected_job === "etsy") {
             if (await hasSuccessfulRunOnThailandDate(env.DB, ETSY_SYNC_SOURCE, route.business_date)) {
               console.log(`SCHEDULER: skip Etsy (already successful for ${route.business_date})`);
-              return;
+            } else {
+              await executeEtsySync(env, "scheduled-weekly");
             }
-            await executeEtsySync(env, "scheduled-weekly");
-            return;
-          }
-
-          if (route.selected_job === "google_ads") {
+          } else if (route.selected_job === "google_ads") {
             if (await hasSuccessfulRunOnThailandDate(env.DB, GOOGLE_ADS_SYNC_SOURCE, route.business_date)) {
               console.log(`SCHEDULER: skip Google Ads (already successful for ${route.business_date})`);
-              return;
+            } else {
+              await executeGoogleAdsSync(env, "scheduled-weekly");
             }
-            await executeGoogleAdsSync(env, "scheduled-weekly");
-            return;
-          }
-
-          if (route.selected_job === "gsc") {
+          } else if (route.selected_job === "gsc") {
             if (await hasSuccessfulRunOnThailandDate(env.DB, GSC_SYNC_SOURCE, route.business_date)) {
               console.log(`SCHEDULER: skip GSC (already successful for ${route.business_date})`);
-              return;
+            } else {
+              await executeGscSync(env, "scheduled-weekly");
             }
-            await executeGscSync(env, "scheduled-weekly");
-            return;
-          }
-
-          if (route.selected_job === "opportunity") {
+          } else if (route.selected_job === "opportunity") {
             if (await hasSuccessfulRunOnThailandDate(env.DB, OPPORTUNITY_SYNC_SOURCE, route.business_date)) {
               console.log(`SCHEDULER: skip Opportunity recompute (already successful for ${route.business_date})`);
-              return;
+            } else {
+              const report = await recomputeOpportunityScores(env, {});
+              console.log(
+                `OPPORTUNITY-RECOMPUTE: model=${report.model_version} date=${report.score_date} ` +
+                `rows=${report.rows_total} scored=${report.scored_count} insufficient=${report.insufficient_count}`
+              );
             }
-            const report = await recomputeOpportunityScores(env, {});
-            console.log(
-              `OPPORTUNITY-RECOMPUTE: model=${report.model_version} date=${report.score_date} ` +
-              `rows=${report.rows_total} scored=${report.scored_count} insufficient=${report.insufficient_count}`
-            );
-            return;
+          } else {
+            console.log(`SCHEDULER: no handler for selected_job=${route.selected_job}`);
           }
 
-          console.log(`SCHEDULER: no handler for selected_job=${route.selected_job}`);
+          // Notion sales-detail sync rides the same single daily trigger
+          // (restored 2026-10-12; Cloudflare cap allowed only one cron):
+          //   - main pass on the 1st & 15th (historical fortnightly cadence)
+          //   - backlog drain on Saturdays (continues bounded partial passes)
+          // Weekday collector routing above is untouched. executeSync is
+          // idempotent (signature compare), lock-protected, bounded by
+          // SYNC_MAX_SUBREQUESTS with cursor carry-over, and holds back the
+          // rolling-prev-month window, so a scheduled main pass can never
+          // import an unsettled month.
+          if (route.notion_main) {
+            if (await hasExhaustedNotionRunOnThailandDate(env.DB, route.business_date)) {
+              console.log(`SCHEDULER: skip Notion main (already exhausted for ${route.business_date})`);
+            } else {
+              const r = await executeSync(env, "scheduled-main", {});
+              console.log(
+                `SCHEDULER: Notion main -> ${r.ok ? `status=${r.status} exhausted=${r.exhausted}` : `failed: ${truncate(r.reason || "", 200)}`}`
+              );
+            }
+          }
+          if (route.notion_drain) {
+            const r = await executeSync(env, "drain", {});
+            console.log(
+              `SCHEDULER: Notion drain -> ${r.ok ? (r.skipped ? r.skipped : `status=${r.status} exhausted=${r.exhausted}`) : `failed: ${truncate(r.reason || "", 200)}`}`
+            );
+          }
         } catch (e) {
           console.log(`SCHEDULER: job=${route.selected_job} failed â€” ${truncate(e?.message || String(e), 300)}`);
         }
