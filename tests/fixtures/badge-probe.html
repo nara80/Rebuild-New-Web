@@ -71,14 +71,14 @@ td.num,th.num{text-align:right}
 .muted{color:var(--c-muted)}
 /* ── Phase 13 Growth Signals table readability (presentation-layer only; scoped, no global table changes) ── */
 #growth-signals-table td{white-space:normal;vertical-align:top}
-#growth-signals-table td.wrap-json{max-width:260px}
-#growth-signals-table td.gs-reason{max-width:360px;font-size:0.75rem;word-break:break-word;overflow-wrap:anywhere}
-#growth-signals-table .gs-summary{font-size:0.75rem;line-height:1.45;word-break:break-word;overflow-wrap:anywhere}
+#growth-signals-table td.wrap-json{min-width:220px;max-width:280px}
+#growth-signals-table td.gs-reason{min-width:240px;max-width:360px;font-size:0.75rem;word-break:break-word;overflow-wrap:break-word}
+#growth-signals-table .gs-summary{font-size:0.75rem;line-height:1.45;word-break:break-word;overflow-wrap:break-word}
 #growth-signals-table .gs-details{margin-top:4px}
 #growth-signals-table .gs-details summary{cursor:pointer;color:var(--c-blue);font-size:0.6875rem;font-weight:600;user-select:none}
 #growth-signals-table .gs-details summary:hover{color:var(--c-dark)}
 #growth-signals-table .gs-details summary:focus-visible{outline:2px solid var(--c-blue);outline-offset:2px}
-#growth-signals-table .gs-details pre{margin:6px 0 0;padding:8px 10px;background:#fff;border:1px solid var(--c-border);border-radius:6px;font-family:ui-monospace,Consolas,monospace;font-size:0.6875rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;max-height:260px;overflow-y:auto}
+#growth-signals-table .gs-details pre{margin:6px 0 0;padding:8px 10px;background:#fff;border:1px solid var(--c-border);border-radius:6px;font-family:ui-monospace,Consolas,monospace;font-size:0.6875rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;max-height:260px;overflow-y:auto}
 .gate{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;padding:24px;text-align:center}
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.stats-grid{grid-template-columns:1fr}.content{padding:14px}.toolbar{padding:12px 14px}}

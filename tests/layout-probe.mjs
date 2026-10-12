@@ -33,7 +33,13 @@ setTimeout(function () {
       scroll_contained: wrap.scrollWidth >= wrap.clientWidth,
       details_count: detailsCount,
       table_width_exceeds_wrap: wrap.scrollWidth > wrap.clientWidth,
-      nowrap_cells: Array.prototype.some.call(tds, function (td) { return getComputedStyle(td).whiteSpace === 'nowrap'; })
+      nowrap_cells: Array.prototype.some.call(tds, function (td) { return getComputedStyle(td).whiteSpace === 'nowrap'; }),
+      squeezed_json_cols: Array.prototype.filter.call(tds, function (td) {
+        return td.className.indexOf('wrap-json') > -1 && td.getBoundingClientRect().width < 200;
+      }).length,
+      anywhere_wrap_css: Array.prototype.some.call(tds, function (td) {
+        return getComputedStyle(td).overflowWrap === 'anywhere' || getComputedStyle(td).wordBreak === 'break-all';
+      })
     };
     var pre = document.createElement('pre');
     pre.id = 'layout-probe';

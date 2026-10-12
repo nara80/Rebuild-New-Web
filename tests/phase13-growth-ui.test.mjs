@@ -209,10 +209,13 @@ test("8: full reason text remains accessible (wrapped, untruncated)", async () =
   assert.match(momentumRow, /class="gs-reason"/, "reason cell must use the wrapping class");
 });
 
-test("9+11: horizontal scroll contained; wrapping + narrow-viewport CSS present", () => {
+test("9+11: horizontal scroll contained; min column widths + break-word (no mid-word fragmentation)", () => {
   assert.match(page, /\.table-wrap\{overflow-x:auto\}/, "scroll containment must remain");
   assert.match(page, /#growth-signals-table td\{white-space:normal;vertical-align:top\}/, "growth cells must wrap");
-  assert.match(page, /#growth-signals-table \.gs-summary\{[^}]*word-break:break-word/, "summary must break long tokens");
+  assert.match(page, /#growth-signals-table td\.wrap-json\{min-width:220px;max-width:280px\}/, "JSON columns must have minimum widths so narrow viewports scroll instead of squeezing");
+  assert.match(page, /#growth-signals-table td\.gs-reason\{min-width:240px/, "reason column must have a minimum width");
+  assert.doesNotMatch(page, /#growth-signals-table[^}]*overflow-wrap:anywhere/, "anywhere-wrapping (mid-word fragmentation source) must not be used in the growth table");
+  assert.match(page, /#growth-signals-table \.gs-summary\{[^}]*word-break:break-word/, "summary must break long tokens only as needed");
   assert.match(page, /#growth-signals-table \.gs-details pre\{[^}]*white-space:pre-wrap/, "pre must wrap, not overflow");
   assert.match(page, /#growth-signals-table \.gs-details pre\{[^}]*overflow-y:auto/, "tall JSON must scroll inside the pre");
   assert.match(page, /@media\(max-width:1100px\)/, "tablet breakpoint must remain");
