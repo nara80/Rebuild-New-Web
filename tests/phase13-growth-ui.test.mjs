@@ -254,3 +254,54 @@ test("15: other Data Analyst sections remain functional after the patch", async 
   // Other loaders started without sync errors (they hang on fetch, never reject).
   await new Promise((r) => setTimeout(r, 30));
 });
+
+// ── XSS / malformed-string safety ──
+const MALICIOUS = {
+  success: true,
+  growth_signal_contract: "v1",
+  signals: {
+    demand: sig("sufficient",
+      { "</pre><script>alert(1)</script>": "<img src=x onerror=alert(1)>", "quote\"&'key<b>": "&\"'<>", nested: { "</td>": "<svg onload=alert(2)>" } },
+      { state: "verified_current_window" }, 2, 0,
+      "<script>alert('reason-xss')</script> </td> & \"quotes\" 'apostrophes'"),
+    momentum: sig("insufficient_signal",
+      { units_growth_pct: null, payload: "</details><script>alert(3)</script>" },
+      { sales_coverage: { state: "unverified" } },
+      null, -20, "Malformed reason with <<<< >>>> &&&& \"\"\"'''."),
+  },
+};
+
+test("16: XSS safety — every API-provided string is escaped before HTML insertion", async () => {
+  const run = runPage(MALICIOUS);
+  await painted(run);
+  const html = run.tableEl.innerHTML;
+
+  // No data-derived raw markup may exist: payload strings must never become tags/elements.
+  assert.doesNotMatch(html, /<script>alert/, "script payload must never render as a real tag");
+  assert.doesNotMatch(html, /<img\s/i, "img payload must never render as a real tag");
+  assert.doesNotMatch(html, /<svg/i, "svg payload must never render as a real tag");
+  // Event handlers must only ever appear INSIDE entity-escaped tag text (rendered as text,
+  // not markup): strip all &lt;…&gt; entities and assert no live handler remains.
+  const withoutEscapedTags = html.replace(/&lt;[^&]*?&gt;/g, "");
+  assert.doesNotMatch(withoutEscapedTags, /onerror=|onload=/, "event-handler payloads must never appear outside escaped entities");
+  // Data-derived "</pre>", "</td>", "</details>" must not close real elements from inside data.
+  assert.doesNotMatch(html.replace(/<pre>[\s\S]*?<\/pre>/, ""), /<\/pre><script>/, "data must not escape the pre via closing tags");
+
+  // Escaped forms must be present instead.
+  assert.match(html, /&lt;script&gt;/, "script payload must be entity-escaped");
+  assert.match(html, /&lt;img/, "img payload must be entity-escaped");
+  assert.match(html, /&amp;/, "ampersand must be entity-escaped");
+  assert.match(html, /&quot;/, "double quotes must be entity-escaped");
+
+  // Full JSON in the pre must round-trip EXACTLY (esc is lossless through entity decode).
+  const pres = [...html.matchAll(/<pre>([\s\S]*?)<\/pre>/g)].map((m) => m[1]
+    .replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"));
+  const roundTripped = pres.map((p) => JSON.parse(p));
+  for (const s of [MALICIOUS.signals.demand.value, MALICIOUS.signals.demand.coverage, MALICIOUS.signals.momentum.value, MALICIOUS.signals.momentum.coverage]) {
+    assert.ok(roundTripped.some((d) => deepEqual(d, s)), "malicious JSON must round-trip exactly through esc()");
+  }
+
+  // Reason text fully escaped, no raw tag injection.
+  assert.match(html, /&lt;script&gt;alert\('reason-xss'\)&lt;\/script&gt;/, "reason must be escaped");
+  assert.match(html, /Malformed reason with &lt;&lt;&lt;&lt; &gt;&gt;&gt;&gt; &amp;&amp;&amp;&amp;/, "malformed reason must be escaped");
+});
