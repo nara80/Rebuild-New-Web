@@ -204,3 +204,102 @@ D1 sales_orders / sales_order_items
 - **Make.com scenario `MildMate - Notion OrderList to D1 Sales Sync`: permanently retired.** It stays OFF and is safe to archive or delete in Make.com. It was built and verified (Sep 2026) but was never activated for ongoing use; the Worker replaces it entirely.
 - **Make.com's remaining role is exclusively channel→Notion order ingestion** (ongoing imports + any historical backfill). The Worker only reads what is in Notion and never creates OrderList records — if the channel-import scenarios were switched off, the Worker would keep running but find nothing new to sync. Those import scenarios must stay active.
 - **Human mapping confirmation remains the never-guess gate:** only `Product_Mapping_Status = Mapped` records are synced; everything else is held and reported.
+---
+
+## 11. Postscript — Notion schedule loss audit and restore RC (2026-10-12)
+
+### Root cause of the missing schedule
+
+The historical "main run 1st/15th 02:00 UTC + hourly drain" design required five cron
+triggers. On 2026-10-12 the schedules deployment of that trigger set **failed the
+Cloudflare cap** (error 8000146: maximum 5 schedules), and the P0 recovery release
+candidate (3cfa4de, deployed as Worker version e60cbe7) deliberately restored the
+single daily dispatcher cron (  1 * * *). The dispatcher routes Mon–Fri to
+ga4/etsy/google_ads/gsc/opportunity and no-ops weekends — **it contained no Notion
+branch**, so 
+otion-mapping-sync became manual-only. Last successful run:
+2026-10-01 (manual drain passes, sync_runs 626–635, all success, cursor exhausted).
+This was an unflagged side effect of the P0 recovery, not an owner decision.
+
+### Current coverage (verified read-only, 2026-10-12)
+
+- **Notion Sales Detail is current through 2026-10-12** (1,055 pages; latest order
+  2026-10-12). Human entry is NOT the bottleneck for recent weeks.
+- Mapping census: **599 Mapped**, 437 (empty), 18 Review Required, 1 Partial.
+- **September 2026: 33 orders, 28 Mapped (all with TotalAmount). 23 are missing from
+  production D1** (Sep 12–29: 17 Shopee + 6 Etsy, ~฿99k combined). The other 5 were
+  synced Sep 8–11 (signature set) and are present in D1.
+- **October 1–12: 23 orders, 18 Mapped (all with TotalAmount), all missing from D1.**
+- D1 sales_orders latest order date: 2026-09-11 (Shopee). The dashboard's "current
+  28-day orders: 0" reflects held/unsynced records — **not zero sales**.
+
+### Why D1 stops at Sep 11 despite the October cutoff being Sep 1
+
+Two stacked causes: (1) no automated run since Oct 1 (above); (2) the
+olling-prev-month cutoff (SYNC_BEFORE_MODE) computes efore = 2026-09-01 during
+October, so even a manual run holds back Sep 1+ records. The five Shopee orders dated
+Sep 8–11 that ARE in D1 were ingested by the Oct 1 manual passes under the then-current
+cutoff/signature rules before the schedule loss, plus earlier same-month syncs.
+
+### September catch-up eligibility (designed; NOT executed)
+
+No code change is required. The existing POST /run API already supports a **pinned,
+exclusive date cutoff**: efore=2026-10-01 filters Order_Date < 2026-10-01
+(September and earlier only; October excluded both in the Notion query and by the
+record-level skipped_after_cutoff guard). All existing safety rules remain active:
+Mapped-only (server-side filter + record-level re-check), TotalAmount required
+(skipped_no_total), signature idempotency (unchanged records skip), canonical-catalog
+product-ID validation, and dry-run mode (dry=1 = zero D1 writes, zero Notion writes).
+
+Expected outcome from the read-only reconciliation: **23 creates, 0 updates, ~5+599
+signature skips, all October records excluded.** No duplicate/conflict candidates were
+found: every backlog (Shop, Order_Number) key is absent from D1, and the one
+sig-set record whose Notion Shop value differs from its D1 source_system
+(MildMate/LuQpJi23 vs website/LuQpJi23) is protected by its unchanged signature.
+A dry=1 confirmation pass on the production Worker remains part of the approved
+execution plan before the live run.
+
+### Proposed synchronization schedule (RC ix/notion-scheduler-restore, commit 4b8d953)
+
+Restores Notion sync inside the existing single-cron architecture (no new triggers):
+
+- **Main pass:** Thailand business date = 1st or 15th → executeSync(env, "scheduled-main"),
+  skipped if the stream state already shows an exhausted scan on that date.
+- **Drain:** Saturdays → executeSync(env, "drain") — the historical guard holds
+  (drain only continues a partial pass; it never starts a fresh scan).
+- Weekday collectors run first and are untouched; Notion jobs run sequentially after
+  them in the same invocation, bounded by SYNC_MAX_SUBREQUESTS=20 with cursor
+  carry-over. A partial pass finishes as partial and the next main/drain resumes it;
+  **scheduled polling is distinguished from backlog completion by the exhausted
+  flag and the success vs partial run status** (backlog completion also emails,
+  keeping the ~2 reports/month cadence).
+- Untouched and regression-protected by tests: weekday routing, direct-client Ads
+  auth, canonical GA4 properties 308922589/533944293, opportunity recompute wiring,
+  single-cron wrangler.toml, and the rolling-prev-month policy.
+
+### Existing month-close protections (unchanged)
+
+- SYNC_BEFORE_MODE=rolling-prev-month: cutoff = first day of the previous month;
+  the current month and last month are held until settled (month M finalizes in
+  Notion during M+1).
+- SYNC_BEFORE_FIXED=YYYY-MM-DD / SYNC_BEFORE_MODE=none overrides remain operator-only.
+- Only D1_Last_Synced_Signature is ever written to Notion, and only after a
+  confirmed D1 upsert. No Notion writes from this audit.
+
+### Regression and rollback plan
+
+- Tests: 
+ode --test tests/worker-reconcile.test.mjs — 10/10 pass (7 pre-existing
+  + 3 new Notion-scheduling tests).
+- Rollback: redeploy the prior Worker version (e60cbe7) or git revert 4b8d953;
+  the dispatcher change is additive (two flags + two guarded blocks) and pausing is
+  clean by construction (state in D1, idempotent work, lock-protected).
+
+### October 14 Google Ads scheduled-run protection
+
+The dispatcher's Wednesday → google_ads routing is confirmed present in the RC and in
+production; the 2026-10-14 01:00 UTC run is protected: RC adds no flags that day
+(
+otion_main false, 
+otion_drain false), the single cron is unchanged, and the
+direct-client Ads auth path is regression-tested.
