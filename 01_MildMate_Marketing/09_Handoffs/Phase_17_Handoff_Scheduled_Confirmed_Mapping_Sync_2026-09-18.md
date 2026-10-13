@@ -303,3 +303,34 @@ production; the 2026-10-14 01:00 UTC run is protected: RC adds no flags that day
 otion_main false, 
 otion_drain false), the single cron is unchanged, and the
 direct-client Ads auth path is regression-tested.
+
+### §11.1 Execution record — recovery completed (2026-10-13)
+
+Owner-approved end-to-end execution. Preflight: 35/35 regression tests; two
+independent read-only dry-runs (Oct 12 + Oct 13) both returned identical results
+(31 eligible = 27 creates + 4 updates, 545 unchanged, 2 parse-holds, 1 no-total).
+The worker-side dry=1 route was rejected as not side-effect-free (it writes
+sync_runs / product_mapping_events / marketing_sync_state even in dry mode);
+local CLI dry-runs were used instead (fully read-only, no email).
+
+**Live import (Oct 13):** POST /run?before=2026-10-01&max-subrequests=40 —
+2 bounded passes, exhausted, status success, report email 01a132a4.
+Created 27 orders (฿105,360.08), updated 4 (฿18,838.00); combined ฿124,198.08.
+Included the reconciled February order Shopee 260221AYTEQT99 (2026-02-21, ฿1031,
+product #26, no D1 duplicate, settled month). Zero October rows imported
+(D1 verified: oct_rows=0, max pre-Oct order date 2026-09-29, sales_orders
+549 → 576). Post-import dry-run: 0 eligible, 576 signature-unchanged.
+Remaining exceptions (held, owner-visible): Notion 1154 + 1140 (Thai-format
+D1_Product_Map parse failures — need Notion-side mapping text correction) and
+LINE 80832733Li (no TotalAmount).
+
+**Scheduler:** RC rebased onto master a6ef91d and integrated to master (FF);
+worker deployed from this exact source. Untouched: single cron 0 1 * * *,
+weekday routing, rolling-prev-month, direct-client Ads auth, GA4 properties.
+The 2026-10-14 01:00 UTC Wednesday Ads run was still future at deploy time;
+its success is to be observed as post-deploy verification.
+
+Coverage note: September 2026 is now reconciled to Notion Mapped records via
+signature + count equality, but NO completeness attestation exists yet (§11
+watermark standard); sales coverage remains "verified through Sep 11, Sep 12–29
+reconciled 2026-10-13, October unverified".
