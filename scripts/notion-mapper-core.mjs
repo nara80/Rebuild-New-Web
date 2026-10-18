@@ -281,7 +281,7 @@ export async function writeLastSyncedSignature({ token, pageId, propType, value 
 // ── Run report ─────────────────────────────────────────────────────────────
 
 export function newReportCollector() {
-  return { synced: [], skips: {}, errors: [] };
+  return { synced: [], skips: {}, errors: [], reviews: [] };
 }
 
 export function recordSkip(report, category, rec) {
@@ -336,6 +336,12 @@ export function buildReportEmail({ args, counts, processed, report, logFile, tri
     lines.push("", `=== Errors (${report.errors.length}) ===`);
     for (const e of report.errors) lines.push(`- ${e.order || `ID ${e.id}`}: ${e.message}`);
   }
+  if (report.reviews.length > 0) {
+    lines.push("", `=== Review signals (${report.reviews.length}) ===`);
+    for (const r of report.reviews) {
+      lines.push(`- [${r.shop}] ${r.order}: repeated product lines detected (${r.details.join(", ")})`);
+    }
+  }
   const text = lines.join("\n");
 
   const html = [
@@ -366,6 +372,11 @@ export function buildReportEmail({ args, counts, processed, report, logFile, tri
   if (report.errors.length > 0) {
     html.push(`<h3 style="color:#B91C1C;font-size:14px">Errors (${report.errors.length})</h3><ul style="font-size:13px;color:#B91C1C;padding-left:20px">`,
       ...report.errors.map((e) => `<li style="margin-bottom:4px">${esc(e.order || `ID ${e.id}`)}: ${esc(e.message)}</li>`),
+      `</ul>`);
+  }
+  if (report.reviews.length > 0) {
+    html.push(`<h3 style="color:#92400e;font-size:14px">Review signals (${report.reviews.length})</h3><ul style="font-size:13px;color:#92400e;padding-left:20px">`,
+      ...report.reviews.map((r) => `<li style="margin-bottom:4px">[${esc(r.shop)}] ${esc(r.order)}: repeated product lines detected (${esc(r.details.join(", "))})</li>`),
       `</ul>`);
   }
   html.push(`<p style="color:#64748b;font-size:12px;margin-top:24px">${logFile ? `Full JSONL log: ${esc(logFile)}` : "Per-record audit rows: product_mapping_events"}</p></div>`);
@@ -485,6 +496,22 @@ export async function processRecord(rec, ctx) {
   }
 
   const { payload, statusMapped } = buildUpsertPayload(rec, parsed.items, syncSource, scenario);
+  const repeatedProducts = parsed.items.reduce((m, it) => {
+    const key = String(it.product_id);
+    m[key] = (m[key] || 0) + 1;
+    return m;
+  }, {});
+  const repeatedProductEntries = Object.entries(repeatedProducts).filter(([, count]) => Number(count) > 1);
+  if (repeatedProductEntries.length > 0) {
+    const details = repeatedProductEntries.map(([pid, count]) => `product_id ${pid} × ${count}`);
+    log.write({ t: "review", id: rec.notion_id, order: rec.order_number, reason: "repeated_product_lines", details });
+    report.reviews.push({
+      id: rec.notion_id,
+      order: rec.order_number,
+      shop: rec.shop,
+      details,
+    });
+  }
   const needsSignatureUpdate = true; // eligibility already implies it
 
   log.write({

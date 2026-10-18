@@ -1159,9 +1159,14 @@ async function loadSales(){
     document.getElementById('sales-next').disabled = salesOffset + salesLimit >= salesTotal;
 
     if (!d.rows.length) { setState('sales-table', '', 'No sales rows for the selected filters.'); return; }
+    var displayRows = collapseIdenticalLineItems(d.rows || []);
     var h = '<table><thead><tr><th>Date</th><th>Channel</th><th>Order</th><th>Status</th><th class="num">Order Total</th><th>Product_ID</th><th>Product</th><th class="num">Qty</th><th class="num">Line Revenue</th><th>Revenue</th><th>Mapping</th></tr></thead><tbody>';
-    d.rows.forEach(function(r){
+    displayRows.forEach(function(r){
       var mapBadge = r.derived_mapping_status === 'Mapped' ? 'badge-green' : r.derived_mapping_status === 'Partial' ? 'badge-amber' : 'badge-red';
+      var qtyHtml = fmtNum(r.quantity);
+      if ((r._line_count || 1) > 1) {
+        qtyHtml += ' <span class="badge badge-grey" title="Collapsed identical item rows for display">×' + fmtNum(r._line_count) + ' lines</span>';
+      }
       h += '<tr>' +
         '<td>' + esc(r.order_day) + '</td>' +
         '<td>' + esc(r.channel_norm) + '</td>' +
@@ -1170,7 +1175,7 @@ async function loadSales(){
         '<td class="num">' + fmtBaht(r.order_total) + '</td>' +
         '<td class="mono">' + (r.product_id === null ? '—' : esc(r.product_id)) + '</td>' +
         '<td>' + esc(r.product_title) + '</td>' +
-        '<td class="num">' + fmtNum(r.quantity) + '</td>' +
+        '<td class="num">' + qtyHtml + '</td>' +
         '<td class="num">' + fmtBaht(r.line_revenue) + '</td>' +
         '<td><span class="badge ' + (r.revenue_status === 'EXACT' ? 'badge-blue' : 'badge-grey') + '">' + esc(r.revenue_status) + '</span></td>' +
         '<td><span class="badge ' + mapBadge + '">' + esc(r.derived_mapping_status || '—') + '</span></td>' +
@@ -1180,6 +1185,37 @@ async function loadSales(){
   } catch(e) {
     setState('sales-table', 'error', 'Could not load sales: ' + e.message);
   }
+}
+
+function collapseIdenticalLineItems(rows){
+  var out = [];
+  var map = {};
+  (rows || []).forEach(function(r){
+    var key = [
+      r.order_day || '',
+      r.channel_norm || '',
+      r.source_system || '',
+      r.source_order_id || '',
+      r.status || '',
+      String(r.order_total == null ? '' : r.order_total),
+      String(r.product_id == null ? '' : r.product_id),
+      r.product_title || '',
+      r.raw_item_text || '',
+      r.revenue_status || '',
+      String(r.line_revenue == null ? '' : r.line_revenue),
+      r.derived_mapping_status || ''
+    ].join('|');
+    if (!map[key]) {
+      var copy = Object.assign({}, r);
+      copy._line_count = 1;
+      map[key] = copy;
+      out.push(copy);
+      return;
+    }
+    map[key]._line_count += 1;
+    map[key].quantity = Number(map[key].quantity || 0) + Number(r.quantity || 0);
+  });
+  return out;
 }
 
 function salesPage(dir){
