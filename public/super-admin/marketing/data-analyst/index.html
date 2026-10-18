@@ -1164,13 +1164,15 @@ async function loadSales(){
     displayRows.forEach(function(r){
       var mapBadge = r.derived_mapping_status === 'Mapped' ? 'badge-green' : r.derived_mapping_status === 'Partial' ? 'badge-amber' : 'badge-red';
       var qtyHtml = fmtNum(r.quantity);
+      var lineIds = (r._line_keys || []).filter(Boolean);
+      var orderTitle = lineIds.length > 0 ? ('Line identities: ' + lineIds.join(', ')) : '';
       if ((r._line_count || 1) > 1) {
         qtyHtml += ' <span class="badge badge-grey" title="Collapsed identical item rows for display">×' + fmtNum(r._line_count) + ' lines</span>';
       }
       h += '<tr>' +
         '<td>' + esc(r.order_day) + '</td>' +
         '<td>' + esc(r.channel_norm) + '</td>' +
-        '<td class="mono">' + esc(r.source_order_id) + '</td>' +
+        '<td class="mono"' + (orderTitle ? (' title="' + esc(orderTitle) + '"') : '') + '>' + esc(r.source_order_id) + '</td>' +
         '<td>' + esc(r.status) + '</td>' +
         '<td class="num">' + fmtBaht(r.order_total) + '</td>' +
         '<td class="mono">' + (r.product_id === null ? '—' : esc(r.product_id)) + '</td>' +
@@ -1208,12 +1210,17 @@ function collapseIdenticalLineItems(rows){
     if (!map[key]) {
       var copy = Object.assign({}, r);
       copy._line_count = 1;
+      var baseOrder = String(r.source_order_id || 'order');
+      copy._line_keys = [r.source_item_key ? String(r.source_item_key) : (baseOrder + '-line1')];
       map[key] = copy;
       out.push(copy);
       return;
     }
     map[key]._line_count += 1;
     map[key].quantity = Number(map[key].quantity || 0) + Number(r.quantity || 0);
+    var baseOrder2 = String(r.source_order_id || 'order');
+    var fallbackLineId = baseOrder2 + '-line' + String(map[key]._line_count);
+    map[key]._line_keys.push(r.source_item_key ? String(r.source_item_key) : fallbackLineId);
   });
   return out;
 }
