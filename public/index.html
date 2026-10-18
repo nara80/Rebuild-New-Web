@@ -758,32 +758,8 @@
       }
 
       window.__mildmateLoadAnalytics = loadAnalytics;
-
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
-      } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
-      }
+      // Load immediately on all devices so homepage page_view is not delayed on mobile.
+      loadAnalytics();
     })();
   </script>
 </head>

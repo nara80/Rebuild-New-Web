@@ -299,10 +299,19 @@
   <meta name="twitter:title" content="Checkout — MildMate">
   <meta name="twitter:description" content="MildMate Checkout — Complete your custom bedding order.">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
+  <script src="/js/analytics-env.js"></script>
     <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-      var GA4_ID = 'G-ESL161CNBV';
+      var resolver = window.__resolveMildMateAnalyticsConfig;
+      var analyticsConfig = resolver ? resolver({ hostname: window.location.hostname }) : null;
+      if (!analyticsConfig || analyticsConfig.enabled !== true) {
+        return;
+      }
+      var GTM_ID = String(analyticsConfig.gtmId || '').trim();
+      var GA4_ID = String(analyticsConfig.ga4Id || '').trim();
+      if (!GTM_ID || !GA4_ID) {
+        return;
+      }
 
       function loadScript(src, async) {
         var s = document.createElement('script');
@@ -325,31 +334,9 @@
 
       window.__mildmateLoadAnalytics = loadAnalytics;
 
-      var isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-      if (!isMobile) {
-        loadAnalytics();
-        return;
-      }
-
-      var started = false;
-      var startOnce = function () {
-        if (started) return;
-        started = true;
-        window.removeEventListener('pointerdown', startOnce, true);
-        window.removeEventListener('keydown', startOnce, true);
-        window.removeEventListener('touchstart', startOnce, true);
-        loadAnalytics();
-      };
-
-      window.addEventListener('pointerdown', startOnce, { once: true, capture: true, passive: true });
-      window.addEventListener('keydown', startOnce, { once: true, capture: true });
-      window.addEventListener('touchstart', startOnce, { once: true, capture: true, passive: true });
-
-      if (document.readyState === 'complete') {
-        setTimeout(startOnce, 6000);
-      } else {
-        window.addEventListener('load', function () { setTimeout(startOnce, 6000); }, { once: true });
-      }
+      // Checkout must always emit page_view before Stripe redirect.
+      // Keep analytics bootstrap immediate on all devices.
+      loadAnalytics();
     })();
   </script>
 </head>
@@ -634,6 +621,8 @@
       var geoDetectBound = false;
       var countrySelectsInitialized = false;
       var ga4BeginCheckoutSent = false;
+      var ga4AddShippingInfoSent = false;
+      var ga4AddPaymentInfoSent = false;
 
       function loadScriptOnce(src) {
         if (externalScriptPromises[src]) return externalScriptPromises[src];
@@ -700,11 +689,30 @@
         }
       }
 
-      function sendGa4Event(name, params) {
+      function sendGa4Event(name, params, onDone) {
         try {
           ensureGa4Stub();
-          window.gtag('event', name, params || {});
+          var payload = params && typeof params === 'object' ? Object.assign({}, params) : {};
+          if (typeof onDone === 'function') {
+            var doneCalled = false;
+            var done = function() {
+              if (doneCalled) return;
+              doneCalled = true;
+              try { onDone(); } catch (e) {}
+            };
+            payload.event_callback = done;
+            payload.event_timeout = 1200;
+            window.gtag('event', name, payload);
+            setTimeout(done, 1300);
+            return true;
+          }
+          window.gtag('event', name, payload);
+          return true;
         } catch (e) {}
+        if (typeof onDone === 'function') {
+          try { onDone(); } catch (err) {}
+        }
+        return false;
       }
 
       function buildGa4Items(currency) {
@@ -720,11 +728,10 @@
         });
       }
 
-      function trackBeginCheckoutOnSessionCreate(sessionId) {
-        if (ga4BeginCheckoutSent) return;
+      function buildGa4CheckoutPayload(trigger, sessionId) {
         var currency = getActiveCurrency();
         var items = buildGa4Items(currency);
-        if (!items.length) return;
+        if (!items.length) return null;
         var value = items.reduce(function(sum, it) {
           return sum + ((Number(it.price || 0) || 0) * (Number(it.quantity || 1) || 1));
         }, 0);
@@ -733,9 +740,50 @@
           value: Math.round(value * 100) / 100,
           items: items
         };
+        if (trigger) payload.checkout_trigger = String(trigger);
         if (sessionId) payload.checkout_session_id = String(sessionId);
-        sendGa4Event('begin_checkout', payload);
+        return payload;
+      }
+
+      function trackBeginCheckoutOnSessionCreate(sessionId, onDone, trigger) {
+        if (ga4BeginCheckoutSent) {
+          if (typeof onDone === 'function') {
+            try { onDone(); } catch (e) {}
+          }
+          return;
+        }
+        var payload = buildGa4CheckoutPayload(trigger, sessionId);
+        if (!payload) {
+          if (typeof onDone === 'function') {
+            try { onDone(); } catch (e) {}
+          }
+          return;
+        }
+        sendGa4Event('begin_checkout', payload, onDone);
         ga4BeginCheckoutSent = true;
+      }
+
+      function trackAddShippingInfoOnStep3(trigger) {
+        if (ga4AddShippingInfoSent) return;
+        var payload = buildGa4CheckoutPayload(trigger || 'step3_view');
+        if (!payload) return;
+        if (shippingState && shippingState.serviceLevel) {
+          payload.shipping_tier = String(shippingState.serviceLevel);
+        }
+        sendGa4Event('add_shipping_info', payload);
+        ga4AddShippingInfoSent = true;
+      }
+
+      function trackAddPaymentInfoOnPay(trigger) {
+        if (ga4AddPaymentInfoSent) return;
+        var payload = buildGa4CheckoutPayload(trigger || 'pay_click');
+        if (!payload) return;
+        payload.payment_type = 'stripe_checkout_redirect';
+        if (shippingState && shippingState.serviceLevel) {
+          payload.shipping_tier = String(shippingState.serviceLevel);
+        }
+        sendGa4Event('add_payment_info', payload);
+        ga4AddPaymentInfoSent = true;
       }
 
       function bindCheckoutLanguageToggle() {
@@ -1737,7 +1785,14 @@
           }
           populateStep2Summary();
         }
-        if (step === 3) renderStep3();
+        if (step === 3) {
+          renderStep3();
+          if (typeof window.__mildmateLoadAnalytics === 'function') {
+            window.__mildmateLoadAnalytics();
+          }
+          trackAddShippingInfoOnStep3('step3_view');
+          trackBeginCheckoutOnSessionCreate('', null, 'step3');
+        }
       };
 
       function renderStep3() {
@@ -1832,6 +1887,10 @@
         if (mSpin) mSpin.style.display = 'inline-block';
 
         try {
+          if (typeof window.__mildmateLoadAnalytics === 'function') {
+            window.__mildmateLoadAnalytics();
+          }
+          trackAddPaymentInfoOnPay('pay_click');
           var currencyPref = getActiveCurrency();
           var shippingCountryCode = getSelectedCountryCode();
 
@@ -1854,10 +1913,9 @@
           var data = await resp.json();
 
           if (resp.ok && data.url) {
-            trackBeginCheckoutOnSessionCreate(data.session_id || '');
-            setTimeout(function() {
+            trackBeginCheckoutOnSessionCreate(data.session_id || '', function() {
               window.location.href = data.url;
-            }, 120);
+            }, 'session_created');
           } else {
             showError(data.error || 'Payment setup failed. Please try again.');
             // If error mentions discount/code, reset discount state so UI matches reality
