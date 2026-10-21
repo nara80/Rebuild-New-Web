@@ -1,17 +1,17 @@
-// Server-side protection for /admin/*
-// Verifies Clerk __session cookie + admin role/email check
-// Dev mode: relies on client-side Clerk gate since cookies are not available
+// Server-side protection for /admin/* and /super-admin/*
+// Verifies Clerk __session cookie + admin role AND email allowlist check.
+// Dev mode: relies on client-side Clerk gate since cookies are not available.
 //
-// Auth flow:
+// Auth flow (AND logic — strictest model):
 // 1. Extract Clerk session token from cookie or query param
-// 2. Verify JWT via Web Crypto + JWKS (reuse clerk-verify.ts)
-// 3. Check for admin/super-admin role claims OR email in ADMIN_EMAILS env var
-// 4. Redirect non-admins to sign-in
-//
-// Works alongside client-side gate as defense-in-depth.
-// Future: Option B — Cloudflare Access for zero-trust before Worker.
+// 2. Verify JWT via Web Crypto + JWKS (clerk-verify.ts)
+// 3. Require BOTH: admin/super-admin role claim AND email in ADMIN_EMAILS
+// 4. Enrich from Clerk Backend API if JWT lacks role/email claims
+// 5. Deny blocked emails (defense-in-depth)
+// 6. Redirect unauthenticated to sign-in; 403 for authenticated-but-unauthorized
 
 import { verifyClerkJwt } from "../../workers/api/clerk-verify";
+import { hasAdminRole, emailAllowed, emailBlocked } from "../../workers/api/admin-auth";
 
 function getClerkSessionToken(request: Request): string | null {
   const cookieHeader = request.headers.get("Cookie") || "";
@@ -27,60 +27,6 @@ function getClerkSessionToken(request: Request): string | null {
   if (qp) return qp;
 
   return null;
-}
-
-function collectRoles(raw: any): string[] {
-  if (!raw || typeof raw !== "object") return [];
-  const values: any[] = [];
-  const add = (v: any) => { if (v !== undefined && v !== null) values.push(v); };
-
-  add((raw as any).role);
-  add((raw as any).roles);
-  add((raw as any).org_role);
-  add((raw as any).orgRole);
-  add((raw as any).public_metadata?.role);
-  add((raw as any).public_metadata?.roles);
-  add((raw as any).unsafe_metadata?.roles);
-  add((raw as any).metadata?.role);
-  add((raw as any).metadata?.roles);
-  add((raw as any)["https://mildmate.com/role"]);
-  add((raw as any)["https://mildmate.com/roles"]);
-
-  const out: string[] = [];
-  values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
-    else out.push(String(v).toLowerCase().trim());
-  });
-  return out.filter(Boolean);
-}
-
-function hasAdminRole(rawClaims: any): boolean {
-  const roles = collectRoles(rawClaims);
-  return roles.some((r) =>
-    r === "admin" ||
-    r === "super-admin" ||
-    r === "super_admin" ||
-    r === "superadmin" ||
-    r.endsWith(":admin") ||
-    r.endsWith("/admin")
-  );
-}
-
-function emailAllowed(email: string, env: any): boolean {
-  if (!email) return false;
-  const allow = String(env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((s: string) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
-
-function emailBlocked(email: string): boolean {
-  if (!email) return false;
-  const blocked = [
-    "mildmateshop@gmail.com",
-  ];
-  return blocked.includes(email.toLowerCase());
 }
 
 function getPrimaryClerkEmail(user: any): string {
@@ -120,21 +66,20 @@ export const onRequest: PagesFunction<{
   DB: D1Database;
   CLERK_PUBLISHABLE_KEY?: string;
   CLERK_SECRET_KEY?: string;
+  CLERK_ACCOUNTS_DOMAIN?: string;
   ADMIN_EMAILS?: string;
   ENVIRONMENT?: string;
 }> = async (context) => {
-  const host = new URL(context.request.url).host;
-
   // Dev mode: Clerk uses IndexedDB (not cookies), so cookie-based middleware
   // cannot detect auth. Rely on client-side gate instead.
-  if (host.includes("pages.dev") || host.includes("localhost")) {
+  if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
 
   const sessionToken = getClerkSessionToken(context.request);
 
   if (!sessionToken) {
-    return redirectToSignIn(context.request.url);
+    return redirectToSignIn(context.request.url, context.env);
   }
 
   const modifiedRequest = new Request(context.request.url, {
@@ -147,17 +92,27 @@ export const onRequest: PagesFunction<{
   const result = await verifyClerkJwt(modifiedRequest, context.env);
 
   if (!result.valid) {
-    return redirectToSignIn(context.request.url);
+    if (result.error === "Token expired") {
+      const handshake = redirectToHandshake(context.request.url, context.env);
+      if (handshake) return handshake;
+    }
+    return redirectToSignIn(context.request.url, context.env);
   }
 
-  // Check for admin role or allowed email
+  // Drop the one-shot handshake marker once the refreshed token verifies.
+  // The markerless retry re-runs the full role/allowlist gates below.
+  const cleaned = stripHandshakeMarker(context.request.url);
+  if (cleaned) return cleaned;
+
+  // AND logic: require BOTH admin role claim AND email in ADMIN_EMAILS.
   const raw = (result.payload as any).raw || {};
   let email = String((result.payload as any).email || "").trim().toLowerCase();
   let hasAdmin = hasAdminRole(raw);
   let allowed = emailAllowed(email, context.env);
 
-  // Fallback: Clerk JWT sometimes lacks email/metadata claims on production custom domains.
-  if (!hasAdmin && !allowed) {
+  // Enrichment: if either role or email is missing from JWT, look up
+  // via Clerk Backend API (JWT may lack claims on production custom domains).
+  if (!hasAdmin || !allowed) {
     const sub = String((result.payload as any).sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
@@ -165,6 +120,7 @@ export const onRequest: PagesFunction<{
     allowed = allowed || emailAllowed(email, context.env);
   }
 
+  // Deny blocked emails first (defense-in-depth).
   if (emailBlocked(email)) {
     return new Response(
       `<!DOCTYPE html>
@@ -176,7 +132,8 @@ export const onRequest: PagesFunction<{
     );
   }
 
-  if (!hasAdmin && !allowed) {
+  // AND logic: both conditions must be true.
+  if (!hasAdmin || !allowed) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -190,12 +147,48 @@ export const onRequest: PagesFunction<{
   return context.next();
 };
 
-function redirectToSignIn(currentUrl: string) {
+// Clerk __session tokens live ~60s and are refreshed only by clerk-js running
+// on a page — which never happens on gated paths (this middleware redirects
+// before any page JS runs). For the expired-token case only, bounce once
+// through Clerk's FAPI handshake, which re-mints the session cookie and
+// redirects back. The marker makes the retry one-shot: if the token is still
+// expired on return, fall through to the sign-in redirect.
+const HANDSHAKE_MARKER = "__mm_hs";
+
+function redirectToHandshake(currentUrl: string, env?: any): Response | null {
+  try {
+    const parsed = new URL(currentUrl);
+    if (parsed.searchParams.has(HANDSHAKE_MARKER)) return null; // already retried once
+    const issuer = String(env?.CLERK_ISSUER || "").trim();
+    if (!issuer) return null; // no production Clerk config — keep sign-in behavior
+    const fapiHost = new URL(issuer).host;
+    const returnUrl = new URL(parsed.origin + parsed.pathname);
+    returnUrl.searchParams.set(HANDSHAKE_MARKER, "1");
+    const handshakeUrl = new URL(`https://${fapiHost}/v1/client/handshake`);
+    handshakeUrl.searchParams.set("redirect_url", returnUrl.toString());
+    return Response.redirect(handshakeUrl.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+
+function stripHandshakeMarker(currentUrl: string): Response | null {
+  try {
+    const url = new URL(currentUrl);
+    if (!url.searchParams.has(HANDSHAKE_MARKER)) return null;
+    url.searchParams.delete(HANDSHAKE_MARKER);
+    return Response.redirect(url.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+
+function redirectToSignIn(currentUrl: string, env?: any) {
   const parsed = new URL(currentUrl);
-  const isDev = parsed.host.includes("pages.dev") || parsed.host.includes("localhost");
+  const isDev = isDevelopmentAuthHost(currentUrl);
   const accountsDomain = isDev
     ? "kind-joey-29.accounts.dev"
-    : "accounts.mildmate.com";
+    : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
 
   const cleanReturnUrl = parsed.origin + parsed.pathname;
   const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
@@ -206,4 +199,13 @@ function redirectToSignIn(currentUrl: string) {
 
 function escHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function isDevelopmentAuthHost(url: string): boolean {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname.includes("pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
+  return false;
 }

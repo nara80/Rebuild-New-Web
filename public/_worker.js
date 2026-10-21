@@ -18699,10 +18699,45 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   });
   const result = await verifyClerkJwt(modifiedRequest, context.env);
   if (!result.valid) {
+    if (result.error === "Token expired") {
+      const handshake = redirectToHandshake(context.request.url, context.env);
+      if (handshake) return handshake;
+    }
     return redirectToSignIn(context.request.url, context.env);
   }
+  const cleaned = stripHandshakeMarker(context.request.url);
+  if (cleaned) return cleaned;
   return context.next();
 }, "onRequest");
+var HANDSHAKE_MARKER = "__mm_hs";
+function redirectToHandshake(currentUrl, env) {
+  try {
+    const parsed = new URL(currentUrl);
+    if (parsed.searchParams.has(HANDSHAKE_MARKER)) return null;
+    const issuer = String(env?.CLERK_ISSUER || "").trim();
+    if (!issuer) return null;
+    const fapiHost = new URL(issuer).host;
+    const returnUrl = new URL(parsed.origin + parsed.pathname);
+    returnUrl.searchParams.set(HANDSHAKE_MARKER, "1");
+    const handshakeUrl = new URL(`https://${fapiHost}/v1/client/handshake`);
+    handshakeUrl.searchParams.set("redirect_url", returnUrl.toString());
+    return Response.redirect(handshakeUrl.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+__name(redirectToHandshake, "redirectToHandshake");
+function stripHandshakeMarker(currentUrl) {
+  try {
+    const url = new URL(currentUrl);
+    if (!url.searchParams.has(HANDSHAKE_MARKER)) return null;
+    url.searchParams.delete(HANDSHAKE_MARKER);
+    return Response.redirect(url.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+__name(stripHandshakeMarker, "stripHandshakeMarker");
 function redirectToSignIn(currentUrl, env) {
   const parsed = new URL(currentUrl);
   const isDev = isDevelopmentAuthHost(currentUrl);
@@ -18840,8 +18875,14 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   });
   const result = await verifyClerkJwt(modifiedRequest, context.env);
   if (!result.valid) {
+    if (result.error === "Token expired") {
+      const handshake = redirectToHandshake2(context.request.url, context.env);
+      if (handshake) return handshake;
+    }
     return redirectToSignIn2(context.request.url, context.env);
   }
+  const cleaned = stripHandshakeMarker2(context.request.url);
+  if (cleaned) return cleaned;
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
   let hasAdmin = hasAdminRole21(raw);
@@ -18875,6 +18916,35 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   }
   return context.next();
 }, "onRequest");
+var HANDSHAKE_MARKER2 = "__mm_hs";
+function redirectToHandshake2(currentUrl, env) {
+  try {
+    const parsed = new URL(currentUrl);
+    if (parsed.searchParams.has(HANDSHAKE_MARKER2)) return null;
+    const issuer = String(env?.CLERK_ISSUER || "").trim();
+    if (!issuer) return null;
+    const fapiHost = new URL(issuer).host;
+    const returnUrl = new URL(parsed.origin + parsed.pathname);
+    returnUrl.searchParams.set(HANDSHAKE_MARKER2, "1");
+    const handshakeUrl = new URL(`https://${fapiHost}/v1/client/handshake`);
+    handshakeUrl.searchParams.set("redirect_url", returnUrl.toString());
+    return Response.redirect(handshakeUrl.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+__name(redirectToHandshake2, "redirectToHandshake");
+function stripHandshakeMarker2(currentUrl) {
+  try {
+    const url = new URL(currentUrl);
+    if (!url.searchParams.has(HANDSHAKE_MARKER2)) return null;
+    url.searchParams.delete(HANDSHAKE_MARKER2);
+    return Response.redirect(url.toString(), 302);
+  } catch {
+    return null;
+  }
+}
+__name(stripHandshakeMarker2, "stripHandshakeMarker");
 function redirectToSignIn2(currentUrl, env) {
   const parsed = new URL(currentUrl);
   const isDev = isDevelopmentAuthHost2(currentUrl);
@@ -19720,7 +19790,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-JmKF8K/functionsRoutes-0.8689313360268893.mjs
+// ../.wrangler/tmp/pages-i8cTqM/functionsRoutes-0.29412824594034315.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
