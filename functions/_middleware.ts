@@ -706,8 +706,11 @@ export async function onRequest(context: any): Promise<Response> {
   const url = new URL(context.request.url);
   const path = url.pathname;
 
+  // Normalize bare directory paths (e.g. /super-admin) so middleware-generated
+  // responses on the no-trailing-slash variant are skipped like their /…/ form.
+  const prefixPath = path.endsWith('/') ? path : `${path}/`;
   for (const prefix of SKIP_PREFIXES) {
-    if (path.startsWith(prefix)) return context.next();
+    if (prefixPath.startsWith(prefix)) return context.next();
   }
   for (const ext of SKIP_EXTENSIONS) {
     if (path.endsWith(ext)) return context.next();

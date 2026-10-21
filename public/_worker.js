@@ -1106,18 +1106,18 @@ function extractProductSlug(pagePath) {
 }
 __name(extractProductSlug, "extractProductSlug");
 function sameNullable(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : a;
+  const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x2 === null && y === null) return true;
-  return String(x2) === String(y);
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
 }
 __name(sameNullable, "sameNullable");
 function sameNullableNum(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x2 === null && y === null) return true;
-  if (x2 === null || y === null) return false;
-  return Math.abs(x2 - y) < 1e-6;
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum, "sameNullableNum");
 async function requireBearerAuth2(request2, env) {
@@ -1462,7 +1462,7 @@ function parseProductIdsJson2(raw) {
   try {
     const v = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!Array.isArray(v)) return [];
-    return v.map((x2) => Number(x2)).filter((x2) => Number.isInteger(x2) && x2 > 0);
+    return v.map((x) => Number(x)).filter((x) => Number.isInteger(x) && x > 0);
   } catch {
     return [];
   }
@@ -1499,18 +1499,18 @@ async function resolveEtsyListingProduct(env, listingId, cache) {
 }
 __name(resolveEtsyListingProduct, "resolveEtsyListingProduct");
 function sameNullable2(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : a;
+  const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x2 === null && y === null) return true;
-  return String(x2) === String(y);
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
 }
 __name(sameNullable2, "sameNullable");
 function sameNullableNum2(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x2 === null && y === null) return true;
-  if (x2 === null || y === null) return false;
-  return Math.abs(x2 - y) < 1e-6;
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum2, "sameNullableNum");
 async function requireBearerAuth3(request2, env) {
@@ -1880,18 +1880,18 @@ function parseProductIdsJson3(raw) {
 }
 __name(parseProductIdsJson3, "parseProductIdsJson");
 function sameNullable3(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : a;
+  const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x2 === null && y === null) return true;
-  return String(x2) === String(y);
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
 }
 __name(sameNullable3, "sameNullable");
 function sameNullableNum3(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x2 === null && y === null) return true;
-  if (x2 === null || y === null) return false;
-  return Math.abs(x2 - y) < 1e-6;
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum3, "sameNullableNum");
 async function requireBearerAuth4(request2, env) {
@@ -2347,18 +2347,18 @@ function parseProductIdsJson4(raw) {
 }
 __name(parseProductIdsJson4, "parseProductIdsJson");
 function sameNullable4(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : a;
+  const x = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x2 === null && y === null) return true;
-  return String(x2) === String(y);
+  if (x === null && y === null) return true;
+  return String(x) === String(y);
 }
 __name(sameNullable4, "sameNullable");
 function sameNullableNum4(a, b) {
-  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x2 === null && y === null) return true;
-  if (x2 === null || y === null) return false;
-  return Math.abs(x2 - y) < 1e-6;
+  if (x === null && y === null) return true;
+  if (x === null || y === null) return false;
+  return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum4, "sameNullableNum");
 async function requireBearerAuth5(request2, env) {
@@ -2764,7 +2764,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
       try {
         const arr = JSON.parse(raw || "[]");
         if (!Array.isArray(arr)) return [];
-        return arr.map((x2) => String(x2 || "").trim()).filter(Boolean);
+        return arr.map((x) => String(x || "").trim()).filter(Boolean);
       } catch {
         return [];
       }
@@ -5920,7 +5920,7 @@ function collectRoles(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6298,7 +6298,7 @@ function collectRoles2(raw) {
   }
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6531,7 +6531,7 @@ function collectRoles3(raw) {
   }
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6830,7 +6830,7 @@ function collectRoles4(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -7118,7 +7118,7 @@ function collectRoles5(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -7302,7 +7302,7 @@ function collectRoles6(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -7428,7 +7428,7 @@ function getDisplayImage(imageUrl, imagesRaw) {
   try {
     const arr = JSON.parse(String(imagesRaw || "[]"));
     if (Array.isArray(arr)) {
-      const first = arr.find((x2) => String(x2 || "").trim());
+      const first = arr.find((x) => String(x || "").trim());
       if (first) return String(first).trim();
     }
   } catch {
@@ -7992,13 +7992,13 @@ function scoreRows(inputs, weights, now) {
       if (n !== null) demandParts.push({ n, w: DW.gsc, src: "GSC" });
     }
     if (demandParts.length) {
-      const wsum = demandParts.reduce((s, x2) => s + x2.w, 0);
-      demandNorm = round1(demandParts.reduce((s, x2) => s + x2.n * x2.w, 0) / wsum);
+      const wsum = demandParts.reduce((s, x) => s + x.w, 0);
+      demandNorm = round1(demandParts.reduce((s, x) => s + x.n * x.w, 0) / wsum);
       components.demand = {
         raw: null,
         normalized: demandNorm,
         weight: W.demand,
-        sources: demandParts.map((x2) => x2.src).join("+"),
+        sources: demandParts.map((x) => x.src).join("+"),
         flags: null
       };
       availableWeight += W.demand;
@@ -8248,7 +8248,7 @@ function collectRoles7(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -10509,7 +10509,7 @@ function collectRoles8(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -11574,7 +11574,7 @@ function collectRoles9(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -11928,7 +11928,7 @@ function collectRoles10(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -12711,7 +12711,7 @@ function collectRoles11(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -13314,7 +13314,7 @@ function collectRoles12(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -13395,8 +13395,8 @@ async function authorizeAdmin12(request2, env) {
 __name(authorizeAdmin12, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
-  const cleaned = raw.map((x2) => String(x2 || "").trim()).filter(Boolean);
-  return cleaned.filter((x2) => BLOG_CATEGORY_OPTIONS.includes(x2));
+  const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
+  return cleaned.filter((x) => BLOG_CATEGORY_OPTIONS.includes(x));
 }
 __name(normalizeCategories, "normalizeCategories");
 function toR2Url3(url) {
@@ -13781,7 +13781,7 @@ function collectRoles13(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -14761,7 +14761,7 @@ function collectRoles14(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -15068,7 +15068,7 @@ function collectRoles15(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -18744,8 +18744,8 @@ function collectRoles16(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
-    else out.push(String(x).toLowerCase().trim());
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
 }
@@ -19586,8 +19586,9 @@ __name(fetchListingProducts, "fetchListingProducts");
 async function onRequest12(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
+  const prefixPath = path.endsWith("/") ? path : `${path}/`;
   for (const prefix of SKIP_PREFIXES) {
-    if (path.startsWith(prefix)) return context.next();
+    if (prefixPath.startsWith(prefix)) return context.next();
   }
   for (const ext of SKIP_EXTENSIONS) {
     if (path.endsWith(ext)) return context.next();
@@ -19719,7 +19720,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-tP7yab/functionsRoutes-0.3182015797150334.mjs
+// ../.wrangler/tmp/pages-JmKF8K/functionsRoutes-0.8689313360268893.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -20016,8 +20017,8 @@ function regexpToFunction(re, keys, options) {
   if (options === void 0) {
     options = {};
   }
-  var _a = options.decode, decode = _a === void 0 ? function(x2) {
-    return x2;
+  var _a = options.decode, decode = _a === void 0 ? function(x) {
+    return x;
   } : _a;
   return function(pathname) {
     var m = re.exec(pathname);
@@ -20087,8 +20088,8 @@ function tokensToRegexp(tokens, keys, options) {
   if (options === void 0) {
     options = {};
   }
-  var _a = options.strict, strict = _a === void 0 ? false : _a, _b = options.start, start = _b === void 0 ? true : _b, _c = options.end, end = _c === void 0 ? true : _c, _d = options.encode, encode = _d === void 0 ? function(x2) {
-    return x2;
+  var _a = options.strict, strict = _a === void 0 ? false : _a, _b = options.start, start = _b === void 0 ? true : _b, _c = options.end, end = _c === void 0 ? true : _c, _d = options.encode, encode = _d === void 0 ? function(x) {
+    return x;
   } : _d, _e = options.delimiter, delimiter = _e === void 0 ? "/#?" : _e, _f = options.endsWith, endsWith = _f === void 0 ? "" : _f;
   var endsWithRe = "[".concat(escapeString(endsWith), "]|$");
   var delimiterRe = "[".concat(escapeString(delimiter), "]");
