@@ -65,6 +65,20 @@ export const onRequest: PagesFunction<{
   const hasPrice = !!((priceThb && priceThb > 0) || (priceUsd && priceUsd > 0));
   const isCheckoutReady = !isExpired && hasPrice;
 
+  // Host-aware CSP: production quote pages allow ONLY Clerk Production domains
+  // (fail-closed); dev/preview pages allow the Development instance.
+  const clerkOrigins = (function (requestUrl: string): string {
+    try {
+      const h = new URL(requestUrl).hostname.toLowerCase();
+      if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+        return "https://kind-joey-29.clerk.accounts.dev";
+      }
+    } catch {}
+    return "https://clerk.mildmate.com https://accounts.mildmate.com";
+  })(request.url);
+
+  const securityCsp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net " + clerkOrigins + " https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th " + clerkOrigins + " https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com " + clerkOrigins + " https://challenges.cloudflare.com; upgrade-insecure-requests;";
+
   function esc(s: string) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -309,9 +323,41 @@ export const onRequest: PagesFunction<{
 
     function sendGa4Event(name, params) {
       try {
+        var payload = params || {};
+        if (typeof window.__mildmateTrackEvent === 'function') {
+          window.__mildmateTrackEvent(name, payload);
+          return;
+        }
         ensureGa4Stub();
-        window.gtag('event', name, params || {});
+        window.gtag('event', name, payload);
       } catch (e) {}
+    }
+
+    function sendGa4EventTokenized(name, params, tokenField, rawToken) {
+      var payload = params || {};
+      payload[tokenField] = '';
+      var attempted = false;
+      function emit(tokenHash) {
+        if (attempted) return;
+        attempted = true;
+        payload[tokenField] = tokenHash;
+        sendGa4Event(name, payload);
+      }
+      try {
+        if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+          crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+            var hex = '';
+            var bytes = new Uint8Array(buf);
+            for (var i = 0; i < 16 && i < bytes.length; i++) {
+              hex += ('0' + bytes[i].toString(16)).slice(-2);
+            }
+            emit(hex || 'token-unavailable');
+          }).catch(function () { emit('token-unavailable'); });
+          setTimeout(function () { emit('token-unavailable'); }, 800);
+          return;
+        }
+      } catch (e) {}
+      emit('token-unavailable');
     }
 
     function trackViewQuote(meta) {
@@ -321,12 +367,12 @@ export const onRequest: PagesFunction<{
         if (sessionStorage.getItem(dedupeKey) === '1') return;
       } catch (e) {}
       var payload = {
-        quote_id: meta.quote_id,
+        quote_id: '',
         product_name: meta.product_name || 'Custom Product',
         currency: meta.currency || 'USD',
         value: Math.round((Number(meta.value || 0) || 0) * 100) / 100
       };
-      sendGa4Event('view_quote', payload);
+      sendGa4EventTokenized('view_quote', payload, 'quote_id', meta.quote_id);
       try {
         sessionStorage.setItem(dedupeKey, '1');
       } catch (e2) {}
@@ -339,7 +385,7 @@ export const onRequest: PagesFunction<{
         ? Number(item.price_thb || 0)
         : Number(item.price_usd || 0);
       var payload = {
-        quote_id: String(item.quote_id),
+        quote_id: '',
         currency: currency,
         value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
         items: [{
@@ -349,7 +395,7 @@ export const onRequest: PagesFunction<{
           quantity: Number(item.qty || 1) || 1
         }]
       };
-      sendGa4Event('add_to_cart', payload);
+      sendGa4EventTokenized('add_to_cart', payload, 'quote_id', item.quote_id);
     }
 
     var _quoteCartItem = null;
@@ -434,6 +480,7 @@ export const onRequest: PagesFunction<{
     headers: {
       "Content-Type": "text/html;charset=utf-8",
       "Cache-Control": "no-cache",
+      "Content-Security-Policy": securityCsp,
     },
   });
 };

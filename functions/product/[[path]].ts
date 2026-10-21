@@ -50,7 +50,34 @@ const NICHE_DISPLAY: Record<string, string> = {
   'rv-truck': 'RV & Truck Cab'
 };
 
-const SECURITY_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
+const MISSING_ECOMMERCE_PRODUCER_SLUGS = new Set([
+  'bedbridge-connector',
+  'duvet-insert',
+  'mattress-lift-helper',
+  'marine-fitted-sheet',
+  'marine-top-sheet',
+  'marine-mattress-protector'
+]);
+
+// Clerk CSP origins are host-aware: production pages allow ONLY the Clerk
+// Production custom domains (fail-closed — the Development instance is never
+// permitted on www.mildmate.com); dev/preview pages allow the Development
+// instance so local/preview rehearsals keep working.
+function clerkCspOrigins(requestUrl: string): string {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+      return "https://kind-joey-29.clerk.accounts.dev";
+    }
+  } catch {}
+  return "https://clerk.mildmate.com https://accounts.mildmate.com";
+}
+
+const SECURITY_CSP_TEMPLATE = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; upgrade-insecure-requests;";
+
+function securityCsp(requestUrl: string): string {
+  return SECURITY_CSP_TEMPLATE.split("__CLERK_CSP_ORIGINS__").join(clerkCspOrigins(requestUrl));
+}
 
 function hasToken(slug: string, token: string): boolean {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
@@ -357,6 +384,186 @@ function applyFlatSheetExtraDeepPocketGuardrails(html: string, isTh: boolean): s
     .replace(/Full-perimeter elastic\.?/gi, 'Loose non-elastic top sheet');
 }
 
+function injectMissingEcommerceTracking(html: string, slug: string, productName: string, fallbackPriceUsd: number): string {
+  if (!MISSING_ECOMMERCE_PRODUCER_SLUGS.has(slug)) return html;
+  if (html.includes('id="mm-fixed-ga4-ecommerce"')) return html;
+
+  const trackerMeta = JSON.stringify({
+    slug,
+    name: String(productName || ''),
+    fallbackPriceUsd: Number(fallbackPriceUsd || 0)
+  });
+
+  const trackerScript = `<script id="mm-fixed-ga4-ecommerce">
+    (function () {
+      var meta = ${trackerMeta};
+      var ga4ViewSent = false;
+      var lastSig = '';
+      var lastSigAt = 0;
+
+      function toNum(v) {
+        var n = Number(v);
+        return isFinite(n) ? n : 0;
+      }
+
+      function round2(v) {
+        return Math.round(toNum(v) * 100) / 100;
+      }
+
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params) {
+        try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
+          ensureGa4Stub();
+          window.gtag('event', name, payload);
+        } catch (e) {}
+      }
+
+      function detectCurrencyFromText(text) {
+        var t = String(text || '');
+        if (/฿|THB/i.test(t)) return 'THB';
+        if (/\\$|USD/i.test(t)) return 'USD';
+        return '';
+      }
+
+      function parsePriceFromText(text) {
+        var n = String(text || '').replace(/[^0-9.]/g, '');
+        if (!n) return 0;
+        return round2(Number(n));
+      }
+
+      function resolveCurrency(item) {
+        if (item && String(item.quote_currency || '').toUpperCase() === 'THB') return 'THB';
+        if (item && String(item.currency || '').toUpperCase() === 'THB') return 'THB';
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var currencyFromText = detectCurrencyFromText(priceEl ? priceEl.textContent : '');
+        if (currencyFromText) return currencyFromText;
+        return 'USD';
+      }
+
+      function resolveUnitPrice(item, currency) {
+        if (item) {
+          if (currency === 'THB') {
+            var thb = toNum(item.price_thb || item.priceThb || item.price);
+            if (thb > 0) return round2(thb);
+          }
+          var usd = toNum(item.price_usd || item.priceUsd || item.price);
+          if (usd > 0) return round2(usd);
+        }
+
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var parsed = parsePriceFromText(priceEl ? priceEl.textContent : '');
+        if (parsed > 0) return round2(parsed);
+        return round2(meta.fallbackPriceUsd || 0);
+      }
+
+      function buildGa4Item(item, currency, unitPrice) {
+        var qty = toNum(item && item.qty) || 1;
+        return {
+          item_id: String((item && (item.product_slug || item.slug)) || meta.slug || ''),
+          item_name: String((item && (item.product_name || item.name || item.title)) || meta.name || meta.slug || ''),
+          price: round2(unitPrice),
+          quantity: qty
+        };
+      }
+
+      function shouldSkip(sig) {
+        var now = Date.now();
+        if (sig && sig === lastSig && (now - lastSigAt) < 1200) return true;
+        lastSig = sig;
+        lastSigAt = now;
+        return false;
+      }
+
+      function trackViewItemOnce() {
+        if (ga4ViewSent) return;
+        var currency = resolveCurrency(null);
+        var unitPrice = resolveUnitPrice(null, currency);
+        var payload = {
+          currency: currency,
+          value: round2(unitPrice),
+          items: [buildGa4Item(null, currency, unitPrice)]
+        };
+        sendGa4Event('view_item', payload);
+        ga4ViewSent = true;
+      }
+
+      function trackAddToCart(item) {
+        var currency = resolveCurrency(item || null);
+        var unitPrice = resolveUnitPrice(item || null, currency);
+        var gaItem = buildGa4Item(item || null, currency, unitPrice);
+        var value = round2(unitPrice * (toNum(gaItem.quantity) || 1));
+        var sig = [gaItem.item_id, gaItem.item_name, currency, value, gaItem.quantity].join('|');
+        if (shouldSkip(sig)) return;
+        sendGa4Event('add_to_cart', {
+          currency: currency,
+          value: value,
+          items: [gaItem]
+        });
+      }
+
+      function wrapGlobalAddToCart() {
+        if (typeof window.addToCart !== 'function') return false;
+        if (window.addToCart.__mildmateGa4Wrapped) return true;
+        var original = window.addToCart;
+        var wrapped = function () {
+          var argItem = arguments.length ? arguments[0] : null;
+          var result = original.apply(this, arguments);
+          trackAddToCart(argItem);
+          return result;
+        };
+        wrapped.__mildmateGa4Wrapped = true;
+        wrapped.__mildmateGa4Original = original;
+        window.addToCart = wrapped;
+        return true;
+      }
+
+      function wrapCartAdd() {
+        if (!window.MildMateCart || typeof window.MildMateCart.add !== 'function') return false;
+        if (window.MildMateCart.__mildmateGa4Wrapped) return true;
+        var originalAdd = window.MildMateCart.add;
+        window.MildMateCart.add = function (item) {
+          var result = originalAdd.apply(this, arguments);
+          trackAddToCart(item);
+          return result;
+        };
+        window.MildMateCart.__mildmateGa4Wrapped = true;
+        return true;
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', trackViewItemOnce, { once: true });
+      } else {
+        trackViewItemOnce();
+      }
+      setTimeout(trackViewItemOnce, 800);
+
+      wrapGlobalAddToCart();
+      wrapCartAdd();
+      var attempts = 0;
+      var timer = setInterval(function () {
+        var wrapped = wrapGlobalAddToCart() && wrapCartAdd();
+        attempts += 1;
+        if (wrapped || attempts > 80) clearInterval(timer);
+      }, 120);
+    })();
+  </script>`;
+
+  return html.replace(/<\/body>/i, `${trackerScript}\n</body>`);
+}
+
 export async function onRequest(context: any): Promise<Response> {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -460,6 +667,9 @@ export async function onRequest(context: any): Promise<Response> {
         `$1${title}$2`
       );
     }
+
+    const effectiveTitle = title || String(product?.title_en || slug.replace(/-/g, ' '));
+    html = injectMissingEcommerceTracking(html, slug, effectiveTitle, Number(product?.base_price_usd || 0));
 
     // For TH pages, also swap the breadcrumb category link text to its TH
     // counterpart. The EN static templates ship EN labels (e.g. "Fitted Sheets",
@@ -633,7 +843,7 @@ export async function onRequest(context: any): Promise<Response> {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=60',
-        'Content-Security-Policy': SECURITY_CSP,
+        'Content-Security-Policy': securityCsp(request.url),
       },
     });
   } catch (err) {
