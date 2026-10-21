@@ -239,7 +239,7 @@ async function finishSyncRun(env, runId, data) {
   ).run();
 }
 __name(finishSyncRun, "finishSyncRun");
-async function requireBearerAuth(request, env) {
+async function requireBearerAuth(request2, env) {
   const configured = trimTo(env[SALES_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -249,7 +249,7 @@ async function requireBearerAuth(request, env) {
       message: `${SALES_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request.headers.get("Authorization") || "";
+  const auth = request2.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -381,8 +381,8 @@ function compareItem(existing, incoming) {
   return same(existing.item_no, incoming.item_no) && same(existing.product_id, incoming.product_id) && same(existing.quantity, incoming.quantity) && same(existing.raw_item_text, incoming.raw_item_text) && same(existing.line_revenue, incoming.line_revenue) && same(existing.revenue_status, incoming.revenue_status) && same(existing.mapping_status, incoming.mapping_status) && parseItemStatus(existing.item_status) === parseItemStatus(incoming.item_status);
 }
 __name(compareItem, "compareItem");
-async function handleUpsert(request, env) {
-  const auth = await requireBearerAuth(request, env);
+async function handleUpsert(request2, env) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({
       success: false,
@@ -393,7 +393,7 @@ async function handleUpsert(request, env) {
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response({
       success: false,
@@ -627,8 +627,8 @@ async function handleUpsert(request, env) {
   }
 }
 __name(handleUpsert, "handleUpsert");
-async function handleReadOrder(request, env, sourcePart, orderPart) {
-  const auth = await requireBearerAuth(request, env);
+async function handleReadOrder(request2, env, sourcePart, orderPart) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({
       success: false,
@@ -692,8 +692,8 @@ function parseProductIdsJson(raw) {
   }
 }
 __name(parseProductIdsJson, "parseProductIdsJson");
-async function handleMappingCatalog(request, env) {
-  const auth = await requireBearerAuth(request, env);
+async function handleMappingCatalog(request2, env) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
@@ -719,14 +719,14 @@ async function recordAliasHit(env, aliasId) {
   ).bind((/* @__PURE__ */ new Date()).toISOString(), aliasId).run();
 }
 __name(recordAliasHit, "recordAliasHit");
-async function handleMappingResolve(request, env) {
-  const auth = await requireBearerAuth(request, env);
+async function handleMappingResolve(request2, env) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -808,14 +808,14 @@ async function handleMappingResolve(request, env) {
   });
 }
 __name(handleMappingResolve, "handleMappingResolve");
-async function handleMappingAliasUpsert(request, env) {
-  const auth = await requireBearerAuth(request, env);
+async function handleMappingAliasUpsert(request2, env) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -872,8 +872,8 @@ async function handleMappingAliasUpsert(request, env) {
   return response({ success: true, action: "created", alias_id: Number(ins.meta?.last_row_id || 0), product_ids: productIds });
 }
 __name(handleMappingAliasUpsert, "handleMappingAliasUpsert");
-async function handleMappingAliasList(request, env) {
-  const auth = await requireBearerAuth(request, env);
+async function handleMappingAliasList(request2, env) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
@@ -889,14 +889,14 @@ async function handleMappingAliasList(request, env) {
 __name(handleMappingAliasList, "handleMappingAliasList");
 var ALLOWED_MAPPING_METHOD = /* @__PURE__ */ new Set(["EXACT_VARIATION", "EXACT_ALIAS", "LISTING_VARIATION", "RULE", "AI", "HUMAN"]);
 var ALLOWED_RESULT_STATUS = /* @__PURE__ */ new Set(["Mapped", "Partial", "Review Required", "Unmapped"]);
-async function handleMappingEventInsert(request, env) {
-  const auth = await requireBearerAuth(request, env);
+async function handleMappingEventInsert(request2, env) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -936,8 +936,8 @@ async function handleMappingEventInsert(request, env) {
   return response({ success: true, action: "created", event_id: Number(ins.meta?.last_row_id || 0) });
 }
 __name(handleMappingEventInsert, "handleMappingEventInsert");
-async function handleMappingEventList(request, env, url) {
-  const auth = await requireBearerAuth(request, env);
+async function handleMappingEventList(request2, env, url) {
+  const auth = await requireBearerAuth(request2, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
@@ -952,10 +952,10 @@ async function handleMappingEventList(request, env, url) {
   return response({ success: true, count: (rows.results || []).length, events: rows.results || [] });
 }
 __name(handleMappingEventList, "handleMappingEventList");
-async function handleSalesApi(request, env) {
-  const url = new URL(request.url);
+async function handleSalesApi(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request.method.toUpperCase();
+  const method = request2.method.toUpperCase();
   if (!path.startsWith("/v1") && !path.startsWith("/api/v1")) {
     return null;
   }
@@ -965,21 +965,21 @@ async function handleSalesApi(request, env) {
     return response({ ok: true, service: SALES_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/sales/orders/upsert" || path === "/api/v1/sales/orders/upsert")) {
-    return handleUpsert(request, env);
+    return handleUpsert(request2, env);
   }
   const readMatch = path.match(/^\/(?:api\/)?v1\/sales\/orders\/([^\/]+)\/([^\/]+)$/i);
   if (method === "GET" && readMatch) {
-    return handleReadOrder(request, env, readMatch[1], readMatch[2]);
+    return handleReadOrder(request2, env, readMatch[1], readMatch[2]);
   }
   const mappingMatch = path.match(/^\/(?:api\/)?v1\/mapping\/(catalog|resolve|aliases|events)$/i);
   if (mappingMatch) {
     const sub = mappingMatch[1].toLowerCase();
-    if (sub === "catalog" && method === "GET") return handleMappingCatalog(request, env);
-    if (sub === "resolve" && method === "POST") return handleMappingResolve(request, env);
-    if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request, env);
-    if (sub === "aliases" && method === "GET") return handleMappingAliasList(request, env);
-    if (sub === "events" && method === "POST") return handleMappingEventInsert(request, env);
-    if (sub === "events" && method === "GET") return handleMappingEventList(request, env, url);
+    if (sub === "catalog" && method === "GET") return handleMappingCatalog(request2, env);
+    if (sub === "resolve" && method === "POST") return handleMappingResolve(request2, env);
+    if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request2, env);
+    if (sub === "aliases" && method === "GET") return handleMappingAliasList(request2, env);
+    if (sub === "events" && method === "POST") return handleMappingEventInsert(request2, env);
+    if (sub === "events" && method === "GET") return handleMappingEventList(request2, env, url);
   }
   return response({ error: "Sales route not found" }, 404);
 }
@@ -1106,21 +1106,21 @@ function extractProductSlug(pagePath) {
 }
 __name(extractProductSlug, "extractProductSlug");
 function sameNullable(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : a;
+  const x2 = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x === null && y === null) return true;
-  return String(x) === String(y);
+  if (x2 === null && y === null) return true;
+  return String(x2) === String(y);
 }
 __name(sameNullable, "sameNullable");
 function sameNullableNum(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x === null && y === null) return true;
-  if (x === null || y === null) return false;
-  return Math.abs(x - y) < 1e-6;
+  if (x2 === null && y === null) return true;
+  if (x2 === null || y === null) return false;
+  return Math.abs(x2 - y) < 1e-6;
 }
 __name(sameNullableNum, "sameNullableNum");
-async function requireBearerAuth2(request, env) {
+async function requireBearerAuth2(request2, env) {
   const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -1130,7 +1130,7 @@ async function requireBearerAuth2(request, env) {
       message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request.headers.get("Authorization") || "";
+  const auth = request2.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -1183,12 +1183,12 @@ async function resolveProductIdBySlug(env, slug, cache) {
   return id;
 }
 __name(resolveProductIdBySlug, "resolveProductIdBySlug");
-async function handleRowsUpsert(request, env) {
-  const auth = await requireBearerAuth2(request, env);
+async function handleRowsUpsert(request2, env) {
+  const auth = await requireBearerAuth2(request2, env);
   if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -1345,17 +1345,17 @@ async function handleRowsUpsert(request, env) {
   }
 }
 __name(handleRowsUpsert, "handleRowsUpsert");
-async function handleGscApi(request, env) {
-  const url = new URL(request.url);
+async function handleGscApi(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request.method.toUpperCase();
+  const method = request2.method.toUpperCase();
   if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
   if (method === "OPTIONS") return response2({ ok: true });
   if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
     return response2({ ok: true, service: GSC_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
-    return handleRowsUpsert(request, env);
+    return handleRowsUpsert(request2, env);
   }
   return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
 }
@@ -1462,7 +1462,7 @@ function parseProductIdsJson2(raw) {
   try {
     const v = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!Array.isArray(v)) return [];
-    return v.map((x) => Number(x)).filter((x) => Number.isInteger(x) && x > 0);
+    return v.map((x2) => Number(x2)).filter((x2) => Number.isInteger(x2) && x2 > 0);
   } catch {
     return [];
   }
@@ -1499,21 +1499,21 @@ async function resolveEtsyListingProduct(env, listingId, cache) {
 }
 __name(resolveEtsyListingProduct, "resolveEtsyListingProduct");
 function sameNullable2(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : a;
+  const x2 = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x === null && y === null) return true;
-  return String(x) === String(y);
+  if (x2 === null && y === null) return true;
+  return String(x2) === String(y);
 }
 __name(sameNullable2, "sameNullable");
 function sameNullableNum2(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x === null && y === null) return true;
-  if (x === null || y === null) return false;
-  return Math.abs(x - y) < 1e-6;
+  if (x2 === null && y === null) return true;
+  if (x2 === null || y === null) return false;
+  return Math.abs(x2 - y) < 1e-6;
 }
 __name(sameNullableNum2, "sameNullableNum");
-async function requireBearerAuth3(request, env) {
+async function requireBearerAuth3(request2, env) {
   const configured = trimTo3(env[GA4_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -1523,7 +1523,7 @@ async function requireBearerAuth3(request, env) {
       message: `${GA4_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request.headers.get("Authorization") || "";
+  const auth = request2.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -1574,12 +1574,12 @@ async function resolveProductIdBySlug2(env, slug, cache) {
   return id;
 }
 __name(resolveProductIdBySlug2, "resolveProductIdBySlug");
-async function handleRowsUpsert2(request, env) {
-  const auth = await requireBearerAuth3(request, env);
+async function handleRowsUpsert2(request2, env) {
+  const auth = await requireBearerAuth3(request2, env);
   if (!auth.ok) return response3({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response3({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -1784,17 +1784,17 @@ async function handleRowsUpsert2(request, env) {
   }
 }
 __name(handleRowsUpsert2, "handleRowsUpsert");
-async function handleGa4Api(request, env) {
-  const url = new URL(request.url);
+async function handleGa4Api(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request.method.toUpperCase();
+  const method = request2.method.toUpperCase();
   if (!path.startsWith("/v1/ga4") && !path.startsWith("/api/v1/ga4")) return null;
   if (method === "OPTIONS") return response3({ ok: true });
   if (method === "GET" && (path === "/v1/ga4/health" || path === "/api/v1/ga4/health")) {
     return response3({ ok: true, service: GA4_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/ga4/rows/upsert" || path === "/api/v1/ga4/rows/upsert")) {
-    return handleRowsUpsert2(request, env);
+    return handleRowsUpsert2(request2, env);
   }
   return response3({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GA4 route not found." }, 404);
 }
@@ -1880,21 +1880,21 @@ function parseProductIdsJson3(raw) {
 }
 __name(parseProductIdsJson3, "parseProductIdsJson");
 function sameNullable3(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : a;
+  const x2 = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x === null && y === null) return true;
-  return String(x) === String(y);
+  if (x2 === null && y === null) return true;
+  return String(x2) === String(y);
 }
 __name(sameNullable3, "sameNullable");
 function sameNullableNum3(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x === null && y === null) return true;
-  if (x === null || y === null) return false;
-  return Math.abs(x - y) < 1e-6;
+  if (x2 === null && y === null) return true;
+  if (x2 === null || y === null) return false;
+  return Math.abs(x2 - y) < 1e-6;
 }
 __name(sameNullableNum3, "sameNullableNum");
-async function requireBearerAuth4(request, env) {
+async function requireBearerAuth4(request2, env) {
   const configured = trimTo4(env[ETSY_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -1904,7 +1904,7 @@ async function requireBearerAuth4(request, env) {
       message: `${ETSY_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request.headers.get("Authorization") || "";
+  const auth = request2.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -1976,12 +1976,12 @@ async function resolveListingAliasProduct(env, listingId) {
   return { productId: null, mappingScope: "unmapped" };
 }
 __name(resolveListingAliasProduct, "resolveListingAliasProduct");
-async function handleRowsUpsert3(request, env) {
-  const auth = await requireBearerAuth4(request, env);
+async function handleRowsUpsert3(request2, env) {
+  const auth = await requireBearerAuth4(request2, env);
   if (!auth.ok) return response4({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response4({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -2252,17 +2252,17 @@ async function handleRowsUpsert3(request, env) {
   }
 }
 __name(handleRowsUpsert3, "handleRowsUpsert");
-async function handleEtsyApi(request, env) {
-  const url = new URL(request.url);
+async function handleEtsyApi(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request.method.toUpperCase();
+  const method = request2.method.toUpperCase();
   if (!path.startsWith("/v1/etsy") && !path.startsWith("/api/v1/etsy")) return null;
   if (method === "OPTIONS") return response4({ ok: true });
   if (method === "GET" && (path === "/v1/etsy/health" || path === "/api/v1/etsy/health")) {
     return response4({ ok: true, service: ETSY_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/etsy/rows/upsert" || path === "/api/v1/etsy/rows/upsert")) {
-    return handleRowsUpsert3(request, env);
+    return handleRowsUpsert3(request2, env);
   }
   return response4({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Etsy route not found." }, 404);
 }
@@ -2347,21 +2347,21 @@ function parseProductIdsJson4(raw) {
 }
 __name(parseProductIdsJson4, "parseProductIdsJson");
 function sameNullable4(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : a;
+  const x2 = a === void 0 || a === null || a === "" ? null : a;
   const y = b === void 0 || b === null || b === "" ? null : b;
-  if (x === null && y === null) return true;
-  return String(x) === String(y);
+  if (x2 === null && y === null) return true;
+  return String(x2) === String(y);
 }
 __name(sameNullable4, "sameNullable");
 function sameNullableNum4(a, b) {
-  const x = a === void 0 || a === null || a === "" ? null : Number(a);
+  const x2 = a === void 0 || a === null || a === "" ? null : Number(a);
   const y = b === void 0 || b === null || b === "" ? null : Number(b);
-  if (x === null && y === null) return true;
-  if (x === null || y === null) return false;
-  return Math.abs(x - y) < 1e-6;
+  if (x2 === null && y === null) return true;
+  if (x2 === null || y === null) return false;
+  return Math.abs(x2 - y) < 1e-6;
 }
 __name(sameNullableNum4, "sameNullableNum");
-async function requireBearerAuth5(request, env) {
+async function requireBearerAuth5(request2, env) {
   const configured = trimTo5(env[GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -2371,7 +2371,7 @@ async function requireBearerAuth5(request, env) {
       message: `${GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request.headers.get("Authorization") || "";
+  const auth = request2.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -2448,12 +2448,12 @@ async function resolveAliasProduct(env, value) {
   return { productId: null, mappingScope: "unmapped" };
 }
 __name(resolveAliasProduct, "resolveAliasProduct");
-async function handleRowsUpsert4(request, env) {
-  const auth = await requireBearerAuth5(request, env);
+async function handleRowsUpsert4(request2, env) {
+  const auth = await requireBearerAuth5(request2, env);
   if (!auth.ok) return response5({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return response5({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -2675,17 +2675,17 @@ async function handleRowsUpsert4(request, env) {
   }
 }
 __name(handleRowsUpsert4, "handleRowsUpsert");
-async function handleGoogleAdsApi(request, env) {
-  const url = new URL(request.url);
+async function handleGoogleAdsApi(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request.method.toUpperCase();
+  const method = request2.method.toUpperCase();
   if (!path.startsWith("/v1/google-ads") && !path.startsWith("/api/v1/google-ads")) return null;
   if (method === "OPTIONS") return response5({ ok: true });
   if (method === "GET" && (path === "/v1/google-ads/health" || path === "/api/v1/google-ads/health")) {
     return response5({ ok: true, service: GOOGLE_ADS_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/google-ads/rows/upsert" || path === "/api/v1/google-ads/rows/upsert")) {
-    return handleRowsUpsert4(request, env);
+    return handleRowsUpsert4(request2, env);
   }
   return response5({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Google Ads route not found." }, 404);
 }
@@ -2764,7 +2764,7 @@ async function buildBlogListingHTML(env, page = 1, lang = "en", categoryFilter =
       try {
         const arr = JSON.parse(raw || "[]");
         if (!Array.isArray(arr)) return [];
-        return arr.map((x) => String(x || "").trim()).filter(Boolean);
+        return arr.map((x2) => String(x2 || "").trim()).filter(Boolean);
       } catch {
         return [];
       }
@@ -3100,8 +3100,8 @@ __name(buildBlogPostHTML, "buildBlogPostHTML");
 
 // th/blogs/[[path]].ts
 async function onRequest2(context) {
-  const { request, env, next } = context;
-  const url = new URL(request.url);
+  const { request: request2, env, next } = context;
+  const url = new URL(request2.url);
   const path = url.pathname;
   if (path === "/th/blogs/" || path === "/th/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -3190,7 +3190,30 @@ var NICHE_DISPLAY = {
   "boarding-dorm": "Boarding Dorm",
   "rv-truck": "RV & Truck Cab"
 };
-var SECURITY_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
+var MISSING_ECOMMERCE_PRODUCER_SLUGS = /* @__PURE__ */ new Set([
+  "bedbridge-connector",
+  "duvet-insert",
+  "mattress-lift-helper",
+  "marine-fitted-sheet",
+  "marine-top-sheet",
+  "marine-mattress-protector"
+]);
+function clerkCspOrigins(requestUrl) {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+      return "https://kind-joey-29.clerk.accounts.dev";
+    }
+  } catch {
+  }
+  return "https://clerk.mildmate.com https://accounts.mildmate.com";
+}
+__name(clerkCspOrigins, "clerkCspOrigins");
+var SECURITY_CSP_TEMPLATE = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com __CLERK_CSP_ORIGINS__ https://challenges.cloudflare.com; upgrade-insecure-requests;";
+function securityCsp(requestUrl) {
+  return SECURITY_CSP_TEMPLATE.split("__CLERK_CSP_ORIGINS__").join(clerkCspOrigins(requestUrl));
+}
+__name(securityCsp, "securityCsp");
 function hasToken(slug, token) {
   return new RegExp(`(^|[-/])${token}($|[-/])`).test(slug);
 }
@@ -3403,6 +3426,184 @@ function applyFlatSheetExtraDeepPocketGuardrails(html, isTh) {
   ).replace(/Full-perimeter elastic\.?/gi, "Loose non-elastic top sheet");
 }
 __name(applyFlatSheetExtraDeepPocketGuardrails, "applyFlatSheetExtraDeepPocketGuardrails");
+function injectMissingEcommerceTracking(html, slug, productName, fallbackPriceUsd) {
+  if (!MISSING_ECOMMERCE_PRODUCER_SLUGS.has(slug)) return html;
+  if (html.includes('id="mm-fixed-ga4-ecommerce"')) return html;
+  const trackerMeta = JSON.stringify({
+    slug,
+    name: String(productName || ""),
+    fallbackPriceUsd: Number(fallbackPriceUsd || 0)
+  });
+  const trackerScript = `<script id="mm-fixed-ga4-ecommerce">
+    (function () {
+      var meta = ${trackerMeta};
+      var ga4ViewSent = false;
+      var lastSig = '';
+      var lastSigAt = 0;
+
+      function toNum(v) {
+        var n = Number(v);
+        return isFinite(n) ? n : 0;
+      }
+
+      function round2(v) {
+        return Math.round(toNum(v) * 100) / 100;
+      }
+
+      function ensureGa4Stub() {
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== 'function') {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+      }
+
+      function sendGa4Event(name, params) {
+        try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
+          ensureGa4Stub();
+          window.gtag('event', name, payload);
+        } catch (e) {}
+      }
+
+      function detectCurrencyFromText(text) {
+        var t = String(text || '');
+        if (/\u0E3F|THB/i.test(t)) return 'THB';
+        if (/\\$|USD/i.test(t)) return 'USD';
+        return '';
+      }
+
+      function parsePriceFromText(text) {
+        var n = String(text || '').replace(/[^0-9.]/g, '');
+        if (!n) return 0;
+        return round2(Number(n));
+      }
+
+      function resolveCurrency(item) {
+        if (item && String(item.quote_currency || '').toUpperCase() === 'THB') return 'THB';
+        if (item && String(item.currency || '').toUpperCase() === 'THB') return 'THB';
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var currencyFromText = detectCurrencyFromText(priceEl ? priceEl.textContent : '');
+        if (currencyFromText) return currencyFromText;
+        return 'USD';
+      }
+
+      function resolveUnitPrice(item, currency) {
+        if (item) {
+          if (currency === 'THB') {
+            var thb = toNum(item.price_thb || item.priceThb || item.price);
+            if (thb > 0) return round2(thb);
+          }
+          var usd = toNum(item.price_usd || item.priceUsd || item.price);
+          if (usd > 0) return round2(usd);
+        }
+
+        var priceEl = document.getElementById('price-display') || document.getElementById('custom-price') || document.getElementById('price-display-top');
+        var parsed = parsePriceFromText(priceEl ? priceEl.textContent : '');
+        if (parsed > 0) return round2(parsed);
+        return round2(meta.fallbackPriceUsd || 0);
+      }
+
+      function buildGa4Item(item, currency, unitPrice) {
+        var qty = toNum(item && item.qty) || 1;
+        return {
+          item_id: String((item && (item.product_slug || item.slug)) || meta.slug || ''),
+          item_name: String((item && (item.product_name || item.name || item.title)) || meta.name || meta.slug || ''),
+          price: round2(unitPrice),
+          quantity: qty
+        };
+      }
+
+      function shouldSkip(sig) {
+        var now = Date.now();
+        if (sig && sig === lastSig && (now - lastSigAt) < 1200) return true;
+        lastSig = sig;
+        lastSigAt = now;
+        return false;
+      }
+
+      function trackViewItemOnce() {
+        if (ga4ViewSent) return;
+        var currency = resolveCurrency(null);
+        var unitPrice = resolveUnitPrice(null, currency);
+        var payload = {
+          currency: currency,
+          value: round2(unitPrice),
+          items: [buildGa4Item(null, currency, unitPrice)]
+        };
+        sendGa4Event('view_item', payload);
+        ga4ViewSent = true;
+      }
+
+      function trackAddToCart(item) {
+        var currency = resolveCurrency(item || null);
+        var unitPrice = resolveUnitPrice(item || null, currency);
+        var gaItem = buildGa4Item(item || null, currency, unitPrice);
+        var value = round2(unitPrice * (toNum(gaItem.quantity) || 1));
+        var sig = [gaItem.item_id, gaItem.item_name, currency, value, gaItem.quantity].join('|');
+        if (shouldSkip(sig)) return;
+        sendGa4Event('add_to_cart', {
+          currency: currency,
+          value: value,
+          items: [gaItem]
+        });
+      }
+
+      function wrapGlobalAddToCart() {
+        if (typeof window.addToCart !== 'function') return false;
+        if (window.addToCart.__mildmateGa4Wrapped) return true;
+        var original = window.addToCart;
+        var wrapped = function () {
+          var argItem = arguments.length ? arguments[0] : null;
+          var result = original.apply(this, arguments);
+          trackAddToCart(argItem);
+          return result;
+        };
+        wrapped.__mildmateGa4Wrapped = true;
+        wrapped.__mildmateGa4Original = original;
+        window.addToCart = wrapped;
+        return true;
+      }
+
+      function wrapCartAdd() {
+        if (!window.MildMateCart || typeof window.MildMateCart.add !== 'function') return false;
+        if (window.MildMateCart.__mildmateGa4Wrapped) return true;
+        var originalAdd = window.MildMateCart.add;
+        window.MildMateCart.add = function (item) {
+          var result = originalAdd.apply(this, arguments);
+          trackAddToCart(item);
+          return result;
+        };
+        window.MildMateCart.__mildmateGa4Wrapped = true;
+        return true;
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', trackViewItemOnce, { once: true });
+      } else {
+        trackViewItemOnce();
+      }
+      setTimeout(trackViewItemOnce, 800);
+
+      wrapGlobalAddToCart();
+      wrapCartAdd();
+      var attempts = 0;
+      var timer = setInterval(function () {
+        var wrapped = wrapGlobalAddToCart() && wrapCartAdd();
+        attempts += 1;
+        if (wrapped || attempts > 80) clearInterval(timer);
+      }, 120);
+    })();
+  <\/script>`;
+  return html.replace(/<\/body>/i, `${trackerScript}
+</body>`);
+}
+__name(injectMissingEcommerceTracking, "injectMissingEcommerceTracking");
 async function onRequest3(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
@@ -3479,6 +3680,8 @@ async function onRequest3(context) {
         `$1${title}$2`
       );
     }
+    const effectiveTitle = title || String(product?.title_en || slug.replace(/-/g, " "));
+    html = injectMissingEcommerceTracking(html, slug, effectiveTitle, Number(product?.base_price_usd || 0));
     if (isTh) {
       html = html.replace(
         /<nav class="product-breadcrumb"[\s\S]*?<\/nav>/i,
@@ -3606,7 +3809,7 @@ async function onRequest3(context) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=60",
-        "Content-Security-Policy": SECURITY_CSP
+        "Content-Security-Policy": securityCsp(request.url)
       }
     });
   } catch (err4) {
@@ -3725,8 +3928,8 @@ async function getProductBySlug(env, slug) {
   return result;
 }
 __name(getProductBySlug, "getProductBySlug");
-async function handleProducts(request, env) {
-  const url = new URL(request.url);
+async function handleProducts(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname;
   if (path === "/api/products" || path === "/api/products/") {
     const category = url.searchParams.get("category") || void 0;
@@ -4294,11 +4497,11 @@ async function loadDerivedMarkupMap(env) {
   return out;
 }
 __name(loadDerivedMarkupMap, "loadDerivedMarkupMap");
-async function handlePricing(request, env) {
-  const url = new URL(request.url);
+async function handlePricing(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname;
   if (path === "/api/pricing" || path === "/api/pricing/") {
-    if (request.method !== "POST" && request.method !== "GET") {
+    if (request2.method !== "POST" && request2.method !== "GET") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
         headers: { "Content-Type": "application/json" }
@@ -4306,8 +4509,8 @@ async function handlePricing(request, env) {
     }
     try {
       let body;
-      if (request.method === "POST") {
-        body = await request.json();
+      if (request2.method === "POST") {
+        body = await request2.json();
       } else {
         const params = url.searchParams;
         body = {
@@ -4442,8 +4645,8 @@ var COUNTRY_NAMES = {
   KE: "Kenya",
   MA: "Morocco"
 };
-function detectGeo(request) {
-  const headers = request.headers;
+function detectGeo(request2) {
+  const headers = request2.headers;
   const country = headers.get("CF-IPCountry") || headers.get("cf-ipcountry") || null;
   const isThailand = country === "TH";
   return {
@@ -4454,8 +4657,8 @@ function detectGeo(request) {
   };
 }
 __name(detectGeo, "detectGeo");
-async function handleGeo(request, env) {
-  const result = detectGeo(request);
+async function handleGeo(request2, env) {
+  const result = detectGeo(request2);
   return new Response(JSON.stringify(result), {
     headers: {
       "Content-Type": "application/json",
@@ -4619,13 +4822,13 @@ async function ensureCountryMasterSchema(env) {
   await countryMasterPromise;
 }
 __name(ensureCountryMasterSchema, "ensureCountryMasterSchema");
-async function handleCountries(request, env) {
-  if (request.method !== "GET") {
+async function handleCountries(request2, env) {
+  if (request2.method !== "GET") {
     return json({ error: "Method not allowed" }, 405);
   }
   try {
     await ensureCountryMasterSchema(env);
-    const url = new URL(request.url);
+    const url = new URL(request2.url);
     const includeFallback = url.searchParams.get("include_fallback") === "1";
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name, phone_code, is_fallback
@@ -4648,7 +4851,54 @@ async function handleCountries(request, env) {
 __name(handleCountries, "handleCountries");
 
 // ../workers/api/email.ts
+var PROD_LABELS = /* @__PURE__ */ new Set(["prod", "production", "live"]);
+function normalize(v) {
+  return String(v || "").trim().toLowerCase();
+}
+__name(normalize, "normalize");
+function evaluateOutboundEmailSafety(env) {
+  const runtimeEnv = normalize(env.RUNTIME_ENV || env.APP_ENV);
+  const d1EnvLabel = normalize(env.D1_ENV_LABEL);
+  const stripeEnvMode = normalize(env.STRIPE_ENV_MODE);
+  const nonProdEmailAllowed = normalize(env.NON_PROD_EMAIL_ALLOWED);
+  const runtimeIsProd = !!runtimeEnv && PROD_LABELS.has(runtimeEnv);
+  const d1IsProd = !!d1EnvLabel && PROD_LABELS.has(d1EnvLabel);
+  const stripeIsProd = stripeEnvMode === "live";
+  const runtimeIsNonProd = !!runtimeEnv && !PROD_LABELS.has(runtimeEnv);
+  const d1IsNonProd = !!d1EnvLabel && !PROD_LABELS.has(d1EnvLabel);
+  const stripeIsNonProd = stripeEnvMode === "test";
+  const hasProdSignal = runtimeIsProd || d1IsProd || stripeIsProd;
+  const hasNonProdSignal = runtimeIsNonProd || d1IsNonProd || stripeIsNonProd;
+  if (hasNonProdSignal && nonProdEmailAllowed === "false") {
+    return { allowed: false, mode: "non_production", reason: "non_prod_email_explicitly_blocked" };
+  }
+  if (hasProdSignal && hasNonProdSignal) {
+    return { allowed: false, mode: "unknown", reason: "environment_signal_conflict" };
+  }
+  if (hasNonProdSignal) {
+    if (nonProdEmailAllowed === "true") {
+      return { allowed: true, mode: "non_production", reason: "non_prod_opt_in" };
+    }
+    if (nonProdEmailAllowed === "false") {
+      return { allowed: false, mode: "non_production", reason: "non_prod_email_explicitly_blocked" };
+    }
+    if (!nonProdEmailAllowed) {
+      return { allowed: false, mode: "non_production", reason: "missing_non_prod_email_allowed" };
+    }
+    return { allowed: false, mode: "non_production", reason: "malformed_non_prod_email_allowed" };
+  }
+  if (hasProdSignal) {
+    return { allowed: true, mode: "production", reason: "production_mode" };
+  }
+  return { allowed: true, mode: "unknown", reason: "legacy_unclassified_mode" };
+}
+__name(evaluateOutboundEmailSafety, "evaluateOutboundEmailSafety");
 async function sendEmail(env, options) {
+  const safety = evaluateOutboundEmailSafety(env);
+  if (!safety.allowed) {
+    console.warn(`Email suppressed: ${safety.reason}`);
+    return { success: false, error: `EMAIL_SUPPRESSED:${safety.reason}` };
+  }
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("RESEND_API_KEY not set");
@@ -4700,16 +4950,16 @@ function isValidEmail(email) {
 }
 __name(isValidEmail, "isValidEmail");
 var SUBSCRIBE_RATE_LIMIT = 2;
-async function handleSubscribe(request, env) {
+async function handleSubscribe(request2, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed. Use POST." }),
       { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -4717,7 +4967,7 @@ async function handleSubscribe(request, env) {
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return new Response(
       JSON.stringify({ error: "Invalid JSON body" }),
@@ -4730,7 +4980,7 @@ async function handleSubscribe(request, env) {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
   const db = env.DB;
   const rateRow = await db.prepare(
     `SELECT COUNT(*) as cnt FROM rate_limits WHERE ip_address = ? AND endpoint = 'subscribe' AND created_at > datetime('now', '-1 hour')`
@@ -4817,8 +5067,8 @@ Date: ${(/* @__PURE__ */ new Date()).toISOString()}`
 __name(handleSubscribe, "handleSubscribe");
 
 // ../workers/api/unsubscribe.ts
-async function handleUnsubscribe(request, env) {
-  if (request.method !== "POST") {
+async function handleUnsubscribe(request2, env) {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ message: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
@@ -4826,7 +5076,7 @@ async function handleUnsubscribe(request, env) {
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return new Response(JSON.stringify({ message: "Invalid JSON body" }), {
       status: 400,
@@ -4928,16 +5178,16 @@ async function verifyTurnstile(env, token, ip) {
   }
 }
 __name(verifyTurnstile, "verifyTurnstile");
-async function handleContact(request, env) {
+async function handleContact(request2, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed. Use POST." }),
       { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -4945,7 +5195,7 @@ async function handleContact(request, env) {
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return new Response(
       JSON.stringify({ error: "Invalid JSON body" }),
@@ -4958,7 +5208,7 @@ async function handleContact(request, env) {
   const subject = (body.subject || "").trim() || inquiryType || "General Inquiry";
   const message = (body.message || "").trim();
   const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
   const turnstile = await verifyTurnstile(env, turnstileToken, ip);
   if (!turnstile.ok) {
     return new Response(
@@ -4984,7 +5234,7 @@ ${message}
 
 ---
 Sent from: ${ip}
-User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
+User-Agent: ${request2.headers.get("user-agent") || "unknown"}`;
   let emailStatus = "not_sent";
   try {
     const result = await sendEmail(env, {
@@ -5078,9 +5328,9 @@ async function verifyTurnstile2(env, token, ip) {
   }
 }
 __name(verifyTurnstile2, "verifyTurnstile");
-async function handleQuote(request, env) {
-  const url = new URL(request.url);
-  if (request.method === "GET") {
+async function handleQuote(request2, env) {
+  const url = new URL(request2.url);
+  if (request2.method === "GET") {
     const quoteId = url.searchParams.get("quote_id");
     if (!quoteId) {
       return new Response(JSON.stringify({ error: "Missing quote_id parameter" }), {
@@ -5145,14 +5395,14 @@ async function handleQuote(request, env) {
       });
     }
   }
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
     });
   }
   try {
-    const body = await request.json();
+    const body = await request2.json();
     const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
     const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
     if (_website && _website.length > 0) {
@@ -5161,7 +5411,7 @@ async function handleQuote(request, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const ip = request.headers.get("cf-connecting-ip") || "unknown";
+    const ip = request2.headers.get("cf-connecting-ip") || "unknown";
     const turnstile = await verifyTurnstile2(env, turnstileToken, ip);
     if (!turnstile.ok) {
       return new Response(JSON.stringify({
@@ -5351,10 +5601,10 @@ Price: ${priceLine}
 __name(buildQuoteEmail, "buildQuoteEmail");
 
 // ../workers/api/pricing-params.ts
-async function handlePricingParams(request, env) {
-  const url = new URL(request.url);
+async function handlePricingParams(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname;
-  if (request.method === "GET" && path === "/api/pricing-params") {
+  if (request2.method === "GET" && path === "/api/pricing-params") {
     const { results: params } = await env.DB.prepare(
       "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
     ).all();
@@ -5420,7 +5670,7 @@ async function handlePricingParams(request, env) {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" }
     });
   }
-  if (request.method === "GET" && path === "/api/diy-prices") {
+  if (request2.method === "GET" && path === "/api/diy-prices") {
     const product = url.searchParams.get("product") || "";
     let query = "SELECT shape_code, size_key, price_thb, price_usd, label FROM diy_prices";
     const bindings = [];
@@ -5439,10 +5689,28 @@ async function handlePricingParams(request, env) {
 __name(handlePricingParams, "handlePricingParams");
 
 // ../workers/api/clerk-verify.ts
-var jwksCache = null;
-var CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
-var JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
+var DEV_CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
+var DEV_JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
 var JWKS_CACHE_MS = 3600 * 1e3;
+function getIssuer(env) {
+  return String(env?.CLERK_ISSUER || DEV_CLERK_ISSUER).trim();
+}
+__name(getIssuer, "getIssuer");
+function getJwksUrl(env) {
+  return String(env?.CLERK_JWKS_URL || DEV_JWKS_URL).trim();
+}
+__name(getJwksUrl, "getJwksUrl");
+function isProdClerkConfigured(env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  return issuer.length > 0 && issuer !== DEV_CLERK_ISSUER;
+}
+__name(isProdClerkConfigured, "isProdClerkConfigured");
+function isProductionHostname(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com";
+}
+__name(isProductionHostname, "isProductionHostname");
+var jwksCache = /* @__PURE__ */ new Map();
 var RATE_WINDOW_MS = 60 * 1e3;
 var MAX_AUTH_REQUESTS = 30;
 async function checkAuthRateLimit(env, ip) {
@@ -5467,15 +5735,17 @@ async function recordRateLimit(env, ip) {
   }
 }
 __name(recordRateLimit, "recordRateLimit");
-async function getJwks() {
-  if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_CACHE_MS) {
-    return jwksCache.keys;
+async function getJwks(jwksUrl) {
+  const cached = jwksCache.get(jwksUrl);
+  if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
+    return cached.keys;
   }
-  const resp = await fetch(JWKS_URL);
+  const resp = await fetch(jwksUrl);
   if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
   const data = await resp.json();
-  jwksCache = { keys: data.keys || [], fetchedAt: Date.now() };
-  return jwksCache.keys;
+  const entry = { keys: data.keys || [], fetchedAt: Date.now() };
+  jwksCache.set(jwksUrl, entry);
+  return entry.keys;
 }
 __name(getJwks, "getJwks");
 function base64urlToBytes(str) {
@@ -5503,9 +5773,9 @@ async function importRsaKey(jwk) {
   );
 }
 __name(importRsaKey, "importRsaKey");
-async function verifyClerkJwt(request, env) {
-  const origin = request.headers.get("Origin") || "";
-  const host = request.headers.get("Host") || "";
+async function verifyClerkJwt(request2, env) {
+  const origin = request2.headers.get("Origin") || "";
+  const host = request2.headers.get("Host") || "";
   const allowedOrigins = [
     "https://mildmate-new.pages.dev",
     "https://www.mildmate.com"
@@ -5513,12 +5783,19 @@ async function verifyClerkJwt(request, env) {
   if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
     return { valid: false, error: "Invalid origin", status: 403 };
   }
-  const ip = request.headers.get("cf-connecting-ip") || "unknown";
+  try {
+    const requestHost = new URL(request2.url).hostname.toLowerCase();
+    if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
+      return { valid: false, error: "Auth service unavailable", status: 503 };
+    }
+  } catch {
+  }
+  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
   if (await checkAuthRateLimit(env, ip)) {
     return { valid: false, error: "Too many requests", status: 429 };
   }
   await recordRateLimit(env, ip);
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
   if (!token) {
     return { valid: false, error: "Missing token", status: 401 };
@@ -5538,7 +5815,7 @@ async function verifyClerkJwt(request, env) {
   }
   let keys;
   try {
-    keys = await getJwks();
+    keys = await getJwks(getJwksUrl(env));
   } catch (e) {
     console.error("Clerk JWKS fetch failed:", e.message);
     return { valid: false, error: "Auth service unavailable", status: 503 };
@@ -5592,8 +5869,14 @@ async function verifyClerkJwt(request, env) {
   if (payload.exp && payload.exp < now) {
     return { valid: false, error: "Token expired", status: 401 };
   }
-  if (payload.iss && payload.iss !== CLERK_ISSUER && !payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
-    return { valid: false, error: "Invalid issuer", status: 401 };
+  const expectedIssuer = getIssuer(env);
+  if (payload.iss && payload.iss !== expectedIssuer) {
+    if (isProdClerkConfigured(env)) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+    if (!payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
   }
   return { valid: true, payload };
 }
@@ -5637,7 +5920,7 @@ function collectRoles(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -5664,12 +5947,12 @@ function getPrimaryClerkEmail(user) {
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
 __name(getPrimaryClerkEmail, "getPrimaryClerkEmail");
-async function isClerkAdmin(request, env) {
+async function isClerkAdmin(request2, env) {
   try {
-    const authHeader = request.headers.get("Authorization") || "";
+    const authHeader = request2.headers.get("Authorization") || "";
     const hasBearer = authHeader.startsWith("Bearer ");
     if (!hasBearer) return false;
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return false;
     const raw = verified.payload.raw || {};
     if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) return true;
@@ -5704,15 +5987,15 @@ function isProductionHostPricing(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHostPricing, "isProductionHostPricing");
-async function authorizeAdminPricing(request, env) {
-  const clerkOk = await isClerkAdmin(request, env);
+async function authorizeAdminPricing(request2, env) {
+  const clerkOk = await isClerkAdmin(request2, env);
   if (clerkOk) return { ok: true };
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHostPricing(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -5723,15 +6006,15 @@ async function authorizeAdminPricing(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdminPricing, "authorizeAdminPricing");
-async function handleAdminPricingParams(request, env) {
-  const auth = await authorizeAdminPricing(request, env);
+async function handleAdminPricingParams(request2, env) {
+  const auth = await authorizeAdminPricing(request2, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     try {
       await ensureDerivedMarkupDefaults(env);
       const { results } = await env.DB.prepare(
@@ -5747,9 +6030,9 @@ async function handleAdminPricingParams(request, env) {
       });
     }
   }
-  if (request.method === "POST" || request.method === "PUT") {
+  if (request2.method === "POST" || request2.method === "PUT") {
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const { key, value, label, category } = body;
       if (!key || value === void 0) {
         return new Response(JSON.stringify({ error: "key and value are required" }), {
@@ -5777,8 +6060,8 @@ async function handleAdminPricingParams(request, env) {
       });
     }
   }
-  if (request.method === "DELETE") {
-    const url = new URL(request.url);
+  if (request2.method === "DELETE") {
+    const url = new URL(request2.url);
     const key = url.searchParams.get("key");
     if (!key) {
       return new Response(JSON.stringify({ error: "?key= required" }), {
@@ -5799,8 +6082,8 @@ async function handleAdminPricingParams(request, env) {
 __name(handleAdminPricingParams, "handleAdminPricingParams");
 
 // ../workers/api/admin-diy.ts
-async function handleAdminDiyPrices(request, env) {
-  if (request.method === "OPTIONS") {
+async function handleAdminDiyPrices(request2, env) {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
       headers: {
@@ -5810,10 +6093,10 @@ async function handleAdminDiyPrices(request, env) {
       }
     });
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
   if (!isDev) {
-    const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+    const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
     const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
     if (!provided) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -5828,9 +6111,9 @@ async function handleAdminDiyPrices(request, env) {
       });
     }
   }
-  if (request.method === "POST" || request.method === "PUT") {
+  if (request2.method === "POST" || request2.method === "PUT") {
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const { id, product_slug, shape_code, size_key, price_thb, price_usd, label } = body;
       if (!product_slug || price_thb === void 0 || price_usd === void 0) {
         return new Response(JSON.stringify({ error: "product_slug, price_thb, price_usd are required" }), {
@@ -5855,8 +6138,8 @@ async function handleAdminDiyPrices(request, env) {
       });
     }
   }
-  if (request.method === "DELETE") {
-    const url = new URL(request.url);
+  if (request2.method === "DELETE") {
+    const url = new URL(request2.url);
     const id = url.searchParams.get("id");
     const product = url.searchParams.get("product");
     const shape = url.searchParams.get("shape_code");
@@ -5890,10 +6173,10 @@ function isDevHost(host) {
   return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
 }
 __name(isDevHost, "isDevHost");
-function authorizeAdmin(request, env) {
-  const host = new URL(request.url).hostname;
+function authorizeAdmin(request2, env) {
+  const host = new URL(request2.url).hostname;
   if (isDevHost(host)) return { ok: true };
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
@@ -5908,8 +6191,8 @@ function authorizeAdmin(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin, "authorizeAdmin");
-async function handleAdminExchangeRates(request, env) {
-  if (request.method === "OPTIONS") {
+async function handleAdminExchangeRates(request2, env) {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
       headers: {
@@ -5919,16 +6202,16 @@ async function handleAdminExchangeRates(request, env) {
       }
     });
   }
-  const auth = authorizeAdmin(request, env);
+  const auth = authorizeAdmin(request2, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error || "Unauthorized" }), {
       status: auth.status || 401,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
-  if (request.method === "POST" || request.method === "PUT") {
+  if (request2.method === "POST" || request2.method === "PUT") {
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const { currency, rate_per_thb, label, symbol } = body;
       if (!currency || rate_per_thb === void 0) {
         return new Response(JSON.stringify({ error: "currency and rate_per_thb are required" }), {
@@ -6015,7 +6298,7 @@ function collectRoles2(raw) {
   }
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6034,13 +6317,13 @@ function emailAllowed2(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed2, "emailAllowed");
-async function authCheck(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authCheck(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
   if (!prodHost) return true;
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole2(raw) || emailAllowed2(verified.payload.email || "", env)) return true;
@@ -6062,23 +6345,23 @@ async function authCheck(request, env) {
       }
     }
   }
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return false;
   if (!configured) return false;
   return provided === configured;
 }
 __name(authCheck, "authCheck");
-async function handleAdminProducts(request, env) {
-  if (!await authCheck(request, env)) {
+async function handleAdminProducts(request2, env) {
+  if (!await authCheck(request2, env)) {
     return new Response(ADMIN_SECRET_ERROR, {
       status: 401,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const url = new URL(request.url);
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/$/, "");
-  const method = request.method;
+  const method = request2.method;
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB;
     const result = await db.prepare(
@@ -6094,7 +6377,7 @@ async function handleAdminProducts(request, env) {
   if (method === "POST" && path === "/api/admin/products") {
     const db = env.DB;
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const slug = body.slug;
       if (!slug) {
         return new Response(JSON.stringify({ error: "Slug is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -6162,7 +6445,7 @@ async function handleAdminProducts(request, env) {
       });
     }
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const allowed = [
         "title_en",
         "title_th",
@@ -6248,7 +6531,7 @@ function collectRoles3(raw) {
   }
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6267,13 +6550,13 @@ function emailAllowed3(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed3, "emailAllowed");
-async function authCheck2(request, env) {
-  const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
+async function authCheck2(request2, env) {
+  const host = String(request2.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
   if (!isProdHost) return true;
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
@@ -6295,21 +6578,21 @@ async function authCheck2(request, env) {
       }
     }
   }
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided || !configured) return false;
   return provided === configured;
 }
 __name(authCheck2, "authCheck");
-async function handleAdminUpload(request, env) {
-  if (!await authCheck2(request, env)) {
+async function handleAdminUpload(request2, env) {
+  if (!await authCheck2(request2, env)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (request.method === "DELETE") {
-    const url = new URL(request.url);
+  if (request2.method === "DELETE") {
+    const url = new URL(request2.url);
     const key = url.searchParams.get("key");
     if (!key) {
       return new Response(JSON.stringify({ error: "Missing key parameter" }), {
@@ -6336,14 +6619,14 @@ async function handleAdminUpload(request, env) {
       });
     }
   }
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
     });
   }
   try {
-    const formData = await request.formData();
+    const formData = await request2.formData();
     const file = formData.get("file");
     if (!file || !(file instanceof File)) {
       return new Response(JSON.stringify({ error: "No file provided" }), {
@@ -6547,7 +6830,7 @@ function collectRoles4(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6566,11 +6849,11 @@ function emailAllowed4(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed4, "emailAllowed");
-async function authorizeAdmin2(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin2(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -6600,12 +6883,12 @@ async function authorizeAdmin2(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost3(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -6616,8 +6899,8 @@ async function authorizeAdmin2(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin2, "authorizeAdmin");
-async function handleAdminOrders(request, env) {
-  const auth = await authorizeAdmin2(request, env);
+async function handleAdminOrders(request2, env) {
+  const auth = await authorizeAdmin2(request2, env);
   if (!auth.ok) return json2({ error: auth.error }, auth.status);
   try {
     await ensureOrderShippingSchema(env);
@@ -6625,9 +6908,9 @@ async function handleAdminOrders(request, env) {
     console.error("orders shipping schema init failed:", e?.message || e);
     return json2({ error: "Orders schema unavailable" }, 500);
   }
-  const url = new URL(request.url);
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/$/, "");
-  const method = request.method;
+  const method = request2.method;
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
     const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
@@ -6698,7 +6981,7 @@ async function handleAdminOrders(request, env) {
   }
   if (method === "PUT" && idMatch) {
     const orderId = parseInt(idMatch[1]);
-    const body = await request.json();
+    const body = await request2.json();
     const newStatus = body.status ? String(body.status).trim().toLowerCase() : "";
     const hasArchiveFlag = Object.prototype.hasOwnProperty.call(body || {}, "is_archived");
     const archiveValue = hasArchiveFlag ? body.is_archived === true || body.is_archived === 1 || String(body.is_archived).toLowerCase() === "true" ? 1 : 0 : null;
@@ -6835,7 +7118,7 @@ function collectRoles5(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -6854,11 +7137,11 @@ function emailAllowed5(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed5, "emailAllowed");
-async function authorizeAdmin3(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin3(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
@@ -6887,12 +7170,12 @@ async function authorizeAdmin3(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost4(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -6903,11 +7186,11 @@ async function authorizeAdmin3(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin3, "authorizeAdmin");
-async function handleAdminCustomers(request, env) {
-  const auth = await authorizeAdmin3(request, env);
+async function handleAdminCustomers(request2, env) {
+  const auth = await authorizeAdmin3(request2, env);
   if (!auth.ok) return json3({ error: auth.error }, auth.status);
-  const url = new URL(request.url);
-  const method = request.method;
+  const url = new URL(request2.url);
+  const method = request2.method;
   if (method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -7019,7 +7302,7 @@ function collectRoles6(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -7038,11 +7321,11 @@ function emailAllowed6(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed6, "emailAllowed");
-async function authorizeAdmin4(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin4(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -7072,12 +7355,12 @@ async function authorizeAdmin4(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost5(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -7145,7 +7428,7 @@ function getDisplayImage(imageUrl, imagesRaw) {
   try {
     const arr = JSON.parse(String(imagesRaw || "[]"));
     if (Array.isArray(arr)) {
-      const first = arr.find((x) => String(x || "").trim());
+      const first = arr.find((x2) => String(x2 || "").trim());
       if (first) return String(first).trim();
     }
   } catch {
@@ -7173,10 +7456,10 @@ function currencySymbol(currency, ratesMap) {
   return ratesMap[c]?.symbol || c;
 }
 __name(currencySymbol, "currencySymbol");
-async function handleAdminStats(request, env) {
-  const auth = await authorizeAdmin4(request, env);
+async function handleAdminStats(request2, env) {
+  const auth = await authorizeAdmin4(request2, env);
   if (!auth.ok) return json4({ error: auth.error }, auth.status);
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -7185,10 +7468,10 @@ async function handleAdminStats(request, env) {
       }
     });
   }
-  if (request.method !== "GET") {
+  if (request2.method !== "GET") {
     return json4({ error: "Method not allowed" }, 405);
   }
-  const url = new URL(request.url);
+  const url = new URL(request2.url);
   const targetCurrency = String(url.searchParams.get("target_currency") || "USD").trim().toUpperCase();
   const bounds = getPeriodBounds(url.searchParams.get("period") || "last-30-days");
   try {
@@ -7709,13 +7992,13 @@ function scoreRows(inputs, weights, now) {
       if (n !== null) demandParts.push({ n, w: DW.gsc, src: "GSC" });
     }
     if (demandParts.length) {
-      const wsum = demandParts.reduce((s, x) => s + x.w, 0);
-      demandNorm = round1(demandParts.reduce((s, x) => s + x.n * x.w, 0) / wsum);
+      const wsum = demandParts.reduce((s, x2) => s + x2.w, 0);
+      demandNorm = round1(demandParts.reduce((s, x2) => s + x2.n * x2.w, 0) / wsum);
       components.demand = {
         raw: null,
         normalized: demandNorm,
         weight: W.demand,
-        sources: demandParts.map((x) => x.src).join("+"),
+        sources: demandParts.map((x2) => x2.src).join("+"),
         flags: null
       };
       availableWeight += W.demand;
@@ -7902,10 +8185,10 @@ async function getOpportunity(env) {
   });
 }
 __name(getOpportunity, "getOpportunity");
-async function recomputeOpportunityHandler(request, env) {
+async function recomputeOpportunityHandler(request2, env) {
   let body = null;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     body = {};
   }
@@ -7965,7 +8248,7 @@ function collectRoles7(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -7984,11 +8267,11 @@ function emailAllowed7(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed7, "emailAllowed");
-async function authorizeAdmin5(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin5(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -8018,12 +8301,12 @@ async function authorizeAdmin5(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost6(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -10143,8 +10426,8 @@ async function getProfitability(env, f) {
   }
 }
 __name(getProfitability, "getProfitability");
-async function handleAdminAnalysis(request, env) {
-  if (request.method === "OPTIONS") {
+async function handleAdminAnalysis(request2, env) {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -10153,12 +10436,12 @@ async function handleAdminAnalysis(request, env) {
       }
     });
   }
-  const url = new URL(request.url);
-  const isRecompute = request.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
-  if (request.method !== "GET" && !isRecompute) {
+  const url = new URL(request2.url);
+  const isRecompute = request2.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
+  if (request2.method !== "GET" && !isRecompute) {
     return err2("METHOD_NOT_ALLOWED", "Only GET is supported (POST only on /opportunity/recompute).", 405);
   }
-  const auth = await authorizeAdmin5(request, env);
+  const auth = await authorizeAdmin5(request2, env);
   if (!auth.ok) return err2("UNAUTHORIZED", auth.error, auth.status);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/analysis/, "") || "/";
   const productMatch = sub.match(/^\/product\/(\d+)$/);
@@ -10166,7 +10449,7 @@ async function handleAdminAnalysis(request, env) {
   if (sub === "/data-quality") return getDataQuality(env);
   if (sub === "/data-quality/exceptions") return getExceptions(env, url);
   if (sub === "/opportunity") return getOpportunity(env);
-  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request, env);
+  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request2, env);
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
@@ -10226,7 +10509,7 @@ function collectRoles8(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -10245,11 +10528,11 @@ function emailAllowed8(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed8, "emailAllowed");
-async function authorizeAdmin6(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin6(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -10279,12 +10562,12 @@ async function authorizeAdmin6(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost7(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -10821,8 +11104,8 @@ async function deleteRow(env, url) {
   return json7({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
 }
 __name(deleteRow, "deleteRow");
-async function handleAdminCostModel(request, env) {
-  if (request.method === "OPTIONS") {
+async function handleAdminCostModel(request2, env) {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -10831,25 +11114,25 @@ async function handleAdminCostModel(request, env) {
       }
     });
   }
-  const auth = await authorizeAdmin6(request, env);
+  const auth = await authorizeAdmin6(request2, env);
   if (!auth.ok) return err3("UNAUTHORIZED", auth.error, auth.status);
-  const url = new URL(request.url);
+  const url = new URL(request2.url);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/cost-model/, "") || "/";
   let body = null;
-  if (request.method === "PUT" || request.method === "POST") {
+  if (request2.method === "PUT" || request2.method === "POST") {
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return err3("INVALID_JSON", "Request body must be valid JSON.");
     }
   }
-  if (request.method === "GET" && sub === "/") return getCostModel(env);
-  if (request.method === "PUT" && sub === "/product") return putProductCost(env, body);
-  if (request.method === "PUT" && sub === "/fees") return putChannelFees(env, body);
-  if (request.method === "PUT" && sub === "/shipping") return putShipping(env, body);
-  if (request.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
-  if (request.method === "DELETE" && sub === "/row") return deleteRow(env, url);
-  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
+  if (request2.method === "GET" && sub === "/") return getCostModel(env);
+  if (request2.method === "PUT" && sub === "/product") return putProductCost(env, body);
+  if (request2.method === "PUT" && sub === "/fees") return putChannelFees(env, body);
+  if (request2.method === "PUT" && sub === "/shipping") return putShipping(env, body);
+  if (request2.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
+  if (request2.method === "DELETE" && sub === "/row") return deleteRow(env, url);
+  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request2.method + " " + sub, 404);
 }
 __name(handleAdminCostModel, "handleAdminCostModel");
 
@@ -11195,8 +11478,8 @@ async function calculateShippingQuote(env, input) {
   };
 }
 __name(calculateShippingQuote, "calculateShippingQuote");
-async function handleShippingCalculate(request, env) {
-  if (request.method === "OPTIONS") {
+async function handleShippingCalculate(request2, env) {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -11205,7 +11488,7 @@ async function handleShippingCalculate(request, env) {
       }
     });
   }
-  if (request.method !== "GET" && request.method !== "POST") {
+  if (request2.method !== "GET" && request2.method !== "POST") {
     return json8({ error: "Method not allowed" }, 405);
   }
   try {
@@ -11214,15 +11497,15 @@ async function handleShippingCalculate(request, env) {
     let currency = "USD";
     let serviceLevel = "express";
     let items;
-    const fallbackCountry = request.headers.get("CF-IPCountry") || "";
-    if (request.method === "GET") {
-      const url = new URL(request.url);
+    const fallbackCountry = request2.headers.get("CF-IPCountry") || "";
+    if (request2.method === "GET") {
+      const url = new URL(request2.url);
       country = url.searchParams.get("country") || "";
       qty = toQty(url.searchParams.get("qty") || 0);
       currency = url.searchParams.get("currency") || "USD";
       serviceLevel = url.searchParams.get("service_level") || "express";
     } else {
-      const body = await request.json().catch(() => ({}));
+      const body = await request2.json().catch(() => ({}));
       country = body.country || body.country_code || "";
       qty = toQty(body.qty || body.total_qty || 0);
       currency = body.currency || "USD";
@@ -11291,7 +11574,7 @@ function collectRoles9(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -11310,15 +11593,15 @@ function emailAllowed9(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed9, "emailAllowed");
-async function authorizeAdmin7(request, env) {
-  const host = new URL(request.url).hostname;
+async function authorizeAdmin7(request2, env) {
+  const host = new URL(request2.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
     return { ok: true };
   }
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -11348,7 +11631,7 @@ async function authorizeAdmin7(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
@@ -11379,10 +11662,10 @@ async function getUsdRatePerThb(env) {
   return 1 / 30;
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
-async function handleAdminShippingRates(request, env) {
-  const auth = await authorizeAdmin7(request, env);
+async function handleAdminShippingRates(request2, env) {
+  const auth = await authorizeAdmin7(request2, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -11392,8 +11675,8 @@ async function handleAdminShippingRates(request, env) {
     });
   }
   await ensureShippingRatesSchema(env);
-  if (request.method === "GET") {
-    const serviceLevel = normalizeServiceLevel(new URL(request.url).searchParams.get("service_level") || "express");
+  if (request2.method === "GET") {
+    const serviceLevel = normalizeServiceLevel(new URL(request2.url).searchParams.get("service_level") || "express");
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name,
@@ -11427,10 +11710,10 @@ async function handleAdminShippingRates(request, env) {
     });
     return json9({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
-  if (request.method === "POST" || request.method === "PUT") {
+  if (request2.method === "POST" || request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json9({ error: "Invalid JSON body" }, 400);
     }
@@ -11481,8 +11764,8 @@ async function handleAdminShippingRates(request, env) {
       }
     });
   }
-  if (request.method === "DELETE") {
-    const url = new URL(request.url);
+  if (request2.method === "DELETE") {
+    const url = new URL(request2.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
     const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
     if (!countryCode) return json9({ error: "country query param is required" }, 400);
@@ -11493,10 +11776,10 @@ async function handleAdminShippingRates(request, env) {
   return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
-async function handleAdminShippingProductTiers(request, env) {
-  const auth = await authorizeAdmin7(request, env);
+async function handleAdminShippingProductTiers(request2, env) {
+  const auth = await authorizeAdmin7(request2, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -11506,7 +11789,7 @@ async function handleAdminShippingProductTiers(request, env) {
     });
   }
   await ensureShippingRatesSchema(env);
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const rows = await env.DB.prepare(
       `SELECT spt.product_slug, spt.tier, p.title_en, p.category
        FROM shipping_product_tiers spt
@@ -11521,10 +11804,10 @@ async function handleAdminShippingProductTiers(request, env) {
     }));
     return json9({ product_tiers: tiers });
   }
-  if (request.method === "PUT") {
+  if (request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json9({ error: "Invalid JSON" }, 400);
     }
@@ -11544,10 +11827,10 @@ async function handleAdminShippingProductTiers(request, env) {
   return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
-async function handleAdminShippingAddRates(request, env) {
-  const auth = await authorizeAdmin7(request, env);
+async function handleAdminShippingAddRates(request2, env) {
+  const auth = await authorizeAdmin7(request2, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -11563,7 +11846,7 @@ async function handleAdminShippingAddRates(request, env) {
       updated_at DATETIME DEFAULT (datetime('now'))
     )`
   ).run();
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       "SELECT tier, add_thb FROM shipping_add_rates ORDER BY tier"
@@ -11576,10 +11859,10 @@ async function handleAdminShippingAddRates(request, env) {
     }
     return json9({ add_rates: addRates, usd_rate_per_thb: usdRate });
   }
-  if (request.method === "PUT") {
+  if (request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json9({ error: "Invalid JSON" }, 400);
     }
@@ -11645,7 +11928,7 @@ function collectRoles10(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -11664,12 +11947,12 @@ function emailAllowed10(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed10, "emailAllowed");
-async function authorizeAdmin8(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin8(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) return { ok: true };
@@ -11695,7 +11978,7 @@ async function authorizeAdmin8(request, env) {
   }
   const bypassPreview = String(env.ADMIN_QUOTES_PREVIEW_BYPASS || "true").toLowerCase() !== "false";
   if (bypassPreview && isPreviewHashHost(host)) return { ok: true };
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const prodHost = isProductionHost9(host);
@@ -11767,8 +12050,8 @@ async function generateQuoteId(db) {
   return `${datePrefix}-${seq}`;
 }
 __name(generateQuoteId, "generateQuoteId");
-function buildQuoteLink(request, quoteId) {
-  const origin = new URL(request.url).origin;
+function buildQuoteLink(request2, quoteId) {
+  const origin = new URL(request2.url).origin;
   return `${origin}/quote/${encodeURIComponent(quoteId)}/`;
 }
 __name(buildQuoteLink, "buildQuoteLink");
@@ -11786,14 +12069,14 @@ async function getUsdRate(db) {
   return 30;
 }
 __name(getUsdRate, "getUsdRate");
-async function sendMagicLinkEmail(env, request, quote) {
+async function sendMagicLinkEmail(env, request2, quote) {
   if (!quote?.email) return { success: false, error: "Missing customer email" };
   if (quote.status !== "approved") return { success: false, error: "Quote is not approved" };
   const priceThb = quote.quoted_price ? Number(quote.quoted_price) : 0;
   const priceUsd = quote.quoted_price_usd ? Number(quote.quoted_price_usd) : 0;
   const hasUsdPrice = priceUsd > 0;
   if (!hasUsdPrice && priceThb <= 0) return { success: false, error: "Quoted price is required before sending email" };
-  const quoteLink = buildQuoteLink(request, quote.quote_id);
+  const quoteLink = buildQuoteLink(request2, quote.quote_id);
   const product = String(quote.product_slug || "").replace(/-/g, " ");
   const prettyProduct = product.replace(/\b\w/g, (c) => c.toUpperCase()) || "Custom Product";
   const expires = quote.expires_at ? /* @__PURE__ */ new Date(String(quote.expires_at).replace(" ", "T") + "Z") : null;
@@ -11948,14 +12231,14 @@ Need help or have a measurement question? Simply reply to this email \u2014 we'r
   return { success: result.success, error: result.error };
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
-async function handleAdminQuotes(request, env) {
-  if (request.method === "OPTIONS") return json10({ ok: true });
-  const auth = await authorizeAdmin8(request, env);
+async function handleAdminQuotes(request2, env) {
+  if (request2.method === "OPTIONS") return json10({ ok: true });
+  const auth = await authorizeAdmin8(request2, env);
   if (!auth.ok) return json10({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
-  const url = new URL(request.url);
-  const method = request.method;
+  const url = new URL(request2.url);
+  const method = request2.method;
   if (method === "GET") {
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
     const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
@@ -12010,7 +12293,7 @@ async function handleAdminQuotes(request, env) {
         expires_at: r.expires_at || null,
         created_at: r.created_at || null,
         size_text: dims && typeof dims === "object" ? dims.size_text || "" : "",
-        quote_url: buildQuoteLink(request, r.quote_id)
+        quote_url: buildQuoteLink(request2, r.quote_id)
       };
     });
     return json10({
@@ -12023,7 +12306,7 @@ async function handleAdminQuotes(request, env) {
   if (method === "POST") {
     let body = {};
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json10({ error: "Invalid JSON" }, 400);
     }
@@ -12095,7 +12378,7 @@ async function handleAdminQuotes(request, env) {
     ).run();
     let emailStatus = { success: false, skipped: true };
     if (sendEmailNow && status === "approved") {
-      emailStatus = await sendMagicLinkEmail(env, request, {
+      emailStatus = await sendMagicLinkEmail(env, request2, {
         quote_id: quoteId,
         customer_name: customerName,
         email,
@@ -12109,7 +12392,7 @@ async function handleAdminQuotes(request, env) {
     return json10({
       success: true,
       quote_id: quoteId,
-      quote_url: buildQuoteLink(request, quoteId),
+      quote_url: buildQuoteLink(request2, quoteId),
       email_sent: !!emailStatus.success,
       email_error: emailStatus.success ? null : emailStatus.skipped ? null : emailStatus.error || null
     }, 201);
@@ -12117,7 +12400,7 @@ async function handleAdminQuotes(request, env) {
   if (method === "PUT") {
     let body = {};
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json10({ error: "Invalid JSON" }, 400);
     }
@@ -12221,7 +12504,7 @@ async function handleAdminQuotes(request, env) {
     if (!row) return json10({ error: "Quote not found" }, 404);
     let emailStatus = { success: false, skipped: true };
     if (body.send_email) {
-      emailStatus = await sendMagicLinkEmail(env, request, row);
+      emailStatus = await sendMagicLinkEmail(env, request2, row);
       if (!emailStatus.success) {
         return json10({
           error: emailStatus.error || "Failed to send quote email",
@@ -12232,7 +12515,7 @@ async function handleAdminQuotes(request, env) {
     return json10({
       success: true,
       quote_id: quoteId,
-      quote_url: buildQuoteLink(request, quoteId),
+      quote_url: buildQuoteLink(request2, quoteId),
       email_sent: !!emailStatus.success
     });
   }
@@ -12260,20 +12543,20 @@ function normalizeAddress(addr) {
   ].join("|");
 }
 __name(normalizeAddress, "normalizeAddress");
-async function handleDiscountValidate(request, env) {
+async function handleDiscountValidate(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" } });
   }
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ valid: false, error: "Method not allowed" }), { status: 405, headers });
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return new Response(JSON.stringify({ valid: false, error: "Invalid JSON" }), { status: 400, headers });
   }
@@ -12367,17 +12650,17 @@ async function handleDiscountValidate(request, env) {
   }), { headers });
 }
 __name(handleDiscountValidate, "handleDiscountValidate");
-async function handleDiscountClaim(request, env) {
+async function handleDiscountClaim(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
   }
@@ -12428,7 +12711,7 @@ function collectRoles11(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -12454,11 +12737,11 @@ function isProductionHost10(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost10, "isProductionHost");
-async function authorizeAdmin9(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin9(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) return { ok: true };
@@ -12482,10 +12765,10 @@ async function authorizeAdmin9(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost10(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -12494,11 +12777,11 @@ async function authorizeAdmin9(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin9, "authorizeAdmin");
-async function handleAdminContacts(request, env) {
-  const auth = await authorizeAdmin9(request, env);
+async function handleAdminContacts(request2, env) {
+  const auth = await authorizeAdmin9(request2, env);
   if (!auth.ok) return json11({ error: auth.error }, auth.status);
-  const url = new URL(request.url);
-  const method = request.method;
+  const url = new URL(request2.url);
+  const method = request2.method;
   const db = env.DB;
   if (method === "GET") {
     const onlySubscribed = url.searchParams.get("subscribed") === "1";
@@ -12522,7 +12805,7 @@ async function handleAdminContacts(request, env) {
   if (method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json11({ error: "Invalid JSON" }, 400);
     }
@@ -12574,12 +12857,12 @@ function emailAllowed12(email, env) {
   return !!email && allow.includes(email.toLowerCase());
 }
 __name(emailAllowed12, "emailAllowed");
-async function authorizeAdmin10(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authorizeAdmin10(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost11(hostname)) return { ok: true };
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole12(raw)) return { ok: true };
@@ -12603,29 +12886,29 @@ async function authorizeAdmin10(request, env) {
     }
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin10, "authorizeAdmin");
-async function handleAdminPromo(request, env) {
+async function handleAdminPromo(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin10(request, env);
+  const auth = await authorizeAdmin10(request2, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
   const db = env.DB;
-  const url = new URL(request.url);
-  const method = request.method;
+  const url = new URL(request2.url);
+  const method = request2.method;
   if (method === "GET") {
     const rows = await db.prepare(`
       SELECT
@@ -12641,7 +12924,7 @@ async function handleAdminPromo(request, env) {
   if (method === "DELETE") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -12654,7 +12937,7 @@ async function handleAdminPromo(request, env) {
   if (method === "POST") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -12747,21 +13030,21 @@ async function ensureBoatModelsTable(env) {
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
 __name(ensureBoatModelsTable, "ensureBoatModelsTable");
-async function handleBoatModels(request, env) {
+async function handleBoatModels(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Cache-Control": "public, max-age=120"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
   }
-  if (request.method !== "GET") {
+  if (request2.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
   try {
     await ensureBoatModelsTable(env);
-    const url = new URL(request.url);
+    const url = new URL(request2.url);
     const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
     let sql = `
@@ -12880,36 +13163,36 @@ async function ensureBoatModelsTable2(env) {
   await ensureBoatModelsColumn2(env, "schematic_url", "TEXT");
 }
 __name(ensureBoatModelsTable2, "ensureBoatModelsTable");
-async function authorizeAdmin11(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authorizeAdmin11(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost12(hostname)) return { ok: true };
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
     if (hasAdminRole13(raw) || emailAllowed13(jwtEmail, env)) return { ok: true };
     return { ok: true };
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin11, "authorizeAdmin");
-async function handleAdminBoatModels(request, env) {
+async function handleAdminBoatModels(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
-  if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin11(request, env);
+  if (request2.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin11(request2, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureBoatModelsTable2(env);
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const rows = await env.DB.prepare(
       `SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, schematic_key, schematic_url, is_active, updated_at
        FROM boat_models
@@ -12917,10 +13200,10 @@ async function handleAdminBoatModels(request, env) {
     ).all();
     return new Response(JSON.stringify({ models: rows.results || [] }), { headers });
   }
-  if (request.method === "DELETE") {
+  if (request2.method === "DELETE") {
     let body = {};
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
     }
     const id = Number(body.id || 0);
@@ -12928,10 +13211,10 @@ async function handleAdminBoatModels(request, env) {
     await env.DB.prepare("DELETE FROM boat_models WHERE id = ?1").bind(id).run();
     return new Response(JSON.stringify({ success: true }), { headers });
   }
-  if (request.method === "POST" || request.method === "PUT") {
+  if (request2.method === "POST" || request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13031,7 +13314,7 @@ function collectRoles12(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -13050,22 +13333,22 @@ function emailAllowed14(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed14, "emailAllowed");
-function getClerkSessionTokenFromCookie(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
+function getClerkSessionTokenFromCookie(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin12(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
-  const cookieToken = getClerkSessionTokenFromCookie(request);
+async function authorizeAdmin12(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie(request2);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   const token = bearerToken || cookieToken;
   if (token) {
-    const verifyRequest = bearerToken ? request : new Request(request.url, {
-      method: request.method,
+    const verifyRequest = bearerToken ? request2 : new Request(request2.url, {
+      method: request2.method,
       headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
+        ...Object.fromEntries(request2.headers.entries()),
         Authorization: "Bearer " + token
       })
     });
@@ -13096,10 +13379,10 @@ async function authorizeAdmin12(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost13(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -13112,8 +13395,8 @@ async function authorizeAdmin12(request, env) {
 __name(authorizeAdmin12, "authorizeAdmin");
 function normalizeCategories(raw) {
   if (!Array.isArray(raw)) return [];
-  const cleaned = raw.map((x) => String(x || "").trim()).filter(Boolean);
-  return cleaned.filter((x) => BLOG_CATEGORY_OPTIONS.includes(x));
+  const cleaned = raw.map((x2) => String(x2 || "").trim()).filter(Boolean);
+  return cleaned.filter((x2) => BLOG_CATEGORY_OPTIONS.includes(x2));
 }
 __name(normalizeCategories, "normalizeCategories");
 function toR2Url3(url) {
@@ -13122,23 +13405,23 @@ function toR2Url3(url) {
   return url;
 }
 __name(toR2Url3, "toR2Url");
-async function handleAdminBlog(request, env) {
+async function handleAdminBlog(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin12(request, env);
+  const auth = await authorizeAdmin12(request2, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
   const db = env.DB;
-  const url = new URL(request.url);
-  if (request.method === "GET") {
+  const url = new URL(request2.url);
+  if (request2.method === "GET") {
     const id = url.searchParams.get("id");
     if (id) {
       const post = await db.prepare("SELECT * FROM blog_posts WHERE id = ?").bind(Number(id)).first();
@@ -13171,10 +13454,10 @@ async function handleAdminBlog(request, env) {
     }));
     return new Response(JSON.stringify({ posts: normalized }), { headers });
   }
-  if (request.method === "POST") {
+  if (request2.method === "POST") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13271,10 +13554,10 @@ async function handleAdminBlog(request, env) {
     }
     return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id, slug: slugNorm }), { headers });
   }
-  if (request.method === "PUT") {
+  if (request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13353,10 +13636,10 @@ async function handleAdminBlog(request, env) {
     }
     return new Response(JSON.stringify({ success: true }), { headers });
   }
-  if (request.method === "DELETE") {
+  if (request2.method === "DELETE") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13376,15 +13659,15 @@ function toPublicR2Url2(url) {
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE5}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url2, "toPublicR2Url");
-async function handleBlogPosts(request, env) {
+async function handleBlogPosts(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
   }
-  if (request.method !== "GET") {
+  if (request2.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
   try {
@@ -13498,7 +13781,7 @@ function collectRoles13(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -13517,22 +13800,22 @@ function emailAllowed15(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed15, "emailAllowed");
-function getClerkSessionTokenFromCookie2(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
+function getClerkSessionTokenFromCookie2(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin13(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
-  const cookieToken = getClerkSessionTokenFromCookie2(request);
+async function authorizeAdmin13(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie2(request2);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   const token = bearerToken || cookieToken;
   if (token) {
-    const verifyRequest = bearerToken ? request : new Request(request.url, {
-      method: request.method,
+    const verifyRequest = bearerToken ? request2 : new Request(request2.url, {
+      method: request2.method,
       headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
+        ...Object.fromEntries(request2.headers.entries()),
         Authorization: "Bearer " + token
       })
     });
@@ -13563,10 +13846,10 @@ async function authorizeAdmin13(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost14(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -13577,8 +13860,8 @@ async function authorizeAdmin13(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin13, "authorizeAdmin");
-async function handleReviews(request, env) {
-  const url = new URL(request.url);
+async function handleReviews(request2, env) {
+  const url = new URL(request2.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
     return new Response(JSON.stringify({ error: "Not authorized" }), {
       status: 401,
@@ -13663,10 +13946,10 @@ async function handleReviews(request, env) {
   }
 }
 __name(handleReviews, "handleReviews");
-async function handleAdminReviews(request, env) {
-  const url = new URL(request.url);
+async function handleAdminReviews(request2, env) {
+  const url = new URL(request2.url);
   const headers = { "Content-Type": "application/json" };
-  const auth = await authorizeAdmin13(request, env);
+  const auth = await authorizeAdmin13(request2, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
@@ -13687,7 +13970,7 @@ async function handleAdminReviews(request, env) {
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers });
   }
   __name(internalError, "internalError");
-  const method = request.method;
+  const method = request2.method;
   try {
     if (method === "GET") {
       const id = url.searchParams.get("id");
@@ -13736,7 +14019,7 @@ async function handleAdminReviews(request, env) {
       return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
     if (method === "POST") {
-      const body = await request.json();
+      const body = await request2.json();
       const customerName = sanitize(body.customer_name);
       if (!customerName) return badRequest("Customer name is required");
       const reviewText = sanitizeReviewText(body.review_text || "");
@@ -13787,7 +14070,7 @@ async function handleAdminReviews(request, env) {
       });
     }
     if (method === "PUT") {
-      const body = await request.json();
+      const body = await request2.json();
       if (!body.id) return badRequest("Review ID required");
       const id = parseInt(body.id, 10);
       const updates = [];
@@ -13852,7 +14135,7 @@ async function handleAdminReviews(request, env) {
       return new Response(JSON.stringify({ success: true }), { headers });
     }
     if (method === "DELETE") {
-      const body = await request.json();
+      const body = await request2.json();
       if (!body.id) return badRequest("Review ID required");
       const stmt = env.DB.prepare(`DELETE FROM reviews WHERE id = ?`).bind(parseInt(body.id, 10));
       await stmt.run();
@@ -13871,24 +14154,16 @@ __name(handleAdminReviews, "handleAdminReviews");
 
 // ../workers/api/admin-recovery-test.ts
 async function sendRecoveryEmail(env, to, subject, html) {
-  try {
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
-        to: [to],
-        subject,
-        html
-      })
-    });
-    return resp.ok;
-  } catch (e) {
-    return false;
-  }
+  const text = `You left something behind \u2014 your MildMate cart is waiting.
+Return to your cart: https://mildmate-new.pages.dev/checkout/`;
+  const result = await sendEmail(env, {
+    to,
+    from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
+    subject,
+    text,
+    html
+  });
+  return result.success;
 }
 __name(sendRecoveryEmail, "sendRecoveryEmail");
 function escHtml2(s) {
@@ -13902,18 +14177,18 @@ function formatPrice(thb, usd) {
   return parts.join(" / ") || "\u2014";
 }
 __name(formatPrice, "formatPrice");
-async function handleAdminRecoveryTest(request, env) {
+async function handleAdminRecoveryTest(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret" } });
   }
-  if (request.method !== "POST") {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
-  const url = new URL(request.url);
+  const url = new URL(request2.url);
   const testEmail = url.searchParams.get("email") || "";
   const db = env.DB;
   if (!env.RESEND_API_KEY) {
@@ -13994,12 +14269,12 @@ function hasAdminRole16(raw) {
   });
 }
 __name(hasAdminRole16, "hasAdminRole");
-async function authorizeAdmin14(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authorizeAdmin14(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost15(hostname)) return { ok: true };
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole16(raw)) return { ok: true };
@@ -14008,35 +14283,27 @@ async function authorizeAdmin14(request, env) {
     if (jwtEmail && allow.includes(jwtEmail)) return { ok: true };
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin14, "authorizeAdmin");
 async function sendThankyouEmail(env, to, discountCode, discountPct) {
-  try {
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
-        to: [to],
-        subject: `Thank you \u2014 here's ${discountPct}% off your next MildMate order`,
-        html: `<!doctype html><html><body style="font-family:Arial,sans-serif"><h2>Thank you for your order</h2><p>Here is your repeat-buyer discount code:</p><p style="font-size:22px;font-weight:700">${discountCode}</p><p>${discountPct}% off your next order (valid for 1 year).</p><p><a href="https://www.mildmate.com/">Shop MildMate</a></p></body></html>`
-      })
-    });
-    if (!resp.ok) {
-      const body = await resp.text().catch(() => "");
-      return { ok: false, error: body || `HTTP ${resp.status}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e?.message || "send failed" };
-  }
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif"><h2>Thank you for your order</h2><p>Here is your repeat-buyer discount code:</p><p style="font-size:22px;font-weight:700">${discountCode}</p><p>${discountPct}% off your next order (valid for 1 year).</p><p><a href="https://www.mildmate.com/">Shop MildMate</a></p></body></html>`;
+  const text = `Thank you for your order.
+
+Your repeat-buyer discount code: ${discountCode}
+Discount: ${discountPct}% off your next order (valid for 1 year).
+Shop: https://www.mildmate.com/`;
+  const result = await sendEmail(env, {
+    to,
+    from: env.ORDER_FROM_EMAIL || "MildMate <orders@mildmate.com>",
+    subject: `Thank you \u2014 here's ${discountPct}% off your next MildMate order`,
+    text,
+    html
+  });
+  return { ok: result.success, error: result.error };
 }
 __name(sendThankyouEmail, "sendThankyouEmail");
 async function ensureThankyouQueueSchema(env) {
@@ -14053,22 +14320,22 @@ async function ensureThankyouQueueSchema(env) {
   }
 }
 __name(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
-async function handleAdminThankyouDispatch(request, env) {
+async function handleAdminThankyouDispatch(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
-  if (request.method === "OPTIONS") return new Response(null, { headers });
-  if (request.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-  const auth = await authorizeAdmin14(request, env);
+  if (request2.method === "OPTIONS") return new Response(null, { headers });
+  if (request2.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  const auth = await authorizeAdmin14(request2, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   if (!env.RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not configured" }), { status: 500, headers });
   await ensureThankyouQueueSchema(env);
   let limit = 50;
   try {
-    const body = await request.json();
+    const body = await request2.json();
     const n = Number(body?.limit || 50);
     if (Number.isFinite(n)) limit = Math.max(1, Math.min(200, Math.floor(n)));
   } catch {
@@ -14191,12 +14458,12 @@ function emailAllowed16(email, env) {
   return !!email && allow.includes(email.toLowerCase());
 }
 __name(emailAllowed16, "emailAllowed");
-async function authorizeAdmin15(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authorizeAdmin15(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost16(hostname)) return { ok: true };
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole17(raw)) return { ok: true };
@@ -14220,7 +14487,7 @@ async function authorizeAdmin15(request, env) {
     }
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
@@ -14280,26 +14547,26 @@ function parseOffersConfig(rows) {
   };
 }
 __name(parseOffersConfig, "parseOffersConfig");
-async function handleAdminOffers(request, env) {
+async function handleAdminOffers(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
-  if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin15(request, env);
+  if (request2.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin15(request2, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const keys = Object.values(KEY_MAP);
     const placeholders = keys.map((_, i) => `?${i + 1}`).join(",");
     const { results } = await env.DB.prepare(`SELECT key, value FROM recovery_config WHERE key IN (${placeholders})`).bind(...keys).all();
     return new Response(JSON.stringify({ offers: parseOffersConfig(results || []) }), { headers });
   }
-  if (request.method === "POST" || request.method === "PUT") {
+  if (request2.method === "POST" || request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -14348,12 +14615,12 @@ function emailAllowed17(email, env) {
   return !!email && allow.includes(email.toLowerCase());
 }
 __name(emailAllowed17, "emailAllowed");
-async function authorizeAdmin16(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authorizeAdmin16(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost17(hostname)) return { ok: true };
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole18(raw)) return { ok: true };
@@ -14377,7 +14644,7 @@ async function authorizeAdmin16(request, env) {
     }
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
@@ -14398,18 +14665,18 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
-async function handleAdminCampaigns(request, env) {
+async function handleAdminCampaigns(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
-  if (request.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin16(request, env);
+  if (request2.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin16(request2, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureCampaignsSchema(env);
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const { results } = await env.DB.prepare(
       "SELECT id, name, discount_pct, product_slugs, start_date, end_date, is_active, created_at FROM marketing_campaigns ORDER BY created_at DESC"
     ).all();
@@ -14431,10 +14698,10 @@ async function handleAdminCampaigns(request, env) {
     }));
     return new Response(JSON.stringify({ campaigns }), { headers });
   }
-  if (request.method === "POST") {
+  if (request2.method === "POST") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -14452,14 +14719,14 @@ async function handleAdminCampaigns(request, env) {
     ).bind(id, name, Math.round(discount), JSON.stringify(productSlugs), startDate, endDate).run();
     return new Response(JSON.stringify({ ok: true, id }), { headers });
   }
-  if (request.method === "DELETE") {
+  if (request2.method === "DELETE") {
     let id = "";
     try {
-      const body = await request.json();
+      const body = await request2.json();
       id = String(body?.id || "").trim();
     } catch {
     }
-    if (!id) id = String(new URL(request.url).searchParams.get("id") || "").trim();
+    if (!id) id = String(new URL(request2.url).searchParams.get("id") || "").trim();
     if (!id) return new Response(JSON.stringify({ error: "id is required" }), { status: 400, headers });
     await env.DB.prepare("DELETE FROM marketing_campaigns WHERE id = ?1").bind(id).run();
     return new Response(JSON.stringify({ ok: true }), { headers });
@@ -14469,8 +14736,8 @@ async function handleAdminCampaigns(request, env) {
 __name(handleAdminCampaigns, "handleAdminCampaigns");
 
 // ../workers/api/admin-accounts.ts
-function getClerkSessionToken(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
+function getClerkSessionToken(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return cookieMatch ? cookieMatch[1] : "";
 }
@@ -14494,7 +14761,7 @@ function collectRoles14(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -14521,16 +14788,16 @@ function getPrimaryClerkEmail2(user) {
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
 __name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
-async function isClerkAdmin2(request, env) {
+async function isClerkAdmin2(request2, env) {
   try {
-    const authHeader = request.headers.get("Authorization") || "";
+    const authHeader = request2.headers.get("Authorization") || "";
     const hasBearer = authHeader.startsWith("Bearer ");
-    const token = hasBearer ? authHeader.slice(7).trim() : getClerkSessionToken(request);
+    const token = hasBearer ? authHeader.slice(7).trim() : getClerkSessionToken(request2);
     if (!token) return false;
-    const verifyReq = new Request(request.url, {
-      method: request.method,
+    const verifyReq = new Request(request2.url, {
+      method: request2.method,
       headers: new Headers({
-        ...Object.fromEntries(request.headers.entries()),
+        ...Object.fromEntries(request2.headers.entries()),
         Authorization: `Bearer ${token}`
       })
     });
@@ -14574,13 +14841,13 @@ async function ensureAdminAccountsTable(db) {
   `).run();
 }
 __name(ensureAdminAccountsTable, "ensureAdminAccountsTable");
-async function handleAdminAccounts(request, env) {
-  const host = new URL(request.url).hostname;
+async function handleAdminAccounts(request2, env) {
+  const host = new URL(request2.url).hostname;
   const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
   if (!isDev) {
-    const clerkOk = await isClerkAdmin2(request, env);
+    const clerkOk = await isClerkAdmin2(request2, env);
     if (!clerkOk) {
-      const provided = (request.headers.get("X-Admin-Secret") || "").trim();
+      const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
       const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
       if (!provided || configured && provided !== configured) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -14591,7 +14858,7 @@ async function handleAdminAccounts(request, env) {
     }
   }
   await ensureAdminAccountsTable(env.DB);
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const { results } = await env.DB.prepare(
       "SELECT email, role, created_at, last_active FROM admin_accounts ORDER BY created_at DESC"
     ).all();
@@ -14599,9 +14866,9 @@ async function handleAdminAccounts(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (request.method === "POST") {
+  if (request2.method === "POST") {
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const email = String(body.email || "").trim().toLowerCase();
       const role = String(body.role || "Admin").trim();
       if (!email || !email.includes("@")) {
@@ -14631,9 +14898,9 @@ async function handleAdminAccounts(request, env) {
       });
     }
   }
-  if (request.method === "DELETE") {
+  if (request2.method === "DELETE") {
     try {
-      const url = new URL(request.url);
+      const url = new URL(request2.url);
       const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
       if (!email) {
         return new Response(JSON.stringify({ error: "email is required" }), {
@@ -14665,35 +14932,35 @@ function isProductionHost18(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
 __name(isProductionHost18, "isProductionHost");
-async function authorizeAdmin17(request, env) {
-  const hostname = request.headers.get("Host") || "";
+async function authorizeAdmin17(request2, env) {
+  const hostname = request2.headers.get("Host") || "";
   const isProd = isProductionHost18(hostname);
-  const authHeader = request.headers.get("Authorization") || "";
+  const authHeader = request2.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status || 401, error: "Unauthorized" };
     return { ok: true };
   }
   if (isProd) {
-    const secret = (request.headers.get("X-Admin-Secret") || "").trim();
+    const secret = (request2.headers.get("X-Admin-Secret") || "").trim();
     const expected = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
     if (!secret || !expected || secret !== expected) return { ok: false, status: 401, error: "Unauthorized" };
   }
   return { ok: true };
 }
 __name(authorizeAdmin17, "authorizeAdmin");
-async function handleAdminColorInventory(request, env) {
+async function handleAdminColorInventory(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" } });
   }
-  const auth = await authorizeAdmin17(request, env);
+  const auth = await authorizeAdmin17(request2, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   const db = env.DB;
-  if (request.method === "GET") {
+  if (request2.method === "GET") {
     const rows = await db.prepare(
       "SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color"
     ).all();
@@ -14705,10 +14972,10 @@ async function handleAdminColorInventory(request, env) {
     }));
     return new Response(JSON.stringify({ inventory }), { headers });
   }
-  if (request.method === "PUT") {
+  if (request2.method === "PUT") {
     let body;
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -14801,7 +15068,7 @@ function collectRoles15(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
     else out.push(String(v).toLowerCase().trim());
   });
   return out.filter(Boolean);
@@ -14820,11 +15087,11 @@ function emailAllowed19(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed19, "emailAllowed");
-async function authorizeAdmin18(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function authorizeAdmin18(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
+    const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole20(raw) || emailAllowed19(verified.payload.email || "", env)) {
@@ -14851,10 +15118,10 @@ async function authorizeAdmin18(request, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request.url).hostname;
+  const host = new URL(request2.url).hostname;
   const prodHost = isProductionHost19(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -14865,26 +15132,26 @@ async function authorizeAdmin18(request, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin18, "authorizeAdmin");
-async function getUserContext(request, env) {
-  const authHeader = request.headers.get("Authorization") || "";
+async function getUserContext(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
     return { ok: false, status: 401, error: "Authentication required" };
   }
-  const verified = await verifyClerkJwt(request, env);
+  const verified = await verifyClerkJwt(request2, env);
   if (!verified.valid) {
     return { ok: false, status: verified.status, error: verified.error };
   }
   const userId = String(verified.payload.sub || "").trim();
-  const email = String(verified.payload.email || request.headers.get("X-User-Email") || "").trim().toLowerCase();
+  const email = String(verified.payload.email || request2.headers.get("X-User-Email") || "").trim().toLowerCase();
   if (!userId) return { ok: false, status: 401, error: "Invalid user session" };
   if (!email) return { ok: false, status: 401, error: "No email in session" };
   return { ok: true, userId, email };
 }
 __name(getUserContext, "getUserContext");
-async function handleFavorites(request, env) {
-  const url = new URL(request.url);
+async function handleFavorites(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname.replace(/\/$/, "");
-  const method = request.method.toUpperCase();
+  const method = request2.method.toUpperCase();
   if (method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -14901,7 +15168,7 @@ async function handleFavorites(request, env) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
       return json12({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin18(request, env);
+    const auth = await authorizeAdmin18(request2, env);
     if (!auth.ok) return json12({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
@@ -14945,7 +15212,7 @@ async function handleFavorites(request, env) {
   if (path !== "/api/favorites") {
     return json12({ error: "Not found" }, 404);
   }
-  const user = await getUserContext(request, env);
+  const user = await getUserContext(request2, env);
   if (!user.ok) return json12({ error: user.error }, user.status);
   try {
     await ensureFavoritesSchema(env);
@@ -14979,7 +15246,7 @@ async function handleFavorites(request, env) {
   if (method === "POST") {
     let body = {};
     try {
-      body = await request.json();
+      body = await request2.json();
     } catch {
       return json12({ error: "Invalid JSON body" }, 400);
     }
@@ -15020,7 +15287,7 @@ async function handleFavorites(request, env) {
     let productSlug = String(url.searchParams.get("productSlug") || "").trim();
     if (!productSlug) {
       try {
-        const body = await request.json();
+        const body = await request2.json();
         productSlug = String(body.productSlug || body.slug || "").trim();
       } catch {
       }
@@ -15046,6 +15313,48 @@ async function handleFavorites(request, env) {
 __name(handleFavorites, "handleFavorites");
 
 // ../workers/api/checkout.ts
+function isProductionHost20(request2) {
+  try {
+    const host = new URL(request2.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+__name(isProductionHost20, "isProductionHost");
+function inferStripeSecretMode(secret) {
+  if (secret.startsWith("sk_live_")) return "live";
+  if (secret.startsWith("sk_test_")) return "test";
+  return "unknown";
+}
+__name(inferStripeSecretMode, "inferStripeSecretMode");
+function assertStripeRuntimeSafety(request2, env, stripeKey) {
+  const prodHost = isProductionHost20(request2);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeMode = inferStripeSecretMode(stripeKey);
+  if (prodHost) {
+    if (stripeMode === "test") return "Production host cannot use Stripe test secret key";
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    return null;
+  }
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production checkout disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeMode !== "test") {
+    return "Non-production checkout requires Stripe test secret key";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+__name(assertStripeRuntimeSafety, "assertStripeRuntimeSafety");
 function humanizeSlug(slug) {
   return String(slug || "").split("-").filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
@@ -15106,8 +15415,8 @@ async function ensureCheckoutSnapshotSchema(env) {
   return await checkoutSnapshotSchemaPromise;
 }
 __name(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
-async function handleCheckout(request, env) {
-  if (request.method !== "POST") {
+async function handleCheckout(request2, env) {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
@@ -15120,9 +15429,16 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const stripeSafetyError = assertStripeRuntimeSafety(request2, env, stripeKey);
+  if (stripeSafetyError) {
+    return new Response(JSON.stringify({ error: stripeSafetyError }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   let body;
   try {
-    body = await request.json();
+    body = await request2.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
@@ -15247,7 +15563,7 @@ async function handleCheckout(request, env) {
       }
     }
   }
-  const origin = String(request.headers.get("CF-IPCountry") || "").toUpperCase();
+  const origin = String(request2.headers.get("CF-IPCountry") || "").toUpperCase();
   const shippingCountry = String(shippingCountryInput || "").toUpperCase();
   const thCountries = ["TH", "LA", "MM", "KH"];
   let currency = "usd";
@@ -15398,7 +15714,7 @@ async function handleCheckout(request, env) {
     return sizeText;
   }
   __name(buildCompactDimText, "buildCompactDimText");
-  const reqUrl = new URL(request.url);
+  const reqUrl = new URL(request2.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
     const params = new URLSearchParams();
@@ -15568,10 +15884,53 @@ function normalizeAddress2(raw) {
   return [(addr.street || addr.address || "").trim().toLowerCase(), (addr.city || "").trim().toLowerCase(), (addr.state || addr.province || "").trim().toLowerCase(), (addr.postal_code || addr.zip || addr.postal || "").trim().toLowerCase(), (addr.country || "").trim().toLowerCase()].join("|");
 }
 __name(normalizeAddress2, "normalizeAddress");
+function isProductionHost21(request2) {
+  try {
+    const host = new URL(request2.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+__name(isProductionHost21, "isProductionHost");
+function assertWebhookRuntimeSafety(request2, env) {
+  const prodHost = isProductionHost21(request2);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeEnvMode = String(env.STRIPE_ENV_MODE || "").trim().toLowerCase();
+  if (prodHost) {
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    if (stripeEnvMode && stripeEnvMode !== "live") {
+      return "Production host requires STRIPE_ENV_MODE=live";
+    }
+    return null;
+  }
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production webhook disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeEnvMode !== "test") {
+    return "Non-production webhook requires STRIPE_ENV_MODE=test";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+__name(assertWebhookRuntimeSafety, "assertWebhookRuntimeSafety");
 var orderCustomerNoteSchemaReady = false;
 var orderCustomerNoteSchemaPromise = null;
 var checkoutSnapshotSchemaReady2 = false;
 var checkoutSnapshotSchemaPromise2 = null;
+var stripeWebhookEventsSchemaReady = false;
+var stripeWebhookEventsSchemaPromise = null;
+var stripeFulfillmentSchemaReady = false;
+var stripeFulfillmentSchemaPromise = null;
+var PAID_OR_HISTORICAL_ORDER_STATUSES = ["confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
 async function ensureOrderCustomerNoteSchema(env) {
   if (orderCustomerNoteSchemaReady) return true;
   if (!orderCustomerNoteSchemaPromise) {
@@ -15625,8 +15984,223 @@ async function ensureCheckoutSnapshotSchema2(env) {
   return await checkoutSnapshotSchemaPromise2;
 }
 __name(ensureCheckoutSnapshotSchema2, "ensureCheckoutSnapshotSchema");
-async function handleStripeWebhook(request, env) {
-  if (request.method !== "POST") {
+async function ensureStripeWebhookEventsSchema(env) {
+  if (stripeWebhookEventsSchemaReady) return true;
+  if (!stripeWebhookEventsSchemaPromise) {
+    stripeWebhookEventsSchemaPromise = (async () => {
+      try {
+        const row = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stripe_webhook_events' LIMIT 1"
+        ).first();
+        const ok = !!row?.name;
+        if (!ok) {
+          console.error("Missing required table stripe_webhook_events; apply migration 057_stripe_payment_idempotency.sql");
+        }
+        stripeWebhookEventsSchemaReady = ok;
+        return ok;
+      } catch (e) {
+        console.error("stripe webhook events schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!stripeWebhookEventsSchemaReady) stripeWebhookEventsSchemaPromise = null;
+    });
+  }
+  return await stripeWebhookEventsSchemaPromise;
+}
+__name(ensureStripeWebhookEventsSchema, "ensureStripeWebhookEventsSchema");
+async function ensureStripeFulfillmentSchema(env) {
+  if (stripeFulfillmentSchemaReady) return true;
+  if (!stripeFulfillmentSchemaPromise) {
+    stripeFulfillmentSchemaPromise = (async () => {
+      try {
+        const row = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stripe_order_fulfillment_lines' LIMIT 1"
+        ).first();
+        const ok = !!row?.name;
+        if (!ok) {
+          console.error("Missing required table stripe_order_fulfillment_lines; apply migration 057_stripe_payment_idempotency.sql");
+        }
+        stripeFulfillmentSchemaReady = ok;
+        return ok;
+      } catch (e) {
+        console.error("stripe fulfillment schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!stripeFulfillmentSchemaReady) stripeFulfillmentSchemaPromise = null;
+    });
+  }
+  return await stripeFulfillmentSchemaPromise;
+}
+__name(ensureStripeFulfillmentSchema, "ensureStripeFulfillmentSchema");
+function isStripeSessionPaid(session) {
+  return String(session?.payment_status || "").toLowerCase() === "paid";
+}
+__name(isStripeSessionPaid, "isStripeSessionPaid");
+function toFiniteNumberOrNull(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toFiniteNumberOrNull, "toFiniteNumberOrNull");
+function normalizeDimsForKey(dimsRaw) {
+  const dims = dimsRaw && typeof dimsRaw === "object" ? dimsRaw : {};
+  const valuesRaw = dims.values && typeof dims.values === "object" ? dims.values : {};
+  const values = {};
+  Object.keys(valuesRaw).sort().forEach((k) => {
+    const n = toFiniteNumberOrNull(valuesRaw[k]);
+    if (n !== null) values[String(k).toUpperCase()] = n;
+  });
+  return {
+    w: toFiniteNumberOrNull(dims.w),
+    l: toFiniteNumberOrNull(dims.l),
+    d: toFiniteNumberOrNull(dims.d),
+    unit: String(dims.unit || "cm"),
+    size_text: String(dims.size_text || ""),
+    shape_code: String(dims.shape_code || ""),
+    shape_name: String(dims.shape_name || ""),
+    boat_model_name: String(dims.boat_model_name || ""),
+    boat_model_key: String(dims.boat_model_key || ""),
+    area_cm2: toFiniteNumberOrNull(dims.area_cm2),
+    values
+  };
+}
+__name(normalizeDimsForKey, "normalizeDimsForKey");
+function buildFulfillmentLineIdentity(item) {
+  return {
+    slug: String(item?.slug || ""),
+    name: String(item?.name || ""),
+    quote_id: String(item?.quote_id || ""),
+    fabric: String(item?.fabric || ""),
+    color: String(item?.color || ""),
+    qty: Number(item?.qty || 1) || 1,
+    unit_amount: Number(item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey(item?.dims || {})
+  };
+}
+__name(buildFulfillmentLineIdentity, "buildFulfillmentLineIdentity");
+async function buildFulfillmentLineKey(sessionId, item, occurrence) {
+  const payload = JSON.stringify({
+    session_id: String(sessionId || ""),
+    occurrence: Number(occurrence || 1),
+    slug: String(item?.slug || ""),
+    name: String(item?.name || ""),
+    quote_id: String(item?.quote_id || ""),
+    fabric: String(item?.fabric || ""),
+    color: String(item?.color || ""),
+    qty: Number(item?.qty || 1) || 1,
+    unit_amount: Number(item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey(item?.dims || {})
+  });
+  return sha2562(payload);
+}
+__name(buildFulfillmentLineKey, "buildFulfillmentLineKey");
+async function claimFulfillmentLine(env, sessionId, eventId, lineKey, lineIndex) {
+  const schemaOk = await ensureStripeFulfillmentSchema(env);
+  if (!schemaOk) throw new Error("Missing required fulfillment schema (migration 057)");
+  const res = await env.DB.prepare(
+    `INSERT OR IGNORE INTO stripe_order_fulfillment_lines
+      (line_key, stripe_session_id, stripe_event_id, line_index, created_at)
+     VALUES (?1, ?2, ?3, ?4, datetime('now'))`
+  ).bind(lineKey, sessionId, eventId || null, lineIndex).run();
+  return Number(res?.meta?.changes || 0) > 0;
+}
+__name(claimFulfillmentLine, "claimFulfillmentLine");
+async function countExistingConfirmedOrderLines(env, line) {
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES.map((s) => `'${s}'`).join(",");
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM orders
+     WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
+       AND COALESCE(product_slug, '') = COALESCE(?2, '')
+       AND COALESCE(product_title_en, '') = COALESCE(?3, '')
+       AND COALESCE(fabric, '') = COALESCE(?4, '')
+       AND COALESCE(color, '') = COALESCE(?5, '')
+       AND ((width_cm IS NULL AND ?6 IS NULL) OR width_cm = ?6)
+       AND ((length_cm IS NULL AND ?7 IS NULL) OR length_cm = ?7)
+       AND ((depth_cm IS NULL AND ?8 IS NULL) OR depth_cm = ?8)
+       AND ((price_usd IS NULL AND ?9 IS NULL) OR price_usd = ?9)
+       AND ((price_thb IS NULL AND ?10 IS NULL) OR price_thb = ?10)
+       AND COALESCE(currency, '') = COALESCE(?11, '')
+       AND quantity = ?12`
+  ).bind(
+    line.sessionId,
+    line.productSlug || "",
+    line.productTitle || "",
+    line.fabric || "",
+    line.color || "",
+    line.widthCm,
+    line.lengthCm,
+    line.depthCm,
+    line.priceUsd,
+    line.priceThb,
+    line.currency || "",
+    line.qty
+  ).first();
+  return Number(row?.c || 0);
+}
+__name(countExistingConfirmedOrderLines, "countExistingConfirmedOrderLines");
+async function releaseFulfillmentLine(env, lineKey) {
+  try {
+    await env.DB.prepare("DELETE FROM stripe_order_fulfillment_lines WHERE line_key = ?1").bind(lineKey).run();
+  } catch {
+  }
+}
+__name(releaseFulfillmentLine, "releaseFulfillmentLine");
+async function claimStripeWebhookEvent(env, event) {
+  const schemaOk = await ensureStripeWebhookEventsSchema(env);
+  if (!schemaOk) return { status: "error" };
+  const eventId = String(event?.id || "").trim();
+  const eventType = String(event?.type || "").trim();
+  const stripeSessionId = String(event?.data?.object?.id || "").trim() || null;
+  if (!eventId) return { status: "error" };
+  await env.DB.prepare(
+    `INSERT OR IGNORE INTO stripe_webhook_events
+      (event_id, event_type, stripe_session_id, processing_token, processed_at, process_result, last_error, created_at, updated_at)
+     VALUES (?1, ?2, ?3, NULL, NULL, NULL, NULL, datetime('now'), datetime('now'))`
+  ).bind(eventId, eventType, stripeSessionId).run();
+  const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const claimRes = await env.DB.prepare(
+    `UPDATE stripe_webhook_events
+     SET processing_token = ?2, updated_at = datetime('now')
+     WHERE event_id = ?1
+       AND processed_at IS NULL
+       AND (processing_token IS NULL OR updated_at < datetime('now', '-10 minutes'))`
+  ).bind(eventId, token).run();
+  if (Number(claimRes?.meta?.changes || 0) > 0) {
+    return { status: "claimed", token };
+  }
+  const row = await env.DB.prepare(
+    "SELECT processed_at FROM stripe_webhook_events WHERE event_id = ?1 LIMIT 1"
+  ).bind(eventId).first();
+  if (row?.processed_at) return { status: "already_processed" };
+  return { status: "in_progress" };
+}
+__name(claimStripeWebhookEvent, "claimStripeWebhookEvent");
+async function markStripeWebhookEventProcessed(env, eventId, token, processResult) {
+  await env.DB.prepare(
+    `UPDATE stripe_webhook_events
+     SET processed_at = datetime('now'),
+         process_result = ?3,
+         processing_token = NULL,
+         last_error = NULL,
+         updated_at = datetime('now')
+     WHERE event_id = ?1 AND processing_token = ?2`
+  ).bind(eventId, token, processResult).run();
+}
+__name(markStripeWebhookEventProcessed, "markStripeWebhookEventProcessed");
+async function markStripeWebhookEventFailed(env, eventId, token, err4) {
+  await env.DB.prepare(
+    `UPDATE stripe_webhook_events
+     SET last_error = ?3,
+         processing_token = NULL,
+         updated_at = datetime('now')
+     WHERE event_id = ?1 AND processing_token = ?2`
+  ).bind(eventId, token, String(err4?.message || err4 || "unknown")).run();
+}
+__name(markStripeWebhookEventFailed, "markStripeWebhookEventFailed");
+async function handleStripeWebhook(request2, env) {
+  if (request2.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
@@ -15639,14 +16213,21 @@ async function handleStripeWebhook(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const signature = request.headers.get("stripe-signature");
+  const webhookSafetyError = assertWebhookRuntimeSafety(request2, env);
+  if (webhookSafetyError) {
+    return new Response(JSON.stringify({ error: webhookSafetyError }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const signature = request2.headers.get("stripe-signature");
   if (!signature) {
     return new Response(JSON.stringify({ error: "Missing signature" }), {
       status: 400,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const rawBody = await request.text();
+  const rawBody = await request2.text();
   let event;
   try {
     const parts = signature.split(",");
@@ -15761,299 +16342,367 @@ async function handleStripeWebhook(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (event.type !== "checkout.session.completed") {
+  const stripeOrderEventTypes = /* @__PURE__ */ new Set([
+    "checkout.session.completed",
+    "checkout.session.async_payment_succeeded",
+    "checkout.session.async_payment_failed"
+  ]);
+  if (!stripeOrderEventTypes.has(String(event?.type || ""))) {
     return new Response(JSON.stringify({ received: true }), {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const eventId = String(event?.id || "").trim();
+  const claim = await claimStripeWebhookEvent(env, event);
+  if (claim.status === "already_processed" || claim.status === "in_progress") {
+    return new Response(JSON.stringify({ received: true, duplicate: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (claim.status !== "claimed" || !claim.token) {
+    return new Response(JSON.stringify({ error: "Webhook idempotency unavailable" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   const session = event.data.object;
-  const metadata = session.metadata || {};
-  const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
-  const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
-  const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
-  const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
-  const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
-  const mapItems = /* @__PURE__ */ __name((rawItems) => {
-    return (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
-      slug: item.slug || item.s || "",
-      name: item.name || item.n || item.slug || item.s || "",
-      quote_id: item.quote_id || item.qi || null,
-      fabric: item.fabric || item.f || null,
-      color: item.color || item.c || null,
-      dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
-      qty: item.qty || item.q || 1,
-      unit_amount: Number(item.u || item.unit_amount || 0)
-      // minor unit (cents/satang)
-    }));
-  }, "mapItems");
-  let items = [];
-  let itemsSource = "metadata";
+  if (event.type === "checkout.session.async_payment_failed") {
+    await markStripeWebhookEventProcessed(env, eventId, claim.token, "ignored_async_payment_failed");
+    return new Response(JSON.stringify({ received: true, ignored: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  if (!isStripeSessionPaid(session)) {
+    await markStripeWebhookEventProcessed(env, eventId, claim.token, "ignored_unpaid");
+    return new Response(JSON.stringify({ received: true, ignored: true }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   try {
-    const schemaOk = await ensureCheckoutSnapshotSchema2(env);
-    if (schemaOk && session.id) {
-      const snapshot = await env.DB.prepare(
-        "SELECT items_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
-      ).bind(String(session.id)).first();
-      if (snapshot?.items_json) {
-        const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
-        const mapped = mapItems(rawSnapshotItems);
-        if (mapped.length > 0) {
-          items = mapped;
-          itemsSource = "d1_snapshot";
-        }
-      }
-    }
-  } catch (e) {
-    console.error("checkout snapshot read failed:", e?.message || e);
-  }
-  if (items.length === 0) {
+    const metadata = session.metadata || {};
+    const customerNoteType = String(metadata.customer_note_type || "").trim().slice(0, 64) || null;
+    const customerNote = String(metadata.customer_note || "").trim().slice(0, 450) || null;
+    const shippingServiceLevelRaw = String(metadata.shipping_service_level || "").trim().toLowerCase();
+    const shippingServiceType = shippingServiceLevelRaw === "standard" ? "Standard" : shippingServiceLevelRaw === "express" ? "Express" : "N/A";
+    const hasOrderCustomerNoteColumns = await ensureOrderCustomerNoteSchema(env);
+    const mapItems = /* @__PURE__ */ __name((rawItems) => {
+      return (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
+        slug: item.slug || item.s || "",
+        name: item.name || item.n || item.slug || item.s || "",
+        quote_id: item.quote_id || item.qi || null,
+        fabric: item.fabric || item.f || null,
+        color: item.color || item.c || null,
+        dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
+        qty: item.qty || item.q || 1,
+        unit_amount: Number(item.u || item.unit_amount || 0)
+        // minor unit (cents/satang)
+      }));
+    }, "mapItems");
+    let items = [];
+    let itemsSource = "metadata";
     try {
-      const rawItems = JSON.parse(metadata.items || "[]");
-      items = mapItems(rawItems);
-      itemsSource = "metadata";
-    } catch {
-    }
-  }
-  console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
-  const sessionCurrency = String(session.currency || "usd").toLowerCase();
-  const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
-  const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
-  const toFiniteNumber = /* @__PURE__ */ __name((v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : void 0;
-  }, "toFiniteNumber");
-  const parseDimsFromSizeText = /* @__PURE__ */ __name((sizeText) => {
-    const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
-    const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
-    if (!m) return {};
-    const unitRaw = String(m[4] || "").toLowerCase();
-    return {
-      w: toFiniteNumber(m[1]),
-      l: toFiniteNumber(m[2]),
-      d: toFiniteNumber(m[3]),
-      unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
-    };
-  }, "parseDimsFromSizeText");
-  const hasUsefulDims = /* @__PURE__ */ __name((dims) => {
-    if (!dims || typeof dims !== "object") return false;
-    if (toFiniteNumber(dims.w) && toFiniteNumber(dims.l)) return true;
-    if (String(dims.size_text || "").trim()) return true;
-    if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
-    if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
-    if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
-    return false;
-  }, "hasUsefulDims");
-  const formatDimsForEmail = /* @__PURE__ */ __name((dims) => {
-    const unit = String(dims?.unit || "cm");
-    const boatModelName = String(dims?.boat_model_name || "").trim();
-    if (boatModelName) {
-      const modelKey = String(dims?.boat_model_key || "").trim();
-      return modelKey ? `Model: ${boatModelName} (${modelKey})` : `Model: ${boatModelName}`;
-    }
-    const shapeCode = String(dims?.shape_code || "").trim();
-    const shapeName = String(dims?.shape_name || "").trim();
-    const valuesObj = dims?.values && typeof dims.values === "object" && !Array.isArray(dims.values) ? dims.values : null;
-    if (shapeCode || shapeName || valuesObj) {
-      const shapeLabel = [shapeCode ? `Shape ${shapeCode}` : "", shapeName].filter(Boolean).join(" \u2014 ");
-      const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
-      const valuePairs = valuesObj ? Object.keys(valuesObj).sort((a, b) => {
-        const ai = order.indexOf(String(a).toUpperCase());
-        const bi = order.indexOf(String(b).toUpperCase());
-        if (ai === -1 && bi === -1) return String(a).localeCompare(String(b));
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
-        return ai - bi;
-      }).map((k) => {
-        const n = toFiniteNumber(valuesObj[k]);
-        return n ? `${String(k).toUpperCase()}:${n}` : null;
-      }).filter(Boolean) : [];
-      const areaCm2 = toFiniteNumber(dims?.area_cm2);
-      const extra = [
-        valuePairs.length ? `${valuePairs.join(", ")} ${unit}` : "",
-        areaCm2 ? `Area:${Math.round(areaCm2).toLocaleString()} cm\xB2` : ""
-      ].filter(Boolean).join(" | ");
-      return [shapeLabel, extra].filter(Boolean).join(" | ") || `?\xD7? ${unit}`;
-    }
-    const w = toFiniteNumber(dims?.w);
-    const l = toFiniteNumber(dims?.l);
-    const d = toFiniteNumber(dims?.d);
-    if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
-    const sizeText = String(dims?.size_text || "").trim();
-    if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
-    return `?\xD7? ${unit}`;
-  }, "formatDimsForEmail");
-  for (const item of items) {
-    let dims = item.dims || {};
-    if (!hasUsefulDims(dims) && item.quote_id) {
-      try {
-        const quoteRow = await env.DB.prepare(
-          "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
-        ).bind(String(item.quote_id)).first();
-        if (quoteRow?.dimensions) {
-          const fromQuote = typeof quoteRow.dimensions === "string" ? JSON.parse(quoteRow.dimensions) : quoteRow.dimensions;
-          if (fromQuote && typeof fromQuote === "object") {
-            dims = fromQuote;
-            item.dims = dims;
+      const schemaOk = await ensureCheckoutSnapshotSchema2(env);
+      if (schemaOk && session.id) {
+        const snapshot = await env.DB.prepare(
+          "SELECT items_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+        ).bind(String(session.id)).first();
+        if (snapshot?.items_json) {
+          const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
+          const mapped = mapItems(rawSnapshotItems);
+          if (mapped.length > 0) {
+            items = mapped;
+            itemsSource = "d1_snapshot";
           }
-        }
-      } catch (e) {
-        console.error("quote dims hydrate failed:", item.quote_id, e?.message || e);
-      }
-    }
-    const parsedDims = parseDimsFromSizeText(dims?.size_text);
-    const widthCm = toFiniteNumber(dims.w) ?? parsedDims.w ?? null;
-    const lengthCm = toFiniteNumber(dims.l) ?? parsedDims.l ?? null;
-    const depthCm = toFiniteNumber(dims.d) ?? parsedDims.d ?? null;
-    const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
-    const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
-    try {
-      if (hasOrderCustomerNoteColumns) {
-        await env.DB.prepare(
-          `INSERT INTO orders (
-            stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
-            shipping_address, product_slug, product_title_en, fabric, color,
-            width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-            custom_notes, price_usd, price_thb, currency, quantity, discount_code,
-            customer_note_type, customer_note, status
-          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
-        ).bind(
-          session.id,
-          session.payment_intent || null,
-          (metadata.email || session.customer_email || "").toLowerCase(),
-          metadata.name || null,
-          metadata.phone || null,
-          metadata.address || null,
-          item.slug || "",
-          item.name || "",
-          item.fabric || null,
-          item.color || null,
-          widthCm,
-          lengthCm,
-          depthCm,
-          null,
-          null,
-          null,
-          null,
-          sessionCurrency === "usd" ? unitPriceMajor : null,
-          sessionCurrency === "thb" ? unitPriceMajor : null,
-          sessionCurrency,
-          item.qty || 1,
-          metadata.discount_code || null,
-          customerNoteType,
-          customerNote
-        ).run();
-      } else {
-        await env.DB.prepare(
-          `INSERT INTO orders (
-            stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
-            shipping_address, product_slug, product_title_en, fabric, color,
-            width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-            custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-          ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
-        ).bind(
-          session.id,
-          session.payment_intent || null,
-          (metadata.email || session.customer_email || "").toLowerCase(),
-          metadata.name || null,
-          metadata.phone || null,
-          metadata.address || null,
-          item.slug || "",
-          item.name || "",
-          item.fabric || null,
-          item.color || null,
-          widthCm,
-          lengthCm,
-          depthCm,
-          null,
-          null,
-          null,
-          null,
-          sessionCurrency === "usd" ? unitPriceMajor : null,
-          sessionCurrency === "thb" ? unitPriceMajor : null,
-          sessionCurrency,
-          item.qty || 1,
-          metadata.discount_code || null
-        ).run();
-      }
-      if (metadata.discount_code) {
-        try {
-          var addrHash = metadata.address ? await sha2562(normalizeAddress2(metadata.address)) : null;
-          const normalizedEmail2 = (metadata.email || session.customer_email || "").toLowerCase();
-          const promoRow = await env.DB.prepare(
-            "SELECT id FROM promo_codes WHERE code = ? AND is_active = 1"
-          ).bind(metadata.discount_code).first();
-          if (promoRow) {
-            await env.DB.prepare(
-              "UPDATE promo_codes SET use_count = use_count + 1 WHERE id = ?"
-            ).bind(promoRow.id).run();
-            await env.DB.prepare(
-              "INSERT INTO promo_redemptions (promo_id, email, order_id) VALUES (?, ?, ?)"
-            ).bind(promoRow.id, normalizedEmail2, null).run();
-          } else {
-            await env.DB.prepare(
-              "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
-            ).bind(addrHash, metadata.discount_code).run();
-          }
-        } catch (err4) {
-          console.error("Discount claim failed:", err4?.message || err4);
         }
       }
     } catch (e) {
-      console.error("Failed to save order:", e.message);
+      console.error("checkout snapshot read failed:", e?.message || e);
     }
-  }
-  const email = metadata.email || session.customer_email;
-  if (email) {
-    try {
-      await env.DB.prepare(
-        "UPDATE abandoned_carts SET recovered = 1 WHERE email = ?1 AND recovered = 0"
-      ).bind(email).run();
-    } catch {
-    }
-  }
-  if (email && metadata.address) {
-    try {
-      const existing = await env.DB.prepare(
-        "SELECT id FROM customer_addresses WHERE email = ?1 AND address = ?2 LIMIT 1"
-      ).bind(email, metadata.address).first();
-      if (!existing) {
-        const fullName = (metadata.name || "").trim();
-        const nameParts = fullName.split(/\s+/);
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.slice(1).join(" ") || "";
-        const addrParts = metadata.address.split(",").map((s) => s.trim());
-        const country = addrParts[addrParts.length - 1] || "";
-        const postal = addrParts.length >= 2 ? addrParts[addrParts.length - 2] : "";
-        const state = addrParts.length >= 3 ? addrParts[addrParts.length - 3] : "";
-        const city = addrParts.length >= 4 ? addrParts[addrParts.length - 4] : "";
-        await env.DB.prepare(
-          `INSERT INTO customer_addresses (email, label, first_name, last_name, phone, country, address, city, state, postal_code, is_default)
-           VALUES (?1, 'Home', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0)`
-        ).bind(email, firstName, lastName, metadata.phone || "", country, metadata.address, city, state, postal).run();
+    if (items.length === 0) {
+      try {
+        const rawItems = JSON.parse(metadata.items || "[]");
+        items = mapItems(rawItems);
+        itemsSource = "metadata";
+      } catch {
       }
-    } catch {
     }
-  }
-  if (email && env.RESEND_API_KEY) {
-    const itemList = items.map((i) => {
-      const dims = i.dims || {};
-      return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
-    }).join("\n");
-    const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
-    const shippingCountryCode = String(
-      metadata.shipping_country_applied || metadata.shipping_country_requested || ""
-    ).trim().toUpperCase();
-    const dutyTaxNotice = shippingCountryCode === "US" || shippingCountryCode === "CA" ? "Import duties and taxes are included (DDP) for this shipment." : shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.";
-    const dutyTaxLine = dutyTaxNotice ? `
+    console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
+    const sessionCurrency = String(session.currency || "usd").toLowerCase();
+    const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
+    const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
+    const toFiniteNumber2 = /* @__PURE__ */ __name((v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : void 0;
+    }, "toFiniteNumber");
+    const parseDimsFromSizeText = /* @__PURE__ */ __name((sizeText) => {
+      const clean = String(sizeText || "").replace(/^dimensions:\s*/i, "").trim();
+      const m = clean.match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)(?:\s*[x×]\s*(\d+(?:\.\d+)?))?\s*(cm|inch|in)?/i);
+      if (!m) return {};
+      const unitRaw = String(m[4] || "").toLowerCase();
+      return {
+        w: toFiniteNumber2(m[1]),
+        l: toFiniteNumber2(m[2]),
+        d: toFiniteNumber2(m[3]),
+        unit: unitRaw === "inch" || unitRaw === "in" ? "inch" : "cm"
+      };
+    }, "parseDimsFromSizeText");
+    const hasUsefulDims = /* @__PURE__ */ __name((dims) => {
+      if (!dims || typeof dims !== "object") return false;
+      if (toFiniteNumber2(dims.w) && toFiniteNumber2(dims.l)) return true;
+      if (String(dims.size_text || "").trim()) return true;
+      if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
+      if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
+      if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
+      return false;
+    }, "hasUsefulDims");
+    const formatDimsForEmail = /* @__PURE__ */ __name((dims) => {
+      const unit = String(dims?.unit || "cm");
+      const boatModelName = String(dims?.boat_model_name || "").trim();
+      if (boatModelName) {
+        const modelKey = String(dims?.boat_model_key || "").trim();
+        return modelKey ? `Model: ${boatModelName} (${modelKey})` : `Model: ${boatModelName}`;
+      }
+      const shapeCode = String(dims?.shape_code || "").trim();
+      const shapeName = String(dims?.shape_name || "").trim();
+      const valuesObj = dims?.values && typeof dims.values === "object" && !Array.isArray(dims.values) ? dims.values : null;
+      if (shapeCode || shapeName || valuesObj) {
+        const shapeLabel = [shapeCode ? `Shape ${shapeCode}` : "", shapeName].filter(Boolean).join(" \u2014 ");
+        const order = ["A", "B", "C", "D", "E", "F", "G", "H", "W", "L", "T"];
+        const valuePairs = valuesObj ? Object.keys(valuesObj).sort((a, b) => {
+          const ai = order.indexOf(String(a).toUpperCase());
+          const bi = order.indexOf(String(b).toUpperCase());
+          if (ai === -1 && bi === -1) return String(a).localeCompare(String(b));
+          if (ai === -1) return 1;
+          if (bi === -1) return -1;
+          return ai - bi;
+        }).map((k) => {
+          const n = toFiniteNumber2(valuesObj[k]);
+          return n ? `${String(k).toUpperCase()}:${n}` : null;
+        }).filter(Boolean) : [];
+        const areaCm2 = toFiniteNumber2(dims?.area_cm2);
+        const extra = [
+          valuePairs.length ? `${valuePairs.join(", ")} ${unit}` : "",
+          areaCm2 ? `Area:${Math.round(areaCm2).toLocaleString()} cm\xB2` : ""
+        ].filter(Boolean).join(" | ");
+        return [shapeLabel, extra].filter(Boolean).join(" | ") || `?\xD7? ${unit}`;
+      }
+      const w = toFiniteNumber2(dims?.w);
+      const l = toFiniteNumber2(dims?.l);
+      const d = toFiniteNumber2(dims?.d);
+      if (w && l) return `${w}\xD7${l}${d ? `\xD7${d}` : ""} ${unit}`;
+      const sizeText = String(dims?.size_text || "").trim();
+      if (sizeText) return sizeText.replace(/^dimensions:\s*/i, "").trim();
+      return `?\xD7? ${unit}`;
+    }, "formatDimsForEmail");
+    let insertedOrderRows = 0;
+    const lineOccurrenceMap = /* @__PURE__ */ new Map();
+    for (let lineIndex = 0; lineIndex < items.length; lineIndex++) {
+      const item = items[lineIndex];
+      let dims = item.dims || {};
+      if (!hasUsefulDims(dims) && item.quote_id) {
+        try {
+          const quoteRow = await env.DB.prepare(
+            "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
+          ).bind(String(item.quote_id)).first();
+          if (quoteRow?.dimensions) {
+            const fromQuote = typeof quoteRow.dimensions === "string" ? JSON.parse(quoteRow.dimensions) : quoteRow.dimensions;
+            if (fromQuote && typeof fromQuote === "object") {
+              dims = fromQuote;
+              item.dims = dims;
+            }
+          }
+        } catch (e) {
+          console.error("quote dims hydrate failed:", item.quote_id, e?.message || e);
+        }
+      }
+      const parsedDims = parseDimsFromSizeText(dims?.size_text);
+      const widthCm = toFiniteNumber2(dims.w) ?? parsedDims.w ?? null;
+      const lengthCm = toFiniteNumber2(dims.l) ?? parsedDims.l ?? null;
+      const depthCm = toFiniteNumber2(dims.d) ?? parsedDims.d ?? null;
+      const unitAmount = item.unit_amount > 0 ? item.unit_amount : fallbackUnitAmount;
+      const unitPriceMajor = unitAmount > 0 ? unitAmount / 100 : null;
+      const linePayload = {
+        slug: item.slug || "",
+        name: item.name || "",
+        quote_id: item.quote_id || "",
+        fabric: item.fabric || "",
+        color: item.color || "",
+        dims,
+        qty: item.qty || 1,
+        unit_amount: unitAmount
+      };
+      const lineIdentity = JSON.stringify(buildFulfillmentLineIdentity(linePayload));
+      const lineOccurrence = (lineOccurrenceMap.get(lineIdentity) || 0) + 1;
+      lineOccurrenceMap.set(lineIdentity, lineOccurrence);
+      const lineKey = await buildFulfillmentLineKey(session.id, linePayload, lineOccurrence);
+      const lineClaimed = await claimFulfillmentLine(env, String(session.id || ""), eventId, lineKey, lineIndex);
+      if (!lineClaimed) continue;
+      try {
+        const priceUsd = sessionCurrency === "usd" ? unitPriceMajor : null;
+        const priceThb = sessionCurrency === "thb" ? unitPriceMajor : null;
+        const existingCount = await countExistingConfirmedOrderLines(env, {
+          sessionId: session.id,
+          productSlug: String(item.slug || ""),
+          productTitle: String(item.name || ""),
+          fabric: item.fabric || null,
+          color: item.color || null,
+          widthCm,
+          lengthCm,
+          depthCm,
+          priceUsd,
+          priceThb,
+          currency: sessionCurrency,
+          qty: Number(item.qty || 1) || 1
+        });
+        if (existingCount >= lineOccurrence) continue;
+        if (hasOrderCustomerNoteColumns) {
+          await env.DB.prepare(
+            `INSERT INTO orders (
+              stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
+              shipping_address, product_slug, product_title_en, fabric, color,
+              width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+              customer_note_type, customer_note, status
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
+          ).bind(
+            session.id,
+            session.payment_intent || null,
+            (metadata.email || session.customer_email || "").toLowerCase(),
+            metadata.name || null,
+            metadata.phone || null,
+            metadata.address || null,
+            item.slug || "",
+            item.name || "",
+            item.fabric || null,
+            item.color || null,
+            widthCm,
+            lengthCm,
+            depthCm,
+            null,
+            null,
+            null,
+            null,
+            priceUsd,
+            priceThb,
+            sessionCurrency,
+            item.qty || 1,
+            metadata.discount_code || null,
+            customerNoteType,
+            customerNote
+          ).run();
+        } else {
+          await env.DB.prepare(
+            `INSERT INTO orders (
+              stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
+              shipping_address, product_slug, product_title_en, fabric, color,
+              width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+          ).bind(
+            session.id,
+            session.payment_intent || null,
+            (metadata.email || session.customer_email || "").toLowerCase(),
+            metadata.name || null,
+            metadata.phone || null,
+            metadata.address || null,
+            item.slug || "",
+            item.name || "",
+            item.fabric || null,
+            item.color || null,
+            widthCm,
+            lengthCm,
+            depthCm,
+            null,
+            null,
+            null,
+            null,
+            priceUsd,
+            priceThb,
+            sessionCurrency,
+            item.qty || 1,
+            metadata.discount_code || null
+          ).run();
+        }
+        insertedOrderRows++;
+      } catch (e) {
+        await releaseFulfillmentLine(env, lineKey);
+        throw e;
+      }
+    }
+    if (insertedOrderRows > 0 && metadata.discount_code) {
+      try {
+        var addrHash = metadata.address ? await sha2562(normalizeAddress2(metadata.address)) : null;
+        const normalizedEmail2 = (metadata.email || session.customer_email || "").toLowerCase();
+        const promoRow = await env.DB.prepare(
+          "SELECT id FROM promo_codes WHERE code = ? AND is_active = 1"
+        ).bind(metadata.discount_code).first();
+        if (promoRow) {
+          await env.DB.prepare(
+            "UPDATE promo_codes SET use_count = use_count + 1 WHERE id = ?"
+          ).bind(promoRow.id).run();
+          await env.DB.prepare(
+            "INSERT INTO promo_redemptions (promo_id, email, order_id) VALUES (?, ?, ?)"
+          ).bind(promoRow.id, normalizedEmail2, null).run();
+        } else {
+          await env.DB.prepare(
+            "UPDATE discount_claims SET status = 'used', address_hash = ?, order_id = last_insert_rowid(), claimed_at = datetime('now') WHERE code = ? AND status = 'issued'"
+          ).bind(addrHash, metadata.discount_code).run();
+        }
+      } catch (err4) {
+        console.error("Discount claim failed:", err4?.message || err4);
+      }
+    }
+    const email = metadata.email || session.customer_email;
+    if (insertedOrderRows > 0 && email) {
+      try {
+        await env.DB.prepare(
+          "UPDATE abandoned_carts SET recovered = 1 WHERE email = ?1 AND recovered = 0"
+        ).bind(email).run();
+      } catch {
+      }
+      if (metadata.address) {
+        try {
+          const existing = await env.DB.prepare(
+            "SELECT id FROM customer_addresses WHERE email = ?1 AND address = ?2 LIMIT 1"
+          ).bind(email, metadata.address).first();
+          if (!existing) {
+            const fullName = (metadata.name || "").trim();
+            const nameParts = fullName.split(/\s+/);
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
+            const addrParts = metadata.address.split(",").map((s) => s.trim());
+            const country = addrParts[addrParts.length - 1] || "";
+            const postal = addrParts.length >= 2 ? addrParts[addrParts.length - 2] : "";
+            const state = addrParts.length >= 3 ? addrParts[addrParts.length - 3] : "";
+            const city = addrParts.length >= 4 ? addrParts[addrParts.length - 4] : "";
+            await env.DB.prepare(
+              `INSERT INTO customer_addresses (email, label, first_name, last_name, phone, country, address, city, state, postal_code, is_default)
+               VALUES (?1, 'Home', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0)`
+            ).bind(email, firstName, lastName, metadata.phone || "", country, metadata.address, city, state, postal).run();
+          }
+        } catch {
+        }
+      }
+      if (env.RESEND_API_KEY) {
+        const itemList = items.map((i) => {
+          const dims = i.dims || {};
+          return `- ${i.name} | ${i.fabric || "N/A"} | ${i.color || "N/A"} | ${formatDimsForEmail(dims)} | Qty: ${i.qty || 1}`;
+        }).join("\n");
+        const total = session.amount_total ? `${(session.amount_total / 100).toFixed(2)} ${session.currency?.toUpperCase() || "USD"}` : "N/A";
+        const shippingCountryCode = String(
+          metadata.shipping_country_applied || metadata.shipping_country_requested || ""
+        ).trim().toUpperCase();
+        const dutyTaxNotice = shippingCountryCode === "US" || shippingCountryCode === "CA" ? "Import duties and taxes are included (DDP) for this shipment." : shippingCountryCode === "TH" ? "" : "Import duties, VAT, and local taxes are not included and may be collected on delivery.";
+        const dutyTaxLine = dutyTaxNotice ? `
 
 Duty/Tax: ${dutyTaxNotice}` : "";
-    const dutyTaxTeamLine = dutyTaxNotice ? `
+        const dutyTaxTeamLine = dutyTaxNotice ? `
 Duty/Tax: ${dutyTaxNotice}` : "";
-    try {
-      const customerMail = await sendEmail(env, {
-        to: email,
-        subject: `Order Confirmed \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `Thank you for your order!
+        try {
+          const customerMail = await sendEmail(env, {
+            to: email,
+            subject: `Order Confirmed \u2014 MildMate #${session.id.slice(-8)}`,
+            text: `Thank you for your order!
 
 Order: #${session.id.slice(-8)}
 
@@ -16065,22 +16714,20 @@ Total: ${total}${dutyTaxLine}
 We'll notify you when your order ships.
 
 \u2014 MildMate`
-      });
-      if (!customerMail.success) {
-        console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
-      }
-    } catch (err4) {
-      console.error("Customer email exception:", err4?.message || err4, "to:", email);
-    }
-    const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
-    try {
-      const customerNoteText = customerNote ? `
+          });
+          if (!customerMail.success) console.error("Customer email failed:", customerMail.error || "unknown error", "to:", email);
+        } catch (err4) {
+          console.error("Customer email exception:", err4?.message || err4, "to:", email);
+        }
+        const teamEmail = env.ORDER_NOTIFICATION_EMAIL || "orders@mildmate.com";
+        try {
+          const customerNoteText = customerNote ? `
 Message Type: ${customerNoteType || "other"}
 Customer Message: ${customerNote}` : "";
-      const teamMail = await sendEmail(env, {
-        to: teamEmail,
-        subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
-        text: `New order received!
+          const teamMail = await sendEmail(env, {
+            to: teamEmail,
+            subject: `New Order \u2014 MildMate #${session.id.slice(-8)}`,
+            text: `New order received!
 
 Order: #${session.id.slice(-8)}
 Customer: ${metadata.name || "Guest"} (${email})
@@ -16092,56 +16739,65 @@ Items:
 ${itemList}
 
 Total: ${total}${dutyTaxTeamLine}`
-      });
-      if (!teamMail.success) {
-        console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
-      }
-    } catch (err4) {
-      console.error("Team email exception:", err4?.message || err4, "to:", teamEmail);
-    }
-  }
-  if (email) {
-    try {
-      const { results: cfgRows } = await env.DB.prepare("SELECT key, value FROM recovery_config").all();
-      let discountPct = 20, sendAfterHours = 1;
-      if (cfgRows) {
-        const map = {};
-        for (const row of cfgRows) map[row.key] = row.value;
-        discountPct = Number(map.thankyou_discount) || 20;
-        sendAfterHours = Number(map.thankyou_send_after_hours) || 1;
-      }
-      const normalizedEmail = email.toLowerCase();
-      const existingForOrder = await env.DB.prepare(
-        "SELECT id FROM thankyou_queue WHERE order_id = ?1 LIMIT 1"
-      ).bind(session.id).first();
-      if (existingForOrder) {
-        console.log(`Webhook: thankyou skip (already queued for order ${session.id})`);
-      } else {
-        const activeClaim = await env.DB.prepare(
-          "SELECT code, expires_at FROM discount_claims WHERE email = ?1 AND source = 'thankyou' AND status = 'issued' AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
-        ).bind(normalizedEmail).first();
-        if (activeClaim) {
-          console.log(`Webhook: thankyou skip (active code exists for ${normalizedEmail}: ${activeClaim.code})`);
-        } else {
-          const discountCode = "THANKS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-          const expiresAt = new Date(Date.now() + 365 * 86400 * 1e3).toISOString().replace("T", " ").slice(0, 19);
-          const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1e3).toISOString().replace("T", " ").slice(0, 19);
-          await env.DB.prepare(
-            "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
-          ).bind(discountCode, normalizedEmail, discountPct, expiresAt).run();
-          await env.DB.prepare(
-            "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
-          ).bind(session.id, normalizedEmail, discountCode, discountPct, sendAfter).run();
-          console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+          });
+          if (!teamMail.success) console.error("Team email failed:", teamMail.error || "unknown error", "to:", teamEmail);
+        } catch (err4) {
+          console.error("Team email exception:", err4?.message || err4, "to:", teamEmail);
         }
       }
-    } catch (e) {
-      console.error("Thankyou queue insert failed:", e.message);
+      try {
+        const { results: cfgRows } = await env.DB.prepare("SELECT key, value FROM recovery_config").all();
+        let discountPct = 20, sendAfterHours = 1;
+        if (cfgRows) {
+          const map = {};
+          for (const row of cfgRows) map[row.key] = row.value;
+          discountPct = Number(map.thankyou_discount) || 20;
+          sendAfterHours = Number(map.thankyou_send_after_hours) || 1;
+        }
+        const normalizedEmail = email.toLowerCase();
+        const existingForOrder = await env.DB.prepare(
+          "SELECT id FROM thankyou_queue WHERE order_id = ?1 LIMIT 1"
+        ).bind(session.id).first();
+        if (!existingForOrder) {
+          const activeClaim = await env.DB.prepare(
+            "SELECT code, expires_at FROM discount_claims WHERE email = ?1 AND source = 'thankyou' AND status = 'issued' AND expires_at > datetime('now') ORDER BY created_at DESC LIMIT 1"
+          ).bind(normalizedEmail).first();
+          if (!activeClaim) {
+            const discountCode = "THANKS-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+            const expiresAt = new Date(Date.now() + 365 * 86400 * 1e3).toISOString().replace("T", " ").slice(0, 19);
+            const sendAfter = new Date(Date.now() + sendAfterHours * 3600 * 1e3).toISOString().replace("T", " ").slice(0, 19);
+            await env.DB.prepare(
+              "INSERT INTO discount_claims (code, email, status, discount_pct, expires_at, source, created_at) VALUES (?, ?, 'issued', ?, ?, 'thankyou', datetime('now'))"
+            ).bind(discountCode, normalizedEmail, discountPct, expiresAt).run();
+            await env.DB.prepare(
+              "INSERT INTO thankyou_queue (order_id, email, discount_code, discount_pct, send_after) VALUES (?, ?, ?, ?, ?)"
+            ).bind(session.id, normalizedEmail, discountCode, discountPct, sendAfter).run();
+            console.log(`Webhook: thankyou queued for ${email} (${discountPct}%, send after ${sendAfterHours}h)`);
+          }
+        } else {
+          console.log(`Webhook: thankyou skip (already queued for order ${session.id})`);
+        }
+      } catch (e) {
+        console.error("Thankyou queue insert failed:", e.message);
+      }
     }
+    await markStripeWebhookEventProcessed(
+      env,
+      eventId,
+      claim.token,
+      insertedOrderRows > 0 ? "processed" : "deduped_no_new_rows"
+    );
+    return new Response(JSON.stringify({ received: true, inserted_order_rows: insertedOrderRows }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (e) {
+    await markStripeWebhookEventFailed(env, eventId, claim.token, e);
+    console.error("Stripe webhook order processing failed:", e?.message || e);
+    return new Response(JSON.stringify({ error: "Webhook processing failed" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
-  return new Response(JSON.stringify({ received: true }), {
-    headers: { "Content-Type": "application/json" }
-  });
 }
 __name(handleStripeWebhook, "handleStripeWebhook");
 function hexToArrayBuffer(hex) {
@@ -16154,17 +16810,17 @@ function hexToArrayBuffer(hex) {
 __name(hexToArrayBuffer, "hexToArrayBuffer");
 
 // ../workers/api/auth.ts
-async function handleAuth(request, env) {
-  const url = new URL(request.url);
+async function handleAuth(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname;
-  if (request.method === "GET" && (path === "/api/auth/me" || path === "/api/auth/me/")) {
-    const authHeader = request.headers.get("Authorization") || "";
+  if (request2.method === "GET" && (path === "/api/auth/me" || path === "/api/auth/me/")) {
+    const authHeader = request2.headers.get("Authorization") || "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ authenticated: false }), {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const result = await verifyClerkJwt(request, env);
+    const result = await verifyClerkJwt(request2, env);
     if (!result.valid) {
       if (result.status === 401) {
         return new Response(JSON.stringify({ authenticated: false }), {
@@ -16177,7 +16833,7 @@ async function handleAuth(request, env) {
       });
     }
     const { payload } = result;
-    const headerEmail = request.headers.get("X-User-Email") || "";
+    const headerEmail = request2.headers.get("X-User-Email") || "";
     const email = payload.email || headerEmail || "";
     const name = payload.name || headerEmail.split("@")[0] || "";
     try {
@@ -16231,15 +16887,15 @@ async function ensureOrderShippingSchema2(env) {
   await orderShippingSchemaPromise2;
 }
 __name(ensureOrderShippingSchema2, "ensureOrderShippingSchema");
-async function getEmail(request, env) {
-  const result = await verifyClerkJwt(request, env);
+async function getEmail(request2, env) {
+  const result = await verifyClerkJwt(request2, env);
   if (!result.valid) {
     return new Response(JSON.stringify({ error: result.error }), {
       status: result.status,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const email = result.payload.email || request.headers.get("X-User-Email") || "";
+  const email = result.payload.email || request2.headers.get("X-User-Email") || "";
   if (!email) {
     return new Response(JSON.stringify({ error: "No email in token" }), {
       status: 401,
@@ -16249,14 +16905,14 @@ async function getEmail(request, env) {
   return email;
 }
 __name(getEmail, "getEmail");
-async function handleCustomers(request, env) {
-  const url = new URL(request.url);
+async function handleCustomers(request2, env) {
+  const url = new URL(request2.url);
   const path = url.pathname;
-  if (request.method === "GET" && (path === "/api/customers/orders" || path === "/api/customers/orders/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "GET" && (path === "/api/customers/orders" || path === "/api/customers/orders/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
-    const guestEmail = (request.headers.get("X-Order-Email") || "").trim().toLowerCase();
+    const guestEmail = (request2.headers.get("X-Order-Email") || "").trim().toLowerCase();
     const hasGuestBridge = guestEmail && guestEmail !== email.toLowerCase();
     try {
       await ensureOrderShippingSchema2(env);
@@ -16322,8 +16978,8 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "GET" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "GET" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
@@ -16341,12 +16997,12 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "PUT" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "PUT" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const items = body.items || [];
       if (!Array.isArray(items)) {
         return new Response(JSON.stringify({ error: "items must be an array" }), {
@@ -16373,8 +17029,8 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "DELETE" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "DELETE" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
@@ -16392,8 +17048,8 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "GET" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "GET" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
@@ -16411,12 +17067,12 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "POST" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "POST" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const { label, first_name, last_name, phone, country, address, city, state, postal_code } = body;
       if (!first_name || !last_name || !phone || !country || !address || !city) {
         return new Response(JSON.stringify({ error: "Missing required fields: first_name, last_name, phone, country, address, city" }), {
@@ -16469,8 +17125,8 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "PUT" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "PUT" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     const addrId = url.searchParams.get("id");
@@ -16481,7 +17137,7 @@ async function handleCustomers(request, env) {
       });
     }
     try {
-      const body = await request.json();
+      const body = await request2.json();
       const existing = await env.DB.prepare(
         "SELECT * FROM customer_addresses WHERE id = ?1 AND email = ?2"
       ).bind(addrId, email).first();
@@ -16537,8 +17193,8 @@ async function handleCustomers(request, env) {
       });
     }
   }
-  if (request.method === "DELETE" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request, env);
+  if (request2.method === "DELETE" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request2, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     const addrId = url.searchParams.get("id");
@@ -16590,23 +17246,249 @@ async function handleCustomers(request, env) {
 __name(handleCustomers, "handleCustomers");
 
 // ../workers/api/order-confirmed.ts
+async function sha2563(text) {
+  const d = new TextEncoder().encode(text);
+  const h = await crypto.subtle.digest("SHA-256", d);
+  return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(sha2563, "sha256");
+function isProductionHost22(request2) {
+  try {
+    const host = new URL(request2.url).hostname.toLowerCase();
+    return host === "www.mildmate.com" || host === "mildmate.com";
+  } catch {
+    return false;
+  }
+}
+__name(isProductionHost22, "isProductionHost");
+function inferStripeSecretMode2(secret) {
+  if (secret.startsWith("sk_live_")) return "live";
+  if (secret.startsWith("sk_test_")) return "test";
+  return "unknown";
+}
+__name(inferStripeSecretMode2, "inferStripeSecretMode");
+function assertReconcileRuntimeSafety(request2, env) {
+  const stripeKey = String(env.STRIPE_SECRET_KEY || "");
+  if (!stripeKey) return null;
+  const prodHost = isProductionHost22(request2);
+  const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
+  const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
+  const stripeMode = inferStripeSecretMode2(stripeKey);
+  if (prodHost) {
+    if (stripeMode === "test") return "Production host cannot use Stripe test secret key";
+    if (runtimeEnv && runtimeEnv !== "prod" && runtimeEnv !== "production") {
+      return "Production host runtime environment mismatch";
+    }
+    return null;
+  }
+  if (env.NON_PROD_STRIPE_ALLOWED !== "true") {
+    return "Non-production reconcile disabled until NON_PROD_STRIPE_ALLOWED=true";
+  }
+  if (!runtimeEnv || runtimeEnv === "prod" || runtimeEnv === "production") {
+    return "Non-production runtime requires explicit non-production RUNTIME_ENV";
+  }
+  if (stripeMode !== "test") {
+    return "Non-production reconcile requires Stripe test secret key";
+  }
+  if (!d1Label || d1Label === "prod" || d1Label === "production") {
+    return "Non-production runtime requires non-production D1_ENV_LABEL";
+  }
+  return null;
+}
+__name(assertReconcileRuntimeSafety, "assertReconcileRuntimeSafety");
+var fulfillmentSchemaReady = false;
+var fulfillmentSchemaPromise = null;
+var PAID_OR_HISTORICAL_ORDER_STATUSES2 = ["confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"];
+var PURCHASE_REPORTABLE_ORDER_STATUSES = ["confirmed", "processing", "shipped", "delivered"];
+async function ensureFulfillmentSchema(env) {
+  if (fulfillmentSchemaReady) return true;
+  if (!fulfillmentSchemaPromise) {
+    fulfillmentSchemaPromise = (async () => {
+      try {
+        const row = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stripe_order_fulfillment_lines' LIMIT 1"
+        ).first();
+        const ok = !!row?.name;
+        if (!ok) {
+          console.error("Missing required table stripe_order_fulfillment_lines; apply migration 057_stripe_payment_idempotency.sql");
+        }
+        fulfillmentSchemaReady = ok;
+        return ok;
+      } catch (e) {
+        console.error("fulfillment schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!fulfillmentSchemaReady) fulfillmentSchemaPromise = null;
+    });
+  }
+  return await fulfillmentSchemaPromise;
+}
+__name(ensureFulfillmentSchema, "ensureFulfillmentSchema");
+function toFiniteNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+__name(toFiniteNumber, "toFiniteNumber");
+function normalizeDimsForKey2(dimsRaw) {
+  const dims = dimsRaw && typeof dimsRaw === "object" ? dimsRaw : {};
+  const valuesRaw = dims.values && typeof dims.values === "object" ? dims.values : {};
+  const values = {};
+  Object.keys(valuesRaw).sort().forEach((k) => {
+    const n = toFiniteNumber(valuesRaw[k]);
+    if (n !== null) values[String(k).toUpperCase()] = n;
+  });
+  return {
+    w: toFiniteNumber(dims.w),
+    l: toFiniteNumber(dims.l),
+    d: toFiniteNumber(dims.d),
+    unit: String(dims.unit || "cm"),
+    size_text: String(dims.size_text || ""),
+    shape_code: String(dims.shape_code || ""),
+    shape_name: String(dims.shape_name || ""),
+    boat_model_name: String(dims.boat_model_name || ""),
+    boat_model_key: String(dims.boat_model_key || ""),
+    area_cm2: toFiniteNumber(dims.area_cm2),
+    values
+  };
+}
+__name(normalizeDimsForKey2, "normalizeDimsForKey");
+function buildFulfillmentLineIdentity2(item) {
+  return {
+    slug: String(item?.slug || item?.s || ""),
+    name: String(item?.name || item?.n || ""),
+    quote_id: String(item?.quote_id || item?.qi || ""),
+    fabric: String(item?.fabric || item?.f || ""),
+    color: String(item?.color || item?.c || ""),
+    qty: Number(item?.qty || item?.q || 1) || 1,
+    unit_amount: Number(item?.u || item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey2(item?.dims || item?.d || {})
+  };
+}
+__name(buildFulfillmentLineIdentity2, "buildFulfillmentLineIdentity");
+async function buildFulfillmentLineKey2(sessionId, item, occurrence) {
+  const payload = JSON.stringify({
+    session_id: String(sessionId || ""),
+    occurrence: Number(occurrence || 1),
+    slug: String(item?.slug || item?.s || ""),
+    name: String(item?.name || item?.n || ""),
+    quote_id: String(item?.quote_id || item?.qi || ""),
+    fabric: String(item?.fabric || item?.f || ""),
+    color: String(item?.color || item?.c || ""),
+    qty: Number(item?.qty || item?.q || 1) || 1,
+    unit_amount: Number(item?.u || item?.unit_amount || 0) || 0,
+    dims: normalizeDimsForKey2(item?.dims || item?.d || {})
+  });
+  return sha2563(payload);
+}
+__name(buildFulfillmentLineKey2, "buildFulfillmentLineKey");
+async function claimFulfillmentLine2(env, sessionId, lineKey, lineIndex) {
+  const schemaOk = await ensureFulfillmentSchema(env);
+  if (!schemaOk) return false;
+  const res = await env.DB.prepare(
+    `INSERT OR IGNORE INTO stripe_order_fulfillment_lines
+      (line_key, stripe_session_id, stripe_event_id, line_index, created_at)
+     VALUES (?1, ?2, NULL, ?3, datetime('now'))`
+  ).bind(lineKey, sessionId, lineIndex).run();
+  const changes = Number(res?.meta?.changes || 0);
+  return changes > 0;
+}
+__name(claimFulfillmentLine2, "claimFulfillmentLine");
+async function countExistingConfirmedOrderLines2(env, line) {
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES2.map((s) => `'${s}'`).join(",");
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM orders
+     WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
+       AND COALESCE(product_slug, '') = COALESCE(?2, '')
+       AND COALESCE(product_title_en, '') = COALESCE(?3, '')
+       AND COALESCE(fabric, '') = COALESCE(?4, '')
+       AND COALESCE(color, '') = COALESCE(?5, '')
+       AND ((width_cm IS NULL AND ?6 IS NULL) OR width_cm = ?6)
+       AND ((length_cm IS NULL AND ?7 IS NULL) OR length_cm = ?7)
+       AND ((depth_cm IS NULL AND ?8 IS NULL) OR depth_cm = ?8)
+       AND ((price_usd IS NULL AND ?9 IS NULL) OR price_usd = ?9)
+       AND ((price_thb IS NULL AND ?10 IS NULL) OR price_thb = ?10)
+       AND COALESCE(currency, '') = COALESCE(?11, '')
+       AND quantity = ?12`
+  ).bind(
+    line.sessionId,
+    line.productSlug || "",
+    line.productTitle || "",
+    line.fabric || "",
+    line.color || "",
+    line.widthCm,
+    line.lengthCm,
+    line.depthCm,
+    line.priceUsd,
+    line.priceThb,
+    line.currency || "",
+    line.qty
+  ).first();
+  return Number(row?.c || 0);
+}
+__name(countExistingConfirmedOrderLines2, "countExistingConfirmedOrderLines");
 async function getOrdersBySession(env, sessionId) {
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES2.map((s) => `'${s}'`).join(",");
   const { results } = await env.DB.prepare(
-    `SELECT id, stripe_session_id, email, shipping_address, product_title_en, fabric, color,
+    `SELECT id, stripe_session_id, stripe_payment_intent_id, email, shipping_address, product_title_en, fabric, color,
             width_cm, length_cm, depth_cm, price_usd, price_thb,
             currency, quantity, status, created_at
      FROM orders
      WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
      ORDER BY created_at DESC`
   ).bind(sessionId).all();
   return results || [];
 }
 __name(getOrdersBySession, "getOrdersBySession");
+async function verifyStripeSessionPaid(sessionId, env) {
+  const stripeKey = String(env.STRIPE_SECRET_KEY || "");
+  if (!stripeKey) return false;
+  try {
+    const resp = await fetch(
+      `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`,
+      { headers: { Authorization: `Bearer ${stripeKey}` } }
+    );
+    if (!resp.ok) return false;
+    const session = await resp.json();
+    return String(session?.payment_status || "").toLowerCase() === "paid";
+  } catch {
+    return false;
+  }
+}
+__name(verifyStripeSessionPaid, "verifyStripeSessionPaid");
+async function hasWebhookPaidEvidence(sessionId, env) {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT event_id
+       FROM stripe_webhook_events
+       WHERE stripe_session_id = ?1
+         AND processed_at IS NOT NULL
+         AND process_result IN ('processed', 'deduped_no_new_rows')
+         AND event_type IN ('checkout.session.completed', 'checkout.session.async_payment_succeeded')
+       LIMIT 1`
+    ).bind(sessionId).first();
+    return !!row;
+  } catch {
+    return false;
+  }
+}
+__name(hasWebhookPaidEvidence, "hasWebhookPaidEvidence");
+function isPurchaseReportableStatus(statusRaw) {
+  const status = String(statusRaw || "").trim().toLowerCase();
+  return PURCHASE_REPORTABLE_ORDER_STATUSES.includes(status);
+}
+__name(isPurchaseReportableStatus, "isPurchaseReportableStatus");
 async function reconcilePaidSessionToOrders(sessionId, env) {
   const stripeKey = env.STRIPE_SECRET_KEY;
   if (!stripeKey) return false;
+  const paidStatusesSql = PAID_OR_HISTORICAL_ORDER_STATUSES2.map((s) => `'${s}'`).join(",");
   const existing = await env.DB.prepare(
-    "SELECT id FROM orders WHERE stripe_session_id = ?1 LIMIT 1"
+    `SELECT id FROM orders
+     WHERE stripe_session_id = ?1
+       AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
+     LIMIT 1`
   ).bind(sessionId).first();
   if (existing) return true;
   const sessionResp = await fetch(
@@ -16615,7 +17497,7 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   );
   if (!sessionResp.ok) return false;
   const session = await sessionResp.json();
-  const isPaid = String(session.payment_status || "").toLowerCase() === "paid" || String(session.status || "").toLowerCase() === "complete";
+  const isPaid = String(session.payment_status || "").toLowerCase() === "paid";
   if (!isPaid) return false;
   const email = String(
     session?.metadata?.email || session?.customer_email || session?.customer_details?.email || ""
@@ -16641,6 +17523,7 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   const sourceRows = lineItems.length > 0 ? lineItems : metaItems;
   const sessionCurrency = String(session.currency || "usd").toLowerCase();
   let inserted = 0;
+  const lineOccurrenceMap = /* @__PURE__ */ new Map();
   for (let i = 0; i < sourceRows.length; i++) {
     const li = sourceRows[i] || {};
     const mi = metaItems[i] || {};
@@ -16650,6 +17533,37 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
     const unitMajor = unitMinor > 0 ? unitMinor / 100 : null;
     const productTitle = li.description || mi.name || mi.n || mi.slug || mi.s || "Custom Order";
     const productSlug = mi.slug || mi.s || "";
+    const idempotencySource = {
+      slug: productSlug,
+      name: productTitle,
+      quote_id: mi.quote_id || mi.qi || null,
+      fabric: mi.fabric || mi.f || null,
+      color: mi.color || mi.c || null,
+      dims,
+      qty,
+      unit_amount: unitMinor
+    };
+    const lineIdentity = JSON.stringify(buildFulfillmentLineIdentity2(idempotencySource));
+    const lineOccurrence = (lineOccurrenceMap.get(lineIdentity) || 0) + 1;
+    lineOccurrenceMap.set(lineIdentity, lineOccurrence);
+    const lineKey = await buildFulfillmentLineKey2(session.id, idempotencySource, lineOccurrence);
+    const lineClaimed = await claimFulfillmentLine2(env, session.id, lineKey, i);
+    if (!lineClaimed) continue;
+    const existingCount = await countExistingConfirmedOrderLines2(env, {
+      sessionId: session.id,
+      productSlug: String(productSlug || ""),
+      productTitle: String(productTitle || ""),
+      fabric: mi.fabric || mi.f || null,
+      color: mi.color || mi.c || null,
+      widthCm: dims.w || null,
+      lengthCm: dims.l || null,
+      depthCm: dims.d || null,
+      priceUsd: sessionCurrency === "usd" ? unitMajor : null,
+      priceThb: sessionCurrency === "thb" ? unitMajor : null,
+      currency: sessionCurrency,
+      qty
+    });
+    if (existingCount >= lineOccurrence) continue;
     await env.DB.prepare(
       `INSERT INTO orders (
         stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
@@ -16686,8 +17600,15 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   return inserted > 0;
 }
 __name(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
-async function handleOrderConfirmed(request, env) {
-  const url = new URL(request.url);
+async function handleOrderConfirmed(request2, env) {
+  const reconcileSafetyError = assertReconcileRuntimeSafety(request2, env);
+  if (reconcileSafetyError) {
+    return new Response(JSON.stringify({ error: reconcileSafetyError }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const url = new URL(request2.url);
   const sessionId = url.searchParams.get("session_id");
   if (!sessionId) {
     return new Response(JSON.stringify({ error: "Missing session_id" }), {
@@ -16708,14 +17629,31 @@ async function handleOrderConfirmed(request, env) {
       }
     }
     if (!results || results.length === 0) {
-      return new Response(JSON.stringify({ pending: true }), {
+      return new Response(JSON.stringify({ pending: true, payment_verified: false }), {
         headers: { "Content-Type": "application/json" }
       });
     }
+    const stripePaidEvidence = await verifyStripeSessionPaid(sessionId, env) || await hasWebhookPaidEvidence(sessionId, env);
+    const purchaseReportableOrders = results.filter((r) => isPurchaseReportableStatus(r?.status));
+    const purchaseReportableValue = purchaseReportableOrders.reduce((sum, row) => {
+      const qty = Number(row?.quantity || 1) || 1;
+      const currency = String(row?.currency || "usd").toLowerCase();
+      const unit = currency === "thb" ? Number(row?.price_thb || row?.price_usd || 0) : Number(row?.price_usd || 0);
+      return sum + (Number(unit || 0) || 0) * qty;
+    }, 0);
+    const responseOrders = results.map((row) => {
+      const copy = { ...row };
+      delete copy.stripe_payment_intent_id;
+      return copy;
+    });
     return new Response(JSON.stringify({
-      orders: results,
+      orders: responseOrders,
       session_id: sessionId,
-      count: results.length
+      count: responseOrders.length,
+      payment_verified: stripePaidEvidence,
+      purchase_reportable: stripePaidEvidence && purchaseReportableOrders.length > 0,
+      purchase_reportable_count: purchaseReportableOrders.length,
+      purchase_reportable_value: Math.round(purchaseReportableValue * 100) / 100
     }), {
       headers: { "Content-Type": "application/json" }
     });
@@ -16730,13 +17668,13 @@ async function handleOrderConfirmed(request, env) {
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
 // ../workers/api/color-inventory.ts
-async function handleColorInventory(request, env) {
+async function handleColorInventory(request2, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Cache-Control": "public, max-age=60"
   };
-  if (request.method === "OPTIONS") {
+  if (request2.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
   }
   try {
@@ -16778,27 +17716,27 @@ function r2Product3(p) {
 }
 __name(r2Product3, "r2Product");
 var onRequest4 = /* @__PURE__ */ __name(async (context) => {
-  const { request, env } = context;
-  const url = new URL(request.url);
+  const { request: request2, env } = context;
+  const url = new URL(request2.url);
   const path = url.pathname;
   if (path.startsWith("/api/v1/gsc")) {
-    const gscRes = await handleGscApi(request, env);
+    const gscRes = await handleGscApi(request2, env);
     if (gscRes) return gscRes;
   }
   if (path.startsWith("/api/v1/ga4")) {
-    const ga4Res = await handleGa4Api(request, env);
+    const ga4Res = await handleGa4Api(request2, env);
     if (ga4Res) return ga4Res;
   }
   if (path.startsWith("/api/v1/etsy")) {
-    const etsyRes = await handleEtsyApi(request, env);
+    const etsyRes = await handleEtsyApi(request2, env);
     if (etsyRes) return etsyRes;
   }
   if (path.startsWith("/api/v1/google-ads")) {
-    const googleAdsRes = await handleGoogleAdsApi(request, env);
+    const googleAdsRes = await handleGoogleAdsApi(request2, env);
     if (googleAdsRes) return googleAdsRes;
   }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
-    const salesRes = await handleSalesApi(request, env);
+    const salesRes = await handleSalesApi(request2, env);
     if (salesRes) return salesRes;
   }
   if (path === "/api/health") {
@@ -16807,7 +17745,7 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     });
   }
   if (path.startsWith("/api/products")) {
-    const res = await handleProducts(request, env);
+    const res = await handleProducts(request2, env);
     const body = await res.text();
     try {
       const json13 = JSON.parse(body);
@@ -16821,134 +17759,134 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     }
   }
   if (path.startsWith("/api/pricing-params") || path.startsWith("/api/diy-prices")) {
-    return handlePricingParams(request, env);
+    return handlePricingParams(request2, env);
   }
   if (path.startsWith("/api/pricing")) {
-    return handlePricing(request, env);
+    return handlePricing(request2, env);
   }
   if (path === "/api/geo") {
-    return handleGeo(request, env);
+    return handleGeo(request2, env);
   }
   if (path === "/api/countries" || path === "/api/countries/") {
-    return handleCountries(request, env);
+    return handleCountries(request2, env);
   }
   if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
-    return handleColorInventory(request, env);
+    return handleColorInventory(request2, env);
   }
   if (path === "/api/subscribe" || path === "/api/subscribe/") {
-    return handleSubscribe(request, env);
+    return handleSubscribe(request2, env);
   }
   if (path === "/api/unsubscribe" || path === "/api/unsubscribe/") {
-    return handleUnsubscribe(request, env);
+    return handleUnsubscribe(request2, env);
   }
   if (path === "/api/contact" || path === "/api/contact/") {
-    return handleContact(request, env);
+    return handleContact(request2, env);
   }
   if (path === "/api/quote" || path === "/api/quote/") {
-    return handleQuote(request, env);
+    return handleQuote(request2, env);
   }
   if (path === "/api/admin/upload" || path === "/api/admin/upload/") {
-    return handleAdminUpload(request, env);
+    return handleAdminUpload(request2, env);
   }
   if (path.startsWith("/api/admin/products")) {
-    return handleAdminProducts(request, env);
+    return handleAdminProducts(request2, env);
   }
   if (path.startsWith("/api/admin/orders")) {
-    return handleAdminOrders(request, env);
+    return handleAdminOrders(request2, env);
   }
   if (path === "/api/admin/customers" || path === "/api/admin/customers/") {
-    return handleAdminCustomers(request, env);
+    return handleAdminCustomers(request2, env);
   }
   if (path === "/api/admin/stats" || path === "/api/admin/stats/") {
-    return handleAdminStats(request, env);
+    return handleAdminStats(request2, env);
   }
   if (path.startsWith("/api/admin/analysis")) {
-    return handleAdminAnalysis(request, env);
+    return handleAdminAnalysis(request2, env);
   }
   if (path.startsWith("/api/admin/cost-model")) {
-    return handleAdminCostModel(request, env);
+    return handleAdminCostModel(request2, env);
   }
   if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
-    return handleAdminShippingRates(request, env);
+    return handleAdminShippingRates(request2, env);
   }
   if (path === "/api/admin/shipping-product-tiers" || path === "/api/admin/shipping-product-tiers/") {
-    return handleAdminShippingProductTiers(request, env);
+    return handleAdminShippingProductTiers(request2, env);
   }
   if (path === "/api/admin/shipping-add-rates" || path === "/api/admin/shipping-add-rates/") {
-    return handleAdminShippingAddRates(request, env);
+    return handleAdminShippingAddRates(request2, env);
   }
   if (path === "/api/admin/quotes" || path === "/api/admin/quotes/") {
-    return handleAdminQuotes(request, env);
+    return handleAdminQuotes(request2, env);
   }
   if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
-    return handleAdminPromo(request, env);
+    return handleAdminPromo(request2, env);
   }
   if (path === "/api/boat-models" || path === "/api/boat-models/") {
-    return handleBoatModels(request, env);
+    return handleBoatModels(request2, env);
   }
   if (path === "/api/admin/boat-models" || path === "/api/admin/boat-models/") {
-    return handleAdminBoatModels(request, env);
+    return handleAdminBoatModels(request2, env);
   }
   if (path === "/api/admin/blog" || path === "/api/admin/blog/") {
-    return handleAdminBlog(request, env);
+    return handleAdminBlog(request2, env);
   }
   if (path === "/api/blog/posts" || path === "/api/blog/posts/") {
-    return handleBlogPosts(request, env);
+    return handleBlogPosts(request2, env);
   }
   if (path === "/api/reviews" || path === "/api/reviews/") {
-    return handleReviews(request, env);
+    return handleReviews(request2, env);
   }
   if (path === "/api/admin/reviews" || path === "/api/admin/reviews/") {
-    return handleAdminReviews(request, env);
+    return handleAdminReviews(request2, env);
   }
   if (path === "/api/admin/recovery-test" || path === "/api/admin/recovery-test/") {
-    return handleAdminRecoveryTest(request, env);
+    return handleAdminRecoveryTest(request2, env);
   }
   if (path === "/api/admin/offers" || path === "/api/admin/offers/") {
-    return handleAdminOffers(request, env);
+    return handleAdminOffers(request2, env);
   }
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
-    return handleAdminCampaigns(request, env);
+    return handleAdminCampaigns(request2, env);
   }
   if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
-    return handleAdminColorInventory(request, env);
+    return handleAdminColorInventory(request2, env);
   }
   if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
-    return handleAdminAccounts(request, env);
+    return handleAdminAccounts(request2, env);
   }
   if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
-    return handleAdminThankyouDispatch(request, env);
+    return handleAdminThankyouDispatch(request2, env);
   }
   if (path === "/api/shipping/calculate" || path === "/api/shipping/calculate/") {
-    return handleShippingCalculate(request, env);
+    return handleShippingCalculate(request2, env);
   }
   if (path === "/api/favorites" || path === "/api/favorites/" || path === "/api/admin/favorites/stats" || path === "/api/admin/favorites/stats/") {
-    return handleFavorites(request, env);
+    return handleFavorites(request2, env);
   }
   if (path === "/api/discount/validate" || path === "/api/discount/validate/") {
-    return handleDiscountValidate(request, env);
+    return handleDiscountValidate(request2, env);
   }
   if (path === "/api/discount/claim" || path === "/api/discount/claim/") {
-    return handleDiscountClaim(request, env);
+    return handleDiscountClaim(request2, env);
   }
   if (path.startsWith("/api/admin/contacts")) {
-    return handleAdminContacts(request, env);
+    return handleAdminContacts(request2, env);
   }
   if (path === "/api/admin/pricing-params" || path === "/api/admin/pricing-params/") {
-    return handleAdminPricingParams(request, env);
+    return handleAdminPricingParams(request2, env);
   }
   if (path === "/api/admin/diy-prices" || path === "/api/admin/diy-prices/") {
-    return handleAdminDiyPrices(request, env);
+    return handleAdminDiyPrices(request2, env);
   }
   if (path === "/api/admin/exchange-rates" || path === "/api/admin/exchange-rates/") {
-    return handleAdminExchangeRates(request, env);
+    return handleAdminExchangeRates(request2, env);
   }
   if (path === "/api/admin/subscribers" || path === "/api/admin/subscribers/") {
-    const secret = request.headers.get("X-Admin-Secret");
+    const secret = request2.headers.get("X-Admin-Secret");
     if (secret !== (env.ADMIN_SECRET || "admin")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
     }
-    if (request.method === "DELETE") {
+    if (request2.method === "DELETE") {
       const id = url.searchParams.get("id");
       if (!id) {
         return new Response(JSON.stringify({ error: "Missing 'id' parameter" }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -16966,19 +17904,19 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
     return new Response(JSON.stringify({ subscribers: results }), { headers: { "Content-Type": "application/json" } });
   }
   if (path === "/api/checkout" || path === "/api/checkout/") {
-    return handleCheckout(request, env);
+    return handleCheckout(request2, env);
   }
   if (path === "/api/webhook/stripe" || path === "/api/webhook/stripe/") {
-    return handleStripeWebhook(request, env);
+    return handleStripeWebhook(request2, env);
   }
   if (path === "/api/auth/me" || path === "/api/auth/me/") {
-    return handleAuth(request, env);
+    return handleAuth(request2, env);
   }
   if (path.startsWith("/api/customers")) {
-    return handleCustomers(request, env);
+    return handleCustomers(request2, env);
   }
   if (path === "/api/order-confirmed" || path === "/api/order-confirmed/") {
-    return handleOrderConfirmed(request, env);
+    return handleOrderConfirmed(request2, env);
   }
   if (path.startsWith("/r2/")) {
     const key = path.substring(4);
@@ -17002,8 +17940,8 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
 
 // blogs/[[path]].ts
 async function onRequest5(context) {
-  const { request, env, next } = context;
-  const url = new URL(request.url);
+  const { request: request2, env, next } = context;
+  const url = new URL(request2.url);
   const path = url.pathname;
   if (path === "/blogs/" || path === "/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -17184,8 +18122,8 @@ function buildCard(product, isTh) {
 }
 __name(buildCard, "buildCard");
 async function onRequest6(context) {
-  const { request, env, next } = context;
-  const url = new URL(request.url);
+  const { request: request2, env, next } = context;
+  const url = new URL(request2.url);
   const path = url.pathname;
   const isEnProducts = path === "/products/" || path === "/products";
   const isThProducts = path === "/th/products/" || path === "/th/products";
@@ -17249,8 +18187,8 @@ __name(onRequest6, "onRequest");
 
 // quote/[[path]].ts
 var onRequest7 = /* @__PURE__ */ __name(async (context) => {
-  const { request, env } = context;
-  const url = new URL(request.url);
+  const { request: request2, env } = context;
+  const url = new URL(request2.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
   const quoteId = pathParts[1];
   if (!quoteId) {
@@ -17301,7 +18239,17 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
   const priceUsd = isUsdQuoted ? explicitPriceUsd : priceThb ? Math.round(priceThb / usdRate) : null;
   const hasPrice = !!(priceThb && priceThb > 0 || priceUsd && priceUsd > 0);
   const isCheckoutReady = !isExpired && hasPrice;
-  const securityCsp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
+  const clerkOrigins = (function(requestUrl) {
+    try {
+      const h = new URL(requestUrl).hostname.toLowerCase();
+      if (h.endsWith(".pages.dev") || h === "localhost" || h === "127.0.0.1") {
+        return "https://kind-joey-29.clerk.accounts.dev";
+      }
+    } catch {
+    }
+    return "https://clerk.mildmate.com https://accounts.mildmate.com";
+  })(request2.url);
+  const securityCsp2 = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net " + clerkOrigins + " https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th " + clerkOrigins + " https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com " + clerkOrigins + " https://challenges.cloudflare.com; upgrade-insecure-requests;";
   function esc(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
@@ -17533,9 +18481,41 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
 
     function sendGa4Event(name, params) {
       try {
+        var payload = params || {};
+        if (typeof window.__mildmateTrackEvent === 'function') {
+          window.__mildmateTrackEvent(name, payload);
+          return;
+        }
         ensureGa4Stub();
-        window.gtag('event', name, params || {});
+        window.gtag('event', name, payload);
       } catch (e) {}
+    }
+
+    function sendGa4EventTokenized(name, params, tokenField, rawToken) {
+      var payload = params || {};
+      payload[tokenField] = '';
+      var attempted = false;
+      function emit(tokenHash) {
+        if (attempted) return;
+        attempted = true;
+        payload[tokenField] = tokenHash;
+        sendGa4Event(name, payload);
+      }
+      try {
+        if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+          crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+            var hex = '';
+            var bytes = new Uint8Array(buf);
+            for (var i = 0; i < 16 && i < bytes.length; i++) {
+              hex += ('0' + bytes[i].toString(16)).slice(-2);
+            }
+            emit(hex || 'token-unavailable');
+          }).catch(function () { emit('token-unavailable'); });
+          setTimeout(function () { emit('token-unavailable'); }, 800);
+          return;
+        }
+      } catch (e) {}
+      emit('token-unavailable');
     }
 
     function trackViewQuote(meta) {
@@ -17545,12 +18525,12 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
         if (sessionStorage.getItem(dedupeKey) === '1') return;
       } catch (e) {}
       var payload = {
-        quote_id: meta.quote_id,
+        quote_id: '',
         product_name: meta.product_name || 'Custom Product',
         currency: meta.currency || 'USD',
         value: Math.round((Number(meta.value || 0) || 0) * 100) / 100
       };
-      sendGa4Event('view_quote', payload);
+      sendGa4EventTokenized('view_quote', payload, 'quote_id', meta.quote_id);
       try {
         sessionStorage.setItem(dedupeKey, '1');
       } catch (e2) {}
@@ -17563,7 +18543,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
         ? Number(item.price_thb || 0)
         : Number(item.price_usd || 0);
       var payload = {
-        quote_id: String(item.quote_id),
+        quote_id: '',
         currency: currency,
         value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
         items: [{
@@ -17573,7 +18553,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
           quantity: Number(item.qty || 1) || 1
         }]
       };
-      sendGa4Event('add_to_cart', payload);
+      sendGa4EventTokenized('add_to_cart', payload, 'quote_id', item.quote_id);
     }
 
     var _quoteCartItem = null;
@@ -17630,9 +18610,9 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^\/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^\/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^/th/, '') || '/';
       }
     };
 
@@ -17655,15 +18635,15 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     headers: {
       "Content-Type": "text/html;charset=utf-8",
       "Cache-Control": "no-cache",
-      "Content-Security-Policy": securityCsp
+      "Content-Security-Policy": securityCsp2
     }
   });
 }, "onRequest");
 
 // r2/[[path]].ts
 var onRequest8 = /* @__PURE__ */ __name(async (context) => {
-  const { request, env } = context;
-  const url = new URL(request.url);
+  const { request: request2, env } = context;
+  const url = new URL(request2.url);
   const key = url.pathname.replace("/r2/", "");
   const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
   const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
@@ -17693,24 +18673,23 @@ var onRequest9 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // account/_middleware.ts
-function getClerkSessionToken2(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
+function getClerkSessionToken2(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   if (cookieMatch) return cookieMatch[1];
-  const url = new URL(request.url);
+  const url = new URL(request2.url);
   const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
   if (qp) return qp;
   return null;
 }
 __name(getClerkSessionToken2, "getClerkSessionToken");
 var onRequest10 = /* @__PURE__ */ __name(async (context) => {
-  const host = new URL(context.request.url).host;
-  if (host.includes("pages.dev") || host.includes("localhost")) {
+  if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
   const sessionToken = getClerkSessionToken2(context.request);
   if (!sessionToken) {
-    return redirectToSignIn(context.request.url);
+    return redirectToSignIn(context.request.url, context.env);
   }
   const modifiedRequest = new Request(context.request.url, {
     headers: new Headers({
@@ -17720,32 +18699,31 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   });
   const result = await verifyClerkJwt(modifiedRequest, context.env);
   if (!result.valid) {
-    return redirectToSignIn(context.request.url);
+    return redirectToSignIn(context.request.url, context.env);
   }
   return context.next();
 }, "onRequest");
-function redirectToSignIn(currentUrl) {
+function redirectToSignIn(currentUrl, env) {
   const parsed = new URL(currentUrl);
-  const isDev = parsed.host.includes("pages.dev") || parsed.host.includes("localhost");
-  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : "accounts.mildmate.com";
+  const isDev = isDevelopmentAuthHost(currentUrl);
+  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const cleanReturnUrl = parsed.origin + parsed.pathname;
   const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
   signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
   return Response.redirect(signInUrl.toString(), 302);
 }
 __name(redirectToSignIn, "redirectToSignIn");
-
-// admin/_middleware.ts
-function getClerkSessionToken3(request) {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
-  if (cookieMatch) return cookieMatch[1];
-  const url = new URL(request.url);
-  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
-  if (qp) return qp;
-  return null;
+function isDevelopmentAuthHost(url) {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname.includes("pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
+  return false;
 }
-__name(getClerkSessionToken3, "getClerkSessionToken");
+__name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
+
+// ../workers/api/admin-auth.ts
 function collectRoles16(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
@@ -17758,6 +18736,7 @@ function collectRoles16(raw) {
   add(raw.orgRole);
   add(raw.public_metadata?.role);
   add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.role);
   add(raw.unsafe_metadata?.roles);
   add(raw.metadata?.role);
   add(raw.metadata?.roles);
@@ -17765,8 +18744,8 @@ function collectRoles16(raw) {
   add(raw["https://mildmate.com/roles"]);
   const out = [];
   values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
-    else out.push(String(v).toLowerCase().trim());
+    if (Array.isArray(v)) v.forEach((x2) => out.push(String(x2).toLowerCase().trim()));
+    else out.push(String(x).toLowerCase().trim());
   });
   return out.filter(Boolean);
 }
@@ -17784,14 +18763,34 @@ function emailAllowed20(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed20, "emailAllowed");
+var BLOCKED_EMAILS = /* @__PURE__ */ new Set([
+  "mildmateshop@gmail.com",
+  "blanky5452@gmail.com",
+  "lxerleap@gmail.com",
+  "jasminecchimay@gmail.com",
+  "9601080851ke@gmail.com",
+  "azuzenap@gmail.com",
+  "matt.mourin@gmail.com",
+  "eugeneapseed@outlook.com",
+  "norrawich.rat@gmail.com"
+]);
 function emailBlocked(email) {
   if (!email) return false;
-  const blocked = [
-    "mildmateshop@gmail.com"
-  ];
-  return blocked.includes(email.toLowerCase());
+  return BLOCKED_EMAILS.has(email.toLowerCase());
 }
 __name(emailBlocked, "emailBlocked");
+
+// admin/_middleware.ts
+function getClerkSessionToken3(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
+  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
+  if (cookieMatch) return cookieMatch[1];
+  const url = new URL(request2.url);
+  const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
+  if (qp) return qp;
+  return null;
+}
+__name(getClerkSessionToken3, "getClerkSessionToken");
 function getPrimaryClerkEmail3(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
@@ -17826,13 +18825,12 @@ async function enrichAdminFromClerk(sub, env) {
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
 var onRequest11 = /* @__PURE__ */ __name(async (context) => {
-  const host = new URL(context.request.url).host;
-  if (host.includes("pages.dev") || host.includes("localhost")) {
+  if (isDevelopmentAuthHost2(context.request.url)) {
     return context.next();
   }
   const sessionToken = getClerkSessionToken3(context.request);
   if (!sessionToken) {
-    return redirectToSignIn2(context.request.url);
+    return redirectToSignIn2(context.request.url, context.env);
   }
   const modifiedRequest = new Request(context.request.url, {
     headers: new Headers({
@@ -17842,13 +18840,13 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   });
   const result = await verifyClerkJwt(modifiedRequest, context.env);
   if (!result.valid) {
-    return redirectToSignIn2(context.request.url);
+    return redirectToSignIn2(context.request.url, context.env);
   }
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
   let hasAdmin = hasAdminRole21(raw);
   let allowed = emailAllowed20(email, context.env);
-  if (!hasAdmin && !allowed) {
+  if (!hasAdmin || !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
@@ -17865,7 +18863,7 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
       { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }
-  if (!hasAdmin && !allowed) {
+  if (!hasAdmin || !allowed) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -17877,10 +18875,10 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   }
   return context.next();
 }, "onRequest");
-function redirectToSignIn2(currentUrl) {
+function redirectToSignIn2(currentUrl, env) {
   const parsed = new URL(currentUrl);
-  const isDev = parsed.host.includes("pages.dev") || parsed.host.includes("localhost");
-  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : "accounts.mildmate.com";
+  const isDev = isDevelopmentAuthHost2(currentUrl);
+  const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const cleanReturnUrl = parsed.origin + parsed.pathname;
   const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
   signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
@@ -17891,6 +18889,15 @@ function escHtml3(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 __name(escHtml3, "escHtml");
+function isDevelopmentAuthHost2(url) {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname.includes("pages.dev")) return true;
+  if (hostname === "localhost") return true;
+  if ((hostname === "127.0.0.1" || hostname === "::1") && parsed.protocol === "http:") return true;
+  return false;
+}
+__name(isDevelopmentAuthHost2, "isDevelopmentAuthHost");
 
 // _middleware.ts
 var CACHE_TTL = 5 * 60 * 1e3;
@@ -18257,6 +19264,31 @@ var SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 var SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
 var LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"><\/script>`;
+function isProductionHost23(hostname) {
+  const host = String(hostname || "").toLowerCase();
+  return host === "www.mildmate.com" || host === "mildmate.com";
+}
+__name(isProductionHost23, "isProductionHost");
+function buildAnalyticsRuntimeConfigScript(request2, env) {
+  const host = new URL(request2.url).hostname;
+  const prodHost = isProductionHost23(host);
+  const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? "production" : "staging")).trim().toLowerCase();
+  const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || "").trim().toLowerCase() === "true";
+  const nonProdGtm = String(env?.ANALYTICS_NON_PROD_GTM_ID || "").trim();
+  const nonProdGa4 = String(env?.ANALYTICS_NON_PROD_GA4_ID || "").trim();
+  const cfg = { environment: runtimeEnv };
+  if (!prodHost) {
+    cfg.nonProductionApproved = nonProdEnabled;
+    if (nonProdEnabled) {
+      if (nonProdGtm) cfg.gtmId = nonProdGtm;
+      if (nonProdGa4) cfg.ga4Id = nonProdGa4;
+      cfg.enabled = true;
+    }
+  }
+  const json13 = JSON.stringify(cfg);
+  return `<script id="runtime-analytics-config">window.__MILDMATE_ANALYTICS_CONFIG = ${json13};<\/script>`;
+}
+__name(buildAnalyticsRuntimeConfigScript, "buildAnalyticsRuntimeConfigScript");
 async function ensureCache(db) {
   const now = Date.now();
   if (_cache.header && _cache.footer && now - _cache.fetchedAt < CACHE_TTL) return;
@@ -18653,11 +19685,41 @@ ${JSON_LD_WEBSITE}
     html = html.replace(/<\/head>/i, `${JSON_LD_FAQ}
 </head>`);
   }
-  return new Response(html, { status: response6.status, headers: response6.headers });
+  if (!html.includes('id="runtime-analytics-config"')) {
+    const analyticsRuntimeScript = buildAnalyticsRuntimeConfigScript(context.request, context.env || {});
+    html = html.replace(/<\/head>/i, `${analyticsRuntimeScript}
+</head>`);
+  }
+  let finalHeaders = response6.headers;
+  if (isDevCspHost(context.request.url)) {
+    const csp = response6.headers.get("Content-Security-Policy");
+    if (csp) {
+      finalHeaders = new Headers(response6.headers);
+      finalHeaders.set("Content-Security-Policy", allowDevClerkOrigins(csp));
+    }
+  }
+  return new Response(html, { status: response6.status, headers: finalHeaders });
 }
 __name(onRequest12, "onRequest");
+function isDevCspHost(requestUrl) {
+  try {
+    const h = new URL(requestUrl).hostname.toLowerCase();
+    if (h.endsWith(".pages.dev")) return true;
+    if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+__name(isDevCspHost, "isDevCspHost");
+function allowDevClerkOrigins(csp) {
+  const DEV_ORIGIN = "https://kind-joey-29.clerk.accounts.dev";
+  if (!csp || csp.includes(DEV_ORIGIN)) return csp;
+  return csp.replace("script-src ", `script-src ${DEV_ORIGIN} `).replace("connect-src ", `connect-src ${DEV_ORIGIN} `).replace("frame-src ", `frame-src ${DEV_ORIGIN} `);
+}
+__name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-tgHhBf/functionsRoutes-0.7183684520515164.mjs
+// ../.wrangler/tmp/pages-6jIFqP/functionsRoutes-0.08435364738723006.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -18954,8 +20016,8 @@ function regexpToFunction(re, keys, options) {
   if (options === void 0) {
     options = {};
   }
-  var _a = options.decode, decode = _a === void 0 ? function(x) {
-    return x;
+  var _a = options.decode, decode = _a === void 0 ? function(x2) {
+    return x2;
   } : _a;
   return function(pathname) {
     var m = re.exec(pathname);
@@ -19025,8 +20087,8 @@ function tokensToRegexp(tokens, keys, options) {
   if (options === void 0) {
     options = {};
   }
-  var _a = options.strict, strict = _a === void 0 ? false : _a, _b = options.start, start = _b === void 0 ? true : _b, _c = options.end, end = _c === void 0 ? true : _c, _d = options.encode, encode = _d === void 0 ? function(x) {
-    return x;
+  var _a = options.strict, strict = _a === void 0 ? false : _a, _b = options.start, start = _b === void 0 ? true : _b, _c = options.end, end = _c === void 0 ? true : _c, _d = options.encode, encode = _d === void 0 ? function(x2) {
+    return x2;
   } : _d, _e = options.delimiter, delimiter = _e === void 0 ? "/#?" : _e, _f = options.endsWith, endsWith = _f === void 0 ? "" : _f;
   var endsWithRe = "[".concat(escapeString(endsWith), "]|$");
   var delimiterRe = "[".concat(escapeString(delimiter), "]");
@@ -19087,10 +20149,10 @@ __name(pathToRegexp, "pathToRegexp");
 
 // ../node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
-function* executeRequest(request) {
-  const requestPath = new URL(request.url).pathname;
+function* executeRequest(request2) {
+  const requestPath = new URL(request2.url).pathname;
   for (const route of [...routes].reverse()) {
-    if (route.method && route.method !== request.method) {
+    if (route.method && route.method !== request2.method) {
       continue;
     }
     const routeMatcher = match(route.routePath.replace(escapeRegex, "\\$&"), {
@@ -19112,7 +20174,7 @@ function* executeRequest(request) {
     }
   }
   for (const route of routes) {
-    if (route.method && route.method !== request.method) {
+    if (route.method && route.method !== request2.method) {
       continue;
     }
     const routeMatcher = match(route.routePath.replace(escapeRegex, "\\$&"), {
@@ -19138,23 +20200,23 @@ function* executeRequest(request) {
 __name(executeRequest, "executeRequest");
 var pages_template_worker_default = {
   async fetch(originalRequest, env, workerContext) {
-    let request = originalRequest;
-    const handlerIterator = executeRequest(request);
+    let request2 = originalRequest;
+    const handlerIterator = executeRequest(request2);
     let data = {};
     let isFailOpen = false;
     const next = /* @__PURE__ */ __name(async (input, init) => {
       if (input !== void 0) {
         let url = input;
         if (typeof input === "string") {
-          url = new URL(input, request.url).toString();
+          url = new URL(input, request2.url).toString();
         }
-        request = new Request(url, init);
+        request2 = new Request(url, init);
       }
       const result = handlerIterator.next();
       if (result.done === false) {
         const { handler, params, path } = result.value;
         const context = {
-          request: new Request(request.clone()),
+          request: new Request(request2.clone()),
           functionPath: path,
           next,
           params,
@@ -19179,10 +20241,10 @@ var pages_template_worker_default = {
         }
         return cloneResponse(response6);
       } else if ("ASSETS") {
-        const response6 = await env["ASSETS"].fetch(request);
+        const response6 = await env["ASSETS"].fetch(request2);
         return cloneResponse(response6);
       } else {
-        const response6 = await fetch(request);
+        const response6 = await fetch(request2);
         return cloneResponse(response6);
       }
     }, "next");
@@ -19190,7 +20252,7 @@ var pages_template_worker_default = {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response6 = await env["ASSETS"].fetch(request);
+        const response6 = await env["ASSETS"].fetch(request2);
         return cloneResponse(response6);
       }
       throw error;
