@@ -11,6 +11,7 @@
 // 6. Redirect unauthenticated to sign-in; 403 for authenticated-but-unauthorized
 
 import { verifyClerkJwt } from "../../workers/api/clerk-verify";
+import { consumeClerkHandshake } from "../../workers/api/clerk-handshake";
 import { hasAdminRole, emailAllowed, emailBlocked } from "../../workers/api/admin-auth";
 
 function getClerkSessionToken(request: Request): string | null {
@@ -75,6 +76,13 @@ export const onRequest: PagesFunction<{
   if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
+
+  // Clerk delivers refreshed session cookies as a signed __clerk_handshake
+  // payload that the application must verify and apply itself — FAPI never
+  // sets __session directly. Consume it before token verification; the
+  // markerless retry re-runs the full role/allowlist gates below.
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
 
   const sessionToken = getClerkSessionToken(context.request);
 

@@ -18672,6 +18672,202 @@ var onRequest9 = /* @__PURE__ */ __name(async (context) => {
   });
 }, "onRequest");
 
+// ../workers/api/clerk-handshake.ts
+var HANDSHAKE_JWKS_CACHE_MS = 3600 * 1e3;
+var MAX_DIRECTIVES = 10;
+var MAX_DIRECTIVE_LENGTH = 8192;
+var ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
+var ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
+var ALLOWED_SAMESITE = /* @__PURE__ */ new Set(["lax", "strict", "none"]);
+var handshakeJwksCache = /* @__PURE__ */ new Map();
+function b64urlToBytes(str) {
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+__name(b64urlToBytes, "b64urlToBytes");
+function getHandshakeToken(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
+  const m = cookieHeader.match(/(?:^|;\s*)__clerk_handshake=([^;]+)/);
+  if (m && m[1]) return m[1].trim();
+  try {
+    const qp = new URL(request2.url).searchParams.get("__clerk_handshake");
+    if (qp) return qp.trim();
+  } catch {
+  }
+  return null;
+}
+__name(getHandshakeToken, "getHandshakeToken");
+async function verifyHandshakeJwt(token, env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  const jwksUrl = String(env?.CLERK_JWKS_URL || "").trim();
+  if (!issuer || !jwksUrl) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])));
+  } catch {
+    return null;
+  }
+  if (header.alg !== "RS256" || !header.kid) return null;
+  let keys;
+  try {
+    const cached = handshakeJwksCache.get(jwksUrl);
+    if (cached && Date.now() - cached.fetchedAt < HANDSHAKE_JWKS_CACHE_MS) {
+      keys = cached.keys;
+    } else {
+      const resp = await fetch(jwksUrl);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      keys = data.keys || [];
+      handshakeJwksCache.set(jwksUrl, { keys, fetchedAt: Date.now() });
+    }
+  } catch {
+    return null;
+  }
+  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
+  if (!jwk) return null;
+  let valid = false;
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      "jwk",
+      { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: "RS256", ext: false },
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    valid = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      b64urlToBytes(parts[2]),
+      new TextEncoder().encode(parts[0] + "." + parts[1])
+    );
+  } catch {
+    return null;
+  }
+  if (!valid) return null;
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
+  } catch {
+    return null;
+  }
+  if (payload.iss && String(payload.iss) !== issuer) return null;
+  const now = Math.floor(Date.now() / 1e3);
+  if (typeof payload.exp === "number" && payload.exp > 0 && payload.exp < now) return null;
+  const list = payload.handshake;
+  if (!Array.isArray(list) || list.length === 0 || list.length > MAX_DIRECTIVES) return null;
+  if (!list.every((d) => typeof d === "string" && d.length <= MAX_DIRECTIVE_LENGTH)) return null;
+  return list;
+}
+__name(verifyHandshakeJwt, "verifyHandshakeJwt");
+function parseDirective(directive, requestHost) {
+  const segments = directive.split(";").map((s) => s.trim());
+  const first = segments.shift() || "";
+  const eq = first.indexOf("=");
+  if (eq <= 0) return null;
+  const name = first.slice(0, eq).trim();
+  const value = first.slice(eq + 1).trim();
+  if (!ALLOWED_COOKIE_NAME.test(name)) return null;
+  if (!ALLOWED_COOKIE_VALUE.test(value)) return null;
+  const attrs = [];
+  for (const seg of segments) {
+    if (!seg) continue;
+    const aEq = seg.indexOf("=");
+    const key = (aEq >= 0 ? seg.slice(0, aEq) : seg).trim().toLowerCase();
+    const val = aEq >= 0 ? seg.slice(aEq + 1).trim() : "";
+    if (key === "path") {
+      if (val !== "/") return null;
+      attrs.push("Path=/");
+    } else if (key === "domain") {
+      const domain = val.replace(/^\./, "").toLowerCase();
+      if (!/^[a-z0-9.-]+$/.test(domain)) return null;
+      if (requestHost !== domain && !requestHost.endsWith("." + domain)) return null;
+      attrs.push("Domain=" + domain);
+    } else if (key === "expires") {
+      const ts = Date.parse(val);
+      if (!Number.isFinite(ts)) return null;
+      attrs.push("Expires=" + new Date(ts).toUTCString());
+    } else if (key === "max-age") {
+      if (!/^\d{1,10}$/.test(val)) return null;
+      attrs.push("Max-Age=" + val);
+    } else if (key === "secure") {
+      attrs.push("Secure");
+    } else if (key === "httponly") {
+      attrs.push("HttpOnly");
+    } else if (key === "samesite") {
+      if (!ALLOWED_SAMESITE.has(val.toLowerCase())) return null;
+      attrs.push("SameSite=" + val.charAt(0).toUpperCase() + val.slice(1).toLowerCase());
+    }
+  }
+  return { name, value, serialized: [first.slice(0, eq).trim() + "=" + value, ...attrs].join("; ") };
+}
+__name(parseDirective, "parseDirective");
+function stripAuthParams(url) {
+  const clean = new URL(url.toString());
+  for (const p of ["__clerk_handshake", "__clerk_help", "__clerk_db_jwt", "__mm_hs"]) {
+    clean.searchParams.delete(p);
+  }
+  return clean.toString();
+}
+__name(stripAuthParams, "stripAuthParams");
+function redirectWithCookies(location, cookies) {
+  const headers = new Headers({ Location: location });
+  for (const c of cookies) headers.append("Set-Cookie", c);
+  return new Response(null, { status: 302, headers });
+}
+__name(redirectWithCookies, "redirectWithCookies");
+function signInUrl(url, env) {
+  const accountsDomain = String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const target = new URL(`https://${accountsDomain}/sign-in`);
+  target.searchParams.set("redirect_url", url.origin + url.pathname);
+  return target.toString();
+}
+__name(signInUrl, "signInUrl");
+async function consumeClerkHandshake(request2, env) {
+  const token = getHandshakeToken(request2);
+  if (!token) return null;
+  const directives = await verifyHandshakeJwt(token, env);
+  if (!directives) return null;
+  const url = new URL(request2.url);
+  const host = url.hostname.toLowerCase();
+  const parsed = [];
+  let sessionToken = "";
+  let sawSessionDirective = false;
+  for (const d of directives) {
+    const p = parseDirective(d, host);
+    if (!p) continue;
+    if (/^__session(_|$)/.test(p.name)) {
+      sawSessionDirective = true;
+      if (p.value) sessionToken = p.value;
+    }
+    parsed.push(p);
+  }
+  if (sessionToken) {
+    const verifyReq = new Request(request2.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request2.headers.entries()),
+        Authorization: `Bearer ${sessionToken}`
+      })
+    });
+    const result = await verifyClerkJwt(verifyReq, env);
+    if (result.valid) {
+      return redirectWithCookies(stripAuthParams(url), parsed.map((p) => p.serialized));
+    }
+    const clears = parsed.filter((p) => /^__clerk_handshake(_|$)/.test(p.name) && !p.value).map((p) => p.serialized);
+    return redirectWithCookies(signInUrl(url, env), clears);
+  }
+  if (sawSessionDirective) {
+    return redirectWithCookies(signInUrl(url, env), parsed.map((p) => p.serialized));
+  }
+  return null;
+}
+__name(consumeClerkHandshake, "consumeClerkHandshake");
+
 // account/_middleware.ts
 function getClerkSessionToken2(request2) {
   const cookieHeader = request2.headers.get("Cookie") || "";
@@ -18687,6 +18883,8 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
   const sessionToken = getClerkSessionToken2(context.request);
   if (!sessionToken) {
     return redirectToSignIn(context.request.url, context.env);
@@ -18743,9 +18941,9 @@ function redirectToSignIn(currentUrl, env) {
   const isDev = isDevelopmentAuthHost(currentUrl);
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const cleanReturnUrl = parsed.origin + parsed.pathname;
-  const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
-  signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
-  return Response.redirect(signInUrl.toString(), 302);
+  const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
+  signInUrl2.searchParams.set("redirect_url", cleanReturnUrl);
+  return Response.redirect(signInUrl2.toString(), 302);
 }
 __name(redirectToSignIn, "redirectToSignIn");
 function isDevelopmentAuthHost(url) {
@@ -18863,6 +19061,8 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost2(context.request.url)) {
     return context.next();
   }
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
   const sessionToken = getClerkSessionToken3(context.request);
   if (!sessionToken) {
     return redirectToSignIn2(context.request.url, context.env);
@@ -18950,9 +19150,9 @@ function redirectToSignIn2(currentUrl, env) {
   const isDev = isDevelopmentAuthHost2(currentUrl);
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
   const cleanReturnUrl = parsed.origin + parsed.pathname;
-  const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
-  signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
-  return Response.redirect(signInUrl.toString(), 302);
+  const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
+  signInUrl2.searchParams.set("redirect_url", cleanReturnUrl);
+  return Response.redirect(signInUrl2.toString(), 302);
 }
 __name(redirectToSignIn2, "redirectToSignIn");
 function escHtml3(s) {
@@ -19790,7 +19990,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-i8cTqM/functionsRoutes-0.29412824594034315.mjs
+// ../.wrangler/tmp/pages-GmEKGn/functionsRoutes-0.6973190967362022.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
