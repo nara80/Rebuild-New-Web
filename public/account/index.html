@@ -584,7 +584,47 @@
       }
 
       // ── Init ── (middleware ensures authenticated user reaches this page)
+
+      // __ACCOUNT_GATE_DECISION_START__
+      // Pure gate decision. On production hosts the server middleware already
+      // guarantees only authenticated users reach this page, so the client gate
+      // must never auto-navigate there — a slow or failed ClerkJS session
+      // restore would bounce an authenticated user to the sign-in portal in a
+      // loop. Dev hosts have no server gate, so they keep the auto-redirect,
+      // but one-shot (mirrors the server-side __mm_hs guard).
+      function accountGateDecision(state) {
+        if (state.hasClerkUser) return 'render';
+        if (state.isDevHost && !state.alreadyBounced) return 'redirect';
+        return 'manual';
+      }
+      // __ACCOUNT_GATE_DECISION_END__
+
+      var GATE_BOUNCE_KEY = 'mm_account_gate_bounced';
+
+      function isDevAuthHost() {
+        var h = (window.location.hostname || '').toLowerCase();
+        return h.indexOf('pages.dev') !== -1 || h === 'localhost' || h === '127.0.0.1' || h === '::1';
+      }
+
+      function gateAlreadyBounced() {
+        try { return sessionStorage.getItem(GATE_BOUNCE_KEY) === '1'; } catch (e) { return false; }
+      }
+
+      function markGateBounced() {
+        try { sessionStorage.setItem(GATE_BOUNCE_KEY, '1'); } catch (e) {}
+      }
+
+      function clearGateBounce() {
+        try { sessionStorage.removeItem(GATE_BOUNCE_KEY); } catch (e) {}
+      }
+
       waitForClerk();
+
+      // Late recovery: if ClerkJS finishes init (or signs in) after the gate
+      // timed out into the manual state, re-run the gate and render normally.
+      // The accountRendered guard makes duplicate events harmless.
+      window.addEventListener('clerk:ready', function () { checkAuth(); });
+      window.addEventListener('clerk:signed-in', function () { checkAuth(); });
 
       async function waitForClerk() {
         await new Promise(function(resolve) {
@@ -595,12 +635,33 @@
         checkAuth();
       }
 
+      function showManualSignIn() {
+        var loading = document.getElementById('loading-state');
+        document.getElementById('auth-state').style.display = 'none';
+        loading.style.display = '';
+        loading.innerHTML =
+          '<div style="max-width:380px;margin:0 auto;text-align:center;padding:24px 16px">' +
+            '<h2 style="font-size:1.125rem;color:var(--color-heading);margin:0 0 8px">Still confirming your session\u2026</h2>' +
+            '<p style="color:var(--color-muted);font-size:0.9375rem;margin:0 0 20px">This is taking longer than usual. You can keep waiting, or sign in again.</p>' +
+            '<button id="manual-signin-btn" onclick="if(typeof signInWithClerk===\'function\'){signInWithClerk(window.location.href)}" style="background:var(--color-primary);color:#fff;font-weight:700;border:none;border-radius:var(--radius);padding:10px 20px;cursor:pointer;font-family:inherit;font-size:0.9375rem">Sign in again</button>' +
+          '</div>';
+      }
+
       // ── Auth ──
+      var accountRendered = false;
+
       async function checkAuth() {
         // Always trust Clerk client as primary auth source
         var clerkUser = window.clerk && window.clerk.user;
-        if (!clerkUser) {
-          // Not signed in — let Clerk SDK handle the redirect
+        var decision = accountGateDecision({
+          hasClerkUser: !!clerkUser,
+          isDevHost: isDevAuthHost(),
+          alreadyBounced: gateAlreadyBounced(),
+        });
+
+        if (decision === 'redirect') {
+          // Dev hosts only (no server-side gate there) — one-shot.
+          markGateBounced();
           document.getElementById('loading-state').style.display = 'none';
           document.getElementById('auth-state').style.display = 'block';
           document.getElementById('dash-greeting-text').textContent = 'Redirecting to sign in\u2026';
@@ -609,6 +670,16 @@
           }
           return;
         }
+
+        if (decision === 'manual') {
+          // No private data, no authenticated requests — session unconfirmed.
+          showManualSignIn();
+          return;
+        }
+
+        if (accountRendered) return; // late clerk event after a successful render
+        accountRendered = true;
+        clearGateBounce();
 
         // Build user profile from Clerk client (always available)
         var clerkProfile = {
