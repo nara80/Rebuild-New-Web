@@ -3,9 +3,9 @@
 // Bundles the real middlewares (which import workers/api/clerk-handshake.ts
 // and clerk-verify.ts) and drives them with real RS256-signed handshake and
 // session JWTs against a mocked JWKS endpoint. Covers: valid sessions,
-// expired sessions, signed-out handshakes, invalid signatures, malformed /
-// hostile directives, wrong issuer, query-param delivery, and admin
-// authorization preservation.
+// expired sessions, signed-out handshakes, category/type checks (SDK parity),
+// invalid signatures, malformed / hostile directives, wrong issuer,
+// query-param delivery, and admin authorization preservation.
 // Run: node scripts/test-handshake-consume.mjs
 import { execSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -29,6 +29,12 @@ const admin = await bundle('functions/admin/_middleware.ts');
 const KID = 'test-key';
 const ISSUER = 'https://clerk.test';
 const JWKS_URL = 'https://clerk.test/jwks';
+// Clerk official backend SDK constants:
+// packages/backend/src/tokens/jwtCategories.ts
+const JWT_CATEGORY_SESSION_TOKEN = 'cl_B7d4PD111AAA';
+const JWT_CATEGORY_JWT_TEMPLATE = 'cl_B7d4PD222AAA';
+const JWT_CATEGORY_M2M_TOKEN = 'cl_B7d4PD333AAA';
+const JWT_CATEGORY_IGNORE = 'cl_I7d4PD111III';
 
 async function makeKeypair() {
   return crypto.subtle.generateKey(
@@ -45,8 +51,8 @@ function b64url(bytes) {
   return Buffer.from(bytes).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-async function sign(payload, privateKey = instance.privateKey, kid = KID) {
-  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid }));
+async function sign(payload, privateKey = instance.privateKey, kid = KID, headerExtras = {}) {
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid, ...headerExtras }));
   const body = b64url(JSON.stringify(payload));
   const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', privateKey, new TextEncoder().encode(`${header}.${body}`));
   return `${header}.${body}.${b64url(new Uint8Array(sig))}`;
@@ -59,8 +65,8 @@ async function mintSession(claims = {}, key) {
     sid: 'sess_test', azp: 'https://www.mildmate.com', ...claims,
   }, key);
 }
-async function mintHandshake(directives, key, extra = {}) {
-  return sign({ handshake: directives, ...extra }, key);
+async function mintHandshake(directives, key, extra = {}, headerExtras = {}) {
+  return sign({ handshake: directives, ...extra }, key, KID, headerExtras);
 }
 
 globalThis.fetch = async (url) => {
@@ -116,7 +122,13 @@ const setCookies = (res) => res.headers.getSetCookie ? res.headers.getSetCookie(
 
 // ── Handshake refresh: happy path ──
 await check('account: handshake with fresh valid session → 302 clean URL + validated Set-Cookies', async () => {
-  const hs = await mintHandshake(freshDirectives(validSession));
+  // Production-style header: typ=JWT + session category.
+  const hs = await mintHandshake(
+    freshDirectives(validSession),
+    instance.privateKey,
+    {},
+    { typ: 'JWT', cat: JWT_CATEGORY_SESSION_TOKEN }
+  );
   const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
   assert.equal(res.status, 302);
   assert.equal(res.headers.get('location'), 'https://www.mildmate.com/account/');
@@ -132,6 +144,46 @@ await check('account: handshake via query param also consumed', async () => {
   assert.equal(res.status, 302);
   assert.equal(res.headers.get('location'), 'https://www.mildmate.com/account/');
   assert.ok(setCookies(res).some((c) => c.startsWith(`__session=${validSession};`)));
+});
+
+// ── Header category/type checks (SDK parity) ──
+await check('account: missing cat remains accepted for backwards compatibility', async () => {
+  const hs = await mintHandshake(freshDirectives(validSession), instance.privateKey, {}, { cat: undefined });
+  const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), 'https://www.mildmate.com/account/');
+  assert.ok(setCookies(res).some((c) => c.startsWith(`__session=${validSession};`)));
+});
+
+await check('account: JWT_CATEGORY_IGNORE accepted (SDK compatibility mode)', async () => {
+  const hs = await mintHandshake(freshDirectives(validSession), instance.privateKey, {}, { cat: JWT_CATEGORY_IGNORE });
+  const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), 'https://www.mildmate.com/account/');
+});
+
+await check('account: JWT template category rejected', async () => {
+  const hs = await mintHandshake(freshDirectives(validSession), instance.privateKey, {}, { cat: JWT_CATEGORY_JWT_TEMPLATE });
+  const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+  assert.equal(setCookies(res).length, 0);
+});
+
+await check('account: M2M token category rejected', async () => {
+  const hs = await mintHandshake(freshDirectives(validSession), instance.privateKey, {}, { cat: JWT_CATEGORY_M2M_TOKEN });
+  const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+  assert.equal(setCookies(res).length, 0);
+});
+
+await check('account: non-JWT typ rejected', async () => {
+  const hs = await mintHandshake(freshDirectives(validSession), instance.privateKey, {}, { typ: 'NOTJWT', cat: JWT_CATEGORY_SESSION_TOKEN });
+  const res = await account.onRequest(ctx(ACCOUNT_URL, `__session=${expiredSession}; __clerk_handshake=${hs}`));
+  assert.equal(res.status, 302);
+  assert.ok(res.headers.get('location').includes('accounts.test/sign-in'));
+  assert.equal(setCookies(res).length, 0);
 });
 
 // ── Signed-out handshake ──

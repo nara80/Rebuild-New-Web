@@ -9,8 +9,9 @@
 //
 // Security model:
 // - The handshake JWT must verify against the configured production JWKS
-//   (CLERK_JWKS_URL); issuer and expiry claims are enforced when present, and
-//   the payload must be a bounded array of directive strings.
+//   (CLERK_JWKS_URL); JWT header type/category checks follow Clerk's official
+//   backend SDK (typ=JWT when present; reject non-session cat values), and the
+//   payload must be a bounded array of directive strings.
 // - Cookie directives are parsed and re-serialized from a strict whitelist:
 //   only Clerk cookie names (__session / __client_uat / __clerk_handshake,
 //   optionally suffixed), header-safe values, Path=/, a Domain that scopes to
@@ -27,6 +28,10 @@ import { verifyClerkJwt } from "./clerk-verify";
 const HANDSHAKE_JWKS_CACHE_MS = 3600 * 1000;
 const MAX_DIRECTIVES = 10;
 const MAX_DIRECTIVE_LENGTH = 8192;
+// Clerk backend SDK category constants:
+// https://raw.githubusercontent.com/clerk/javascript/main/packages/backend/src/tokens/jwtCategories.ts
+const JWT_CATEGORY_SESSION_TOKEN = "cl_B7d4PD111AAA";
+const JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
 
 // Clerk cookie names only (optionally suffixed, e.g. __session_abc12).
 const ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
@@ -57,6 +62,12 @@ function getHandshakeToken(request: Request): string | null {
   return null;
 }
 
+function isNonSessionJwtCategory(cat: unknown): boolean {
+  // SDK parity:
+  // return cat !== undefined && cat !== SESSION && cat !== IGNORE;
+  return cat !== undefined && cat !== JWT_CATEGORY_SESSION_TOKEN && cat !== JWT_CATEGORY_IGNORE;
+}
+
 /** Verify the handshake JWT and return its directive list, or null. */
 async function verifyHandshakeJwt(token: string, env: any): Promise<string[] | null> {
   const issuer = String(env?.CLERK_ISSUER || "").trim();
@@ -72,7 +83,14 @@ async function verifyHandshakeJwt(token: string, env: any): Promise<string[] | n
   } catch {
     return null;
   }
+  // SDK parity with assertHeaderType(typ):
+  // - typ may be omitted (legacy compatibility)
+  // - if present, must be "JWT"
+  if (header.typ !== undefined && header.typ !== "JWT") return null;
   if (header.alg !== "RS256" || !header.kid) return null;
+  // Critical category discriminator (AISEC-85 hardening):
+  // non-session token classes signed by the same key must not pass as handshake.
+  if (isNonSessionJwtCategory(header.cat)) return null;
 
   let keys: any[];
   try {

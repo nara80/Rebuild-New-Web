@@ -18676,6 +18676,8 @@ var onRequest9 = /* @__PURE__ */ __name(async (context) => {
 var HANDSHAKE_JWKS_CACHE_MS = 3600 * 1e3;
 var MAX_DIRECTIVES = 10;
 var MAX_DIRECTIVE_LENGTH = 8192;
+var JWT_CATEGORY_SESSION_TOKEN = "cl_B7d4PD111AAA";
+var JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
 var ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
 var ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
 var ALLOWED_SAMESITE = /* @__PURE__ */ new Set(["lax", "strict", "none"]);
@@ -18701,6 +18703,10 @@ function getHandshakeToken(request2) {
   return null;
 }
 __name(getHandshakeToken, "getHandshakeToken");
+function isNonSessionJwtCategory(cat) {
+  return cat !== void 0 && cat !== JWT_CATEGORY_SESSION_TOKEN && cat !== JWT_CATEGORY_IGNORE;
+}
+__name(isNonSessionJwtCategory, "isNonSessionJwtCategory");
 async function verifyHandshakeJwt(token, env) {
   const issuer = String(env?.CLERK_ISSUER || "").trim();
   const jwksUrl = String(env?.CLERK_JWKS_URL || "").trim();
@@ -18713,7 +18719,9 @@ async function verifyHandshakeJwt(token, env) {
   } catch {
     return null;
   }
+  if (header.typ !== void 0 && header.typ !== "JWT") return null;
   if (header.alg !== "RS256" || !header.kid) return null;
+  if (isNonSessionJwtCategory(header.cat)) return null;
   let keys;
   try {
     const cached = handshakeJwksCache.get(jwksUrl);
@@ -19990,7 +19998,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-GmEKGn/functionsRoutes-0.6973190967362022.mjs
+// ../.wrangler/tmp/pages-Tm3Xdl/functionsRoutes-0.7055225621247175.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
