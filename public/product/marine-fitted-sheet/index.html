@@ -304,8 +304,8 @@
           <div class="panel-section">
             <div class="mode-choice-hint">Choose one sizing mode</div>
             <div class="marine-mode-tabs" role="tablist" aria-label="Marine sizing mode">
-              <button type="button" class="config-tab active" id="marine-tab-standard" data-tab="standard" aria-selected="true">Standard Size</button>
-              <button type="button" class="config-tab" id="marine-tab-custom" data-tab="custom" aria-selected="false">Custom Size</button>
+              <button type="button" class="config-tab active" id="marine-tab-standard" data-tab="standard" aria-selected="true">Boat Model</button>
+              <button type="button" class="config-tab" id="marine-tab-custom" data-tab="custom" aria-selected="false">Mattress Shape</button>
             </div>
             <div class="marine-mode-panel active" id="marine-mode-standard">
               <label class="panel-label" for="boat-model-select" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Choose fixed-price option</label>
@@ -316,7 +316,7 @@
                 <span id="boat-model-year" style="font-size:0.75rem;color:#475569">Year: —</span>
                 <span id="boat-model-price" style="font-size:0.75rem;color:#1d4ed8;font-weight:700">Price: —</span>
               </div>
-              <div style="margin-top:4px"><span id="boat-model-status" style="font-size:0.75rem;color:#64748b">Select a boat model to use standard sizing.</span></div>
+              <div style="margin-top:4px"><span id="boat-model-status" style="font-size:0.75rem;color:#64748b">Select a boat model to use Boat Model pricing.</span></div>
             </div>
             <div class="marine-mode-panel" id="marine-mode-custom">
               <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
@@ -739,9 +739,66 @@
 
       function getBoatModelAdjustedUsd(model){
         var base = model && model.price_usd ? Number(model.price_usd) : 0;
-        if(!isFinite(base) || base <= 0) return 0;
-        var adjusted = isMarineProtector ? (base * 1.2) : base;
-        return Math.round(adjusted * 100) / 100;
+        if(!isFinite(base) || base <= 0) base = 0;
+        if(!isMarineProtector) return Math.round(base * 100) / 100;
+        var dims = (model && model.dimensions && typeof model.dimensions === 'object') ? model.dimensions : null;
+        var shapeCode = String((model && model.shape_code) || '').trim();
+        if(!dims || !shapeCode) return 0;
+        var topArea = getTopAreaFromValues(shapeCode, dims);
+        var depthCm = Number(dims.T || dims.t || dims.D || dims.d || 0);
+        if(!isFinite(depthCm) || depthCm <= 0 || topArea <= 0) return 0;
+        var bd = calcMarineProtectorBreakdown(topArea, depthCm);
+        return Math.round((bd.roundedThb / THB_PER_USD) * 100) / 100;
+      }
+
+      function getModelDim(vals, key){
+        if(!vals || typeof vals !== 'object') return 0;
+        var v = Number(vals[key]);
+        if(!isFinite(v) || v <= 0){
+          v = Number(vals[String(key).toLowerCase()]);
+        }
+        return isFinite(v) && v > 0 ? v : 0;
+      }
+
+      function getTopAreaFromValues(shapeCode, vals){
+        if(!shapeCode) return 0;
+        var A=getModelDim(vals,'A'),B=getModelDim(vals,'B'),C=getModelDim(vals,'C'),D=getModelDim(vals,'D'),
+            E=getModelDim(vals,'E'),F=getModelDim(vals,'F'),W=getModelDim(vals,'W'),L=getModelDim(vals,'L');
+        switch(shapeCode){
+          case '01': return ((A + D) / 2) * L;
+          case '02': return ((A + D) / 2) * L;
+          case '03': return ((A + C) / 2) * L;
+          case '04': return ((C + E + A) / 2) * D;
+          case '05': return W * L;
+          case '06': {
+            var L1 = getModelDim(vals,'L1'), L2 = getModelDim(vals,'L2');
+            return Math.max(0, ((W + A) / 2) * L1 + (W * C) + (W * L2 / 2));
+          }
+          case '07': {
+            var W1 = getModelDim(vals,'W1'), W2 = getModelDim(vals,'W2');
+            var L1_07 = getModelDim(vals,'L1'), L2_07 = getModelDim(vals,'L2');
+            return Math.max(0, ((W1 + A) / 2) * L1_07 + ((W1 + W2) / 2) * C + ((W2 + E) / 2) * L2_07);
+          }
+          case '09': return Math.max(0, C * D + ((D + A) / 2) * (E - C));
+          case '10': return Math.max(0, D * L - (L - C) * (D - A));
+          case '12': return ((B + D) / 2) * C;
+          case '13': return Math.max(0, W * L - ((L - C) * (W - A)) / 2 - ((L - F) * (W - D)) / 2);
+          case '14': return Math.max(0, A * getModelDim(vals,'H') - D * C);
+          default: return A * B;
+        }
+      }
+
+      function renderBoatModelOptions(rows){
+        if(!boatModelSelect) return;
+        var opts = ['<option value="">Select boat model</option>'];
+        (rows || []).forEach(function(m){
+          var key = String(m.model_key || '');
+          var label = String(m.model_label || m.model_name || key);
+          var adjustedUsd = getBoatModelAdjustedUsd(m);
+          var price = adjustedUsd > 0 ? ('$' + adjustedUsd.toFixed(2)) : '—';
+          opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + price + '</option>');
+        });
+        boatModelSelect.innerHTML = opts.join('');
       }
 
       function updateBoatModelMeta(model){
@@ -781,18 +838,23 @@
         if(boatModelSelect) boatModelSelect.value = '';
         updateBoatModelMeta(null);
         if(!silent){
-          setBoatModelStatus('No model selected. Choose a boat model for Standard Size.', false);
+          setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
         }
       }
 
       function applyBoatModel(model, opts){
         var options = opts || {};
         activeBoatModel = model || null;
+        var modelUsd = getBoatModelAdjustedUsd(activeBoatModel);
         updateBoatModelMeta(activeBoatModel);
         if(activeBoatModel){
-          setBoatModelStatus('Using fixed price for ' + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
+          if(isMarineProtector && modelUsd <= 0){
+            setBoatModelStatus('Selected model is missing dimensions for formula pricing. Please update this model in Boat Models.', true);
+          } else {
+            setBoatModelStatus((isMarineProtector ? 'Using formula price for ' : 'Using fixed price for ') + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
+          }
         } else if(!options.silentEmpty){
-          setBoatModelStatus('No model selected. Choose a boat model for Standard Size.', false);
+          setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
         }
         if(!options.skipPriceUpdate) updatePrice();
       }
@@ -815,33 +877,40 @@
         if(isStandardMode){
           resetCustomShapeState();
           if(!activeBoatModel){
-            setBoatModelStatus('No model selected. Choose a boat model for Standard Size.', false);
+            setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
           }
         } else {
           clearBoatModelSelection(true);
-          setBoatModelStatus('Custom Size mode active. Select a shape and enter dimensions below.', false);
+          setBoatModelStatus('Mattress Shape mode active. Select a shape and enter dimensions below.', false);
+          ensureShapeOptionsPopulated();
         }
         updatePrice();
       }
 
+      function ensureShapeOptionsPopulated(){
+        if(!shapeSelect) return;
+        if(shapeSelect.options.length > 1) return;
+        shapeSelect.innerHTML = '<option value=""> — Select a shape — </option>';
+        shapes.forEach(function(s){
+          var opt = document.createElement('option');
+          opt.value = s.code;
+          opt.textContent = s.code + '. ' + s.name + (s.comingSoon ? ' (Coming Soon)' : '');
+          if(s.comingSoon) opt.disabled = true;
+          shapeSelect.appendChild(opt);
+        });
+      }
+
       function loadBoatModels(){
         if(!boatModelSelect) return;
-        fetch('/api/boat-models')
+        var endpoint = isMarineProtector ? '/api/boat-models?include_dimensions=1' : '/api/boat-models';
+        fetch(endpoint)
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(payload){
             var rows = payload && Array.isArray(payload.models) ? payload.models : [];
             boatModels = rows;
-            var opts = ['<option value="">Select boat model</option>'];
-            rows.forEach(function(m){
-              var key = String(m.model_key || '');
-              var label = String(m.model_label || m.model_name || key);
-              var adjustedUsd = getBoatModelAdjustedUsd(m);
-              var price = adjustedUsd > 0 ? ('$' + adjustedUsd.toFixed(2)) : '—';
-              opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + price + '</option>');
-            });
-            boatModelSelect.innerHTML = opts.join('');
+            renderBoatModelOptions(rows);
             updateBoatModelMeta(null);
-            setBoatModelStatus(rows.length ? 'Choose a boat model to apply a fixed Standard Size price.' : 'No saved boat models yet. Use Custom Size instead.', false);
+            setBoatModelStatus(rows.length ? 'Choose a boat model to apply fixed Boat Model pricing.' : 'No saved boat models yet. Use Mattress Shape instead.', false);
           })
           .catch(function(){
             setBoatModelStatus('Boat model lookup unavailable right now.', true);
@@ -849,13 +918,7 @@
       }
 
       /* Populate shape dropdown */
-      shapes.forEach(function(s){
-        var opt = document.createElement('option');
-        opt.value = s.code;
-        opt.textContent = s.code + '. ' + s.name + (s.comingSoon ? ' (Coming Soon)' : '');
-        if(s.comingSoon) opt.disabled = true;
-        shapeSelect.appendChild(opt);
-      });
+      ensureShapeOptionsPopulated();
 
       if(boatModelSelect){
         boatModelSelect.addEventListener('change', function(){
@@ -1463,6 +1526,14 @@
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(payload){
             applyMarinePricingParams(payload);
+            if(boatModels && boatModels.length){
+              renderBoatModelOptions(boatModels);
+              if(activeBoatModel && activeBoatModel.model_key){
+                var synced = findBoatModelByKey(activeBoatModel.model_key);
+                if(synced) activeBoatModel = synced;
+              }
+              updateBoatModelMeta(activeBoatModel);
+            }
             updatePrice();
           })
           .catch(function(){});
@@ -1508,6 +1579,9 @@
             addToCartBtn.disabled = false;
             if(warningEl) warningEl.style.display = 'none';
             return;
+          }
+          if(activeBoatModel && isMarineProtector){
+            setBoatModelStatus('Selected model is missing dimensions for formula pricing. Please update this model in Boat Models.', true);
           }
           customPrice.textContent = ' — ';
           priceDisplay.textContent = ' — ';

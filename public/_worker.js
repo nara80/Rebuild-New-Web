@@ -3843,7 +3843,10 @@ var TH_STATIC_HTML_REPLACEMENTS = [
   [/Choose one sizing mode/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E42\u0E2B\u0E21\u0E14\u0E01\u0E32\u0E23\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E41\u0E1A\u0E1A"],
   [/Know your boat model\? Choose fixed-price option/g, "\u0E17\u0E23\u0E32\u0E1A\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13? \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E32\u0E04\u0E32\u0E04\u0E07\u0E17\u0E35\u0E48"],
   [/Select boat model<\/option>/g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D</option>"],
-  [/Select a boat model to use standard sizing\./g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49\u0E42\u0E2B\u0E21\u0E14\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19"],
+  [/Select a boat model to use Boat Model pricing\./g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49\u0E01\u0E32\u0E23\u0E15\u0E31\u0E49\u0E07\u0E23\u0E32\u0E04\u0E32\u0E41\u0E1A\u0E1A\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D"],
+  [/Choose a boat model to apply fixed Boat Model pricing\./g, "\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E43\u0E0A\u0E49\u0E23\u0E32\u0E04\u0E32\u0E04\u0E07\u0E17\u0E35\u0E48\u0E15\u0E32\u0E21\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D"],
+  [/No saved boat models yet\. Use Mattress Shape instead\./g, "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E23\u0E38\u0E48\u0E19\u0E40\u0E23\u0E37\u0E2D\u0E17\u0E35\u0E48\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E44\u0E27\u0E49 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E43\u0E0A\u0E49\u0E42\u0E2B\u0E21\u0E14\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E41\u0E17\u0E19"],
+  [/Mattress Shape mode active\. Select a shape and enter dimensions below\./g, "\u0E42\u0E2B\u0E21\u0E14\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E40\u0E1B\u0E34\u0E14\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E41\u0E25\u0E49\u0E27 \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B\u0E17\u0E23\u0E07\u0E41\u0E25\u0E30\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E14\u0E49\u0E32\u0E19\u0E25\u0E48\u0E32\u0E07"],
   // Unit warning (configurator) — preserves <strong> markup
   [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, "\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19: <strong>\u0E0B\u0E21.</strong> \u0E15\u0E49\u0E2D\u0E07\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E2B\u0E19\u0E48\u0E27\u0E22\u0E19\u0E34\u0E49\u0E27? \u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E40\u0E1B\u0E47\u0E19 <strong>\u0E19\u0E34\u0E49\u0E27</strong> \u0E01\u0E48\u0E2D\u0E19"]
 ];
@@ -13415,6 +13418,23 @@ async function handleAdminPromo(request2, env) {
 __name(handleAdminPromo, "handleAdminPromo");
 
 // ../workers/api/boat-models.ts
+function parseDimensionsJson(raw) {
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed || typeof parsed !== "object") return {};
+    const out = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const key = String(k || "").trim().toUpperCase();
+      const num = Number(v);
+      if (!key || !Number.isFinite(num) || num <= 0) continue;
+      out[key] = Math.round(num * 100) / 100;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+__name(parseDimensionsJson, "parseDimensionsJson");
 async function ensureBoatModelsColumn(env, name, def) {
   try {
     await env.DB.prepare(`ALTER TABLE boat_models ADD COLUMN ${name} ${def}`).run();
@@ -13463,8 +13483,9 @@ async function handleBoatModels(request2, env) {
     const url = new URL(request2.url);
     const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
+    const includeDimensions = String(url.searchParams.get("include_dimensions") || "").trim() === "1";
     let sql = `
-      SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, updated_at
+      SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, updated_at
       FROM boat_models
       WHERE is_active = 1
         AND model_year IS NOT NULL
@@ -13488,6 +13509,7 @@ async function handleBoatModels(request2, env) {
       model_year: r.model_year == null ? null : Number(r.model_year),
       price_usd: r.sale_price_usd == null ? null : Math.round(Number(r.sale_price_usd) * 100) / 100,
       shape_code: r.shape_code,
+      ...includeDimensions ? { dimensions: parseDimensionsJson(r.dimensions_json) } : {},
       updated_at: r.updated_at || null
     }));
     return new Response(JSON.stringify({ models }), { headers });
@@ -20122,7 +20144,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-JqZd24/functionsRoutes-0.3328498023866767.mjs
+// ../.wrangler/tmp/pages-9ciHWr/functionsRoutes-0.9303216726888638.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

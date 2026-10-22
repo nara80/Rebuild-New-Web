@@ -296,7 +296,10 @@ const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
   [/Choose one sizing mode/g, 'เลือกโหมดการสั่งซื้อหนึ่งแบบ'],
   [/Know your boat model\? Choose fixed-price option/g, 'ทราบรุ่นเรือของคุณ? เลือกตัวเลือกราคาคงที่'],
   [/Select boat model<\/option>/g, 'เลือกรุ่นเรือ</option>'],
-  [/Select a boat model to use standard sizing\./g, 'เลือกรุ่นเรือเพื่อใช้โหมดขนาดมาตรฐาน'],
+  [/Select a boat model to use Boat Model pricing\./g, 'เลือกรุ่นเรือเพื่อใช้การตั้งราคาแบบรุ่นเรือ'],
+  [/Choose a boat model to apply fixed Boat Model pricing\./g, 'เลือกรุ่นเรือเพื่อใช้ราคาคงที่ตามรุ่นเรือ'],
+  [/No saved boat models yet\. Use Mattress Shape instead\./g, 'ยังไม่มีรุ่นเรือที่บันทึกไว้ กรุณาใช้โหมดรูปทรงที่นอนแทน'],
+  [/Mattress Shape mode active\. Select a shape and enter dimensions below\./g, 'โหมดรูปทรงที่นอนเปิดใช้งานแล้ว เลือกรูปทรงและกรอกขนาดด้านล่าง'],
   // Unit warning (configurator) — preserves <strong> markup
   [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, 'หน่วยเริ่มต้น: <strong>ซม.</strong> ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น <strong>นิ้ว</strong> ก่อน'],
 ];

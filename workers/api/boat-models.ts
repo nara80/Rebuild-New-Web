@@ -6,8 +6,26 @@ type BoatModelRow = {
   model_year?: number | null;
   sale_price_usd?: number | null;
   shape_code: string;
+  dimensions_json?: string | null;
   updated_at?: string | null;
 };
+
+function parseDimensionsJson(raw: any): Record<string, number> {
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: Record<string, number> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const key = String(k || "").trim().toUpperCase();
+      const num = Number(v);
+      if (!key || !Number.isFinite(num) || num <= 0) continue;
+      out[key] = Math.round(num * 100) / 100;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
 
 async function ensureBoatModelsColumn(env: any, name: string, def: string): Promise<void> {
   try {
@@ -58,9 +76,10 @@ export async function handleBoatModels(request: Request, env: any): Promise<Resp
     const url = new URL(request.url);
     const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
+    const includeDimensions = String(url.searchParams.get("include_dimensions") || "").trim() === "1";
 
     let sql = `
-      SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, updated_at
+      SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, updated_at
       FROM boat_models
       WHERE is_active = 1
         AND model_year IS NOT NULL
@@ -84,6 +103,7 @@ export async function handleBoatModels(request: Request, env: any): Promise<Resp
       model_year: r.model_year == null ? null : Number(r.model_year),
       price_usd: r.sale_price_usd == null ? null : Math.round(Number(r.sale_price_usd) * 100) / 100,
       shape_code: r.shape_code,
+      ...(includeDimensions ? { dimensions: parseDimensionsJson(r.dimensions_json) } : {}),
       updated_at: r.updated_at || null,
     }));
     return new Response(JSON.stringify({ models }), { headers });
