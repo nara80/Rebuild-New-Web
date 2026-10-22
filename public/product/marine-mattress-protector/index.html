@@ -93,6 +93,13 @@
     .trust-signals-mobile{display:none}
     .trust-item{display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:600;color:#1E293B;white-space:nowrap}
     .trust-item svg{width:16px;height:16px;color:var(--color-primary);flex-shrink:0}
+    .mode-choice-hint{font-size:0.75rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .marine-mode-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+    .marine-mode-tabs .config-tab{min-height:46px;border:2px solid #dbe3ee;border-radius:8px;background:#fff;color:#1E293B;font-size:0.9rem;font-weight:700;transition:border-color .15s,background-color .15s,color .15s}
+    .marine-mode-tabs .config-tab:hover{border-color:var(--color-primary)}
+    .marine-mode-tabs .config-tab.active{border:2px solid #1e40af;background:#dbeafe;color:#1e3a8a}
+    .marine-mode-panel{display:none}
+    .marine-mode-panel.active{display:block}
     /* Marine Shape Configurator */
     .shape-select{width:100%;padding:12px 14px;border:2px solid var(--color-border);border-radius:var(--radius);font-family:var(--font-main);font-size:0.9375rem;color:var(--color-text);background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;min-height:48px}
     .shape-select:focus{outline:none;border-color:var(--color-primary)}
@@ -295,22 +302,30 @@
         <div class="pricing-panel" id="marine-configurator">
           <!-- Shape Selector -->
           <div class="panel-section">
-            <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
-            <select class="shape-select" id="marine-shape-select">
-              <option value=""> — Select a shape — </option>
-            </select>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0">
+            <div class="mode-choice-hint">Choose one sizing mode</div>
+            <div class="marine-mode-tabs" role="tablist" aria-label="Marine sizing mode">
+              <button type="button" class="config-tab active" id="marine-tab-standard" data-tab="standard" aria-selected="true">Standard Size</button>
+              <button type="button" class="config-tab" id="marine-tab-custom" data-tab="custom" aria-selected="false">Custom Size</button>
+            </div>
+            <div class="marine-mode-panel active" id="marine-mode-standard">
               <label class="panel-label" for="boat-model-select" style="margin-bottom:6px;text-transform:none;letter-spacing:0;font-size:0.8125rem">Know your boat model? Choose fixed-price option</label>
               <select id="boat-model-select" class="shape-select">
-                <option value="">Select boat model (optional)</option>
+                <option value="">Select boat model</option>
               </select>
               <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px">
                 <span id="boat-model-year" style="font-size:0.75rem;color:#475569">Year: —</span>
                 <span id="boat-model-price" style="font-size:0.75rem;color:#1d4ed8;font-weight:700">Price: —</span>
               </div>
-              <div style="margin-top:4px"><span id="boat-model-status" style="font-size:0.75rem;color:#64748b"></span></div>
+              <div style="margin-top:4px"><span id="boat-model-status" style="font-size:0.75rem;color:#64748b">Select a boat model to use standard sizing.</span></div>
+            </div>
+            <div class="marine-mode-panel" id="marine-mode-custom">
+              <label class="panel-label" for="marine-shape-select" id="shape-select-label">Choose Your Boat Mattress Shape</label>
+              <select class="shape-select" id="marine-shape-select">
+                <option value=""> — Select a shape — </option>
+              </select>
             </div>
           </div>
+          <div id="marine-custom-block" style="display:none;">
           <!-- Schematic Diagram -->
           <div class="shape-guide" id="shape-guide-wrap">
             <img src="" alt="Shape diagram" id="shape-guide-img" style="display:none;">
@@ -348,6 +363,7 @@
           <div class="area-warning" id="area-warning" style="display:none; padding:12px 16px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#b91c1c; font-size:0.875rem; font-weight:600; line-height:1.5;">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             This mattress area exceeds our maximum of 41,300 cm² (6,400 sq.in). Try splitting into 2 pieces — select <strong>V-Berth Split (Shape 04)</strong> above, or <a href="/contact/" style="color:var(--color-primary);">contact us</a> for a custom solution.
+          </div>
           </div>
           <div class="price-row" style="margin-bottom:12px;">
             <span class="price-label">Estimated Price</span>
@@ -691,10 +707,19 @@
       var boatModelStatus = document.getElementById('boat-model-status');
       var boatModelYear = document.getElementById('boat-model-year');
       var boatModelPrice = document.getElementById('boat-model-price');
+      var standardModeTab = document.getElementById('marine-tab-standard');
+      var customModeTab = document.getElementById('marine-tab-custom');
+      var standardModePanel = document.getElementById('marine-mode-standard');
+      var customModePanel = document.getElementById('marine-mode-custom');
+      var marineCustomBlock = document.getElementById('marine-custom-block');
       var currentQuotePriceThb = 0;
       var currentQuotePriceUsd = 0;
       var boatModels = [];
       var activeBoatModel = null;
+      var marineMode = 'boat_model';
+      var defaultAreaWarningHtml = '';
+      var areaWarningElement = document.getElementById('area-warning');
+      if(areaWarningElement) defaultAreaWarningHtml = areaWarningElement.innerHTML;
 
       function setBoatModelStatus(text, isError){
         if(!boatModelStatus) return;
@@ -729,15 +754,74 @@
         }
       }
 
-      function applyBoatModel(model){
+      function resetCustomShapeState(){
+        if(shapeSelect) shapeSelect.value = '';
+        if(guideImg){
+          guideImg.removeAttribute('src');
+          guideImg.style.display = 'none';
+        }
+        if(guideCaption){
+          guideCaption.textContent = '';
+          guideCaption.style.display = 'none';
+        }
+        if(guidePlaceholder) guidePlaceholder.style.display = 'block';
+        if(comingSoon) comingSoon.style.display = 'none';
+        if(dimsContainer) dimsContainer.innerHTML = '';
+        var bfNote = document.getElementById('bf-note');
+        if(bfNote) bfNote.style.display = 'none';
+        var warningEl = document.getElementById('area-warning');
+        if(warningEl){
+          warningEl.style.display = 'none';
+          if(defaultAreaWarningHtml) warningEl.innerHTML = defaultAreaWarningHtml;
+        }
+      }
+
+      function clearBoatModelSelection(silent){
+        activeBoatModel = null;
+        if(boatModelSelect) boatModelSelect.value = '';
+        updateBoatModelMeta(null);
+        if(!silent){
+          setBoatModelStatus('No model selected. Choose a boat model for Standard Size.', false);
+        }
+      }
+
+      function applyBoatModel(model, opts){
+        var options = opts || {};
         activeBoatModel = model || null;
         updateBoatModelMeta(activeBoatModel);
-        updatePrice();
         if(activeBoatModel){
           setBoatModelStatus('Using fixed price for ' + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
-        } else {
-          setBoatModelStatus('No model selected. Use manual configurator below.', false);
+        } else if(!options.silentEmpty){
+          setBoatModelStatus('No model selected. Choose a boat model for Standard Size.', false);
         }
+        if(!options.skipPriceUpdate) updatePrice();
+      }
+
+      function setMarineMode(mode){
+        marineMode = mode === 'custom_dimensions' ? 'custom_dimensions' : 'boat_model';
+        var isStandardMode = marineMode === 'boat_model';
+        if(standardModeTab){
+          standardModeTab.classList.toggle('active', isStandardMode);
+          standardModeTab.setAttribute('aria-selected', isStandardMode ? 'true' : 'false');
+        }
+        if(customModeTab){
+          customModeTab.classList.toggle('active', !isStandardMode);
+          customModeTab.setAttribute('aria-selected', !isStandardMode ? 'true' : 'false');
+        }
+        if(standardModePanel) standardModePanel.classList.toggle('active', isStandardMode);
+        if(customModePanel) customModePanel.classList.toggle('active', !isStandardMode);
+        if(marineCustomBlock) marineCustomBlock.style.display = isStandardMode ? 'none' : 'block';
+
+        if(isStandardMode){
+          resetCustomShapeState();
+          if(!activeBoatModel){
+            setBoatModelStatus('No model selected. Choose a boat model for Standard Size.', false);
+          }
+        } else {
+          clearBoatModelSelection(true);
+          setBoatModelStatus('Custom Size mode active. Select a shape and enter dimensions below.', false);
+        }
+        updatePrice();
       }
 
       function loadBoatModels(){
@@ -747,7 +831,7 @@
           .then(function(payload){
             var rows = payload && Array.isArray(payload.models) ? payload.models : [];
             boatModels = rows;
-            var opts = ['<option value="">Select boat model (optional)</option>'];
+            var opts = ['<option value="">Select boat model</option>'];
             rows.forEach(function(m){
               var key = String(m.model_key || '');
               var label = String(m.model_label || m.model_name || key);
@@ -757,7 +841,7 @@
             });
             boatModelSelect.innerHTML = opts.join('');
             updateBoatModelMeta(null);
-            setBoatModelStatus(rows.length ? (rows.length + ' boat models available') : 'No saved boat models yet', false);
+            setBoatModelStatus(rows.length ? 'Choose a boat model to apply a fixed Standard Size price.' : 'No saved boat models yet. Use Custom Size instead.', false);
           })
           .catch(function(){
             setBoatModelStatus('Boat model lookup unavailable right now.', true);
@@ -775,9 +859,16 @@
 
       if(boatModelSelect){
         boatModelSelect.addEventListener('change', function(){
+          setMarineMode('boat_model');
           var model = findBoatModelByKey(boatModelSelect.value);
           applyBoatModel(model);
         });
+      }
+      if(standardModeTab){
+        standardModeTab.addEventListener('click', function(){ setMarineMode('boat_model'); });
+      }
+      if(customModeTab){
+        customModeTab.addEventListener('click', function(){ setMarineMode('custom_dimensions'); });
       }
 
       /* â”€â”€ Dimension field definitions per shape â”€â”€ */
@@ -1398,21 +1489,40 @@
       function updatePrice(){
         var code = shapeSelect.value;
         var warningEl = document.getElementById('area-warning');
+        if(warningEl && defaultAreaWarningHtml && warningEl.style.display === 'none' && warningEl.innerHTML !== defaultAreaWarningHtml){
+          warningEl.innerHTML = defaultAreaWarningHtml;
+        }
         var fixedModelUsd = getBoatModelAdjustedUsd(activeBoatModel);
-        if(activeBoatModel && fixedModelUsd > 0){
-          var fixedUsd = fixedModelUsd;
-          var fixedThb = Math.round(fixedUsd * THB_PER_USD);
-          var fixedDisplay = formatBoatModelPrice(fixedUsd);
-          customPrice.textContent = fixedDisplay;
-          priceDisplay.textContent = fixedDisplay;
-          priceDisplayTop.textContent = fixedDisplay;
-          priceTopSub.textContent = 'Fixed price for selected boat model';
-          currentQuotePriceUsd = fixedUsd;
-          currentQuotePriceThb = fixedThb;
+        if(marineMode === 'boat_model'){
+          if(activeBoatModel && fixedModelUsd > 0){
+            var fixedUsd = fixedModelUsd;
+            var fixedThb = Math.round(fixedUsd * THB_PER_USD);
+            var fixedDisplay = formatBoatModelPrice(fixedUsd);
+            customPrice.textContent = fixedDisplay;
+            priceDisplay.textContent = fixedDisplay;
+            priceDisplayTop.textContent = fixedDisplay;
+            priceTopSub.textContent = 'Fixed price for selected boat model';
+            currentQuotePriceUsd = fixedUsd;
+            currentQuotePriceThb = fixedThb;
+            renderPriceBreakdown(null);
+            addToCartBtn.disabled = false;
+            if(warningEl) warningEl.style.display = 'none';
+            return;
+          }
+          customPrice.textContent = ' — ';
+          priceDisplay.textContent = ' — ';
+          priceDisplayTop.textContent = ' — ';
+          priceTopSub.textContent = 'Select a boat model to see fixed pricing';
+          currentQuotePriceThb = 0;
+          currentQuotePriceUsd = 0;
           renderPriceBreakdown(null);
-          addToCartBtn.disabled = false;
+          addToCartBtn.disabled = true;
           if(warningEl) warningEl.style.display = 'none';
           return;
+        }
+        if(activeBoatModel){
+          activeBoatModel = null;
+          updateBoatModelMeta(null);
         }
         if(!code || shapeFields[code] === undefined){
           customPrice.textContent = ' — ';
@@ -1518,8 +1628,15 @@
       }
 
       shapeSelect.addEventListener('change', function(){
+        if(marineMode !== 'custom_dimensions'){
+          setMarineMode('custom_dimensions');
+        }
         var code = shapeSelect.value;
-        if(!code) return;
+        if(!code){
+          resetCustomShapeState();
+          updatePrice();
+          return;
+        }
 
         var shape = shapes.find(function(s){return s.code===code});
 
@@ -2065,7 +2182,8 @@
       }
       function collectMarineQuoteData(){
         var boatModelUsd = getBoatModelAdjustedUsd(activeBoatModel);
-        if(activeBoatModel && boatModelUsd > 0){
+        if(marineMode === 'boat_model'){
+          if(!activeBoatModel || boatModelUsd <= 0) return null;
           return {
             source: 'boat_model',
             shapeCode: activeBoatModel.shape_code || '',
@@ -2078,6 +2196,10 @@
               'Price: $' + boatModelUsd.toFixed(2) + ' USD'
             ]
           };
+        }
+        if(activeBoatModel){
+          activeBoatModel = null;
+          updateBoatModelMeta(null);
         }
         var code = shapeSelect.value;
         if(!code) return null;
@@ -2147,7 +2269,9 @@
         var data = collectMarineQuoteData();
         if(!data){
           updatePrice();
-          alert('Please choose a boat model or complete valid dimensions before requesting a quote.');
+          alert(marineMode === 'boat_model'
+            ? 'Please select a boat model before requesting a quote.'
+            : 'Please choose a shape and complete valid dimensions before requesting a quote.');
           return;
         }
         if(quoteOverlay){
@@ -2186,7 +2310,9 @@
           var quoteData = collectMarineQuoteData();
           if(!quoteData){
             valid = false;
-            alert('Please choose a boat model or complete valid dimensions before submitting the quote.');
+            alert(marineMode === 'boat_model'
+              ? 'Please select a boat model before submitting the quote.'
+              : 'Please choose a shape and complete valid dimensions before submitting the quote.');
           }
           var turnstileToken = getTurnstileToken(document.getElementById('quote-form'));
           if (!turnstileToken) {
@@ -2219,8 +2345,6 @@
                     unit: 'cm',
                     shape_code: quoteData.shapeCode,
                     shape_name: quoteData.shapeName,
-                    boat_model_name: activeBoatModel ? (activeBoatModel.model_label || activeBoatModel.model_name) : undefined,
-                    boat_model_key: activeBoatModel ? activeBoatModel.model_key : undefined,
                     area_cm2: quoteData.areaCm2,
                     values: quoteData.values
                   },

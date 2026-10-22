@@ -293,7 +293,10 @@ const TH_STATIC_HTML_REPLACEMENTS: Array<[RegExp, string]> = [
   [/<div class="spec-label">Fabric<\/div>/g, '<div class="spec-label">เนื้อผ้า</div>'],
   // Configurator inline JS — single-fabric Fabric badge label
   [/<div class="panel-label">Fabric<\/div>/g, '<div class="panel-label">เนื้อผ้า</div>'],
+  [/Choose one sizing mode/g, 'เลือกโหมดการสั่งซื้อหนึ่งแบบ'],
   [/Know your boat model\? Choose fixed-price option/g, 'ทราบรุ่นเรือของคุณ? เลือกตัวเลือกราคาคงที่'],
+  [/Select boat model<\/option>/g, 'เลือกรุ่นเรือ</option>'],
+  [/Select a boat model to use standard sizing\./g, 'เลือกรุ่นเรือเพื่อใช้โหมดขนาดมาตรฐาน'],
   // Unit warning (configurator) — preserves <strong> markup
   [/Default: <strong>cm<\/strong>\. Using inches\? Switch to <strong>inch<\/strong> first\./g, 'หน่วยเริ่มต้น: <strong>ซม.</strong> ต้องการใช้หน่วยนิ้ว? เปลี่ยนเป็น <strong>นิ้ว</strong> ก่อน'],
 ];
