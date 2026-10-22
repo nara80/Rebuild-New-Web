@@ -105,6 +105,11 @@ Move decision-making from revenue growth to profitable growth.
 
 ---
 
-## Reconciliation Note (2026-09-29)
+## Reconciliation Note (2026-10-22)
 
-Status verified: **NOT STARTED**. No profitability cost schema, contribution-margin views, or profitability dashboard artifacts for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-09 and 17 are operational; Phases 10-11 are deployed and awaiting first live metric reconciliations; Phase 12 Google Ads slice is deployed (Meta Ads intentionally deferred by owner decision).
+Status update: **IMPLEMENTED / OPERATIONAL AS FOUNDATION**. Phase 13 profitability infrastructure is now present in repository and production:
+- Migration `053_profitability_layer.sql` tables are live in production D1 (`cost_model_products`, `cost_model_channel_fees`, `cost_model_shipping`).
+- Profitability views are live (`analysis_profit_items`, `analysis_profit_orders`).
+- Runtime handlers are implemented (`workers/api/admin-cost-model.ts`, `/api/admin/analysis/profitability` path in `workers/api/admin-analysis.ts`).
+
+Scope note: this checklist remains as planning/history. Downstream dashboards and decisioning continue to evolve, but the prior **NOT STARTED** state is no longer accurate.

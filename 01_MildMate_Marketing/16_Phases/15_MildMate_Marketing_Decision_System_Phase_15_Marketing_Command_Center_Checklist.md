@@ -101,6 +101,8 @@ Turn the existing `/super-admin/marketing/` area into the owner/decision view fo
 
 ---
 
-## Reconciliation Note (2026-09-29)
+## Reconciliation Note (2026-10-22)
 
-Status verified: **NOT STARTED**. No command-center implementation artifacts for this phase (executive opportunity view, approval workflow layer, or related routes) were found in the repository or production runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-09 and 17 are operational; Phases 10-12 are now deployed in their current approved scope (Phase 12 = Google Ads only, Meta Ads deferred); Opportunity Engine dependency (Phase 14) remains pending.
+Status verified: **NOT STARTED** for Phase 15 deliverables (command-center UX, approval workflow, orchestration layer).
+
+Baseline correction: the prior dependency statement is outdated. **Phase 14 is now implemented/operational** (opportunity score model + snapshots + protected analysis routes live). Phase 15 itself still remains pending.

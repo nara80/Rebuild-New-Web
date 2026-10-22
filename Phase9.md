@@ -1,5 +1,5 @@
 # Phase 9 — Testing (Vitest + Worker Testing)
-**Status (2026-09-03 reconciliation): ❌ OUT OF SCOPE — Not active in the current roadmap unless explicitly re-opened.**
+**Status (2026-10-22 reconciliation): ❌ OUT OF SCOPE AS A ROADMAP PHASE — Not active as a standalone delivery phase unless explicitly re-opened. Practical reality: targeted regression suites now exist in-repo (including Stripe hardening, analytics isolation, and email safety); one known stale GTM assertion is currently failing in `stripe-purchase-hardening.test.ts`.**
 
 ## Overview
 

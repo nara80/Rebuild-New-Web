@@ -92,3 +92,12 @@ Build a sales-growth analytical layer that identifies demand, momentum, conversi
 - [ ] Save implementation summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
 - [ ] Commit only phase-scoped changes with a clear Git commit message.
 - [ ] Prepare a concise handoff for Phase 14 and stop.
+
+## Reconciliation Note (2026-10-22)
+
+Status update: **IMPLEMENTED / OPERATIONAL AS FOUNDATION**. Repository and production now include growth/profitability/opportunity wiring:
+- Protected production routes respond for `/api/admin/analysis/growth-signals` and `/api/admin/analysis/profitability`.
+- Runtime includes growth-signal and profitability paths in `workers/api/admin-analysis.ts`.
+- Opportunity core/scoring integration is present in runtime bundles and production D1 score snapshots exist (`opportunity_scores` rows present).
+
+Scope note: this checklist remains as planning/history; unchecked implementation boxes above are no longer a reliable indicator of current runtime state.

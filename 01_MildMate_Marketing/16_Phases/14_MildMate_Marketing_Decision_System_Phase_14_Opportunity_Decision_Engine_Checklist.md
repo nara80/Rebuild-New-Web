@@ -109,6 +109,11 @@ Rank product/channel opportunities consistently using approved analytical inputs
 
 ---
 
-## Reconciliation Note (2026-09-29)
+## Reconciliation Note (2026-10-22)
 
-Status verified: **NOT STARTED**. No opportunity-score schema, score-history storage, or opportunity-ranking endpoints/views for this phase were found in the repository or production D1/runtime. Checklist state remains pending for implementation. Baseline updated: Phases 01-09 and 17 are operational; Phases 10-11 are deployed and awaiting first live metric reconciliations; Phase 12 Google Ads slice is deployed (Meta Ads intentionally deferred); Phase 13 remains pending.
+Status update: **IMPLEMENTED / OPERATIONAL**.
+- Migration `054_opportunity_engine.sql` artifacts are live in production D1 (`opportunity_score_models`, `opportunity_scores`).
+- Production D1 contains populated score snapshots (non-zero `opportunity_scores` rows).
+- Runtime routes are implemented and deployed (`workers/api/admin-opportunity.ts`, `/api/admin/analysis/opportunity`, `/api/admin/analysis/opportunity/recompute` in `workers/api/admin-analysis.ts`).
+
+Scope note: this checklist is retained as planning/history. The previous **NOT STARTED** statement is superseded by current runtime and production evidence.

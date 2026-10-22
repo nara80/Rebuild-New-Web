@@ -19,6 +19,8 @@
 - Clerk handshake reconciliation (2026-10-22): `/account/*` and `/admin/*` middleware now consume Clerk return handshakes (`__clerk_handshake`) server-side with strict `typ` + `cat` checks to prevent post-idle auth loops.
 - Admin access reconciliation (2026-10-22): Cloudflare Zero Trust challenge is active on `/super-admin/*` (www + pages.dev). `/admin/*` currently remains Clerk middleware gated.
 - Analytics reconciliation (2026-10-22): website GA4 is now tracked via Cloudflare Zaraz (server-side) using Measurement ID `G-0GWVSPJLVJ`; hardcoded client-side `gtag.js` bootstrap snippets were removed from page `<head>` blocks to avoid double counting. GTM remains for non-GA tag use cases.
+- Stripe payment health audit (2026-10-22): production checkout and webhook/order-confirm paths validated as healthy by read-only probes + D1 metadata checks (recent confirmed/shipped paid orders present; sampled webhook failure rows in the last 30 days = 0). Purchase analytics remained UNVERIFIED in that audit.
+- Stripe regression status (2026-10-22): `workers/api/__tests__/stripe-purchase-hardening.test.ts` passes 23/24 tests; the single failure is a stale delayed-GTM string assertion, not a checkout-processing defect.
 
 ---
 
@@ -38,12 +40,13 @@ Verified/confirmed:
 - Make.com Sales Sync scenario (`MildMate - Notion OrderList to D1 Sales Sync`) is **retired permanently**; Notion→D1 sync is owned by Worker `mildmate-marketing-sync` (Phase 17 decision, 2026-09-19).
 - Phase 09 (GSC) base infrastructure is live: migration `046_gsc_analytics.sql` applied on prod D1, `/api/v1/gsc/*` ingestion API live, `/api/admin/analysis/gsc` live, dashboard GSC section deployed.
 - GSC freshness-source reconciliation is applied on prod D1: `analysis_gsc_freshness` now reads `sync_runs` with `source LIKE 'gsc-%'` (verified 2026-09-26).
+- Phase 13/14 foundations are now present in production D1/runtime: migration `053_profitability_layer.sql` tables/views (`cost_model_*`, `analysis_profit_*`) and migration `054_opportunity_engine.sql` tables (`opportunity_score_models`, `opportunity_scores`) are populated; protected admin analysis routes for profitability/growth/opportunity respond from production.
 
 Current pending (not yet production-verified end-to-end):
-- Weekly GSC collector worker update is implemented in repo (`marketing-sync-worker`) but still needs final rollout completion: set `GSC_REFRESH_TOKEN`, deploy updated worker, run first live ingest, reconcile clicks/impressions against sampled GSC exports.
 - Historical product-mapping resolver automation remains design/handoff only.
 - Automatic D1 → Google Product Master synchronization remains pending (`Last_Synced_At` not yet trusted).
-- GA4/Etsy performance/Google Ads/Meta Ads collectors remain pending.
+- Google Ads collector is deployed but still awaiting first live campaign data (Meta Ads remains owner-deferred).
+- Formal sampled clicks/impressions reconciliation against exported GSC source reports is still not recorded in handoffs.
 
 Reporting guardrail:
 - Exclude smoke-test identity `TEST-MAKE-001` from commercial KPI reporting.
