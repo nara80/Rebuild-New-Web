@@ -71,6 +71,7 @@ import { handleGscApi } from "../../workers/api/gsc";
 import { handleGa4Api } from "../../workers/api/ga4";
 import { handleEtsyApi } from "../../workers/api/etsy";
 import { handleGoogleAdsApi } from "../../workers/api/google-ads";
+import { authorizeAdminForRoute, classifyAdminApiPath, normalizeAdminApiPath } from "../../workers/api/admin-auth";
 
 export const onRequest: PagesFunction<{
   DB: D1Database;
@@ -81,6 +82,32 @@ export const onRequest: PagesFunction<{
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  const normalizedPath = normalizeAdminApiPath(path);
+  const adminRouteMode = classifyAdminApiPath(normalizedPath);
+
+  // Centralized /api/admin/* authorization gate for the actual live router.
+  // - OPTIONS: safe CORS preflight only (no business operation).
+  // - Non-OPTIONS: route-aware auth (browser-admin vs approved machine route).
+  if (adminRouteMode !== "not_admin") {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret",
+        },
+      });
+    }
+
+    const auth = await authorizeAdminForRoute(request, env, normalizedPath);
+    if (!auth.ok) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
 
   // Phase 09 — GSC collector API under /api/v1/gsc/*
   if (path.startsWith("/api/v1/gsc")) {
@@ -342,10 +369,6 @@ export const onRequest: PagesFunction<{
 
   // Admin subscribers
   if (path === "/api/admin/subscribers" || path === "/api/admin/subscribers/") {
-    const secret = request.headers.get("X-Admin-Secret");
-    if (secret !== (env.ADMIN_SECRET || "admin")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
-    }
     // DELETE — remove a subscriber by ID
     if (request.method === "DELETE") {
       const id = url.searchParams.get("id");
@@ -354,6 +377,9 @@ export const onRequest: PagesFunction<{
       }
       await env.DB.prepare("DELETE FROM subscribers WHERE id = ?").bind(Number(id)).run();
       return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
+    }
+    if (request.method !== "GET") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
     }
     // GET — list subscribers
     const fmt = url.searchParams.get("format");

@@ -2,6 +2,7 @@
 // POST /api/admin/recovery-test?email=test@example.com
 
 import { sendEmail } from "./email";
+import { authorizeAdminBrowser } from "./admin-auth";
 
 async function sendRecoveryEmail(env: any, to: string, subject: string, html: string): Promise<boolean> {
   const text = `You left something behind — your MildMate cart is waiting.\nReturn to your cart: https://mildmate-new.pages.dev/checkout/`;
@@ -33,11 +34,16 @@ export async function handleAdminRecoveryTest(request: Request, env: any): Promi
   };
 
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret" } });
+    return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret" } });
   }
 
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  }
+
+  const auth = await authorizeAdminBrowser(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
 
   const url = new URL(request.url);

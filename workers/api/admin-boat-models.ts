@@ -1,38 +1,4 @@
-import { verifyClerkJwt } from "./clerk-verify";
-
-function isProductionHost(hostname: string): boolean {
-  const h = String(hostname || "").toLowerCase();
-  return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
-}
-
-function hasAdminRole(raw: any): boolean {
-  if (!raw) return false;
-  const candidates: any[] = [];
-  if (raw.role) candidates.push(raw.role);
-  if (raw.roles) candidates.push(raw.roles);
-  if (raw.public_metadata?.role) candidates.push(raw.public_metadata.role);
-  if (raw.publicMetadata?.role) candidates.push(raw.publicMetadata.role);
-  if (raw.metadata?.role) candidates.push(raw.metadata.role);
-  if (raw.organization_role) candidates.push(raw.organization_role);
-  if (raw.org_role) candidates.push(raw.org_role);
-  const flat: string[] = [];
-  for (const c of candidates) {
-    if (Array.isArray(c)) flat.push(...c.map(String));
-    else if (typeof c === "string") flat.push(c);
-  }
-  return flat.some((v) => {
-    const r = String(v).toLowerCase();
-    return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
-  });
-}
-
-function emailAllowed(email: string, env: any): boolean {
-  const allow = String(env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((s: string) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return !!email && allow.includes(email.toLowerCase());
-}
+import { authorizeAdminBrowser } from "./admin-auth";
 
 function normalizeModelKey(input: string): string {
   return String(input || "")
@@ -89,23 +55,7 @@ async function ensureBoatModelsTable(env: any): Promise<void> {
 }
 
 async function authorizeAdmin(request: Request, env: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
-  const hostname = request.headers.get("Host") || "";
-  if (!isProductionHost(hostname)) return { ok: true };
-
-  const authHeader = request.headers.get("Authorization") || "";
-  if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request, env);
-    if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
-    const raw = (verified as any).payload?.raw || {};
-    const jwtEmail = String(raw.email || (verified as any).payload?.email || "").trim().toLowerCase();
-    if (hasAdminRole(raw) || emailAllowed(jwtEmail, env)) return { ok: true };
-    return { ok: true };
-  }
-
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
-  const expectedSecret = String(env.ADMIN_SECRET || "").trim();
-  if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
+  return authorizeAdminBrowser(request, env);
 }
 
 export async function handleAdminBoatModels(request: Request, env: any): Promise<Response> {

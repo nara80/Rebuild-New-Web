@@ -1,11 +1,18 @@
-// Shared admin authorization for all /api/admin/* endpoints.
-// AND logic: requires BOTH admin role claim AND email in ADMIN_EMAILS.
-// This is the strictest model — no single condition alone grants access.
-//
-// Migration: each admin-* handler should import { authorizeAdmin } from "./admin-auth"
-// and remove its local hasAdminRole / emailAllowed / authorizeAdmin copies.
+// Shared admin authorization for /api/admin/* endpoints.
+// Browser-admin operations require Clerk Bearer auth + role + allowlist
+// (+ denylist enforcement). Machine integrations are explicitly route-scoped.
 
 import { verifyClerkJwt } from "./clerk-verify";
+
+export type AdminAuthResult =
+  | { ok: true }
+  | { ok: false; status: number; error: string };
+
+type AdminRouteAuthMode = "not_admin" | "browser_admin" | "machine_secret";
+
+const MACHINE_SECRET_ROUTES = new Set<string>([
+  "/api/admin/subscribers",
+]);
 
 // ── Role extraction ──
 
@@ -68,6 +75,29 @@ export function emailBlocked(email: string, env: any): boolean {
   return blockedEmailsFromEnv(env).has(email.toLowerCase());
 }
 
+// ── Route normalization / classification ──
+
+export function normalizeAdminApiPath(pathname: string): string {
+  let path = String(pathname || "/").trim();
+  if (!path) path = "/";
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    // keep raw form when decode fails
+  }
+  path = path.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+  if (!path.startsWith("/")) path = "/" + path;
+  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  return path;
+}
+
+export function classifyAdminApiPath(pathname: string): AdminRouteAuthMode {
+  const path = normalizeAdminApiPath(pathname);
+  if (path !== "/api/admin" && !path.startsWith("/api/admin/")) return "not_admin";
+  if (MACHINE_SECRET_ROUTES.has(path)) return "machine_secret";
+  return "browser_admin";
+}
+
 // ── Clerk Backend API enrichment ──
 
 function getPrimaryClerkEmail(user: any): string {
@@ -112,63 +142,108 @@ export function isProductionHost(hostname: string): boolean {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
   if (hostname.endsWith(".local")) return false;
-  if (hostname.endsWith(".pages.dev")) return false;
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 
-// ── Main authorization function (AND logic) ──
-// Returns { ok: true } if the caller has BOTH:
-//   (a) an admin/super-admin role claim (from JWT or Clerk Backend API enrichment)
-//   (b) an email listed in the ADMIN_EMAILS env var
-// AND the email is not in the BLOCKED_EMAILS denylist.
-// Falls back to X-Admin-Secret only on non-production hosts or when
-// ADMIN_SECRET_ALLOW_PROD is explicitly "true".
+function hasBearerAuth(request: Request): boolean {
+  return (request.headers.get("Authorization") || "").startsWith("Bearer ");
+}
 
-export async function authorizeAdmin(
+function configuredAdminSecret(env: any): string {
+  return typeof env?.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+}
+
+// ── Strict browser-admin auth: Clerk only (AND logic) ──
+
+export async function authorizeAdminBrowser(
   request: Request,
   env: any
-): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
-  const authHeader = request.headers.get("Authorization") || "";
-  const hasBearer = authHeader.startsWith("Bearer ");
-
-  // 1) Preferred: Clerk Bearer token with AND logic
-  if (hasBearer) {
-    const verified = await verifyClerkJwt(request, env);
-    if (verified.valid) {
-      const raw = verified.payload.raw || {};
-      let hasRole = hasAdminRole(raw);
-      let email = String(verified.payload.email || "").trim().toLowerCase();
-      let allowed = emailAllowed(email, env);
-
-      // Enrichment: if either role or email is missing from JWT, look up
-      // via Clerk Backend API (JWT may lack claims on production custom domains).
-      if (!hasRole || !allowed) {
-        const sub = String(verified.payload.sub || "").trim();
-        const enriched = await enrichFromClerk(sub, env);
-        if (enriched.email) email = enriched.email;
-        hasRole = hasRole || enriched.hasAdmin;
-        allowed = allowed || emailAllowed(email, env);
-      }
-
-      // Deny blocked emails first (defense-in-depth).
-      if (emailBlocked(email, env)) {
-        return { ok: false, status: 403, error: "Forbidden: account not authorized for admin access" };
-      }
-
-      // AND logic: both conditions must be true.
-      if (hasRole && allowed) {
-        return { ok: true };
-      }
-
-      return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
-    }
-    // If JWT invalid, fall through to secret fallback.
+): Promise<AdminAuthResult> {
+  if (!hasBearerAuth(request)) {
+    return { ok: false, status: 401, error: "Unauthorized: bearer token required" };
   }
 
-  // 2) Legacy fallback: X-Admin-Secret (blocked in production unless explicitly enabled)
+  const verified = await verifyClerkJwt(request, env);
+  if (!verified.valid) {
+    return { ok: false, status: verified.status, error: verified.error };
+  }
+
+  const raw = verified.payload.raw || {};
+  let hasRole = hasAdminRole(raw);
+  let email = String(verified.payload.email || "").trim().toLowerCase();
+  let allowed = emailAllowed(email, env);
+
+  // Enrichment: if either role or email is missing from JWT, look up
+  // via Clerk Backend API.
+  if (!hasRole || !allowed) {
+    const sub = String(verified.payload.sub || "").trim();
+    const enriched = await enrichFromClerk(sub, env);
+    if (enriched.email) email = enriched.email;
+    hasRole = hasRole || enriched.hasAdmin;
+    allowed = allowed || emailAllowed(email, env);
+  }
+
+  // Deny blocked emails first (defense-in-depth).
+  if (emailBlocked(email, env)) {
+    return { ok: false, status: 403, error: "Forbidden: account not authorized for admin access" };
+  }
+
+  if (hasRole && allowed) {
+    return { ok: true };
+  }
+  return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
+}
+
+// ── Strict machine auth: explicit secret only, no defaults ──
+
+export async function authorizeAdminMachineSecret(
+  request: Request,
+  env: any
+): Promise<AdminAuthResult> {
   const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
+  }
+
+  const expectedSecret = configuredAdminSecret(env);
+  if (!expectedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized: ADMIN_SECRET not configured" };
+  }
+  if (providedSecret !== expectedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  return { ok: true };
+}
+
+// Route-aware policy:
+// - browser_admin routes: Clerk Bearer token + role + allowlist + denylist.
+// - machine_secret routes: machine secret, OR browser admin token if provided.
+export async function authorizeAdminForRoute(
+  request: Request,
+  env: any,
+  pathname: string
+): Promise<AdminAuthResult> {
+  const mode = classifyAdminApiPath(pathname);
+  if (mode === "not_admin") return { ok: true };
+  if (mode === "machine_secret") {
+    if (hasBearerAuth(request)) return authorizeAdminBrowser(request, env);
+    return authorizeAdminMachineSecret(request, env);
+  }
+  return authorizeAdminBrowser(request, env);
+}
+
+// Backward-compatible helper used by legacy handlers.
+// Browser calls use strict Clerk auth.
+// Secret fallback is only allowed when:
+// - route is not production host, OR
+// - ADMIN_SECRET_ALLOW_PROD=true
+// and always requires configured ADMIN_SECRET.
+export async function authorizeAdmin(
+  request: Request,
+  env: any
+): Promise<AdminAuthResult> {
+  if (hasBearerAuth(request)) {
+    return authorizeAdminBrowser(request, env);
   }
 
   const host = new URL(request.url).hostname;
@@ -177,10 +252,5 @@ export async function authorizeAdmin(
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   }
-
-  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  // Dev bypass: if ADMIN_SECRET not set, allow any non-empty secret.
-  if (!configuredSecret) return { ok: true };
-  if (providedSecret === configuredSecret) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
+  return authorizeAdminMachineSecret(request, env);
 }
