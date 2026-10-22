@@ -1,5 +1,5 @@
 # Phase 7 — Admin Dashboard
-**Status (2026-07-12): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `public/super-admin/index.html` + `public/admin/index.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron), **Promo Codes** (admin-created codes with optional `free_shipping` flag — Super Admin table shows Free Ship column), **Color Inventory** (Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback, `fabric_color_inventory` D1 table). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Global `functions/_middleware.ts` (D1 header/footer SSR + Thai link rewriting), `functions/blog-shared.ts` (blog SSR renderer), `functions/product/[[path]].ts` (product SSR + image overrides + H1/breadcrumb always replaced from D1 title), `functions/th/blogs/[[path]].ts` (Thai blog SSR), `functions/super-admin/_middleware.ts` (re-exports admin middleware) all built. Migrations 017–036 applied. Option B (Cloudflare Access) is optional for launch — defense-in-depth only. **Old sandbox files (`/admin/sandbox/`) removed 2026-06-10 — 301 redirect remains in `_redirects`.**
+**Status (2026-10-22): ✅ BUILT + VERIFIED — Admin at `/admin/` (moved from `/admin/sandbox/`, 301 redirect in place). Two dashboards built: `public/super-admin/index.html` + `public/admin/index.html` with full products CRUD, orders table (live D1 + Option A shipping tracking: carrier + tracking number + tracking URL), R2 drag-drop upload (20 slots), CSV export, subscribers, customers (D1-grouped by email), **Quotes** (full sales quote CRUD with dual-currency THB/USD, Resend magic-link email via `orders@mildmate.com`), **Thank-you discount emails** (`buildThankyouEmail` → `thankyou_queue` table + cron), **Promo Codes** (admin-created codes with optional `free_shipping` flag — Super Admin table shows Free Ship column), **Color Inventory** (Super Admin visual swatch grid per fabric, real-time OOS checkbox toggle with toast feedback, `fabric_color_inventory` D1 table). Workers API protected via `authorizeAdmin()` (Clerk JWT admin role + X-Admin-Secret fallback). Pages protected via `functions/admin/_middleware.ts` (admin-role gate) and `functions/account/_middleware.ts` (customer session gate). Clerk admin roles assigned (nara19080@gmail.com + sriprasit9@gmail.com → super-admin; mildmateshop@gmail.com → admin). `ADMIN_EMAILS` + `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` secrets ✅ set on Cloudflare. Global `functions/_middleware.ts` (D1 header/footer SSR + Thai link rewriting), `functions/blog-shared.ts` (blog SSR renderer), `functions/product/[[path]].ts` (product SSR + image overrides + H1/breadcrumb always replaced from D1 title), `functions/th/blogs/[[path]].ts` (Thai blog SSR), `functions/super-admin/_middleware.ts` (re-exports admin middleware) all built. Migrations 017–036 applied. **Cloudflare Access reconciliation:** `/super-admin/*` is Access-challenged in front of Clerk, while `/admin/*` currently remains Clerk-gated only. **Old sandbox files (`/admin/sandbox/`) removed 2026-06-10 — 301 redirect remains in `_redirects`.**
 **Goal:** Build a private management interface for your team — protected by Clerk admin authentication.
 
 **End Result:** A clean, Clerk-protected dashboard at `mildmate-new.pages.dev/admin/` that only your team can access. Your manufacturing team sees every order's exact custom dimensions. Your marketing team can update products and export email lists without touching any code. Your operations team can update order status live.
@@ -127,13 +127,13 @@ Each `/api/admin/*` endpoint independently verifies auth:
 - Prefers `Authorization: Bearer <clerk-jwt>` → verifies → checks admin role/email
 - Falls back to `X-Admin-Secret` header (non-prod only, or `ADMIN_SECRET_ALLOW_PROD=true`)
 
-### Option B — Planned (Cloudflare Access)
+### Option B — Partially Live (Cloudflare Access)
 
-Add Cloudflare Access zero-trust policy in front of `/admin/*` for defense-in-depth:
+Cloudflare Access zero-trust is currently enforced on `/super-admin/*` for defense-in-depth, while `/admin/*` is still protected by Clerk middleware only.
 - Cloudflare handles identity verification before requests reach the Worker
 - Works with Google, GitHub, or any OIDC provider
 - Requires Cloudflare Teams (free for up to 50 users)
-- Can co-exist with Option A — Access is the outer gate, middleware is the inner gate
+- Co-exists with Option A, Access is the outer gate and Clerk middleware is the inner gate
 
 ### Setup Required
 
@@ -170,7 +170,7 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 
 | Item | Status |
 |---|---|
-| Option B — Cloudflare Access | **Planned for launch** — defense-in-depth, no code changes needed |
+| Option B — Cloudflare Access | **Partially live** — `/super-admin/*` challenged by Access; `/admin/*` rollout is optional follow-up |
 
 ---
 
@@ -180,13 +180,15 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 
 **Production:** `https://www.mildmate.com/admin/` — `functions/admin/_middleware.ts` enforces Clerk admin auth
 
+**Super Admin (www + preview):** `/super-admin/*` currently adds Cloudflare Access challenge before Clerk/admin middleware.
+
 ---
 
 ## How to Add a New Admin User
 
 1. **Option A (Clerk role):** Clerk Dashboard → Users → select user → Metadata → set `public_metadata.role` to `admin` or `super-admin`
 2. **Option A (Email):** Add their email to the `ADMIN_EMAILS` env var (comma-separated) and redeploy
-3. **Option B (future):** Add their email in Cloudflare Zero Trust → Access → MildMate Admin policy
+3. **Option B (for super-admin path today):** Add their email in Cloudflare Zero Trust → Access policy that protects `/super-admin/*` (and `/admin/*` only if that path is later included)
 
 ---
 
@@ -215,7 +217,8 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 - [x] Shipping Tier 3 additional rate reduced ฿150 → ฿50 (applied to both prod + preview D1)
 - [x] Product H1/breadcrumb always replaced from D1 title (EN + TH, all 28 slugs verified)
 - [x] Family/Co-Sleep size presets in product configurator (`family-fitted-sheet`, `mattress-protector-family`)
-- [ ] Option B — Cloudflare Access (optional, for launch — defense-in-depth only)
+- [x] Option B — Cloudflare Access active on `/super-admin/*`
+- [ ] Option B extension to `/admin/*` (optional follow-up)
 
 ---
 
@@ -224,7 +227,7 @@ Same pattern as Orders. Customers are grouped by email from the D1 `orders` tabl
 | Problem | Solution |
 |---|---|
 | "D1 unavailable" on Orders page (production) | Clerk session missing or user doesn't have admin role. Check `public_metadata.role` in Clerk Dashboard or add email to `ADMIN_EMAILS`. |
-| /admin/ redirects to Clerk sign-in loop | Verify active Clerk session and role claims first (`admin`/`super-admin`). Current live auth runs on Clerk Development instance; Production-instance migration is a separate future task. |
+| /admin/ redirects to Clerk sign-in loop | Verify active Clerk session and role claims first (`admin`/`super-admin`). Live site now uses host-aware Clerk keys (`pk_live_*` on prod hosts, `pk_test_*` elsewhere), so persistent loops usually indicate handshake/session issues or missing role/email allowlist. |
 | "Not Found" on /api/admin/orders | Worker hasn't been deployed yet. Run `npx wrangler pages deploy public`. |
 | Product list won't select | Missing `_pendingUploads`/`_pendingCount` declarations — fixed in super-admin. |
 | Image upload fails | Check R2 bucket binding `MILDMATE_ASSETS` in `wrangler.toml`. |
