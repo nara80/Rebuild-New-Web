@@ -129,7 +129,7 @@ export const onRequest: PagesFunction<{
   }
 
   // Deny blocked emails first (defense-in-depth).
-  if (emailBlocked(email)) {
+  if (emailBlocked(email, context.env)) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -198,9 +198,21 @@ function redirectToSignIn(currentUrl: string, env?: any) {
     ? "kind-joey-29.accounts.dev"
     : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
 
-  const cleanReturnUrl = parsed.origin + parsed.pathname;
+  const clean = new URL(parsed.origin + parsed.pathname + parsed.search);
+  for (const key of Array.from(clean.searchParams.keys())) {
+    if (key.indexOf("__clerk_") === 0 || key === HANDSHAKE_MARKER) {
+      clean.searchParams.delete(key);
+    }
+  }
+  const cleanReturnUrl = clean.origin + clean.pathname;
+  const isSuperAdminPath = clean.pathname.toLowerCase().startsWith("/super-admin");
+  const callbackReturnUrl = new URL("/auth/clerk-return/", clean.origin);
+  if (isSuperAdminPath) {
+    const nextPath = clean.pathname + clean.search;
+    callbackReturnUrl.searchParams.set("next", nextPath || "/super-admin/");
+  }
   const signInUrl = new URL(`https://${accountsDomain}/sign-in`);
-  signInUrl.searchParams.set("redirect_url", cleanReturnUrl);
+  signInUrl.searchParams.set("redirect_url", isSuperAdminPath ? callbackReturnUrl.toString() : cleanReturnUrl);
 
   return Response.redirect(signInUrl.toString(), 302);
 }

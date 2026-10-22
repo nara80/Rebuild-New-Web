@@ -2,31 +2,7 @@
 // POST /api/admin/exchange-rates  — upsert a rate
 // PUT  /api/admin/exchange-rates  — same
 
-function isProductionHost(host: string): boolean {
-  return host === "www.mildmate.com" || host === "mildmate.com";
-}
-
-function isDevHost(host: string): boolean {
-  return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-}
-
-function authorizeAdmin(request: Request, env: any): { ok: boolean; status?: number; error?: string } {
-  const host = new URL(request.url).hostname;
-  if (isDevHost(host)) return { ok: true };
-  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
-  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!providedSecret) {
-    return { ok: false, status: 401, error: "Unauthorized" };
-  }
-  const prodHost = isProductionHost(host);
-  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
-  if (prodHost && !allowSecretInProd) {
-    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
-  }
-  if (!configuredSecret) return { ok: true };
-  if (providedSecret === configuredSecret) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
-}
+import { authorizeAdmin } from "./admin-auth";
 
 export async function handleAdminExchangeRates(request: Request, env: any): Promise<Response> {
   if (request.method === "OPTIONS") {
@@ -40,10 +16,10 @@ export async function handleAdminExchangeRates(request: Request, env: any): Prom
     });
   }
 
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error || "Unauthorized" }), {
-      status: auth.status || 401,
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }

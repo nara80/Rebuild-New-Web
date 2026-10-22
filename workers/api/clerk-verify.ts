@@ -23,11 +23,34 @@ interface JwksKey {
   use: string;
 }
 
-let jwksCache: { keys: JwksKey[]; fetchedAt: number } | null = null;
-
-const CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
-const JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
+// Env-var-driven Clerk config with dev fallback.
+// Production sets CLERK_ISSUER + CLERK_JWKS_URL via Cloudflare Pages secrets/vars.
+// Dev/preview falls back to the Development instance (kind-joey-29).
+const DEV_CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
+const DEV_JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
 const JWKS_CACHE_MS = 3600 * 1000; // 1 hour
+
+function getIssuer(env: any): string {
+  return String(env?.CLERK_ISSUER || DEV_CLERK_ISSUER).trim();
+}
+
+function getJwksUrl(env: any): string {
+  return String(env?.CLERK_JWKS_URL || DEV_JWKS_URL).trim();
+}
+
+function isProdClerkConfigured(env: any): boolean {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  return issuer.length > 0 && issuer !== DEV_CLERK_ISSUER;
+}
+
+/** Production custom domains — the only hosts that must NEVER fall back to dev Clerk config. */
+function isProductionHostname(hostname: string): boolean {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com";
+}
+
+// Cache JWKS keys per-URL so dev and prod keys don't collide.
+let jwksCache: Map<string, { keys: JwksKey[]; fetchedAt: number }> = new Map();
 
 const RATE_WINDOW_MS = 60 * 1000; // 1 minute for auth rate limiting
 const MAX_AUTH_REQUESTS = 30; // per IP per minute
@@ -54,18 +77,20 @@ async function recordRateLimit(env: any, ip: string): Promise<void> {
   } catch {}
 }
 
-/** Fetch and cache JWKS keys */
-async function getJwks(): Promise<JwksKey[]> {
-  if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_CACHE_MS) {
-    return jwksCache.keys;
+/** Fetch and cache JWKS keys (per-URL cache to support dev + prod simultaneously) */
+async function getJwks(jwksUrl: string): Promise<JwksKey[]> {
+  const cached = jwksCache.get(jwksUrl);
+  if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
+    return cached.keys;
   }
 
-  const resp = await fetch(JWKS_URL);
+  const resp = await fetch(jwksUrl);
   if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
 
   const data: any = await resp.json();
-  jwksCache = { keys: data.keys || [], fetchedAt: Date.now() };
-  return jwksCache.keys;
+  const entry = { keys: data.keys || [], fetchedAt: Date.now() };
+  jwksCache.set(jwksUrl, entry);
+  return entry.keys;
 }
 
 /** Base64url → Uint8Array */
@@ -118,6 +143,18 @@ export async function verifyClerkJwt(
     return { valid: false, error: "Invalid origin", status: 403 };
   }
 
+  // ── Fail-closed production guard ──
+  // If a request arrives on a production host but the Clerk Production
+  // configuration (CLERK_ISSUER / CLERK_JWKS_URL) is missing, REJECT the
+  // token instead of falling back to the Development instance. Production
+  // must never silently trust Development-instance JWTs.
+  try {
+    const requestHost = new URL(request.url).hostname.toLowerCase();
+    if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
+      return { valid: false, error: "Auth service unavailable", status: 503 };
+    }
+  } catch {}
+
   // ── Rate limiting ──
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
   if (await checkAuthRateLimit(env, ip)) {
@@ -154,7 +191,7 @@ export async function verifyClerkJwt(
   // ── Find matching JWK ──
   let keys: JwksKey[];
   try {
-    keys = await getJwks();
+    keys = await getJwks(getJwksUrl(env));
   } catch (e: any) {
     console.error("Clerk JWKS fetch failed:", e.message);
     return { valid: false, error: "Auth service unavailable", status: 503 };
@@ -219,17 +256,29 @@ export async function verifyClerkJwt(
     return { valid: false, error: "Token expired", status: 401 };
   }
 
-  // Accept production and development Clerk issuers (multiple URL patterns)
-  if (
-    payload.iss &&
-    payload.iss !== CLERK_ISSUER &&
-    !payload.iss.startsWith("https://clerk.") &&
-    !payload.iss.includes(".clerk.accounts.dev")
-  ) {
-    return { valid: false, error: "Invalid issuer", status: 401 };
+  // ── Issuer validation ──
+  // Production (CLERK_ISSUER env var set): strict match only — reject any
+  // token signed by a different issuer (prevents dev JWTs from validating
+  // on the production deployment).
+  //
+  // Dev/preview (no env var): permissive — accept any clerk.accounts.dev
+  // issuer so test instances work.
+  const expectedIssuer = getIssuer(env);
+  if (payload.iss && payload.iss !== expectedIssuer) {
+    if (isProdClerkConfigured(env)) {
+      // Production mode: strict — no fallback patterns.
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+    // Dev mode: allow other dev Clerk issuers for test instances.
+    if (
+      !payload.iss.startsWith("https://clerk.") &&
+      !payload.iss.includes(".clerk.accounts.dev")
+    ) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
   }
 
   return { valid: true, payload };
 }
 
-export { CLERK_ISSUER };
+export { DEV_CLERK_ISSUER as CLERK_ISSUER };

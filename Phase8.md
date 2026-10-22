@@ -1,5 +1,5 @@
 # Phase 8 — Polish + Launch
-**Status (2026-06-19): ✅ COMPLETE — All Part A and Part B items are fully complete, including Stripe Live Mode keys.**
+**Status (2026-10-22 reconciliation): ✅ COMPLETE — All Part A and Part B items are fully complete, including Stripe Live Mode keys. Analytics reconciliation: GA4 now runs via Cloudflare Zaraz (server-side) using `G-0GWVSPJLVJ`; hardcoded client-side `gtag.js` page-head snippets were removed to prevent double counting.**
 **Goal:** Part A and Part B are complete — mobile issues fixed, Lighthouse targets achieved, and Stripe live mode keys deployed.
 
 **End Result:** `www.mildmate.com` is live on the new site. The old WordPress site is retired. Google Search Console shows no errors. Real customers can browse, configure, and purchase custom bedding.
@@ -27,7 +27,7 @@
 | `public/robots.txt` | Tells Google which pages to index — blocks `/admin/*`, `/api/*`, `/checkout/*`, `/account/*`, `/unsubscribe/` | ✅ Built |
 | `sitemap.xml` | List of all URLs — submitted to Google Search Console | ✅ Built + submitted (2026-06-14) |
 | Open Graph meta tags | Facebook/LINE share preview image + title on all pages | ✅ Built + verified (homepage + product pages, 2026-06-14) |
-| GTM / Analytics | Google Tag Manager (`GTM-KLJZZM9`) + GA4 tracking on all pages | ✅ Built + verified (GTM-KLJZZM9 + G-R2DDCBXXXX, homepage + product pages, 2026-06-14) |
+| GTM / Analytics | GTM container (`GTM-KLJZZM9`) retained for non-GA tags; GA4 handled by Cloudflare Zaraz (server-side) | ✅ Reconciled (Zaraz GA4 `G-0GWVSPJLVJ`, hardcoded `gtag.js` snippets removed from page heads, 2026-10-22) |
 | Mobile CSS fixes | Any layout issues found during QA review | ✅ Passed (2026-06-14) |
 | Lighthouse performance fixes | Image compression, CSS/JS optimization | ✅ Passed (2026-06-14) |
 | Stripe live mode keys | Real payment credentials stored as Cloudflare secrets | ✅ Deployed |
@@ -143,15 +143,16 @@ On launch day, you switch from Stripe test mode to live mode. This means real pa
 
 ---
 
-### Requirement 6 — Your Google Tag Manager / Analytics ID
+### Requirement 6 — GTM + Zaraz Tracking Ownership
 
-Your existing WordPress site already has Google Tag Manager (GTM-KLJZZM9 from the site source). You should keep this tracking on the new site.
+Production tracking is now split:
+- **GA4 page/event collection:** Cloudflare Zaraz (server-side), canonical Measurement ID `G-0GWVSPJLVJ`
+- **GTM (`GTM-KLJZZM9`):** retained only for non-GA marketing tags that still require GTM
 
 **What to provide:**
-- Your Google Tag Manager ID (looks like: `GTM-XXXXXXX`)
-- Your Google Analytics ID if separate (looks like: `G-XXXXXXXXXX` or `UA-XXXXXXXX-X`)
-
-> **Where to find it:** Log in to [tagmanager.google.com](https://tagmanager.google.com) → your account → your container — the ID is in the top right (e.g., `GTM-KLJZZM9`).
+- Confirm whether GTM is still needed for any non-GA tags
+- If yes, list which tags still depend on GTM (for example: Ads remarketing, Meta Pixel, other third-party pixels)
+- Confirm Zaraz remains the only GA4 collector (no direct `gtag.js` bootstrap in page `<head>`)
 
 ---
 
@@ -193,11 +194,11 @@ Choose your launch day. Recommended approach:
 > **Requirement 3 — OG Image:** [og-image.jpg is ready / use auto-generated CI blue]
 > **Requirement 4 — Exclude from Google:** [your list or 'use defaults']
 > **Requirement 5 — Live Stripe Keys:** [collected and stored safely — will provide on launch day]
-> **Requirement 6 — GTM ID:** [GTM-KLJZZM9 or your ID]
+> **Requirement 6 — Tracking ownership:** [Confirm Zaraz GA4 `G-0GWVSPJLVJ` as canonical; list GTM-dependent non-GA tags if any]
 > **Requirement 7 — Facebook Pixel:** [your Pixel ID or 'none']
 > **Requirement 8 — Launch Date:** [your planned date]
 >
-> Build: _headers security file, Open Graph tags on all pages, sitemap.xml, robots.txt, GTM/Analytics tags. Then run a full audit and give me a list of everything to review."
+> Build: _headers security file, Open Graph tags on all pages, sitemap.xml, robots.txt, and analytics reconciliation checks (Zaraz GA4 canonical + no hardcoded page-head `gtag.js`). Then run a full audit and give me a list of everything to review."
 
 ---
 
@@ -349,7 +350,7 @@ Before moving to Part B (Launch Day), confirm all of these:
 - [ ] Lighthouse scores: Performance 90+, SEO 95+
 - [ ] Security headers grade A or A+
 - [ ] Open Graph preview correct on LINE and Facebook
-- [ ] GTM/Analytics tracking tag added to all pages
+- [ ] Zaraz GA4 (`G-0GWVSPJLVJ`) confirmed as canonical and hardcoded page-head `gtag.js` snippets absent
 - [x] https://www.mildmate.com/sitemap.xml exists and lists all important URLs
 - [ ] `public/robots.txt` exists and excludes `/admin/*`, `/checkout/*`, `/api/*`
 - [ ] Final full test purchase passed all 13 steps
@@ -578,7 +579,7 @@ Two days after launch:
 - [x] Lighthouse: Performance 90+, SEO 95+, Accessibility 85+, Best Practices 90+
 - [ ] Security headers grade A or A+ at securityheaders.com
 - [ ] Open Graph preview correct on LINE and Facebook
-- [x] GTM/Analytics tracking tag on all pages
+- [x] Zaraz GA4 (`G-0GWVSPJLVJ`) canonical and hardcoded page-head `gtag.js` snippets removed (double-count guard)
 - [x] sitemap.xml and robots.txt built + submitted
 - [x] Final full test purchase passed (end-to-end)
 - [ ] Real product data entered (minimum top 10 with photos)

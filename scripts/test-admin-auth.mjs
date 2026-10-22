@@ -69,12 +69,14 @@ check('empty email / empty allowlist are denied', () => {
 });
 
 // ── emailBlocked (denylist) ──
-check('denylisted email is blocked', () => {
-  assert.equal(emailBlocked('mildmateshop@gmail.com'), true);
+check('email in ADMIN_BLOCKED_EMAILS is blocked', () => {
+  const env = { ADMIN_BLOCKED_EMAILS: 'mildmateshop@gmail.com,norrawich.rat@gmail.com' };
+  assert.equal(emailBlocked('mildmateshop@gmail.com', env), true);
 });
-check('non-denylisted admin email is not blocked', () => {
-  assert.equal(emailBlocked('nara19080@gmail.com'), false);
-  assert.equal(emailBlocked(''), false);
+check('email not in ADMIN_BLOCKED_EMAILS is not blocked', () => {
+  const env = { ADMIN_BLOCKED_EMAILS: 'mildmateshop@gmail.com' };
+  assert.equal(emailBlocked('nara19080@gmail.com', env), false);
+  assert.equal(emailBlocked('', env), false);
 });
 
 console.log(`\nAll ${passed} admin-auth regression tests passed.`);

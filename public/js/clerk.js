@@ -6,7 +6,14 @@
 
 (function () {
   if (window.__SKIP_CLERK) return;
-  var PUBLISHABLE_KEY = 'pk_test_a2luZC1qb2V5LTI5LmNsZXJrLmFjY291bnRzLmRldiQ';
+  var PROD_HOSTS = { 'www.mildmate.com': true, 'mildmate.com': true };
+  var PROD_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsubWlsZG1hdGUuY29tJA';
+  var DEV_PUBLISHABLE_KEY = 'pk_test_a2luZC1qb2V5LTI5LmNsZXJrLmFjY291bnRzLmRldiQ';
+  var _host = '';
+  try { _host = (window.location && window.location.hostname || '').toLowerCase(); } catch (e) {}
+  // Host-aware key selection: production Clerk instance only on prod hosts.
+  // Dev/preview/local keeps the Development instance so tests never touch live auth.
+  var PUBLISHABLE_KEY = PROD_HOSTS[_host] ? PROD_PUBLISHABLE_KEY : DEV_PUBLISHABLE_KEY;
   var clerkDomain;
   var hostedAccountsDomain;
   try {
@@ -15,6 +22,11 @@
       '.clerk.accounts.dev',
       '.accounts.dev'
     );
+    if (hostedAccountsDomain === clerkDomain) {
+      // Production custom domain: hosted sign-in lives on the accounts subdomain
+      // (clerk.mildmate.com → accounts.mildmate.com)
+      hostedAccountsDomain = clerkDomain.replace(/^clerk\./, 'accounts.');
+    }
   } catch (e) {
     console.error('Clerk: invalid publishable key');
     return;
@@ -44,6 +56,20 @@
       return url.toString();
     } catch (e) {
       return inputUrl || window.location.href;
+    }
+  }
+
+  function getAuthReturnUrl(inputUrl) {
+    var cleanUrl = getCleanUrl(inputUrl || window.location.href);
+    try {
+      var url = new URL(cleanUrl, window.location.origin);
+      var path = (url.pathname || '/').toLowerCase();
+      if (path.indexOf('/super-admin') !== 0) return cleanUrl;
+      var callbackUrl = new URL('/auth/clerk-return/', url.origin);
+      callbackUrl.searchParams.set('next', url.pathname + (url.search || ''));
+      return callbackUrl.toString();
+    } catch (e) {
+      return cleanUrl;
     }
   }
 
@@ -188,7 +214,7 @@
     var btn = document.querySelector('.btn-google');
     var initialText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
-    var redirectUrl = getCleanUrl(returnTo || window.location.href);
+    var redirectUrl = getAuthReturnUrl(returnTo || window.location.href);
     var fallbackUrl =
       'https://' +
       hostedAccountsDomain +
@@ -227,7 +253,7 @@
     var btn = document.querySelector('.btn-google');
     var initialText = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
-    var redirectUrl = getCleanUrl(returnTo || window.location.href);
+    var redirectUrl = getAuthReturnUrl(returnTo || window.location.href);
     var fallbackUrl =
       'https://' +
       hostedAccountsDomain +

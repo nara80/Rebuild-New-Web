@@ -268,8 +268,19 @@
         window.signInWithClerk(cleanCurrentUrl);
       } else {
         // Fallback — direct URL to Clerk hosted sign-in page
+        // Host-aware: production uses accounts.mildmate.com, dev/preview use the
+        // Clerk Development instance accounts domain.
+        var fallbackAccountsDomain = (function () {
+          try {
+            var h = window.location.hostname.toLowerCase();
+            if (h === 'www.mildmate.com' || h === 'mildmate.com') {
+              return 'accounts.mildmate.com';
+            }
+          } catch (_) {}
+          return 'kind-joey-29.accounts.dev';
+        })();
         window.location.href =
-          'https://kind-joey-29.accounts.dev/sign-in?redirect_url=' +
+          'https://' + fallbackAccountsDomain + '/sign-in?redirect_url=' +
           encodeURIComponent(cleanCurrentUrl);
       }
     });

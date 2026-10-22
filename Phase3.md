@@ -189,7 +189,7 @@ Think of Phase 3 as building the **frame of a house** before putting in the furn
 |---|---|---|
 | `public/css/main.min.css` | All visual styles — brand tokens, typography, layout, header, footer, buttons, cards, forms (~40KB minified) | ✅ Built |
 | `public/js/nav.js` | Sticky header shrink on scroll + mobile hamburger drawer (left) + search overlay toggle | ✅ Built |
-| `public/js/cookie-consent.js` | GDPR cookie consent banner + GA4 conditional load | ✅ Built |
+| `public/js/cookie-consent.js` | GDPR cookie consent banner + analytics-consent trigger (`window.__mildmateLoadAnalytics`) | ✅ Built (reconciled 2026-10-22: no direct `gtag.js` injection) |
 | `public/js/clerk.js` | Clerk auth integration — account button (Sign In vs person icon) | ✅ Built |
 | Header HTML component | Sticky bar: logo + navigation (Home/Shop/Fabrics/Size Guide) + EN/TH toggle + search + account + cart | ✅ Built |
 | Footer HTML component | 4-column minimal footer + icon-only marketplace links + search overlay | ✅ Built |
@@ -375,7 +375,7 @@ Once all requirements are collected and the logo is placed, hand off to Droid.
 **What Droid builds:**
 1. `public/css/main.min.css` — full design system CSS (~40KB minified)
 2. `public/js/nav.js` — sticky header shrink on scroll + mobile drawer (left) + search overlay toggle
-3. `public/js/cookie-consent.js` — GDPR cookie consent banner + GA4 conditional load
+3. `public/js/cookie-consent.js` — GDPR cookie consent banner + analytics-consent trigger (`window.__mildmateLoadAnalytics`, no direct `gtag.js` injection)
 4. `public/js/clerk.js` — Clerk auth integration for account button
 5. Header HTML (injected into all ~56 pages in `public/`)
 6. Footer HTML with LINE widget and marketplace links (injected into all pages)

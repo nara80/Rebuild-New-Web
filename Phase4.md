@@ -879,7 +879,7 @@ For current-state operations and reconciliation details, use AGENTS.md / Framewo
 | Privacy Policy (`/policy/`) | ✅ | 14-section GDPR/CCPA-compliant with cookie inventory, breach notification, account deletion |
 | Customer Reviews (`/reviews/`) | ✅ | 8 real Etsy reviews with mapped buyer names/countries + Etsy 5-star badge |
 | Unsubscribe (`/unsubscribe/`) | ✅ | Email form + D1 deletion API + privacy-safe responses |
-| Cookie Consent Banner | ✅ | GDPR banner + settings modal, conditional GA4 load (ID: G-0GWVSPJLVJ) |
+| Cookie Consent Banner | ✅ | GDPR banner + settings modal, consent trigger via `window.__mildmateLoadAnalytics`; hardcoded client-side `gtag.js` head snippets removed during Zaraz reconciliation (2026-10-22) |
 | Size Guide Landing (`/sizeguide/`) | ✅ | 4-card landing page linking to specific guides |
 | Thai Size Guide (`/mattress-size-th/`) | ✅ | #1 SEO page — Thai + international size tables |
 | EN Size Guide (`/mattress-size/`) | ✅ | International size comparison tables |

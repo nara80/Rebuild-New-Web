@@ -54,25 +54,18 @@ export function emailAllowed(email: string, env: any): boolean {
   return allow.includes(email.toLowerCase());
 }
 
-// Hardcoded denylist — emails that must NEVER get admin access, regardless of
-// role claims or ADMIN_EMAILS contents. Includes all known dev/test instance
-// users to prevent accidental production access if a dev user authenticates
-// on the production deployment.
-const BLOCKED_EMAILS = new Set([
-  "mildmateshop@gmail.com",
-  "blanky5452@gmail.com",
-  "lxerleap@gmail.com",
-  "jasminecchimay@gmail.com",
-  "9601080851ke@gmail.com",
-  "azuzenap@gmail.com",
-  "matt.mourin@gmail.com",
-  "eugeneapseed@outlook.com",
-  "norrawich.rat@gmail.com",
-]);
+function blockedEmailsFromEnv(env: any): Set<string> {
+  return new Set(
+    String(env?.ADMIN_BLOCKED_EMAILS || "")
+      .split(",")
+      .map((s: string) => s.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
 
-export function emailBlocked(email: string): boolean {
+export function emailBlocked(email: string, env: any): boolean {
   if (!email) return false;
-  return BLOCKED_EMAILS.has(email.toLowerCase());
+  return blockedEmailsFromEnv(env).has(email.toLowerCase());
 }
 
 // ── Clerk Backend API enrichment ──
@@ -158,7 +151,7 @@ export async function authorizeAdmin(
       }
 
       // Deny blocked emails first (defense-in-depth).
-      if (emailBlocked(email)) {
+      if (emailBlocked(email, env)) {
         return { ok: false, status: 403, error: "Forbidden: account not authorized for admin access" };
       }
 

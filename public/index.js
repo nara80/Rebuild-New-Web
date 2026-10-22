@@ -3605,7 +3605,7 @@ async function onRequest3(context) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=60",
-        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;"
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; upgrade-insecure-requests;"
       }
     });
   } catch (err4) {
@@ -5438,10 +5438,32 @@ async function handlePricingParams(request, env) {
 __name(handlePricingParams, "handlePricingParams");
 
 // ../workers/api/clerk-verify.ts
-var jwksCache = null;
-var CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
-var JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
+// Env-var-driven Clerk config with dev fallback.
+// Production sets CLERK_ISSUER + CLERK_JWKS_URL via Cloudflare Pages secrets/vars.
+// Dev/preview falls back to the Development instance (kind-joey-29).
+var DEV_CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
+var DEV_JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
 var JWKS_CACHE_MS = 3600 * 1e3;
+function getIssuer(env) {
+  return String(env?.CLERK_ISSUER || DEV_CLERK_ISSUER).trim();
+}
+__name(getIssuer, "getIssuer");
+function getJwksUrl(env) {
+  return String(env?.CLERK_JWKS_URL || DEV_JWKS_URL).trim();
+}
+__name(getJwksUrl, "getJwksUrl");
+function isProdClerkConfigured(env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  return issuer.length > 0 && issuer !== DEV_CLERK_ISSUER;
+}
+__name(isProdClerkConfigured, "isProdClerkConfigured");
+function isProductionHostname(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com";
+}
+__name(isProductionHostname, "isProductionHostname");
+// Cache JWKS keys per-URL so dev and prod keys don't collide.
+var jwksCache = /* @__PURE__ */ new Map();
 var RATE_WINDOW_MS = 60 * 1e3;
 var MAX_AUTH_REQUESTS = 30;
 async function checkAuthRateLimit(env, ip) {
@@ -5466,15 +5488,17 @@ async function recordRateLimit(env, ip) {
   }
 }
 __name(recordRateLimit, "recordRateLimit");
-async function getJwks() {
-  if (jwksCache && Date.now() - jwksCache.fetchedAt < JWKS_CACHE_MS) {
-    return jwksCache.keys;
+async function getJwks(jwksUrl) {
+  const cached = jwksCache.get(jwksUrl);
+  if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
+    return cached.keys;
   }
-  const resp = await fetch(JWKS_URL);
+  const resp = await fetch(jwksUrl);
   if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
   const data = await resp.json();
-  jwksCache = { keys: data.keys || [], fetchedAt: Date.now() };
-  return jwksCache.keys;
+  const entry = { keys: data.keys || [], fetchedAt: Date.now() };
+  jwksCache.set(jwksUrl, entry);
+  return entry.keys;
 }
 __name(getJwks, "getJwks");
 function base64urlToBytes(str) {
@@ -5512,6 +5536,13 @@ async function verifyClerkJwt(request, env) {
   if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
     return { valid: false, error: "Invalid origin", status: 403 };
   }
+  try {
+    const requestHost = new URL(request.url).hostname.toLowerCase();
+    if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
+      return { valid: false, error: "Auth service unavailable", status: 503 };
+    }
+  } catch {
+  }
   const ip = request.headers.get("cf-connecting-ip") || "unknown";
   if (await checkAuthRateLimit(env, ip)) {
     return { valid: false, error: "Too many requests", status: 429 };
@@ -5537,7 +5568,7 @@ async function verifyClerkJwt(request, env) {
   }
   let keys;
   try {
-    keys = await getJwks();
+    keys = await getJwks(getJwksUrl(env));
   } catch (e) {
     console.error("Clerk JWKS fetch failed:", e.message);
     return { valid: false, error: "Auth service unavailable", status: 503 };
@@ -5591,8 +5622,14 @@ async function verifyClerkJwt(request, env) {
   if (payload.exp && payload.exp < now) {
     return { valid: false, error: "Token expired", status: 401 };
   }
-  if (payload.iss && payload.iss !== CLERK_ISSUER && !payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
-    return { valid: false, error: "Invalid issuer", status: 401 };
+  const expectedIssuer = getIssuer(env);
+  if (payload.iss && payload.iss !== expectedIssuer) {
+    if (isProdClerkConfigured(env)) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+    if (!payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
   }
   return { valid: true, payload };
 }
@@ -17653,7 +17690,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
     headers: {
       "Content-Type": "text/html;charset=utf-8",
       "Cache-Control": "no-cache",
-      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;"
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; upgrade-insecure-requests;"
     }
   });
 }, "onRequest");
@@ -17893,7 +17930,7 @@ __name(escHtml3, "escHtml");
 // _middleware.ts
 var CACHE_TTL = 5 * 60 * 1e3;
 var _cache = { fetchedAt: 0 };
-var CSP_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://challenges.cloudflare.com; upgrade-insecure-requests;";
+var CSP_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://www.google.com https://cdn.jsdelivr.net https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tagmanager.google.com https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://ssl.gstatic.com https://www.gstatic.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://ad.doubleclick.net https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com https://kind-joey-29.clerk.accounts.dev https://clerk.mildmate.com https://accounts.mildmate.com https://challenges.cloudflare.com; upgrade-insecure-requests;";
 var FALLBACK_HEADER = `<header class="site-header">
     <div class="container header-inner">
 

@@ -23,18 +23,16 @@
  *   - Records without a TotalAmount are held, never synced with a guessed total.
  *   - Secrets come from bindings and are never logged.
  *
- * Schedules:
- *   "0 2 1,15 * *"  main run â€” 1st and 15th at 02:00 UTC (09:00 Bangkok).
- *                   Cron cannot express a true 14-day interval; twice-monthly
- *                   on fixed dates is deterministic and needs no extra state.
- *   "0 * * * *"     drain â€” no-ops unless the previous run stopped bounded
- *                   with carry-over work. Without this, a batch too large for
- *                   one invocation would wait a fortnight to finish.
- *   "0 3 * * 1"     GSC weekly collector (Monday 03:00 UTC) with overlap
- *                   window to absorb late-settling Search Console rows.
- *   "0 4 * * 1"     GA4 + Etsy + Google Ads weekly collectors (Monday
- *                   04:00 UTC) with overlap windows to absorb late-settling
- *                   rows.
+ * Schedule:
+ *   "0 1 * * *"     single dispatcher trigger, daily 01:00 UTC
+ *                   (08:00 Asia/Bangkok). The scheduled() handler maps
+ *                   Thailand weekdays to a single job per day:
+ *                     Monday    GA4
+ *                     Tuesday   Etsy
+ *                     Wednesday Google Ads
+ *                     Thursday  GSC
+ *                     Friday    existing weekly analysis/reconciliation
+ *                     Sat/Sun   no-op
  */
 
 import {
@@ -52,17 +50,19 @@ import { recomputeOpportunityScores } from "../scripts/opportunity-core.mjs";
 const STREAM = "notion-mapping-sync";
 const SYNC_SOURCE = "notion-mapping-sync";
 const SCENARIO = "phase17-scheduled-confirmed-mapping-sync";
-const MAIN_CRON = "0 2 1,15 * *";
-const DRAIN_CRON = "0 * * * *";
+const SCHEDULER_DAILY_CRON = "0 1 * * *"; // 01:00 UTC = 08:00 Thailand (Asia/Bangkok)
+const THAILAND_UTC_OFFSET_HOURS = 7;
+const THAILAND_WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const THAILAND_WEEKDAY_NOOP = new Set([0, 6]); // Sunday, Saturday
 
 const OPPORTUNITY_STREAM = "opportunity-weekly-recompute";
 const OPPORTUNITY_SYNC_SOURCE = "opportunity-cron";
-const OPPORTUNITY_WEEKLY_CRON = "0 5 * * 1"; // weekly Monday 05:00 UTC, after all collectors
+const OPPORTUNITY_WEEKLY_LABEL = "Friday analysis/reconciliation";
 
 const GSC_STREAM = "gsc-weekly-sync";
 const GSC_SYNC_SOURCE = "gsc-worker-cron";
 const GSC_SCENARIO = "phase09-weekly-gsc-sync";
-const GSC_WEEKLY_CRON = "0 3 * * 1"; // weekly Monday 03:00 UTC
+const GSC_WEEKLY_LABEL = "Thursday weekly run";
 const GSC_UPSERT_ROUTE = "/api/v1/gsc/rows/upsert";
 const GSC_LOCK_TTL_MS = 20 * 60 * 1000;
 const GSC_DEFAULT_OVERLAP_DAYS = 14;
@@ -76,7 +76,7 @@ const GSC_DIMENSIONS = ["query", "page", "country", "device"];
 const GA4_STREAM = "ga4-weekly-sync";
 const GA4_SYNC_SOURCE = "ga4-worker-cron";
 const GA4_SCENARIO = "phase10-weekly-ga4-sync";
-const GA4_WEEKLY_CRON = "0 4 * * 1"; // weekly Monday 04:00 UTC
+const GA4_WEEKLY_LABEL = "Monday weekly run";
 const GA4_UPSERT_ROUTE = "/api/v1/ga4/rows/upsert";
 const GA4_LOCK_TTL_MS = 20 * 60 * 1000;
 const GA4_DEFAULT_OVERLAP_DAYS = 14;
@@ -154,7 +154,7 @@ const GA4_DEFAULT_PURCHASE_EVENTS = ["purchase"];
 const ETSY_STREAM = "etsy-weekly-sync";
 const ETSY_SYNC_SOURCE = "etsy-worker-cron";
 const ETSY_SCENARIO = "phase11-weekly-etsy-sync";
-const ETSY_WEEKLY_CRON = "0 4 * * 1"; // shared weekly Monday 04:00 UTC run
+const ETSY_WEEKLY_LABEL = "Tuesday weekly run";
 const ETSY_UPSERT_ROUTE = "/api/v1/etsy/rows/upsert";
 const ETSY_LOCK_TTL_MS = 20 * 60 * 1000;
 const ETSY_DEFAULT_OVERLAP_DAYS = 14;
@@ -167,14 +167,18 @@ const ETSY_STATES = ["active", "inactive", "sold_out", "draft", "removed", "expi
 
 const GOOGLE_ADS_STREAM = "google-ads-weekly-sync";
 const GOOGLE_ADS_SYNC_SOURCE = "google-ads-worker-cron";
+// Keep collector telemetry distinct from ingestion freshness views that use
+// source LIKE 'google-ads-%' (migration 050 view semantics).
+const GOOGLE_ADS_COLLECTOR_SYNC_SOURCE = "googleads-collector";
 const GOOGLE_ADS_SCENARIO = "phase12-weekly-google-ads-sync";
-const GOOGLE_ADS_WEEKLY_CRON = "0 4 * * 1"; // shared weekly Monday 04:00 UTC run
+const GOOGLE_ADS_WEEKLY_LABEL = "Wednesday weekly run";
 const GOOGLE_ADS_UPSERT_ROUTE = "/api/v1/google-ads/rows/upsert";
 const GOOGLE_ADS_LOCK_TTL_MS = 20 * 60 * 1000;
 const GOOGLE_ADS_DEFAULT_OVERLAP_DAYS = 14;
 const GOOGLE_ADS_DEFAULT_LAG_DAYS = 2;
 const GOOGLE_ADS_DEFAULT_CHUNK_SIZE = 1000;
 const GOOGLE_ADS_MAX_WINDOW_DAYS = 90;
+const GOOGLE_ADS_CLIENT_FINGERPRINT_PREFIX_LEN = 12;
 
 // Stop and carry over via the cursor before the platform can cut the run off
 // mid-record. Notion calls are throttled to ~350ms, so this is wall-clock bound.
@@ -231,6 +235,71 @@ function listIsoDaysInclusive(startIso, endIso) {
     cur.setUTCDate(cur.getUTCDate() + 1);
   }
   return out;
+}
+
+function getThailandScheduledContext(scheduledTimeMs) {
+  const utcMs = Number.isFinite(Number(scheduledTimeMs)) ? Number(scheduledTimeMs) : Date.now();
+  const utc = new Date(utcMs);
+  const th = new Date(utc.getTime() + THAILAND_UTC_OFFSET_HOURS * 60 * 60 * 1000);
+  const businessDate = th.toISOString().slice(0, 10);
+  const weekday = th.getUTCDay(); // Thailand weekday derived deterministically from UTC +7h
+  const weekdayName = THAILAND_WEEKDAY_NAMES[weekday] || `Day${weekday}`;
+  return {
+    scheduled_time_utc: utc.toISOString(),
+    timezone: "Asia/Bangkok",
+    timezone_offset_hours: THAILAND_UTC_OFFSET_HOURS,
+    business_date: businessDate,
+    business_weekday: weekday,
+    business_weekday_name: weekdayName,
+  };
+}
+
+export function resolveScheduledDispatcherJob(scheduledTimeMs) {
+  const context = getThailandScheduledContext(scheduledTimeMs);
+  let selectedJob = "noop";
+  switch (context.business_weekday) {
+    case 1:
+      selectedJob = "ga4";
+      break; // Monday
+    case 2:
+      selectedJob = "etsy";
+      break; // Tuesday
+    case 3:
+      selectedJob = "google_ads";
+      break; // Wednesday
+    case 4:
+      selectedJob = "gsc";
+      break; // Thursday
+    case 5:
+      selectedJob = "opportunity";
+      break; // Friday
+    default:
+      selectedJob = "noop"; // Saturday / Sunday
+  }
+  return { ...context, selected_job: selectedJob, is_noop_day: THAILAND_WEEKDAY_NOOP.has(context.business_weekday) };
+}
+
+async function hasSuccessfulRunOnThailandDate(db, source, thailandDate) {
+  const row = await db
+    .prepare(
+      `SELECT 1
+         FROM sync_runs
+        WHERE source = ?1
+          AND status = 'success'
+          AND date(COALESCE(finished_at, started_at, created_at), '+7 hours') = ?2
+        LIMIT 1`
+    )
+    .bind(source, thailandDate)
+    .first();
+  return !!row;
+}
+
+async function hasCompleteGa4SuccessOnThailandDate(db, thailandDate, properties) {
+  if (!Array.isArray(properties) || !properties.length) return false;
+  for (const p of properties) {
+    if (!(await hasSuccessfulRunOnThailandDate(db, p.sync_source, thailandDate))) return false;
+  }
+  return true;
 }
 
 /**
@@ -1557,6 +1626,133 @@ function toGoogleAdsNumber(v) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function sanitizeGoogleAdsMessage(value, maxLen = 280) {
+  const src = String(value || "");
+  const redacted = src
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [REDACTED]")
+    .replace(/(access_token|refresh_token|client_secret|authorization)\s*[:=]\s*["']?[^"'\s,}]+/gi, "$1=[REDACTED]");
+  return truncate(redacted, maxLen);
+}
+
+function normalizeGoogleAdsErrorRoot(body) {
+  if (Array.isArray(body)) {
+    const first = body.find((entry) => entry && typeof entry === "object") || null;
+    return first || {};
+  }
+  if (body && typeof body === "object") return body;
+  return {};
+}
+
+function extractGoogleAdsErrorSubtype(errorRoot) {
+  const details = Array.isArray(errorRoot?.error?.details) ? errorRoot.error.details : [];
+  for (const detail of details) {
+    const errs = Array.isArray(detail?.errors) ? detail.errors : [];
+    for (const err of errs) {
+      const codeObj = err?.errorCode;
+      if (!codeObj || typeof codeObj !== "object") continue;
+      const keys = Object.keys(codeObj);
+      for (const key of keys) {
+        const code = codeObj[key];
+        if (code) return `${key}.${code}`;
+      }
+    }
+  }
+  return null;
+}
+
+function extractGoogleRequestId(res, errorRoot) {
+  const headerId = res?.headers?.get?.("request-id") || res?.headers?.get?.("x-request-id") || null;
+  if (headerId) return String(headerId).trim();
+
+  const details = Array.isArray(errorRoot?.error?.details) ? errorRoot.error.details : [];
+  for (const detail of details) {
+    if (detail?.requestId) return String(detail.requestId).trim();
+  }
+  if (errorRoot?.error?.requestId) return String(errorRoot.error.requestId).trim();
+  return null;
+}
+
+function extractGoogleAdsErrorDetails(res, body, rawBody) {
+  const errorRoot = normalizeGoogleAdsErrorRoot(body);
+  const subtype = extractGoogleAdsErrorSubtype(errorRoot);
+  const requestId = extractGoogleRequestId(res, errorRoot);
+  const details = Array.isArray(errorRoot?.error?.details) ? errorRoot.error.details : [];
+  let nestedMessage = null;
+  for (const detail of details) {
+    const errs = Array.isArray(detail?.errors) ? detail.errors : [];
+    const firstWithMsg = errs.find((entry) => entry && entry.message);
+    if (firstWithMsg?.message) {
+      nestedMessage = String(firstWithMsg.message);
+      break;
+    }
+  }
+  const message =
+    errorRoot?.error?.message ||
+    nestedMessage ||
+    errorRoot?.message ||
+    rawBody ||
+    "unknown error";
+  return {
+    http_status: Number(res?.status || 0) || null,
+    error_subtype: subtype || null,
+    message: sanitizeGoogleAdsMessage(message, 260),
+    request_id: requestId || null,
+  };
+}
+
+function buildGoogleAdsDiagnosticSummary(diag) {
+  const payload = {
+    http_status: diag?.http_status ?? null,
+    error_subtype: diag?.error_subtype ?? null,
+    request_id: diag?.request_id ?? null,
+    message: sanitizeGoogleAdsMessage(diag?.message || "unknown error", 260),
+  };
+  return truncate(JSON.stringify(payload), 500);
+}
+
+async function sha256Hex(value) {
+  const data = new TextEncoder().encode(String(value || ""));
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function startGoogleAdsCollectorRun(db, trigger) {
+  const res = await db
+    .prepare(`INSERT INTO sync_runs (source, scenario, started_at, status, records_received) VALUES (?, ?, ?, 'running', 0)`)
+    .bind(GOOGLE_ADS_COLLECTOR_SYNC_SOURCE, `${GOOGLE_ADS_SCENARIO}:${trigger}`, nowIso())
+    .run();
+  return Number(res.meta?.last_row_id || 0);
+}
+
+async function finishGoogleAdsCollectorRun(db, runId, data) {
+  if (!runId) return;
+  await db
+    .prepare(
+      `UPDATE sync_runs
+          SET finished_at = ?,
+              status = ?,
+              records_received = ?,
+              records_created = ?,
+              records_updated = ?,
+              records_unchanged = ?,
+              records_rejected = ?,
+              error_message = ?
+        WHERE id = ?`
+    )
+    .bind(
+      nowIso(),
+      data.status,
+      Number(data.records_received || 0),
+      Number(data.records_created || 0),
+      Number(data.records_updated || 0),
+      Number(data.records_unchanged || 0),
+      Number(data.records_rejected || 0),
+      data.error_message ? truncate(String(data.error_message), 500) : null,
+      runId
+    )
+    .run();
+}
+
 function normalizeGoogleAdsResultRow(row, currencyFallback) {
   const date = String(row?.segments?.date || "").trim();
   if (!parseIsoDay(date)) return null;
@@ -1592,9 +1788,7 @@ function normalizeGoogleAdsResultRow(row, currencyFallback) {
 
 async function fetchGoogleAdsRowsForWindow(env, accessToken, startIso, endIso) {
   const customerId = String(env.GOOGLE_ADS_CUSTOMER_ID || "").trim();
-  const loginCustomerId = String(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "").trim();
   if (!customerId) throw new Error("GOOGLE_ADS_CUSTOMER_ID is not configured");
-  if (!loginCustomerId) throw new Error("GOOGLE_ADS_LOGIN_CUSTOMER_ID is not configured");
 
   const apiBase = String(env.GOOGLE_ADS_API_BASE || "https://googleads.googleapis.com").replace(/\/+$/, "");
   const endpoint = `${apiBase}/v25/customers/${encodeURIComponent(customerId)}/googleAds:searchStream`;
@@ -1625,7 +1819,6 @@ async function fetchGoogleAdsRowsForWindow(env, accessToken, startIso, endIso) {
 
   const headers = {
     Authorization: `Bearer ${accessToken}`,
-    "login-customer-id": loginCustomerId,
     "Content-Type": "application/json",
   };
 
@@ -1642,13 +1835,12 @@ async function fetchGoogleAdsRowsForWindow(env, accessToken, startIso, endIso) {
     body = {};
   }
   if (!res.ok) {
-    const msg =
-      body?.error?.message ||
-      body?.error?.details?.[0]?.errors?.[0]?.message ||
-      body?.message ||
-      rawBody ||
-      "unknown error";
-    throw new Error(`Google Ads searchStream failed (${res.status}): ${truncate(String(msg), 4000)}`);
+    const diag = extractGoogleAdsErrorDetails(res, body, rawBody);
+    const err = new Error(
+      `Google Ads searchStream failed (${diag.http_status || res.status}): ${diag.message}`
+    );
+    err.googleAdsDiag = diag;
+    throw err;
   }
 
   const batches = Array.isArray(body) ? body : [body];
@@ -1685,6 +1877,104 @@ async function postGoogleAdsRowsChunk(env, rows, triggerTag) {
     throw new Error(`Google Ads upsert failed (${res.status}) ${truncate(body?.message || body?.error_code || "unknown", 220)}`);
   }
   return body;
+}
+
+async function getGoogleAdsClientFingerprintPrefix(env) {
+  const clientId = String(env.GOOGLE_ADS_CLIENT_ID || "").trim();
+  if (!clientId) return null;
+  const fullHash = await sha256Hex(clientId);
+  return fullHash.slice(0, GOOGLE_ADS_CLIENT_FINGERPRINT_PREFIX_LEN);
+}
+
+function parseGoogleAdsCustomerId(resourceName) {
+  const raw = String(resourceName || "").trim();
+  if (!raw) return null;
+  if (/^\d+$/.test(raw)) return raw;
+  const m = raw.match(/^customers\/(\d+)$/i);
+  return m?.[1] || null;
+}
+
+function normalizeGoogleAdsAccessibleCustomerIds(resourceNames) {
+  const out = [];
+  const seen = new Set();
+  const names = Array.isArray(resourceNames) ? resourceNames : [];
+  for (const name of names) {
+    const id = parseGoogleAdsCustomerId(name);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
+async function getGoogleAdsAccessibleCustomersDiagnostic(env, deps = {}) {
+  const getAccessTokenFn = deps.getGoogleAdsAccessToken || getGoogleAdsAccessToken;
+  const fetchImpl = deps.fetchImpl || fetch;
+  const managerId = String(env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || "").trim();
+  const clientId = String(env.GOOGLE_ADS_CUSTOMER_ID || "").trim();
+  const apiBase = String(env.GOOGLE_ADS_API_BASE || "https://googleads.googleapis.com").replace(/\/+$/, "");
+  const endpoint = `${apiBase}/v25/customers:listAccessibleCustomers`;
+
+  try {
+    const accessToken = await getAccessTokenFn(env);
+    const res = await fetchImpl(endpoint, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const rawBody = await res.text();
+    let body = {};
+    try {
+      body = rawBody ? JSON.parse(rawBody) : {};
+    } catch {
+      body = {};
+    }
+
+    if (!res.ok) {
+      const diag = extractGoogleAdsErrorDetails(res, body, rawBody);
+      return {
+        ok: false,
+        api_http_status: diag.http_status || res.status || null,
+        request_id: diag.request_id || null,
+        total_directly_accessible_accounts: null,
+        manager_directly_accessible: false,
+        client_directly_accessible: false,
+        error_subtype: diag.error_subtype || null,
+        error_message: sanitizeGoogleAdsMessage(diag.message || "Google Ads request failed", 260),
+      };
+    }
+
+    const ids = normalizeGoogleAdsAccessibleCustomerIds(body?.resourceNames);
+    return {
+      ok: true,
+      api_http_status: res.status || 200,
+      request_id: extractGoogleRequestId(res, normalizeGoogleAdsErrorRoot(body)),
+      total_directly_accessible_accounts: ids.length,
+      manager_directly_accessible: !!(managerId && ids.includes(managerId)),
+      client_directly_accessible: !!(clientId && ids.includes(clientId)),
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      api_http_status: null,
+      request_id: null,
+      total_directly_accessible_accounts: null,
+      manager_directly_accessible: false,
+      client_directly_accessible: false,
+      error_subtype: null,
+      error_message: sanitizeGoogleAdsMessage(e?.message || String(e), 260),
+    };
+  }
+}
+
+function splitGoogleAdsRunRows(rows) {
+  const runRows = Array.isArray(rows) ? rows : [];
+  return {
+    recent_runs: runRows,
+    recent_collector_runs: runRows.filter((r) => r?.source === GOOGLE_ADS_COLLECTOR_SYNC_SOURCE),
+    recent_ingestion_runs: runRows.filter((r) => r?.source === GOOGLE_ADS_SYNC_SOURCE),
+  };
 }
 
 function normalizeGscRow(day, keys, row, searchType) {
@@ -2197,11 +2487,19 @@ async function executeEtsySync(env, trigger, overrides = {}) {
   }
 }
 
-async function executeGoogleAdsSync(env, trigger, overrides = {}) {
+async function executeGoogleAdsSync(env, trigger, overrides = {}, deps = {}) {
+  const acquireLockFn = deps.acquireGoogleAdsLock || acquireGoogleAdsLock;
+  const releaseLockFn = deps.releaseGoogleAdsLock || releaseGoogleAdsLock;
+  const getAccessTokenFn = deps.getGoogleAdsAccessToken || getGoogleAdsAccessToken;
+  const fetchRowsFn = deps.fetchGoogleAdsRowsForWindow || fetchGoogleAdsRowsForWindow;
+  const postChunkFn = deps.postGoogleAdsRowsChunk || postGoogleAdsRowsChunk;
+  const chunkRowsFn = deps.chunkRows || chunkRows;
+  const startCollectorRunFn = deps.startGoogleAdsCollectorRun || startGoogleAdsCollectorRun;
+  const finishCollectorRunFn = deps.finishGoogleAdsCollectorRun || finishGoogleAdsCollectorRun;
+
   for (const required of [
     "SALES_SYNC_API_TOKEN",
     "GOOGLE_ADS_CUSTOMER_ID",
-    "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
     "GOOGLE_ADS_CLIENT_ID",
     "GOOGLE_ADS_CLIENT_SECRET",
     "GOOGLE_ADS_REFRESH_TOKEN",
@@ -2211,34 +2509,39 @@ async function executeGoogleAdsSync(env, trigger, overrides = {}) {
 
   const db = env.DB;
   const runId = `${GOOGLE_ADS_STREAM}-${trigger}-${Date.now()}`;
-  if (!(await acquireGoogleAdsLock(db, runId))) {
+  if (!(await acquireLockFn(db, runId))) {
     console.log("GOOGLE-ADS-SYNC: previous run still active, skipping");
     return { ok: true, skipped: "locked" };
   }
 
+  let collectorRunId = 0;
+  const totals = {
+    days_in_window: 0,
+    fetched_rows: 0,
+    sent_rows: 0,
+    created: 0,
+    updated: 0,
+    unchanged: 0,
+    rejected: 0,
+    upsert_calls: 0,
+  };
+
   try {
+    collectorRunId = await startCollectorRunFn(db, trigger);
     const window = resolveGoogleAdsWindow(env, overrides);
-    const accessToken = await getGoogleAdsAccessToken(env);
+    totals.days_in_window = window.days.length;
+    const accessToken = await getAccessTokenFn(env);
     const chunkSize = clampInt(
       toInt(env.GOOGLE_ADS_UPSERT_CHUNK_SIZE, GOOGLE_ADS_DEFAULT_CHUNK_SIZE),
       200,
       5000
     );
-    const rows = await fetchGoogleAdsRowsForWindow(env, accessToken, window.start, window.end);
-    const totals = {
-      days_in_window: window.days.length,
-      fetched_rows: rows.length,
-      sent_rows: 0,
-      created: 0,
-      updated: 0,
-      unchanged: 0,
-      rejected: 0,
-      upsert_calls: 0,
-    };
+    const rows = await fetchRowsFn(env, accessToken, window.start, window.end);
+    totals.fetched_rows = rows.length;
 
-    const chunks = chunkRows(rows, chunkSize);
+    const chunks = chunkRowsFn(rows, chunkSize);
     for (const chunk of chunks) {
-      const out = await postGoogleAdsRowsChunk(env, chunk, trigger);
+      const out = await postChunkFn(env, chunk, trigger);
       totals.upsert_calls += 1;
       totals.sent_rows += Number(out?.totals?.received || 0);
       totals.created += Number(out?.totals?.created || 0);
@@ -2251,6 +2554,16 @@ async function executeGoogleAdsSync(env, trigger, overrides = {}) {
       `GOOGLE-ADS-SYNC: ${trigger} done â€” rows ${totals.fetched_rows}, sent ${totals.sent_rows}, ` +
       `created ${totals.created}, updated ${totals.updated}, unchanged ${totals.unchanged}, rejected ${totals.rejected}`
     );
+
+    await finishCollectorRunFn(db, collectorRunId, {
+      status: totals.rejected > 0 ? "partial" : "success",
+      records_received: totals.fetched_rows,
+      records_created: totals.created,
+      records_updated: totals.updated,
+      records_unchanged: totals.unchanged,
+      records_rejected: totals.rejected,
+      error_message: null,
+    });
 
     return {
       ok: true,
@@ -2267,11 +2580,31 @@ async function executeGoogleAdsSync(env, trigger, overrides = {}) {
       totals,
     };
   } catch (e) {
-    const msg = truncate(e?.message || String(e), 280);
+    const diag = e?.googleAdsDiag || null;
+    const msg = sanitizeGoogleAdsMessage(e?.message || String(e), 280);
+    const status = totals.sent_rows > 0 || totals.created > 0 || totals.updated > 0 ? "partial" : "failed";
+    const errorSummary = diag ? buildGoogleAdsDiagnosticSummary(diag) : buildGoogleAdsDiagnosticSummary({ message: msg });
+    await finishCollectorRunFn(db, collectorRunId, {
+      status,
+      records_received: totals.fetched_rows,
+      records_created: totals.created,
+      records_updated: totals.updated,
+      records_unchanged: totals.unchanged,
+      records_rejected: Math.max(totals.rejected, totals.fetched_rows - totals.sent_rows),
+      error_message: errorSummary,
+    });
     console.log(`GOOGLE-ADS-SYNC: ${trigger} failed â€” ${msg}`);
-    return { ok: false, reason: msg };
+    return {
+      ok: false,
+      reason: msg,
+      diagnostic: {
+        http_status: diag?.http_status || null,
+        error_subtype: diag?.error_subtype || null,
+        request_id: diag?.request_id || null,
+      },
+    };
   } finally {
-    await releaseGoogleAdsLock(db, runId);
+    await releaseLockFn(db, runId);
   }
 }
 
@@ -2520,62 +2853,82 @@ async function executeSync(env, trigger, overrides = {}) {
 
 export default {
   async scheduled(event, env, ctx) {
-    if (event.cron === OPPORTUNITY_WEEKLY_CRON) {
-      ctx.waitUntil(
-        (async () => {
-          try {
+    if (event.cron !== SCHEDULER_DAILY_CRON) {
+      console.log(`MARKETING-SYNC: unsupported cron "${event.cron}" ignored`);
+      return;
+    }
+
+    const route = resolveScheduledDispatcherJob(event.scheduledTime);
+    console.log(
+      `SCHEDULER: trigger=01:00UTC/08:00TH ` +
+      `scheduled_utc=${route.scheduled_time_utc} ` +
+      `business_date=${route.business_date} weekday=${route.business_weekday_name} ` +
+      `selected_job=${route.selected_job}`
+    );
+
+    if (route.selected_job === "noop") {
+      console.log("SCHEDULER: no-op day (Saturday/Sunday)");
+      return;
+    }
+
+    ctx.waitUntil(
+      (async () => {
+        try {
+          if (route.selected_job === "ga4") {
+            const properties = resolveGa4Properties(env);
+            if (await hasCompleteGa4SuccessOnThailandDate(env.DB, route.business_date, properties)) {
+              console.log(`SCHEDULER: skip GA4 (already successful for ${route.business_date})`);
+              return;
+            }
+            await executeGa4Sync(env, "scheduled-weekly");
+            return;
+          }
+
+          if (route.selected_job === "etsy") {
+            if (await hasSuccessfulRunOnThailandDate(env.DB, ETSY_SYNC_SOURCE, route.business_date)) {
+              console.log(`SCHEDULER: skip Etsy (already successful for ${route.business_date})`);
+              return;
+            }
+            await executeEtsySync(env, "scheduled-weekly");
+            return;
+          }
+
+          if (route.selected_job === "google_ads") {
+            if (await hasSuccessfulRunOnThailandDate(env.DB, GOOGLE_ADS_SYNC_SOURCE, route.business_date)) {
+              console.log(`SCHEDULER: skip Google Ads (already successful for ${route.business_date})`);
+              return;
+            }
+            await executeGoogleAdsSync(env, "scheduled-weekly");
+            return;
+          }
+
+          if (route.selected_job === "gsc") {
+            if (await hasSuccessfulRunOnThailandDate(env.DB, GSC_SYNC_SOURCE, route.business_date)) {
+              console.log(`SCHEDULER: skip GSC (already successful for ${route.business_date})`);
+              return;
+            }
+            await executeGscSync(env, "scheduled-weekly");
+            return;
+          }
+
+          if (route.selected_job === "opportunity") {
+            if (await hasSuccessfulRunOnThailandDate(env.DB, OPPORTUNITY_SYNC_SOURCE, route.business_date)) {
+              console.log(`SCHEDULER: skip Opportunity recompute (already successful for ${route.business_date})`);
+              return;
+            }
             const report = await recomputeOpportunityScores(env, {});
             console.log(
               `OPPORTUNITY-RECOMPUTE: model=${report.model_version} date=${report.score_date} ` +
               `rows=${report.rows_total} scored=${report.scored_count} insufficient=${report.insufficient_count}`
             );
-          } catch (e) {
-            console.log(`OPPORTUNITY-RECOMPUTE: unhandled — ${truncate(e.message, 300)}`);
+            return;
           }
-        })()
-      );
-      return;
-    }
 
-    if (event.cron === GA4_WEEKLY_CRON) {
-      ctx.waitUntil((async () => {
-        try {
-          await executeGa4Sync(env, "scheduled-weekly");
+          console.log(`SCHEDULER: no handler for selected_job=${route.selected_job}`);
         } catch (e) {
-          console.log(`GA4-SYNC: unhandled â€” ${truncate(e.message, 300)}`);
+          console.log(`SCHEDULER: job=${route.selected_job} failed â€” ${truncate(e?.message || String(e), 300)}`);
         }
-        try {
-          await executeEtsySync(env, "scheduled-weekly");
-        } catch (e) {
-          console.log(`ETSY-SYNC: unhandled â€” ${truncate(e.message, 300)}`);
-        }
-        try {
-          await executeGoogleAdsSync(env, "scheduled-weekly");
-        } catch (e) {
-          console.log(`GOOGLE-ADS-SYNC: unhandled â€” ${truncate(e.message, 300)}`);
-        }
-      })());
-      return;
-    }
-
-    if (event.cron === GSC_WEEKLY_CRON) {
-      ctx.waitUntil(
-        executeGscSync(env, "scheduled-weekly").catch((e) =>
-          console.log(`GSC-SYNC: unhandled â€” ${truncate(e.message, 300)}`)
-        )
-      );
-      return;
-    }
-
-    // 02:00 UTC on the 1st/15th is the main pass; every other hour is a drain
-    // that returns immediately unless carry-over work exists.
-    const trigger = event.cron === DRAIN_CRON ? "drain" : "scheduled";
-    if (event.cron !== MAIN_CRON && event.cron !== DRAIN_CRON) {
-      console.log(`MARKETING-SYNC: unsupported cron "${event.cron}" ignored`);
-      return;
-    }
-    ctx.waitUntil(
-      executeSync(env, trigger).catch((e) => console.log(`MARKETING-SYNC: unhandled â€” ${truncate(e.message, 300)}`))
+      })()
     );
   },
 
@@ -2594,6 +2947,7 @@ export default {
    *   GET  /etsy/status
    *   POST /google-ads/run?[start=YYYY-MM-DD&end=YYYY-MM-DD&overlap=14&lag=2]
    *   GET  /google-ads/status
+   *   GET  /google-ads/accessible-customers
    *   GET  /ga4/debug-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=25]
    *   GET  /ga4/debug-realtime?[minutes=30&limit=100]
    *   GET  /ga4/debug-stream-events?[start=YYYY-MM-DD&end=YYYY-MM-DD&limit=100]
@@ -2673,7 +3027,9 @@ export default {
         stream: GSC_STREAM,
         source: GSC_SYNC_SOURCE,
         scenario: GSC_SCENARIO,
-        cron: GSC_WEEKLY_CRON,
+        cron: SCHEDULER_DAILY_CRON,
+        scheduler_day_thailand: "Thursday",
+        scheduler_note: GSC_WEEKLY_LABEL,
         lock: lock || null,
         freshness,
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
@@ -2739,7 +3095,9 @@ export default {
         stream: GA4_STREAM,
         source: GA4_SYNC_SOURCE,
         scenario: GA4_SCENARIO,
-        cron: GA4_WEEKLY_CRON,
+        cron: SCHEDULER_DAILY_CRON,
+        scheduler_day_thailand: "Monday",
+        scheduler_note: GA4_WEEKLY_LABEL,
         event_filters: resolveGa4EventFilters(env),
         properties,
         locks,
@@ -2779,7 +3137,9 @@ export default {
         stream: ETSY_STREAM,
         source: ETSY_SYNC_SOURCE,
         scenario: ETSY_SCENARIO,
-        cron: ETSY_WEEKLY_CRON,
+        cron: SCHEDULER_DAILY_CRON,
+        scheduler_day_thailand: "Tuesday",
+        scheduler_note: ETSY_WEEKLY_LABEL,
         lock: lock || null,
         freshness,
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
@@ -2809,10 +3169,10 @@ export default {
         `SELECT id, source, scenario, started_at, finished_at, status,
                 records_received, records_created, records_updated, records_unchanged, records_rejected, error_message
            FROM sync_runs
-          WHERE source LIKE 'google-ads-%'
+          WHERE source = ?1 OR source = ?2
           ORDER BY COALESCE(finished_at, started_at) DESC
           LIMIT 10`
-      ).all();
+      ).bind(GOOGLE_ADS_SYNC_SOURCE, GOOGLE_ADS_COLLECTOR_SYNC_SOURCE).all();
       const lock = await env.DB
         .prepare(`SELECT locked_until, run_id FROM marketing_sync_lock WHERE name = ?`)
         .bind(GOOGLE_ADS_STREAM)
@@ -2823,15 +3183,37 @@ export default {
       } catch {
         window = null;
       }
+      const diagEnabled = url.searchParams.get("diag") === "1";
+      const collectorSource = GOOGLE_ADS_COLLECTOR_SYNC_SOURCE;
+      const ingestionSource = GOOGLE_ADS_SYNC_SOURCE;
+      const splitRuns = splitGoogleAdsRunRows(runs.results || []);
+      let diagnostics = null;
+      if (diagEnabled) {
+        diagnostics = {
+          oauth_client_id_sha256_prefix: await getGoogleAdsClientFingerprintPrefix(env),
+          hash_algorithm: "SHA-256",
+          prefix_length: GOOGLE_ADS_CLIENT_FINGERPRINT_PREFIX_LEN,
+          source_relationship: {
+            collector_source: collectorSource,
+            ingestion_source: ingestionSource,
+            note: "Collector run tracks one invocation; ingestion runs are created by /api/v1/google-ads/rows/upsert chunk calls.",
+          },
+        };
+      }
       return Response.json({
         stream: GOOGLE_ADS_STREAM,
         source: GOOGLE_ADS_SYNC_SOURCE,
         scenario: GOOGLE_ADS_SCENARIO,
-        cron: GOOGLE_ADS_WEEKLY_CRON,
+        cron: SCHEDULER_DAILY_CRON,
+        scheduler_day_thailand: "Wednesday",
+        scheduler_note: GOOGLE_ADS_WEEKLY_LABEL,
         lock: lock || null,
         freshness,
         default_window: window ? { start: window.start, end: window.end, days: window.days.length } : null,
-        recent_runs: runs.results || [],
+        recent_runs: splitRuns.recent_runs,
+        recent_collector_runs: splitRuns.recent_collector_runs,
+        recent_ingestion_runs: splitRuns.recent_ingestion_runs,
+        diagnostics: diagEnabled ? diagnostics : undefined,
       });
     }
 
@@ -2843,6 +3225,11 @@ export default {
         lagDays: url.searchParams.get("lag") ? Number(url.searchParams.get("lag")) : null,
       };
       const out = await executeGoogleAdsSync(env, "manual", overrides);
+      return Response.json(out, { status: out.ok ? 200 : 500 });
+    }
+
+    if (url.pathname === "/google-ads/accessible-customers" && request.method === "GET") {
+      const out = await getGoogleAdsAccessibleCustomersDiagnostic(env);
       return Response.json(out, { status: out.ok ? 200 : 500 });
     }
 
@@ -2990,6 +3377,21 @@ export default {
 
     return Response.json({ error: "not found" }, { status: 404 });
   },
+};
+
+export const __googleAdsDiagTest = {
+  GOOGLE_ADS_SYNC_SOURCE,
+  GOOGLE_ADS_COLLECTOR_SYNC_SOURCE,
+  sanitizeGoogleAdsMessage,
+  extractGoogleAdsErrorSubtype,
+  extractGoogleAdsErrorDetails,
+  buildGoogleAdsDiagnosticSummary,
+  getGoogleAdsAccessToken,
+  fetchGoogleAdsRowsForWindow,
+  normalizeGoogleAdsAccessibleCustomerIds,
+  getGoogleAdsAccessibleCustomersDiagnostic,
+  splitGoogleAdsRunRows,
+  executeGoogleAdsSync,
 };
 
 

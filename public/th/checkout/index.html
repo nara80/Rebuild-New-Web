@@ -308,8 +308,7 @@
         return;
       }
       var GTM_ID = String(analyticsConfig.gtmId || '').trim();
-      var GA4_ID = String(analyticsConfig.ga4Id || '').trim();
-      if (!GTM_ID || !GA4_ID) {
+      if (!GTM_ID) {
         return;
       }
 
@@ -324,11 +323,7 @@
         if (window.__mildmateAnalyticsLoaded) return;
         window.__mildmateAnalyticsLoaded = true;
         window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
         window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        window.gtag('js', new Date());
-        window.gtag('config', GA4_ID);
-        loadScript('https://www.googletagmanager.com/gtag/js?id=' + GA4_ID, true);
         loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
       }
 

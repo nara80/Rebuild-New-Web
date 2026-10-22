@@ -3,6 +3,8 @@
 // PUT    /api/admin/diy-prices  — same
 // DELETE /api/admin/diy-prices  — ?id= or ?product=&shape_code=
 
+import { authorizeAdmin } from "./admin-auth";
+
 export async function handleAdminDiyPrices(request: Request, env: any): Promise<Response> {
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -15,23 +17,12 @@ export async function handleAdminDiyPrices(request: Request, env: any): Promise<
     });
   }
 
-  const host = new URL(request.url).hostname;
-  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-  if (!isDev) {
-    const provided = (request.headers.get("X-Admin-Secret") || "").trim();
-    const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-    if (!provided) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
-    }
-    if (configured && provided !== configured) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      });
-    }
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
   }
 
   if (request.method === "POST" || request.method === "PUT") {

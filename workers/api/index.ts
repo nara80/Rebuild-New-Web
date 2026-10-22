@@ -34,6 +34,7 @@ import { handleAdminContacts } from "./admin-contacts";
 import { handleAdminTemplates } from "./admin-templates";
 import { handleAdminOffers } from "./admin-offers";
 import { handleAdminCampaigns } from "./admin-campaigns";
+import { authorizeAdmin } from "./admin-auth";
 import { handleFavorites } from "./favorites";
 import { handleReviews, handleAdminReviews } from "./reviews";
 import { handleCheckout } from "./checkout";
@@ -52,6 +53,17 @@ export default {
   async fetch(request: Request, env: any, ctx: any): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
+    const isAdminPath = path.startsWith("/api/admin/");
+
+    if (isAdminPath && request.method !== "OPTIONS") {
+      const auth = await authorizeAdmin(request, env);
+      if (!auth.ok) {
+        return new Response(JSON.stringify({ error: auth.error }), {
+          status: auth.status,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Health check endpoint
     if (path === "/api/health") {
@@ -333,9 +345,9 @@ export default {
 };
 
 async function handleAdminSubscribers(request: Request, env: any): Promise<Response> {
-  const secret = request.headers.get("X-Admin-Secret");
-  if (secret !== (env.ADMIN_SECRET || "admin")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  const auth = await authorizeAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: { "Content-Type": "application/json" } });
   }
   const url = new URL(request.url);
   // DELETE — remove a subscriber by ID

@@ -4,17 +4,18 @@ main = "index.js"
 # Raise this only together with a wrangler upgrade, or `wrangler dev` fails to start.
 compatibility_date = "2026-06-18"
 
-# Bi-weekly Notion mapper pass + hourly drain for carry-over work,
-# plus weekly GSC and shared GA4+Etsy+Google Ads collector passes.
-# Cron cannot express a true 14-day interval; the 1st and 15th at 02:00 UTC
-# (09:00 Bangkok) is deterministic and needs no extra state. The hourly entry
-# returns immediately unless the previous run stopped bounded with work left.
-# GSC runs weekly on Monday 03:00 UTC with an overlap window (configurable).
-# GA4, Etsy, and Google Ads run weekly on Monday 04:00 UTC with overlap windows (configurable).
-# Phase 14 opportunity scores recompute weekly on Monday 05:00 UTC (after all
-# collectors finish), using the shared engine scripts/opportunity-core.mjs.
+# Single cron dispatcher:
+# - Fires daily at 01:00 UTC = 08:00 Thailand (Asia/Bangkok)
+# - Worker scheduled() routes by Thailand weekday:
+#   Monday    -> GA4
+#   Tuesday   -> Etsy
+#   Wednesday -> Google Ads
+#   Thursday  -> GSC
+#   Friday    -> existing weekly analysis/reconciliation job(s), if applicable
+#   Saturday  -> no-op
+#   Sunday    -> no-op
 [triggers]
-crons = ["0 2 1,15 * *", "0 * * * *", "0 3 * * 1", "0 4 * * 1", "0 5 * * 1"]
+crons = ["0 1 * * *"]
 
 # PRODUCTION D1 — this Worker reads/writes live sales tables (sales_orders,
 # sales_order_items, sync_runs, product_mapping_events, marketing_sync_*).

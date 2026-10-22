@@ -2718,6 +2718,461 @@ var onRequest = /* @__PURE__ */ __name(async (context) => {
   });
 }, "onRequest");
 
+// ../workers/api/clerk-verify.ts
+var DEV_CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
+var DEV_JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
+var JWKS_CACHE_MS = 3600 * 1e3;
+function getIssuer(env) {
+  return String(env?.CLERK_ISSUER || DEV_CLERK_ISSUER).trim();
+}
+__name(getIssuer, "getIssuer");
+function getJwksUrl(env) {
+  return String(env?.CLERK_JWKS_URL || DEV_JWKS_URL).trim();
+}
+__name(getJwksUrl, "getJwksUrl");
+function isProdClerkConfigured(env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  return issuer.length > 0 && issuer !== DEV_CLERK_ISSUER;
+}
+__name(isProdClerkConfigured, "isProdClerkConfigured");
+function isProductionHostname(hostname) {
+  const h = String(hostname || "").toLowerCase();
+  return h === "www.mildmate.com" || h === "mildmate.com";
+}
+__name(isProductionHostname, "isProductionHostname");
+var jwksCache = /* @__PURE__ */ new Map();
+var RATE_WINDOW_MS = 60 * 1e3;
+var MAX_AUTH_REQUESTS = 30;
+async function checkAuthRateLimit(env, ip) {
+  try {
+    const row = await env.DB.prepare(
+      `SELECT COUNT(*) as cnt FROM rate_limits
+       WHERE ip_address = ?1 AND endpoint = 'auth'
+       AND created_at > datetime('now', '-1 minute')`
+    ).bind(ip).first();
+    return (row?.cnt || 0) >= MAX_AUTH_REQUESTS;
+  } catch {
+    return false;
+  }
+}
+__name(checkAuthRateLimit, "checkAuthRateLimit");
+async function recordRateLimit(env, ip) {
+  try {
+    await env.DB.prepare(
+      "INSERT INTO rate_limits (ip_address, endpoint) VALUES (?1, 'auth')"
+    ).bind(ip).run();
+  } catch {
+  }
+}
+__name(recordRateLimit, "recordRateLimit");
+async function getJwks(jwksUrl) {
+  const cached = jwksCache.get(jwksUrl);
+  if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
+    return cached.keys;
+  }
+  const resp = await fetch(jwksUrl);
+  if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
+  const data = await resp.json();
+  const entry = { keys: data.keys || [], fetchedAt: Date.now() };
+  jwksCache.set(jwksUrl, entry);
+  return entry.keys;
+}
+__name(getJwks, "getJwks");
+function base64urlToBytes(str) {
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+__name(base64urlToBytes, "base64urlToBytes");
+async function importRsaKey(jwk) {
+  return crypto.subtle.importKey(
+    "jwk",
+    {
+      kty: jwk.kty,
+      n: jwk.n,
+      e: jwk.e,
+      alg: "RS256",
+      ext: false
+    },
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+}
+__name(importRsaKey, "importRsaKey");
+async function verifyClerkJwt(request2, env) {
+  const origin = request2.headers.get("Origin") || "";
+  const host = request2.headers.get("Host") || "";
+  const allowedOrigins = [
+    "https://mildmate-new.pages.dev",
+    "https://www.mildmate.com"
+  ];
+  if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
+    return { valid: false, error: "Invalid origin", status: 403 };
+  }
+  try {
+    const requestHost = new URL(request2.url).hostname.toLowerCase();
+    if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
+      return { valid: false, error: "Auth service unavailable", status: 503 };
+    }
+  } catch {
+  }
+  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
+  if (await checkAuthRateLimit(env, ip)) {
+    return { valid: false, error: "Too many requests", status: 429 };
+  }
+  await recordRateLimit(env, ip);
+  const authHeader = request2.headers.get("Authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+  if (!token) {
+    return { valid: false, error: "Missing token", status: 401 };
+  }
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return { valid: false, error: "Invalid token format", status: 401 };
+  }
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(base64urlToBytes(parts[0])));
+  } catch {
+    return { valid: false, error: "Invalid token header", status: 401 };
+  }
+  if (header.alg !== "RS256") {
+    return { valid: false, error: "Unsupported algorithm", status: 401 };
+  }
+  let keys;
+  try {
+    keys = await getJwks(getJwksUrl(env));
+  } catch (e) {
+    console.error("Clerk JWKS fetch failed:", e.message);
+    return { valid: false, error: "Auth service unavailable", status: 503 };
+  }
+  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
+  if (!jwk) {
+    return { valid: false, error: "Unknown signing key", status: 401 };
+  }
+  const signedData = new TextEncoder().encode(parts[0] + "." + parts[1]);
+  const signature = base64urlToBytes(parts[2]);
+  let cryptoKey;
+  try {
+    cryptoKey = await importRsaKey(jwk);
+  } catch {
+    return { valid: false, error: "Invalid key", status: 401 };
+  }
+  let validSig = false;
+  try {
+    validSig = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      signature,
+      signedData
+    );
+  } catch {
+    return { valid: false, error: "Signature verification failed", status: 401 };
+  }
+  if (!validSig) {
+    return { valid: false, error: "Invalid signature", status: 401 };
+  }
+  let payload;
+  try {
+    const rawPayload = JSON.parse(
+      new TextDecoder().decode(base64urlToBytes(parts[1]))
+    );
+    payload = {
+      sub: rawPayload.sub || "",
+      email: rawPayload.email || "",
+      name: rawPayload.name || "",
+      raw: rawPayload,
+      exp: rawPayload.exp || 0,
+      iat: rawPayload.iat || 0,
+      iss: rawPayload.iss || "",
+      azp: rawPayload.azp || "",
+      sid: rawPayload.sid || ""
+    };
+  } catch {
+    return { valid: false, error: "Invalid token payload", status: 401 };
+  }
+  const now = Math.floor(Date.now() / 1e3);
+  if (payload.exp && payload.exp < now) {
+    return { valid: false, error: "Token expired", status: 401 };
+  }
+  const expectedIssuer = getIssuer(env);
+  if (payload.iss && payload.iss !== expectedIssuer) {
+    if (isProdClerkConfigured(env)) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+    if (!payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
+      return { valid: false, error: "Invalid issuer", status: 401 };
+    }
+  }
+  return { valid: true, payload };
+}
+__name(verifyClerkJwt, "verifyClerkJwt");
+
+// ../workers/api/clerk-handshake.ts
+var HANDSHAKE_JWKS_CACHE_MS = 3600 * 1e3;
+var MAX_DIRECTIVES = 10;
+var MAX_DIRECTIVE_LENGTH = 8192;
+var JWT_CATEGORY_SESSION_TOKEN = "cl_B7d4PD111AAA";
+var JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
+var ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
+var ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
+var ALLOWED_SAMESITE = /* @__PURE__ */ new Set(["lax", "strict", "none"]);
+var handshakeJwksCache = /* @__PURE__ */ new Map();
+function b64urlToBytes(str) {
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+__name(b64urlToBytes, "b64urlToBytes");
+function getHandshakeToken(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
+  const m = cookieHeader.match(/(?:^|;\s*)__clerk_handshake=([^;]+)/);
+  if (m && m[1]) return m[1].trim();
+  try {
+    const qp = new URL(request2.url).searchParams.get("__clerk_handshake");
+    if (qp) return qp.trim();
+  } catch {
+  }
+  return null;
+}
+__name(getHandshakeToken, "getHandshakeToken");
+function isNonSessionJwtCategory(cat) {
+  return cat !== void 0 && cat !== JWT_CATEGORY_SESSION_TOKEN && cat !== JWT_CATEGORY_IGNORE;
+}
+__name(isNonSessionJwtCategory, "isNonSessionJwtCategory");
+async function verifyHandshakeJwt(token, env) {
+  const issuer = String(env?.CLERK_ISSUER || "").trim();
+  const jwksUrl = String(env?.CLERK_JWKS_URL || "").trim();
+  if (!issuer || !jwksUrl) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])));
+  } catch {
+    return null;
+  }
+  if (header.typ !== void 0 && header.typ !== "JWT") return null;
+  if (header.alg !== "RS256" || !header.kid) return null;
+  if (isNonSessionJwtCategory(header.cat)) return null;
+  let keys;
+  try {
+    const cached = handshakeJwksCache.get(jwksUrl);
+    if (cached && Date.now() - cached.fetchedAt < HANDSHAKE_JWKS_CACHE_MS) {
+      keys = cached.keys;
+    } else {
+      const resp = await fetch(jwksUrl);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      keys = data.keys || [];
+      handshakeJwksCache.set(jwksUrl, { keys, fetchedAt: Date.now() });
+    }
+  } catch {
+    return null;
+  }
+  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
+  if (!jwk) return null;
+  let valid = false;
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      "jwk",
+      { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: "RS256", ext: false },
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    valid = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      cryptoKey,
+      b64urlToBytes(parts[2]),
+      new TextEncoder().encode(parts[0] + "." + parts[1])
+    );
+  } catch {
+    return null;
+  }
+  if (!valid) return null;
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
+  } catch {
+    return null;
+  }
+  if (payload.iss && String(payload.iss) !== issuer) return null;
+  const now = Math.floor(Date.now() / 1e3);
+  if (typeof payload.exp === "number" && payload.exp > 0 && payload.exp < now) return null;
+  const list = payload.handshake;
+  if (!Array.isArray(list) || list.length === 0 || list.length > MAX_DIRECTIVES) return null;
+  if (!list.every((d) => typeof d === "string" && d.length <= MAX_DIRECTIVE_LENGTH)) return null;
+  return list;
+}
+__name(verifyHandshakeJwt, "verifyHandshakeJwt");
+function parseDirective(directive, requestHost) {
+  const segments = directive.split(";").map((s) => s.trim());
+  const first = segments.shift() || "";
+  const eq = first.indexOf("=");
+  if (eq <= 0) return null;
+  const name = first.slice(0, eq).trim();
+  const value = first.slice(eq + 1).trim();
+  if (!ALLOWED_COOKIE_NAME.test(name)) return null;
+  if (!ALLOWED_COOKIE_VALUE.test(value)) return null;
+  const attrs = [];
+  for (const seg of segments) {
+    if (!seg) continue;
+    const aEq = seg.indexOf("=");
+    const key = (aEq >= 0 ? seg.slice(0, aEq) : seg).trim().toLowerCase();
+    const val = aEq >= 0 ? seg.slice(aEq + 1).trim() : "";
+    if (key === "path") {
+      if (val !== "/") return null;
+      attrs.push("Path=/");
+    } else if (key === "domain") {
+      const domain = val.replace(/^\./, "").toLowerCase();
+      if (!/^[a-z0-9.-]+$/.test(domain)) return null;
+      if (requestHost !== domain && !requestHost.endsWith("." + domain)) return null;
+      attrs.push("Domain=" + domain);
+    } else if (key === "expires") {
+      const ts = Date.parse(val);
+      if (!Number.isFinite(ts)) return null;
+      attrs.push("Expires=" + new Date(ts).toUTCString());
+    } else if (key === "max-age") {
+      if (!/^\d{1,10}$/.test(val)) return null;
+      attrs.push("Max-Age=" + val);
+    } else if (key === "secure") {
+      attrs.push("Secure");
+    } else if (key === "httponly") {
+      attrs.push("HttpOnly");
+    } else if (key === "samesite") {
+      if (!ALLOWED_SAMESITE.has(val.toLowerCase())) return null;
+      attrs.push("SameSite=" + val.charAt(0).toUpperCase() + val.slice(1).toLowerCase());
+    }
+  }
+  return { name, value, serialized: [first.slice(0, eq).trim() + "=" + value, ...attrs].join("; ") };
+}
+__name(parseDirective, "parseDirective");
+function stripAuthParams(url) {
+  const clean = new URL(url.toString());
+  for (const p of ["__clerk_handshake", "__clerk_help", "__clerk_db_jwt", "__mm_hs"]) {
+    clean.searchParams.delete(p);
+  }
+  return clean.toString();
+}
+__name(stripAuthParams, "stripAuthParams");
+function redirectWithCookies(location, cookies) {
+  const headers = new Headers({ Location: location });
+  for (const c of cookies) headers.append("Set-Cookie", c);
+  return new Response(null, { status: 302, headers });
+}
+__name(redirectWithCookies, "redirectWithCookies");
+function signInUrl(url, env) {
+  const accountsDomain = String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const target = new URL(`https://${accountsDomain}/sign-in`);
+  target.searchParams.set("redirect_url", url.origin + url.pathname);
+  return target.toString();
+}
+__name(signInUrl, "signInUrl");
+async function consumeClerkHandshake(request2, env) {
+  const token = getHandshakeToken(request2);
+  if (!token) return null;
+  const directives = await verifyHandshakeJwt(token, env);
+  if (!directives) return null;
+  const url = new URL(request2.url);
+  const host = url.hostname.toLowerCase();
+  const parsed = [];
+  let sessionToken = "";
+  let sawSessionDirective = false;
+  for (const d of directives) {
+    const p = parseDirective(d, host);
+    if (!p) continue;
+    if (/^__session(_|$)/.test(p.name)) {
+      sawSessionDirective = true;
+      if (p.value) sessionToken = p.value;
+    }
+    parsed.push(p);
+  }
+  if (sessionToken) {
+    const verifyReq = new Request(request2.url, {
+      headers: new Headers({
+        ...Object.fromEntries(request2.headers.entries()),
+        Authorization: `Bearer ${sessionToken}`
+      })
+    });
+    const result = await verifyClerkJwt(verifyReq, env);
+    if (result.valid) {
+      return redirectWithCookies(stripAuthParams(url), parsed.map((p) => p.serialized));
+    }
+    const clears = parsed.filter((p) => /^__clerk_handshake(_|$)/.test(p.name) && !p.value).map((p) => p.serialized);
+    return redirectWithCookies(signInUrl(url, env), clears);
+  }
+  if (sawSessionDirective) {
+    return redirectWithCookies(signInUrl(url, env), parsed.map((p) => p.serialized));
+  }
+  return null;
+}
+__name(consumeClerkHandshake, "consumeClerkHandshake");
+
+// auth/clerk-return/[[path]].ts
+var DEFAULT_NEXT_PATH = "/super-admin/";
+function normalizeNextPath(raw) {
+  const value = String(raw || "").trim();
+  if (!value) return DEFAULT_NEXT_PATH;
+  if (!value.startsWith("/") || value.startsWith("//")) return DEFAULT_NEXT_PATH;
+  try {
+    const parsed = new URL(value, "https://mildmate.local");
+    if (!parsed.pathname.startsWith("/")) return DEFAULT_NEXT_PATH;
+    return parsed.pathname + parsed.search;
+  } catch {
+    return DEFAULT_NEXT_PATH;
+  }
+}
+__name(normalizeNextPath, "normalizeNextPath");
+function getSessionToken(request2) {
+  const cookieHeader = request2.headers.get("Cookie") || "";
+  const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
+  if (cookieMatch && cookieMatch[1]) return cookieMatch[1].trim();
+  return "";
+}
+__name(getSessionToken, "getSessionToken");
+function buildCallbackUrl(url, nextPath) {
+  const callback = new URL("/auth/clerk-return/", url.origin);
+  callback.searchParams.set("next", nextPath);
+  return callback.toString();
+}
+__name(buildCallbackUrl, "buildCallbackUrl");
+function redirectToSignIn(url, env, nextPath) {
+  const accountsDomain = String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
+  const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
+  signInUrl2.searchParams.set("redirect_url", buildCallbackUrl(url, nextPath));
+  return Response.redirect(signInUrl2.toString(), 302);
+}
+__name(redirectToSignIn, "redirectToSignIn");
+var onRequest2 = /* @__PURE__ */ __name(async (context) => {
+  const url = new URL(context.request.url);
+  const nextPath = normalizeNextPath(url.searchParams.get("next"));
+  const handshakeResponse = await consumeClerkHandshake(context.request, context.env);
+  if (handshakeResponse) return handshakeResponse;
+  const sessionToken = getSessionToken(context.request);
+  if (!sessionToken) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+  const verifyRequest = new Request(context.request.url, {
+    headers: new Headers({
+      ...Object.fromEntries(context.request.headers.entries()),
+      Authorization: `Bearer ${sessionToken}`
+    })
+  });
+  const verified = await verifyClerkJwt(verifyRequest, context.env);
+  if (!verified.valid) {
+    return redirectToSignIn(url, context.env, nextPath);
+  }
+  return Response.redirect(new URL(nextPath, url.origin).toString(), 302);
+}, "onRequest");
+
 // blog-shared.ts
 function escHtml(str) {
   if (!str) return "";
@@ -3099,7 +3554,7 @@ async function buildBlogPostHTML(post, env, lang = "en") {
 __name(buildBlogPostHTML, "buildBlogPostHTML");
 
 // th/blogs/[[path]].ts
-async function onRequest2(context) {
+async function onRequest3(context) {
   const { request: request2, env, next } = context;
   const url = new URL(request2.url);
   const path = url.pathname;
@@ -3138,7 +3593,7 @@ async function onRequest2(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest2, "onRequest");
+__name(onRequest3, "onRequest");
 
 // product/[[path]].ts
 var CANONICAL_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
@@ -3604,7 +4059,7 @@ function injectMissingEcommerceTracking(html, slug, productName, fallbackPriceUs
 </body>`);
 }
 __name(injectMissingEcommerceTracking, "injectMissingEcommerceTracking");
-async function onRequest3(context) {
+async function onRequest4(context) {
   const url = new URL(context.request.url);
   const pathname = url.pathname;
   if (pathname === "/product" || pathname === "/product/") {
@@ -3817,7 +4272,7 @@ async function onRequest3(context) {
     return context.next();
   }
 }
-__name(onRequest3, "onRequest");
+__name(onRequest4, "onRequest");
 
 // ../workers/api/products.ts
 var R2_PUBLIC_BASE2 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
@@ -5688,200 +6143,6 @@ async function handlePricingParams(request2, env) {
 }
 __name(handlePricingParams, "handlePricingParams");
 
-// ../workers/api/clerk-verify.ts
-var DEV_CLERK_ISSUER = "https://clerk.kind-joey-29.clerk.accounts.dev";
-var DEV_JWKS_URL = "https://kind-joey-29.clerk.accounts.dev/.well-known/jwks.json";
-var JWKS_CACHE_MS = 3600 * 1e3;
-function getIssuer(env) {
-  return String(env?.CLERK_ISSUER || DEV_CLERK_ISSUER).trim();
-}
-__name(getIssuer, "getIssuer");
-function getJwksUrl(env) {
-  return String(env?.CLERK_JWKS_URL || DEV_JWKS_URL).trim();
-}
-__name(getJwksUrl, "getJwksUrl");
-function isProdClerkConfigured(env) {
-  const issuer = String(env?.CLERK_ISSUER || "").trim();
-  return issuer.length > 0 && issuer !== DEV_CLERK_ISSUER;
-}
-__name(isProdClerkConfigured, "isProdClerkConfigured");
-function isProductionHostname(hostname) {
-  const h = String(hostname || "").toLowerCase();
-  return h === "www.mildmate.com" || h === "mildmate.com";
-}
-__name(isProductionHostname, "isProductionHostname");
-var jwksCache = /* @__PURE__ */ new Map();
-var RATE_WINDOW_MS = 60 * 1e3;
-var MAX_AUTH_REQUESTS = 30;
-async function checkAuthRateLimit(env, ip) {
-  try {
-    const row = await env.DB.prepare(
-      `SELECT COUNT(*) as cnt FROM rate_limits
-       WHERE ip_address = ?1 AND endpoint = 'auth'
-       AND created_at > datetime('now', '-1 minute')`
-    ).bind(ip).first();
-    return (row?.cnt || 0) >= MAX_AUTH_REQUESTS;
-  } catch {
-    return false;
-  }
-}
-__name(checkAuthRateLimit, "checkAuthRateLimit");
-async function recordRateLimit(env, ip) {
-  try {
-    await env.DB.prepare(
-      "INSERT INTO rate_limits (ip_address, endpoint) VALUES (?1, 'auth')"
-    ).bind(ip).run();
-  } catch {
-  }
-}
-__name(recordRateLimit, "recordRateLimit");
-async function getJwks(jwksUrl) {
-  const cached = jwksCache.get(jwksUrl);
-  if (cached && Date.now() - cached.fetchedAt < JWKS_CACHE_MS) {
-    return cached.keys;
-  }
-  const resp = await fetch(jwksUrl);
-  if (!resp.ok) throw new Error("Failed to fetch JWKS: " + resp.status);
-  const data = await resp.json();
-  const entry = { keys: data.keys || [], fetchedAt: Date.now() };
-  jwksCache.set(jwksUrl, entry);
-  return entry.keys;
-}
-__name(getJwks, "getJwks");
-function base64urlToBytes(str) {
-  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-__name(base64urlToBytes, "base64urlToBytes");
-async function importRsaKey(jwk) {
-  return crypto.subtle.importKey(
-    "jwk",
-    {
-      kty: jwk.kty,
-      n: jwk.n,
-      e: jwk.e,
-      alg: "RS256",
-      ext: false
-    },
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
-}
-__name(importRsaKey, "importRsaKey");
-async function verifyClerkJwt(request2, env) {
-  const origin = request2.headers.get("Origin") || "";
-  const host = request2.headers.get("Host") || "";
-  const allowedOrigins = [
-    "https://mildmate-new.pages.dev",
-    "https://www.mildmate.com"
-  ];
-  if (origin && !allowedOrigins.includes(origin) && host !== "localhost" && !host.startsWith("127.0.0.1")) {
-    return { valid: false, error: "Invalid origin", status: 403 };
-  }
-  try {
-    const requestHost = new URL(request2.url).hostname.toLowerCase();
-    if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
-      return { valid: false, error: "Auth service unavailable", status: 503 };
-    }
-  } catch {
-  }
-  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
-  if (await checkAuthRateLimit(env, ip)) {
-    return { valid: false, error: "Too many requests", status: 429 };
-  }
-  await recordRateLimit(env, ip);
-  const authHeader = request2.headers.get("Authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-  if (!token) {
-    return { valid: false, error: "Missing token", status: 401 };
-  }
-  const parts = token.split(".");
-  if (parts.length !== 3) {
-    return { valid: false, error: "Invalid token format", status: 401 };
-  }
-  let header;
-  try {
-    header = JSON.parse(new TextDecoder().decode(base64urlToBytes(parts[0])));
-  } catch {
-    return { valid: false, error: "Invalid token header", status: 401 };
-  }
-  if (header.alg !== "RS256") {
-    return { valid: false, error: "Unsupported algorithm", status: 401 };
-  }
-  let keys;
-  try {
-    keys = await getJwks(getJwksUrl(env));
-  } catch (e) {
-    console.error("Clerk JWKS fetch failed:", e.message);
-    return { valid: false, error: "Auth service unavailable", status: 503 };
-  }
-  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
-  if (!jwk) {
-    return { valid: false, error: "Unknown signing key", status: 401 };
-  }
-  const signedData = new TextEncoder().encode(parts[0] + "." + parts[1]);
-  const signature = base64urlToBytes(parts[2]);
-  let cryptoKey;
-  try {
-    cryptoKey = await importRsaKey(jwk);
-  } catch {
-    return { valid: false, error: "Invalid key", status: 401 };
-  }
-  let validSig = false;
-  try {
-    validSig = await crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
-      cryptoKey,
-      signature,
-      signedData
-    );
-  } catch {
-    return { valid: false, error: "Signature verification failed", status: 401 };
-  }
-  if (!validSig) {
-    return { valid: false, error: "Invalid signature", status: 401 };
-  }
-  let payload;
-  try {
-    const rawPayload = JSON.parse(
-      new TextDecoder().decode(base64urlToBytes(parts[1]))
-    );
-    payload = {
-      sub: rawPayload.sub || "",
-      email: rawPayload.email || "",
-      name: rawPayload.name || "",
-      raw: rawPayload,
-      exp: rawPayload.exp || 0,
-      iat: rawPayload.iat || 0,
-      iss: rawPayload.iss || "",
-      azp: rawPayload.azp || "",
-      sid: rawPayload.sid || ""
-    };
-  } catch {
-    return { valid: false, error: "Invalid token payload", status: 401 };
-  }
-  const now = Math.floor(Date.now() / 1e3);
-  if (payload.exp && payload.exp < now) {
-    return { valid: false, error: "Token expired", status: 401 };
-  }
-  const expectedIssuer = getIssuer(env);
-  if (payload.iss && payload.iss !== expectedIssuer) {
-    if (isProdClerkConfigured(env)) {
-      return { valid: false, error: "Invalid issuer", status: 401 };
-    }
-    if (!payload.iss.startsWith("https://clerk.") && !payload.iss.includes(".clerk.accounts.dev")) {
-      return { valid: false, error: "Invalid issuer", status: 401 };
-    }
-  }
-  return { valid: true, payload };
-}
-__name(verifyClerkJwt, "verifyClerkJwt");
-
 // ../workers/api/admin-pricing.ts
 var DEFAULT_DERIVED_MARKUP_PARAMS = [
   {
@@ -6081,6 +6342,141 @@ async function handleAdminPricingParams(request2, env) {
 }
 __name(handleAdminPricingParams, "handleAdminPricingParams");
 
+// ../workers/api/admin-auth.ts
+function collectRoles2(raw) {
+  if (!raw || typeof raw !== "object") return [];
+  const values = [];
+  const add = /* @__PURE__ */ __name((v) => {
+    if (v !== void 0 && v !== null) values.push(v);
+  }, "add");
+  add(raw.role);
+  add(raw.roles);
+  add(raw.org_role);
+  add(raw.orgRole);
+  add(raw.public_metadata?.role);
+  add(raw.public_metadata?.roles);
+  add(raw.unsafe_metadata?.role);
+  add(raw.unsafe_metadata?.roles);
+  add(raw.metadata?.role);
+  add(raw.metadata?.roles);
+  add(raw["https://mildmate.com/role"]);
+  add(raw["https://mildmate.com/roles"]);
+  const out = [];
+  values.forEach((v) => {
+    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
+    else out.push(String(v).toLowerCase().trim());
+  });
+  return out.filter(Boolean);
+}
+__name(collectRoles2, "collectRoles");
+function hasAdminRole2(rawClaims) {
+  const roles = collectRoles2(rawClaims);
+  return roles.some(
+    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
+  );
+}
+__name(hasAdminRole2, "hasAdminRole");
+function emailAllowed2(email, env) {
+  if (!email) return false;
+  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allow.includes(email.toLowerCase());
+}
+__name(emailAllowed2, "emailAllowed");
+function blockedEmailsFromEnv(env) {
+  return new Set(
+    String(env?.ADMIN_BLOCKED_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+  );
+}
+__name(blockedEmailsFromEnv, "blockedEmailsFromEnv");
+function emailBlocked(email, env) {
+  if (!email) return false;
+  return blockedEmailsFromEnv(env).has(email.toLowerCase());
+}
+__name(emailBlocked, "emailBlocked");
+function getPrimaryClerkEmail2(user) {
+  if (!user || typeof user !== "object") return "";
+  const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
+  const primaryId = user.primary_email_address_id;
+  const primary = list.find((e) => e && e.id === primaryId);
+  return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
+}
+__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
+async function enrichFromClerk(sub, env) {
+  const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
+  if (!sub || !clerkKey) return { email: "", hasAdmin: false };
+  try {
+    const resp = await fetch("https://api.clerk.com/v1/users/" + encodeURIComponent(sub), {
+      headers: { Authorization: "Bearer " + clerkKey }
+    });
+    if (!resp.ok) return { email: "", hasAdmin: false };
+    const user = await resp.json();
+    const email = getPrimaryClerkEmail2(user);
+    const metadataRaw = {
+      role: user?.public_metadata?.role,
+      roles: user?.public_metadata?.roles,
+      org_role: user?.public_metadata?.org_role,
+      orgRole: user?.public_metadata?.orgRole,
+      public_metadata: user?.public_metadata || {},
+      unsafe_metadata: user?.unsafe_metadata || {},
+      metadata: user?.private_metadata || {}
+    };
+    return { email, hasAdmin: hasAdminRole2(metadataRaw) };
+  } catch {
+    return { email: "", hasAdmin: false };
+  }
+}
+__name(enrichFromClerk, "enrichFromClerk");
+function isProductionHost(hostname) {
+  if (!hostname) return false;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return false;
+  if (hostname.endsWith(".local")) return false;
+  if (hostname.endsWith(".pages.dev")) return false;
+  return hostname === "www.mildmate.com" || hostname === "mildmate.com";
+}
+__name(isProductionHost, "isProductionHost");
+async function authorizeAdmin(request2, env) {
+  const authHeader = request2.headers.get("Authorization") || "";
+  const hasBearer = authHeader.startsWith("Bearer ");
+  if (hasBearer) {
+    const verified = await verifyClerkJwt(request2, env);
+    if (verified.valid) {
+      const raw = verified.payload.raw || {};
+      let hasRole = hasAdminRole2(raw);
+      let email = String(verified.payload.email || "").trim().toLowerCase();
+      let allowed = emailAllowed2(email, env);
+      if (!hasRole || !allowed) {
+        const sub = String(verified.payload.sub || "").trim();
+        const enriched = await enrichFromClerk(sub, env);
+        if (enriched.email) email = enriched.email;
+        hasRole = hasRole || enriched.hasAdmin;
+        allowed = allowed || emailAllowed2(email, env);
+      }
+      if (emailBlocked(email, env)) {
+        return { ok: false, status: 403, error: "Forbidden: account not authorized for admin access" };
+      }
+      if (hasRole && allowed) {
+        return { ok: true };
+      }
+      return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
+    }
+  }
+  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  if (!providedSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const host = new URL(request2.url).hostname;
+  const prodHost = isProductionHost(host);
+  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
+  if (prodHost && !allowSecretInProd) {
+    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
+  }
+  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
+  if (!configuredSecret) return { ok: true };
+  if (providedSecret === configuredSecret) return { ok: true };
+  return { ok: false, status: 401, error: "Unauthorized" };
+}
+__name(authorizeAdmin, "authorizeAdmin");
+
 // ../workers/api/admin-diy.ts
 async function handleAdminDiyPrices(request2, env) {
   if (request2.method === "OPTIONS") {
@@ -6093,23 +6489,12 @@ async function handleAdminDiyPrices(request2, env) {
       }
     });
   }
-  const host = new URL(request2.url).hostname;
-  const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-  if (!isDev) {
-    const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
-    const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-    if (!provided) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      });
-    }
-    if (configured && provided !== configured) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-      });
-    }
+  const auth = await authorizeAdmin(request2, env);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+    });
   }
   if (request2.method === "POST" || request2.method === "PUT") {
     try {
@@ -6165,32 +6550,6 @@ async function handleAdminDiyPrices(request2, env) {
 __name(handleAdminDiyPrices, "handleAdminDiyPrices");
 
 // ../workers/api/admin-exchange.ts
-function isProductionHost(host) {
-  return host === "www.mildmate.com" || host === "mildmate.com";
-}
-__name(isProductionHost, "isProductionHost");
-function isDevHost(host) {
-  return host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
-}
-__name(isDevHost, "isDevHost");
-function authorizeAdmin(request2, env) {
-  const host = new URL(request2.url).hostname;
-  if (isDevHost(host)) return { ok: true };
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
-  const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
-  if (!providedSecret) {
-    return { ok: false, status: 401, error: "Unauthorized" };
-  }
-  const prodHost = isProductionHost(host);
-  const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
-  if (prodHost && !allowSecretInProd) {
-    return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
-  }
-  if (!configuredSecret) return { ok: true };
-  if (providedSecret === configuredSecret) return { ok: true };
-  return { ok: false, status: 401, error: "Unauthorized" };
-}
-__name(authorizeAdmin, "authorizeAdmin");
 async function handleAdminExchangeRates(request2, env) {
   if (request2.method === "OPTIONS") {
     return new Response(null, {
@@ -6202,10 +6561,10 @@ async function handleAdminExchangeRates(request2, env) {
       }
     });
   }
-  const auth = authorizeAdmin(request2, env);
+  const auth = await authorizeAdmin(request2, env);
   if (!auth.ok) {
-    return new Response(JSON.stringify({ error: auth.error || "Unauthorized" }), {
-      status: auth.status || 401,
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
@@ -6279,7 +6638,7 @@ function isProductionHost2(hostname) {
 }
 __name(isProductionHost2, "isProductionHost");
 var ADMIN_SECRET_ERROR = JSON.stringify({ error: "Unauthorized" });
-function collectRoles2(raw) {
+function collectRoles3(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
@@ -6303,20 +6662,20 @@ function collectRoles2(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles2, "collectRoles");
-function hasAdminRole2(rawClaims) {
-  const roles = collectRoles2(rawClaims);
+__name(collectRoles3, "collectRoles");
+function hasAdminRole3(rawClaims) {
+  const roles = collectRoles3(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole2, "hasAdminRole");
-function emailAllowed2(email, env) {
+__name(hasAdminRole3, "hasAdminRole");
+function emailAllowed3(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed2, "emailAllowed");
+__name(emailAllowed3, "emailAllowed");
 async function authCheck(request2, env) {
   const hostname = request2.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
@@ -6326,7 +6685,7 @@ async function authCheck(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole2(raw) || emailAllowed2(verified.payload.email || "", env)) return true;
+      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -6338,7 +6697,7 @@ async function authCheck(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed2(email, env) || hasAdminRole2(metadata)) return true;
+            if (emailAllowed3(email, env) || hasAdminRole3(metadata)) return true;
           }
         } catch {
         }
@@ -6512,7 +6871,7 @@ async function handleAdminProducts(request2, env) {
 __name(handleAdminProducts, "handleAdminProducts");
 
 // ../workers/api/admin-upload.ts
-function collectRoles3(raw) {
+function collectRoles4(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   values.push(raw.role, raw.roles, raw.org_role, raw.org_roles, raw.permission, raw.permissions);
@@ -6536,20 +6895,20 @@ function collectRoles3(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles3, "collectRoles");
-function hasAdminRole3(rawClaims) {
-  const roles = collectRoles3(rawClaims);
+__name(collectRoles4, "collectRoles");
+function hasAdminRole4(rawClaims) {
+  const roles = collectRoles4(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole3, "hasAdminRole");
-function emailAllowed3(email, env) {
+__name(hasAdminRole4, "hasAdminRole");
+function emailAllowed4(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed3, "emailAllowed");
+__name(emailAllowed4, "emailAllowed");
 async function authCheck2(request2, env) {
   const host = String(request2.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
@@ -6559,7 +6918,7 @@ async function authCheck2(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
+      if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) return true;
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -6571,7 +6930,7 @@ async function authCheck2(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed3(email, env) || hasAdminRole3(metadata)) return true;
+            if (emailAllowed4(email, env) || hasAdminRole4(metadata)) return true;
           }
         } catch {
         }
@@ -6810,7 +7169,7 @@ function isProductionHost3(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost3, "isProductionHost");
-function collectRoles4(raw) {
+function collectRoles5(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -6835,20 +7194,20 @@ function collectRoles4(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles4, "collectRoles");
-function hasAdminRole4(rawClaims) {
-  const roles = collectRoles4(rawClaims);
+__name(collectRoles5, "collectRoles");
+function hasAdminRole5(rawClaims) {
+  const roles = collectRoles5(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole4, "hasAdminRole");
-function emailAllowed4(email, env) {
+__name(hasAdminRole5, "hasAdminRole");
+function emailAllowed5(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed4, "emailAllowed");
+__name(emailAllowed5, "emailAllowed");
 async function authorizeAdmin2(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -6857,7 +7216,7 @@ async function authorizeAdmin2(request2, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) {
+      if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -6873,8 +7232,8 @@ async function authorizeAdmin2(request2, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed4(email, env)) return { ok: true };
-            if (hasAdminRole4(metadata)) return { ok: true };
+            if (emailAllowed5(email, env)) return { ok: true };
+            if (hasAdminRole5(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -7099,7 +7458,7 @@ function isProductionHost4(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost4, "isProductionHost");
-function collectRoles5(raw) {
+function collectRoles6(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -7123,20 +7482,20 @@ function collectRoles5(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles5, "collectRoles");
-function hasAdminRole5(rawClaims) {
-  const roles = collectRoles5(rawClaims);
+__name(collectRoles6, "collectRoles");
+function hasAdminRole6(rawClaims) {
+  const roles = collectRoles6(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole5, "hasAdminRole");
-function emailAllowed5(email, env) {
+__name(hasAdminRole6, "hasAdminRole");
+function emailAllowed6(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed5, "emailAllowed");
+__name(emailAllowed6, "emailAllowed");
 async function authorizeAdmin3(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -7144,7 +7503,7 @@ async function authorizeAdmin3(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole5(raw) || emailAllowed5(verified.payload.email || "", env)) {
+      if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -7160,8 +7519,8 @@ async function authorizeAdmin3(request2, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed5(email, env)) return { ok: true };
-            if (hasAdminRole5(metadata)) return { ok: true };
+            if (emailAllowed6(email, env)) return { ok: true };
+            if (hasAdminRole6(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -7282,7 +7641,7 @@ function isProductionHost5(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost5, "isProductionHost");
-function collectRoles6(raw) {
+function collectRoles7(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -7307,20 +7666,20 @@ function collectRoles6(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles6, "collectRoles");
-function hasAdminRole6(rawClaims) {
-  const roles = collectRoles6(rawClaims);
+__name(collectRoles7, "collectRoles");
+function hasAdminRole7(rawClaims) {
+  const roles = collectRoles7(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole6, "hasAdminRole");
-function emailAllowed6(email, env) {
+__name(hasAdminRole7, "hasAdminRole");
+function emailAllowed7(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed6, "emailAllowed");
+__name(emailAllowed7, "emailAllowed");
 async function authorizeAdmin4(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -7329,7 +7688,7 @@ async function authorizeAdmin4(request2, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) {
+      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -7345,8 +7704,8 @@ async function authorizeAdmin4(request2, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed6(email, env)) return { ok: true };
-            if (hasAdminRole6(metadata)) return { ok: true };
+            if (emailAllowed7(email, env)) return { ok: true };
+            if (hasAdminRole7(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -8228,7 +8587,7 @@ function isProductionHost6(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost6, "isProductionHost");
-function collectRoles7(raw) {
+function collectRoles8(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -8253,20 +8612,20 @@ function collectRoles7(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles7, "collectRoles");
-function hasAdminRole7(rawClaims) {
-  const roles = collectRoles7(rawClaims);
+__name(collectRoles8, "collectRoles");
+function hasAdminRole8(rawClaims) {
+  const roles = collectRoles8(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole7, "hasAdminRole");
-function emailAllowed7(email, env) {
+__name(hasAdminRole8, "hasAdminRole");
+function emailAllowed8(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed7, "emailAllowed");
+__name(emailAllowed8, "emailAllowed");
 async function authorizeAdmin5(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -8275,7 +8634,7 @@ async function authorizeAdmin5(request2, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole7(raw) || emailAllowed7(verified.payload.email || "", env)) {
+      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -8291,8 +8650,8 @@ async function authorizeAdmin5(request2, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed7(email, env)) return { ok: true };
-            if (hasAdminRole7(metadata)) return { ok: true };
+            if (emailAllowed8(email, env)) return { ok: true };
+            if (hasAdminRole8(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -10489,7 +10848,7 @@ function isProductionHost7(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost7, "isProductionHost");
-function collectRoles8(raw) {
+function collectRoles9(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -10514,20 +10873,20 @@ function collectRoles8(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles8, "collectRoles");
-function hasAdminRole8(rawClaims) {
-  const roles = collectRoles8(rawClaims);
+__name(collectRoles9, "collectRoles");
+function hasAdminRole9(rawClaims) {
+  const roles = collectRoles9(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole8, "hasAdminRole");
-function emailAllowed8(email, env) {
+__name(hasAdminRole9, "hasAdminRole");
+function emailAllowed9(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed8, "emailAllowed");
+__name(emailAllowed9, "emailAllowed");
 async function authorizeAdmin6(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -10536,7 +10895,7 @@ async function authorizeAdmin6(request2, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole8(raw) || emailAllowed8(verified.payload.email || "", env)) {
+      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -10552,8 +10911,8 @@ async function authorizeAdmin6(request2, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed8(email, env)) return { ok: true };
-            if (hasAdminRole8(metadata)) return { ok: true };
+            if (emailAllowed9(email, env)) return { ok: true };
+            if (hasAdminRole9(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -11554,7 +11913,7 @@ function isProductionHost8(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost8, "isProductionHost");
-function collectRoles9(raw) {
+function collectRoles10(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -11579,20 +11938,20 @@ function collectRoles9(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles9, "collectRoles");
-function hasAdminRole9(rawClaims) {
-  const roles = collectRoles9(rawClaims);
+__name(collectRoles10, "collectRoles");
+function hasAdminRole10(rawClaims) {
+  const roles = collectRoles10(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole9, "hasAdminRole");
-function emailAllowed9(email, env) {
+__name(hasAdminRole10, "hasAdminRole");
+function emailAllowed10(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed9, "emailAllowed");
+__name(emailAllowed10, "emailAllowed");
 async function authorizeAdmin7(request2, env) {
   const host = new URL(request2.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
@@ -11605,7 +11964,7 @@ async function authorizeAdmin7(request2, env) {
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole9(raw) || emailAllowed9(verified.payload.email || "", env)) {
+      if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -11621,8 +11980,8 @@ async function authorizeAdmin7(request2, env) {
               return e.id === user.primary_email_address_id;
             })?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed9(email, env)) return { ok: true };
-            if (hasAdminRole9(metadata)) return { ok: true };
+            if (emailAllowed10(email, env)) return { ok: true };
+            if (hasAdminRole10(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -11908,7 +12267,7 @@ function isPreviewHashHost(hostname) {
   return /^[a-f0-9]{8,}\.mildmate-new\.pages\.dev$/i.test(hostname);
 }
 __name(isPreviewHashHost, "isPreviewHashHost");
-function collectRoles10(raw) {
+function collectRoles11(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -11933,20 +12292,20 @@ function collectRoles10(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles10, "collectRoles");
-function hasAdminRole10(raw) {
-  const roles = collectRoles10(raw);
+__name(collectRoles11, "collectRoles");
+function hasAdminRole11(raw) {
+  const roles = collectRoles11(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole10, "hasAdminRole");
-function emailAllowed10(email, env) {
+__name(hasAdminRole11, "hasAdminRole");
+function emailAllowed11(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed10, "emailAllowed");
+__name(emailAllowed11, "emailAllowed");
 async function authorizeAdmin8(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -11955,7 +12314,7 @@ async function authorizeAdmin8(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole10(raw) || emailAllowed10(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -11967,8 +12326,8 @@ async function authorizeAdmin8(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed10(email, env)) return { ok: true };
-            if (hasAdminRole10(metadata)) return { ok: true };
+            if (emailAllowed11(email, env)) return { ok: true };
+            if (hasAdminRole11(metadata)) return { ok: true };
           }
         } catch {
         }
@@ -12691,7 +13050,7 @@ function json11(body, status = 200) {
   });
 }
 __name(json11, "json");
-function collectRoles11(raw) {
+function collectRoles12(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -12716,20 +13075,20 @@ function collectRoles11(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles11, "collectRoles");
-function hasAdminRole11(raw) {
-  const roles = collectRoles11(raw);
+__name(collectRoles12, "collectRoles");
+function hasAdminRole12(raw) {
+  const roles = collectRoles12(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole11, "hasAdminRole");
-function emailAllowed11(email, env) {
+__name(hasAdminRole12, "hasAdminRole");
+function emailAllowed12(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed11, "emailAllowed");
+__name(emailAllowed12, "emailAllowed");
 function isProductionHost10(hostname) {
   if (!hostname) return false;
   if (hostname === "localhost" || hostname === "127.0.0.1") return false;
@@ -12744,7 +13103,7 @@ async function authorizeAdmin9(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) return { ok: true };
+      if (hasAdminRole12(raw) || emailAllowed12(verified.payload.email || "", env)) return { ok: true };
       const sub = verified.payload.sub;
       const clerkKey = env.CLERK_SECRET_KEY;
       if (sub && clerkKey) {
@@ -12756,8 +13115,8 @@ async function authorizeAdmin9(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed11(email, env)) return { ok: true };
-            if (hasAdminRole11(metadata)) return { ok: true };
+            if (emailAllowed12(email, env)) return { ok: true };
+            if (hasAdminRole12(metadata)) return { ok: true };
           }
         } catch (e) {
         }
@@ -12831,7 +13190,7 @@ function isProductionHost11(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
 __name(isProductionHost11, "isProductionHost");
-function hasAdminRole12(raw) {
+function hasAdminRole13(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -12851,12 +13210,12 @@ function hasAdminRole12(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole12, "hasAdminRole");
-function emailAllowed12(email, env) {
+__name(hasAdminRole13, "hasAdminRole");
+function emailAllowed13(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed12, "emailAllowed");
+__name(emailAllowed13, "emailAllowed");
 async function authorizeAdmin10(request2, env) {
   const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost11(hostname)) return { ok: true };
@@ -12865,9 +13224,9 @@ async function authorizeAdmin10(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole12(raw)) return { ok: true };
+    if (hasAdminRole13(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed12(jwtEmail, env)) return { ok: true };
+    if (emailAllowed13(jwtEmail, env)) return { ok: true };
     const sub = String(verified.payload?.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (sub && clerkKey) {
@@ -12879,7 +13238,7 @@ async function authorizeAdmin10(request2, env) {
           const user = await clerkResp.json();
           const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
           const metadata = user.public_metadata || {};
-          if (emailAllowed12(email, env) || hasAdminRole12(metadata)) return { ok: true };
+          if (emailAllowed13(email, env) || hasAdminRole13(metadata)) return { ok: true };
         }
       } catch {
       }
@@ -13087,7 +13446,7 @@ function isProductionHost12(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
 __name(isProductionHost12, "isProductionHost");
-function hasAdminRole13(raw) {
+function hasAdminRole14(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -13107,12 +13466,12 @@ function hasAdminRole13(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole13, "hasAdminRole");
-function emailAllowed13(email, env) {
+__name(hasAdminRole14, "hasAdminRole");
+function emailAllowed14(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed13, "emailAllowed");
+__name(emailAllowed14, "emailAllowed");
 function normalizeModelKey(input) {
   return String(input || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
@@ -13172,7 +13531,7 @@ async function authorizeAdmin11(request2, env) {
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (hasAdminRole13(raw) || emailAllowed13(jwtEmail, env)) return { ok: true };
+    if (hasAdminRole14(raw) || emailAllowed14(jwtEmail, env)) return { ok: true };
     return { ok: true };
   }
   const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
@@ -13295,7 +13654,7 @@ function isProductionHost13(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost13, "isProductionHost");
-function collectRoles12(raw) {
+function collectRoles13(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -13319,20 +13678,20 @@ function collectRoles12(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles12, "collectRoles");
-function hasAdminRole14(raw) {
-  const roles = collectRoles12(raw);
+__name(collectRoles13, "collectRoles");
+function hasAdminRole15(raw) {
+  const roles = collectRoles13(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole14, "hasAdminRole");
-function emailAllowed14(email, env) {
+__name(hasAdminRole15, "hasAdminRole");
+function emailAllowed15(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed14, "emailAllowed");
+__name(emailAllowed15, "emailAllowed");
 function getClerkSessionTokenFromCookie(request2) {
   const cookieHeader = request2.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -13355,7 +13714,7 @@ async function authorizeAdmin12(request2, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole14(raw) || emailAllowed14(verified.payload.email || "", env)) {
+      if (hasAdminRole15(raw) || emailAllowed15(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -13369,8 +13728,8 @@ async function authorizeAdmin12(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed14(email, env)) return { ok: true };
-            if (hasAdminRole14(metadata)) return { ok: true };
+            if (emailAllowed15(email, env)) return { ok: true };
+            if (hasAdminRole15(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -13762,7 +14121,7 @@ function isProductionHost14(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost14, "isProductionHost");
-function collectRoles13(raw) {
+function collectRoles14(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -13786,20 +14145,20 @@ function collectRoles13(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles13, "collectRoles");
-function hasAdminRole15(raw) {
-  const roles = collectRoles13(raw);
+__name(collectRoles14, "collectRoles");
+function hasAdminRole16(raw) {
+  const roles = collectRoles14(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole15, "hasAdminRole");
-function emailAllowed15(email, env) {
+__name(hasAdminRole16, "hasAdminRole");
+function emailAllowed16(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed15, "emailAllowed");
+__name(emailAllowed16, "emailAllowed");
 function getClerkSessionTokenFromCookie2(request2) {
   const cookieHeader = request2.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
@@ -13822,7 +14181,7 @@ async function authorizeAdmin13(request2, env) {
     const verified = await verifyClerkJwt(verifyRequest, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole15(raw) || emailAllowed15(verified.payload.email || "", env)) {
+      if (hasAdminRole16(raw) || emailAllowed16(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -13836,8 +14195,8 @@ async function authorizeAdmin13(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed15(email, env)) return { ok: true };
-            if (hasAdminRole15(metadata)) return { ok: true };
+            if (emailAllowed16(email, env)) return { ok: true };
+            if (hasAdminRole16(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -14248,7 +14607,7 @@ function isProductionHost15(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
 __name(isProductionHost15, "isProductionHost");
-function hasAdminRole16(raw) {
+function hasAdminRole17(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -14268,7 +14627,7 @@ function hasAdminRole16(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole16, "hasAdminRole");
+__name(hasAdminRole17, "hasAdminRole");
 async function authorizeAdmin14(request2, env) {
   const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost15(hostname)) return { ok: true };
@@ -14277,7 +14636,7 @@ async function authorizeAdmin14(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole16(raw)) return { ok: true };
+    if (hasAdminRole17(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
     const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
     if (jwtEmail && allow.includes(jwtEmail)) return { ok: true };
@@ -14432,7 +14791,7 @@ function isProductionHost16(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
 __name(isProductionHost16, "isProductionHost");
-function hasAdminRole17(raw) {
+function hasAdminRole18(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -14452,12 +14811,12 @@ function hasAdminRole17(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole17, "hasAdminRole");
-function emailAllowed16(email, env) {
+__name(hasAdminRole18, "hasAdminRole");
+function emailAllowed17(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed16, "emailAllowed");
+__name(emailAllowed17, "emailAllowed");
 async function authorizeAdmin15(request2, env) {
   const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost16(hostname)) return { ok: true };
@@ -14466,9 +14825,9 @@ async function authorizeAdmin15(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole17(raw)) return { ok: true };
+    if (hasAdminRole18(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed16(jwtEmail, env)) return { ok: true };
+    if (emailAllowed17(jwtEmail, env)) return { ok: true };
     const sub = String(verified.payload?.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (sub && clerkKey) {
@@ -14480,7 +14839,7 @@ async function authorizeAdmin15(request2, env) {
           const user = await clerkResp.json();
           const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
           const metadata = user.public_metadata || {};
-          if (emailAllowed16(email, env) || hasAdminRole17(metadata)) return { ok: true };
+          if (emailAllowed17(email, env) || hasAdminRole18(metadata)) return { ok: true };
         }
       } catch {
       }
@@ -14589,7 +14948,7 @@ function isProductionHost17(hostname) {
   return h === "www.mildmate.com" || h === "mildmate.com" || h.endsWith(".mildmate.com");
 }
 __name(isProductionHost17, "isProductionHost");
-function hasAdminRole18(raw) {
+function hasAdminRole19(raw) {
   if (!raw) return false;
   const candidates = [];
   if (raw.role) candidates.push(raw.role);
@@ -14609,12 +14968,12 @@ function hasAdminRole18(raw) {
     return r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin");
   });
 }
-__name(hasAdminRole18, "hasAdminRole");
-function emailAllowed17(email, env) {
+__name(hasAdminRole19, "hasAdminRole");
+function emailAllowed18(email, env) {
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return !!email && allow.includes(email.toLowerCase());
 }
-__name(emailAllowed17, "emailAllowed");
+__name(emailAllowed18, "emailAllowed");
 async function authorizeAdmin16(request2, env) {
   const hostname = request2.headers.get("Host") || "";
   if (!isProductionHost17(hostname)) return { ok: true };
@@ -14623,9 +14982,9 @@ async function authorizeAdmin16(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
-    if (hasAdminRole18(raw)) return { ok: true };
+    if (hasAdminRole19(raw)) return { ok: true };
     const jwtEmail = String(raw.email || verified.payload?.email || "").trim().toLowerCase();
-    if (emailAllowed17(jwtEmail, env)) return { ok: true };
+    if (emailAllowed18(jwtEmail, env)) return { ok: true };
     const sub = String(verified.payload?.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (sub && clerkKey) {
@@ -14637,7 +14996,7 @@ async function authorizeAdmin16(request2, env) {
           const user = await clerkResp.json();
           const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
           const metadata = user.public_metadata || {};
-          if (emailAllowed17(email, env) || hasAdminRole18(metadata)) return { ok: true };
+          if (emailAllowed18(email, env) || hasAdminRole19(metadata)) return { ok: true };
         }
       } catch {
       }
@@ -14742,7 +15101,7 @@ function getClerkSessionToken(request2) {
   return cookieMatch ? cookieMatch[1] : "";
 }
 __name(getClerkSessionToken, "getClerkSessionToken");
-function collectRoles14(raw) {
+function collectRoles15(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -14766,28 +15125,28 @@ function collectRoles14(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles14, "collectRoles");
-function hasAdminRole19(raw) {
-  const roles = collectRoles14(raw);
+__name(collectRoles15, "collectRoles");
+function hasAdminRole20(raw) {
+  const roles = collectRoles15(raw);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole19, "hasAdminRole");
-function emailAllowed18(email, env) {
+__name(hasAdminRole20, "hasAdminRole");
+function emailAllowed19(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed18, "emailAllowed");
-function getPrimaryClerkEmail2(user) {
+__name(emailAllowed19, "emailAllowed");
+function getPrimaryClerkEmail3(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
   const primaryId = user.primary_email_address_id;
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail2, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
 async function isClerkAdmin2(request2, env) {
   try {
     const authHeader = request2.headers.get("Authorization") || "";
@@ -14805,7 +15164,7 @@ async function isClerkAdmin2(request2, env) {
     if (!verified.valid) return false;
     const raw = verified.payload.raw || {};
     const email = String(verified.payload.email || "").trim().toLowerCase();
-    if (hasAdminRole19(raw) || emailAllowed18(email, env)) return true;
+    if (hasAdminRole20(raw) || emailAllowed19(email, env)) return true;
     const sub = String(verified.payload.sub || "").trim();
     const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
     if (!sub || !clerkKey) return false;
@@ -14814,7 +15173,7 @@ async function isClerkAdmin2(request2, env) {
     });
     if (!clerkResp.ok) return false;
     const user = await clerkResp.json();
-    const clerkEmail = getPrimaryClerkEmail2(user);
+    const clerkEmail = getPrimaryClerkEmail3(user);
     const metadataRaw = {
       role: user?.public_metadata?.role,
       roles: user?.public_metadata?.roles,
@@ -14824,7 +15183,7 @@ async function isClerkAdmin2(request2, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return emailAllowed18(clerkEmail, env) || hasAdminRole19(metadataRaw);
+    return emailAllowed19(clerkEmail, env) || hasAdminRole20(metadataRaw);
   } catch {
     return false;
   }
@@ -15048,7 +15407,7 @@ function isProductionHost19(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost19, "isProductionHost");
-function collectRoles15(raw) {
+function collectRoles16(raw) {
   if (!raw || typeof raw !== "object") return [];
   const values = [];
   const add = /* @__PURE__ */ __name((v) => {
@@ -15073,20 +15432,20 @@ function collectRoles15(raw) {
   });
   return out.filter(Boolean);
 }
-__name(collectRoles15, "collectRoles");
-function hasAdminRole20(rawClaims) {
-  const roles = collectRoles15(rawClaims);
+__name(collectRoles16, "collectRoles");
+function hasAdminRole21(rawClaims) {
+  const roles = collectRoles16(rawClaims);
   return roles.some(
     (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
   );
 }
-__name(hasAdminRole20, "hasAdminRole");
-function emailAllowed19(email, env) {
+__name(hasAdminRole21, "hasAdminRole");
+function emailAllowed20(email, env) {
   if (!email) return false;
   const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
   return allow.includes(email.toLowerCase());
 }
-__name(emailAllowed19, "emailAllowed");
+__name(emailAllowed20, "emailAllowed");
 async function authorizeAdmin18(request2, env) {
   const authHeader = request2.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
@@ -15094,7 +15453,7 @@ async function authorizeAdmin18(request2, env) {
     const verified = await verifyClerkJwt(request2, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
-      if (hasAdminRole20(raw) || emailAllowed19(verified.payload.email || "", env)) {
+      if (hasAdminRole21(raw) || emailAllowed20(verified.payload.email || "", env)) {
         return { ok: true };
       }
       const sub = verified.payload.sub;
@@ -15108,8 +15467,8 @@ async function authorizeAdmin18(request2, env) {
             const user = await clerkResp.json();
             const email = user.email_addresses?.find((e) => e.id === user.primary_email_address_id)?.email_address || "";
             const metadata = user.public_metadata || {};
-            if (emailAllowed19(email, env)) return { ok: true };
-            if (hasAdminRole20(metadata)) return { ok: true };
+            if (emailAllowed20(email, env)) return { ok: true };
+            if (hasAdminRole21(metadata)) return { ok: true };
           }
         } catch (e) {
           console.error("Clerk API lookup failed:", e?.message || e);
@@ -17715,7 +18074,7 @@ function r2Product3(p) {
   return out;
 }
 __name(r2Product3, "r2Product");
-var onRequest4 = /* @__PURE__ */ __name(async (context) => {
+var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   const { request: request2, env } = context;
   const url = new URL(request2.url);
   const path = url.pathname;
@@ -17939,7 +18298,7 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // blogs/[[path]].ts
-async function onRequest5(context) {
+async function onRequest6(context) {
   const { request: request2, env, next } = context;
   const url = new URL(request2.url);
   const path = url.pathname;
@@ -17978,7 +18337,7 @@ async function onRequest5(context) {
     return new Response("Server error", { status: 500 });
   }
 }
-__name(onRequest5, "onRequest");
+__name(onRequest6, "onRequest");
 
 // products/[[path]].ts
 var FIXED_PRODUCT_SLUGS = /* @__PURE__ */ new Set([
@@ -18121,7 +18480,7 @@ function buildCard(product, isTh) {
           </article>`;
 }
 __name(buildCard, "buildCard");
-async function onRequest6(context) {
+async function onRequest7(context) {
   const { request: request2, env, next } = context;
   const url = new URL(request2.url);
   const path = url.pathname;
@@ -18183,10 +18542,10 @@ ${cardsHtml}
     return next();
   }
 }
-__name(onRequest6, "onRequest");
+__name(onRequest7, "onRequest");
 
 // quote/[[path]].ts
-var onRequest7 = /* @__PURE__ */ __name(async (context) => {
+var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   const { request: request2, env } = context;
   const url = new URL(request2.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
@@ -18641,7 +19000,7 @@ var onRequest7 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // r2/[[path]].ts
-var onRequest8 = /* @__PURE__ */ __name(async (context) => {
+var onRequest9 = /* @__PURE__ */ __name(async (context) => {
   const { request: request2, env } = context;
   const url = new URL(request2.url);
   const key = url.pathname.replace("/r2/", "");
@@ -18663,7 +19022,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // v1/[[path]].ts
-var onRequest9 = /* @__PURE__ */ __name(async (context) => {
+var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   const res = await handleSalesApi(context.request, context.env);
   if (res) return res;
   return new Response(JSON.stringify({ error: "Not Found" }), {
@@ -18671,210 +19030,6 @@ var onRequest9 = /* @__PURE__ */ __name(async (context) => {
     headers: { "Content-Type": "application/json" }
   });
 }, "onRequest");
-
-// ../workers/api/clerk-handshake.ts
-var HANDSHAKE_JWKS_CACHE_MS = 3600 * 1e3;
-var MAX_DIRECTIVES = 10;
-var MAX_DIRECTIVE_LENGTH = 8192;
-var JWT_CATEGORY_SESSION_TOKEN = "cl_B7d4PD111AAA";
-var JWT_CATEGORY_IGNORE = "cl_I7d4PD111III";
-var ALLOWED_COOKIE_NAME = /^(__session|__client_uat|__clerk_handshake)(_[A-Za-z0-9_-]{1,64})?$/;
-var ALLOWED_COOKIE_VALUE = /^[A-Za-z0-9._~%+/=-]*$/;
-var ALLOWED_SAMESITE = /* @__PURE__ */ new Set(["lax", "strict", "none"]);
-var handshakeJwksCache = /* @__PURE__ */ new Map();
-function b64urlToBytes(str) {
-  const base64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, "=");
-  const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-__name(b64urlToBytes, "b64urlToBytes");
-function getHandshakeToken(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
-  const m = cookieHeader.match(/(?:^|;\s*)__clerk_handshake=([^;]+)/);
-  if (m && m[1]) return m[1].trim();
-  try {
-    const qp = new URL(request2.url).searchParams.get("__clerk_handshake");
-    if (qp) return qp.trim();
-  } catch {
-  }
-  return null;
-}
-__name(getHandshakeToken, "getHandshakeToken");
-function isNonSessionJwtCategory(cat) {
-  return cat !== void 0 && cat !== JWT_CATEGORY_SESSION_TOKEN && cat !== JWT_CATEGORY_IGNORE;
-}
-__name(isNonSessionJwtCategory, "isNonSessionJwtCategory");
-async function verifyHandshakeJwt(token, env) {
-  const issuer = String(env?.CLERK_ISSUER || "").trim();
-  const jwksUrl = String(env?.CLERK_JWKS_URL || "").trim();
-  if (!issuer || !jwksUrl) return null;
-  const parts = token.split(".");
-  if (parts.length !== 3) return null;
-  let header;
-  try {
-    header = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[0])));
-  } catch {
-    return null;
-  }
-  if (header.typ !== void 0 && header.typ !== "JWT") return null;
-  if (header.alg !== "RS256" || !header.kid) return null;
-  if (isNonSessionJwtCategory(header.cat)) return null;
-  let keys;
-  try {
-    const cached = handshakeJwksCache.get(jwksUrl);
-    if (cached && Date.now() - cached.fetchedAt < HANDSHAKE_JWKS_CACHE_MS) {
-      keys = cached.keys;
-    } else {
-      const resp = await fetch(jwksUrl);
-      if (!resp.ok) return null;
-      const data = await resp.json();
-      keys = data.keys || [];
-      handshakeJwksCache.set(jwksUrl, { keys, fetchedAt: Date.now() });
-    }
-  } catch {
-    return null;
-  }
-  const jwk = keys.find((k) => k.kid === header.kid && k.alg === "RS256");
-  if (!jwk) return null;
-  let valid = false;
-  try {
-    const cryptoKey = await crypto.subtle.importKey(
-      "jwk",
-      { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: "RS256", ext: false },
-      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-      false,
-      ["verify"]
-    );
-    valid = await crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
-      cryptoKey,
-      b64urlToBytes(parts[2]),
-      new TextEncoder().encode(parts[0] + "." + parts[1])
-    );
-  } catch {
-    return null;
-  }
-  if (!valid) return null;
-  let payload;
-  try {
-    payload = JSON.parse(new TextDecoder().decode(b64urlToBytes(parts[1])));
-  } catch {
-    return null;
-  }
-  if (payload.iss && String(payload.iss) !== issuer) return null;
-  const now = Math.floor(Date.now() / 1e3);
-  if (typeof payload.exp === "number" && payload.exp > 0 && payload.exp < now) return null;
-  const list = payload.handshake;
-  if (!Array.isArray(list) || list.length === 0 || list.length > MAX_DIRECTIVES) return null;
-  if (!list.every((d) => typeof d === "string" && d.length <= MAX_DIRECTIVE_LENGTH)) return null;
-  return list;
-}
-__name(verifyHandshakeJwt, "verifyHandshakeJwt");
-function parseDirective(directive, requestHost) {
-  const segments = directive.split(";").map((s) => s.trim());
-  const first = segments.shift() || "";
-  const eq = first.indexOf("=");
-  if (eq <= 0) return null;
-  const name = first.slice(0, eq).trim();
-  const value = first.slice(eq + 1).trim();
-  if (!ALLOWED_COOKIE_NAME.test(name)) return null;
-  if (!ALLOWED_COOKIE_VALUE.test(value)) return null;
-  const attrs = [];
-  for (const seg of segments) {
-    if (!seg) continue;
-    const aEq = seg.indexOf("=");
-    const key = (aEq >= 0 ? seg.slice(0, aEq) : seg).trim().toLowerCase();
-    const val = aEq >= 0 ? seg.slice(aEq + 1).trim() : "";
-    if (key === "path") {
-      if (val !== "/") return null;
-      attrs.push("Path=/");
-    } else if (key === "domain") {
-      const domain = val.replace(/^\./, "").toLowerCase();
-      if (!/^[a-z0-9.-]+$/.test(domain)) return null;
-      if (requestHost !== domain && !requestHost.endsWith("." + domain)) return null;
-      attrs.push("Domain=" + domain);
-    } else if (key === "expires") {
-      const ts = Date.parse(val);
-      if (!Number.isFinite(ts)) return null;
-      attrs.push("Expires=" + new Date(ts).toUTCString());
-    } else if (key === "max-age") {
-      if (!/^\d{1,10}$/.test(val)) return null;
-      attrs.push("Max-Age=" + val);
-    } else if (key === "secure") {
-      attrs.push("Secure");
-    } else if (key === "httponly") {
-      attrs.push("HttpOnly");
-    } else if (key === "samesite") {
-      if (!ALLOWED_SAMESITE.has(val.toLowerCase())) return null;
-      attrs.push("SameSite=" + val.charAt(0).toUpperCase() + val.slice(1).toLowerCase());
-    }
-  }
-  return { name, value, serialized: [first.slice(0, eq).trim() + "=" + value, ...attrs].join("; ") };
-}
-__name(parseDirective, "parseDirective");
-function stripAuthParams(url) {
-  const clean = new URL(url.toString());
-  for (const p of ["__clerk_handshake", "__clerk_help", "__clerk_db_jwt", "__mm_hs"]) {
-    clean.searchParams.delete(p);
-  }
-  return clean.toString();
-}
-__name(stripAuthParams, "stripAuthParams");
-function redirectWithCookies(location, cookies) {
-  const headers = new Headers({ Location: location });
-  for (const c of cookies) headers.append("Set-Cookie", c);
-  return new Response(null, { status: 302, headers });
-}
-__name(redirectWithCookies, "redirectWithCookies");
-function signInUrl(url, env) {
-  const accountsDomain = String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
-  const target = new URL(`https://${accountsDomain}/sign-in`);
-  target.searchParams.set("redirect_url", url.origin + url.pathname);
-  return target.toString();
-}
-__name(signInUrl, "signInUrl");
-async function consumeClerkHandshake(request2, env) {
-  const token = getHandshakeToken(request2);
-  if (!token) return null;
-  const directives = await verifyHandshakeJwt(token, env);
-  if (!directives) return null;
-  const url = new URL(request2.url);
-  const host = url.hostname.toLowerCase();
-  const parsed = [];
-  let sessionToken = "";
-  let sawSessionDirective = false;
-  for (const d of directives) {
-    const p = parseDirective(d, host);
-    if (!p) continue;
-    if (/^__session(_|$)/.test(p.name)) {
-      sawSessionDirective = true;
-      if (p.value) sessionToken = p.value;
-    }
-    parsed.push(p);
-  }
-  if (sessionToken) {
-    const verifyReq = new Request(request2.url, {
-      headers: new Headers({
-        ...Object.fromEntries(request2.headers.entries()),
-        Authorization: `Bearer ${sessionToken}`
-      })
-    });
-    const result = await verifyClerkJwt(verifyReq, env);
-    if (result.valid) {
-      return redirectWithCookies(stripAuthParams(url), parsed.map((p) => p.serialized));
-    }
-    const clears = parsed.filter((p) => /^__clerk_handshake(_|$)/.test(p.name) && !p.value).map((p) => p.serialized);
-    return redirectWithCookies(signInUrl(url, env), clears);
-  }
-  if (sawSessionDirective) {
-    return redirectWithCookies(signInUrl(url, env), parsed.map((p) => p.serialized));
-  }
-  return null;
-}
-__name(consumeClerkHandshake, "consumeClerkHandshake");
 
 // account/_middleware.ts
 function getClerkSessionToken2(request2) {
@@ -18887,7 +19042,7 @@ function getClerkSessionToken2(request2) {
   return null;
 }
 __name(getClerkSessionToken2, "getClerkSessionToken");
-var onRequest10 = /* @__PURE__ */ __name(async (context) => {
+var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost(context.request.url)) {
     return context.next();
   }
@@ -18895,7 +19050,7 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
   if (handshakeResponse) return handshakeResponse;
   const sessionToken = getClerkSessionToken2(context.request);
   if (!sessionToken) {
-    return redirectToSignIn(context.request.url, context.env);
+    return redirectToSignIn2(context.request.url, context.env);
   }
   const modifiedRequest = new Request(context.request.url, {
     headers: new Headers({
@@ -18909,7 +19064,7 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
       const handshake = redirectToHandshake(context.request.url, context.env);
       if (handshake) return handshake;
     }
-    return redirectToSignIn(context.request.url, context.env);
+    return redirectToSignIn2(context.request.url, context.env);
   }
   const cleaned = stripHandshakeMarker(context.request.url);
   if (cleaned) return cleaned;
@@ -18944,7 +19099,7 @@ function stripHandshakeMarker(currentUrl) {
   }
 }
 __name(stripHandshakeMarker, "stripHandshakeMarker");
-function redirectToSignIn(currentUrl, env) {
+function redirectToSignIn2(currentUrl, env) {
   const parsed = new URL(currentUrl);
   const isDev = isDevelopmentAuthHost(currentUrl);
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
@@ -18953,7 +19108,7 @@ function redirectToSignIn(currentUrl, env) {
   signInUrl2.searchParams.set("redirect_url", cleanReturnUrl);
   return Response.redirect(signInUrl2.toString(), 302);
 }
-__name(redirectToSignIn, "redirectToSignIn");
+__name(redirectToSignIn2, "redirectToSignIn");
 function isDevelopmentAuthHost(url) {
   const parsed = new URL(url);
   const hostname = parsed.hostname.toLowerCase();
@@ -18963,63 +19118,6 @@ function isDevelopmentAuthHost(url) {
   return false;
 }
 __name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
-
-// ../workers/api/admin-auth.ts
-function collectRoles16(raw) {
-  if (!raw || typeof raw !== "object") return [];
-  const values = [];
-  const add = /* @__PURE__ */ __name((v) => {
-    if (v !== void 0 && v !== null) values.push(v);
-  }, "add");
-  add(raw.role);
-  add(raw.roles);
-  add(raw.org_role);
-  add(raw.orgRole);
-  add(raw.public_metadata?.role);
-  add(raw.public_metadata?.roles);
-  add(raw.unsafe_metadata?.role);
-  add(raw.unsafe_metadata?.roles);
-  add(raw.metadata?.role);
-  add(raw.metadata?.roles);
-  add(raw["https://mildmate.com/role"]);
-  add(raw["https://mildmate.com/roles"]);
-  const out = [];
-  values.forEach((v) => {
-    if (Array.isArray(v)) v.forEach((x) => out.push(String(x).toLowerCase().trim()));
-    else out.push(String(v).toLowerCase().trim());
-  });
-  return out.filter(Boolean);
-}
-__name(collectRoles16, "collectRoles");
-function hasAdminRole21(rawClaims) {
-  const roles = collectRoles16(rawClaims);
-  return roles.some(
-    (r) => r === "admin" || r === "super-admin" || r === "super_admin" || r === "superadmin" || r.endsWith(":admin") || r.endsWith("/admin")
-  );
-}
-__name(hasAdminRole21, "hasAdminRole");
-function emailAllowed20(email, env) {
-  if (!email) return false;
-  const allow = String(env.ADMIN_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
-__name(emailAllowed20, "emailAllowed");
-var BLOCKED_EMAILS = /* @__PURE__ */ new Set([
-  "mildmateshop@gmail.com",
-  "blanky5452@gmail.com",
-  "lxerleap@gmail.com",
-  "jasminecchimay@gmail.com",
-  "9601080851ke@gmail.com",
-  "azuzenap@gmail.com",
-  "matt.mourin@gmail.com",
-  "eugeneapseed@outlook.com",
-  "norrawich.rat@gmail.com"
-]);
-function emailBlocked(email) {
-  if (!email) return false;
-  return BLOCKED_EMAILS.has(email.toLowerCase());
-}
-__name(emailBlocked, "emailBlocked");
 
 // admin/_middleware.ts
 function getClerkSessionToken3(request2) {
@@ -19032,14 +19130,14 @@ function getClerkSessionToken3(request2) {
   return null;
 }
 __name(getClerkSessionToken3, "getClerkSessionToken");
-function getPrimaryClerkEmail3(user) {
+function getPrimaryClerkEmail4(user) {
   if (!user || typeof user !== "object") return "";
   const list = Array.isArray(user.email_addresses) ? user.email_addresses : [];
   const primaryId = user.primary_email_address_id;
   const primary = list.find((e) => e && e.id === primaryId);
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
-__name(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
+__name(getPrimaryClerkEmail4, "getPrimaryClerkEmail");
 async function enrichAdminFromClerk(sub, env) {
   const clerkKey = String(env.CLERK_SECRET_KEY || "").trim();
   if (!sub || !clerkKey) return { email: "", hasAdmin: false };
@@ -19049,7 +19147,7 @@ async function enrichAdminFromClerk(sub, env) {
     });
     if (!resp.ok) return { email: "", hasAdmin: false };
     const user = await resp.json();
-    const email = getPrimaryClerkEmail3(user);
+    const email = getPrimaryClerkEmail4(user);
     const metadataRaw = {
       role: user?.public_metadata?.role,
       roles: user?.public_metadata?.roles,
@@ -19059,13 +19157,13 @@ async function enrichAdminFromClerk(sub, env) {
       unsafe_metadata: user?.unsafe_metadata || {},
       metadata: user?.private_metadata || {}
     };
-    return { email, hasAdmin: hasAdminRole21(metadataRaw) };
+    return { email, hasAdmin: hasAdminRole2(metadataRaw) };
   } catch {
     return { email: "", hasAdmin: false };
   }
 }
 __name(enrichAdminFromClerk, "enrichAdminFromClerk");
-var onRequest11 = /* @__PURE__ */ __name(async (context) => {
+var onRequest12 = /* @__PURE__ */ __name(async (context) => {
   if (isDevelopmentAuthHost2(context.request.url)) {
     return context.next();
   }
@@ -19073,7 +19171,7 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
   if (handshakeResponse) return handshakeResponse;
   const sessionToken = getClerkSessionToken3(context.request);
   if (!sessionToken) {
-    return redirectToSignIn2(context.request.url, context.env);
+    return redirectToSignIn3(context.request.url, context.env);
   }
   const modifiedRequest = new Request(context.request.url, {
     headers: new Headers({
@@ -19087,22 +19185,22 @@ var onRequest11 = /* @__PURE__ */ __name(async (context) => {
       const handshake = redirectToHandshake2(context.request.url, context.env);
       if (handshake) return handshake;
     }
-    return redirectToSignIn2(context.request.url, context.env);
+    return redirectToSignIn3(context.request.url, context.env);
   }
   const cleaned = stripHandshakeMarker2(context.request.url);
   if (cleaned) return cleaned;
   const raw = result.payload.raw || {};
   let email = String(result.payload.email || "").trim().toLowerCase();
-  let hasAdmin = hasAdminRole21(raw);
-  let allowed = emailAllowed20(email, context.env);
+  let hasAdmin = hasAdminRole2(raw);
+  let allowed = emailAllowed2(email, context.env);
   if (!hasAdmin || !allowed) {
     const sub = String(result.payload.sub || "").trim();
     const enriched = await enrichAdminFromClerk(sub, context.env);
     if (enriched.email) email = enriched.email;
     hasAdmin = hasAdmin || enriched.hasAdmin;
-    allowed = allowed || emailAllowed20(email, context.env);
+    allowed = allowed || emailAllowed2(email, context.env);
   }
-  if (emailBlocked(email)) {
+  if (emailBlocked(email, context.env)) {
     return new Response(
       `<!DOCTYPE html>
 <html lang="en">
@@ -19153,16 +19251,28 @@ function stripHandshakeMarker2(currentUrl) {
   }
 }
 __name(stripHandshakeMarker2, "stripHandshakeMarker");
-function redirectToSignIn2(currentUrl, env) {
+function redirectToSignIn3(currentUrl, env) {
   const parsed = new URL(currentUrl);
   const isDev = isDevelopmentAuthHost2(currentUrl);
   const accountsDomain = isDev ? "kind-joey-29.accounts.dev" : String(env?.CLERK_ACCOUNTS_DOMAIN || "accounts.mildmate.com").trim();
-  const cleanReturnUrl = parsed.origin + parsed.pathname;
+  const clean = new URL(parsed.origin + parsed.pathname + parsed.search);
+  for (const key of Array.from(clean.searchParams.keys())) {
+    if (key.indexOf("__clerk_") === 0 || key === HANDSHAKE_MARKER2) {
+      clean.searchParams.delete(key);
+    }
+  }
+  const cleanReturnUrl = clean.origin + clean.pathname;
+  const isSuperAdminPath = clean.pathname.toLowerCase().startsWith("/super-admin");
+  const callbackReturnUrl = new URL("/auth/clerk-return/", clean.origin);
+  if (isSuperAdminPath) {
+    const nextPath = clean.pathname + clean.search;
+    callbackReturnUrl.searchParams.set("next", nextPath || "/super-admin/");
+  }
   const signInUrl2 = new URL(`https://${accountsDomain}/sign-in`);
-  signInUrl2.searchParams.set("redirect_url", cleanReturnUrl);
+  signInUrl2.searchParams.set("redirect_url", isSuperAdminPath ? callbackReturnUrl.toString() : cleanReturnUrl);
   return Response.redirect(signInUrl2.toString(), 302);
 }
-__name(redirectToSignIn2, "redirectToSignIn");
+__name(redirectToSignIn3, "redirectToSignIn");
 function escHtml3(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
@@ -19861,7 +19971,7 @@ async function fetchListingProducts(db, config) {
   return result?.results || [];
 }
 __name(fetchListingProducts, "fetchListingProducts");
-async function onRequest12(context) {
+async function onRequest13(context) {
   const url = new URL(context.request.url);
   const path = url.pathname;
   const prefixPath = path.endsWith("/") ? path : `${path}/`;
@@ -19979,7 +20089,7 @@ ${JSON_LD_WEBSITE}
   }
   return new Response(html, { status: response6.status, headers: finalHeaders });
 }
-__name(onRequest12, "onRequest");
+__name(onRequest13, "onRequest");
 function isDevCspHost(requestUrl) {
   try {
     const h = new URL(requestUrl).hostname.toLowerCase();
@@ -19998,7 +20108,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-Tm3Xdl/functionsRoutes-0.7055225621247175.mjs
+// ../.wrangler/tmp/pages-C0t08g/functionsRoutes-0.78873623829205.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -20008,94 +20118,101 @@ var routes = [
     modules: [onRequest]
   },
   {
+    routePath: "/auth/clerk-return/:path*",
+    mountPath: "/auth/clerk-return",
+    method: "",
+    middlewares: [],
+    modules: [onRequest2]
+  },
+  {
     routePath: "/th/blogs/:path*",
     mountPath: "/th/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest2]
+    modules: [onRequest3]
   },
   {
     routePath: "/th/product/:path*",
     mountPath: "/th/product",
     method: "",
     middlewares: [],
-    modules: [onRequest3]
+    modules: [onRequest4]
   },
   {
     routePath: "/api/:path*",
     mountPath: "/api",
     method: "",
     middlewares: [],
-    modules: [onRequest4]
+    modules: [onRequest5]
   },
   {
     routePath: "/blogs/:path*",
     mountPath: "/blogs",
     method: "",
     middlewares: [],
-    modules: [onRequest5]
+    modules: [onRequest6]
   },
   {
     routePath: "/product/:path*",
     mountPath: "/product",
     method: "",
     middlewares: [],
-    modules: [onRequest3]
+    modules: [onRequest4]
   },
   {
     routePath: "/products/:path*",
     mountPath: "/products",
     method: "",
     middlewares: [],
-    modules: [onRequest6]
+    modules: [onRequest7]
   },
   {
     routePath: "/quote/:path*",
     mountPath: "/quote",
     method: "",
     middlewares: [],
-    modules: [onRequest7]
+    modules: [onRequest8]
   },
   {
     routePath: "/r2/:path*",
     mountPath: "/r2",
     method: "",
     middlewares: [],
-    modules: [onRequest8]
+    modules: [onRequest9]
   },
   {
     routePath: "/v1/:path*",
     mountPath: "/v1",
     method: "",
     middlewares: [],
-    modules: [onRequest9]
+    modules: [onRequest10]
   },
   {
     routePath: "/account",
     mountPath: "/account",
     method: "",
-    middlewares: [onRequest10],
+    middlewares: [onRequest11],
     modules: []
   },
   {
     routePath: "/admin",
     mountPath: "/admin",
     method: "",
-    middlewares: [onRequest11],
+    middlewares: [onRequest12],
     modules: []
   },
   {
     routePath: "/super-admin",
     mountPath: "/super-admin",
     method: "",
-    middlewares: [onRequest11],
+    middlewares: [onRequest12],
     modules: []
   },
   {
     routePath: "/",
     mountPath: "/",
     method: "",
-    middlewares: [onRequest12],
+    middlewares: [onRequest13],
     modules: []
   }
 ];
