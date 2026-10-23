@@ -794,9 +794,7 @@
         (rows || []).forEach(function(m){
           var key = String(m.model_key || '');
           var label = String(m.model_label || m.model_name || key);
-          var adjustedUsd = getBoatModelAdjustedUsd(m);
-          var price = adjustedUsd > 0 ? ('$' + adjustedUsd.toFixed(2)) : '—';
-          opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' — ' + price + '</option>');
+          opts.push('<option value="' + key.replace(/"/g, '&quot;') + '">' + label.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</option>');
         });
         boatModelSelect.innerHTML = opts.join('');
       }
