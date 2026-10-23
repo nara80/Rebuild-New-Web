@@ -741,14 +741,8 @@
         var base = model && model.price_usd ? Number(model.price_usd) : 0;
         if(!isFinite(base) || base <= 0) base = 0;
         if(!isMarineProtector) return Math.round(base * 100) / 100;
-        var dims = (model && model.dimensions && typeof model.dimensions === 'object') ? model.dimensions : null;
-        var shapeCode = String((model && model.shape_code) || '').trim();
-        if(!dims || !shapeCode) return 0;
-        var topArea = getTopAreaFromValues(shapeCode, dims);
-        var depthCm = Number(dims.T || dims.t || dims.D || dims.d || 0);
-        if(!isFinite(depthCm) || depthCm <= 0 || topArea <= 0) return 0;
-        var bd = calcMarineProtectorBreakdown(topArea, depthCm);
-        return Math.round((bd.roundedThb / THB_PER_USD) * 100) / 100;
+        var protectorUsd = base * (1 + MARINE_PROTECTOR_MARGIN_RATE);
+        return Math.round(protectorUsd * 100) / 100;
       }
 
       function getModelDim(vals, key){
@@ -843,14 +837,9 @@
       function applyBoatModel(model, opts){
         var options = opts || {};
         activeBoatModel = model || null;
-        var modelUsd = getBoatModelAdjustedUsd(activeBoatModel);
         updateBoatModelMeta(activeBoatModel);
         if(activeBoatModel){
-          if(isMarineProtector && modelUsd <= 0){
-            setBoatModelStatus('Selected model is missing dimensions for formula pricing. Please update this model in Boat Models.', true);
-          } else {
-            setBoatModelStatus((isMarineProtector ? 'Using formula price for ' : 'Using fixed price for ') + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
-          }
+          setBoatModelStatus((isMarineProtector ? 'Using Boat Model price + Protector Marine Margin for ' : 'Using fixed price for ') + (activeBoatModel.model_label || activeBoatModel.model_name || activeBoatModel.model_key) + '.', false);
         } else if(!options.silentEmpty){
           setBoatModelStatus('No model selected. Choose a boat model to use Boat Model pricing.', false);
         }
@@ -900,7 +889,7 @@
 
       function loadBoatModels(){
         if(!boatModelSelect) return;
-        var endpoint = isMarineProtector ? '/api/boat-models?include_dimensions=1' : '/api/boat-models';
+        var endpoint = '/api/boat-models';
         fetch(endpoint)
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(payload){
@@ -1570,7 +1559,9 @@
             customPrice.textContent = fixedDisplay;
             priceDisplay.textContent = fixedDisplay;
             priceDisplayTop.textContent = fixedDisplay;
-            priceTopSub.textContent = 'Fixed price for selected boat model';
+            priceTopSub.textContent = isMarineProtector
+              ? 'Boat Model price + Protector Marine Margin'
+              : 'Fixed price for selected boat model';
             currentQuotePriceUsd = fixedUsd;
             currentQuotePriceThb = fixedThb;
             renderPriceBreakdown(null);
@@ -1578,13 +1569,12 @@
             if(warningEl) warningEl.style.display = 'none';
             return;
           }
-          if(activeBoatModel && isMarineProtector){
-            setBoatModelStatus('Selected model is missing dimensions for formula pricing. Please update this model in Boat Models.', true);
-          }
           customPrice.textContent = ' — ';
           priceDisplay.textContent = ' — ';
           priceDisplayTop.textContent = ' — ';
-          priceTopSub.textContent = 'Select a boat model to see fixed pricing';
+          priceTopSub.textContent = isMarineProtector
+            ? 'Select a boat model to see Boat Model + margin pricing'
+            : 'Select a boat model to see fixed pricing';
           currentQuotePriceThb = 0;
           currentQuotePriceUsd = 0;
           renderPriceBreakdown(null);
