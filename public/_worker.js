@@ -239,7 +239,7 @@ async function finishSyncRun(env, runId, data) {
   ).run();
 }
 __name(finishSyncRun, "finishSyncRun");
-async function requireBearerAuth(request2, env) {
+async function requireBearerAuth(request, env) {
   const configured = trimTo(env[SALES_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -249,7 +249,7 @@ async function requireBearerAuth(request2, env) {
       message: `${SALES_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request2.headers.get("Authorization") || "";
+  const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -381,8 +381,8 @@ function compareItem(existing, incoming) {
   return same(existing.item_no, incoming.item_no) && same(existing.product_id, incoming.product_id) && same(existing.quantity, incoming.quantity) && same(existing.raw_item_text, incoming.raw_item_text) && same(existing.line_revenue, incoming.line_revenue) && same(existing.revenue_status, incoming.revenue_status) && same(existing.mapping_status, incoming.mapping_status) && parseItemStatus(existing.item_status) === parseItemStatus(incoming.item_status);
 }
 __name(compareItem, "compareItem");
-async function handleUpsert(request2, env) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleUpsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({
       success: false,
@@ -393,7 +393,7 @@ async function handleUpsert(request2, env) {
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response({
       success: false,
@@ -627,8 +627,8 @@ async function handleUpsert(request2, env) {
   }
 }
 __name(handleUpsert, "handleUpsert");
-async function handleReadOrder(request2, env, sourcePart, orderPart) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleReadOrder(request, env, sourcePart, orderPart) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({
       success: false,
@@ -692,8 +692,8 @@ function parseProductIdsJson(raw) {
   }
 }
 __name(parseProductIdsJson, "parseProductIdsJson");
-async function handleMappingCatalog(request2, env) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleMappingCatalog(request, env) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
@@ -719,14 +719,14 @@ async function recordAliasHit(env, aliasId) {
   ).bind((/* @__PURE__ */ new Date()).toISOString(), aliasId).run();
 }
 __name(recordAliasHit, "recordAliasHit");
-async function handleMappingResolve(request2, env) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleMappingResolve(request, env) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -808,14 +808,14 @@ async function handleMappingResolve(request2, env) {
   });
 }
 __name(handleMappingResolve, "handleMappingResolve");
-async function handleMappingAliasUpsert(request2, env) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleMappingAliasUpsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -872,8 +872,8 @@ async function handleMappingAliasUpsert(request2, env) {
   return response({ success: true, action: "created", alias_id: Number(ins.meta?.last_row_id || 0), product_ids: productIds });
 }
 __name(handleMappingAliasUpsert, "handleMappingAliasUpsert");
-async function handleMappingAliasList(request2, env) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleMappingAliasList(request, env) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
@@ -889,14 +889,14 @@ async function handleMappingAliasList(request2, env) {
 __name(handleMappingAliasList, "handleMappingAliasList");
 var ALLOWED_MAPPING_METHOD = /* @__PURE__ */ new Set(["EXACT_VARIATION", "EXACT_ALIAS", "LISTING_VARIATION", "RULE", "AI", "HUMAN"]);
 var ALLOWED_RESULT_STATUS = /* @__PURE__ */ new Set(["Mapped", "Partial", "Review Required", "Unmapped"]);
-async function handleMappingEventInsert(request2, env) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleMappingEventInsert(request, env) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -936,8 +936,8 @@ async function handleMappingEventInsert(request2, env) {
   return response({ success: true, action: "created", event_id: Number(ins.meta?.last_row_id || 0) });
 }
 __name(handleMappingEventInsert, "handleMappingEventInsert");
-async function handleMappingEventList(request2, env, url) {
-  const auth = await requireBearerAuth(request2, env);
+async function handleMappingEventList(request, env, url) {
+  const auth = await requireBearerAuth(request, env);
   if (!auth.ok) {
     return response({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   }
@@ -952,10 +952,10 @@ async function handleMappingEventList(request2, env, url) {
   return response({ success: true, count: (rows.results || []).length, events: rows.results || [] });
 }
 __name(handleMappingEventList, "handleMappingEventList");
-async function handleSalesApi(request2, env) {
-  const url = new URL(request2.url);
+async function handleSalesApi(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request2.method.toUpperCase();
+  const method = request.method.toUpperCase();
   if (!path.startsWith("/v1") && !path.startsWith("/api/v1")) {
     return null;
   }
@@ -965,21 +965,21 @@ async function handleSalesApi(request2, env) {
     return response({ ok: true, service: SALES_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/sales/orders/upsert" || path === "/api/v1/sales/orders/upsert")) {
-    return handleUpsert(request2, env);
+    return handleUpsert(request, env);
   }
   const readMatch = path.match(/^\/(?:api\/)?v1\/sales\/orders\/([^\/]+)\/([^\/]+)$/i);
   if (method === "GET" && readMatch) {
-    return handleReadOrder(request2, env, readMatch[1], readMatch[2]);
+    return handleReadOrder(request, env, readMatch[1], readMatch[2]);
   }
   const mappingMatch = path.match(/^\/(?:api\/)?v1\/mapping\/(catalog|resolve|aliases|events)$/i);
   if (mappingMatch) {
     const sub = mappingMatch[1].toLowerCase();
-    if (sub === "catalog" && method === "GET") return handleMappingCatalog(request2, env);
-    if (sub === "resolve" && method === "POST") return handleMappingResolve(request2, env);
-    if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request2, env);
-    if (sub === "aliases" && method === "GET") return handleMappingAliasList(request2, env);
-    if (sub === "events" && method === "POST") return handleMappingEventInsert(request2, env);
-    if (sub === "events" && method === "GET") return handleMappingEventList(request2, env, url);
+    if (sub === "catalog" && method === "GET") return handleMappingCatalog(request, env);
+    if (sub === "resolve" && method === "POST") return handleMappingResolve(request, env);
+    if (sub === "aliases" && method === "POST") return handleMappingAliasUpsert(request, env);
+    if (sub === "aliases" && method === "GET") return handleMappingAliasList(request, env);
+    if (sub === "events" && method === "POST") return handleMappingEventInsert(request, env);
+    if (sub === "events" && method === "GET") return handleMappingEventList(request, env, url);
   }
   return response({ error: "Sales route not found" }, 404);
 }
@@ -1120,7 +1120,7 @@ function sameNullableNum(a, b) {
   return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum, "sameNullableNum");
-async function requireBearerAuth2(request2, env) {
+async function requireBearerAuth2(request, env) {
   const configured = trimTo2(env[GSC_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -1130,7 +1130,7 @@ async function requireBearerAuth2(request2, env) {
       message: `${GSC_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request2.headers.get("Authorization") || "";
+  const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -1183,12 +1183,12 @@ async function resolveProductIdBySlug(env, slug, cache) {
   return id;
 }
 __name(resolveProductIdBySlug, "resolveProductIdBySlug");
-async function handleRowsUpsert(request2, env) {
-  const auth = await requireBearerAuth2(request2, env);
+async function handleRowsUpsert(request, env) {
+  const auth = await requireBearerAuth2(request, env);
   if (!auth.ok) return response2({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response2({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -1345,17 +1345,17 @@ async function handleRowsUpsert(request2, env) {
   }
 }
 __name(handleRowsUpsert, "handleRowsUpsert");
-async function handleGscApi(request2, env) {
-  const url = new URL(request2.url);
+async function handleGscApi(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request2.method.toUpperCase();
+  const method = request.method.toUpperCase();
   if (!path.startsWith("/v1/gsc") && !path.startsWith("/api/v1/gsc")) return null;
   if (method === "OPTIONS") return response2({ ok: true });
   if (method === "GET" && (path === "/v1/gsc/health" || path === "/api/v1/gsc/health")) {
     return response2({ ok: true, service: GSC_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/gsc/rows/upsert" || path === "/api/v1/gsc/rows/upsert")) {
-    return handleRowsUpsert(request2, env);
+    return handleRowsUpsert(request, env);
   }
   return response2({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GSC route not found." }, 404);
 }
@@ -1513,7 +1513,7 @@ function sameNullableNum2(a, b) {
   return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum2, "sameNullableNum");
-async function requireBearerAuth3(request2, env) {
+async function requireBearerAuth3(request, env) {
   const configured = trimTo3(env[GA4_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -1523,7 +1523,7 @@ async function requireBearerAuth3(request2, env) {
       message: `${GA4_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request2.headers.get("Authorization") || "";
+  const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -1574,12 +1574,12 @@ async function resolveProductIdBySlug2(env, slug, cache) {
   return id;
 }
 __name(resolveProductIdBySlug2, "resolveProductIdBySlug");
-async function handleRowsUpsert2(request2, env) {
-  const auth = await requireBearerAuth3(request2, env);
+async function handleRowsUpsert2(request, env) {
+  const auth = await requireBearerAuth3(request, env);
   if (!auth.ok) return response3({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response3({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -1784,17 +1784,17 @@ async function handleRowsUpsert2(request2, env) {
   }
 }
 __name(handleRowsUpsert2, "handleRowsUpsert");
-async function handleGa4Api(request2, env) {
-  const url = new URL(request2.url);
+async function handleGa4Api(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request2.method.toUpperCase();
+  const method = request.method.toUpperCase();
   if (!path.startsWith("/v1/ga4") && !path.startsWith("/api/v1/ga4")) return null;
   if (method === "OPTIONS") return response3({ ok: true });
   if (method === "GET" && (path === "/v1/ga4/health" || path === "/api/v1/ga4/health")) {
     return response3({ ok: true, service: GA4_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/ga4/rows/upsert" || path === "/api/v1/ga4/rows/upsert")) {
-    return handleRowsUpsert2(request2, env);
+    return handleRowsUpsert2(request, env);
   }
   return response3({ success: false, error_code: "ROUTE_NOT_FOUND", message: "GA4 route not found." }, 404);
 }
@@ -1894,7 +1894,7 @@ function sameNullableNum3(a, b) {
   return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum3, "sameNullableNum");
-async function requireBearerAuth4(request2, env) {
+async function requireBearerAuth4(request, env) {
   const configured = trimTo4(env[ETSY_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -1904,7 +1904,7 @@ async function requireBearerAuth4(request2, env) {
       message: `${ETSY_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request2.headers.get("Authorization") || "";
+  const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -1976,12 +1976,12 @@ async function resolveListingAliasProduct(env, listingId) {
   return { productId: null, mappingScope: "unmapped" };
 }
 __name(resolveListingAliasProduct, "resolveListingAliasProduct");
-async function handleRowsUpsert3(request2, env) {
-  const auth = await requireBearerAuth4(request2, env);
+async function handleRowsUpsert3(request, env) {
+  const auth = await requireBearerAuth4(request, env);
   if (!auth.ok) return response4({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response4({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -2252,17 +2252,17 @@ async function handleRowsUpsert3(request2, env) {
   }
 }
 __name(handleRowsUpsert3, "handleRowsUpsert");
-async function handleEtsyApi(request2, env) {
-  const url = new URL(request2.url);
+async function handleEtsyApi(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request2.method.toUpperCase();
+  const method = request.method.toUpperCase();
   if (!path.startsWith("/v1/etsy") && !path.startsWith("/api/v1/etsy")) return null;
   if (method === "OPTIONS") return response4({ ok: true });
   if (method === "GET" && (path === "/v1/etsy/health" || path === "/api/v1/etsy/health")) {
     return response4({ ok: true, service: ETSY_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/etsy/rows/upsert" || path === "/api/v1/etsy/rows/upsert")) {
-    return handleRowsUpsert3(request2, env);
+    return handleRowsUpsert3(request, env);
   }
   return response4({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Etsy route not found." }, 404);
 }
@@ -2361,7 +2361,7 @@ function sameNullableNum4(a, b) {
   return Math.abs(x - y) < 1e-6;
 }
 __name(sameNullableNum4, "sameNullableNum");
-async function requireBearerAuth5(request2, env) {
+async function requireBearerAuth5(request, env) {
   const configured = trimTo5(env[GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME], 500);
   if (!configured) {
     return {
@@ -2371,7 +2371,7 @@ async function requireBearerAuth5(request2, env) {
       message: `${GOOGLE_ADS_SYNC_TOKEN_SECRET_NAME} is not configured`
     };
   }
-  const auth = request2.headers.get("Authorization") || "";
+  const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) {
     return { ok: false, status: 401, code: "UNAUTHORIZED", message: "Missing Bearer token" };
   }
@@ -2448,12 +2448,12 @@ async function resolveAliasProduct(env, value) {
   return { productId: null, mappingScope: "unmapped" };
 }
 __name(resolveAliasProduct, "resolveAliasProduct");
-async function handleRowsUpsert4(request2, env) {
-  const auth = await requireBearerAuth5(request2, env);
+async function handleRowsUpsert4(request, env) {
+  const auth = await requireBearerAuth5(request, env);
   if (!auth.ok) return response5({ success: false, error_code: auth.code, message: auth.message }, auth.status);
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return response5({ success: false, error_code: "INVALID_JSON", message: "Body must be valid JSON." }, 400);
   }
@@ -2675,17 +2675,17 @@ async function handleRowsUpsert4(request2, env) {
   }
 }
 __name(handleRowsUpsert4, "handleRowsUpsert");
-async function handleGoogleAdsApi(request2, env) {
-  const url = new URL(request2.url);
+async function handleGoogleAdsApi(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
-  const method = request2.method.toUpperCase();
+  const method = request.method.toUpperCase();
   if (!path.startsWith("/v1/google-ads") && !path.startsWith("/api/v1/google-ads")) return null;
   if (method === "OPTIONS") return response5({ ok: true });
   if (method === "GET" && (path === "/v1/google-ads/health" || path === "/api/v1/google-ads/health")) {
     return response5({ ok: true, service: GOOGLE_ADS_SERVICE_NAME });
   }
   if (method === "POST" && (path === "/v1/google-ads/rows/upsert" || path === "/api/v1/google-ads/rows/upsert")) {
-    return handleRowsUpsert4(request2, env);
+    return handleRowsUpsert4(request, env);
   }
   return response5({ success: false, error_code: "ROUTE_NOT_FOUND", message: "Google Ads route not found." }, 404);
 }
@@ -2803,9 +2803,9 @@ async function importRsaKey(jwk) {
   );
 }
 __name(importRsaKey, "importRsaKey");
-async function verifyClerkJwt(request2, env) {
-  const origin = request2.headers.get("Origin") || "";
-  const host = request2.headers.get("Host") || "";
+async function verifyClerkJwt(request, env) {
+  const origin = request.headers.get("Origin") || "";
+  const host = request.headers.get("Host") || "";
   const allowedOrigins = [
     "https://mildmate-new.pages.dev",
     "https://www.mildmate.com"
@@ -2814,18 +2814,18 @@ async function verifyClerkJwt(request2, env) {
     return { valid: false, error: "Invalid origin", status: 403 };
   }
   try {
-    const requestHost = new URL(request2.url).hostname.toLowerCase();
+    const requestHost = new URL(request.url).hostname.toLowerCase();
     if (isProductionHostname(requestHost) && !isProdClerkConfigured(env)) {
       return { valid: false, error: "Auth service unavailable", status: 503 };
     }
   } catch {
   }
-  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
   if (await checkAuthRateLimit(env, ip)) {
     return { valid: false, error: "Too many requests", status: 429 };
   }
   await recordRateLimit(env, ip);
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
   if (!token) {
     return { valid: false, error: "Missing token", status: 401 };
@@ -2931,12 +2931,12 @@ function b64urlToBytes(str) {
   return bytes;
 }
 __name(b64urlToBytes, "b64urlToBytes");
-function getHandshakeToken(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getHandshakeToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const m = cookieHeader.match(/(?:^|;\s*)__clerk_handshake=([^;]+)/);
   if (m && m[1]) return m[1].trim();
   try {
-    const qp = new URL(request2.url).searchParams.get("__clerk_handshake");
+    const qp = new URL(request.url).searchParams.get("__clerk_handshake");
     if (qp) return qp.trim();
   } catch {
   }
@@ -3076,12 +3076,12 @@ function signInUrl(url, env) {
   return target.toString();
 }
 __name(signInUrl, "signInUrl");
-async function consumeClerkHandshake(request2, env) {
-  const token = getHandshakeToken(request2);
+async function consumeClerkHandshake(request, env) {
+  const token = getHandshakeToken(request);
   if (!token) return null;
   const directives = await verifyHandshakeJwt(token, env);
   if (!directives) return null;
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const host = url.hostname.toLowerCase();
   const parsed = [];
   let sessionToken = "";
@@ -3096,9 +3096,9 @@ async function consumeClerkHandshake(request2, env) {
     parsed.push(p);
   }
   if (sessionToken) {
-    const verifyReq = new Request(request2.url, {
+    const verifyReq = new Request(request.url, {
       headers: new Headers({
-        ...Object.fromEntries(request2.headers.entries()),
+        ...Object.fromEntries(request.headers.entries()),
         Authorization: `Bearer ${sessionToken}`
       })
     });
@@ -3131,8 +3131,8 @@ function normalizeNextPath(raw) {
   }
 }
 __name(normalizeNextPath, "normalizeNextPath");
-function getSessionToken(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getSessionToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   if (cookieMatch && cookieMatch[1]) return cookieMatch[1].trim();
   return "";
@@ -3555,8 +3555,8 @@ __name(buildBlogPostHTML, "buildBlogPostHTML");
 
 // th/blogs/[[path]].ts
 async function onRequest3(context) {
-  const { request: request2, env, next } = context;
-  const url = new URL(request2.url);
+  const { request, env, next } = context;
+  const url = new URL(request.url);
   const path = url.pathname;
   if (path === "/th/blogs/" || path === "/th/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -4096,10 +4096,19 @@ async function onRequest4(context) {
     if (isTh) {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
-    const stmt = context.env.DB.prepare(
-      "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
-    ).bind(slug);
-    const product = await stmt.first();
+    let product = null;
+    try {
+      const stmt = context.env.DB.prepare(
+        "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      ).bind(slug);
+      product = await stmt.first();
+    } catch (dbErr) {
+      console.warn("Product SSR: primary product query failed, retrying with compatibility projection", dbErr);
+      const fallbackStmt = context.env.DB.prepare(
+        "SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+      ).bind(slug);
+      product = await fallbackStmt.first();
+    }
     const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
     const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
@@ -4270,7 +4279,7 @@ async function onRequest4(context) {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=60",
-        "Content-Security-Policy": securityCsp(request.url)
+        "Content-Security-Policy": securityCsp(context.request.url)
       }
     });
   } catch (err4) {
@@ -4389,8 +4398,8 @@ async function getProductBySlug(env, slug) {
   return result;
 }
 __name(getProductBySlug, "getProductBySlug");
-async function handleProducts(request2, env) {
-  const url = new URL(request2.url);
+async function handleProducts(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname;
   if (path === "/api/products" || path === "/api/products/") {
     const category = url.searchParams.get("category") || void 0;
@@ -4958,11 +4967,11 @@ async function loadDerivedMarkupMap(env) {
   return out;
 }
 __name(loadDerivedMarkupMap, "loadDerivedMarkupMap");
-async function handlePricing(request2, env) {
-  const url = new URL(request2.url);
+async function handlePricing(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname;
   if (path === "/api/pricing" || path === "/api/pricing/") {
-    if (request2.method !== "POST" && request2.method !== "GET") {
+    if (request.method !== "POST" && request.method !== "GET") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
         headers: { "Content-Type": "application/json" }
@@ -4970,8 +4979,8 @@ async function handlePricing(request2, env) {
     }
     try {
       let body;
-      if (request2.method === "POST") {
-        body = await request2.json();
+      if (request.method === "POST") {
+        body = await request.json();
       } else {
         const params = url.searchParams;
         body = {
@@ -5106,8 +5115,8 @@ var COUNTRY_NAMES = {
   KE: "Kenya",
   MA: "Morocco"
 };
-function detectGeo(request2) {
-  const headers = request2.headers;
+function detectGeo(request) {
+  const headers = request.headers;
   const country = headers.get("CF-IPCountry") || headers.get("cf-ipcountry") || null;
   const isThailand = country === "TH";
   return {
@@ -5118,8 +5127,8 @@ function detectGeo(request2) {
   };
 }
 __name(detectGeo, "detectGeo");
-async function handleGeo(request2, env) {
-  const result = detectGeo(request2);
+async function handleGeo(request, env) {
+  const result = detectGeo(request);
   return new Response(JSON.stringify(result), {
     headers: {
       "Content-Type": "application/json",
@@ -5283,13 +5292,13 @@ async function ensureCountryMasterSchema(env) {
   await countryMasterPromise;
 }
 __name(ensureCountryMasterSchema, "ensureCountryMasterSchema");
-async function handleCountries(request2, env) {
-  if (request2.method !== "GET") {
+async function handleCountries(request, env) {
+  if (request.method !== "GET") {
     return json({ error: "Method not allowed" }, 405);
   }
   try {
     await ensureCountryMasterSchema(env);
-    const url = new URL(request2.url);
+    const url = new URL(request.url);
     const includeFallback = url.searchParams.get("include_fallback") === "1";
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name, phone_code, is_fallback
@@ -5411,16 +5420,16 @@ function isValidEmail(email) {
 }
 __name(isValidEmail, "isValidEmail");
 var SUBSCRIBE_RATE_LIMIT = 2;
-async function handleSubscribe(request2, env) {
+async function handleSubscribe(request, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed. Use POST." }),
       { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -5428,7 +5437,7 @@ async function handleSubscribe(request2, env) {
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return new Response(
       JSON.stringify({ error: "Invalid JSON body" }),
@@ -5441,7 +5450,7 @@ async function handleSubscribe(request2, env) {
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
-  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
   const db = env.DB;
   const rateRow = await db.prepare(
     `SELECT COUNT(*) as cnt FROM rate_limits WHERE ip_address = ? AND endpoint = 'subscribe' AND created_at > datetime('now', '-1 hour')`
@@ -5528,8 +5537,8 @@ Date: ${(/* @__PURE__ */ new Date()).toISOString()}`
 __name(handleSubscribe, "handleSubscribe");
 
 // ../workers/api/unsubscribe.ts
-async function handleUnsubscribe(request2, env) {
-  if (request2.method !== "POST") {
+async function handleUnsubscribe(request, env) {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ message: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
@@ -5537,7 +5546,7 @@ async function handleUnsubscribe(request2, env) {
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return new Response(JSON.stringify({ message: "Invalid JSON body" }), {
       status: 400,
@@ -5639,16 +5648,16 @@ async function verifyTurnstile(env, token, ip) {
   }
 }
 __name(verifyTurnstile, "verifyTurnstile");
-async function handleContact(request2, env) {
+async function handleContact(request, env) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed. Use POST." }),
       { status: 405, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -5656,7 +5665,7 @@ async function handleContact(request2, env) {
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return new Response(
       JSON.stringify({ error: "Invalid JSON body" }),
@@ -5669,7 +5678,7 @@ async function handleContact(request2, env) {
   const subject = (body.subject || "").trim() || inquiryType || "General Inquiry";
   const message = (body.message || "").trim();
   const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
-  const ip = request2.headers.get("cf-connecting-ip") || "unknown";
+  const ip = request.headers.get("cf-connecting-ip") || "unknown";
   const turnstile = await verifyTurnstile(env, turnstileToken, ip);
   if (!turnstile.ok) {
     return new Response(
@@ -5695,7 +5704,7 @@ ${message}
 
 ---
 Sent from: ${ip}
-User-Agent: ${request2.headers.get("user-agent") || "unknown"}`;
+User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
   let emailStatus = "not_sent";
   try {
     const result = await sendEmail(env, {
@@ -5789,9 +5798,9 @@ async function verifyTurnstile2(env, token, ip) {
   }
 }
 __name(verifyTurnstile2, "verifyTurnstile");
-async function handleQuote(request2, env) {
-  const url = new URL(request2.url);
-  if (request2.method === "GET") {
+async function handleQuote(request, env) {
+  const url = new URL(request.url);
+  if (request.method === "GET") {
     const quoteId = url.searchParams.get("quote_id");
     if (!quoteId) {
       return new Response(JSON.stringify({ error: "Missing quote_id parameter" }), {
@@ -5856,14 +5865,14 @@ async function handleQuote(request2, env) {
       });
     }
   }
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
     });
   }
   try {
-    const body = await request2.json();
+    const body = await request.json();
     const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
     const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
     if (_website && _website.length > 0) {
@@ -5872,7 +5881,7 @@ async function handleQuote(request2, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const ip = request2.headers.get("cf-connecting-ip") || "unknown";
+    const ip = request.headers.get("cf-connecting-ip") || "unknown";
     const turnstile = await verifyTurnstile2(env, turnstileToken, ip);
     if (!turnstile.ok) {
       return new Response(JSON.stringify({
@@ -6062,10 +6071,10 @@ Price: ${priceLine}
 __name(buildQuoteEmail, "buildQuoteEmail");
 
 // ../workers/api/pricing-params.ts
-async function handlePricingParams(request2, env) {
-  const url = new URL(request2.url);
+async function handlePricingParams(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname;
-  if (request2.method === "GET" && path === "/api/pricing-params") {
+  if (request.method === "GET" && path === "/api/pricing-params") {
     const { results: params } = await env.DB.prepare(
       "SELECT key, value, label, category FROM pricing_params ORDER BY category, key"
     ).all();
@@ -6131,7 +6140,7 @@ async function handlePricingParams(request2, env) {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" }
     });
   }
-  if (request2.method === "GET" && path === "/api/diy-prices") {
+  if (request.method === "GET" && path === "/api/diy-prices") {
     const product = url.searchParams.get("product") || "";
     let query = "SELECT shape_code, size_key, price_thb, price_usd, label FROM diy_prices";
     const bindings = [];
@@ -6214,12 +6223,12 @@ function getPrimaryClerkEmail(user) {
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
 __name(getPrimaryClerkEmail, "getPrimaryClerkEmail");
-async function isClerkAdmin(request2, env) {
+async function isClerkAdmin(request, env) {
   try {
-    const authHeader = request2.headers.get("Authorization") || "";
+    const authHeader = request.headers.get("Authorization") || "";
     const hasBearer = authHeader.startsWith("Bearer ");
     if (!hasBearer) return false;
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return false;
     const raw = verified.payload.raw || {};
     if (hasAdminRole(raw) || emailAllowed(verified.payload.email || "", env)) return true;
@@ -6254,15 +6263,15 @@ function isProductionHostPricing(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHostPricing, "isProductionHostPricing");
-async function authorizeAdminPricing(request2, env) {
-  const clerkOk = await isClerkAdmin(request2, env);
+async function authorizeAdminPricing(request, env) {
+  const clerkOk = await isClerkAdmin(request, env);
   if (clerkOk) return { ok: true };
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHostPricing(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -6273,15 +6282,15 @@ async function authorizeAdminPricing(request2, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdminPricing, "authorizeAdminPricing");
-async function handleAdminPricingParams(request2, env) {
-  const auth = await authorizeAdminPricing(request2, env);
+async function handleAdminPricingParams(request, env) {
+  const auth = await authorizeAdminPricing(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     try {
       await ensureDerivedMarkupDefaults(env);
       const { results } = await env.DB.prepare(
@@ -6297,9 +6306,9 @@ async function handleAdminPricingParams(request2, env) {
       });
     }
   }
-  if (request2.method === "POST" || request2.method === "PUT") {
+  if (request.method === "POST" || request.method === "PUT") {
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const { key, value, label, category } = body;
       if (!key || value === void 0) {
         return new Response(JSON.stringify({ error: "key and value are required" }), {
@@ -6327,8 +6336,8 @@ async function handleAdminPricingParams(request2, env) {
       });
     }
   }
-  if (request2.method === "DELETE") {
-    const url = new URL(request2.url);
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
     const key = url.searchParams.get("key");
     if (!key) {
       return new Response(JSON.stringify({ error: "?key= required" }), {
@@ -6462,19 +6471,19 @@ function isProductionHost(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost, "isProductionHost");
-function hasBearerAuth(request2) {
-  return (request2.headers.get("Authorization") || "").startsWith("Bearer ");
+function hasBearerAuth(request) {
+  return (request.headers.get("Authorization") || "").startsWith("Bearer ");
 }
 __name(hasBearerAuth, "hasBearerAuth");
 function configuredAdminSecret(env) {
   return typeof env?.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
 }
 __name(configuredAdminSecret, "configuredAdminSecret");
-async function authorizeAdminBrowser(request2, env) {
-  if (!hasBearerAuth(request2)) {
+async function authorizeAdminBrowser(request, env) {
+  if (!hasBearerAuth(request)) {
     return { ok: false, status: 401, error: "Unauthorized: bearer token required" };
   }
-  const verified = await verifyClerkJwt(request2, env);
+  const verified = await verifyClerkJwt(request, env);
   if (!verified.valid) {
     return { ok: false, status: verified.status, error: verified.error };
   }
@@ -6498,8 +6507,8 @@ async function authorizeAdminBrowser(request2, env) {
   return { ok: false, status: 403, error: "Forbidden: admin role and email allowlist required" };
 }
 __name(authorizeAdminBrowser, "authorizeAdminBrowser");
-async function authorizeAdminMachineSecret(request2, env) {
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+async function authorizeAdminMachineSecret(request, env) {
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
@@ -6513,33 +6522,33 @@ async function authorizeAdminMachineSecret(request2, env) {
   return { ok: true };
 }
 __name(authorizeAdminMachineSecret, "authorizeAdminMachineSecret");
-async function authorizeAdminForRoute(request2, env, pathname) {
+async function authorizeAdminForRoute(request, env, pathname) {
   const mode = classifyAdminApiPath(pathname);
   if (mode === "not_admin") return { ok: true };
   if (mode === "machine_secret") {
-    if (hasBearerAuth(request2)) return authorizeAdminBrowser(request2, env);
-    return authorizeAdminMachineSecret(request2, env);
+    if (hasBearerAuth(request)) return authorizeAdminBrowser(request, env);
+    return authorizeAdminMachineSecret(request, env);
   }
-  return authorizeAdminBrowser(request2, env);
+  return authorizeAdminBrowser(request, env);
 }
 __name(authorizeAdminForRoute, "authorizeAdminForRoute");
-async function authorizeAdmin(request2, env) {
-  if (hasBearerAuth(request2)) {
-    return authorizeAdminBrowser(request2, env);
+async function authorizeAdmin(request, env) {
+  if (hasBearerAuth(request)) {
+    return authorizeAdminBrowser(request, env);
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
     return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
   }
-  return authorizeAdminMachineSecret(request2, env);
+  return authorizeAdminMachineSecret(request, env);
 }
 __name(authorizeAdmin, "authorizeAdmin");
 
 // ../workers/api/admin-diy.ts
-async function handleAdminDiyPrices(request2, env) {
-  if (request2.method === "OPTIONS") {
+async function handleAdminDiyPrices(request, env) {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
       headers: {
@@ -6549,16 +6558,16 @@ async function handleAdminDiyPrices(request2, env) {
       }
     });
   }
-  const auth = await authorizeAdmin(request2, env);
+  const auth = await authorizeAdmin(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
-  if (request2.method === "POST" || request2.method === "PUT") {
+  if (request.method === "POST" || request.method === "PUT") {
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const { id, product_slug, shape_code, size_key, price_thb, price_usd, label } = body;
       if (!product_slug || price_thb === void 0 || price_usd === void 0) {
         return new Response(JSON.stringify({ error: "product_slug, price_thb, price_usd are required" }), {
@@ -6583,8 +6592,8 @@ async function handleAdminDiyPrices(request2, env) {
       });
     }
   }
-  if (request2.method === "DELETE") {
-    const url = new URL(request2.url);
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
     const id = url.searchParams.get("id");
     const product = url.searchParams.get("product");
     const shape = url.searchParams.get("shape_code");
@@ -6610,8 +6619,8 @@ async function handleAdminDiyPrices(request2, env) {
 __name(handleAdminDiyPrices, "handleAdminDiyPrices");
 
 // ../workers/api/admin-exchange.ts
-async function handleAdminExchangeRates(request2, env) {
-  if (request2.method === "OPTIONS") {
+async function handleAdminExchangeRates(request, env) {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
       headers: {
@@ -6621,16 +6630,16 @@ async function handleAdminExchangeRates(request2, env) {
       }
     });
   }
-  const auth = await authorizeAdmin(request2, env);
+  const auth = await authorizeAdmin(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
     });
   }
-  if (request2.method === "POST" || request2.method === "PUT") {
+  if (request.method === "POST" || request.method === "PUT") {
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const { currency, rate_per_thb, label, symbol } = body;
       if (!currency || rate_per_thb === void 0) {
         return new Response(JSON.stringify({ error: "currency and rate_per_thb are required" }), {
@@ -6736,13 +6745,13 @@ function emailAllowed3(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed3, "emailAllowed");
-async function authCheck(request2, env) {
-  const hostname = request2.headers.get("Host") || "";
+async function authCheck(request, env) {
+  const hostname = request.headers.get("Host") || "";
   const prodHost = isProductionHost2(hostname);
   if (!prodHost) return true;
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole3(raw) || emailAllowed3(verified.payload.email || "", env)) return true;
@@ -6764,23 +6773,23 @@ async function authCheck(request2, env) {
       }
     }
   }
-  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return false;
   if (!configured) return false;
   return provided === configured;
 }
 __name(authCheck, "authCheck");
-async function handleAdminProducts(request2, env) {
-  if (!await authCheck(request2, env)) {
+async function handleAdminProducts(request, env) {
+  if (!await authCheck(request, env)) {
     return new Response(ADMIN_SECRET_ERROR, {
       status: 401,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "");
-  const method = request2.method;
+  const method = request.method;
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB;
     const result = await db.prepare(
@@ -6796,7 +6805,7 @@ async function handleAdminProducts(request2, env) {
   if (method === "POST" && path === "/api/admin/products") {
     const db = env.DB;
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const slug = body.slug;
       if (!slug) {
         return new Response(JSON.stringify({ error: "Slug is required" }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -6864,7 +6873,7 @@ async function handleAdminProducts(request2, env) {
       });
     }
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const allowed = [
         "title_en",
         "title_th",
@@ -6969,13 +6978,13 @@ function emailAllowed4(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed4, "emailAllowed");
-async function authCheck2(request2, env) {
-  const host = String(request2.headers.get("Host") || "").toLowerCase().split(":")[0];
+async function authCheck2(request, env) {
+  const host = String(request.headers.get("Host") || "").toLowerCase().split(":")[0];
   const isProdHost = host === "www.mildmate.com" || host === "mildmate.com";
   if (!isProdHost) return true;
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole4(raw) || emailAllowed4(verified.payload.email || "", env)) return true;
@@ -6997,21 +7006,21 @@ async function authCheck2(request2, env) {
       }
     }
   }
-  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided || !configured) return false;
   return provided === configured;
 }
 __name(authCheck2, "authCheck");
-async function handleAdminUpload(request2, env) {
-  if (!await authCheck2(request2, env)) {
+async function handleAdminUpload(request, env) {
+  if (!await authCheck2(request, env)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (request2.method === "DELETE") {
-    const url = new URL(request2.url);
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
     const key = url.searchParams.get("key");
     if (!key) {
       return new Response(JSON.stringify({ error: "Missing key parameter" }), {
@@ -7038,14 +7047,14 @@ async function handleAdminUpload(request2, env) {
       });
     }
   }
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
     });
   }
   try {
-    const formData = await request2.formData();
+    const formData = await request.formData();
     const file = formData.get("file");
     if (!file || !(file instanceof File)) {
       return new Response(JSON.stringify({ error: "No file provided" }), {
@@ -7268,11 +7277,11 @@ function emailAllowed5(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed5, "emailAllowed");
-async function authorizeAdmin2(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin2(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -7302,12 +7311,12 @@ async function authorizeAdmin2(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost3(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -7318,8 +7327,8 @@ async function authorizeAdmin2(request2, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin2, "authorizeAdmin");
-async function handleAdminOrders(request2, env) {
-  const auth = await authorizeAdmin2(request2, env);
+async function handleAdminOrders(request, env) {
+  const auth = await authorizeAdmin2(request, env);
   if (!auth.ok) return json2({ error: auth.error }, auth.status);
   try {
     await ensureOrderShippingSchema(env);
@@ -7327,9 +7336,9 @@ async function handleAdminOrders(request2, env) {
     console.error("orders shipping schema init failed:", e?.message || e);
     return json2({ error: "Orders schema unavailable" }, 500);
   }
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "");
-  const method = request2.method;
+  const method = request.method;
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
     const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
@@ -7400,7 +7409,7 @@ async function handleAdminOrders(request2, env) {
   }
   if (method === "PUT" && idMatch) {
     const orderId = parseInt(idMatch[1]);
-    const body = await request2.json();
+    const body = await request.json();
     const newStatus = body.status ? String(body.status).trim().toLowerCase() : "";
     const hasArchiveFlag = Object.prototype.hasOwnProperty.call(body || {}, "is_archived");
     const archiveValue = hasArchiveFlag ? body.is_archived === true || body.is_archived === 1 || String(body.is_archived).toLowerCase() === "true" ? 1 : 0 : null;
@@ -7556,11 +7565,11 @@ function emailAllowed6(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed6, "emailAllowed");
-async function authorizeAdmin3(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin3(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole6(raw) || emailAllowed6(verified.payload.email || "", env)) {
@@ -7589,12 +7598,12 @@ async function authorizeAdmin3(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost4(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -7605,11 +7614,11 @@ async function authorizeAdmin3(request2, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin3, "authorizeAdmin");
-async function handleAdminCustomers(request2, env) {
-  const auth = await authorizeAdmin3(request2, env);
+async function handleAdminCustomers(request, env) {
+  const auth = await authorizeAdmin3(request, env);
   if (!auth.ok) return json3({ error: auth.error }, auth.status);
-  const url = new URL(request2.url);
-  const method = request2.method;
+  const url = new URL(request.url);
+  const method = request.method;
   if (method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -7740,11 +7749,11 @@ function emailAllowed7(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed7, "emailAllowed");
-async function authorizeAdmin4(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin4(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -7774,12 +7783,12 @@ async function authorizeAdmin4(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost5(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -7875,10 +7884,10 @@ function currencySymbol(currency, ratesMap) {
   return ratesMap[c]?.symbol || c;
 }
 __name(currencySymbol, "currencySymbol");
-async function handleAdminStats(request2, env) {
-  const auth = await authorizeAdmin4(request2, env);
+async function handleAdminStats(request, env) {
+  const auth = await authorizeAdmin4(request, env);
   if (!auth.ok) return json4({ error: auth.error }, auth.status);
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -7887,10 +7896,10 @@ async function handleAdminStats(request2, env) {
       }
     });
   }
-  if (request2.method !== "GET") {
+  if (request.method !== "GET") {
     return json4({ error: "Method not allowed" }, 405);
   }
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const targetCurrency = String(url.searchParams.get("target_currency") || "USD").trim().toUpperCase();
   const bounds = getPeriodBounds(url.searchParams.get("period") || "last-30-days");
   try {
@@ -8604,10 +8613,10 @@ async function getOpportunity(env) {
   });
 }
 __name(getOpportunity, "getOpportunity");
-async function recomputeOpportunityHandler(request2, env) {
+async function recomputeOpportunityHandler(request, env) {
   let body = null;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     body = {};
   }
@@ -8686,11 +8695,11 @@ function emailAllowed8(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed8, "emailAllowed");
-async function authorizeAdmin5(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin5(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -8720,12 +8729,12 @@ async function authorizeAdmin5(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost6(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -10845,8 +10854,8 @@ async function getProfitability(env, f) {
   }
 }
 __name(getProfitability, "getProfitability");
-async function handleAdminAnalysis(request2, env) {
-  if (request2.method === "OPTIONS") {
+async function handleAdminAnalysis(request, env) {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -10855,12 +10864,12 @@ async function handleAdminAnalysis(request2, env) {
       }
     });
   }
-  const url = new URL(request2.url);
-  const isRecompute = request2.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
-  if (request2.method !== "GET" && !isRecompute) {
+  const url = new URL(request.url);
+  const isRecompute = request.method === "POST" && url.pathname.replace(/\/+$/, "").endsWith("/opportunity/recompute");
+  if (request.method !== "GET" && !isRecompute) {
     return err2("METHOD_NOT_ALLOWED", "Only GET is supported (POST only on /opportunity/recompute).", 405);
   }
-  const auth = await authorizeAdmin5(request2, env);
+  const auth = await authorizeAdmin5(request, env);
   if (!auth.ok) return err2("UNAUTHORIZED", auth.error, auth.status);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/analysis/, "") || "/";
   const productMatch = sub.match(/^\/product\/(\d+)$/);
@@ -10868,7 +10877,7 @@ async function handleAdminAnalysis(request2, env) {
   if (sub === "/data-quality") return getDataQuality(env);
   if (sub === "/data-quality/exceptions") return getExceptions(env, url);
   if (sub === "/opportunity") return getOpportunity(env);
-  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request2, env);
+  if (sub === "/opportunity/recompute") return recomputeOpportunityHandler(request, env);
   const parsed = parseFilters(url);
   if (!parsed.ok) return parsed.res;
   const f = parsed.f;
@@ -10947,11 +10956,11 @@ function emailAllowed9(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed9, "emailAllowed");
-async function authorizeAdmin6(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin6(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -10981,12 +10990,12 @@ async function authorizeAdmin6(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost7(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -11523,8 +11532,8 @@ async function deleteRow(env, url) {
   return json7({ success: true, table: tables[table], id, deleted: result?.meta?.changes ?? null });
 }
 __name(deleteRow, "deleteRow");
-async function handleAdminCostModel(request2, env) {
-  if (request2.method === "OPTIONS") {
+async function handleAdminCostModel(request, env) {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -11533,25 +11542,25 @@ async function handleAdminCostModel(request2, env) {
       }
     });
   }
-  const auth = await authorizeAdmin6(request2, env);
+  const auth = await authorizeAdmin6(request, env);
   if (!auth.ok) return err3("UNAUTHORIZED", auth.error, auth.status);
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const sub = url.pathname.replace(/\/+$/, "").replace(/^\/api\/admin\/cost-model/, "") || "/";
   let body = null;
-  if (request2.method === "PUT" || request2.method === "POST") {
+  if (request.method === "PUT" || request.method === "POST") {
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return err3("INVALID_JSON", "Request body must be valid JSON.");
     }
   }
-  if (request2.method === "GET" && sub === "/") return getCostModel(env);
-  if (request2.method === "PUT" && sub === "/product") return putProductCost(env, body);
-  if (request2.method === "PUT" && sub === "/fees") return putChannelFees(env, body);
-  if (request2.method === "PUT" && sub === "/shipping") return putShipping(env, body);
-  if (request2.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
-  if (request2.method === "DELETE" && sub === "/row") return deleteRow(env, url);
-  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request2.method + " " + sub, 404);
+  if (request.method === "GET" && sub === "/") return getCostModel(env);
+  if (request.method === "PUT" && sub === "/product") return putProductCost(env, body);
+  if (request.method === "PUT" && sub === "/fees") return putChannelFees(env, body);
+  if (request.method === "PUT" && sub === "/shipping") return putShipping(env, body);
+  if (request.method === "POST" && sub === "/recalculate") return recalculateFormulaCosts(env);
+  if (request.method === "DELETE" && sub === "/row") return deleteRow(env, url);
+  return err3("ROUTE_NOT_FOUND", "Unknown cost-model route: " + request.method + " " + sub, 404);
 }
 __name(handleAdminCostModel, "handleAdminCostModel");
 
@@ -11897,8 +11906,8 @@ async function calculateShippingQuote(env, input) {
   };
 }
 __name(calculateShippingQuote, "calculateShippingQuote");
-async function handleShippingCalculate(request2, env) {
-  if (request2.method === "OPTIONS") {
+async function handleShippingCalculate(request, env) {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -11907,7 +11916,7 @@ async function handleShippingCalculate(request2, env) {
       }
     });
   }
-  if (request2.method !== "GET" && request2.method !== "POST") {
+  if (request.method !== "GET" && request.method !== "POST") {
     return json8({ error: "Method not allowed" }, 405);
   }
   try {
@@ -11916,15 +11925,15 @@ async function handleShippingCalculate(request2, env) {
     let currency = "USD";
     let serviceLevel = "express";
     let items;
-    const fallbackCountry = request2.headers.get("CF-IPCountry") || "";
-    if (request2.method === "GET") {
-      const url = new URL(request2.url);
+    const fallbackCountry = request.headers.get("CF-IPCountry") || "";
+    if (request.method === "GET") {
+      const url = new URL(request.url);
       country = url.searchParams.get("country") || "";
       qty = toQty(url.searchParams.get("qty") || 0);
       currency = url.searchParams.get("currency") || "USD";
       serviceLevel = url.searchParams.get("service_level") || "express";
     } else {
-      const body = await request2.json().catch(() => ({}));
+      const body = await request.json().catch(() => ({}));
       country = body.country || body.country_code || "";
       qty = toQty(body.qty || body.total_qty || 0);
       currency = body.currency || "USD";
@@ -12012,15 +12021,15 @@ function emailAllowed10(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed10, "emailAllowed");
-async function authorizeAdmin7(request2, env) {
-  const host = new URL(request2.url).hostname;
+async function authorizeAdmin7(request, env) {
+  const host = new URL(request.url).hostname;
   if (host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1")) {
     return { ok: true };
   }
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) {
     } else {
       const raw = verified.payload.raw || {};
@@ -12050,7 +12059,7 @@ async function authorizeAdmin7(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) {
     return { ok: false, status: 401, error: "Unauthorized" };
@@ -12081,10 +12090,10 @@ async function getUsdRatePerThb(env) {
   return 1 / 30;
 }
 __name(getUsdRatePerThb, "getUsdRatePerThb");
-async function handleAdminShippingRates(request2, env) {
-  const auth = await authorizeAdmin7(request2, env);
+async function handleAdminShippingRates(request, env) {
+  const auth = await authorizeAdmin7(request, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -12094,8 +12103,8 @@ async function handleAdminShippingRates(request2, env) {
     });
   }
   await ensureShippingRatesSchema(env);
-  if (request2.method === "GET") {
-    const serviceLevel = normalizeServiceLevel(new URL(request2.url).searchParams.get("service_level") || "express");
+  if (request.method === "GET") {
+    const serviceLevel = normalizeServiceLevel(new URL(request.url).searchParams.get("service_level") || "express");
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       `SELECT country_code, country_name,
@@ -12129,10 +12138,10 @@ async function handleAdminShippingRates(request2, env) {
     });
     return json9({ service_level: serviceLevel, rates, usd_rate_per_thb: usdRate });
   }
-  if (request2.method === "POST" || request2.method === "PUT") {
+  if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json9({ error: "Invalid JSON body" }, 400);
     }
@@ -12183,8 +12192,8 @@ async function handleAdminShippingRates(request2, env) {
       }
     });
   }
-  if (request2.method === "DELETE") {
-    const url = new URL(request2.url);
+  if (request.method === "DELETE") {
+    const url = new URL(request.url);
     const countryCode = normalizeCountryCode(url.searchParams.get("country") || "");
     const serviceLevel = normalizeServiceLevel(url.searchParams.get("service_level") || "express");
     if (!countryCode) return json9({ error: "country query param is required" }, 400);
@@ -12195,10 +12204,10 @@ async function handleAdminShippingRates(request2, env) {
   return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingRates, "handleAdminShippingRates");
-async function handleAdminShippingProductTiers(request2, env) {
-  const auth = await authorizeAdmin7(request2, env);
+async function handleAdminShippingProductTiers(request, env) {
+  const auth = await authorizeAdmin7(request, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -12208,7 +12217,7 @@ async function handleAdminShippingProductTiers(request2, env) {
     });
   }
   await ensureShippingRatesSchema(env);
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const rows = await env.DB.prepare(
       `SELECT spt.product_slug, spt.tier, p.title_en, p.category
        FROM shipping_product_tiers spt
@@ -12223,10 +12232,10 @@ async function handleAdminShippingProductTiers(request2, env) {
     }));
     return json9({ product_tiers: tiers });
   }
-  if (request2.method === "PUT") {
+  if (request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json9({ error: "Invalid JSON" }, 400);
     }
@@ -12246,10 +12255,10 @@ async function handleAdminShippingProductTiers(request2, env) {
   return json9({ error: "Method not allowed" }, 405);
 }
 __name(handleAdminShippingProductTiers, "handleAdminShippingProductTiers");
-async function handleAdminShippingAddRates(request2, env) {
-  const auth = await authorizeAdmin7(request2, env);
+async function handleAdminShippingAddRates(request, env) {
+  const auth = await authorizeAdmin7(request, env);
   if (!auth.ok) return json9({ error: auth.error }, auth.status);
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -12265,7 +12274,7 @@ async function handleAdminShippingAddRates(request2, env) {
       updated_at DATETIME DEFAULT (datetime('now'))
     )`
   ).run();
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const usdRate = await getUsdRatePerThb(env);
     const rows = await env.DB.prepare(
       "SELECT tier, add_thb FROM shipping_add_rates ORDER BY tier"
@@ -12278,10 +12287,10 @@ async function handleAdminShippingAddRates(request2, env) {
     }
     return json9({ add_rates: addRates, usd_rate_per_thb: usdRate });
   }
-  if (request2.method === "PUT") {
+  if (request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json9({ error: "Invalid JSON" }, 400);
     }
@@ -12366,12 +12375,12 @@ function emailAllowed11(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed11, "emailAllowed");
-async function authorizeAdmin8(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin8(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole11(raw) || emailAllowed11(verified.payload.email || "", env)) return { ok: true };
@@ -12397,7 +12406,7 @@ async function authorizeAdmin8(request2, env) {
   }
   const bypassPreview = String(env.ADMIN_QUOTES_PREVIEW_BYPASS || "true").toLowerCase() !== "false";
   if (bypassPreview && isPreviewHashHost(host)) return { ok: true };
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
   const prodHost = isProductionHost9(host);
@@ -12469,8 +12478,8 @@ async function generateQuoteId(db) {
   return `${datePrefix}-${seq}`;
 }
 __name(generateQuoteId, "generateQuoteId");
-function buildQuoteLink(request2, quoteId) {
-  const origin = new URL(request2.url).origin;
+function buildQuoteLink(request, quoteId) {
+  const origin = new URL(request.url).origin;
   return `${origin}/quote/${encodeURIComponent(quoteId)}/`;
 }
 __name(buildQuoteLink, "buildQuoteLink");
@@ -12488,14 +12497,14 @@ async function getUsdRate(db) {
   return 30;
 }
 __name(getUsdRate, "getUsdRate");
-async function sendMagicLinkEmail(env, request2, quote) {
+async function sendMagicLinkEmail(env, request, quote) {
   if (!quote?.email) return { success: false, error: "Missing customer email" };
   if (quote.status !== "approved") return { success: false, error: "Quote is not approved" };
   const priceThb = quote.quoted_price ? Number(quote.quoted_price) : 0;
   const priceUsd = quote.quoted_price_usd ? Number(quote.quoted_price_usd) : 0;
   const hasUsdPrice = priceUsd > 0;
   if (!hasUsdPrice && priceThb <= 0) return { success: false, error: "Quoted price is required before sending email" };
-  const quoteLink = buildQuoteLink(request2, quote.quote_id);
+  const quoteLink = buildQuoteLink(request, quote.quote_id);
   const product = String(quote.product_slug || "").replace(/-/g, " ");
   const prettyProduct = product.replace(/\b\w/g, (c) => c.toUpperCase()) || "Custom Product";
   const expires = quote.expires_at ? /* @__PURE__ */ new Date(String(quote.expires_at).replace(" ", "T") + "Z") : null;
@@ -12650,14 +12659,14 @@ Need help or have a measurement question? Simply reply to this email \u2014 we'r
   return { success: result.success, error: result.error };
 }
 __name(sendMagicLinkEmail, "sendMagicLinkEmail");
-async function handleAdminQuotes(request2, env) {
-  if (request2.method === "OPTIONS") return json10({ ok: true });
-  const auth = await authorizeAdmin8(request2, env);
+async function handleAdminQuotes(request, env) {
+  if (request.method === "OPTIONS") return json10({ ok: true });
+  const auth = await authorizeAdmin8(request, env);
   if (!auth.ok) return json10({ error: auth.error }, auth.status);
   await ensureQuoteSchema(env);
   const db = env.DB;
-  const url = new URL(request2.url);
-  const method = request2.method;
+  const url = new URL(request.url);
+  const method = request.method;
   if (method === "GET") {
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
     const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
@@ -12712,7 +12721,7 @@ async function handleAdminQuotes(request2, env) {
         expires_at: r.expires_at || null,
         created_at: r.created_at || null,
         size_text: dims && typeof dims === "object" ? dims.size_text || "" : "",
-        quote_url: buildQuoteLink(request2, r.quote_id)
+        quote_url: buildQuoteLink(request, r.quote_id)
       };
     });
     return json10({
@@ -12725,7 +12734,7 @@ async function handleAdminQuotes(request2, env) {
   if (method === "POST") {
     let body = {};
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json10({ error: "Invalid JSON" }, 400);
     }
@@ -12797,7 +12806,7 @@ async function handleAdminQuotes(request2, env) {
     ).run();
     let emailStatus = { success: false, skipped: true };
     if (sendEmailNow && status === "approved") {
-      emailStatus = await sendMagicLinkEmail(env, request2, {
+      emailStatus = await sendMagicLinkEmail(env, request, {
         quote_id: quoteId,
         customer_name: customerName,
         email,
@@ -12811,7 +12820,7 @@ async function handleAdminQuotes(request2, env) {
     return json10({
       success: true,
       quote_id: quoteId,
-      quote_url: buildQuoteLink(request2, quoteId),
+      quote_url: buildQuoteLink(request, quoteId),
       email_sent: !!emailStatus.success,
       email_error: emailStatus.success ? null : emailStatus.skipped ? null : emailStatus.error || null
     }, 201);
@@ -12819,7 +12828,7 @@ async function handleAdminQuotes(request2, env) {
   if (method === "PUT") {
     let body = {};
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json10({ error: "Invalid JSON" }, 400);
     }
@@ -12923,7 +12932,7 @@ async function handleAdminQuotes(request2, env) {
     if (!row) return json10({ error: "Quote not found" }, 404);
     let emailStatus = { success: false, skipped: true };
     if (body.send_email) {
-      emailStatus = await sendMagicLinkEmail(env, request2, row);
+      emailStatus = await sendMagicLinkEmail(env, request, row);
       if (!emailStatus.success) {
         return json10({
           error: emailStatus.error || "Failed to send quote email",
@@ -12934,7 +12943,7 @@ async function handleAdminQuotes(request2, env) {
     return json10({
       success: true,
       quote_id: quoteId,
-      quote_url: buildQuoteLink(request2, quoteId),
+      quote_url: buildQuoteLink(request, quoteId),
       email_sent: !!emailStatus.success
     });
   }
@@ -12962,20 +12971,20 @@ function normalizeAddress(addr) {
   ].join("|");
 }
 __name(normalizeAddress, "normalizeAddress");
-async function handleDiscountValidate(request2, env) {
+async function handleDiscountValidate(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" } });
   }
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ valid: false, error: "Method not allowed" }), { status: 405, headers });
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return new Response(JSON.stringify({ valid: false, error: "Invalid JSON" }), { status: 400, headers });
   }
@@ -13069,17 +13078,17 @@ async function handleDiscountValidate(request2, env) {
   }), { headers });
 }
 __name(handleDiscountValidate, "handleDiscountValidate");
-async function handleDiscountClaim(request2, env) {
+async function handleDiscountClaim(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
   }
@@ -13156,11 +13165,11 @@ function isProductionHost10(hostname) {
   return hostname === "www.mildmate.com" || hostname === "mildmate.com";
 }
 __name(isProductionHost10, "isProductionHost");
-async function authorizeAdmin9(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin9(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole12(raw) || emailAllowed12(verified.payload.email || "", env)) return { ok: true };
@@ -13184,10 +13193,10 @@ async function authorizeAdmin9(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost10(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) return { ok: false, status: 401, error: "Unauthorized: use Clerk admin session" };
@@ -13196,11 +13205,11 @@ async function authorizeAdmin9(request2, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin9, "authorizeAdmin");
-async function handleAdminContacts(request2, env) {
-  const auth = await authorizeAdmin9(request2, env);
+async function handleAdminContacts(request, env) {
+  const auth = await authorizeAdmin9(request, env);
   if (!auth.ok) return json11({ error: auth.error }, auth.status);
-  const url = new URL(request2.url);
-  const method = request2.method;
+  const url = new URL(request.url);
+  const method = request.method;
   const db = env.DB;
   if (method === "GET") {
     const onlySubscribed = url.searchParams.get("subscribed") === "1";
@@ -13224,7 +13233,7 @@ async function handleAdminContacts(request2, env) {
   if (method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json11({ error: "Invalid JSON" }, 400);
     }
@@ -13276,12 +13285,12 @@ function emailAllowed13(email, env) {
   return !!email && allow.includes(email.toLowerCase());
 }
 __name(emailAllowed13, "emailAllowed");
-async function authorizeAdmin10(request2, env) {
-  const hostname = request2.headers.get("Host") || "";
+async function authorizeAdmin10(request, env) {
+  const hostname = request.headers.get("Host") || "";
   if (!isProductionHost11(hostname)) return { ok: true };
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole13(raw)) return { ok: true };
@@ -13305,29 +13314,29 @@ async function authorizeAdmin10(request2, env) {
     }
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin10, "authorizeAdmin");
-async function handleAdminPromo(request2, env) {
+async function handleAdminPromo(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin10(request2, env);
+  const auth = await authorizeAdmin10(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
   const db = env.DB;
-  const url = new URL(request2.url);
-  const method = request2.method;
+  const url = new URL(request.url);
+  const method = request.method;
   if (method === "GET") {
     const rows = await db.prepare(`
       SELECT
@@ -13343,7 +13352,7 @@ async function handleAdminPromo(request2, env) {
   if (method === "DELETE") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13356,7 +13365,7 @@ async function handleAdminPromo(request2, env) {
   if (method === "POST") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13466,21 +13475,21 @@ async function ensureBoatModelsTable(env) {
   await ensureBoatModelsColumn(env, "sale_price_usd", "REAL");
 }
 __name(ensureBoatModelsTable, "ensureBoatModelsTable");
-async function handleBoatModels(request2, env) {
+async function handleBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Cache-Control": "public, max-age=120"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
   }
-  if (request2.method !== "GET") {
+  if (request.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
   try {
     await ensureBoatModelsTable(env);
-    const url = new URL(request2.url);
+    const url = new URL(request.url);
     const q = String(url.searchParams.get("q") || "").trim().toLowerCase();
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 100), 1), 250);
     const includeDimensions = String(url.searchParams.get("include_dimensions") || "").trim() === "1";
@@ -13570,22 +13579,22 @@ async function ensureBoatModelsTable2(env) {
   await ensureBoatModelsColumn2(env, "schematic_url", "TEXT");
 }
 __name(ensureBoatModelsTable2, "ensureBoatModelsTable");
-async function authorizeAdmin11(request2, env) {
-  return authorizeAdminBrowser(request2, env);
+async function authorizeAdmin11(request, env) {
+  return authorizeAdminBrowser(request, env);
 }
 __name(authorizeAdmin11, "authorizeAdmin");
-async function handleAdminBoatModels(request2, env) {
+async function handleAdminBoatModels(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
-  if (request2.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin11(request2, env);
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin11(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureBoatModelsTable2(env);
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const rows = await env.DB.prepare(
       `SELECT id, model_key, model_label, model_name, model_year, sale_price_usd, shape_code, dimensions_json, notes, schematic_key, schematic_url, is_active, updated_at
        FROM boat_models
@@ -13593,10 +13602,10 @@ async function handleAdminBoatModels(request2, env) {
     ).all();
     return new Response(JSON.stringify({ models: rows.results || [] }), { headers });
   }
-  if (request2.method === "DELETE") {
+  if (request.method === "DELETE") {
     let body = {};
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
     }
     const id = Number(body.id || 0);
@@ -13604,10 +13613,10 @@ async function handleAdminBoatModels(request2, env) {
     await env.DB.prepare("DELETE FROM boat_models WHERE id = ?1").bind(id).run();
     return new Response(JSON.stringify({ success: true }), { headers });
   }
-  if (request2.method === "POST" || request2.method === "PUT") {
+  if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13726,22 +13735,22 @@ function emailAllowed14(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed14, "emailAllowed");
-function getClerkSessionTokenFromCookie(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getClerkSessionTokenFromCookie(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin12(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
-  const cookieToken = getClerkSessionTokenFromCookie(request2);
+async function authorizeAdmin12(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie(request);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   const token = bearerToken || cookieToken;
   if (token) {
-    const verifyRequest = bearerToken ? request2 : new Request(request2.url, {
-      method: request2.method,
+    const verifyRequest = bearerToken ? request : new Request(request.url, {
+      method: request.method,
       headers: new Headers({
-        ...Object.fromEntries(request2.headers.entries()),
+        ...Object.fromEntries(request.headers.entries()),
         Authorization: "Bearer " + token
       })
     });
@@ -13772,10 +13781,10 @@ async function authorizeAdmin12(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost12(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -13798,23 +13807,23 @@ function toR2Url3(url) {
   return url;
 }
 __name(toR2Url3, "toR2Url");
-async function handleAdminBlog(request2, env) {
+async function handleAdminBlog(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Admin-Secret, Authorization"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers });
   }
-  const auth = await authorizeAdmin12(request2, env);
+  const auth = await authorizeAdmin12(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
   const db = env.DB;
-  const url = new URL(request2.url);
-  if (request2.method === "GET") {
+  const url = new URL(request.url);
+  if (request.method === "GET") {
     const id = url.searchParams.get("id");
     if (id) {
       const post = await db.prepare("SELECT * FROM blog_posts WHERE id = ?").bind(Number(id)).first();
@@ -13847,10 +13856,10 @@ async function handleAdminBlog(request2, env) {
     }));
     return new Response(JSON.stringify({ posts: normalized }), { headers });
   }
-  if (request2.method === "POST") {
+  if (request.method === "POST") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -13947,10 +13956,10 @@ async function handleAdminBlog(request2, env) {
     }
     return new Response(JSON.stringify({ success: true, id: result.meta?.last_row_id, slug: slugNorm }), { headers });
   }
-  if (request2.method === "PUT") {
+  if (request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -14029,10 +14038,10 @@ async function handleAdminBlog(request2, env) {
     }
     return new Response(JSON.stringify({ success: true }), { headers });
   }
-  if (request2.method === "DELETE") {
+  if (request.method === "DELETE") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -14052,15 +14061,15 @@ function toPublicR2Url2(url) {
   return url.startsWith("/r2/") ? `${R2_PUBLIC_BASE5}${url.slice(3)}` : url;
 }
 __name(toPublicR2Url2, "toPublicR2Url");
-async function handleBlogPosts(request2, env) {
+async function handleBlogPosts(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
   }
-  if (request2.method !== "GET") {
+  if (request.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
   try {
@@ -14193,22 +14202,22 @@ function emailAllowed15(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed15, "emailAllowed");
-function getClerkSessionTokenFromCookie2(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getClerkSessionTokenFromCookie2(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const match2 = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return match2 ? String(match2[1] || "").trim() : "";
 }
 __name(getClerkSessionTokenFromCookie2, "getClerkSessionTokenFromCookie");
-async function authorizeAdmin13(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
-  const cookieToken = getClerkSessionTokenFromCookie2(request2);
+async function authorizeAdmin13(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const cookieToken = getClerkSessionTokenFromCookie2(request);
   const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   const token = bearerToken || cookieToken;
   if (token) {
-    const verifyRequest = bearerToken ? request2 : new Request(request2.url, {
-      method: request2.method,
+    const verifyRequest = bearerToken ? request : new Request(request.url, {
+      method: request.method,
       headers: new Headers({
-        ...Object.fromEntries(request2.headers.entries()),
+        ...Object.fromEntries(request.headers.entries()),
         Authorization: "Bearer " + token
       })
     });
@@ -14239,10 +14248,10 @@ async function authorizeAdmin13(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const provided = (request.headers.get("X-Admin-Secret") || "").trim();
   const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!provided) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost13(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -14253,8 +14262,8 @@ async function authorizeAdmin13(request2, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin13, "authorizeAdmin");
-async function handleReviews(request2, env) {
-  const url = new URL(request2.url);
+async function handleReviews(request, env) {
+  const url = new URL(request.url);
   if (url.pathname.startsWith("/api/admin/reviews")) {
     return new Response(JSON.stringify({ error: "Not authorized" }), {
       status: 401,
@@ -14339,10 +14348,10 @@ async function handleReviews(request2, env) {
   }
 }
 __name(handleReviews, "handleReviews");
-async function handleAdminReviews(request2, env) {
-  const url = new URL(request2.url);
+async function handleAdminReviews(request, env) {
+  const url = new URL(request.url);
   const headers = { "Content-Type": "application/json" };
-  const auth = await authorizeAdmin13(request2, env);
+  const auth = await authorizeAdmin13(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), {
       status: auth.status,
@@ -14363,7 +14372,7 @@ async function handleAdminReviews(request2, env) {
     return new Response(JSON.stringify({ error: msg }), { status: 500, headers });
   }
   __name(internalError, "internalError");
-  const method = request2.method;
+  const method = request.method;
   try {
     if (method === "GET") {
       const id = url.searchParams.get("id");
@@ -14412,7 +14421,7 @@ async function handleAdminReviews(request2, env) {
       return new Response(JSON.stringify({ reviews: results || [] }), { headers });
     }
     if (method === "POST") {
-      const body = await request2.json();
+      const body = await request.json();
       const customerName = sanitize(body.customer_name);
       if (!customerName) return badRequest("Customer name is required");
       const reviewText = sanitizeReviewText(body.review_text || "");
@@ -14463,7 +14472,7 @@ async function handleAdminReviews(request2, env) {
       });
     }
     if (method === "PUT") {
-      const body = await request2.json();
+      const body = await request.json();
       if (!body.id) return badRequest("Review ID required");
       const id = parseInt(body.id, 10);
       const updates = [];
@@ -14528,7 +14537,7 @@ async function handleAdminReviews(request2, env) {
       return new Response(JSON.stringify({ success: true }), { headers });
     }
     if (method === "DELETE") {
-      const body = await request2.json();
+      const body = await request.json();
       if (!body.id) return badRequest("Review ID required");
       const stmt = env.DB.prepare(`DELETE FROM reviews WHERE id = ?`).bind(parseInt(body.id, 10));
       await stmt.run();
@@ -14570,22 +14579,22 @@ function formatPrice(thb, usd) {
   return parts.join(" / ") || "\u2014";
 }
 __name(formatPrice, "formatPrice");
-async function handleAdminRecoveryTest(request2, env) {
+async function handleAdminRecoveryTest(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret" } });
   }
-  if (request2.method !== "POST") {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
   }
-  const auth = await authorizeAdminBrowser(request2, env);
+  const auth = await authorizeAdminBrowser(request, env);
   if (!auth.ok) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   }
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const testEmail = url.searchParams.get("email") || "";
   const db = env.DB;
   if (!env.RESEND_API_KEY) {
@@ -14666,12 +14675,12 @@ function hasAdminRole16(raw) {
   });
 }
 __name(hasAdminRole16, "hasAdminRole");
-async function authorizeAdmin14(request2, env) {
-  const hostname = request2.headers.get("Host") || "";
+async function authorizeAdmin14(request, env) {
+  const hostname = request.headers.get("Host") || "";
   if (!isProductionHost14(hostname)) return { ok: true };
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole16(raw)) return { ok: true };
@@ -14680,7 +14689,7 @@ async function authorizeAdmin14(request2, env) {
     if (jwtEmail && allow.includes(jwtEmail)) return { ok: true };
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
@@ -14717,22 +14726,22 @@ async function ensureThankyouQueueSchema(env) {
   }
 }
 __name(ensureThankyouQueueSchema, "ensureThankyouQueueSchema");
-async function handleAdminThankyouDispatch(request2, env) {
+async function handleAdminThankyouDispatch(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
-  if (request2.method === "OPTIONS") return new Response(null, { headers });
-  if (request2.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-  const auth = await authorizeAdmin14(request2, env);
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  if (request.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  const auth = await authorizeAdmin14(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   if (!env.RESEND_API_KEY) return new Response(JSON.stringify({ error: "RESEND_API_KEY not configured" }), { status: 500, headers });
   await ensureThankyouQueueSchema(env);
   let limit = 50;
   try {
-    const body = await request2.json();
+    const body = await request.json();
     const n = Number(body?.limit || 50);
     if (Number.isFinite(n)) limit = Math.max(1, Math.min(200, Math.floor(n)));
   } catch {
@@ -14855,12 +14864,12 @@ function emailAllowed16(email, env) {
   return !!email && allow.includes(email.toLowerCase());
 }
 __name(emailAllowed16, "emailAllowed");
-async function authorizeAdmin15(request2, env) {
-  const hostname = request2.headers.get("Host") || "";
+async function authorizeAdmin15(request, env) {
+  const hostname = request.headers.get("Host") || "";
   if (!isProductionHost15(hostname)) return { ok: true };
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole17(raw)) return { ok: true };
@@ -14884,7 +14893,7 @@ async function authorizeAdmin15(request2, env) {
     }
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
@@ -14944,26 +14953,26 @@ function parseOffersConfig(rows) {
   };
 }
 __name(parseOffersConfig, "parseOffersConfig");
-async function handleAdminOffers(request2, env) {
+async function handleAdminOffers(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
-  if (request2.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin15(request2, env);
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin15(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const keys = Object.values(KEY_MAP);
     const placeholders = keys.map((_, i) => `?${i + 1}`).join(",");
     const { results } = await env.DB.prepare(`SELECT key, value FROM recovery_config WHERE key IN (${placeholders})`).bind(...keys).all();
     return new Response(JSON.stringify({ offers: parseOffersConfig(results || []) }), { headers });
   }
-  if (request2.method === "POST" || request2.method === "PUT") {
+  if (request.method === "POST" || request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -15012,12 +15021,12 @@ function emailAllowed17(email, env) {
   return !!email && allow.includes(email.toLowerCase());
 }
 __name(emailAllowed17, "emailAllowed");
-async function authorizeAdmin16(request2, env) {
-  const hostname = request2.headers.get("Host") || "";
+async function authorizeAdmin16(request, env) {
+  const hostname = request.headers.get("Host") || "";
   if (!isProductionHost16(hostname)) return { ok: true };
-  const authHeader = request2.headers.get("Authorization") || "";
+  const authHeader = request.headers.get("Authorization") || "";
   if (authHeader.startsWith("Bearer ")) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (!verified.valid) return { ok: false, status: verified.status, error: verified.error };
     const raw = verified.payload?.raw || {};
     if (hasAdminRole18(raw)) return { ok: true };
@@ -15041,7 +15050,7 @@ async function authorizeAdmin16(request2, env) {
     }
     return { ok: false, status: 403, error: "Forbidden: admin role required" };
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const expectedSecret = String(env.ADMIN_SECRET || "").trim();
   if (providedSecret && expectedSecret && providedSecret === expectedSecret) return { ok: true };
   return { ok: false, status: 401, error: "Unauthorized" };
@@ -15062,18 +15071,18 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
-async function handleAdminCampaigns(request2, env) {
+async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
   };
-  if (request2.method === "OPTIONS") return new Response(null, { headers });
-  const auth = await authorizeAdmin16(request2, env);
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  const auth = await authorizeAdmin16(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   await ensureCampaignsSchema(env);
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const { results } = await env.DB.prepare(
       "SELECT id, name, discount_pct, product_slugs, start_date, end_date, is_active, created_at FROM marketing_campaigns ORDER BY created_at DESC"
     ).all();
@@ -15095,10 +15104,10 @@ async function handleAdminCampaigns(request2, env) {
     }));
     return new Response(JSON.stringify({ campaigns }), { headers });
   }
-  if (request2.method === "POST") {
+  if (request.method === "POST") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -15116,14 +15125,14 @@ async function handleAdminCampaigns(request2, env) {
     ).bind(id, name, Math.round(discount), JSON.stringify(productSlugs), startDate, endDate).run();
     return new Response(JSON.stringify({ ok: true, id }), { headers });
   }
-  if (request2.method === "DELETE") {
+  if (request.method === "DELETE") {
     let id = "";
     try {
-      const body = await request2.json();
+      const body = await request.json();
       id = String(body?.id || "").trim();
     } catch {
     }
-    if (!id) id = String(new URL(request2.url).searchParams.get("id") || "").trim();
+    if (!id) id = String(new URL(request.url).searchParams.get("id") || "").trim();
     if (!id) return new Response(JSON.stringify({ error: "id is required" }), { status: 400, headers });
     await env.DB.prepare("DELETE FROM marketing_campaigns WHERE id = ?1").bind(id).run();
     return new Response(JSON.stringify({ ok: true }), { headers });
@@ -15133,8 +15142,8 @@ async function handleAdminCampaigns(request2, env) {
 __name(handleAdminCampaigns, "handleAdminCampaigns");
 
 // ../workers/api/admin-accounts.ts
-function getClerkSessionToken(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getClerkSessionToken(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   return cookieMatch ? cookieMatch[1] : "";
 }
@@ -15185,16 +15194,16 @@ function getPrimaryClerkEmail3(user) {
   return String(primary?.email_address || list[0]?.email_address || "").trim().toLowerCase();
 }
 __name(getPrimaryClerkEmail3, "getPrimaryClerkEmail");
-async function isClerkAdmin2(request2, env) {
+async function isClerkAdmin2(request, env) {
   try {
-    const authHeader = request2.headers.get("Authorization") || "";
+    const authHeader = request.headers.get("Authorization") || "";
     const hasBearer = authHeader.startsWith("Bearer ");
-    const token = hasBearer ? authHeader.slice(7).trim() : getClerkSessionToken(request2);
+    const token = hasBearer ? authHeader.slice(7).trim() : getClerkSessionToken(request);
     if (!token) return false;
-    const verifyReq = new Request(request2.url, {
-      method: request2.method,
+    const verifyReq = new Request(request.url, {
+      method: request.method,
       headers: new Headers({
-        ...Object.fromEntries(request2.headers.entries()),
+        ...Object.fromEntries(request.headers.entries()),
         Authorization: `Bearer ${token}`
       })
     });
@@ -15238,13 +15247,13 @@ async function ensureAdminAccountsTable(db) {
   `).run();
 }
 __name(ensureAdminAccountsTable, "ensureAdminAccountsTable");
-async function handleAdminAccounts(request2, env) {
-  const host = new URL(request2.url).hostname;
+async function handleAdminAccounts(request, env) {
+  const host = new URL(request.url).hostname;
   const isDev = host.includes("pages.dev") || host === "localhost" || host.startsWith("127.0.0.1");
   if (!isDev) {
-    const clerkOk = await isClerkAdmin2(request2, env);
+    const clerkOk = await isClerkAdmin2(request, env);
     if (!clerkOk) {
-      const provided = (request2.headers.get("X-Admin-Secret") || "").trim();
+      const provided = (request.headers.get("X-Admin-Secret") || "").trim();
       const configured = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
       if (!provided || configured && provided !== configured) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -15255,7 +15264,7 @@ async function handleAdminAccounts(request2, env) {
     }
   }
   await ensureAdminAccountsTable(env.DB);
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const { results } = await env.DB.prepare(
       "SELECT email, role, created_at, last_active FROM admin_accounts ORDER BY created_at DESC"
     ).all();
@@ -15263,9 +15272,9 @@ async function handleAdminAccounts(request2, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  if (request2.method === "POST") {
+  if (request.method === "POST") {
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const email = String(body.email || "").trim().toLowerCase();
       const role = String(body.role || "Admin").trim();
       if (!email || !email.includes("@")) {
@@ -15295,9 +15304,9 @@ async function handleAdminAccounts(request2, env) {
       });
     }
   }
-  if (request2.method === "DELETE") {
+  if (request.method === "DELETE") {
     try {
-      const url = new URL(request2.url);
+      const url = new URL(request.url);
       const email = String(url.searchParams.get("email") || "").trim().toLowerCase();
       if (!email) {
         return new Response(JSON.stringify({ error: "email is required" }), {
@@ -15324,18 +15333,18 @@ async function handleAdminAccounts(request2, env) {
 __name(handleAdminAccounts, "handleAdminAccounts");
 
 // ../workers/api/admin-color-inventory.ts
-async function handleAdminColorInventory(request2, env) {
+async function handleAdminColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, PUT, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret" } });
   }
-  const auth = await authorizeAdminBrowser(request2, env);
+  const auth = await authorizeAdminBrowser(request, env);
   if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers });
   const db = env.DB;
-  if (request2.method === "GET") {
+  if (request.method === "GET") {
     const rows = await db.prepare(
       "SELECT fabric, color, in_stock, updated_at FROM fabric_color_inventory ORDER BY fabric, color"
     ).all();
@@ -15347,10 +15356,10 @@ async function handleAdminColorInventory(request2, env) {
     }));
     return new Response(JSON.stringify({ inventory }), { headers });
   }
-  if (request2.method === "PUT") {
+  if (request.method === "PUT") {
     let body;
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers });
     }
@@ -15462,11 +15471,11 @@ function emailAllowed19(email, env) {
   return allow.includes(email.toLowerCase());
 }
 __name(emailAllowed19, "emailAllowed");
-async function authorizeAdmin17(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function authorizeAdmin17(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   const hasBearer = authHeader.startsWith("Bearer ");
   if (hasBearer) {
-    const verified = await verifyClerkJwt(request2, env);
+    const verified = await verifyClerkJwt(request, env);
     if (verified.valid) {
       const raw = verified.payload.raw || {};
       if (hasAdminRole20(raw) || emailAllowed19(verified.payload.email || "", env)) {
@@ -15493,10 +15502,10 @@ async function authorizeAdmin17(request2, env) {
       return { ok: false, status: 403, error: "Forbidden: admin role required" };
     }
   }
-  const providedSecret = (request2.headers.get("X-Admin-Secret") || "").trim();
+  const providedSecret = (request.headers.get("X-Admin-Secret") || "").trim();
   const configuredSecret = typeof env.ADMIN_SECRET === "string" ? env.ADMIN_SECRET.trim() : "";
   if (!providedSecret) return { ok: false, status: 401, error: "Unauthorized" };
-  const host = new URL(request2.url).hostname;
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost17(host);
   const allowSecretInProd = String(env.ADMIN_SECRET_ALLOW_PROD || "").toLowerCase() === "true";
   if (prodHost && !allowSecretInProd) {
@@ -15507,26 +15516,26 @@ async function authorizeAdmin17(request2, env) {
   return { ok: false, status: 401, error: "Unauthorized" };
 }
 __name(authorizeAdmin17, "authorizeAdmin");
-async function getUserContext(request2, env) {
-  const authHeader = request2.headers.get("Authorization") || "";
+async function getUserContext(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) {
     return { ok: false, status: 401, error: "Authentication required" };
   }
-  const verified = await verifyClerkJwt(request2, env);
+  const verified = await verifyClerkJwt(request, env);
   if (!verified.valid) {
     return { ok: false, status: verified.status, error: verified.error };
   }
   const userId = String(verified.payload.sub || "").trim();
-  const email = String(verified.payload.email || request2.headers.get("X-User-Email") || "").trim().toLowerCase();
+  const email = String(verified.payload.email || request.headers.get("X-User-Email") || "").trim().toLowerCase();
   if (!userId) return { ok: false, status: 401, error: "Invalid user session" };
   if (!email) return { ok: false, status: 401, error: "No email in session" };
   return { ok: true, userId, email };
 }
 __name(getUserContext, "getUserContext");
-async function handleFavorites(request2, env) {
-  const url = new URL(request2.url);
+async function handleFavorites(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname.replace(/\/$/, "");
-  const method = request2.method.toUpperCase();
+  const method = request.method.toUpperCase();
   if (method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -15543,7 +15552,7 @@ async function handleFavorites(request2, env) {
       console.error("favorites schema init failed (admin stats):", e?.message || e);
       return json12({ error: "Favorites storage unavailable" }, 500);
     }
-    const auth = await authorizeAdmin17(request2, env);
+    const auth = await authorizeAdmin17(request, env);
     if (!auth.ok) return json12({ error: auth.error }, auth.status);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") || "5", 10) || 5, 1), 20);
     const totals = await env.DB.prepare(
@@ -15587,7 +15596,7 @@ async function handleFavorites(request2, env) {
   if (path !== "/api/favorites") {
     return json12({ error: "Not found" }, 404);
   }
-  const user = await getUserContext(request2, env);
+  const user = await getUserContext(request, env);
   if (!user.ok) return json12({ error: user.error }, user.status);
   try {
     await ensureFavoritesSchema(env);
@@ -15621,7 +15630,7 @@ async function handleFavorites(request2, env) {
   if (method === "POST") {
     let body = {};
     try {
-      body = await request2.json();
+      body = await request.json();
     } catch {
       return json12({ error: "Invalid JSON body" }, 400);
     }
@@ -15662,7 +15671,7 @@ async function handleFavorites(request2, env) {
     let productSlug = String(url.searchParams.get("productSlug") || "").trim();
     if (!productSlug) {
       try {
-        const body = await request2.json();
+        const body = await request.json();
         productSlug = String(body.productSlug || body.slug || "").trim();
       } catch {
       }
@@ -15688,9 +15697,9 @@ async function handleFavorites(request2, env) {
 __name(handleFavorites, "handleFavorites");
 
 // ../workers/api/checkout.ts
-function isProductionHost18(request2) {
+function isProductionHost18(request) {
   try {
-    const host = new URL(request2.url).hostname.toLowerCase();
+    const host = new URL(request.url).hostname.toLowerCase();
     return host === "www.mildmate.com" || host === "mildmate.com";
   } catch {
     return false;
@@ -15703,8 +15712,8 @@ function inferStripeSecretMode(secret) {
   return "unknown";
 }
 __name(inferStripeSecretMode, "inferStripeSecretMode");
-function assertStripeRuntimeSafety(request2, env, stripeKey) {
-  const prodHost = isProductionHost18(request2);
+function assertStripeRuntimeSafety(request, env, stripeKey) {
+  const prodHost = isProductionHost18(request);
   const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
   const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
   const stripeMode = inferStripeSecretMode(stripeKey);
@@ -15790,8 +15799,8 @@ async function ensureCheckoutSnapshotSchema(env) {
   return await checkoutSnapshotSchemaPromise;
 }
 __name(ensureCheckoutSnapshotSchema, "ensureCheckoutSnapshotSchema");
-async function handleCheckout(request2, env) {
-  if (request2.method !== "POST") {
+async function handleCheckout(request, env) {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
@@ -15804,7 +15813,7 @@ async function handleCheckout(request2, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const stripeSafetyError = assertStripeRuntimeSafety(request2, env, stripeKey);
+  const stripeSafetyError = assertStripeRuntimeSafety(request, env, stripeKey);
   if (stripeSafetyError) {
     return new Response(JSON.stringify({ error: stripeSafetyError }), {
       status: 503,
@@ -15813,7 +15822,7 @@ async function handleCheckout(request2, env) {
   }
   let body;
   try {
-    body = await request2.json();
+    body = await request.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
@@ -15938,7 +15947,7 @@ async function handleCheckout(request2, env) {
       }
     }
   }
-  const origin = String(request2.headers.get("CF-IPCountry") || "").toUpperCase();
+  const origin = String(request.headers.get("CF-IPCountry") || "").toUpperCase();
   const shippingCountry = String(shippingCountryInput || "").toUpperCase();
   const thCountries = ["TH", "LA", "MM", "KH"];
   let currency = "usd";
@@ -16089,7 +16098,7 @@ async function handleCheckout(request2, env) {
     return sizeText;
   }
   __name(buildCompactDimText, "buildCompactDimText");
-  const reqUrl = new URL(request2.url);
+  const reqUrl = new URL(request.url);
   const siteUrl = reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1" ? "http://localhost:8788" : reqUrl.origin;
   try {
     const params = new URLSearchParams();
@@ -16259,17 +16268,17 @@ function normalizeAddress2(raw) {
   return [(addr.street || addr.address || "").trim().toLowerCase(), (addr.city || "").trim().toLowerCase(), (addr.state || addr.province || "").trim().toLowerCase(), (addr.postal_code || addr.zip || addr.postal || "").trim().toLowerCase(), (addr.country || "").trim().toLowerCase()].join("|");
 }
 __name(normalizeAddress2, "normalizeAddress");
-function isProductionHost19(request2) {
+function isProductionHost19(request) {
   try {
-    const host = new URL(request2.url).hostname.toLowerCase();
+    const host = new URL(request.url).hostname.toLowerCase();
     return host === "www.mildmate.com" || host === "mildmate.com";
   } catch {
     return false;
   }
 }
 __name(isProductionHost19, "isProductionHost");
-function assertWebhookRuntimeSafety(request2, env) {
-  const prodHost = isProductionHost19(request2);
+function assertWebhookRuntimeSafety(request, env) {
+  const prodHost = isProductionHost19(request);
   const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
   const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
   const stripeEnvMode = String(env.STRIPE_ENV_MODE || "").trim().toLowerCase();
@@ -16574,8 +16583,8 @@ async function markStripeWebhookEventFailed(env, eventId, token, err4) {
   ).bind(eventId, token, String(err4?.message || err4 || "unknown")).run();
 }
 __name(markStripeWebhookEventFailed, "markStripeWebhookEventFailed");
-async function handleStripeWebhook(request2, env) {
-  if (request2.method !== "POST") {
+async function handleStripeWebhook(request, env) {
+  if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" }
@@ -16588,21 +16597,21 @@ async function handleStripeWebhook(request2, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const webhookSafetyError = assertWebhookRuntimeSafety(request2, env);
+  const webhookSafetyError = assertWebhookRuntimeSafety(request, env);
   if (webhookSafetyError) {
     return new Response(JSON.stringify({ error: webhookSafetyError }), {
       status: 503,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const signature = request2.headers.get("stripe-signature");
+  const signature = request.headers.get("stripe-signature");
   if (!signature) {
     return new Response(JSON.stringify({ error: "Missing signature" }), {
       status: 400,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const rawBody = await request2.text();
+  const rawBody = await request.text();
   let event;
   try {
     const parts = signature.split(",");
@@ -17185,17 +17194,17 @@ function hexToArrayBuffer(hex) {
 __name(hexToArrayBuffer, "hexToArrayBuffer");
 
 // ../workers/api/auth.ts
-async function handleAuth(request2, env) {
-  const url = new URL(request2.url);
+async function handleAuth(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname;
-  if (request2.method === "GET" && (path === "/api/auth/me" || path === "/api/auth/me/")) {
-    const authHeader = request2.headers.get("Authorization") || "";
+  if (request.method === "GET" && (path === "/api/auth/me" || path === "/api/auth/me/")) {
+    const authHeader = request.headers.get("Authorization") || "";
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ authenticated: false }), {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const result = await verifyClerkJwt(request2, env);
+    const result = await verifyClerkJwt(request, env);
     if (!result.valid) {
       if (result.status === 401) {
         return new Response(JSON.stringify({ authenticated: false }), {
@@ -17208,7 +17217,7 @@ async function handleAuth(request2, env) {
       });
     }
     const { payload } = result;
-    const headerEmail = request2.headers.get("X-User-Email") || "";
+    const headerEmail = request.headers.get("X-User-Email") || "";
     const email = payload.email || headerEmail || "";
     const name = payload.name || headerEmail.split("@")[0] || "";
     try {
@@ -17262,15 +17271,15 @@ async function ensureOrderShippingSchema2(env) {
   await orderShippingSchemaPromise2;
 }
 __name(ensureOrderShippingSchema2, "ensureOrderShippingSchema");
-async function getEmail(request2, env) {
-  const result = await verifyClerkJwt(request2, env);
+async function getEmail(request, env) {
+  const result = await verifyClerkJwt(request, env);
   if (!result.valid) {
     return new Response(JSON.stringify({ error: result.error }), {
       status: result.status,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const email = result.payload.email || request2.headers.get("X-User-Email") || "";
+  const email = result.payload.email || request.headers.get("X-User-Email") || "";
   if (!email) {
     return new Response(JSON.stringify({ error: "No email in token" }), {
       status: 401,
@@ -17280,14 +17289,14 @@ async function getEmail(request2, env) {
   return email;
 }
 __name(getEmail, "getEmail");
-async function handleCustomers(request2, env) {
-  const url = new URL(request2.url);
+async function handleCustomers(request, env) {
+  const url = new URL(request.url);
   const path = url.pathname;
-  if (request2.method === "GET" && (path === "/api/customers/orders" || path === "/api/customers/orders/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "GET" && (path === "/api/customers/orders" || path === "/api/customers/orders/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
-    const guestEmail = (request2.headers.get("X-Order-Email") || "").trim().toLowerCase();
+    const guestEmail = (request.headers.get("X-Order-Email") || "").trim().toLowerCase();
     const hasGuestBridge = guestEmail && guestEmail !== email.toLowerCase();
     try {
       await ensureOrderShippingSchema2(env);
@@ -17353,8 +17362,8 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "GET" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "GET" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
@@ -17372,12 +17381,12 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "PUT" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "PUT" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const items = body.items || [];
       if (!Array.isArray(items)) {
         return new Response(JSON.stringify({ error: "items must be an array" }), {
@@ -17404,8 +17413,8 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "DELETE" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "DELETE" && (path === "/api/customers/cart" || path === "/api/customers/cart/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
@@ -17423,8 +17432,8 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "GET" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "GET" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
@@ -17442,12 +17451,12 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "POST" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "POST" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const { label, first_name, last_name, phone, country, address, city, state, postal_code } = body;
       if (!first_name || !last_name || !phone || !country || !address || !city) {
         return new Response(JSON.stringify({ error: "Missing required fields: first_name, last_name, phone, country, address, city" }), {
@@ -17500,8 +17509,8 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "PUT" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "PUT" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     const addrId = url.searchParams.get("id");
@@ -17512,7 +17521,7 @@ async function handleCustomers(request2, env) {
       });
     }
     try {
-      const body = await request2.json();
+      const body = await request.json();
       const existing = await env.DB.prepare(
         "SELECT * FROM customer_addresses WHERE id = ?1 AND email = ?2"
       ).bind(addrId, email).first();
@@ -17568,8 +17577,8 @@ async function handleCustomers(request2, env) {
       });
     }
   }
-  if (request2.method === "DELETE" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
-    const emailOrErr = await getEmail(request2, env);
+  if (request.method === "DELETE" && (path === "/api/customers/addresses" || path === "/api/customers/addresses/")) {
+    const emailOrErr = await getEmail(request, env);
     if (typeof emailOrErr !== "string") return emailOrErr;
     const email = emailOrErr;
     const addrId = url.searchParams.get("id");
@@ -17627,9 +17636,9 @@ async function sha2563(text) {
   return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 __name(sha2563, "sha256");
-function isProductionHost20(request2) {
+function isProductionHost20(request) {
   try {
-    const host = new URL(request2.url).hostname.toLowerCase();
+    const host = new URL(request.url).hostname.toLowerCase();
     return host === "www.mildmate.com" || host === "mildmate.com";
   } catch {
     return false;
@@ -17642,10 +17651,10 @@ function inferStripeSecretMode2(secret) {
   return "unknown";
 }
 __name(inferStripeSecretMode2, "inferStripeSecretMode");
-function assertReconcileRuntimeSafety(request2, env) {
+function assertReconcileRuntimeSafety(request, env) {
   const stripeKey = String(env.STRIPE_SECRET_KEY || "");
   if (!stripeKey) return null;
-  const prodHost = isProductionHost20(request2);
+  const prodHost = isProductionHost20(request);
   const runtimeEnv = String(env.RUNTIME_ENV || env.APP_ENV || "").trim().toLowerCase();
   const d1Label = String(env.D1_ENV_LABEL || "").trim().toLowerCase();
   const stripeMode = inferStripeSecretMode2(stripeKey);
@@ -17975,15 +17984,15 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
   return inserted > 0;
 }
 __name(reconcilePaidSessionToOrders, "reconcilePaidSessionToOrders");
-async function handleOrderConfirmed(request2, env) {
-  const reconcileSafetyError = assertReconcileRuntimeSafety(request2, env);
+async function handleOrderConfirmed(request, env) {
+  const reconcileSafetyError = assertReconcileRuntimeSafety(request, env);
   if (reconcileSafetyError) {
     return new Response(JSON.stringify({ error: reconcileSafetyError }), {
       status: 503,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const sessionId = url.searchParams.get("session_id");
   if (!sessionId) {
     return new Response(JSON.stringify({ error: "Missing session_id" }), {
@@ -18043,13 +18052,13 @@ async function handleOrderConfirmed(request2, env) {
 __name(handleOrderConfirmed, "handleOrderConfirmed");
 
 // ../workers/api/color-inventory.ts
-async function handleColorInventory(request2, env) {
+async function handleColorInventory(request, env) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Cache-Control": "public, max-age=60"
   };
-  if (request2.method === "OPTIONS") {
+  if (request.method === "OPTIONS") {
     return new Response(null, { headers: { ...headers, "Access-Control-Allow-Methods": "GET, OPTIONS" } });
   }
   try {
@@ -18091,13 +18100,13 @@ function r2Product3(p) {
 }
 __name(r2Product3, "r2Product");
 var onRequest5 = /* @__PURE__ */ __name(async (context) => {
-  const { request: request2, env } = context;
-  const url = new URL(request2.url);
+  const { request, env } = context;
+  const url = new URL(request.url);
   const path = url.pathname;
   const normalizedPath = normalizeAdminApiPath(path);
   const adminRouteMode = classifyAdminApiPath(normalizedPath);
   if (adminRouteMode !== "not_admin") {
-    if (request2.method === "OPTIONS") {
+    if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
         headers: {
@@ -18107,7 +18116,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
         }
       });
     }
-    const auth = await authorizeAdminForRoute(request2, env, normalizedPath);
+    const auth = await authorizeAdminForRoute(request, env, normalizedPath);
     if (!auth.ok) {
       return new Response(JSON.stringify({ error: auth.error }), {
         status: auth.status,
@@ -18116,23 +18125,23 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     }
   }
   if (path.startsWith("/api/v1/gsc")) {
-    const gscRes = await handleGscApi(request2, env);
+    const gscRes = await handleGscApi(request, env);
     if (gscRes) return gscRes;
   }
   if (path.startsWith("/api/v1/ga4")) {
-    const ga4Res = await handleGa4Api(request2, env);
+    const ga4Res = await handleGa4Api(request, env);
     if (ga4Res) return ga4Res;
   }
   if (path.startsWith("/api/v1/etsy")) {
-    const etsyRes = await handleEtsyApi(request2, env);
+    const etsyRes = await handleEtsyApi(request, env);
     if (etsyRes) return etsyRes;
   }
   if (path.startsWith("/api/v1/google-ads")) {
-    const googleAdsRes = await handleGoogleAdsApi(request2, env);
+    const googleAdsRes = await handleGoogleAdsApi(request, env);
     if (googleAdsRes) return googleAdsRes;
   }
   if (path.startsWith("/api/v1/") || path === "/api/v1") {
-    const salesRes = await handleSalesApi(request2, env);
+    const salesRes = await handleSalesApi(request, env);
     if (salesRes) return salesRes;
   }
   if (path === "/api/health") {
@@ -18141,7 +18150,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     });
   }
   if (path.startsWith("/api/products")) {
-    const res = await handleProducts(request2, env);
+    const res = await handleProducts(request, env);
     const body = await res.text();
     try {
       const json13 = JSON.parse(body);
@@ -18155,130 +18164,130 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     }
   }
   if (path.startsWith("/api/pricing-params") || path.startsWith("/api/diy-prices")) {
-    return handlePricingParams(request2, env);
+    return handlePricingParams(request, env);
   }
   if (path.startsWith("/api/pricing")) {
-    return handlePricing(request2, env);
+    return handlePricing(request, env);
   }
   if (path === "/api/geo") {
-    return handleGeo(request2, env);
+    return handleGeo(request, env);
   }
   if (path === "/api/countries" || path === "/api/countries/") {
-    return handleCountries(request2, env);
+    return handleCountries(request, env);
   }
   if (path === "/api/color-inventory" || path === "/api/color-inventory/") {
-    return handleColorInventory(request2, env);
+    return handleColorInventory(request, env);
   }
   if (path === "/api/subscribe" || path === "/api/subscribe/") {
-    return handleSubscribe(request2, env);
+    return handleSubscribe(request, env);
   }
   if (path === "/api/unsubscribe" || path === "/api/unsubscribe/") {
-    return handleUnsubscribe(request2, env);
+    return handleUnsubscribe(request, env);
   }
   if (path === "/api/contact" || path === "/api/contact/") {
-    return handleContact(request2, env);
+    return handleContact(request, env);
   }
   if (path === "/api/quote" || path === "/api/quote/") {
-    return handleQuote(request2, env);
+    return handleQuote(request, env);
   }
   if (path === "/api/admin/upload" || path === "/api/admin/upload/") {
-    return handleAdminUpload(request2, env);
+    return handleAdminUpload(request, env);
   }
   if (path.startsWith("/api/admin/products")) {
-    return handleAdminProducts(request2, env);
+    return handleAdminProducts(request, env);
   }
   if (path.startsWith("/api/admin/orders")) {
-    return handleAdminOrders(request2, env);
+    return handleAdminOrders(request, env);
   }
   if (path === "/api/admin/customers" || path === "/api/admin/customers/") {
-    return handleAdminCustomers(request2, env);
+    return handleAdminCustomers(request, env);
   }
   if (path === "/api/admin/stats" || path === "/api/admin/stats/") {
-    return handleAdminStats(request2, env);
+    return handleAdminStats(request, env);
   }
   if (path.startsWith("/api/admin/analysis")) {
-    return handleAdminAnalysis(request2, env);
+    return handleAdminAnalysis(request, env);
   }
   if (path.startsWith("/api/admin/cost-model")) {
-    return handleAdminCostModel(request2, env);
+    return handleAdminCostModel(request, env);
   }
   if (path === "/api/admin/shipping-rates" || path === "/api/admin/shipping-rates/") {
-    return handleAdminShippingRates(request2, env);
+    return handleAdminShippingRates(request, env);
   }
   if (path === "/api/admin/shipping-product-tiers" || path === "/api/admin/shipping-product-tiers/") {
-    return handleAdminShippingProductTiers(request2, env);
+    return handleAdminShippingProductTiers(request, env);
   }
   if (path === "/api/admin/shipping-add-rates" || path === "/api/admin/shipping-add-rates/") {
-    return handleAdminShippingAddRates(request2, env);
+    return handleAdminShippingAddRates(request, env);
   }
   if (path === "/api/admin/quotes" || path === "/api/admin/quotes/") {
-    return handleAdminQuotes(request2, env);
+    return handleAdminQuotes(request, env);
   }
   if (path === "/api/admin/promo" || path === "/api/admin/promo/") {
-    return handleAdminPromo(request2, env);
+    return handleAdminPromo(request, env);
   }
   if (path === "/api/boat-models" || path === "/api/boat-models/") {
-    return handleBoatModels(request2, env);
+    return handleBoatModels(request, env);
   }
   if (path === "/api/admin/boat-models" || path === "/api/admin/boat-models/") {
-    return handleAdminBoatModels(request2, env);
+    return handleAdminBoatModels(request, env);
   }
   if (path === "/api/admin/blog" || path === "/api/admin/blog/") {
-    return handleAdminBlog(request2, env);
+    return handleAdminBlog(request, env);
   }
   if (path === "/api/blog/posts" || path === "/api/blog/posts/") {
-    return handleBlogPosts(request2, env);
+    return handleBlogPosts(request, env);
   }
   if (path === "/api/reviews" || path === "/api/reviews/") {
-    return handleReviews(request2, env);
+    return handleReviews(request, env);
   }
   if (path === "/api/admin/reviews" || path === "/api/admin/reviews/") {
-    return handleAdminReviews(request2, env);
+    return handleAdminReviews(request, env);
   }
   if (path === "/api/admin/recovery-test" || path === "/api/admin/recovery-test/") {
-    return handleAdminRecoveryTest(request2, env);
+    return handleAdminRecoveryTest(request, env);
   }
   if (path === "/api/admin/offers" || path === "/api/admin/offers/") {
-    return handleAdminOffers(request2, env);
+    return handleAdminOffers(request, env);
   }
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
-    return handleAdminCampaigns(request2, env);
+    return handleAdminCampaigns(request, env);
   }
   if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
-    return handleAdminColorInventory(request2, env);
+    return handleAdminColorInventory(request, env);
   }
   if (path === "/api/admin/accounts" || path === "/api/admin/accounts/") {
-    return handleAdminAccounts(request2, env);
+    return handleAdminAccounts(request, env);
   }
   if (path === "/api/admin/thankyou-dispatch" || path === "/api/admin/thankyou-dispatch/") {
-    return handleAdminThankyouDispatch(request2, env);
+    return handleAdminThankyouDispatch(request, env);
   }
   if (path === "/api/shipping/calculate" || path === "/api/shipping/calculate/") {
-    return handleShippingCalculate(request2, env);
+    return handleShippingCalculate(request, env);
   }
   if (path === "/api/favorites" || path === "/api/favorites/" || path === "/api/admin/favorites/stats" || path === "/api/admin/favorites/stats/") {
-    return handleFavorites(request2, env);
+    return handleFavorites(request, env);
   }
   if (path === "/api/discount/validate" || path === "/api/discount/validate/") {
-    return handleDiscountValidate(request2, env);
+    return handleDiscountValidate(request, env);
   }
   if (path === "/api/discount/claim" || path === "/api/discount/claim/") {
-    return handleDiscountClaim(request2, env);
+    return handleDiscountClaim(request, env);
   }
   if (path.startsWith("/api/admin/contacts")) {
-    return handleAdminContacts(request2, env);
+    return handleAdminContacts(request, env);
   }
   if (path === "/api/admin/pricing-params" || path === "/api/admin/pricing-params/") {
-    return handleAdminPricingParams(request2, env);
+    return handleAdminPricingParams(request, env);
   }
   if (path === "/api/admin/diy-prices" || path === "/api/admin/diy-prices/") {
-    return handleAdminDiyPrices(request2, env);
+    return handleAdminDiyPrices(request, env);
   }
   if (path === "/api/admin/exchange-rates" || path === "/api/admin/exchange-rates/") {
-    return handleAdminExchangeRates(request2, env);
+    return handleAdminExchangeRates(request, env);
   }
   if (path === "/api/admin/subscribers" || path === "/api/admin/subscribers/") {
-    if (request2.method === "DELETE") {
+    if (request.method === "DELETE") {
       const id = url.searchParams.get("id");
       if (!id) {
         return new Response(JSON.stringify({ error: "Missing 'id' parameter" }), { status: 400, headers: { "Content-Type": "application/json" } });
@@ -18286,7 +18295,7 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
       await env.DB.prepare("DELETE FROM subscribers WHERE id = ?").bind(Number(id)).run();
       return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } });
     }
-    if (request2.method !== "GET") {
+    if (request.method !== "GET") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "Content-Type": "application/json" } });
     }
     const fmt = url.searchParams.get("format");
@@ -18299,19 +18308,19 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
     return new Response(JSON.stringify({ subscribers: results }), { headers: { "Content-Type": "application/json" } });
   }
   if (path === "/api/checkout" || path === "/api/checkout/") {
-    return handleCheckout(request2, env);
+    return handleCheckout(request, env);
   }
   if (path === "/api/webhook/stripe" || path === "/api/webhook/stripe/") {
-    return handleStripeWebhook(request2, env);
+    return handleStripeWebhook(request, env);
   }
   if (path === "/api/auth/me" || path === "/api/auth/me/") {
-    return handleAuth(request2, env);
+    return handleAuth(request, env);
   }
   if (path.startsWith("/api/customers")) {
-    return handleCustomers(request2, env);
+    return handleCustomers(request, env);
   }
   if (path === "/api/order-confirmed" || path === "/api/order-confirmed/") {
-    return handleOrderConfirmed(request2, env);
+    return handleOrderConfirmed(request, env);
   }
   if (path.startsWith("/r2/")) {
     const key = path.substring(4);
@@ -18335,8 +18344,8 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
 
 // blogs/[[path]].ts
 async function onRequest6(context) {
-  const { request: request2, env, next } = context;
-  const url = new URL(request2.url);
+  const { request, env, next } = context;
+  const url = new URL(request.url);
   const path = url.pathname;
   if (path === "/blogs/" || path === "/blogs") {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -18517,8 +18526,8 @@ function buildCard(product, isTh) {
 }
 __name(buildCard, "buildCard");
 async function onRequest7(context) {
-  const { request: request2, env, next } = context;
-  const url = new URL(request2.url);
+  const { request, env, next } = context;
+  const url = new URL(request.url);
   const path = url.pathname;
   const isEnProducts = path === "/products/" || path === "/products";
   const isThProducts = path === "/th/products/" || path === "/th/products";
@@ -18582,8 +18591,8 @@ __name(onRequest7, "onRequest");
 
 // quote/[[path]].ts
 var onRequest8 = /* @__PURE__ */ __name(async (context) => {
-  const { request: request2, env } = context;
-  const url = new URL(request2.url);
+  const { request, env } = context;
+  const url = new URL(request.url);
   const pathParts = url.pathname.replace(/^\/+|\/+$/g, "").split("/");
   const quoteId = pathParts[1];
   if (!quoteId) {
@@ -18643,7 +18652,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
     } catch {
     }
     return "https://clerk.mildmate.com https://accounts.mildmate.com";
-  })(request2.url);
+  })(request.url);
   const securityCsp2 = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.googleadservices.com https://cdn.jsdelivr.net https://cdn.protect.clerk.com " + clerkOrigins + " https://challenges.cloudflare.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' https://*.cloudfront.net https://*.amazonaws.com https://img.youtube.com https://i.ytimg.com https://placehold.co https://img.clerk.com https://*.r2.dev https://www.googletagmanager.com https://www.google-analytics.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com https://www.google.co.th data: blob:; connect-src 'self' https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://www.googleadservices.com https://www.google.co.th https://cdn.protect.clerk.com " + clerkOrigins + " https://challenges.cloudflare.com; frame-src https://www.googletagmanager.com https://js.stripe.com https://hooks.stripe.com https://www.youtube.com https://www.youtube-nocookie.com " + clerkOrigins + " https://challenges.cloudflare.com; upgrade-insecure-requests;";
   function esc(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -19037,8 +19046,8 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
 
 // r2/[[path]].ts
 var onRequest9 = /* @__PURE__ */ __name(async (context) => {
-  const { request: request2, env } = context;
-  const url = new URL(request2.url);
+  const { request, env } = context;
+  const url = new URL(request.url);
   const key = url.pathname.replace("/r2/", "");
   const R2_PUBLIC_BASE8 = "https://pub-1739fdf11fd0474f982b7a9f30f77669.r2.dev";
   const publicUrl = `${R2_PUBLIC_BASE8}/${key}`;
@@ -19068,11 +19077,11 @@ var onRequest10 = /* @__PURE__ */ __name(async (context) => {
 }, "onRequest");
 
 // account/_middleware.ts
-function getClerkSessionToken2(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getClerkSessionToken2(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   if (cookieMatch) return cookieMatch[1];
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
   if (qp) return qp;
   return null;
@@ -19156,11 +19165,11 @@ function isDevelopmentAuthHost(url) {
 __name(isDevelopmentAuthHost, "isDevelopmentAuthHost");
 
 // admin/_middleware.ts
-function getClerkSessionToken3(request2) {
-  const cookieHeader = request2.headers.get("Cookie") || "";
+function getClerkSessionToken3(request) {
+  const cookieHeader = request.headers.get("Cookie") || "";
   const cookieMatch = cookieHeader.match(/__session=([^;]+)/) || cookieHeader.match(/__clerk_db_jwt=([^;]+)/);
   if (cookieMatch) return cookieMatch[1];
-  const url = new URL(request2.url);
+  const url = new URL(request.url);
   const qp = url.searchParams.get("__clerk_db_jwt") || url.searchParams.get("__session");
   if (qp) return qp;
   return null;
@@ -19693,8 +19702,8 @@ function isProductionHost21(hostname) {
   return host === "www.mildmate.com" || host === "mildmate.com";
 }
 __name(isProductionHost21, "isProductionHost");
-function buildAnalyticsRuntimeConfigScript(request2, env) {
-  const host = new URL(request2.url).hostname;
+function buildAnalyticsRuntimeConfigScript(request, env) {
+  const host = new URL(request.url).hostname;
   const prodHost = isProductionHost21(host);
   const runtimeEnv = String(env?.ANALYTICS_ENV || (prodHost ? "production" : "staging")).trim().toLowerCase();
   const nonProdEnabled = String(env?.ANALYTICS_NON_PROD_ENABLED || "").trim().toLowerCase() === "true";
@@ -20144,7 +20153,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-9ciHWr/functionsRoutes-0.9303216726888638.mjs
+// ../.wrangler/tmp/pages-U0GTII/functionsRoutes-0.6467946040708883.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
@@ -20581,10 +20590,10 @@ __name(pathToRegexp, "pathToRegexp");
 
 // ../node_modules/wrangler/templates/pages-template-worker.ts
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
-function* executeRequest(request2) {
-  const requestPath = new URL(request2.url).pathname;
+function* executeRequest(request) {
+  const requestPath = new URL(request.url).pathname;
   for (const route of [...routes].reverse()) {
-    if (route.method && route.method !== request2.method) {
+    if (route.method && route.method !== request.method) {
       continue;
     }
     const routeMatcher = match(route.routePath.replace(escapeRegex, "\\$&"), {
@@ -20606,7 +20615,7 @@ function* executeRequest(request2) {
     }
   }
   for (const route of routes) {
-    if (route.method && route.method !== request2.method) {
+    if (route.method && route.method !== request.method) {
       continue;
     }
     const routeMatcher = match(route.routePath.replace(escapeRegex, "\\$&"), {
@@ -20632,23 +20641,23 @@ function* executeRequest(request2) {
 __name(executeRequest, "executeRequest");
 var pages_template_worker_default = {
   async fetch(originalRequest, env, workerContext) {
-    let request2 = originalRequest;
-    const handlerIterator = executeRequest(request2);
+    let request = originalRequest;
+    const handlerIterator = executeRequest(request);
     let data = {};
     let isFailOpen = false;
     const next = /* @__PURE__ */ __name(async (input, init) => {
       if (input !== void 0) {
         let url = input;
         if (typeof input === "string") {
-          url = new URL(input, request2.url).toString();
+          url = new URL(input, request.url).toString();
         }
-        request2 = new Request(url, init);
+        request = new Request(url, init);
       }
       const result = handlerIterator.next();
       if (result.done === false) {
         const { handler, params, path } = result.value;
         const context = {
-          request: new Request(request2.clone()),
+          request: new Request(request.clone()),
           functionPath: path,
           next,
           params,
@@ -20673,10 +20682,10 @@ var pages_template_worker_default = {
         }
         return cloneResponse(response6);
       } else if ("ASSETS") {
-        const response6 = await env["ASSETS"].fetch(request2);
+        const response6 = await env["ASSETS"].fetch(request);
         return cloneResponse(response6);
       } else {
-        const response6 = await fetch(request2);
+        const response6 = await fetch(request);
         return cloneResponse(response6);
       }
     }, "next");
@@ -20684,7 +20693,7 @@ var pages_template_worker_default = {
       return await next();
     } catch (error) {
       if (isFailOpen) {
-        const response6 = await env["ASSETS"].fetch(request2);
+        const response6 = await env["ASSETS"].fetch(request);
         return cloneResponse(response6);
       }
       throw error;
