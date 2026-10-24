@@ -615,11 +615,23 @@ export async function onRequest(context: any): Promise<Response> {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
 
-    // 2. Query D1 for this product's image, title, pricing, and category data
-    const stmt = context.env.DB.prepare(
-      'SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
-    ).bind(slug);
-    const product = await stmt.first() as any;
+    // 2. Query D1 for this product's image, title, pricing, and category data.
+    // Some environments may lag on schema columns (faq_en/faq_th). Keep a
+    // compatibility fallback so TH product pages do not silently fall back to
+    // static HTML when those columns are temporarily unavailable.
+    let product: any = null;
+    try {
+      const stmt = context.env.DB.prepare(
+        'SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+      ).bind(slug);
+      product = await stmt.first() as any;
+    } catch (dbErr) {
+      console.warn('Product SSR: primary product query failed, retrying with compatibility projection', dbErr);
+      const fallbackStmt = context.env.DB.prepare(
+        'SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+      ).bind(slug);
+      product = await fallbackStmt.first() as any;
+    }
 
     const localizedDescription = isTh
       ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || '')
@@ -849,7 +861,7 @@ export async function onRequest(context: any): Promise<Response> {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=60',
-        'Content-Security-Policy': securityCsp(request.url),
+        'Content-Security-Policy': securityCsp(context.request.url),
       },
     });
   } catch (err) {
