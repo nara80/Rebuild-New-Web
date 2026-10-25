@@ -1118,16 +1118,24 @@
       }
       return top;
     }
-    var targets = [document.getElementById('sale-info'), ensureTopSaleInfo()].filter(Boolean);
-    if (!targets.length) return;
+    // Render only next to the price (#sale-info-top). The old #sale-info slot
+    // inside the size panel is retired — the countdown there interrupted the
+    // size-selection flow and duplicated the price-area badge.
+    // Neutralize the legacy embedded page script (templates' updateSaleDisplay):
+    // kill its 60s interval and clear the size-panel slot so it stays empty.
+    try { if (window._saleTimer) { clearInterval(window._saleTimer); window._saleTimer = null; } } catch (e) {}
+    var legacy = document.getElementById('sale-info');
+    if (legacy && legacy.innerHTML !== '') legacy.innerHTML = '';
+    var target = ensureTopSaleInfo();
+    if (!target) return;
     if (!discount) {
-      targets.forEach(function (target) { target.innerHTML = ''; });
+      target.innerHTML = '';
       return;
     }
     var countdown = typeof MildMateCampaigns !== 'undefined' ? MildMateCampaigns.getCampaignCountdown(window.location.pathname.split('/').filter(function(s){return s;}).pop()) : null;
     var html = '<div class="sale-badge">-' + discount + '% SALE</div>';
-    if (countdown) html += '<div class="sale-countdown">(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)</div>';
-    targets.forEach(function (target) { target.innerHTML = html; });
+    if (countdown) html += '<div class="sale-countdown" style="margin-left:8px">(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)</div>';
+    target.innerHTML = html;
   }
 
   function displayPrice(thb, usd, priceEl) {
