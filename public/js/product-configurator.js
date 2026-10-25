@@ -29,6 +29,14 @@
     var val = PRODUCT_UI_LABELS[key];
     return val && String(val).trim() ? String(val).trim() : defaultLabel;
   }
+  var CART_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ';
+  function addToCartLabel(ready) {
+    // D1 cta_primary overrides are authored as pre-selection guidance
+    // ("เลือกขนาดและเนื้อผ้า") — valid only while the form is incomplete.
+    // Once every selection is made the button must read as the cart action.
+    var action = t('Add to Cart', 'เพิ่มลงตะกร้า');
+    return ready ? action : labelOr(action, 'ctaPrimary');
+  }
 
   // -- Detect product variant --
   var path = window.location.pathname;
@@ -428,6 +436,8 @@
     }).observe(priceDisplay, { characterData: true, childList: true, subtree: true });
   }
   var addToCartBtn = document.getElementById('add-to-cart');
+  var lastCtaReady = null;
+  var cartFeedbackActive = false;
   var customPrice = document.getElementById('custom-price');
   var mobileCtaPrice = document.getElementById('mobile-cta-price');
   var desktopStickyPriceBlock = document.querySelector('.desktop-cta-sticky .price-block');
@@ -492,7 +502,8 @@
     var priceSummary = document.getElementById('price-summary');
     if (priceSummary) priceSummary.style.display = hidePricingUI ? 'none' : '';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + labelOr(t('Add to Cart', 'เพิ่มลงตะกร้า'), 'ctaPrimary');
+      lastCtaReady = null;
+      addToCartBtn.innerHTML = CART_ICON_SVG + addToCartLabel(false);
       addToCartBtn.style.background = '';
       addToCartBtn.style.color = '';
     }
@@ -612,7 +623,15 @@
     }
 
     if (addToCartBtn) {
-      addToCartBtn.disabled = !(v.region && v.size && v.fabric && v.color);
+      var ready = !!(v.region && v.size && v.fabric && v.color);
+      addToCartBtn.disabled = !ready;
+      // State-aware CTA: guidance label while incomplete, cart action once
+      // ready. Custom/quote tabs and marine shape flow manage their own label.
+      var customTabActive = !!(tabCustom && tabCustom.classList.contains('active'));
+      if (!customTabActive && !isMarineShapeProduct && !cartFeedbackActive && lastCtaReady !== ready) {
+        lastCtaReady = ready;
+        addToCartBtn.innerHTML = CART_ICON_SVG + addToCartLabel(ready);
+      }
     }
   }
 
@@ -680,7 +699,7 @@
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
           priceDisplay.innerHTML = displayPrice(thb, price);
-          if (addToCartBtn) { addToCartBtn.textContent = labelOr(t('Add to Cart', 'เพิ่มลงตะกร้า'), 'ctaPrimary'); addToCartBtn.style.background = ''; }
+          if (addToCartBtn) { addToCartBtn.textContent = addToCartLabel(true); addToCartBtn.style.background = ''; }
           state._dims = { w: parseFloat(opt.dataset.headMin) || 0, l: parseFloat(opt.dataset.lengthMin) || 0, d: 30 };
           state._price = { thb: thb, usd: price };
           state.region = 'marine';  // Marine uses shape selector — mark region as set
@@ -1853,10 +1872,13 @@
       trackAddToCart(item);
 
       // Visual feedback
+      cartFeedbackActive = true;
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
       addToCartBtn.style.background = '#16a34a';
       setTimeout(function () {
-        addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + labelOr(t('Add to Cart', 'เพิ่มลงตะกร้า'), 'ctaPrimary');
+        cartFeedbackActive = false;
+        lastCtaReady = true;
+        addToCartBtn.innerHTML = CART_ICON_SVG + addToCartLabel(true);
         addToCartBtn.style.background = '';
         addToCartBtn.disabled = false;
       }, 2000);
