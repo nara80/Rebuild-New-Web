@@ -4175,21 +4175,21 @@ async function onRequest4(context) {
         product = await legacyStmt.first();
       }
     }
-    const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
-    const seoMetaDescription = isTh ? String(product?.seo_meta_description_th || product?.seo_meta_description_en || "") : String(product?.seo_meta_description_en || product?.seo_meta_description_th || "");
+    const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || "");
+    const seoMetaDescription = isTh ? String(product?.seo_meta_description_th || product?.seo_meta_description_en || "") : String(product?.seo_meta_description_en || "");
     html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, seoMetaDescription);
     const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
     const localizedFaq = isTh ? String(product?.faq_th || thFaqFallback) : String(product?.faq_en || "");
     html = applyLocalizedFaqFromD1(html, localizedFaq);
-    const localizedTagline = isTh ? String(product?.product_tagline_th || product?.card_benefit_th || product?.product_tagline_en || product?.card_benefit_en || product?.title_th || "") : String(product?.product_tagline_en || product?.card_benefit_en || product?.product_tagline_th || product?.card_benefit_th || product?.title_en || "");
+    const localizedTagline = isTh ? String(product?.product_tagline_th || product?.card_benefit_th || product?.product_tagline_en || product?.card_benefit_en || product?.title_th || "") : String(product?.product_tagline_en || product?.card_benefit_en || product?.title_en || "");
     if (isTh) {
       html = applyThaiProductUiLocalization(html, localizedTagline, slug);
     } else {
       html = replaceProductTagline(html, localizedTagline);
     }
-    const ctaPrimary = isTh ? String(product?.cta_primary_th || product?.cta_primary_en || "") : String(product?.cta_primary_en || product?.cta_primary_th || "");
-    const ctaCustom = isTh ? String(product?.cta_custom_th || product?.cta_custom_en || "") : String(product?.cta_custom_en || product?.cta_custom_th || "");
-    const ctaSizeHelp = isTh ? String(product?.cta_size_help_th || product?.cta_size_help_en || "") : String(product?.cta_size_help_en || product?.cta_size_help_th || "");
+    const ctaPrimary = isTh ? String(product?.cta_primary_th || product?.cta_primary_en || "") : String(product?.cta_primary_en || "");
+    const ctaCustom = isTh ? String(product?.cta_custom_th || product?.cta_custom_en || "") : String(product?.cta_custom_en || "");
+    const ctaSizeHelp = isTh ? String(product?.cta_size_help_th || product?.cta_size_help_en || "") : String(product?.cta_size_help_en || "");
     html = applyProductUiLabelOverrides(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
     html = injectConfiguratorLabelMeta(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
     if (slug === "flat-sheet-extra-deep-pocket") {
@@ -4211,8 +4211,8 @@ async function onRequest4(context) {
       }
     }
     const mainImage = product && product.image_url || images[0] || "";
-    const visibleTitle = isTh ? String(product?.title_th || product?.title_en || "") : String(product?.title_en || product?.title_th || "");
-    const seoTitleRaw = isTh ? String(product?.seo_title_th || product?.seo_title_en || visibleTitle) : String(product?.seo_title_en || product?.seo_title_th || visibleTitle);
+    const visibleTitle = isTh ? String(product?.title_th || product?.title_en || "") : String(product?.title_en || "");
+    const seoTitleRaw = isTh ? String(product?.seo_title_th || product?.seo_title_en || visibleTitle) : String(product?.seo_title_en || visibleTitle);
     const seoTitle = formatSeoTitle(seoTitleRaw);
     if (visibleTitle) {
       if (seoTitle) {
@@ -12951,6 +12951,7 @@ async function handleAdminQuotes(request, env) {
         total,
         total_pages: totalPages
       },
+      // Backward compatibility
       page,
       total,
       status: rawStatus || "all",
@@ -15298,21 +15299,6 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
-async function ensureCampaignsSchemaPublic(env) {
-  await env.DB.prepare(
-    `CREATE TABLE IF NOT EXISTS marketing_campaigns (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      discount_pct INTEGER NOT NULL,
-      product_slugs TEXT NOT NULL,
-      start_date TEXT NOT NULL,
-      end_date TEXT NOT NULL,
-      is_active INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`
-  ).run();
-}
-__name(ensureCampaignsSchemaPublic, "ensureCampaignsSchemaPublic");
 function normalizeProductSlugs(input) {
   const raw = Array.isArray(input) ? input : [];
   const out = [];
@@ -15375,7 +15361,7 @@ async function validateCampaignPayload(body, env, requireId = false) {
   const found = await env.DB.prepare(
     `SELECT slug FROM products WHERE COALESCE(is_active, 1) = 1 AND slug IN (${placeholders})`
   ).bind(...productSlugs).all();
-  const foundSet = /* @__PURE__ */ new Set((found.results || []).map((r) => String(r.slug || "")));
+  const foundSet = new Set((found.results || []).map((r) => String(r.slug || "")));
   const invalid = productSlugs.filter((slug) => !foundSet.has(slug));
   if (invalid.length) return { ok: false, error: "Invalid or inactive product slugs: " + invalid.join(", ") };
   return {
@@ -15391,37 +15377,6 @@ async function validateCampaignPayload(body, env, requireId = false) {
   };
 }
 __name(validateCampaignPayload, "validateCampaignPayload");
-async function handleCampaigns(request, env) {
-  const headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
-  };
-  if (request.method === "OPTIONS") return new Response(null, { headers });
-  if (request.method !== "GET") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
-  await ensureCampaignsSchemaPublic(env);
-  const { results } = await env.DB.prepare(
-    "SELECT id, name, discount_pct, product_slugs, start_date, end_date FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now') ORDER BY discount_pct DESC, created_at DESC"
-  ).all();
-  const campaigns = (results || []).map((r) => ({
-    id: r.id,
-    name: r.name,
-    discount: Number(r.discount_pct || 0),
-    productSlugs: (() => {
-      try {
-        return JSON.parse(r.product_slugs || "[]");
-      } catch {
-        return [];
-      }
-    })(),
-    startDate: r.start_date,
-    endDate: r.end_date,
-    isActive: true
-  }));
-  return new Response(JSON.stringify({ campaigns }), { headers });
-}
-__name(handleCampaigns, "handleCampaigns");
 async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -15508,6 +15463,54 @@ async function handleAdminCampaigns(request, env) {
   return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
 }
 __name(handleAdminCampaigns, "handleAdminCampaigns");
+
+// ../workers/api/campaigns.ts
+async function ensureCampaignsSchema2(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS marketing_campaigns (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      discount_pct INTEGER NOT NULL,
+      product_slugs TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+}
+__name(ensureCampaignsSchema2, "ensureCampaignsSchema");
+async function handleCampaigns(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+  };
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  if (request.method !== "GET") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  await ensureCampaignsSchema2(env);
+  const { results } = await env.DB.prepare(
+    "SELECT id, name, discount_pct, product_slugs, start_date, end_date FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now') ORDER BY discount_pct DESC, created_at DESC"
+  ).all();
+  const campaigns = (results || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    discount: Number(r.discount_pct || 0),
+    productSlugs: (() => {
+      try {
+        return JSON.parse(r.product_slugs || "[]");
+      } catch {
+        return [];
+      }
+    })(),
+    startDate: r.start_date,
+    endDate: r.end_date,
+    isActive: true
+  }));
+  return new Response(JSON.stringify({ campaigns }), { headers });
+}
+__name(handleCampaigns, "handleCampaigns");
 
 // ../workers/api/admin-accounts.ts
 function getClerkSessionToken(request) {
@@ -16065,6 +16068,32 @@ async function handleFavorites(request, env) {
 __name(handleFavorites, "handleFavorites");
 
 // ../workers/api/checkout.ts
+async function getActiveCampaignDiscounts(env) {
+  const map = /* @__PURE__ */ new Map();
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT discount_pct, product_slugs FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now')"
+    ).all();
+    for (const row of results || []) {
+      const pct = Number(row.discount_pct || 0);
+      if (!(pct > 0)) continue;
+      let slugs = [];
+      try {
+        slugs = JSON.parse(row.product_slugs || "[]");
+      } catch {
+        slugs = [];
+      }
+      for (const slug of slugs) {
+        const key = String(slug || "").trim();
+        if (key && pct > (map.get(key) || 0)) map.set(key, pct);
+      }
+    }
+  } catch (e) {
+    console.warn("Campaign discount lookup failed:", e?.message || e);
+  }
+  return map;
+}
+__name(getActiveCampaignDiscounts, "getActiveCampaignDiscounts");
 function isProductionHost18(request) {
   try {
     const host = new URL(request.url).hostname.toLowerCase();
@@ -16345,10 +16374,23 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const campaignDiscounts = await getActiveCampaignDiscounts(env);
   const lineItems = items.map((item) => {
     const itemName = getItemName(item);
     const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
-    const unitAmount = currency === "thb" ? Math.round((item.price_thb || 0) * 100) : Math.round((item.price_usd || 0) * 100);
+    const baseThb = Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = Number(item.original_price_usd || item.price_usd || 0);
+    const unitAmount = currency === "thb" ? Math.round(baseThb * 100) : Math.round(baseUsd * 100);
+    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    const campaignPct = isQuoteItem ? 0 : campaignDiscounts.get(String(item.product_slug || "").trim()) || 0;
+    const promoPct = discountApplied ? discountPct : 0;
+    let finalUnitAmount = unitAmount;
+    if (campaignPct > promoPct) {
+      const baseMajor = currency === "thb" ? baseThb : baseUsd;
+      finalUnitAmount = Math.round(baseMajor * (100 - campaignPct) / 100) * 100;
+    } else if (promoPct > 0) {
+      finalUnitAmount = Math.round(unitAmount * (100 - promoPct) / 100);
+    }
     const desc = [
       itemName,
       normalizedFabric ? `Fabric: ${normalizedFabric}` : "",
@@ -16362,7 +16404,7 @@ async function handleCheckout(request, env) {
           name: itemName,
           description: desc
         },
-        unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount
+        unit_amount: finalUnitAmount
       },
       quantity: item.qty || 1
     };
@@ -20068,6 +20110,118 @@ var SHARED_FOOTER_MOBILE_STYLE = `<style id="shared-footer-mobile-style">
 var SHARED_FAVICON_LINKS = `<link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png">
 <link rel="apple-touch-icon" href="/images/logo.png">`;
 var LISTING_IMAGE_SYNC_SCRIPT = `<script src="/js/listing-images-sync.js"><\/script>`;
+var CATALOG_CAMPAIGN_INLINE_FALLBACK = `<script id="catalog-campaign-inline-fallback">
+(function(){
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (window.__MildMateCatalogCampaignUiLoaded) return;
+  window.__MildMateCatalogCampaignFallbackLoaded = true;
+
+  function isThaiPage() {
+    try {
+      var lang = (document.documentElement && document.documentElement.lang || '').toLowerCase();
+      var path = window.location.pathname || '';
+      return lang === 'th' || path.indexOf('/th/') === 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function toNumber(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
+  }
+
+  function getProductSlug(card) {
+    var link = card.querySelector('a[href*="/product/"]');
+    if (!link) return '';
+    var href = link.getAttribute('href') || '';
+    var parts = href.split('/').filter(function (s) { return s; });
+    return parts.length ? parts[parts.length - 1] : '';
+  }
+
+  function formatBasePrice(usd, thb, isThai) {
+    return isThai ? ('\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19 \u0E3F' + Math.round(thb).toLocaleString()) : ('From US$' + Math.round(usd));
+  }
+
+  function ensureStyles() {
+    if (document.getElementById('catalog-campaign-ui-style')) return;
+    var style = document.createElement('style');
+    style.id = 'catalog-campaign-ui-style';
+    style.textContent =
+      '.product-price .price-strike{color:#94a3b8;text-decoration:line-through;font-weight:600;margin-right:6px}' +
+      '.product-price .price-sale{color:#dc2626;font-weight:800}' +
+      '.catalog-sale-meta{display:flex;align-items:center;gap:8px;margin-top:6px;min-height:20px;flex-wrap:wrap}' +
+      '.catalog-sale-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1.2}' +
+      '.catalog-sale-countdown{font-size:12px;color:#64748b;font-weight:600;line-height:1.3}' +
+      '@media (max-width:768px){.catalog-sale-meta{gap:6px}.catalog-sale-badge{font-size:10px;padding:2px 7px}.catalog-sale-countdown{display:block;width:100%;font-size:11px}}';
+    document.head.appendChild(style);
+  }
+
+  function renderAll() {
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.product-card'));
+    if (!cards.length) return;
+    var isThai = isThaiPage();
+
+    cards.forEach(function(card) {
+      var priceEl = card.querySelector('.product-price');
+      if (!priceEl) return;
+      var usd = toNumber(priceEl.getAttribute('data-usd'));
+      var thb = toNumber(priceEl.getAttribute('data-thb'));
+      if (!usd && !thb) return;
+
+      var slug = getProductSlug(card);
+      var discountInfo = (typeof MildMateCampaigns !== 'undefined' && slug)
+        ? MildMateCampaigns.getDiscountForProduct(slug)
+        : { discount: 0 };
+      var discount = toNumber(discountInfo && discountInfo.discount);
+
+      var meta = card.querySelector('.catalog-sale-meta');
+      if (!meta) {
+        meta = document.createElement('div');
+        meta.className = 'catalog-sale-meta';
+        priceEl.insertAdjacentElement('afterend', meta);
+      }
+
+      if (discount > 0) {
+        var saleUsd = Math.max(1, Math.round(usd * (1 - discount / 100)));
+        var saleThb = Math.max(1, Math.round(thb * (1 - discount / 100)));
+        var baseLabel = formatBasePrice(usd, thb, isThai);
+        var saleLabel = formatBasePrice(saleUsd, saleThb, isThai);
+        priceEl.innerHTML = '<span class="price-strike">' + baseLabel + '</span><span class="price-sale">' + saleLabel + '</span>';
+
+        var countdown = (typeof MildMateCampaigns !== 'undefined' && slug)
+          ? MildMateCampaigns.getCampaignCountdown(slug)
+          : null;
+        var countdownText = '';
+        if (countdown) {
+          countdownText = isThai
+            ? ('\u0E2B\u0E21\u0E14\u0E40\u0E02\u0E15\u0E43\u0E19 ' + countdown.days + ' \u0E27\u0E31\u0E19 ' + countdown.hours + ' \u0E0A\u0E21. ' + countdown.mins + ' \u0E19\u0E32\u0E17\u0E35')
+            : ('Ends in ' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm');
+        }
+        meta.innerHTML = (isThai
+          ? ('<span class="catalog-sale-badge">\u0E25\u0E14 ' + discount + '%</span>')
+          : ('<span class="catalog-sale-badge">-' + discount + '% SALE</span>')) +
+          (countdownText ? '<span class="catalog-sale-countdown">' + countdownText + '</span>' : '');
+      } else {
+        priceEl.textContent = formatBasePrice(usd, thb, isThai);
+        meta.innerHTML = '';
+      }
+    });
+  }
+
+  function init() {
+    ensureStyles();
+    renderAll();
+    if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+      MildMateCampaigns.loadStorefrontCampaigns(false).finally(renderAll);
+    }
+    window.addEventListener('mildmate:campaigns-updated', renderAll);
+    window.setInterval(renderAll, 60000);
+  }
+
+  init();
+})();
+<\/script>`;
 function isProductionHost21(hostname) {
   const host = String(hostname || "").toLowerCase();
   return host === "www.mildmate.com" || host === "mildmate.com";
@@ -20480,6 +20634,11 @@ ${header}`);
     html = html.replace(/<\/body>/i, `${LISTING_IMAGE_SYNC_SCRIPT}
 </body>`);
   }
+  const hasCatalogCampaignScriptRef = html.includes("/js/catalog-campaign-ui.js");
+  if (hasProductCards && hasCatalogCampaignScriptRef && !html.includes('id="catalog-campaign-inline-fallback"')) {
+    html = html.replace(/<\/body>/i, `${CATALOG_CAMPAIGN_INLINE_FALLBACK}
+</body>`);
+  }
   if (!html.includes('id="json-ld-org"')) {
     html = html.replace(/<\/head>/i, `${JSON_LD_ORG}
 ${JSON_LD_WEBSITE}
@@ -20524,7 +20683,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-RUTBht/functionsRoutes-0.7956054850289755.mjs
+// ../.wrangler/tmp/pages-sNYs1W/functionsRoutes-0.40252307065351534.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

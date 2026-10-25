@@ -1,5 +1,7 @@
 $ErrorActionPreference = 'Stop'
-cd D:\00_mildmate\Re-Build_web
+# Build relative to this script's own directory so detached-worktree deploys
+# bundle the checked-out sources instead of the main working tree.
+Set-Location $PSScriptRoot
 
 # Build to a TEMP file so public\_worker.js is never left as raw formdata.
 # (The old version wrote formdata straight to public\_worker.js; if extraction
