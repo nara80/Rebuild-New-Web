@@ -431,7 +431,7 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
 
     const db = env.DB;
     const currentOrder = await db.prepare(
-      `SELECT id, stripe_session_id, email, customer_name, product_title_en
+      `SELECT id, stripe_session_id, email, customer_name, product_title_en, status, carrier_code, tracking_number
        FROM orders
        WHERE id = ?1`
     ).bind(orderId).first();
@@ -448,6 +448,9 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
     if (newStatus === "shipped") {
       const carrierCode = normalizeCarrier(body.carrier_code);
       const trackingNumber = String(body.tracking_number || "").trim();
+      const sendShippingEmail = body.send_shipping_email === undefined
+        ? true
+        : (body.send_shipping_email === true || body.send_shipping_email === 1 || String(body.send_shipping_email).toLowerCase() === "true");
       if (!carrierCode || !TRACKING_URL_BY_CARRIER[carrierCode]) {
         return json({ error: "carrier_code is required for shipped status" }, 400);
       }
@@ -471,7 +474,31 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
          WHERE id = ?8`
       ).bind(newStatus, carrierCode, trackingNumber, trackingUrl, shippingStatus, shippedAt, archiveValue, orderId).run();
 
-      if (currentOrder.email && env.RESEND_API_KEY) {
+      const currentCarrier = normalizeCarrier((currentOrder as any).carrier_code);
+      const currentTracking = String((currentOrder as any).tracking_number || "").trim();
+      const isSameShippedState = String((currentOrder as any).status || "").toLowerCase() === "shipped"
+        && currentCarrier === carrierCode
+        && currentTracking === trackingNumber;
+      let alreadyNotified = isSameShippedState;
+      if (!alreadyNotified && currentOrder.stripe_session_id) {
+        const duplicateShipment = await db.prepare(
+          `SELECT id
+           FROM orders
+           WHERE stripe_session_id = ?1
+             AND id != ?2
+             AND LOWER(COALESCE(status, '')) = 'shipped'
+             AND LOWER(COALESCE(carrier_code, '')) = ?3
+             AND tracking_number = ?4
+           LIMIT 1`
+        ).bind(String(currentOrder.stripe_session_id), orderId, carrierCode, trackingNumber).first();
+        alreadyNotified = !!duplicateShipment;
+      }
+
+      const emailSkippedReason = !sendShippingEmail
+        ? "disabled_by_admin"
+        : (alreadyNotified ? "duplicate_shipment" : null);
+
+      if (sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY) {
         const orderCode = String(currentOrder.stripe_session_id || orderId).slice(-8);
         const customerName = String(currentOrder.customer_name || "").trim();
         const greeting = customerName ? `Hi ${customerName},` : "Hi,";
@@ -507,6 +534,8 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
         shipping_status: shippingStatus,
         shipped_at: shippedAt,
         is_archived: archiveValue,
+        email_sent: !!(sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY),
+        email_skipped_reason: emailSkippedReason,
       });
     }
 

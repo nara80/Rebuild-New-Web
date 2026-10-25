@@ -1516,6 +1516,7 @@ function promptShippedDetails(defaultCarrier, defaultTracking) {
       '<label style="display:block;font-size:.8125rem;font-weight:600;margin-bottom:6px">Tracking number</label>' +
       '<input id="ship-tracking-input" type="text" value="' + escHtml(trackingNumber) + '" placeholder="e.g. TH1234567890" style="width:100%;padding:10px;border:1px solid var(--c-border);border-radius:8px;margin-bottom:8px;font-family:inherit">' +
       '<div id="ship-track-preview" style="font-size:.75rem;color:var(--c-muted);word-break:break-all;margin-bottom:14px"></div>' +
+      '<label style="display:flex;align-items:center;gap:8px;font-size:.8125rem;color:var(--c-text);margin-bottom:14px;cursor:pointer"><input id="ship-send-email-input" type="checkbox" checked style="margin:0"> Send shipping email to customer</label>' +
       '<div style="display:flex;justify-content:flex-end;gap:8px">' +
         '<button type="button" id="ship-cancel-btn" class="btn btn-outline btn-sm">Cancel</button>' +
         '<button type="button" id="ship-save-btn" class="btn btn-primary btn-sm">Save</button>' +
@@ -1527,6 +1528,7 @@ function promptShippedDetails(defaultCarrier, defaultTracking) {
     var carrierEl = modal.querySelector('#ship-carrier-select');
     var trackingEl = modal.querySelector('#ship-tracking-input');
     var previewEl = modal.querySelector('#ship-track-preview');
+    var sendEmailEl = modal.querySelector('#ship-send-email-input');
     var cancelBtn = modal.querySelector('#ship-cancel-btn');
     var saveBtn = modal.querySelector('#ship-save-btn');
 
@@ -1565,7 +1567,8 @@ function promptShippedDetails(defaultCarrier, defaultTracking) {
         carrier_code: carrier,
         tracking_number: tracking,
         tracking_url: buildTrackingUrl(carrier, tracking),
-        shipping_status: 'in_transit'
+        shipping_status: 'in_transit',
+        send_shipping_email: !!(sendEmailEl && sendEmailEl.checked)
       });
     });
     overlay.addEventListener('click', function(e) { if (e.target === overlay) close(null); });
@@ -1576,6 +1579,7 @@ function promptShippedDetails(defaultCarrier, defaultTracking) {
 }
 
 function mapOrderRow(o) {
+  var statusKey = String(o.status || 'pending').toLowerCase();
   var dims = [];
   if (o.width_cm && o.length_cm) {
     dims.push(o.width_cm + '×' + o.length_cm);
@@ -1599,7 +1603,7 @@ function mapOrderRow(o) {
     qty: qty,
     dims: dims.join(' × ') || '—',
     fabric: o.fabric || '—',
-    status: o.status || 'pending',
+    status: statusKey,
     total: price,
     dbId: o.id,
     isArchived: Number(o.is_archived || 0) === 1,
@@ -1877,7 +1881,8 @@ async function rOrders(){
   h += '<div class="table-wrap orders-desktop-table"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Line Total</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
   var mobileCards = '';
   orders.forEach(function(o){
-    var bc = getOrderStatusClass(o.status);
+    var statusKey = String(o.status || 'pending').toLowerCase();
+    var bc = getOrderStatusClass(statusKey);
     var trackingCell = '—';
     if (o.trackingNumber) {
       var carrierLabel = getCarrierLabel(o.carrierCode);
@@ -1894,28 +1899,34 @@ async function rOrders(){
     h+='<tr><td>'+orderIdCell+'</td><td>'+o.date+'</td><td>'+escHtml(o.customer)+'</td><td>'+productCell+'</td><td><strong>'+o.total+'</strong></td>';
     h+='<td style="font-size:0.75rem">'+trackingCell+'</td>';
     if (o.dbId) {
-      h+='<td><select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+
-        ['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+
+      h+='<td><select data-prev="'+statusKey+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:2px 6px;border:1px solid var(--c-border);border-radius:4px;font-size:0.75rem;font-family:inherit">'+
+        ['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(statusKey===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+
         '</select></td>';
-      var canArchiveCancelled = o.status === 'cancelled';
+      var canArchiveCancelled = statusKey === 'cancelled';
       if (canArchiveCancelled) {
         var actionLabel = o.isArchived ? 'Unarchive' : 'Archive';
         var actionStyle = o.isArchived ? '' : 'color:var(--c-red);border-color:var(--c-red)';
         h += '<td><button class="btn btn-sm btn-outline" style="'+actionStyle+'" onclick="setOrderArchived('+o.dbId+','+(o.isArchived ? 'false' : 'true')+')">'+actionLabel+'</button></td>';
+      } else if (statusKey === 'shipped') {
+        h += '<td><button class="btn btn-sm btn-outline" onclick="editOrderTracking(' + o.dbId + ',\'' + encodeURIComponent(o.carrierCode || '') + '\',\'' + encodeURIComponent(o.trackingNumber || '') + '\')">Edit tracking</button></td>';
       } else {
         h += '<td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
       }
     } else {
-      h += '<td><span class="badge '+bc+'">'+o.status+'</span></td><td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
+      h += '<td><span class="badge '+bc+'">'+statusKey+'</span></td><td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
     }
     h+='</tr>';
 
     var mobileArchiveBtn = '—';
-    if (o.dbId && o.status === 'cancelled') {
+    if (o.dbId && statusKey === 'cancelled') {
       mobileArchiveBtn = '<button class="btn btn-sm btn-outline" onclick="setOrderArchived('+o.dbId+','+(o.isArchived ? 'false' : 'true')+')" style="' + (o.isArchived ? '' : 'color:var(--c-red);border-color:var(--c-red)') + '">' + (o.isArchived ? 'Unarchive' : 'Archive') + '</button>';
     }
+    var mobileTrackBtn = '';
+    if (o.dbId && statusKey === 'shipped') {
+      mobileTrackBtn = '<button class="btn btn-sm btn-outline" onclick="editOrderTracking(' + o.dbId + ',\'' + encodeURIComponent(o.carrierCode || '') + '\',\'' + encodeURIComponent(o.trackingNumber || '') + '\')">Edit tracking</button>';
+    }
     mobileCards += '<div class="order-card">' +
-      '<div class="order-card-top"><div><button class="order-detail-link" onclick="openOrderDetail(' + Number(o.dbId || 0) + ')">' + escHtml(o.id) + '</button><div style="font-size:.72rem;color:var(--c-muted)">' + escHtml(o.date) + '</div></div><span class="badge ' + bc + '">' + escHtml(o.status || 'pending') + '</span></div>' +
+      '<div class="order-card-top"><div><button class="order-detail-link" onclick="openOrderDetail(' + Number(o.dbId || 0) + ')">' + escHtml(o.id) + '</button><div style="font-size:.72rem;color:var(--c-muted)">' + escHtml(o.date) + '</div></div><span class="badge ' + bc + '">' + escHtml(statusKey) + '</span></div>' +
       '<div class="order-card-grid">' +
         '<div class="order-card-field"><b>Customer</b>' + escHtml(o.customer) + '</div>' +
         '<div class="order-card-field"><b>Product</b>' + escHtml(o.product) + '</div>' +
@@ -1923,7 +1934,8 @@ async function rOrders(){
         '<div class="order-card-field"><b>Tracking</b>' + trackingCell + '</div>' +
       '</div>' +
       '<div class="order-card-actions">' +
-        (o.dbId ? '<select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:6px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:0.78rem;font-family:inherit">'+['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+'</select>' : '') +
+        (o.dbId ? '<select data-prev="'+statusKey+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:6px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:0.78rem;font-family:inherit">'+['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(statusKey===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+'</select>' : '') +
+        mobileTrackBtn +
         mobileArchiveBtn +
       '</div>' +
     '</div>';
@@ -1968,6 +1980,47 @@ async function setOrderArchived(orderId, isArchived) {
   }
 }
 
+async function editOrderTracking(orderId, carrierEncoded, trackingEncoded) {
+  var defaultCarrier = '';
+  var defaultTracking = '';
+  try { defaultCarrier = decodeURIComponent(String(carrierEncoded || '')); } catch(e) { defaultCarrier = String(carrierEncoded || ''); }
+  try { defaultTracking = decodeURIComponent(String(trackingEncoded || '')); } catch(e) { defaultTracking = String(trackingEncoded || ''); }
+
+  var details = await promptShippedDetails(defaultCarrier || 'dhl', defaultTracking || '');
+  if (!details) return;
+
+  try {
+    var resp = await fetch('/api/admin/orders/' + orderId, {
+      method: 'PUT',
+      headers: await getAdminAuthHeaders(true),
+      body: JSON.stringify({
+        status: 'shipped',
+        carrier_code: details.carrier_code,
+        tracking_number: details.tracking_number,
+        tracking_url: details.tracking_url,
+        shipping_status: details.shipping_status,
+        send_shipping_email: details.send_shipping_email
+      })
+    });
+    if (resp.ok) {
+      var dataOk = await resp.json().catch(function(){ return {}; });
+      document.getElementById('page-content').innerHTML = await rOrders();
+      if (dataOk && dataOk.email_skipped_reason === 'duplicate_shipment') {
+        toast('Tracking updated (email skipped: duplicate shipment)');
+      } else if (dataOk && dataOk.email_skipped_reason === 'disabled_by_admin') {
+        toast('Tracking updated (email skipped by choice)');
+      } else {
+        toast('Tracking updated');
+      }
+    } else {
+      var err = await resp.json().catch(function(){ return {}; });
+      toast('Failed: ' + (err.error || resp.status));
+    }
+  } catch (e) {
+    toast('Network error: ' + e.message);
+  }
+}
+
 async function updateOrderStatus(orderId, newStatus, selectEl) {
   var payload = { status: newStatus };
   var previousStatus = selectEl ? (selectEl.getAttribute('data-prev') || '') : '';
@@ -1983,6 +2036,7 @@ async function updateOrderStatus(orderId, newStatus, selectEl) {
     payload.tracking_number = details.tracking_number;
     payload.tracking_url = details.tracking_url;
     payload.shipping_status = details.shipping_status;
+    payload.send_shipping_email = details.send_shipping_email;
   }
 
   try {
@@ -1992,7 +2046,19 @@ async function updateOrderStatus(orderId, newStatus, selectEl) {
       body: JSON.stringify(payload)
     });
     if (resp.ok) {
+      var dataOk = await resp.json().catch(function(){ return {}; });
       document.getElementById('page-content').innerHTML = await rOrders();
+      if (newStatus === 'shipped') {
+        if (dataOk && dataOk.email_skipped_reason === 'duplicate_shipment') {
+          toast('Marked shipped (email skipped: duplicate shipment)');
+        } else if (dataOk && dataOk.email_skipped_reason === 'disabled_by_admin') {
+          toast('Marked shipped (email skipped by choice)');
+        } else if (dataOk && dataOk.email_sent) {
+          toast('Marked shipped and email sent');
+        } else {
+          toast('Marked shipped');
+        }
+      }
     } else {
       var err = await resp.json();
       toast('Failed: '+(err.error||resp.status));
