@@ -690,6 +690,7 @@
   <script src="/js/nav.js"></script>
   <script src="/js/clerk.js"></script>
   <script src="/js/cart.js"></script>
+  <script src="/js/campaign-state.js?v=20260601"></script>
   <script src="/js/cookie-consent.js"></script>
   <script>
     // Visual chip filter â€” multi-select/single-select with sort and pagination
@@ -703,12 +704,65 @@
       var noResults = document.getElementById('no-results');
       var loadMoreBtn = document.getElementById('load-more-btn');
       var loadMoreContainer = document.getElementById('load-more-container');
+      var saleRefreshTimer = null;
+
+      (function injectSaleStyles() {
+        var style = document.createElement('style');
+        style.textContent = '.product-price .price-strike{color:#94a3b8;text-decoration:line-through;font-weight:600;margin-right:6px}.product-price .price-sale{color:#dc2626;font-weight:800}.catalog-sale-meta{display:flex;align-items:center;gap:8px;margin-top:6px;min-height:20px}.catalog-sale-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;letter-spacing:.02em}.catalog-sale-countdown{font-size:12px;color:#64748b;font-weight:600}';
+        document.head.appendChild(style);
+      })();
+
+      function getProductSlug(card) {
+        var link = card.querySelector('a[href*="/product/"]');
+        if (!link) return '';
+        var href = link.getAttribute('href') || '';
+        var parts = href.split('/').filter(function (s) { return s; });
+        return parts.length ? parts[parts.length - 1] : '';
+      }
+
+      function renderCatalogSales() {
+        cards.forEach(function(card) {
+          var priceEl = card.querySelector('.product-price');
+          if (!priceEl) return;
+          var baseUsd = Number(priceEl.getAttribute('data-usd') || 0);
+          if (!baseUsd) return;
+          var slug = getProductSlug(card);
+          var discountInfo = (typeof MildMateCampaigns !== 'undefined' && slug)
+            ? MildMateCampaigns.getDiscountForProduct(slug)
+            : { discount: 0 };
+          var discount = Number(discountInfo && discountInfo.discount || 0);
+          var saleUsd = Math.max(1, Math.round(baseUsd * (1 - discount / 100)));
+          card.setAttribute('data-price', String(discount > 0 ? saleUsd : baseUsd));
+
+          var meta = card.querySelector('.catalog-sale-meta');
+          if (!meta) {
+            meta = document.createElement('div');
+            meta.className = 'catalog-sale-meta';
+            priceEl.insertAdjacentElement('afterend', meta);
+          }
+
+          if (discount > 0) {
+            priceEl.innerHTML = '<span class="price-strike">From US$' + baseUsd + '</span><span class="price-sale">From US$' + saleUsd + '</span>';
+            var countdown = (typeof MildMateCampaigns !== 'undefined' && slug)
+              ? MildMateCampaigns.getCampaignCountdown(slug)
+              : null;
+            var countdownText = countdown
+              ? ('Ends in ' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm')
+              : '';
+            meta.innerHTML = '<span class="catalog-sale-badge">-' + discount + '% SALE</span>' + (countdownText ? '<span class="catalog-sale-countdown">' + countdownText + '</span>' : '');
+          } else {
+            priceEl.textContent = 'From US$' + baseUsd;
+            meta.innerHTML = '';
+          }
+        });
+      }
       
       var itemsPerPage = 12;
       var visibleLimit = itemsPerPage;
       var activeFilters = { type: 'all', niche: 'all' };
 
       function updateGrid() {
+        renderCatalogSales();
         var filtered = [];
         
         cards.forEach(function(card) {
@@ -844,7 +898,14 @@
       });
 
       // Run initial load
-      updateGrid();})();
+      if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+        MildMateCampaigns.loadStorefrontCampaigns(false).finally(updateGrid);
+      } else {
+        updateGrid();
+      }
+      window.addEventListener('mildmate:campaigns-updated', updateGrid);
+      saleRefreshTimer = window.setInterval(updateGrid, 60000);
+    })();
   </script>
 </body>
 </html>

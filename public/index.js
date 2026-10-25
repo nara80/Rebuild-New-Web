@@ -6666,33 +6666,82 @@ async function handleAdminOrders(request, env) {
   const method = request.method;
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
     const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
-    const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
-    const sql = shouldIncludeArchived ? `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       ORDER BY created_at DESC` : `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       WHERE COALESCE(is_archived, 0) = 0
-       ORDER BY created_at DESC`;
-    const result = await db.prepare(
-      sql
-    ).all();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = /* @__PURE__ */ new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
+    const statusAllow = /* @__PURE__ */ new Set(["pending", "confirmed", "production", "shipped", "cancelled"]);
+    const statuses = rawStatus ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => statusAllow.has(s)) : [];
+    let archivedMode = "active";
+    if (archivedParam === "all" || archivedParam === "archived" || archivedParam === "active") {
+      archivedMode = archivedParam;
+    } else {
+      const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
+      archivedMode = shouldIncludeArchived ? "all" : "active";
+    }
+    const where = [];
+    const binds = [];
+    if (archivedMode === "active") {
+      where.push("COALESCE(is_archived, 0) = 0");
+    } else if (archivedMode === "archived") {
+      where.push("COALESCE(is_archived, 0) = 1");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(status) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(created_at, 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(created_at, 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        stripe_session_id LIKE ?
+        OR CAST(id AS TEXT) LIKE ?
+        OR email LIKE ?
+        OR customer_name LIKE ?
+        OR product_title_en LIKE ?
+        OR product_slug LIKE ?
+        OR tracking_number LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
+    }
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    const orderClause = sort === "created_at_asc" ? "ORDER BY created_at ASC" : "ORDER BY created_at DESC";
+    const selectColumns = `id, stripe_session_id, stripe_payment_intent_id,
+            email, customer_name, phone, shipping_address,
+            product_slug, product_title_en, fabric, color,
+            width_cm, length_cm, depth_cm,
+            width_in, length_in, depth_in,
+            custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
+            status, created_at,
+            carrier_code, tracking_number, tracking_url,
+            shipping_status, shipped_at, is_archived`;
+    const countSql = `SELECT COUNT(*) AS total FROM orders ${whereClause}`;
+    const countRow = await db.prepare(countSql).bind(...binds).first();
+    const total = Number(countRow?.total || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const listSql = `SELECT ${selectColumns}
+      FROM orders
+      ${whereClause}
+      ${orderClause}
+      LIMIT ?
+      OFFSET ?`;
+    const result = await db.prepare(listSql).bind(...binds, pageSize, offset).all();
     const rows = Array.isArray(result.results) ? result.results : [];
     const missingConfigurable = rows.filter(
       (o) => isConfigurableProductSlug(o?.product_slug) && !hasDimensions(o)
@@ -6703,6 +6752,12 @@ async function handleAdminOrders(request, env) {
     const latestSalesSync = await getLatestSalesSyncRun(env);
     return json2({
       orders: rows,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages
+      },
       dimension_guardrail: {
         missing_configurable_rows: missingConfigurable.length,
         affected_orders: affectedOrderIds
@@ -6747,7 +6802,7 @@ async function handleAdminOrders(request, env) {
     }
     const db = env.DB;
     const currentOrder = await db.prepare(
-      `SELECT id, stripe_session_id, email, customer_name, product_title_en
+      `SELECT id, stripe_session_id, email, customer_name, product_title_en, status, carrier_code, tracking_number
        FROM orders
        WHERE id = ?1`
     ).bind(orderId).first();
@@ -6761,6 +6816,7 @@ async function handleAdminOrders(request, env) {
     if (newStatus === "shipped") {
       const carrierCode = normalizeCarrier(body.carrier_code);
       const trackingNumber = String(body.tracking_number || "").trim();
+      const sendShippingEmail = body.send_shipping_email === void 0 ? true : body.send_shipping_email === true || body.send_shipping_email === 1 || String(body.send_shipping_email).toLowerCase() === "true";
       if (!carrierCode || !TRACKING_URL_BY_CARRIER[carrierCode]) {
         return json2({ error: "carrier_code is required for shipped status" }, 400);
       }
@@ -6781,7 +6837,25 @@ async function handleAdminOrders(request, env) {
              is_archived = COALESCE(?7, is_archived)
          WHERE id = ?8`
       ).bind(newStatus, carrierCode, trackingNumber, trackingUrl, shippingStatus, shippedAt, archiveValue, orderId).run();
-      if (currentOrder.email && env.RESEND_API_KEY) {
+      const currentCarrier = normalizeCarrier(currentOrder.carrier_code);
+      const currentTracking = String(currentOrder.tracking_number || "").trim();
+      const isSameShippedState = String(currentOrder.status || "").toLowerCase() === "shipped" && currentCarrier === carrierCode && currentTracking === trackingNumber;
+      let alreadyNotified = isSameShippedState;
+      if (!alreadyNotified && currentOrder.stripe_session_id) {
+        const duplicateShipment = await db.prepare(
+          `SELECT id
+           FROM orders
+           WHERE stripe_session_id = ?1
+             AND id != ?2
+             AND LOWER(COALESCE(status, '')) = 'shipped'
+             AND LOWER(COALESCE(carrier_code, '')) = ?3
+             AND tracking_number = ?4
+           LIMIT 1`
+        ).bind(String(currentOrder.stripe_session_id), orderId, carrierCode, trackingNumber).first();
+        alreadyNotified = !!duplicateShipment;
+      }
+      const emailSkippedReason = !sendShippingEmail ? "disabled_by_admin" : alreadyNotified ? "duplicate_shipment" : null;
+      if (sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY) {
         const orderCode = String(currentOrder.stripe_session_id || orderId).slice(-8);
         const customerName = String(currentOrder.customer_name || "").trim();
         const greeting = customerName ? `Hi ${customerName},` : "Hi,";
@@ -6815,7 +6889,9 @@ Thank you for shopping with MildMate.`;
         tracking_url: trackingUrl,
         shipping_status: shippingStatus,
         shipped_at: shippedAt,
-        is_archived: archiveValue
+        is_archived: archiveValue,
+        email_sent: !!(sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY),
+        email_skipped_reason: emailSkippedReason
       });
     }
     await db.prepare("UPDATE orders SET status = ?1, is_archived = COALESCE(?2, is_archived) WHERE id = ?3").bind(newStatus, archiveValue, orderId).run();
@@ -11993,31 +12069,69 @@ async function handleAdminQuotes(request, env) {
   const url = new URL(request.url);
   const method = request.method;
   if (method === "GET") {
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = /* @__PURE__ */ new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
     const allowedStatus = /* @__PURE__ */ new Set(["pending", "approved", "rejected", "expired", "archived"]);
+    const statuses = rawStatus ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => allowedStatus.has(s)) : [];
+    const archivedMode = archivedParam === "all" || archivedParam === "archived" || archivedParam === "active" ? archivedParam : "active";
     const where = [];
     const binds = [];
-    if (statusFilter && statusFilter !== "all" && allowedStatus.has(statusFilter)) {
-      where.push("LOWER(COALESCE(status,'pending')) = ?");
-      binds.push(statusFilter);
-    } else if (!statusFilter || statusFilter === "all") {
+    if (archivedMode === "active") {
       where.push("LOWER(COALESCE(status,'pending')) != 'archived'");
+    } else if (archivedMode === "archived") {
+      where.push("LOWER(COALESCE(status,'pending')) = 'archived'");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(COALESCE(status,'pending')) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        quote_id LIKE ?
+        OR customer_name LIKE ?
+        OR email LIKE ?
+        OR telephone LIKE ?
+        OR product_slug LIKE ?
+        OR fabric LIKE ?
+        OR color LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
     }
     const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
-    const limit = 50;
-    const offset = (page - 1) * limit;
+    const orderSql = sort === "created_at_asc" ? "ORDER BY COALESCE(created_at, datetime('now')) ASC, id ASC" : "ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC";
+    const totalRow = await db.prepare(
+      `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
+    ).bind(...binds).first();
+    const total = Number(totalRow?.cnt || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const rows = await db.prepare(
       `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
               status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        ${whereSql}
-       ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
-       LIMIT ${limit} OFFSET ${offset}`
-    ).bind(...binds).all();
-    const totalRow = await db.prepare(
-      `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
-    ).bind(...binds).first();
+       ${orderSql}
+       LIMIT ?
+       OFFSET ?`
+    ).bind(...binds, pageSize, offset).all();
     const quotes = (rows.results || []).map((r) => {
       let dims = r.dimensions;
       try {
@@ -12051,9 +12165,17 @@ async function handleAdminQuotes(request, env) {
     });
     return json10({
       quotes,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages
+      },
       page,
-      total: totalRow?.cnt || 0,
-      status: statusFilter || "all"
+      total,
+      status: rawStatus || "all",
+      archived: archivedMode,
+      sort
     });
   }
   if (method === "POST") {
@@ -14434,6 +14556,52 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
+async function ensureCampaignsSchemaPublic(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS marketing_campaigns (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      discount_pct INTEGER NOT NULL,
+      product_slugs TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+}
+__name(ensureCampaignsSchemaPublic, "ensureCampaignsSchemaPublic");
+async function handleCampaigns(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+  };
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  if (request.method !== "GET") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  await ensureCampaignsSchemaPublic(env);
+  const { results } = await env.DB.prepare(
+    "SELECT id, name, discount_pct, product_slugs, start_date, end_date FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now') ORDER BY discount_pct DESC, created_at DESC"
+  ).all();
+  const campaigns = (results || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    discount: Number(r.discount_pct || 0),
+    productSlugs: (() => {
+      try {
+        return JSON.parse(r.product_slugs || "[]");
+      } catch {
+        return [];
+      }
+    })(),
+    startDate: r.start_date,
+    endDate: r.end_date,
+    isActive: true
+  }));
+  return new Response(JSON.stringify({ campaigns }), { headers });
+}
+__name(handleCampaigns, "handleCampaigns");
 async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -16945,6 +17113,9 @@ var onRequest4 = /* @__PURE__ */ __name(async (context) => {
   }
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
     return handleAdminCampaigns(request, env);
+  }
+  if (path === "/api/campaigns" || path === "/api/campaigns/") {
+    return handleCampaigns(request, env);
   }
   if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
     return handleAdminColorInventory(request, env);

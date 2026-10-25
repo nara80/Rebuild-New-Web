@@ -8,6 +8,9 @@ var MildMateCampaigns = (function(){
   var STORAGE_KEY = 'mildmate_campaigns';
   var OFFERS_KEY = 'mildmate_offers';
   var FAVORITES_KEY = 'mildmate_favorites';
+  var storefrontCampaigns = [];
+  var storefrontLoaded = false;
+  var storefrontLoadPromise = null;
   function isSuperAdminPage(){
     try { return window.location.pathname.indexOf('/super-admin/') === 0; }
     catch(e){ return false; }
@@ -51,21 +54,79 @@ var MildMateCampaigns = (function(){
     return null;
   }
 
+  function normalizeCampaign(raw){
+    if (!raw || typeof raw !== 'object') return null;
+    var discount = Number(raw.discount || raw.discount_pct || 0);
+    var startDate = String(raw.startDate || raw.start_date || '');
+    var endDate = String(raw.endDate || raw.end_date || '');
+    var productSlugs = Array.isArray(raw.productSlugs) ? raw.productSlugs : [];
+    if (!startDate || !endDate || !productSlugs.length || discount <= 0) return null;
+    return {
+      id: String(raw.id || ''),
+      name: String(raw.name || ''),
+      discount: Math.max(0, Math.min(90, discount)),
+      productSlugs: productSlugs.map(function(s){ return String(s || '').trim(); }).filter(Boolean),
+      startDate: startDate,
+      endDate: endDate,
+      isActive: true
+    };
+  }
+
+  function isCampaignActive(c){
+    var now = Date.now();
+    var start = new Date(c.startDate).getTime();
+    var end = new Date(c.endDate).getTime();
+    return isFinite(start) && isFinite(end) && now >= start && now <= end;
+  }
+
+  function emitCampaignsUpdated(){
+    try {
+      window.dispatchEvent(new CustomEvent('mildmate:campaigns-updated', {
+        detail: { campaigns: getActiveCampaigns() }
+      }));
+    } catch(e) {}
+  }
+
+  async function loadStorefrontCampaigns(forceRefresh){
+    if (isSuperAdminPage()) return [];
+    if (!forceRefresh && storefrontLoaded) return storefrontCampaigns;
+    if (!forceRefresh && storefrontLoadPromise) return storefrontLoadPromise;
+    storefrontLoadPromise = fetch('/api/campaigns', { method: 'GET', credentials: 'same-origin' })
+      .then(function(resp){
+        if (!resp.ok) return { campaigns: [] };
+        return resp.json().catch(function(){ return { campaigns: [] }; });
+      })
+      .then(function(payload){
+        var list = Array.isArray(payload && payload.campaigns) ? payload.campaigns : [];
+        storefrontCampaigns = list.map(normalizeCampaign).filter(Boolean);
+        storefrontLoaded = true;
+        emitCampaignsUpdated();
+        return storefrontCampaigns;
+      })
+      .catch(function(){
+        storefrontCampaigns = [];
+        storefrontLoaded = true;
+        emitCampaignsUpdated();
+        return storefrontCampaigns;
+      })
+      .finally(function(){
+        storefrontLoadPromise = null;
+      });
+    return storefrontLoadPromise;
+  }
+
   // ── Campaigns ──
   function getActiveCampaigns(){
     // Storefront must never trust localStorage campaigns
-    if (!isSuperAdminPage()) return [];
+    if (!isSuperAdminPage()) {
+      return storefrontCampaigns.filter(isCampaignActive);
+    }
     var all = load(STORAGE_KEY, []);
-    var now = Date.now();
-    return all.filter(function(c){
-      var start = new Date(c.startDate).getTime();
-      var end = new Date(c.endDate).getTime();
-      return now >= start && now <= end;
-    });
+    return all.filter(isCampaignActive);
   }
 
   function getAllCampaigns(){
-    if (!isSuperAdminPage()) return [];
+    if (!isSuperAdminPage()) return storefrontCampaigns.slice();
     return load(STORAGE_KEY, []);
   }
 
@@ -242,6 +303,10 @@ var MildMateCampaigns = (function(){
   }
 
   // ── Public API ──
+  if (!isSuperAdminPage()) {
+    setTimeout(function(){ loadStorefrontCampaigns(false); }, 0);
+  }
+
   return {
     getActiveCampaigns: getActiveCampaigns,
     getAllCampaigns: getAllCampaigns,
@@ -249,6 +314,7 @@ var MildMateCampaigns = (function(){
     deleteCampaign: deleteCampaign,
     getDiscountForProduct: getDiscountForProduct,
     getCampaignCountdown: getCampaignCountdown,
+    loadStorefrontCampaigns: loadStorefrontCampaigns,
     getOffers: getOffers,
     saveOffers: saveOffers,
     getFavorites: getFavorites,

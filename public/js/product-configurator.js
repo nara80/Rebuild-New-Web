@@ -16,6 +16,19 @@
   function t(en, th) {
     return isThaiPage() ? th : en;
   }
+  function getMetaContent(name) {
+    var el = document.querySelector('meta[name="' + name + '"]');
+    return el ? String(el.getAttribute('content') || '').trim() : '';
+  }
+  var PRODUCT_UI_LABELS = {
+    ctaPrimary: getMetaContent('mm-cta-primary'),
+    ctaCustom: getMetaContent('mm-cta-custom'),
+    ctaSizeHelp: getMetaContent('mm-cta-size-help')
+  };
+  function labelOr(defaultLabel, key) {
+    var val = PRODUCT_UI_LABELS[key];
+    return val && String(val).trim() ? String(val).trim() : defaultLabel;
+  }
 
   // -- Detect product variant --
   var path = window.location.pathname;
@@ -441,7 +454,7 @@
   if (isThaiPage()) {
     configTabs.forEach(function(tab) {
       if (tab.dataset && tab.dataset.tab === 'standard') tab.textContent = 'ขนาดมาตรฐาน';
-      if (tab.dataset && tab.dataset.tab === 'custom') tab.textContent = 'ขนาดกำหนดเอง';
+      if (tab.dataset && tab.dataset.tab === 'custom') tab.textContent = labelOr('ขนาดกำหนดเอง', 'ctaCustom');
     });
   }
   function syncTabAwarePriceUI() {
@@ -479,7 +492,7 @@
     var priceSummary = document.getElementById('price-summary');
     if (priceSummary) priceSummary.style.display = hidePricingUI ? 'none' : '';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + t('Add to Cart', 'เพิ่มลงตะกร้า');
+      addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + labelOr(t('Add to Cart', 'เพิ่มลงตะกร้า'), 'ctaPrimary');
       addToCartBtn.style.background = '';
       addToCartBtn.style.color = '';
     }
@@ -490,7 +503,7 @@
     var priceSummary = document.getElementById('price-summary');
     if (priceSummary) priceSummary.style.display = 'none';
     if (addToCartBtn) {
-      addToCartBtn.innerHTML = t('Request Custom Quote', 'ขอใบเสนอราคาแบบกำหนดเอง');
+      addToCartBtn.innerHTML = labelOr(t('Request Custom Quote', 'ขอใบเสนอราคาแบบกำหนดเอง'), 'ctaCustom');
       addToCartBtn.disabled = false;
       addToCartBtn.style.background = '#f59e0b';
       addToCartBtn.style.color = '#fff';
@@ -504,7 +517,7 @@
     var tabsWrap = document.querySelector('.config-tabs');
     configTabs.forEach(function(tab) {
       if (tab.dataset.tab === 'standard') tab.style.display = 'none';
-      if (tab.dataset.tab === 'custom') tab.textContent = t('Custom Size', 'ขนาดกำหนดเอง');
+      if (tab.dataset.tab === 'custom') tab.textContent = labelOr(t('Custom Size', 'ขนาดกำหนดเอง'), 'ctaCustom');
     });
     if (tabsWrap) tabsWrap.style.display = 'none';
     if (tabStandard) tabStandard.style.display = 'none';
@@ -611,6 +624,11 @@
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
 
   applyCustomOnlyConfiguratorUI();
+  if (PRODUCT_UI_LABELS.ctaSizeHelp) {
+    document.querySelectorAll('.size-hint a').forEach(function(anchor) {
+      anchor.textContent = PRODUCT_UI_LABELS.ctaSizeHelp;
+    });
+  }
 
   // Duvet covers & pillow protectors only need W—L — hide the depth input
   if ((isDuvet || isPillowProtector || isPillowcase) && dimD) {
@@ -655,14 +673,14 @@
         // Price display
         if (quoteOnly) {
           priceDisplay.textContent = t('Custom Quote', 'ใบเสนอราคา');
-          if (addToCartBtn) { addToCartBtn.textContent = 'Request Quote'; addToCartBtn.style.background = '#f59e0b'; }
+          if (addToCartBtn) { addToCartBtn.textContent = labelOr(t('Request Quote', 'ขอใบเสนอราคา'), 'ctaCustom'); addToCartBtn.style.background = '#f59e0b'; }
           state._dims = null;
           state._price = null;
         } else {
           var price = parseFloat(opt.dataset.price) || 0;
           var thb = Math.round(price * THB_TO_USD);
           priceDisplay.innerHTML = displayPrice(thb, price);
-          if (addToCartBtn) { addToCartBtn.textContent = t('Add to Cart', 'เพิ่มลงตะกร้า'); addToCartBtn.style.background = ''; }
+          if (addToCartBtn) { addToCartBtn.textContent = labelOr(t('Add to Cart', 'เพิ่มลงตะกร้า'), 'ctaPrimary'); addToCartBtn.style.background = ''; }
           state._dims = { w: parseFloat(opt.dataset.headMin) || 0, l: parseFloat(opt.dataset.lengthMin) || 0, d: 30 };
           state._price = { thb: thb, usd: price };
           state.region = 'marine';  // Marine uses shape selector — mark region as set
@@ -1782,7 +1800,7 @@
       addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Added!';
       addToCartBtn.style.background = '#16a34a';
       setTimeout(function () {
-        addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + t('Add to Cart', 'เพิ่มลงตะกร้า');
+        addToCartBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> ' + labelOr(t('Add to Cart', 'เพิ่มลงตะกร้า'), 'ctaPrimary');
         addToCartBtn.style.background = '';
         addToCartBtn.disabled = false;
       }, 2000);
@@ -1820,6 +1838,12 @@
 
   // -- Init: default price --
   updateAllPrices();
+  window.addEventListener('mildmate:campaigns-updated', function () {
+    updateAllPrices();
+  });
+  if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+    MildMateCampaigns.loadStorefrontCampaigns(false);
+  }
   trackViewItemOnce();
 
   // -- Color inventory: fetch and apply out-of-stock state --

@@ -3733,20 +3733,24 @@ function buildDescriptionHtml(description) {
   return `<p>${escapeHtml(text)}</p>`;
 }
 __name(buildDescriptionHtml, "buildDescriptionHtml");
-function applyLocalizedDescriptionFromD1(html, description, isTh) {
+function applyLocalizedDescriptionFromD1(html, description, isTh, seoMetaOverride) {
   const text = String(description || "").trim();
-  if (!text) return html;
-  const metaDescription = escapeHtml(truncateForMeta(stripHtml(text), 160));
+  const overrideMeta = String(seoMetaOverride || "").trim();
+  if (!text && !overrideMeta) return html;
+  const metaSource = overrideMeta || text;
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(metaSource), 160));
   const descriptionHtml = buildDescriptionHtml(text);
   html = html.replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${metaDescription}">`).replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${metaDescription}">`).replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${metaDescription}">`);
   if (isTh) {
     html = html.replace(/data-info-tab="description">[\s\S]*?<\/button>/i, 'data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>');
   }
-  html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
-    (_m, start, end) => `${start}${descriptionHtml}
+  if (text) {
+    html = html.replace(
+      /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+      (_m, start, end) => `${start}${descriptionHtml}
         ${end}`
-  );
+    );
+  }
   return html;
 }
 __name(applyLocalizedDescriptionFromD1, "applyLocalizedDescriptionFromD1");
@@ -3761,6 +3765,59 @@ function applyLocalizedFaqFromD1(html, faq) {
   );
 }
 __name(applyLocalizedFaqFromD1, "applyLocalizedFaqFromD1");
+function formatSeoTitle(value) {
+  const title = String(value || "").trim();
+  if (!title) return "";
+  return /mildmate/i.test(title) ? title : `${title} \u2014 MildMate`;
+}
+__name(formatSeoTitle, "formatSeoTitle");
+function replaceProductTagline(html, tagline) {
+  const safeTagline = String(tagline || "").trim();
+  if (!safeTagline) return html;
+  return html.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+__name(replaceProductTagline, "replaceProductTagline");
+function applyProductUiLabelOverrides(html, labels) {
+  let result = html;
+  const ctaPrimary = String(labels.ctaPrimary || "").trim();
+  const ctaCustom = String(labels.ctaCustom || "").trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || "").trim();
+  if (ctaPrimary) {
+    const label = escapeHtml(ctaPrimary);
+    result = result.replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`).replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`);
+  }
+  if (ctaCustom) {
+    const label = escapeHtml(ctaCustom);
+    result = result.replace(
+      /(<button class="config-tab" data-tab="custom">)[\s\S]*?(<\/button>)/i,
+      `$1${label}$2`
+    );
+  }
+  if (ctaSizeHelp) {
+    const label = escapeHtml(ctaSizeHelp);
+    result = result.replace(
+      /(<a href="\/(?:th\/)?sizeguide\/"[^>]*>)[\s\S]*?(<\/a>)/i,
+      `$1${label}$2`
+    );
+  }
+  return result;
+}
+__name(applyProductUiLabelOverrides, "applyProductUiLabelOverrides");
+function injectConfiguratorLabelMeta(html, labels) {
+  const ctaPrimary = String(labels.ctaPrimary || "").trim();
+  const ctaCustom = String(labels.ctaCustom || "").trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || "").trim();
+  const parts = [];
+  if (ctaPrimary) parts.push(`<meta name="mm-cta-primary" content="${escapeHtml(ctaPrimary)}">`);
+  if (ctaCustom) parts.push(`<meta name="mm-cta-custom" content="${escapeHtml(ctaCustom)}">`);
+  if (ctaSizeHelp) parts.push(`<meta name="mm-cta-size-help" content="${escapeHtml(ctaSizeHelp)}">`);
+  if (parts.length === 0) return html;
+  const anchor = '<meta charset="UTF-8">';
+  if (!html.includes(anchor)) return html;
+  return html.replace(anchor, `${anchor}
+  ${parts.join("\n  ")}`);
+}
+__name(injectConfiguratorLabelMeta, "injectConfiguratorLabelMeta");
 var TH_GENERIC_FAQ_INNER = `<details class="faq-item" open>
             <summary>\u0E08\u0E30\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E17\u0E35\u0E48\u0E19\u0E2D\u0E19\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E44\u0E23?</summary>
             <p>\u0E14\u0E39<a href="/th/sizeguide/">\u0E04\u0E39\u0E48\u0E21\u0E37\u0E2D\u0E02\u0E19\u0E32\u0E14</a>\u0E02\u0E2D\u0E07\u0E40\u0E23\u0E32\u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A\u0E02\u0E19\u0E32\u0E14\u0E21\u0E32\u0E15\u0E23\u0E10\u0E32\u0E19 \u0E2B\u0E23\u0E37\u0E2D\u0E01\u0E23\u0E2D\u0E01\u0E02\u0E19\u0E32\u0E14\u0E08\u0E23\u0E34\u0E07\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13\u0E43\u0E19\u0E41\u0E1A\u0E1A\u0E1F\u0E2D\u0E23\u0E4C\u0E21\u0E2A\u0E31\u0E48\u0E07\u0E15\u0E31\u0E14\u0E15\u0E32\u0E21\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C</p>
@@ -3865,11 +3922,12 @@ function applyThaiProductUiLocalization(html, tagline, slug) {
     /<button class="config-tab" data-tab="custom">[\s\S]*?<\/button>/i,
     '<button class="config-tab" data-tab="custom">\u0E02\u0E19\u0E32\u0E14\u0E2A\u0E31\u0E48\u0E07\u0E17\u0E33</button>'
   ).replace(/id="price-top-sub">[\s\S]*?<\/span>/i, 'id="price-top-sub">\u0E23\u0E32\u0E04\u0E32\u0E40\u0E23\u0E34\u0E48\u0E21\u0E15\u0E49\u0E19</span>').replace(/<div class="panel-label">\s*Select Mattress Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<div class="panel-label">\s*Select Duvet Size\s*<\/div>/i, `<div class="panel-label">${sizeLabel}</div>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact mattress dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<strong style="font-size:0\.9375rem;">\s*Enter your exact duvet dimensions\s*<\/strong>/i, `<strong style="font-size:0.9375rem;">${customPrompt}</strong>`).replace(/<div class="size-hint"><a href="\/sizeguide\/">[\s\S]*?<\/a><\/div>/i, `<div class="size-hint"><a href="/th/sizeguide/">${sizeHintText}</a></div>`).replace(/<p class="dim-diagram-caption">[\s\S]*?<\/p>/i, `<p class="dim-diagram-caption">${customTabNote}</p>`).replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*Add to Cart/i, "$1 \u0E40\u0E1E\u0E34\u0E48\u0E21\u0E25\u0E07\u0E15\u0E30\u0E01\u0E23\u0E49\u0E32").replace(/<button class="info-tab active" type="button" data-info-tab="description">[\s\S]*?<\/button>/i, '<button class="info-tab active" type="button" data-info-tab="description">\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14</button>').replace(/<button class="info-tab" type="button" data-info-tab="faq">[\s\S]*?<\/button>/i, '<button class="info-tab" type="button" data-info-tab="faq">\u0E04\u0E33\u0E16\u0E32\u0E21\u0E17\u0E35\u0E48\u0E1E\u0E1A\u0E1A\u0E48\u0E2D\u0E22</button>').replace(/>\s*Premium Quality\s*<\/span>/i, ">\u0E04\u0E38\u0E13\u0E20\u0E32\u0E1E\u0E1E\u0E23\u0E35\u0E40\u0E21\u0E35\u0E22\u0E21</span>").replace(/>\s*Custom Fit\s*<\/div>/i, ">\u0E15\u0E31\u0E14\u0E40\u0E22\u0E47\u0E1A\u0E15\u0E32\u0E21\u0E02\u0E19\u0E32\u0E14</div>").replace(/>\s*Human Safe\s*<\/div>/i, ">\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E15\u0E48\u0E2D\u0E01\u0E32\u0E23\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19</div>").replace(/>\s*Pet Resist\s*<\/div>/i, ">\u0E40\u0E2B\u0E21\u0E32\u0E30\u0E01\u0E31\u0E1A\u0E1A\u0E49\u0E32\u0E19\u0E17\u0E35\u0E48\u0E21\u0E35\u0E2A\u0E31\u0E15\u0E27\u0E4C\u0E40\u0E25\u0E35\u0E49\u0E22\u0E07</div>");
+  let result = localized;
   if (isCushionProtector) {
-    return localized.replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30: \u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L), \u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W), \u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)"');
+    result = result.replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">\u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)</label>').replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="\u0E41\u0E1C\u0E19\u0E20\u0E32\u0E1E\u0E27\u0E31\u0E14\u0E02\u0E19\u0E32\u0E14\u0E40\u0E1A\u0E32\u0E30: \u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 (L), \u0E04\u0E27\u0E32\u0E21\u0E01\u0E27\u0E49\u0E32\u0E07 (W), \u0E04\u0E27\u0E32\u0E21\u0E2A\u0E39\u0E07 (H)"');
   }
-  if (!safeTagline) return localized;
-  return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+  if (!safeTagline) return result;
+  return result.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 __name(applyThaiProductUiLocalization, "applyThaiProductUiLocalization");
 function applyCushionProtectorUiLocalization(html, isTh) {
@@ -4099,24 +4157,41 @@ async function onRequest4(context) {
     let product = null;
     try {
       const stmt = context.env.DB.prepare(
-        "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+        "SELECT image_url, images, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
       ).bind(slug);
       product = await stmt.first();
     } catch (dbErr) {
       console.warn("Product SSR: primary product query failed, retrying with compatibility projection", dbErr);
-      const fallbackStmt = context.env.DB.prepare(
-        "SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
-      ).bind(slug);
-      product = await fallbackStmt.first();
+      try {
+        const fallbackStmt = context.env.DB.prepare(
+          "SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+        ).bind(slug);
+        product = await fallbackStmt.first();
+      } catch (legacyDbErr) {
+        console.warn("Product SSR: faq projection unavailable, retrying legacy fallback", legacyDbErr);
+        const legacyStmt = context.env.DB.prepare(
+          "SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?"
+        ).bind(slug);
+        product = await legacyStmt.first();
+      }
     }
     const localizedDescription = isTh ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || "") : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || "");
-    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+    const seoMetaDescription = isTh ? String(product?.seo_meta_description_th || product?.seo_meta_description_en || "") : String(product?.seo_meta_description_en || product?.seo_meta_description_th || "");
+    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, seoMetaDescription);
     const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
     const localizedFaq = isTh ? String(product?.faq_th || thFaqFallback) : String(product?.faq_en || "");
     html = applyLocalizedFaqFromD1(html, localizedFaq);
+    const localizedTagline = isTh ? String(product?.product_tagline_th || product?.card_benefit_th || product?.product_tagline_en || product?.card_benefit_en || product?.title_th || "") : String(product?.product_tagline_en || product?.card_benefit_en || product?.product_tagline_th || product?.card_benefit_th || product?.title_en || "");
     if (isTh) {
-      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ""), slug);
+      html = applyThaiProductUiLocalization(html, localizedTagline, slug);
+    } else {
+      html = replaceProductTagline(html, localizedTagline);
     }
+    const ctaPrimary = isTh ? String(product?.cta_primary_th || product?.cta_primary_en || "") : String(product?.cta_primary_en || product?.cta_primary_th || "");
+    const ctaCustom = isTh ? String(product?.cta_custom_th || product?.cta_custom_en || "") : String(product?.cta_custom_en || product?.cta_custom_th || "");
+    const ctaSizeHelp = isTh ? String(product?.cta_size_help_th || product?.cta_size_help_en || "") : String(product?.cta_size_help_en || product?.cta_size_help_th || "");
+    html = applyProductUiLabelOverrides(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
+    html = injectConfiguratorLabelMeta(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
     if (slug === "flat-sheet-extra-deep-pocket") {
       html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
     }
@@ -4136,21 +4211,25 @@ async function onRequest4(context) {
       }
     }
     const mainImage = product && product.image_url || images[0] || "";
-    const title = isTh && product && product.title_th ? product.title_th : product && product.title_en;
-    if (title) {
-      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} \u2014 MildMate</title>`);
-      html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} \u2014 MildMate"`);
-      html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} \u2014 MildMate"`);
+    const visibleTitle = isTh ? String(product?.title_th || product?.title_en || "") : String(product?.title_en || product?.title_th || "");
+    const seoTitleRaw = isTh ? String(product?.seo_title_th || product?.seo_title_en || visibleTitle) : String(product?.seo_title_en || product?.seo_title_th || visibleTitle);
+    const seoTitle = formatSeoTitle(seoTitleRaw);
+    if (visibleTitle) {
+      if (seoTitle) {
+        html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seoTitle}</title>`);
+        html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${seoTitle}"`);
+        html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${seoTitle}"`);
+      }
       html = html.replace(
         /<h1 class="product-title">[\s\S]*?<\/h1>/i,
-        `<h1 class="product-title">${title}</h1>`
+        `<h1 class="product-title">${visibleTitle}</h1>`
       );
       html = html.replace(
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
-        `$1${title}$2`
+        `$1${visibleTitle}$2`
       );
     }
-    const effectiveTitle = title || String(product?.title_en || slug.replace(/-/g, " "));
+    const effectiveTitle = visibleTitle || String(product?.title_en || slug.replace(/-/g, " "));
     html = injectMissingEcommerceTracking(html, slug, effectiveTitle, Number(product?.base_price_usd || 0));
     if (isTh) {
       html = html.replace(
@@ -6793,7 +6872,9 @@ async function handleAdminProducts(request, env) {
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB;
     const result = await db.prepare(
-      `SELECT id, slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
+      `SELECT id, slug, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th,
+              product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th,
+              description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
               category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
@@ -6817,12 +6898,24 @@ async function handleAdminProducts(request, env) {
       const { product_type, niches } = parseCategoryCsv(body.category || "sheets");
       const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
       await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+        `INSERT INTO products (slug, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
       ).bind(
         slug,
         body.title_en || body.titleEN || slug,
         body.title_th || body.titleTH || null,
+        body.seo_title_en || body.seoTitleEN || null,
+        body.seo_title_th || body.seoTitleTH || null,
+        body.seo_meta_description_en || body.seoMetaDescriptionEN || null,
+        body.seo_meta_description_th || body.seoMetaDescriptionTH || null,
+        body.product_tagline_en || body.productTaglineEN || null,
+        body.product_tagline_th || body.productTaglineTH || null,
+        body.cta_primary_en || body.ctaPrimaryEN || null,
+        body.cta_primary_th || body.ctaPrimaryTH || null,
+        body.cta_custom_en || body.ctaCustomEN || null,
+        body.cta_custom_th || body.ctaCustomTH || null,
+        body.cta_size_help_en || body.ctaSizeHelpEN || null,
+        body.cta_size_help_th || body.ctaSizeHelpTH || null,
         body.description_en || body.descEN || null,
         body.description_th || body.descTH || null,
         body.faq_en || body.faqEN || null,
@@ -6883,6 +6976,18 @@ async function handleAdminProducts(request, env) {
         "faq_th",
         "card_benefit_en",
         "card_benefit_th",
+        "seo_title_en",
+        "seo_title_th",
+        "seo_meta_description_en",
+        "seo_meta_description_th",
+        "product_tagline_en",
+        "product_tagline_th",
+        "cta_primary_en",
+        "cta_primary_th",
+        "cta_custom_en",
+        "cta_custom_th",
+        "cta_size_help_en",
+        "cta_size_help_th",
         "tags",
         "youtube_url",
         "images",
@@ -7341,33 +7446,82 @@ async function handleAdminOrders(request, env) {
   const method = request.method;
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
     const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
-    const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
-    const sql = shouldIncludeArchived ? `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       ORDER BY created_at DESC` : `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       WHERE COALESCE(is_archived, 0) = 0
-       ORDER BY created_at DESC`;
-    const result = await db.prepare(
-      sql
-    ).all();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = /* @__PURE__ */ new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
+    const statusAllow = /* @__PURE__ */ new Set(["pending", "confirmed", "production", "shipped", "cancelled"]);
+    const statuses = rawStatus ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => statusAllow.has(s)) : [];
+    let archivedMode = "active";
+    if (archivedParam === "all" || archivedParam === "archived" || archivedParam === "active") {
+      archivedMode = archivedParam;
+    } else {
+      const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
+      archivedMode = shouldIncludeArchived ? "all" : "active";
+    }
+    const where = [];
+    const binds = [];
+    if (archivedMode === "active") {
+      where.push("COALESCE(is_archived, 0) = 0");
+    } else if (archivedMode === "archived") {
+      where.push("COALESCE(is_archived, 0) = 1");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(status) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(created_at, 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(created_at, 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        stripe_session_id LIKE ?
+        OR CAST(id AS TEXT) LIKE ?
+        OR email LIKE ?
+        OR customer_name LIKE ?
+        OR product_title_en LIKE ?
+        OR product_slug LIKE ?
+        OR tracking_number LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
+    }
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    const orderClause = sort === "created_at_asc" ? "ORDER BY created_at ASC" : "ORDER BY created_at DESC";
+    const selectColumns = `id, stripe_session_id, stripe_payment_intent_id,
+            email, customer_name, phone, shipping_address,
+            product_slug, product_title_en, fabric, color,
+            width_cm, length_cm, depth_cm,
+            width_in, length_in, depth_in,
+            custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
+            status, created_at,
+            carrier_code, tracking_number, tracking_url,
+            shipping_status, shipped_at, is_archived`;
+    const countSql = `SELECT COUNT(*) AS total FROM orders ${whereClause}`;
+    const countRow = await db.prepare(countSql).bind(...binds).first();
+    const total = Number(countRow?.total || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const listSql = `SELECT ${selectColumns}
+      FROM orders
+      ${whereClause}
+      ${orderClause}
+      LIMIT ?
+      OFFSET ?`;
+    const result = await db.prepare(listSql).bind(...binds, pageSize, offset).all();
     const rows = Array.isArray(result.results) ? result.results : [];
     const missingConfigurable = rows.filter(
       (o) => isConfigurableProductSlug(o?.product_slug) && !hasDimensions(o)
@@ -7378,6 +7532,12 @@ async function handleAdminOrders(request, env) {
     const latestSalesSync = await getLatestSalesSyncRun(env);
     return json2({
       orders: rows,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages
+      },
       dimension_guardrail: {
         missing_configurable_rows: missingConfigurable.length,
         affected_orders: affectedOrderIds
@@ -7422,7 +7582,7 @@ async function handleAdminOrders(request, env) {
     }
     const db = env.DB;
     const currentOrder = await db.prepare(
-      `SELECT id, stripe_session_id, email, customer_name, product_title_en
+      `SELECT id, stripe_session_id, email, customer_name, product_title_en, status, carrier_code, tracking_number
        FROM orders
        WHERE id = ?1`
     ).bind(orderId).first();
@@ -7436,6 +7596,7 @@ async function handleAdminOrders(request, env) {
     if (newStatus === "shipped") {
       const carrierCode = normalizeCarrier(body.carrier_code);
       const trackingNumber = String(body.tracking_number || "").trim();
+      const sendShippingEmail = body.send_shipping_email === void 0 ? true : body.send_shipping_email === true || body.send_shipping_email === 1 || String(body.send_shipping_email).toLowerCase() === "true";
       if (!carrierCode || !TRACKING_URL_BY_CARRIER[carrierCode]) {
         return json2({ error: "carrier_code is required for shipped status" }, 400);
       }
@@ -7456,7 +7617,25 @@ async function handleAdminOrders(request, env) {
              is_archived = COALESCE(?7, is_archived)
          WHERE id = ?8`
       ).bind(newStatus, carrierCode, trackingNumber, trackingUrl, shippingStatus, shippedAt, archiveValue, orderId).run();
-      if (currentOrder.email && env.RESEND_API_KEY) {
+      const currentCarrier = normalizeCarrier(currentOrder.carrier_code);
+      const currentTracking = String(currentOrder.tracking_number || "").trim();
+      const isSameShippedState = String(currentOrder.status || "").toLowerCase() === "shipped" && currentCarrier === carrierCode && currentTracking === trackingNumber;
+      let alreadyNotified = isSameShippedState;
+      if (!alreadyNotified && currentOrder.stripe_session_id) {
+        const duplicateShipment = await db.prepare(
+          `SELECT id
+           FROM orders
+           WHERE stripe_session_id = ?1
+             AND id != ?2
+             AND LOWER(COALESCE(status, '')) = 'shipped'
+             AND LOWER(COALESCE(carrier_code, '')) = ?3
+             AND tracking_number = ?4
+           LIMIT 1`
+        ).bind(String(currentOrder.stripe_session_id), orderId, carrierCode, trackingNumber).first();
+        alreadyNotified = !!duplicateShipment;
+      }
+      const emailSkippedReason = !sendShippingEmail ? "disabled_by_admin" : alreadyNotified ? "duplicate_shipment" : null;
+      if (sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY) {
         const orderCode = String(currentOrder.stripe_session_id || orderId).slice(-8);
         const customerName = String(currentOrder.customer_name || "").trim();
         const greeting = customerName ? `Hi ${customerName},` : "Hi,";
@@ -7490,7 +7669,9 @@ Thank you for shopping with MildMate.`;
         tracking_url: trackingUrl,
         shipping_status: shippingStatus,
         shipped_at: shippedAt,
-        is_archived: archiveValue
+        is_archived: archiveValue,
+        email_sent: !!(sendShippingEmail && !alreadyNotified && currentOrder.email && env.RESEND_API_KEY),
+        email_skipped_reason: emailSkippedReason
       });
     }
     await db.prepare("UPDATE orders SET status = ?1, is_archived = COALESCE(?2, is_archived) WHERE id = ?3").bind(newStatus, archiveValue, orderId).run();
@@ -12668,31 +12849,69 @@ async function handleAdminQuotes(request, env) {
   const url = new URL(request.url);
   const method = request.method;
   if (method === "GET") {
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = /* @__PURE__ */ new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
     const allowedStatus = /* @__PURE__ */ new Set(["pending", "approved", "rejected", "expired", "archived"]);
+    const statuses = rawStatus ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => allowedStatus.has(s)) : [];
+    const archivedMode = archivedParam === "all" || archivedParam === "archived" || archivedParam === "active" ? archivedParam : "active";
     const where = [];
     const binds = [];
-    if (statusFilter && statusFilter !== "all" && allowedStatus.has(statusFilter)) {
-      where.push("LOWER(COALESCE(status,'pending')) = ?");
-      binds.push(statusFilter);
-    } else if (!statusFilter || statusFilter === "all") {
+    if (archivedMode === "active") {
       where.push("LOWER(COALESCE(status,'pending')) != 'archived'");
+    } else if (archivedMode === "archived") {
+      where.push("LOWER(COALESCE(status,'pending')) = 'archived'");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(COALESCE(status,'pending')) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        quote_id LIKE ?
+        OR customer_name LIKE ?
+        OR email LIKE ?
+        OR telephone LIKE ?
+        OR product_slug LIKE ?
+        OR fabric LIKE ?
+        OR color LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
     }
     const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
-    const limit = 50;
-    const offset = (page - 1) * limit;
+    const orderSql = sort === "created_at_asc" ? "ORDER BY COALESCE(created_at, datetime('now')) ASC, id ASC" : "ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC";
+    const totalRow = await db.prepare(
+      `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
+    ).bind(...binds).first();
+    const total = Number(totalRow?.cnt || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const rows = await db.prepare(
       `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
               status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        ${whereSql}
-       ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
-       LIMIT ${limit} OFFSET ${offset}`
-    ).bind(...binds).all();
-    const totalRow = await db.prepare(
-      `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
-    ).bind(...binds).first();
+       ${orderSql}
+       LIMIT ?
+       OFFSET ?`
+    ).bind(...binds, pageSize, offset).all();
     const quotes = (rows.results || []).map((r) => {
       let dims = r.dimensions;
       try {
@@ -12726,9 +12945,17 @@ async function handleAdminQuotes(request, env) {
     });
     return json10({
       quotes,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages
+      },
       page,
-      total: totalRow?.cnt || 0,
-      status: statusFilter || "all"
+      total,
+      status: rawStatus || "all",
+      archived: archivedMode,
+      sort
     });
   }
   if (method === "POST") {
@@ -15071,6 +15298,52 @@ async function ensureCampaignsSchema(env) {
   ).run();
 }
 __name(ensureCampaignsSchema, "ensureCampaignsSchema");
+async function ensureCampaignsSchemaPublic(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS marketing_campaigns (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      discount_pct INTEGER NOT NULL,
+      product_slugs TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+}
+__name(ensureCampaignsSchemaPublic, "ensureCampaignsSchemaPublic");
+async function handleCampaigns(request, env) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Secret"
+  };
+  if (request.method === "OPTIONS") return new Response(null, { headers });
+  if (request.method !== "GET") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+  await ensureCampaignsSchemaPublic(env);
+  const { results } = await env.DB.prepare(
+    "SELECT id, name, discount_pct, product_slugs, start_date, end_date FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now') ORDER BY discount_pct DESC, created_at DESC"
+  ).all();
+  const campaigns = (results || []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    discount: Number(r.discount_pct || 0),
+    productSlugs: (() => {
+      try {
+        return JSON.parse(r.product_slugs || "[]");
+      } catch {
+        return [];
+      }
+    })(),
+    startDate: r.start_date,
+    endDate: r.end_date,
+    isActive: true
+  }));
+  return new Response(JSON.stringify({ campaigns }), { headers });
+}
+__name(handleCampaigns, "handleCampaigns");
 async function handleAdminCampaigns(request, env) {
   const headers = {
     "Content-Type": "application/json",
@@ -18253,6 +18526,9 @@ var onRequest5 = /* @__PURE__ */ __name(async (context) => {
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
     return handleAdminCampaigns(request, env);
   }
+  if (path === "/api/campaigns" || path === "/api/campaigns/") {
+    return handleCampaigns(request, env);
+  }
   if (path === "/api/admin/color-inventory" || path === "/api/admin/color-inventory/") {
     return handleAdminColorInventory(request, env);
   }
@@ -20153,7 +20429,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-U0GTII/functionsRoutes-0.6467946040708883.mjs
+// ../.wrangler/tmp/pages-RUTBht/functionsRoutes-0.7956054850289755.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

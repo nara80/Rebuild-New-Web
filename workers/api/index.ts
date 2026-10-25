@@ -34,6 +34,7 @@ import { handleAdminContacts } from "./admin-contacts";
 import { handleAdminTemplates } from "./admin-templates";
 import { handleAdminOffers } from "./admin-offers";
 import { handleAdminCampaigns } from "./admin-campaigns";
+import { handleCampaigns } from "./campaigns";
 import { authorizeAdmin } from "./admin-auth";
 import { handleFavorites } from "./favorites";
 import { handleReviews, handleAdminReviews } from "./reviews";
@@ -241,6 +242,10 @@ export default {
     // Admin API — Run a Sale campaigns
     if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
       return handleAdminCampaigns(request, env);
+    }
+    // Public API — active campaigns for storefront sale rendering
+    if (path === "/api/campaigns" || path === "/api/campaigns/") {
+      return handleCampaigns(request, env);
     }
 
     // Admin API — manual dispatch for due thank-you emails
