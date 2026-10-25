@@ -29,6 +29,18 @@ interface ProductRow {
   slug: string;
   title_en: string;
   title_th: string | null;
+  seo_title_en: string | null;
+  seo_title_th: string | null;
+  seo_meta_description_en: string | null;
+  seo_meta_description_th: string | null;
+  product_tagline_en: string | null;
+  product_tagline_th: string | null;
+  cta_primary_en: string | null;
+  cta_primary_th: string | null;
+  cta_custom_en: string | null;
+  cta_custom_th: string | null;
+  cta_size_help_en: string | null;
+  cta_size_help_th: string | null;
   description_en: string | null;
   description_th: string | null;
   faq_en: string | null;
@@ -170,7 +182,9 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
   if (method === "GET" && path === "/api/admin/products") {
     const db = env.DB as D1Database;
     const result = await db.prepare(
-      `SELECT id, slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
+      `SELECT id, slug, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th,
+              product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th,
+              description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th,
               category, product_type, niches, subcategory, fabric_options, base_price_usd, base_price_thb,
               is_custom, image_url, tags, youtube_url, images, sort_order, is_active
        FROM products ORDER BY sort_order, id`
@@ -201,12 +215,24 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
       const placeholderImage = "/images/products/mattress-protector-standard/main.jpg";
 
       await db.prepare(
-        `INSERT INTO products (slug, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
+        `INSERT INTO products (slug, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, category, product_type, niches, fabric_options, image_url, youtube_url, images, tags, is_custom, is_active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 99)`
       ).bind(
         slug,
         body.title_en || body.titleEN || slug,
         body.title_th || body.titleTH || null,
+        body.seo_title_en || body.seoTitleEN || null,
+        body.seo_title_th || body.seoTitleTH || null,
+        body.seo_meta_description_en || body.seoMetaDescriptionEN || null,
+        body.seo_meta_description_th || body.seoMetaDescriptionTH || null,
+        body.product_tagline_en || body.productTaglineEN || null,
+        body.product_tagline_th || body.productTaglineTH || null,
+        body.cta_primary_en || body.ctaPrimaryEN || null,
+        body.cta_primary_th || body.ctaPrimaryTH || null,
+        body.cta_custom_en || body.ctaCustomEN || null,
+        body.cta_custom_th || body.ctaCustomTH || null,
+        body.cta_size_help_en || body.ctaSizeHelpEN || null,
+        body.cta_size_help_th || body.ctaSizeHelpTH || null,
         body.description_en || body.descEN || null,
         body.description_th || body.descTH || null,
         body.faq_en || body.faqEN || null,
@@ -273,6 +299,12 @@ export async function handleAdminProducts(request: Request, env: any): Promise<R
         "title_en", "title_th", "description_en", "description_th",
         "faq_en", "faq_th",
         "card_benefit_en", "card_benefit_th",
+        "seo_title_en", "seo_title_th",
+        "seo_meta_description_en", "seo_meta_description_th",
+        "product_tagline_en", "product_tagline_th",
+        "cta_primary_en", "cta_primary_th",
+        "cta_custom_en", "cta_custom_th",
+        "cta_size_help_en", "cta_size_help_th",
         "tags", "youtube_url", "images", "image_url", "fabric_options", "category",
         "product_type", "niches"
       ];

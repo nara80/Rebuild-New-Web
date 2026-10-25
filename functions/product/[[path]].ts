@@ -159,11 +159,18 @@ function buildDescriptionHtml(description: string): string {
   return `<p>${escapeHtml(text)}</p>`;
 }
 
-function applyLocalizedDescriptionFromD1(html: string, description: string, isTh: boolean): string {
+function applyLocalizedDescriptionFromD1(
+  html: string,
+  description: string,
+  isTh: boolean,
+  seoMetaOverride?: string
+): string {
   const text = String(description || '').trim();
-  if (!text) return html;
+  const overrideMeta = String(seoMetaOverride || '').trim();
+  if (!text && !overrideMeta) return html;
 
-  const metaDescription = escapeHtml(truncateForMeta(stripHtml(text), 160));
+  const metaSource = overrideMeta || text;
+  const metaDescription = escapeHtml(truncateForMeta(stripHtml(metaSource), 160));
   const descriptionHtml = buildDescriptionHtml(text);
 
   html = html
@@ -177,10 +184,12 @@ function applyLocalizedDescriptionFromD1(html: string, description: string, isTh
       .replace(/data-info-tab="faq">[\s\S]*?<\/button>/i, 'data-info-tab="faq">คำถามที่พบบ่อย</button>');
   }
 
-  html = html.replace(
-    /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
-    (_m, start, end) => `${start}${descriptionHtml}\n        ${end}`
-  );
+  if (text) {
+    html = html.replace(
+      /(<div[^>]*id="info-panel-description"[^>]*>)[\s\S]*?(<\/div>\s*<div[^>]*id="info-panel-faq")/i,
+      (_m, start, end) => `${start}${descriptionHtml}\n        ${end}`
+    );
+  }
   return html;
 }
 
@@ -192,6 +201,70 @@ function applyLocalizedFaqFromD1(html: string, faq: string): string {
     /(<div[^>]*id="info-panel-faq"[^>]*>)[\s\S]*?(<\/div>\s*<\/div>\s*<\/div>)/i,
     (_m, start, end) => `${start}${faqHtml}\n        ${end}`
   );
+}
+
+function formatSeoTitle(value: string): string {
+  const title = String(value || '').trim();
+  if (!title) return '';
+  return /mildmate/i.test(title) ? title : `${title} — MildMate`;
+}
+
+function replaceProductTagline(html: string, tagline: string): string {
+  const safeTagline = String(tagline || '').trim();
+  if (!safeTagline) return html;
+  return html.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+}
+
+function applyProductUiLabelOverrides(
+  html: string,
+  labels: { ctaPrimary?: string; ctaCustom?: string; ctaSizeHelp?: string }
+): string {
+  let result = html;
+  const ctaPrimary = String(labels.ctaPrimary || '').trim();
+  const ctaCustom = String(labels.ctaCustom || '').trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || '').trim();
+
+  if (ctaPrimary) {
+    const label = escapeHtml(ctaPrimary);
+    result = result
+      .replace(/(<button[^>]*id="add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`)
+      .replace(/(<button[^>]*id="mobile-add-to-cart"[^>]*>[\s\S]*?<\/svg>)\s*[\s\S]*?(<\/button>)/i, `$1 ${label}$2`);
+  }
+
+  if (ctaCustom) {
+    const label = escapeHtml(ctaCustom);
+    result = result.replace(
+      /(<button class="config-tab" data-tab="custom">)[\s\S]*?(<\/button>)/i,
+      `$1${label}$2`
+    );
+  }
+
+  if (ctaSizeHelp) {
+    const label = escapeHtml(ctaSizeHelp);
+    result = result.replace(
+      /(<a href="\/(?:th\/)?sizeguide\/"[^>]*>)[\s\S]*?(<\/a>)/i,
+      `$1${label}$2`
+    );
+  }
+
+  return result;
+}
+
+function injectConfiguratorLabelMeta(
+  html: string,
+  labels: { ctaPrimary?: string; ctaCustom?: string; ctaSizeHelp?: string }
+): string {
+  const ctaPrimary = String(labels.ctaPrimary || '').trim();
+  const ctaCustom = String(labels.ctaCustom || '').trim();
+  const ctaSizeHelp = String(labels.ctaSizeHelp || '').trim();
+  const parts: string[] = [];
+  if (ctaPrimary) parts.push(`<meta name="mm-cta-primary" content="${escapeHtml(ctaPrimary)}">`);
+  if (ctaCustom) parts.push(`<meta name="mm-cta-custom" content="${escapeHtml(ctaCustom)}">`);
+  if (ctaSizeHelp) parts.push(`<meta name="mm-cta-size-help" content="${escapeHtml(ctaSizeHelp)}">`);
+  if (parts.length === 0) return html;
+  const anchor = '<meta charset="UTF-8">';
+  if (!html.includes(anchor)) return html;
+  return html.replace(anchor, `${anchor}\n  ${parts.join('\n  ')}`);
 }
 
 // Generic Thai FAQ block used as a fallback for products that don't have a
@@ -348,13 +421,14 @@ function applyThaiProductUiLocalization(html: string, tagline: string, slug: str
     .replace(/>\s*Custom Fit\s*<\/div>/i, '>ตัดเย็บตามขนาด</div>')
     .replace(/>\s*Human Safe\s*<\/div>/i, '>ปลอดภัยต่อการใช้งาน</div>')
     .replace(/>\s*Pet Resist\s*<\/div>/i, '>เหมาะกับบ้านที่มีสัตว์เลี้ยง</div>');
+  let result = localized;
   if (isCushionProtector) {
-    return localized
+    result = result
       .replace(/<label for="dim-depth">ความลึก \(D\)<\/label>/i, '<label for="dim-depth">ความสูง (H)</label>')
       .replace(/alt="Mattress dimension diagram:[^"]*"/i, 'alt="แผนภาพวัดขนาดเบาะ: ความยาว (L), ความกว้าง (W), ความสูง (H)"');
   }
-  if (!safeTagline) return localized;
-  return localized.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
+  if (!safeTagline) return result;
+  return result.replace(/<p class="product-tagline">[\s\S]*?<\/p>/i, `<p class="product-tagline">${safeTagline}</p>`);
 }
 
 function applyCushionProtectorUiLocalization(html: string, isTh: boolean): string {
@@ -615,36 +689,64 @@ export async function onRequest(context: any): Promise<Response> {
       html = html.replace('<html lang="en">', '<html lang="th">');
     }
 
-    // 2. Query D1 for this product's image, title, pricing, and category data.
-    // Some environments may lag on schema columns (faq_en/faq_th). Keep a
-    // compatibility fallback so TH product pages do not silently fall back to
-    // static HTML when those columns are temporarily unavailable.
+    // 2. Query D1 for this product's image, titles, SEO fields, CTA labels,
+    // pricing, and category data. Keep compatibility fallbacks for environments
+    // where newer columns are not yet present.
     let product: any = null;
     try {
       const stmt = context.env.DB.prepare(
-        'SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+        'SELECT image_url, images, title_en, title_th, seo_title_en, seo_title_th, seo_meta_description_en, seo_meta_description_th, product_tagline_en, product_tagline_th, cta_primary_en, cta_primary_th, cta_custom_en, cta_custom_th, cta_size_help_en, cta_size_help_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
       ).bind(slug);
       product = await stmt.first() as any;
     } catch (dbErr) {
       console.warn('Product SSR: primary product query failed, retrying with compatibility projection', dbErr);
-      const fallbackStmt = context.env.DB.prepare(
-        'SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
-      ).bind(slug);
-      product = await fallbackStmt.first() as any;
+      try {
+        const fallbackStmt = context.env.DB.prepare(
+          'SELECT image_url, images, title_en, title_th, description_en, description_th, faq_en, faq_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+        ).bind(slug);
+        product = await fallbackStmt.first() as any;
+      } catch (legacyDbErr) {
+        console.warn('Product SSR: faq projection unavailable, retrying legacy fallback', legacyDbErr);
+        const legacyStmt = context.env.DB.prepare(
+          'SELECT image_url, images, title_en, title_th, description_en, description_th, card_benefit_en, card_benefit_th, base_price_usd, product_type, niches FROM products WHERE slug = ?'
+        ).bind(slug);
+        product = await legacyStmt.first() as any;
+      }
     }
 
+    // EN must never fall back to *_th fields: an empty EN value keeps the
+    // static template's built-in English copy instead of leaking Thai.
     const localizedDescription = isTh
       ? String(product?.description_th || product?.card_benefit_th || product?.description_en || product?.card_benefit_en || '')
-      : String(product?.description_en || product?.card_benefit_en || product?.description_th || product?.card_benefit_th || '');
-    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh);
+      : String(product?.description_en || product?.card_benefit_en || '');
+    const seoMetaDescription = isTh
+      ? String(product?.seo_meta_description_th || product?.seo_meta_description_en || '')
+      : String(product?.seo_meta_description_en || '');
+    html = applyLocalizedDescriptionFromD1(html, localizedDescription, isTh, seoMetaDescription);
     const thFaqFallback = MARINE_FAQ_SLUGS.has(slug) ? TH_MARINE_FAQ_INNER : TH_GENERIC_FAQ_INNER;
     const localizedFaq = isTh
       ? String(product?.faq_th || thFaqFallback)
       : String(product?.faq_en || '');
     html = applyLocalizedFaqFromD1(html, localizedFaq);
+    const localizedTagline = isTh
+      ? String(product?.product_tagline_th || product?.card_benefit_th || product?.product_tagline_en || product?.card_benefit_en || product?.title_th || '')
+      : String(product?.product_tagline_en || product?.card_benefit_en || product?.title_en || '');
     if (isTh) {
-      html = applyThaiProductUiLocalization(html, String(product?.card_benefit_th || product?.title_th || ''), slug);
+      html = applyThaiProductUiLocalization(html, localizedTagline, slug);
+    } else {
+      html = replaceProductTagline(html, localizedTagline);
     }
+    const ctaPrimary = isTh
+      ? String(product?.cta_primary_th || product?.cta_primary_en || '')
+      : String(product?.cta_primary_en || '');
+    const ctaCustom = isTh
+      ? String(product?.cta_custom_th || product?.cta_custom_en || '')
+      : String(product?.cta_custom_en || '');
+    const ctaSizeHelp = isTh
+      ? String(product?.cta_size_help_th || product?.cta_size_help_en || '')
+      : String(product?.cta_size_help_en || '');
+    html = applyProductUiLabelOverrides(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
+    html = injectConfiguratorLabelMeta(html, { ctaPrimary, ctaCustom, ctaSizeHelp });
     if (slug === 'flat-sheet-extra-deep-pocket') {
       html = applyFlatSheetExtraDeepPocketGuardrails(html, isTh);
     }
@@ -667,26 +769,34 @@ export async function onRequest(context: any): Promise<Response> {
     }
     const mainImage = (product && (product.image_url as string)) || images[0] || '';
 
-    // Handle localized title translation for Thai pages
-    const title = isTh && product && product.title_th ? product.title_th : (product && product.title_en);
-    if (title) {
+    // Visible title follows title_en/title_th; SEO title can be overridden.
+    const visibleTitle = isTh
+      ? String(product?.title_th || product?.title_en || '')
+      : String(product?.title_en || '');
+    const seoTitleRaw = isTh
+      ? String(product?.seo_title_th || product?.seo_title_en || visibleTitle)
+      : String(product?.seo_title_en || visibleTitle);
+    const seoTitle = formatSeoTitle(seoTitleRaw);
+    if (visibleTitle) {
       // Replace browser title
-      html = html.replace(/<title>[^<]*<\/title>/i, `<title>${title} — MildMate<\/title>`);
-      html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${title} — MildMate"`);
-      html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${title} — MildMate"`);
+      if (seoTitle) {
+        html = html.replace(/<title>[^<]*<\/title>/i, `<title>${seoTitle}<\/title>`);
+        html = html.replace(/<meta property="og:title" content="[^"]*"/g, `<meta property="og:title" content="${seoTitle}"`);
+        html = html.replace(/<meta name="twitter:title" content="[^"]*"/g, `<meta name="twitter:title" content="${seoTitle}"`);
+      }
 
       // Keep visible product title blocks consistent with D1 title (EN/TH)
       html = html.replace(
         /<h1 class="product-title">[\s\S]*?<\/h1>/i,
-        `<h1 class="product-title">${title}</h1>`
+        `<h1 class="product-title">${visibleTitle}</h1>`
       );
       html = html.replace(
         /(<nav class="product-breadcrumb"[\s\S]*?<span>)[\s\S]*?(<\/span>)/i,
-        `$1${title}$2`
+        `$1${visibleTitle}$2`
       );
     }
 
-    const effectiveTitle = title || String(product?.title_en || slug.replace(/-/g, ' '));
+    const effectiveTitle = visibleTitle || String(product?.title_en || slug.replace(/-/g, ' '));
     html = injectMissingEcommerceTracking(html, slug, effectiveTitle, Number(product?.base_price_usd || 0));
 
     // For TH pages, also swap the breadcrumb category link text to its TH
