@@ -2542,9 +2542,20 @@ async function renderMarketingPage() {
 async function loadCampaignsFromServer(forceReload){
   if (!forceReload && campaignsConfigCache) return campaignsConfigCache;
   try {
-    var headers = await getAdminAuthHeaders(false);
-    var resp = await fetch('/api/admin/campaigns', { headers: headers });
-    if (!resp.ok) return [];
+    var resp;
+    var attempts = 0;
+    while (attempts < 8) {
+      attempts++;
+      var headers = await getAdminAuthHeaders(false);
+      resp = await fetch('/api/admin/campaigns', { headers: headers });
+      if (resp.ok) break;
+      if ((resp.status === 401 || resp.status === 403) && !headers.Authorization) {
+        await new Promise(function(resolve){ setTimeout(resolve, 200); });
+        continue;
+      }
+      break;
+    }
+    if (!resp || !resp.ok) return [];
     var data = await resp.json();
     campaignsConfigCache = (data && data.campaigns) ? data.campaigns : [];
     return campaignsConfigCache;
@@ -2596,9 +2607,20 @@ function getCampaignStatus(c) {
 async function loadCampaignListingsFromServer(forceReload) {
   if (!forceReload && campaignListingsCache) return campaignListingsCache;
   try {
-    var headers = await getAdminAuthHeaders(false);
-    var resp = await fetch('/api/admin/campaigns?mode=listings', { headers: headers });
-    if (!resp.ok) return [];
+    var resp;
+    var attempts = 0;
+    while (attempts < 8) {
+      attempts++;
+      var headers = await getAdminAuthHeaders(false);
+      resp = await fetch('/api/admin/campaigns?mode=listings', { headers: headers });
+      if (resp.ok) break;
+      if ((resp.status === 401 || resp.status === 403) && !headers.Authorization) {
+        await new Promise(function(resolve){ setTimeout(resolve, 200); });
+        continue;
+      }
+      break;
+    }
+    if (!resp || !resp.ok) return [];
     var data = await resp.json().catch(function(){ return {}; });
     campaignListingsCache = Array.isArray(data.products) ? data.products : [];
     return campaignListingsCache;
