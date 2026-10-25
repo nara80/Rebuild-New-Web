@@ -15356,6 +15356,32 @@ function getItemName(item) {
   return fromSlug || "Custom Product";
 }
 __name(getItemName, "getItemName");
+async function getActiveCampaignDiscounts(env) {
+  const map = /* @__PURE__ */ new Map();
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT discount_pct, product_slugs FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now')"
+    ).all();
+    for (const row of results || []) {
+      const pct = Number(row.discount_pct || 0);
+      if (!(pct > 0)) continue;
+      let slugs = [];
+      try {
+        slugs = JSON.parse(row.product_slugs || "[]");
+      } catch {
+        slugs = [];
+      }
+      for (const slug of slugs) {
+        const key = String(slug || "").trim();
+        if (key && pct > (map.get(key) || 0)) map.set(key, pct);
+      }
+    }
+  } catch (e) {
+    console.warn("Campaign discount lookup failed:", e?.message || e);
+  }
+  return map;
+}
+__name(getActiveCampaignDiscounts, "getActiveCampaignDiscounts");
 function normalizeFabricForSlug(slugRaw, fabricRaw) {
   const slug = String(slugRaw || "").trim().toLowerCase();
   if (slug === "pet-proof-mattress-protector") return "tpu";
@@ -15576,10 +15602,23 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const campaignDiscounts = await getActiveCampaignDiscounts(env);
   const lineItems = items.map((item) => {
     const itemName = getItemName(item);
     const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
-    const unitAmount = currency === "thb" ? Math.round((item.price_thb || 0) * 100) : Math.round((item.price_usd || 0) * 100);
+    const baseThb = Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = Number(item.original_price_usd || item.price_usd || 0);
+    const unitAmount = currency === "thb" ? Math.round(baseThb * 100) : Math.round(baseUsd * 100);
+    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    const campaignPct = isQuoteItem ? 0 : campaignDiscounts.get(String(item.product_slug || "").trim()) || 0;
+    const promoPct = discountApplied ? discountPct : 0;
+    let finalUnitAmount = unitAmount;
+    if (campaignPct > promoPct) {
+      const baseMajor = currency === "thb" ? baseThb : baseUsd;
+      finalUnitAmount = Math.round(baseMajor * (100 - campaignPct) / 100) * 100;
+    } else if (promoPct > 0) {
+      finalUnitAmount = Math.round(unitAmount * (100 - promoPct) / 100);
+    }
     const desc = [
       itemName,
       normalizedFabric ? `Fabric: ${normalizedFabric}` : "",
@@ -15593,7 +15632,7 @@ async function handleCheckout(request, env) {
           name: itemName,
           description: desc
         },
-        unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount
+        unit_amount: finalUnitAmount
       },
       quantity: item.qty || 1
     };

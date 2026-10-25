@@ -15,10 +15,38 @@ interface CartItem {
   color: string;
   price_usd: number;
   price_thb: number;
+  original_price_usd?: number;  // pre-campaign price (client sends when a sale was applied)
+  original_price_thb?: number;
+  campaign_discount_pct?: number;
   qty: number;
   image?: string;
   quote_id?: string;      // only for custom_quote type
   is_quote?: boolean;
+}
+
+// Server-authoritative campaign sale lookup: slug → highest active discount pct.
+// Client-sent prices are display-only; the charge is always recomputed from the
+// original price with the live campaign window checked here.
+async function getActiveCampaignDiscounts(env: any): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT discount_pct, product_slugs FROM marketing_campaigns WHERE is_active = 1 AND datetime(start_date) <= datetime('now') AND datetime(end_date) >= datetime('now')"
+    ).all();
+    for (const row of ((results || []) as any[])) {
+      const pct = Number(row.discount_pct || 0);
+      if (!(pct > 0)) continue;
+      let slugs: any[] = [];
+      try { slugs = JSON.parse(row.product_slugs || "[]"); } catch { slugs = []; }
+      for (const slug of slugs) {
+        const key = String(slug || "").trim();
+        if (key && pct > (map.get(key) || 0)) map.set(key, pct);
+      }
+    }
+  } catch (e: any) {
+    console.warn("Campaign discount lookup failed:", e?.message || e);
+  }
+  return map;
 }
 
 function isProductionHost(request: Request): boolean {
@@ -317,12 +345,31 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   // Build Stripe line items
+  const campaignDiscounts = await getActiveCampaignDiscounts(env);
   const lineItems = items.map((item: CartItem) => {
     const itemName = getItemName(item);
     const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
+    // Base price = pre-sale original when present (client stores the discounted
+    // price in price_usd/price_thb for display); legacy items carry the
+    // original in price_usd/price_thb directly.
+    const baseThb = Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = Number(item.original_price_usd || item.price_usd || 0);
     const unitAmount = currency === "thb"
-      ? Math.round((item.price_thb || 0) * 100)
-      : Math.round((item.price_usd || 0) * 100);
+      ? Math.round(baseThb * 100)
+      : Math.round(baseUsd * 100);
+    // Campaign sales never apply to negotiated custom quotes.
+    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    const campaignPct = isQuoteItem ? 0 : (campaignDiscounts.get(String(item.product_slug || "").trim()) || 0);
+    const promoPct = discountApplied ? discountPct : 0;
+    // Non-stacking: apply the better of campaign sale vs discount code.
+    // Campaign rounds in whole currency units to match the advertised price.
+    let finalUnitAmount = unitAmount;
+    if (campaignPct > promoPct) {
+      const baseMajor = currency === "thb" ? baseThb : baseUsd;
+      finalUnitAmount = Math.round(baseMajor * (100 - campaignPct) / 100) * 100;
+    } else if (promoPct > 0) {
+      finalUnitAmount = Math.round(unitAmount * (100 - promoPct) / 100);
+    }
 
     const desc = [
       itemName,
@@ -340,7 +387,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
           name: itemName,
           description: desc,
         },
-        unit_amount: discountApplied ? Math.round(unitAmount * (100 - discountPct) / 100) : unitAmount,
+        unit_amount: finalUnitAmount,
       },
       quantity: item.qty || 1,
     };

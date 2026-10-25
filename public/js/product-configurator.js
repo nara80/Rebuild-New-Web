@@ -1810,6 +1810,9 @@
         }
       }
 
+      // Campaign sale: store the discounted price so cart + checkout display
+      // match the advertised sale; keep the original for server-side validation.
+      var salePrice = applyCampaignDiscount(state._price.thb, state._price.usd);
       var item = {
         type: 'product',
         id: 'cart-' + Date.now(),
@@ -1824,8 +1827,11 @@
         },
         fabric: fabricName,
         color: colorName,
-        price_usd: Math.round(state._price.usd),
-        price_thb: state._price.thb,
+        price_usd: Math.round(salePrice.usd),
+        price_thb: salePrice.thb,
+        original_price_usd: Math.round(state._price.usd),
+        original_price_thb: state._price.thb,
+        campaign_discount_pct: salePrice.discount || 0,
         qty: 1,
         image: (function() {
           var meta = document.querySelector('meta[name="product-image"]');
