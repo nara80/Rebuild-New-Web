@@ -2502,6 +2502,24 @@ async function archiveQuote(quoteId) {
 var marketingSub = 'campaigns'; // 'campaigns' or 'offers' or 'promo'
 var offersConfigCache = null;
 var campaignsConfigCache = null;
+var campaignListingsCache = null;
+var campaignWizardState = {
+  open: false,
+  mode: 'create',
+  id: '',
+  step: 1,
+  loading: false,
+  loadingError: '',
+  submitting: false,
+  name: '',
+  discount: 15,
+  startDate: '',
+  endDate: '',
+  search: '',
+  category: 'all',
+  selected: {},
+  errors: {}
+};
 
 async function rMarketing(){
   var tabs='<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--c-border)">'+
@@ -2513,6 +2531,12 @@ async function rMarketing(){
   if (marketingSub === 'offers') return tabs + (await rOffers());
   if (marketingSub === 'promo') return tabs + (await rPromoCodes());
   return tabs + (await rCampaigns());
+}
+
+async function renderMarketingPage() {
+  var page = document.getElementById('page-content');
+  if (!page) return;
+  page.innerHTML = await rMarketing();
 }
 
 async function loadCampaignsFromServer(forceReload){
@@ -2529,128 +2553,356 @@ async function loadCampaignsFromServer(forceReload){
   }
 }
 
-async function rCampaigns(){
-  var campaigns = await loadCampaignsFromServer(false);
-  var now=Date.now();
-
-  var h='<div class="card"><div class="card-header"><span>Active Sales</span><button class="btn btn-primary btn-sm" onclick="showNewCampaignForm()">+ New Sale</button></div><div class="card-body">';
-
-  var activeCampaigns=campaigns.filter(function(c){return now>=new Date(c.startDate).getTime()&&now<=new Date(c.endDate).getTime();});
-  var upcoming=campaigns.filter(function(c){return now<new Date(c.startDate).getTime();});
-  var expired=campaigns.filter(function(c){return now>new Date(c.endDate).getTime();});
-
-  if(campaigns.length===0){
-    h+='<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🏷</p><p>No campaigns yet. Create your first sale.</p></div>';
-  } else {
-    if(activeCampaigns.length>0){
-      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Active ('+activeCampaigns.length+')</h4>';
-      h+=renderCampaignTable(activeCampaigns, 'active');
-    }
-    if(upcoming.length>0){
-      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Upcoming ('+upcoming.length+')</h4>';
-      h+=renderCampaignTable(upcoming, 'upcoming');
-    }
-    if(expired.length>0){
-      h+='<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Expired ('+expired.length+')</h4>';
-      h+=renderCampaignTable(expired, 'expired');
-    }
+function fmtLocalDateInput(iso) {
+  try {
+    var d = new Date(iso);
+    if (!isFinite(d.getTime())) return '';
+    var z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return z.toISOString().slice(0, 16);
+  } catch(e) {
+    return '';
   }
-  h+='</div></div>';
-  h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Campaigns apply to product pages — strike-through original price + countdown timer. Valid 1-15 days.</p>';
-  return h;
 }
 
-function renderCampaignTable(items, type){
-  var h='<table><thead><tr><th>Name</th><th>Discount</th><th>Products</th><th>Period</th><th>Status</th><th></th></tr></thead><tbody>';
+function nowLocalInput() {
+  var d = new Date();
+  var z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return z.toISOString().slice(0, 16);
+}
+
+function plusDaysLocalInput(days) {
+  var d = new Date(Date.now() + days * 86400000);
+  var z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return z.toISOString().slice(0, 16);
+}
+
+function parseDateInputLocal(v) {
+  if (!v) return NaN;
+  var ts = new Date(v).getTime();
+  return isFinite(ts) ? ts : NaN;
+}
+
+function getCampaignStatus(c) {
+  var now = Date.now();
+  var start = new Date(c.startDate).getTime();
+  var end = new Date(c.endDate).getTime();
+  var productSlugs = Array.isArray(c.productSlugs) ? c.productSlugs : [];
+  if (!c.name || !isFinite(start) || !isFinite(end) || !productSlugs.length || end <= start) return 'invalid';
+  if (now < start) return 'scheduled';
+  if (now > end) return 'ended';
+  return 'active';
+}
+
+async function loadCampaignListingsFromServer(forceReload) {
+  if (!forceReload && campaignListingsCache) return campaignListingsCache;
+  try {
+    var headers = await getAdminAuthHeaders(false);
+    var resp = await fetch('/api/admin/campaigns?mode=listings', { headers: headers });
+    if (!resp.ok) return [];
+    var data = await resp.json().catch(function(){ return {}; });
+    campaignListingsCache = Array.isArray(data.products) ? data.products : [];
+    return campaignListingsCache;
+  } catch (e) {
+    return [];
+  }
+}
+
+function resetCampaignWizardDefaults() {
+  campaignWizardState.name = '';
+  campaignWizardState.discount = 15;
+  campaignWizardState.startDate = nowLocalInput();
+  campaignWizardState.endDate = plusDaysLocalInput(3);
+  campaignWizardState.search = '';
+  campaignWizardState.category = 'all';
+  campaignWizardState.selected = {};
+  campaignWizardState.errors = {};
+  campaignWizardState.loadingError = '';
+  campaignWizardState.submitting = false;
+  campaignWizardState.step = 1;
+}
+
+function campaignSelectedCount() {
+  var keys = Object.keys(campaignWizardState.selected || {});
+  return keys.filter(function(k){ return campaignWizardState.selected[k]; }).length;
+}
+
+function getCampaignWizardSelectedSlugs() {
+  return Object.keys(campaignWizardState.selected || {}).filter(function(k){ return campaignWizardState.selected[k]; });
+}
+
+function setCampaignWizardField(field, value) {
+  campaignWizardState[field] = value;
+  delete campaignWizardState.errors[field];
+  renderMarketingPage();
+}
+
+function setCampaignWizardStep(step) {
+  campaignWizardState.step = step;
+  renderMarketingPage();
+}
+
+function toggleCampaignWizardSelection(slug, checked) {
+  campaignWizardState.selected[slug] = !!checked;
+  delete campaignWizardState.errors.productSlugs;
+  renderMarketingPage();
+}
+
+function closeCampaignWizard() {
+  campaignWizardState.open = false;
+  campaignWizardState.loading = false;
+  campaignWizardState.loadingError = '';
+  campaignWizardState.errors = {};
+  renderMarketingPage();
+}
+
+async function openCampaignWizard(mode, id) {
+  campaignWizardState.open = true;
+  campaignWizardState.mode = mode || 'create';
+  campaignWizardState.id = id || '';
+  campaignWizardState.loading = true;
+  campaignWizardState.loadingError = '';
+  resetCampaignWizardDefaults();
+
+  var listings = await loadCampaignListingsFromServer(false);
+  if (!listings.length) {
+    campaignWizardState.loadingError = 'Failed to load active listings. Please retry.';
+  }
+
+  if (campaignWizardState.mode === 'edit' && id) {
+    var campaigns = await loadCampaignsFromServer(false);
+    var existing = (campaigns || []).find(function(c){ return c.id === id; });
+    if (existing) {
+      campaignWizardState.name = existing.name || '';
+      campaignWizardState.discount = Number(existing.discount || 15) || 15;
+      campaignWizardState.startDate = fmtLocalDateInput(existing.startDate) || nowLocalInput();
+      campaignWizardState.endDate = fmtLocalDateInput(existing.endDate) || plusDaysLocalInput(3);
+      campaignWizardState.selected = {};
+      (existing.productSlugs || []).forEach(function(slug){ campaignWizardState.selected[slug] = true; });
+    }
+  }
+  campaignWizardState.loading = false;
+  renderMarketingPage();
+}
+
+async function retryCampaignListingsLoad() {
+  campaignWizardState.loading = true;
+  campaignWizardState.loadingError = '';
+  renderMarketingPage();
+  var listings = await loadCampaignListingsFromServer(true);
+  if (!listings.length) {
+    campaignWizardState.loadingError = 'Failed to load active listings. Please retry.';
+  }
+  campaignWizardState.loading = false;
+  renderMarketingPage();
+}
+
+function validateCampaignWizardStep1() {
+  var errors = {};
+  var name = String(campaignWizardState.name || '').trim();
+  var discountNum = Number(campaignWizardState.discount);
+  var startTs = parseDateInputLocal(campaignWizardState.startDate);
+  var endTs = parseDateInputLocal(campaignWizardState.endDate);
+  if (!name || name.length < 3 || name.length > 80) errors.name = 'Campaign name must be 3-80 characters';
+  if (!isFinite(discountNum) || Math.round(discountNum) !== discountNum || discountNum < 1 || discountNum > 90) errors.discount = 'Discount must be an integer between 1 and 90';
+  if (!isFinite(startTs) || !isFinite(endTs)) errors.dates = 'Start and end date are required';
+  else if (endTs <= startTs) errors.dates = 'End date must be after start date';
+  campaignWizardState.errors = Object.assign({}, campaignWizardState.errors, errors);
+  return Object.keys(errors).length === 0;
+}
+
+function nextCampaignWizardStep() {
+  if (!validateCampaignWizardStep1()) {
+    renderMarketingPage();
+    return;
+  }
+  campaignWizardState.step = 2;
+  renderMarketingPage();
+}
+
+function getFilteredCampaignListings() {
+  var listings = campaignListingsCache || [];
+  var q = String(campaignWizardState.search || '').trim().toLowerCase();
+  var category = String(campaignWizardState.category || 'all');
+  return listings.filter(function(p) {
+    var title = String(p.title_en || '').toLowerCase();
+    var slug = String(p.slug || '').toLowerCase();
+    var cat = String(p.product_type || p.category || '').toLowerCase();
+    var qOk = !q || title.indexOf(q) !== -1 || slug.indexOf(q) !== -1;
+    var cOk = category === 'all' || cat === category;
+    return qOk && cOk;
+  });
+}
+
+function renderCampaignWizard() {
+  if (!campaignWizardState.open) return '';
+  var isEdit = campaignWizardState.mode === 'edit';
+  var errors = campaignWizardState.errors || {};
+  var selectedCount = campaignSelectedCount();
+  var stepOneActive = campaignWizardState.step === 1;
+  var stepTwoActive = campaignWizardState.step === 2;
+  var listings = getFilteredCampaignListings();
+  var allListings = campaignListingsCache || [];
+  var categories = {};
+  allListings.forEach(function(p){
+    var key = String(p.product_type || p.category || '').toLowerCase().trim();
+    if (key) categories[key] = true;
+  });
+  var categoryOptions = Object.keys(categories).sort().map(function(cat){
+    return '<option value="' + escHtml(cat) + '"' + (campaignWizardState.category===cat?' selected':'') + '>' + escHtml(cat.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();})) + '</option>';
+  }).join('');
+
+  var step1 = '<div style="' + (stepOneActive ? '' : 'display:none') + '">' +
+    '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" value="' + escHtml(campaignWizardState.name) + '" oninput="setCampaignWizardField(\'name\', this.value)" placeholder="e.g. Holiday Bedding Sale"></div>' +
+    '<div class="form-group"><label>Discount % *</label><input type="number" id="camp-discount" value="' + escHtml(campaignWizardState.discount) + '" min="1" max="90" step="1" oninput="setCampaignWizardField(\'discount\', this.value)"></div></div>' +
+    (errors.name ? '<div style="color:var(--c-red);font-size:0.75rem;margin-top:-8px;margin-bottom:8px">' + escHtml(errors.name) + '</div>' : '') +
+    (errors.discount ? '<div style="color:var(--c-red);font-size:0.75rem;margin-top:-8px;margin-bottom:8px">' + escHtml(errors.discount) + '</div>' : '') +
+    '<div class="form-row"><div class="form-group"><label>Start Date *</label><input type="datetime-local" value="' + escHtml(campaignWizardState.startDate) + '" oninput="setCampaignWizardField(\'startDate\', this.value)"></div>' +
+    '<div class="form-group"><label>End Date *</label><input type="datetime-local" value="' + escHtml(campaignWizardState.endDate) + '" oninput="setCampaignWizardField(\'endDate\', this.value)"></div></div>' +
+    (errors.dates ? '<div style="color:var(--c-red);font-size:0.75rem;margin-top:-8px;margin-bottom:8px">' + escHtml(errors.dates) + '</div>' : '') +
+    '<div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn btn-outline" onclick="closeCampaignWizard()">Cancel</button><button class="btn btn-primary" onclick="nextCampaignWizardStep()">Next: Select listings</button></div>' +
+  '</div>';
+
+  var listingsBody = '';
+  if (campaignWizardState.loading) {
+    listingsBody = '<div style="padding:18px;color:var(--c-muted)">Loading listings...</div>';
+  } else if (campaignWizardState.loadingError) {
+    listingsBody = '<div style="padding:18px;color:var(--c-red)">'+escHtml(campaignWizardState.loadingError)+'</div><div style="padding:0 18px 18px"><button class="btn btn-outline" onclick="retryCampaignListingsLoad()">Retry</button></div>';
+  } else if (!allListings.length) {
+    listingsBody = '<div style="padding:18px;color:var(--c-muted)">No active listings found.</div>';
+  } else if (!listings.length) {
+    listingsBody = '<div style="padding:18px;color:var(--c-muted)">No listings match your search/filter.</div>';
+  } else {
+    listingsBody = listings.map(function(p){
+      var checked = !!campaignWizardState.selected[p.slug];
+      var title = p.title_en || p.slug;
+      var usd = Number(p.base_price_usd || 0);
+      var thb = Number(p.base_price_thb || 0);
+      return '<label style="display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--c-border);cursor:pointer">' +
+        '<input type="checkbox" ' + (checked?'checked':'') + ' onchange="toggleCampaignWizardSelection(\'' + escHtml(p.slug) + '\', this.checked)">' +
+        '<div><div style="font-weight:600;font-size:0.8125rem">' + escHtml(title) + '</div><div style="font-size:0.75rem;color:var(--c-muted)">' + escHtml(p.slug) + '</div></div>' +
+        '<div style="text-align:right;font-size:0.75rem;color:var(--c-muted)">US$' + escHtml(usd || 0) + ' · ฿' + escHtml((thb || 0).toLocaleString()) + '</div>' +
+      '</label>';
+    }).join('');
+  }
+
+  var step2 = '<div style="' + (stepTwoActive ? '' : 'display:none') + '">' +
+    '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">' +
+      '<input placeholder="Search title or slug" value="' + escHtml(campaignWizardState.search) + '" oninput="setCampaignWizardField(\'search\', this.value)" style="min-width:240px;flex:1;padding:8px 10px;border:1px solid var(--c-border);border-radius:var(--radius)">' +
+      '<select onchange="setCampaignWizardField(\'category\', this.value)" style="padding:8px 10px;border:1px solid var(--c-border);border-radius:var(--radius)"><option value="all">All categories</option>' + categoryOptions + '</select>' +
+      '<div style="font-size:0.75rem;color:var(--c-muted);font-weight:700">Selected ' + selectedCount + ' listing' + (selectedCount===1?'':'s') + '</div>' +
+    '</div>' +
+    '<div style="border:1px solid var(--c-border);border-radius:var(--radius);max-height:300px;overflow:auto;background:#fff">' + listingsBody + '</div>' +
+    (errors.productSlugs ? '<div style="color:var(--c-red);font-size:0.75rem;margin-top:8px">' + escHtml(errors.productSlugs) + '</div>' : '') +
+    '<div style="margin-top:12px;padding:10px;border:1px dashed var(--c-border);border-radius:var(--radius);background:#f8fafc">' +
+      '<div style="font-size:0.75rem;color:var(--c-muted);text-transform:uppercase;font-weight:700;margin-bottom:8px">Review</div>' +
+      '<div style="font-size:0.8125rem"><strong>' + escHtml(campaignWizardState.name || '—') + '</strong> · ' + escHtml(campaignWizardState.discount || 0) + '% off · ' + escHtml(campaignWizardState.startDate || '') + ' → ' + escHtml(campaignWizardState.endDate || '') + ' · ' + selectedCount + ' listings</div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px"><button class="btn btn-outline" onclick="setCampaignWizardStep(1)">Back</button>' +
+      '<div style="display:flex;gap:8px"><button class="btn btn-outline" onclick="closeCampaignWizard()">Cancel</button><button class="btn btn-primary" ' + (campaignWizardState.submitting?'disabled':'') + ' onclick="submitCampaignWizard()">' + (campaignWizardState.submitting ? 'Saving...' : (isEdit ? 'Save changes' : 'Create campaign')) + '</button></div></div>' +
+  '</div>';
+
+  return '<div class="card" style="margin-bottom:16px"><div class="card-header">' + (isEdit ? 'Edit Sale Campaign' : 'Create Sale Campaign') + '</div><div class="card-body">' +
+    '<div style="display:flex;gap:10px;margin-bottom:12px"><span class="badge ' + (stepOneActive?'badge-production':'badge-confirmed') + '">1. Customize sale</span><span class="badge ' + (stepTwoActive?'badge-production':'badge-confirmed') + '">2. Select listings</span></div>' +
+    step1 + step2 +
+  '</div></div>';
+}
+
+async function submitCampaignWizard() {
+  campaignWizardState.errors = {};
+  if (!validateCampaignWizardStep1()) {
+    campaignWizardState.step = 1;
+    renderMarketingPage();
+    return;
+  }
+  var slugs = getCampaignWizardSelectedSlugs();
+  if (!slugs.length) {
+    campaignWizardState.errors.productSlugs = 'Select at least one listing';
+    campaignWizardState.step = 2;
+    renderMarketingPage();
+    return;
+  }
+  var startTs = parseDateInputLocal(campaignWizardState.startDate);
+  var endTs = parseDateInputLocal(campaignWizardState.endDate);
+  if (!isFinite(startTs) || !isFinite(endTs) || endTs <= startTs) {
+    campaignWizardState.errors.dates = 'End date must be after start date';
+    campaignWizardState.step = 1;
+    renderMarketingPage();
+    return;
+  }
+
+  var payload = {
+    id: campaignWizardState.id || undefined,
+    name: String(campaignWizardState.name || '').trim(),
+    discount: Math.round(Number(campaignWizardState.discount)),
+    productSlugs: slugs,
+    startDate: new Date(startTs).toISOString(),
+    endDate: new Date(endTs).toISOString()
+  };
+
+  campaignWizardState.submitting = true;
+  renderMarketingPage();
+  try {
+    var headers = await getAdminAuthHeaders(true);
+    var method = campaignWizardState.mode === 'edit' ? 'PUT' : 'POST';
+    var resp = await fetch('/api/admin/campaigns', { method: method, headers: headers, body: JSON.stringify(payload) });
+    var data = await resp.json().catch(function(){ return {}; });
+    campaignWizardState.submitting = false;
+    if (!resp.ok) {
+      toast(data.error || 'Failed to save campaign');
+      renderMarketingPage();
+      return;
+    }
+    campaignsConfigCache = null;
+    campaignWizardState.open = false;
+    toast(campaignWizardState.mode === 'edit' ? 'Campaign updated' : 'Campaign created');
+    showPage('marketing');
+  } catch (e) {
+    campaignWizardState.submitting = false;
+    toast('Network error: ' + e.message);
+    renderMarketingPage();
+  }
+}
+
+function renderCampaignTable(items){
+  var h='<table><thead><tr><th>Name</th><th>Discount</th><th>Selected listings</th><th>Date range</th><th>Status</th><th></th></tr></thead><tbody>';
   items.forEach(function(c){
-    var statusTag=type==='active'?'<span class="badge badge-shipped">Live</span>':type==='upcoming'?'<span class="badge badge-production">Scheduled</span>':'<span class="badge badge-cancelled">Ended</span>';
-    h+='<tr><td><strong>'+c.name+'</strong></td><td><strong style="color:var(--c-red)">'+c.discount+'% off</strong></td><td>'+c.productSlugs.join(', ')+'</td><td>'+c.startDate+' → '+c.endDate+'</td><td>'+statusTag+'</td><td><button class="btn btn-sm btn-outline" onclick="deleteCampaign(\''+c.id+'\')" style="color:var(--c-red)">Delete</button></td></tr>';
+    var status = getCampaignStatus(c);
+    var statusTag = status==='active' ? '<span class="badge badge-shipped">Active</span>'
+      : status==='scheduled' ? '<span class="badge badge-production">Scheduled</span>'
+      : status==='ended' ? '<span class="badge badge-confirmed">Ended</span>'
+      : '<span class="badge badge-cancelled">Invalid</span>';
+    var count = Array.isArray(c.productSlugs) ? c.productSlugs.length : 0;
+    h+='<tr><td><strong>'+escHtml(c.name || '—')+'</strong></td><td><strong style="color:var(--c-red)">'+escHtml(c.discount || 0)+'% off</strong></td><td>'+count+'</td><td>'+escHtml(c.startDate || '')+' → '+escHtml(c.endDate || '')+'</td><td>'+statusTag+'</td><td style="text-align:right"><button class="btn btn-sm btn-outline" onclick="openCampaignWizard(\'edit\', \''+escHtml(c.id)+'\')">Edit</button> <button class="btn btn-sm btn-outline" onclick="deleteCampaign(\''+escHtml(c.id)+'\')" style="color:var(--c-red)">Delete</button></td></tr>';
   });
   h+='</tbody></table>';
   return h;
 }
 
-function showNewCampaignForm(){
-  var existing=document.getElementById('new-campaign-form');
-  if(existing){ existing.style.display=existing.style.display==='none'?'block':'none'; return; }
-  var div=document.createElement('div');
-  div.id='new-campaign-form';
-  div.style.cssText='margin-bottom:20px';
-  div.innerHTML='<div class="card"><div class="card-header">New Sale Campaign</div><div class="card-body">'+
-    '<div class="form-row"><div class="form-group"><label>Campaign Name *</label><input id="camp-name" placeholder="e.g. Songkran Flash Sale"></div>'+
-    '<div class="form-group"><label>Discount % *</label><input type="number" id="camp-discount" value="15" min="1" max="90"></div></div>'+
-    '<div class="form-group"><label>Products * <span style="font-weight:400;font-size:0.75rem;color:var(--c-muted)">— click to multi-select</span></label>'+
-    '<div style="display:flex;gap:6px;margin-bottom:6px"><button type="button" class="btn btn-sm btn-outline" onclick="toggleCampProds(true)">Select All</button><button type="button" class="btn btn-sm btn-outline" onclick="toggleCampProds(false)">Clear All</button></div>'+
-    '<div class="camp-checkboxes" style="max-height:280px;overflow-y:auto;border:1px solid var(--c-border);border-radius:var(--radius);background:#fff">'+
-    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px">Sheets (9)</div>'+
-    allProductSlugs.slice(0,9).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
-    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Duvet Covers (6)</div>'+
-    allProductSlugs.slice(9,15).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
-    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Pillowcases (3)</div>'+
-    allProductSlugs.slice(15,18).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
-    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Protection (7)</div>'+
-    allProductSlugs.slice(18,25).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
-    '<div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--c-muted);padding:8px 10px 4px;border-top:1px solid var(--c-border)">Accessories (2)</div>'+
-    allProductSlugs.slice(25,27).map(function(s){return'<label style="display:grid;grid-template-columns:24px 1fr;align-items:center;gap:6px;padding:5px 10px;font-size:0.8125rem;cursor:pointer;white-space:nowrap" onmouseover="this.style.background=\'#f1f5f9\'" onmouseout="this.style.background=\'\'"><input type="checkbox" class="camp-prod" value="'+s+'" style="margin:0">'+s.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})+'</label>';}).join('')+
-    '</div></div>'+
-    '<div class="form-row"><div class="form-group"><label>Start Date</label><input type="date" id="camp-start"></div>'+
-    '<div class="form-group"><label>End Date (max 15 days)</label><input type="date" id="camp-end"></div></div>'+
-    '<p style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Maximum 15 days. Product pages show strike-through price + countdown timer.</p>'+
-    '<div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="createCampaign()">Create Campaign</button>'+
-    '<button class="btn btn-outline" onclick="document.getElementById(\'new-campaign-form\').remove()">Cancel</button></div>'+
-  '</div></div>';
-  var content=document.getElementById('page-content');
-  content.insertBefore(div, content.firstChild);
-  var today=new Date().toISOString().split('T')[0];
-  var end=new Date(Date.now()+3*86400000).toISOString().split('T')[0];
-  document.getElementById('camp-start').value=today;
-  document.getElementById('camp-end').value=end;
-}
+async function rCampaigns(){
+  var campaigns = await loadCampaignsFromServer(false);
+  var active = campaigns.filter(function(c){ return getCampaignStatus(c) === 'active'; });
+  var scheduled = campaigns.filter(function(c){ return getCampaignStatus(c) === 'scheduled'; });
+  var ended = campaigns.filter(function(c){ return getCampaignStatus(c) === 'ended'; });
+  var invalid = campaigns.filter(function(c){ return getCampaignStatus(c) === 'invalid'; });
 
-var allProductSlugs=[
-  'standard-fitted-sheet','deep-pocket-fitted-sheet','marine-fitted-sheet','dorm-fitted-sheet',
-  'rv-truck-fitted-sheet','family-fitted-sheet','pet-owner-fitted-sheet','flat-sheet-standard',
-  'flat-sheet-extra-deep-pocket','3-sided-duvet','pet-owner-duvet-cover','duvet-cover-marine',
-  'duvet-cover-rv','duvet-cover-dorm','duvet-insert','pillowcase-envelope','pillowcase-zipper',
-  'pillowcase-sham','mattress-protector-standard','mattress-protector-family',
-  'mattress-protector-deep-pocket','pet-proof-mattress-protector','mattress-encasement-general',
-  'rv-truck-mattress-encasement','pillow-protector-general','bedbridge-connector','mattress-lift-helper'
-];
-
-function toggleCampProds(checked) {
-  document.querySelectorAll('.camp-prod').forEach(function(cb) { cb.checked = checked; });
-}
-
-async function createCampaign(){
-  var name=document.getElementById('camp-name').value.trim();
-  var discount=parseInt(document.getElementById('camp-discount').value)||15;
-  var start=document.getElementById('camp-start').value;
-  var end=document.getElementById('camp-end').value;
-  if(!name){toast('Enter campaign name');return;}
-  var days=(new Date(end)-new Date(start))/86400000;
-  if(days<0){toast('End date must be after start date');return;}
-  if(days>15){toast('Maximum campaign duration is 15 days');return;}
-  var slugs = [];
-  document.querySelectorAll('.camp-prod:checked').forEach(function(cb) { slugs.push(cb.value); });
-  if (slugs.length === 0) { toast('Select at least one product'); return; }
-  try {
-    var headers = await getAdminAuthHeaders(true);
-    var resp = await fetch('/api/admin/campaigns', {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify({ name:name, discount:discount, productSlugs:slugs, startDate:start, endDate:end })
-    });
-    var data = await resp.json();
-    if (!resp.ok) { toast(data.error || 'Failed to create campaign'); return; }
-    campaignsConfigCache = null;
-    toast('Campaign created: '+name+' ('+discount+'% off)');
-    showPage('marketing');
-  } catch(e) {
-    toast('Network error: ' + e.message);
+  var h = '';
+  h += renderCampaignWizard();
+  h += '<div class="card"><div class="card-header"><span>Run a Sale campaigns</span><button class="btn btn-primary btn-sm" onclick="openCampaignWizard(\'create\')">+ Create campaign</button></div><div class="card-body">';
+  if (!campaigns.length) {
+    h += '<div style="text-align:center;padding:40px;color:var(--c-muted)"><p style="font-size:2rem;margin-bottom:8px">🏷</p><p>No campaigns yet. Create your first sale.</p></div>';
+  } else {
+    if (active.length) { h += '<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Active ('+active.length+')</h4>'; h += renderCampaignTable(active); }
+    if (scheduled.length) { h += '<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Scheduled ('+scheduled.length+')</h4>'; h += renderCampaignTable(scheduled); }
+    if (ended.length) { h += '<h4 style="font-size:0.8125rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Ended ('+ended.length+')</h4>'; h += renderCampaignTable(ended); }
+    if (invalid.length) { h += '<h4 style="font-size:0.8125rem;color:var(--c-red);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 12px">Invalid ('+invalid.length+')</h4>'; h += renderCampaignTable(invalid); }
   }
+  h += '</div></div>';
+  h += '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">No “All listings” mode. Campaigns apply only to selected live listings from the active product catalog.</p>';
+  return h;
 }
 
 async function deleteCampaign(id){
+  if (!confirm('Delete this campaign?')) return;
   try {
     var headers = await getAdminAuthHeaders(true);
     var resp = await fetch('/api/admin/campaigns', {
