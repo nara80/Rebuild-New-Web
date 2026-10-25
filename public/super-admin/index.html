@@ -58,6 +58,7 @@ tr:hover td{background:#f8fafc}
 .badge-sewing{background:#dcfce7;color:#166534}.badge-fixed{background:#fef3c7;color:#92400e}.badge-ops{background:#e0e7ff;color:#3730a3}
 .badge-pending{background:#fef3c7;color:#92400e}.badge-production{background:#dbeafe;color:#1e40af}
 .badge-shipped{background:#dcfce7;color:#166534}.badge-cancelled{background:#fee2e2;color:#991b1b}
+.badge-confirmed{background:#e0f2fe;color:#075985}
 .upload-zone{border:2px dashed var(--c-border);border-radius:var(--radius);padding:40px;text-align:center;color:var(--c-muted);cursor:pointer;transition:all 0.15s}
 .upload-zone:hover{border-color:var(--c-blue);color:var(--c-blue);background:#f0f7ff}
 .upload-zone.dragover{border-color:var(--c-blue);background:#eff6ff}
@@ -156,6 +157,21 @@ background:#f8fafc;
 .order-detail-label{font-size:.6875rem;color:var(--c-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
 .order-detail-value{font-size:.875rem;color:var(--c-text);word-break:break-word}
 @media(max-width:640px){.order-detail-grid{grid-template-columns:1fr}}
+.orders-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.orders-toolbar .field{display:flex;flex-direction:column;gap:4px}
+.orders-toolbar .field label{font-size:.72rem;color:var(--c-muted);font-weight:600}
+.orders-toolbar .field input,.orders-toolbar .field select{padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;font-size:.8125rem}
+.orders-toolbar-actions{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.orders-pagination{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.orders-mobile-cards{display:none;gap:10px}
+.order-card{border:1px solid var(--c-border);border-radius:10px;background:#fff;padding:12px}
+.order-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.order-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.order-card-field{font-size:.78rem}
+.order-card-field b{display:block;font-size:.68rem;text-transform:uppercase;color:var(--c-muted);margin-bottom:2px}
+.order-card-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+@media(max-width:980px){.orders-desktop-table{display:none}.orders-mobile-cards{display:grid}.orders-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.orders-toolbar{grid-template-columns:1fr}.order-card-grid{grid-template-columns:1fr}}
 .quote-close:hover{color:var(--c-dark)}
 .quote-popup-title{font-size:1.125rem;font-weight:700;color:var(--c-dark);margin-bottom:20px}
 .quote-field{margin-bottom:16px}
@@ -1391,8 +1407,17 @@ async function saveAddRate(tier) {
     toast('Network error');
   }
 }
-// ── Orders (enhanced with status badges) ──
-var orderShowArchived = false;
+// ── Orders (server-filtered + pagination + mobile cards) ──
+var orderFilters = {
+  q: '',
+  status: 'all',
+  archived: 'active',
+  from: '',
+  to: '',
+  sort: 'created_at_desc',
+  page: 1,
+  pageSize: 25
+};
 
 async function getAdminAuthHeaders(includeJson) {
   var headers = {};
@@ -1411,6 +1436,12 @@ async function getAdminAuthHeaders(includeJson) {
   if (secret) ADMIN_SECRET = secret;
   if (secret) headers['X-Admin-Secret'] = secret;
   return headers;
+}
+
+function getOrderStatusClass(status) {
+  var key = String(status || '').toLowerCase();
+  if (key === 'confirmed') return 'badge-confirmed';
+  return { pending: 'badge-pending', production: 'badge-production', shipped: 'badge-shipped', cancelled: 'badge-cancelled' }[key] || 'badge-pending';
 }
 
 var TRACKING_URL_BY_CARRIER = {
@@ -1681,7 +1712,7 @@ async function openOrderDetail(orderId) {
       throw new Error((data && data.error) || ('HTTP ' + resp.status));
     }
     var o = data.order;
-    var statusClass = {'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status] || 'badge-pending';
+    var statusClass = getOrderStatusClass(o.status);
     var trackingLabel = o.tracking_number ? (getCarrierLabel(o.carrier_code || '') + ': ' + o.tracking_number) : '—';
     var detailRows = [
       ['Order ID', '#' + String(o.id || '—')],
@@ -1728,18 +1759,82 @@ async function openOrderDetail(orderId) {
   }
 }
 
+function readOrderFiltersFromDom(resetPage) {
+  var qEl = document.getElementById('order-filter-q');
+  var statusEl = document.getElementById('order-filter-status');
+  var archivedEl = document.getElementById('order-filter-archived');
+  var fromEl = document.getElementById('order-filter-from');
+  var toEl = document.getElementById('order-filter-to');
+  var sortEl = document.getElementById('order-filter-sort');
+  var pageSizeEl = document.getElementById('order-filter-page-size');
+  orderFilters.q = qEl ? String(qEl.value || '').trim() : '';
+  orderFilters.status = statusEl ? String(statusEl.value || 'all') : 'all';
+  orderFilters.archived = archivedEl ? String(archivedEl.value || 'active') : 'active';
+  orderFilters.from = fromEl ? String(fromEl.value || '') : '';
+  orderFilters.to = toEl ? String(toEl.value || '') : '';
+  orderFilters.sort = sortEl ? String(sortEl.value || 'created_at_desc') : 'created_at_desc';
+  orderFilters.pageSize = pageSizeEl ? Number(pageSizeEl.value || 25) : 25;
+  if (resetPage) orderFilters.page = 1;
+}
+
+function orderQueryString() {
+  var p = new URLSearchParams();
+  if (orderFilters.q) p.set('q', orderFilters.q);
+  if (orderFilters.status && orderFilters.status !== 'all') p.set('status', orderFilters.status);
+  if (orderFilters.archived) p.set('archived', orderFilters.archived);
+  if (orderFilters.from) p.set('from', orderFilters.from);
+  if (orderFilters.to) p.set('to', orderFilters.to);
+  if (orderFilters.sort) p.set('sort', orderFilters.sort);
+  p.set('page', String(orderFilters.page || 1));
+  p.set('page_size', String(orderFilters.pageSize || 25));
+  return p.toString();
+}
+
+function applyOrderFilters() {
+  readOrderFiltersFromDom(true);
+  showPage('orders');
+}
+
+function clearOrderFilters() {
+  orderFilters = { q: '', status: 'all', archived: 'active', from: '', to: '', sort: 'created_at_desc', page: 1, pageSize: 25 };
+  showPage('orders');
+}
+
+function setOrderPage(nextPage) {
+  orderFilters.page = Math.max(1, Number(nextPage || 1));
+  showPage('orders');
+}
+
+function changeOrderPageSize() {
+  readOrderFiltersFromDom(true);
+  showPage('orders');
+}
+
 async function rOrders(){
   var orders = [];
   var guardrail = null;
   var salesSync = null;
+  var pagination = { page: orderFilters.page || 1, page_size: orderFilters.pageSize || 25, total: 0, total_pages: 1 };
   var fetchError = '';
   try {
-    var resp = await fetch('/api/admin/orders?include_archived=' + (orderShowArchived ? '1' : '0'), { headers: await getAdminAuthHeaders(false) });
+    var resp = await fetch('/api/admin/orders?' + orderQueryString(), { headers: await getAdminAuthHeaders(false) });
     if (resp.ok) {
       var data = await resp.json();
       orders = Array.isArray(data.orders) ? data.orders.map(mapOrderRow) : [];
       guardrail = data.dimension_guardrail || null;
       salesSync = data.sales_sync || null;
+      if (data.pagination && typeof data.pagination === 'object') {
+        pagination = {
+          page: Number(data.pagination.page || 1),
+          page_size: Number(data.pagination.page_size || orderFilters.pageSize || 25),
+          total: Number(data.pagination.total || 0),
+          total_pages: Math.max(1, Number(data.pagination.total_pages || 1))
+        };
+      } else {
+        pagination.total = orders.length;
+      }
+      orderFilters.page = pagination.page;
+      orderFilters.pageSize = pagination.page_size;
     } else {
       var errData = null;
       try { errData = await resp.json(); } catch(e) {}
@@ -1753,7 +1848,7 @@ async function rOrders(){
     return '<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-red)">API unavailable</span></div><div class="card-body"><p style="color:var(--c-red);margin-bottom:8px"><strong>Could not load order data from D1.</strong></p><p style="color:var(--c-muted);font-size:0.875rem">Reason: ' + escHtml(fetchError) + '</p></div></div>';
   }
 
-  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+orders.length+' orders (D1)</span></div><div class="card-body">';
+  var h='<div class="card"><div class="card-header"><span>Orders</span><span style="font-size:0.75rem;color:var(--c-muted)">'+Number(pagination.total || 0)+' total (page '+Number(pagination.page || 1)+'/'+Number(pagination.total_pages || 1)+')</span></div><div class="card-body">';
   h += renderSalesSyncBanner(salesSync);
   var uiMissingRows = orders.filter(function(o){ return !!o.missingDimsIssue; }).length;
   var apiMissingRows = guardrail && typeof guardrail.missing_configurable_rows === 'number'
@@ -1764,13 +1859,21 @@ async function rOrders(){
     var affectedText = affectedOrders.length ? (' Affected orders: ' + affectedOrders.map(function(id){ return '#' + id; }).join(', ')) : '';
     h += '<div style="margin-bottom:12px;padding:10px 12px;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;border-radius:8px;font-size:0.8125rem"><strong>Dimension Guardrail:</strong> ' + apiMissingRows + ' configurable order row(s) are missing dimensions.' + escHtml(affectedText) + '</div>';
   }
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">' +
-    '<label style="display:flex;align-items:center;gap:8px;font-size:0.8125rem;color:var(--c-muted)"><input type="checkbox" ' + (orderShowArchived ? 'checked' : '') + ' onchange="toggleOrderArchivedView(this.checked)">Show archived cancelled</label>' +
-    '<span style="font-size:0.75rem;color:var(--c-muted)">Use Archive on cancelled orders instead of deleting.</span>' +
+  h += '<div class="orders-toolbar">' +
+    '<div class="field"><label>Search</label><input id="order-filter-q" value="' + escHtml(orderFilters.q) + '" placeholder="Order #, email, product"></div>' +
+    '<div class="field"><label>Status</label><select id="order-filter-status"><option value="all"' + (orderFilters.status==='all'?' selected':'') + '>All</option><option value="pending"' + (orderFilters.status==='pending'?' selected':'') + '>Pending</option><option value="confirmed"' + (orderFilters.status==='confirmed'?' selected':'') + '>Confirmed</option><option value="production"' + (orderFilters.status==='production'?' selected':'') + '>Production</option><option value="shipped"' + (orderFilters.status==='shipped'?' selected':'') + '>Shipped</option><option value="cancelled"' + (orderFilters.status==='cancelled'?' selected':'') + '>Cancelled</option></select></div>' +
+    '<div class="field"><label>Archived</label><select id="order-filter-archived"><option value="active"' + (orderFilters.archived==='active'?' selected':'') + '>Active only</option><option value="archived"' + (orderFilters.archived==='archived'?' selected':'') + '>Archived only</option><option value="all"' + (orderFilters.archived==='all'?' selected':'') + '>Active + archived</option></select></div>' +
+    '<div class="field"><label>Sort</label><select id="order-filter-sort"><option value="created_at_desc"' + (orderFilters.sort==='created_at_desc'?' selected':'') + '>Newest first</option><option value="created_at_asc"' + (orderFilters.sort==='created_at_asc'?' selected':'') + '>Oldest first</option></select></div>' +
+    '<div class="field"><label>From</label><input id="order-filter-from" type="date" value="' + escHtml(orderFilters.from) + '"></div>' +
+    '<div class="field"><label>To</label><input id="order-filter-to" type="date" value="' + escHtml(orderFilters.to) + '"></div>' +
+    '<div class="field"><label>Page size</label><select id="order-filter-page-size" onchange="changeOrderPageSize()"><option value="10"' + (Number(orderFilters.pageSize)===10?' selected':'') + '>10</option><option value="25"' + (Number(orderFilters.pageSize)===25?' selected':'') + '>25</option><option value="50"' + (Number(orderFilters.pageSize)===50?' selected':'') + '>50</option><option value="100"' + (Number(orderFilters.pageSize)===100?' selected':'') + '>100</option></select></div>' +
+    '<div class="orders-toolbar-actions"><button class="btn btn-primary btn-sm" onclick="applyOrderFilters()">Apply</button><button class="btn btn-outline btn-sm" onclick="clearOrderFilters()">Reset</button></div>' +
     '</div>';
-  h += '<div class="table-wrap"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Line Total</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  h += '<div style="font-size:0.75rem;color:var(--c-muted);margin-bottom:12px">Use Archive on cancelled orders instead of deleting.</div>';
+  h += '<div class="table-wrap orders-desktop-table"><table><thead><tr><th>Order No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Line Total</th><th>Tracking</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+  var mobileCards = '';
   orders.forEach(function(o){
-    var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
+    var bc = getOrderStatusClass(o.status);
     var trackingCell = '—';
     if (o.trackingNumber) {
       var carrierLabel = getCarrierLabel(o.carrierCode);
@@ -1802,14 +1905,43 @@ async function rOrders(){
       h += '<td><span class="badge '+bc+'">'+o.status+'</span></td><td style="font-size:0.75rem;color:var(--c-muted)">—</td>';
     }
     h+='</tr>';
+
+    var mobileArchiveBtn = '—';
+    if (o.dbId && o.status === 'cancelled') {
+      mobileArchiveBtn = '<button class="btn btn-sm btn-outline" onclick="setOrderArchived('+o.dbId+','+(o.isArchived ? 'false' : 'true')+')" style="' + (o.isArchived ? '' : 'color:var(--c-red);border-color:var(--c-red)') + '">' + (o.isArchived ? 'Unarchive' : 'Archive') + '</button>';
+    }
+    mobileCards += '<div class="order-card">' +
+      '<div class="order-card-top"><div><button class="order-detail-link" onclick="openOrderDetail(' + Number(o.dbId || 0) + ')">' + escHtml(o.id) + '</button><div style="font-size:.72rem;color:var(--c-muted)">' + escHtml(o.date) + '</div></div><span class="badge ' + bc + '">' + escHtml(o.status || 'pending') + '</span></div>' +
+      '<div class="order-card-grid">' +
+        '<div class="order-card-field"><b>Customer</b>' + escHtml(o.customer) + '</div>' +
+        '<div class="order-card-field"><b>Product</b>' + escHtml(o.product) + '</div>' +
+        '<div class="order-card-field"><b>Total</b>' + escHtml(o.total) + '</div>' +
+        '<div class="order-card-field"><b>Tracking</b>' + trackingCell + '</div>' +
+      '</div>' +
+      '<div class="order-card-actions">' +
+        (o.dbId ? '<select data-prev="'+o.status+'" data-carrier="'+escHtml(o.carrierCode || '')+'" data-tracking="'+escHtml(o.trackingNumber || '')+'" onchange="updateOrderStatus('+o.dbId+',this.value,this)" style="padding:6px 8px;border:1px solid var(--c-border);border-radius:6px;font-size:0.78rem;font-family:inherit">'+['pending','confirmed','production','shipped','cancelled'].map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; }).join('')+'</select>' : '') +
+        mobileArchiveBtn +
+      '</div>' +
+    '</div>';
   });
-  h+='</tbody></table></div></div></div>';
+  h+='</tbody></table></div>';
+  h += '<div class="orders-mobile-cards">' + mobileCards + '</div>';
+  h += '<div class="orders-pagination">' +
+    '<div style="font-size:0.75rem;color:var(--c-muted)">Showing ' + orders.length + ' of ' + Number(pagination.total || 0) + '</div>' +
+    '<div style="display:flex;gap:6px;align-items:center">' +
+      '<button class="btn btn-sm btn-outline" ' + (pagination.page <= 1 ? 'disabled' : '') + ' onclick="setOrderPage(' + (pagination.page - 1) + ')">Prev</button>' +
+      '<span style="font-size:0.75rem;color:var(--c-muted)">Page ' + pagination.page + ' / ' + pagination.total_pages + '</span>' +
+      '<button class="btn btn-sm btn-outline" ' + (pagination.page >= pagination.total_pages ? 'disabled' : '') + ' onclick="setOrderPage(' + (pagination.page + 1) + ')">Next</button>' +
+    '</div>' +
+    '</div>';
+  h += '</div></div>';
   h+='<p style="font-size:0.75rem;color:var(--c-muted);margin-top:16px">Orders loaded from D1 database.</p>';
   return h;
 }
 
 function toggleOrderArchivedView(checked) {
-  orderShowArchived = !!checked;
+  orderFilters.archived = checked ? 'all' : 'active';
+  orderFilters.page = 1;
   showPage('orders');
 }
 
@@ -2749,6 +2881,18 @@ async function getProducts() {
         formulaType: (r.category||"").toLowerCase().indexOf("accessor") >= 0 ? "fixed" : "fitted",
         titleEN: r.title_en || "",
         titleTH: r.title_th || "",
+        seoTitleEN: r.seo_title_en || "",
+        seoTitleTH: r.seo_title_th || "",
+        seoMetaDescriptionEN: r.seo_meta_description_en || "",
+        seoMetaDescriptionTH: r.seo_meta_description_th || "",
+        productTaglineEN: r.product_tagline_en || "",
+        productTaglineTH: r.product_tagline_th || "",
+        ctaPrimaryEN: r.cta_primary_en || "",
+        ctaPrimaryTH: r.cta_primary_th || "",
+        ctaCustomEN: r.cta_custom_en || "",
+        ctaCustomTH: r.cta_custom_th || "",
+        ctaSizeHelpEN: r.cta_size_help_en || "",
+        ctaSizeHelpTH: r.cta_size_help_th || "",
         descEN: r.description_en || "",
         descTH: r.description_th || "",
         faqEN: r.faq_en || "",
@@ -2763,6 +2907,18 @@ async function getProducts() {
         is_active: r.is_active,
         title_en: r.title_en,
         title_th: r.title_th,
+        seo_title_en: r.seo_title_en || "",
+        seo_title_th: r.seo_title_th || "",
+        seo_meta_description_en: r.seo_meta_description_en || "",
+        seo_meta_description_th: r.seo_meta_description_th || "",
+        product_tagline_en: r.product_tagline_en || "",
+        product_tagline_th: r.product_tagline_th || "",
+        cta_primary_en: r.cta_primary_en || "",
+        cta_primary_th: r.cta_primary_th || "",
+        cta_custom_en: r.cta_custom_en || "",
+        cta_custom_th: r.cta_custom_th || "",
+        cta_size_help_en: r.cta_size_help_en || "",
+        cta_size_help_th: r.cta_size_help_th || "",
         description_en: r.description_en,
         description_th: r.description_th,
         faq_en: r.faq_en || "",
@@ -3064,6 +3220,18 @@ async function saveProduct() {
 
   var titleEN = (document.getElementById("ed-title-en") || {}).value || "";
   var titleTH = (document.getElementById("ed-title-th") || {}).value || "";
+  var seoTitleEN = (document.getElementById("ed-seo-title-en") || {}).value || "";
+  var seoTitleTH = (document.getElementById("ed-seo-title-th") || {}).value || "";
+  var seoMetaEN = (document.getElementById("ed-seo-meta-en") || {}).value || "";
+  var seoMetaTH = (document.getElementById("ed-seo-meta-th") || {}).value || "";
+  var taglineEN = (document.getElementById("ed-tagline-en") || {}).value || "";
+  var taglineTH = (document.getElementById("ed-tagline-th") || {}).value || "";
+  var ctaPrimaryEN = (document.getElementById("ed-cta-primary-en") || {}).value || "";
+  var ctaPrimaryTH = (document.getElementById("ed-cta-primary-th") || {}).value || "";
+  var ctaCustomEN = (document.getElementById("ed-cta-custom-en") || {}).value || "";
+  var ctaCustomTH = (document.getElementById("ed-cta-custom-th") || {}).value || "";
+  var ctaSizeHelpEN = (document.getElementById("ed-cta-size-help-en") || {}).value || "";
+  var ctaSizeHelpTH = (document.getElementById("ed-cta-size-help-th") || {}).value || "";
   var descEN = (document.getElementById("ed-desc-en") || {}).innerHTML || "";
   var descTH = (document.getElementById("ed-desc-th") || {}).innerHTML || "";
   var faqEN = (document.getElementById("ed-faq-en") || {}).innerHTML || "";
@@ -3097,6 +3265,18 @@ async function saveProduct() {
         slug: isNew ? slug : undefined,
         title_en: titleEN,
         title_th: titleTH,
+        seo_title_en: seoTitleEN,
+        seo_title_th: seoTitleTH,
+        seo_meta_description_en: seoMetaEN,
+        seo_meta_description_th: seoMetaTH,
+        product_tagline_en: taglineEN,
+        product_tagline_th: taglineTH,
+        cta_primary_en: ctaPrimaryEN,
+        cta_primary_th: ctaPrimaryTH,
+        cta_custom_en: ctaCustomEN,
+        cta_custom_th: ctaCustomTH,
+        cta_size_help_en: ctaSizeHelpEN,
+        cta_size_help_th: ctaSizeHelpTH,
         description_en: descEN,
         description_th: descTH,
         faq_en: faqEN,
@@ -3183,6 +3363,18 @@ async function showProductEditor(){
   var hasYoutube=p.youtube_url||p.video||'';
   var titleEN = p.title_en || p.titleEN || '';
   var titleTH = p.title_th || p.titleTH || '';
+  var seoTitleEN = p.seo_title_en || p.seoTitleEN || '';
+  var seoTitleTH = p.seo_title_th || p.seoTitleTH || '';
+  var seoMetaEN = p.seo_meta_description_en || p.seoMetaDescriptionEN || '';
+  var seoMetaTH = p.seo_meta_description_th || p.seoMetaDescriptionTH || '';
+  var taglineEN = p.product_tagline_en || p.productTaglineEN || '';
+  var taglineTH = p.product_tagline_th || p.productTaglineTH || '';
+  var ctaPrimaryEN = p.cta_primary_en || p.ctaPrimaryEN || '';
+  var ctaPrimaryTH = p.cta_primary_th || p.ctaPrimaryTH || '';
+  var ctaCustomEN = p.cta_custom_en || p.ctaCustomEN || '';
+  var ctaCustomTH = p.cta_custom_th || p.ctaCustomTH || '';
+  var ctaSizeHelpEN = p.cta_size_help_en || p.ctaSizeHelpEN || '';
+  var ctaSizeHelpTH = p.cta_size_help_th || p.ctaSizeHelpTH || '';
   var descEN = p.description_en || p.descEN || '';
   var descTH = p.description_th || p.descTH || '';
   var faqEN = p.faq_en || p.faqEN || '';
@@ -3233,6 +3425,18 @@ async function showProductEditor(){
       configWarning+
       '<div class="form-row"><div class="form-group"><label>Title (EN)</label><input id="ed-title-en" value="'+titleEN+'"></div>'+
       '<div class="form-group"><label>Title (TH)</label><input id="ed-title-th" value="'+titleTH+'"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>SEO Title (EN)</label><input id="ed-seo-title-en" value="'+seoTitleEN+'" placeholder="Optional. If empty, uses Title (EN)"></div>'+
+      '<div class="form-group"><label>SEO Title (TH)</label><input id="ed-seo-title-th" value="'+seoTitleTH+'" placeholder="ตัวเลือกเสริม ถ้าว่างจะใช้ Title (TH)"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>SEO Meta Description (EN)</label><textarea id="ed-seo-meta-en" rows="3" placeholder="Optional. If empty, uses Description text">'+seoMetaEN+'</textarea></div>'+
+      '<div class="form-group"><label>SEO Meta Description (TH)</label><textarea id="ed-seo-meta-th" rows="3" placeholder="ตัวเลือกเสริม ถ้าว่างจะใช้ Description text">'+seoMetaTH+'</textarea></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>Product Tagline (EN)</label><input id="ed-tagline-en" value="'+taglineEN+'" placeholder="Text under H1 on product page"></div>'+
+      '<div class="form-group"><label>Product Tagline (TH)</label><input id="ed-tagline-th" value="'+taglineTH+'" placeholder="ข้อความใต้ H1 บนหน้าสินค้า"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>CTA Primary Button (EN)</label><input id="ed-cta-primary-en" value="'+ctaPrimaryEN+'" placeholder="Default: Add to Cart"></div>'+
+      '<div class="form-group"><label>CTA Primary Button (TH)</label><input id="ed-cta-primary-th" value="'+ctaPrimaryTH+'" placeholder="ค่าเริ่มต้น: เพิ่มลงตะกร้า"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>CTA Custom Button / Tab (EN)</label><input id="ed-cta-custom-en" value="'+ctaCustomEN+'" placeholder="Default: Request Custom Quote"></div>'+
+      '<div class="form-group"><label>CTA Custom Button / Tab (TH)</label><input id="ed-cta-custom-th" value="'+ctaCustomTH+'" placeholder="ค่าเริ่มต้น: ขอใบเสนอราคาแบบกำหนดเอง"></div></div>'+
+      '<div class="form-row"><div class="form-group"><label>CTA Size-Help Label (EN)</label><input id="ed-cta-size-help-en" value="'+ctaSizeHelpEN+'" placeholder="Default: View full size guide"></div>'+
+      '<div class="form-group"><label>CTA Size-Help Label (TH)</label><input id="ed-cta-size-help-th" value="'+ctaSizeHelpTH+'" placeholder="ค่าเริ่มต้น: ดูคู่มือขนาด"></div></div>'+
       '<div class="form-row"><div class="form-group"><label>Product Type</label>'+catSelect+
         '<p style="font-size:0.6875rem;color:#94a3b8;margin-top:4px">Determines which category page this product appears on</p></div>'+
       '<div class="form-group"><label>Niche Type(s)</label>'+nicheSelect+
@@ -3257,6 +3461,18 @@ async function showProductEditor(){
   setTimeout(function(){
     var f = document.getElementById('ed-title-en'); if(f) f.value = titleEN;
     f = document.getElementById('ed-title-th'); if(f) f.value = titleTH;
+    f = document.getElementById('ed-seo-title-en'); if(f) f.value = seoTitleEN;
+    f = document.getElementById('ed-seo-title-th'); if(f) f.value = seoTitleTH;
+    f = document.getElementById('ed-seo-meta-en'); if(f) f.value = seoMetaEN;
+    f = document.getElementById('ed-seo-meta-th'); if(f) f.value = seoMetaTH;
+    f = document.getElementById('ed-tagline-en'); if(f) f.value = taglineEN;
+    f = document.getElementById('ed-tagline-th'); if(f) f.value = taglineTH;
+    f = document.getElementById('ed-cta-primary-en'); if(f) f.value = ctaPrimaryEN;
+    f = document.getElementById('ed-cta-primary-th'); if(f) f.value = ctaPrimaryTH;
+    f = document.getElementById('ed-cta-custom-en'); if(f) f.value = ctaCustomEN;
+    f = document.getElementById('ed-cta-custom-th'); if(f) f.value = ctaCustomTH;
+    f = document.getElementById('ed-cta-size-help-en'); if(f) f.value = ctaSizeHelpEN;
+    f = document.getElementById('ed-cta-size-help-th'); if(f) f.value = ctaSizeHelpTH;
     f = document.getElementById('ed-desc-en'); if(f) f.innerHTML = descEN;
     f = document.getElementById('ed-desc-th'); if(f) f.innerHTML = descTH;
     f = document.getElementById('ed-faq-en'); if(f) f.innerHTML = faqEN;
@@ -3881,7 +4097,7 @@ async function rCustomerDetailLive(idx) {
       var dims = [];
       if (o.width_cm && o.length_cm) { dims.push(o.width_cm+' x '+o.length_cm); if(o.depth_cm) dims.push(o.depth_cm+' cm'); }
       var price = o.price_thb ? ('THB '+Number(o.price_thb).toLocaleString()) : (o.price_usd ? ('USD '+Number(o.price_usd)) : '--');
-      var bc={'pending':'badge-pending','production':'badge-production','shipped':'badge-shipped','cancelled':'badge-cancelled','confirmed':'badge-production'}[o.status]||'badge-pending';
+      var bc=getOrderStatusClass(o.status);
       h+='<tr><td>#ORD-'+o.id+'</td><td>'+(o.created_at||'').substring(0,10)+'</td><td>'+escHtml(o.product_title_en||o.product_slug||'--')+'</td><td style="font-size:0.8125rem">'+(dims.join(' x ')||'--')+'</td><td><strong>'+price+'</strong></td><td><span class="badge '+bc+'">'+o.status+'</span></td></tr>';
     });
     h += '</tbody></table>';

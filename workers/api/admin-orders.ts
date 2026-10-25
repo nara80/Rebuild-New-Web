@@ -272,36 +272,92 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
   // GET /api/admin/orders — list all orders, newest first
   if (method === "GET" && path === "/api/admin/orders") {
     const db = env.DB;
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
     const includeArchived = String(url.searchParams.get("include_archived") || "").toLowerCase();
-    const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
-    const sql = shouldIncludeArchived
-      ? `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       ORDER BY created_at DESC`
-      : `SELECT id, stripe_session_id, stripe_payment_intent_id,
-              email, customer_name, phone, shipping_address,
-              product_slug, product_title_en, fabric, color,
-              width_cm, length_cm, depth_cm,
-              width_in, length_in, depth_in,
-              custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
-              status, created_at,
-              carrier_code, tracking_number, tracking_url,
-              shipping_status, shipped_at, is_archived
-       FROM orders
-       WHERE COALESCE(is_archived, 0) = 0
-       ORDER BY created_at DESC`;
-    const result = await db.prepare(
-      sql
-    ).all();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
 
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
+
+    const statusAllow = new Set(["pending", "confirmed", "production", "shipped", "cancelled"]);
+    const statuses = rawStatus
+      ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => statusAllow.has(s))
+      : [];
+
+    let archivedMode = "active";
+    if (archivedParam === "all" || archivedParam === "archived" || archivedParam === "active") {
+      archivedMode = archivedParam;
+    } else {
+      const shouldIncludeArchived = includeArchived === "1" || includeArchived === "true" || includeArchived === "yes";
+      archivedMode = shouldIncludeArchived ? "all" : "active";
+    }
+
+    const where: string[] = [];
+    const binds: any[] = [];
+    if (archivedMode === "active") {
+      where.push("COALESCE(is_archived, 0) = 0");
+    } else if (archivedMode === "archived") {
+      where.push("COALESCE(is_archived, 0) = 1");
+    }
+    if (statuses.length) {
+      where.push(`LOWER(status) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(created_at, 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(created_at, 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        stripe_session_id LIKE ?
+        OR CAST(id AS TEXT) LIKE ?
+        OR email LIKE ?
+        OR customer_name LIKE ?
+        OR product_title_en LIKE ?
+        OR product_slug LIKE ?
+        OR tracking_number LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    const orderClause = sort === "created_at_asc" ? "ORDER BY created_at ASC" : "ORDER BY created_at DESC";
+
+    const selectColumns = `id, stripe_session_id, stripe_payment_intent_id,
+            email, customer_name, phone, shipping_address,
+            product_slug, product_title_en, fabric, color,
+            width_cm, length_cm, depth_cm,
+            width_in, length_in, depth_in,
+            custom_notes, customer_note_type, customer_note, price_usd, price_thb, currency, quantity,
+            status, created_at,
+            carrier_code, tracking_number, tracking_url,
+            shipping_status, shipped_at, is_archived`;
+
+    const countSql = `SELECT COUNT(*) AS total FROM orders ${whereClause}`;
+    const countRow = await db.prepare(countSql).bind(...binds).first();
+    const total = Number(countRow?.total || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    const listSql = `SELECT ${selectColumns}
+      FROM orders
+      ${whereClause}
+      ${orderClause}
+      LIMIT ?
+      OFFSET ?`;
+    const result = await db.prepare(listSql).bind(...binds, pageSize, offset).all();
     const rows = Array.isArray(result.results) ? result.results : [];
     const missingConfigurable = rows.filter((o: any) =>
       isConfigurableProductSlug(o?.product_slug) && !hasDimensions(o)
@@ -314,6 +370,12 @@ export async function handleAdminOrders(request: Request, env: any): Promise<Res
     const latestSalesSync = await getLatestSalesSyncRun(env);
     return json({
       orders: rows,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages,
+      },
       dimension_guardrail: {
         missing_configurable_rows: missingConfigurable.length,
         affected_orders: affectedOrderIds,
