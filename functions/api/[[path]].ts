@@ -56,6 +56,7 @@ import { handleAdminRecoveryTest } from "../../workers/api/admin-recovery-test";
 import { handleAdminThankyouDispatch } from "../../workers/api/admin-thankyou-dispatch";
 import { handleAdminOffers } from "../../workers/api/admin-offers";
 import { handleAdminCampaigns } from "../../workers/api/admin-campaigns";
+import { handleCampaigns } from "../../workers/api/campaigns";
 import { handleAdminAccounts } from "../../workers/api/admin-accounts";
 import { handleAdminColorInventory } from "../../workers/api/admin-color-inventory";
 import { handleFavorites } from "../../workers/api/favorites";
@@ -309,6 +310,11 @@ export const onRequest: PagesFunction<{
   // Admin marketing campaigns (Run a Sale)
   if (path === "/api/admin/campaigns" || path === "/api/admin/campaigns/") {
     return handleAdminCampaigns(request, env);
+  }
+
+  // Public active campaigns for storefront sale rendering
+  if (path === "/api/campaigns" || path === "/api/campaigns/") {
+    return handleCampaigns(request, env);
   }
 
   // Admin color inventory
