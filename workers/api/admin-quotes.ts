@@ -405,34 +405,80 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
   const method = request.method;
 
   if (method === "GET") {
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const statusFilter = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const q = String(url.searchParams.get("q") || "").trim();
+    const rawStatus = String(url.searchParams.get("status") || "").trim().toLowerCase();
+    const archivedParam = String(url.searchParams.get("archived") || "").trim().toLowerCase();
+    const fromDate = String(url.searchParams.get("from") || "").trim();
+    const toDate = String(url.searchParams.get("to") || "").trim();
+    const sort = String(url.searchParams.get("sort") || "created_at_desc").trim().toLowerCase();
+    const requestedPage = Number(url.searchParams.get("page") || 1);
+    const requestedPageSize = Number(url.searchParams.get("page_size") || 25);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+    const allowedPageSizes = new Set([10, 25, 50, 100]);
+    const pageSize = allowedPageSizes.has(requestedPageSize) ? requestedPageSize : 25;
+    const offset = (page - 1) * pageSize;
+
     const allowedStatus = new Set(["pending", "approved", "rejected", "expired", "archived"]);
+    const statuses = rawStatus
+      ? rawStatus.split(",").map((s) => s.trim().toLowerCase()).filter((s) => allowedStatus.has(s))
+      : [];
+
+    const archivedMode = archivedParam === "all" || archivedParam === "archived" || archivedParam === "active"
+      ? archivedParam
+      : "active";
     const where: string[] = [];
     const binds: any[] = [];
-    if (statusFilter && statusFilter !== "all" && allowedStatus.has(statusFilter)) {
-      where.push("LOWER(COALESCE(status,'pending')) = ?");
-      binds.push(statusFilter);
-    } else if (!statusFilter || statusFilter === "all") {
-      // Default "All" view excludes archived — use "Archived" filter to see deleted quotes
+    if (archivedMode === "active") {
       where.push("LOWER(COALESCE(status,'pending')) != 'archived'");
+    } else if (archivedMode === "archived") {
+      where.push("LOWER(COALESCE(status,'pending')) = 'archived'");
     }
-    const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
-    const limit = 50;
-    const offset = (page - 1) * limit;
 
+    if (statuses.length) {
+      where.push(`LOWER(COALESCE(status,'pending')) IN (${statuses.map(() => "?").join(",")})`);
+      binds.push(...statuses);
+    }
+    if (fromDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) >= ?");
+      binds.push(fromDate);
+    }
+    if (toDate) {
+      where.push("substr(COALESCE(created_at, datetime('now')), 1, 10) <= ?");
+      binds.push(toDate);
+    }
+    if (q) {
+      const qLike = `%${q}%`;
+      where.push(`(
+        quote_id LIKE ?
+        OR customer_name LIKE ?
+        OR email LIKE ?
+        OR telephone LIKE ?
+        OR product_slug LIKE ?
+        OR fabric LIKE ?
+        OR color LIKE ?
+      )`);
+      binds.push(qLike, qLike, qLike, qLike, qLike, qLike, qLike);
+    }
+
+    const whereSql = where.length ? ` WHERE ${where.join(" AND ")}` : "";
+    const orderSql = sort === "created_at_asc"
+      ? "ORDER BY COALESCE(created_at, datetime('now')) ASC, id ASC"
+      : "ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC";
+
+    const totalRow = await db.prepare(
+      `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
+    ).bind(...binds).first();
+    const total = Number(totalRow?.cnt || 0);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const rows = await db.prepare(
       `SELECT id, quote_id, customer_name, email, telephone, address, product_slug, dimensions, fabric, color,
               status, quoted_price, quoted_price_usd, free_shipping, expires_at, created_at
        FROM custom_quotes
        ${whereSql}
-       ORDER BY COALESCE(created_at, datetime('now')) DESC, id DESC
-       LIMIT ${limit} OFFSET ${offset}`
-    ).bind(...binds).all();
-
-    const totalRow = await db.prepare(
-      `SELECT COUNT(*) as cnt FROM custom_quotes ${whereSql}`
-    ).bind(...binds).first();
+       ${orderSql}
+       LIMIT ?
+       OFFSET ?`
+    ).bind(...binds, pageSize, offset).all();
 
     const quotes = (rows.results || []).map((r: any) => {
       let dims = r.dimensions;
@@ -467,9 +513,18 @@ export async function handleAdminQuotes(request: Request, env: any): Promise<Res
 
     return json({
       quotes,
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages,
+      },
+      // Backward compatibility
       page,
-      total: totalRow?.cnt || 0,
-      status: statusFilter || "all",
+      total,
+      status: rawStatus || "all",
+      archived: archivedMode,
+      sort,
     });
   }
 

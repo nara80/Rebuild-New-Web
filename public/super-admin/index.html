@@ -115,9 +115,12 @@ box-shadow:-8px 0 10px -10px rgba(15,23,42,.35);
 z-index:3;
 background:#f8fafc;
 }
-.quote-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.quote-filter{display:flex;align-items:center;gap:8px}
-.quote-filter select{padding:6px 10px;border:1px solid var(--c-border);border-radius:6px;font-size:0.8125rem}
+.quote-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.quote-filter{display:flex;flex-direction:column;gap:4px}
+.quote-filter label{font-size:.72rem;color:var(--c-muted);font-weight:600}
+.quote-filter input,.quote-filter select{padding:8px 10px;border:1px solid var(--c-border);border-radius:6px;font-size:.8125rem}
+.quote-toolbar-actions{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
+.quote-pagination{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
 .quote-mobile-cards{display:none}
 .quote-card{border:1px solid var(--c-border);border-radius:10px;background:#fff;padding:12px}
 .quote-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
@@ -128,7 +131,8 @@ background:#f8fafc;
 .quote-card-field b{display:block;font-size:0.68rem;text-transform:uppercase;letter-spacing:.4px;color:var(--c-muted);font-weight:600}
 .quote-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .quote-card-actions .btn{flex:1;min-width:84px;justify-content:center}
-@media(max-width:980px){.quote-desktop-table{display:none}.quote-mobile-cards{display:grid;gap:10px}.quote-card-grid{grid-template-columns:1fr}}
+@media(max-width:980px){.quote-desktop-table{display:none}.quote-mobile-cards{display:grid;gap:10px}.quote-card-grid{grid-template-columns:1fr}.quote-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.quote-toolbar{grid-template-columns:1fr}}
 @media(max-width:768px){body{flex-direction:column}.sidebar{width:100%}.dashboard-grid{overflow-x:auto;display:flex;gap:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px}.dashboard-grid>*{min-width:200px;flex-shrink:0;scroll-snap-align:start}.stats-grid{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:4px}.stats-grid>*{min-width:170px;flex-shrink:0;scroll-snap-align:start}.editor-layout{grid-template-columns:1fr}.image-grid{grid-template-columns:repeat(2,minmax(120px,1fr))}.form-row{grid-template-columns:1fr}.content{padding:12px}.toolbar{padding:12px 16px}.card{margin-bottom:12px}.table-wrap{-webkit-overflow-scrolling:touch}.image-slot.has-image .slot-move-controls{display:flex}}
 .tags-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .tag-chip{font-size:0.6875rem;padding:4px 10px;border-radius:4px;background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;gap:6px}
@@ -1996,7 +2000,16 @@ async function updateOrderStatus(orderId, newStatus, selectEl) {
   } catch(e) { toast('Network error: '+e.message); }
 }
 
-var quoteFilterStatus = 'all';
+var quoteFilters = {
+  q: '',
+  status: 'all',
+  archived: 'active',
+  from: '',
+  to: '',
+  sort: 'created_at_desc',
+  page: 1,
+  pageSize: 25
+};
 
 var quoteFabricOptions = ['CloudSoft', 'BreezePlus', 'EcoLuxe', 'PremaCotton', 'Waterproof TPU', 'Other'];
 
@@ -2038,19 +2051,81 @@ function toggleQuoteSizeMode() {
   if (custom) custom.style.display = mode === 'custom' ? '' : 'none';
 }
 
+function readQuoteFiltersFromDom(resetPage) {
+  var qEl = document.getElementById('quote-filter-q');
+  var statusEl = document.getElementById('quote-filter-status');
+  var archivedEl = document.getElementById('quote-filter-archived');
+  var fromEl = document.getElementById('quote-filter-from');
+  var toEl = document.getElementById('quote-filter-to');
+  var sortEl = document.getElementById('quote-filter-sort');
+  var pageSizeEl = document.getElementById('quote-filter-page-size');
+  quoteFilters.q = qEl ? String(qEl.value || '').trim() : '';
+  quoteFilters.status = statusEl ? String(statusEl.value || 'all') : 'all';
+  quoteFilters.archived = archivedEl ? String(archivedEl.value || 'active') : 'active';
+  quoteFilters.from = fromEl ? String(fromEl.value || '') : '';
+  quoteFilters.to = toEl ? String(toEl.value || '') : '';
+  quoteFilters.sort = sortEl ? String(sortEl.value || 'created_at_desc') : 'created_at_desc';
+  quoteFilters.pageSize = pageSizeEl ? Number(pageSizeEl.value || 25) : 25;
+  if (resetPage) quoteFilters.page = 1;
+}
+
+function quoteQueryString() {
+  var p = new URLSearchParams();
+  if (quoteFilters.q) p.set('q', quoteFilters.q);
+  if (quoteFilters.status && quoteFilters.status !== 'all') p.set('status', quoteFilters.status);
+  if (quoteFilters.archived) p.set('archived', quoteFilters.archived);
+  if (quoteFilters.from) p.set('from', quoteFilters.from);
+  if (quoteFilters.to) p.set('to', quoteFilters.to);
+  if (quoteFilters.sort) p.set('sort', quoteFilters.sort);
+  p.set('page', String(quoteFilters.page || 1));
+  p.set('page_size', String(quoteFilters.pageSize || 25));
+  return p.toString();
+}
+
+function applyQuoteFilters() {
+  readQuoteFiltersFromDom(true);
+  showPage('quotes');
+}
+
+function clearQuoteFilters() {
+  quoteFilters = { q: '', status: 'all', archived: 'active', from: '', to: '', sort: 'created_at_desc', page: 1, pageSize: 25 };
+  showPage('quotes');
+}
+
+function setQuotePage(nextPage) {
+  quoteFilters.page = Math.max(1, Number(nextPage || 1));
+  showPage('quotes');
+}
+
+function changeQuotePageSize() {
+  readQuoteFiltersFromDom(true);
+  showPage('quotes');
+}
+
 async function renderQuotes() {
-  var status = quoteFilterStatus || 'all';
+  var status = quoteFilters.status || 'all';
   var quotes = [];
-  var total = 0;
+  var pagination = { page: quoteFilters.page || 1, page_size: quoteFilters.pageSize || 25, total: 0, total_pages: 1 };
   var fetchError = '';
   var products = [];
 
   try {
-    var quoteResp = await fetch('/api/admin/quotes?status=' + encodeURIComponent(status), { headers: await getAdminAuthHeaders(false) });
+    var quoteResp = await fetch('/api/admin/quotes?' + quoteQueryString(), { headers: await getAdminAuthHeaders(false) });
     if (quoteResp.ok) {
       var quoteData = await quoteResp.json();
       quotes = quoteData.quotes || [];
-      total = quoteData.total || quotes.length;
+      if (quoteData.pagination && typeof quoteData.pagination === 'object') {
+        pagination = {
+          page: Number(quoteData.pagination.page || 1),
+          page_size: Number(quoteData.pagination.page_size || quoteFilters.pageSize || 25),
+          total: Number(quoteData.pagination.total || 0),
+          total_pages: Math.max(1, Number(quoteData.pagination.total_pages || 1))
+        };
+      } else {
+        pagination.total = Number(quoteData.total || quotes.length || 0);
+      }
+      quoteFilters.page = pagination.page;
+      quoteFilters.pageSize = pagination.page_size;
     } else {
       var errData = await quoteResp.json().catch(function(){ return {}; });
       fetchError = errData.error || ('HTTP ' + quoteResp.status);
@@ -2093,19 +2168,34 @@ async function renderQuotes() {
     return h;
   }
 
-  h += '<div class="card"><div class="card-header"><span>Quote Manager</span><span style="font-size:0.75rem;color:var(--c-muted)">' + total + ' quotes</span></div><div class="card-body">';
-  h += '<div class="quote-toolbar"><div class="quote-filter"><label style="font-size:0.8125rem;color:var(--c-muted)">Status</label>' +
-    '<select onchange="quoteFilterStatus=this.value;showPage(\'quotes\')">' +
+  h += '<div class="card"><div class="card-header"><span>Quote Manager</span><span style="font-size:0.75rem;color:var(--c-muted)">' + Number(pagination.total || 0) + ' total (page ' + Number(pagination.page || 1) + '/' + Number(pagination.total_pages || 1) + ')</span></div><div class="card-body">';
+  h += '<div class="quote-toolbar">' +
+    '<div class="quote-filter"><label>Search</label><input id="quote-filter-q" value="' + escHtml(quoteFilters.q) + '" placeholder="Quote ID, customer, email, product"></div>' +
+    '<div class="quote-filter"><label>Status</label><select id="quote-filter-status">' +
       '<option value="all"' + (status==='all'?' selected':'') + '>All</option>' +
       '<option value="pending"' + (status==='pending'?' selected':'') + '>Pending</option>' +
       '<option value="approved"' + (status==='approved'?' selected':'') + '>Approved</option>' +
       '<option value="rejected"' + (status==='rejected'?' selected':'') + '>Rejected</option>' +
       '<option value="expired"' + (status==='expired'?' selected':'') + '>Expired</option>' +
       '<option value="archived"' + (status==='archived'?' selected':'') + '>Archived</option>' +
-    '</select></div><span style="font-size:0.75rem;color:var(--c-muted)">Tap a row action to copy, send, or archive</span></div>';
+    '</select></div>' +
+    '<div class="quote-filter"><label>Archived</label><select id="quote-filter-archived">' +
+      '<option value="active"' + (quoteFilters.archived==='active'?' selected':'') + '>Active only</option>' +
+      '<option value="archived"' + (quoteFilters.archived==='archived'?' selected':'') + '>Archived only</option>' +
+      '<option value="all"' + (quoteFilters.archived==='all'?' selected':'') + '>Active + archived</option>' +
+    '</select></div>' +
+    '<div class="quote-filter"><label>Sort</label><select id="quote-filter-sort">' +
+      '<option value="created_at_desc"' + (quoteFilters.sort==='created_at_desc'?' selected':'') + '>Newest first</option>' +
+      '<option value="created_at_asc"' + (quoteFilters.sort==='created_at_asc'?' selected':'') + '>Oldest first</option>' +
+    '</select></div>' +
+    '<div class="quote-filter"><label>From</label><input id="quote-filter-from" type="date" value="' + escHtml(quoteFilters.from) + '"></div>' +
+    '<div class="quote-filter"><label>To</label><input id="quote-filter-to" type="date" value="' + escHtml(quoteFilters.to) + '"></div>' +
+    '<div class="quote-filter"><label>Page size</label><select id="quote-filter-page-size" onchange="changeQuotePageSize()"><option value="10"' + (Number(quoteFilters.pageSize)===10?' selected':'') + '>10</option><option value="25"' + (Number(quoteFilters.pageSize)===25?' selected':'') + '>25</option><option value="50"' + (Number(quoteFilters.pageSize)===50?' selected':'') + '>50</option><option value="100"' + (Number(quoteFilters.pageSize)===100?' selected':'') + '>100</option></select></div>' +
+    '<div class="quote-toolbar-actions"><button class="btn btn-primary btn-sm" onclick="applyQuoteFilters()">Apply</button><button class="btn btn-outline btn-sm" onclick="clearQuoteFilters()">Reset</button></div>' +
+    '</div><div style="font-size:0.75rem;color:var(--c-muted);margin-bottom:10px">Tap a row action to copy, send, or archive</div>';
 
   if (!quotes.length) {
-    h += '<p style="color:var(--c-muted);text-align:center;padding:24px">No quotes found for this status.</p>';
+    h += '<p style="color:var(--c-muted);text-align:center;padding:24px">No quotes found for current filters.</p>';
   } else {
     var tableRows = '';
     var mobileCards = '';
@@ -2163,6 +2253,14 @@ async function renderQuotes() {
     h += '<div class="table-wrap quote-desktop-table"><table class="quote-table"><thead><tr><th>Quote ID</th><th>Customer</th><th>Product</th><th>Fabric</th><th>Color</th><th>Size</th><th>Status</th><th>Price</th><th>Free Ship</th><th>Expires</th><th class="quote-actions-cell">Actions</th></tr></thead><tbody>' + tableRows + '</tbody></table></div>';
     h += '<div class="quote-mobile-cards">' + mobileCards + '</div>';
   }
+  h += '<div class="quote-pagination">' +
+    '<div style="font-size:0.75rem;color:var(--c-muted)">Showing ' + quotes.length + ' of ' + Number(pagination.total || 0) + '</div>' +
+    '<div style="display:flex;gap:6px;align-items:center">' +
+      '<button class="btn btn-sm btn-outline" ' + (pagination.page <= 1 ? 'disabled' : '') + ' onclick="setQuotePage(' + (pagination.page - 1) + ')">Prev</button>' +
+      '<span style="font-size:0.75rem;color:var(--c-muted)">Page ' + pagination.page + ' / ' + pagination.total_pages + '</span>' +
+      '<button class="btn btn-sm btn-outline" ' + (pagination.page >= pagination.total_pages ? 'disabled' : '') + ' onclick="setQuotePage(' + (pagination.page + 1) + ')">Next</button>' +
+    '</div>' +
+    '</div>';
   h += '<p style="font-size:0.75rem;color:var(--c-muted);margin-top:12px">Tip: Create quote from customer email, then click Approve & Send to email the magic link automatically. Delete moves quote to Archived.</p>';
   h += '</div></div>';
   return h;
