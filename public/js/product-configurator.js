@@ -1898,7 +1898,16 @@
     updateAllPrices();
   });
   if (typeof MildMateCampaigns !== 'undefined' && typeof MildMateCampaigns.loadStorefrontCampaigns === 'function') {
+    // The pricing-params await above can lose the startup race: if
+    // /api/campaigns resolved first, mildmate:campaigns-updated fired before
+    // this listener existed. loadStorefrontCampaigns(false) then returns the
+    // cached list WITHOUT re-emitting — so re-render once when it is already
+    // populated.
+    var campaignsAlreadyLoaded = MildMateCampaigns.getActiveCampaigns();
     MildMateCampaigns.loadStorefrontCampaigns(false);
+    if (Array.isArray(campaignsAlreadyLoaded) && campaignsAlreadyLoaded.length) {
+      updateAllPrices();
+    }
   }
   trackViewItemOnce();
 
