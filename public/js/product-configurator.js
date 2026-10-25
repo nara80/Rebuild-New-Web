@@ -1106,13 +1106,28 @@
   }
 
   function updateSaleInfoDiv(discount, originalThb, originalUsd) {
-    var el = document.getElementById('sale-info');
-    if (!el) return;
-    if (!discount) { el.innerHTML = ''; return; }
+    function ensureTopSaleInfo() {
+      var summary = document.getElementById('price-summary');
+      if (!summary) return null;
+      var top = document.getElementById('sale-info-top');
+      if (!top) {
+        top = document.createElement('div');
+        top.id = 'sale-info-top';
+        top.style.marginTop = '8px';
+        summary.appendChild(top);
+      }
+      return top;
+    }
+    var targets = [document.getElementById('sale-info'), ensureTopSaleInfo()].filter(Boolean);
+    if (!targets.length) return;
+    if (!discount) {
+      targets.forEach(function (target) { target.innerHTML = ''; });
+      return;
+    }
     var countdown = typeof MildMateCampaigns !== 'undefined' ? MildMateCampaigns.getCampaignCountdown(window.location.pathname.split('/').filter(function(s){return s;}).pop()) : null;
     var html = '<div class="sale-badge">-' + discount + '% SALE</div>';
     if (countdown) html += '<div class="sale-countdown">(' + countdown.days + 'd ' + countdown.hours + 'h ' + countdown.mins + 'm left)</div>';
-    el.innerHTML = html;
+    targets.forEach(function (target) { target.innerHTML = html; });
   }
 
   function displayPrice(thb, usd, priceEl) {
@@ -1427,7 +1442,17 @@
   }
 
   function updateAllPrices() {
-    updateStandardPrice();
+    if (!isCustomOnlyProduct) {
+      updateStandardPrice();
+    } else if (priceDisplayTop) {
+      var baseText = String(priceDisplayTop.textContent || '');
+      var match = baseText.match(/(\d+(?:\.\d+)?)/);
+      var baseUsd = match ? parseFloat(match[1]) : 0;
+      if (baseUsd > 0) {
+        var baseThb = Math.round(baseUsd * THB_TO_USD);
+        priceDisplayTop.innerHTML = displayPrice(baseThb, baseUsd);
+      }
+    }
     updateCustomPrice();
   }
 
