@@ -1139,6 +1139,30 @@
     return formatPrice(thb, usd);
   }
 
+  function getStartingUsdPrice() {
+    var sources = [];
+    if (priceDisplayTop) sources.push(String(priceDisplayTop.textContent || ''));
+    if (priceDisplay) sources.push(String(priceDisplay.textContent || ''));
+    for (var i = 0; i < sources.length; i++) {
+      var match = sources[i].match(/(\d+(?:\.\d+)?)/);
+      if (match) {
+        var usd = parseFloat(match[1]);
+        if (isFinite(usd) && usd > 0) return usd;
+      }
+    }
+    return 0;
+  }
+
+  function renderStartingPriceWithCampaign() {
+    var baseUsd = getStartingUsdPrice();
+    if (!baseUsd) return false;
+    var baseThb = Math.round(baseUsd * THB_TO_USD);
+    var html = displayPrice(baseThb, baseUsd);
+    if (priceDisplayTop) priceDisplayTop.innerHTML = html;
+    if (priceDisplay) priceDisplay.innerHTML = html;
+    return true;
+  }
+
   function ensureGa4Stub() {
     window.dataLayer = window.dataLayer || [];
     if (typeof window.gtag !== 'function') {
@@ -1284,7 +1308,9 @@
     }
     var dims = parseSizeVal(val);
     if (!dims) {
-      priceDisplay.textContent = '—';
+      if (!renderStartingPriceWithCampaign()) {
+        priceDisplay.textContent = '—';
+      }
       if (addToCartBtn) addToCartBtn.disabled = true;
       return;
     }
@@ -1442,17 +1468,8 @@
   }
 
   function updateAllPrices() {
-    if (!isCustomOnlyProduct) {
-      updateStandardPrice();
-    } else if (priceDisplayTop) {
-      var baseText = String(priceDisplayTop.textContent || '');
-      var match = baseText.match(/(\d+(?:\.\d+)?)/);
-      var baseUsd = match ? parseFloat(match[1]) : 0;
-      if (baseUsd > 0) {
-        var baseThb = Math.round(baseUsd * THB_TO_USD);
-        priceDisplayTop.innerHTML = displayPrice(baseThb, baseUsd);
-      }
-    }
+    renderStartingPriceWithCampaign();
+    if (!isCustomOnlyProduct) updateStandardPrice();
     updateCustomPrice();
   }
 
