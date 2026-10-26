@@ -13,6 +13,10 @@ const FIXED_WHITE_PROTECTOR_SLUGS = new Set([
   "mattress-protector-family",
   "mattress-protector-deep-pocket",
   "pet-proof-mattress-protector",
+  // TPU-only, white-only encasements + pillow protector — client default fabric must never leak through
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general",
 ]);
 
 function normalizeQuoteFabric(slug: string, fabric: any): string | null {
@@ -250,8 +254,17 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
       `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'quote')`
     ).bind(ip).run();
 
+    // Human-readable product title for the team email (fallback: slug)
+    let productTitle = "";
+    try {
+      const titleRow = await env.DB.prepare(
+        "SELECT title_en FROM products WHERE slug = ?1"
+      ).bind(cleanSlug).first();
+      if (titleRow?.title_en) productTitle = String(titleRow.title_en).trim();
+    } catch {}
+
     // Notify contact@mildmate.com via Resend
-    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd);
+    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd, productTitle);
     let emailStatus = "not_sent";
     try {
       const emailResult = await sendEmail(env, {
@@ -292,8 +305,10 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
 function buildQuoteEmail(
   name: string, email: string, address: string, phone: string,
   slug: string, dimsJson: string, fabric: string, color: string,
-  quoteId: string, priceThb: number | null, priceUsd: number | null
+  quoteId: string, priceThb: number | null, priceUsd: number | null,
+  productTitle?: string
 ): string {
+  const fmt1 = (n: any) => String(Math.round(Number(n) * 10) / 10);
   let dimStr = "—";
   let shapeLine = "";
   let areaLine = "";
@@ -325,7 +340,20 @@ function buildQuoteEmail(
           dimStr = JSON.stringify(d);
         }
       } else if (d.w && d.l) {
-        dimStr = d.d ? `${d.w} × ${d.l} × ${d.d} ${unit}` : `${d.w} × ${d.l} ${unit}`;
+        // Round converted cm values (kills FP noise like 248.92000000000002)
+        const cmStr = d.d
+          ? `${fmt1(d.w)} × ${fmt1(d.l)} × ${fmt1(d.d)} ${unit}`
+          : `${fmt1(d.w)} × ${fmt1(d.l)} ${unit}`;
+        // Customer-entered unit first (e.g. inches), converted cm in parentheses
+        const e = d.entered;
+        if (e && typeof e === "object" && e.w && e.l && e.unit && String(e.unit).toLowerCase() !== String(unit).toLowerCase()) {
+          const enteredStr = e.d
+            ? `${fmt1(e.w)} × ${fmt1(e.l)} × ${fmt1(e.d)} ${e.unit}`
+            : `${fmt1(e.w)} × ${fmt1(e.l)} ${e.unit}`;
+          dimStr = `${enteredStr} (${cmStr})`;
+        } else {
+          dimStr = cmStr;
+        }
       } else {
         dimStr = JSON.stringify(d);
       }
@@ -339,10 +367,12 @@ function buildQuoteEmail(
     priceLine = `$${usd} USD${thb}`;
   }
 
+  const productLine = productTitle ? `${productTitle} (${slug})` : slug;
+
   return `New custom quote submitted from MildMate website:
 
 Quote ID: ${quoteId}
-Product: ${slug}
+Product: ${productLine}
 
 ━━━ Customer ━━━
 Name: ${name}

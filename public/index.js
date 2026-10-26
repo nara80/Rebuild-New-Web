@@ -5026,7 +5026,11 @@ var FIXED_WHITE_PROTECTOR_SLUGS = /* @__PURE__ */ new Set([
   "mattress-protector-standard",
   "mattress-protector-family",
   "mattress-protector-deep-pocket",
-  "pet-proof-mattress-protector"
+  "pet-proof-mattress-protector",
+  // TPU-only, white-only encasements + pillow protector — client default fabric must never leak through
+  "mattress-encasement-general",
+  "rv-truck-mattress-encasement",
+  "pillow-protector-general"
 ]);
 function normalizeQuoteFabric(slug, fabric) {
   if (FIXED_WHITE_PROTECTOR_SLUGS.has(slug)) return "tpu";
@@ -5244,7 +5248,15 @@ async function handleQuote(request, env) {
     await env.DB.prepare(
       `INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, 'quote')`
     ).bind(ip).run();
-    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd);
+    let productTitle = "";
+    try {
+      const titleRow = await env.DB.prepare(
+        "SELECT title_en FROM products WHERE slug = ?1"
+      ).bind(cleanSlug).first();
+      if (titleRow?.title_en) productTitle = String(titleRow.title_en).trim();
+    } catch {
+    }
+    const emailBody = buildQuoteEmail(cleanName, cleanEmail, cleanAddress, cleanPhone, cleanSlug, dimsJson, cleanFabric, cleanColor, quoteId, quoted_price_thb, quoted_price_usd, productTitle);
     let emailStatus = "not_sent";
     try {
       const emailResult = await sendEmail(env, {
@@ -5280,7 +5292,8 @@ async function handleQuote(request, env) {
   }
 }
 __name(handleQuote, "handleQuote");
-function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, color, quoteId, priceThb, priceUsd) {
+function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, color, quoteId, priceThb, priceUsd, productTitle) {
+  const fmt1 = /* @__PURE__ */ __name((n) => String(Math.round(Number(n) * 10) / 10), "fmt1");
   let dimStr = "\u2014";
   let shapeLine = "";
   let areaLine = "";
@@ -5312,7 +5325,14 @@ function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, co
           dimStr = JSON.stringify(d);
         }
       } else if (d.w && d.l) {
-        dimStr = d.d ? `${d.w} \xD7 ${d.l} \xD7 ${d.d} ${unit}` : `${d.w} \xD7 ${d.l} ${unit}`;
+        const cmStr = d.d ? `${fmt1(d.w)} \xD7 ${fmt1(d.l)} \xD7 ${fmt1(d.d)} ${unit}` : `${fmt1(d.w)} \xD7 ${fmt1(d.l)} ${unit}`;
+        const e = d.entered;
+        if (e && typeof e === "object" && e.w && e.l && e.unit && String(e.unit).toLowerCase() !== String(unit).toLowerCase()) {
+          const enteredStr = e.d ? `${fmt1(e.w)} \xD7 ${fmt1(e.l)} \xD7 ${fmt1(e.d)} ${e.unit}` : `${fmt1(e.w)} \xD7 ${fmt1(e.l)} ${e.unit}`;
+          dimStr = `${enteredStr} (${cmStr})`;
+        } else {
+          dimStr = cmStr;
+        }
       } else {
         dimStr = JSON.stringify(d);
       }
@@ -5326,10 +5346,11 @@ function buildQuoteEmail(name, email, address, phone, slug, dimsJson, fabric, co
     const thb = priceThb != null ? ` (\u0E3F${priceThb.toLocaleString()})` : "";
     priceLine = `$${usd} USD${thb}`;
   }
+  const productLine = productTitle ? `${productTitle} (${slug})` : slug;
   return `New custom quote submitted from MildMate website:
 
 Quote ID: ${quoteId}
-Product: ${slug}
+Product: ${productLine}
 
 \u2501\u2501\u2501 Customer \u2501\u2501\u2501
 Name: ${name}

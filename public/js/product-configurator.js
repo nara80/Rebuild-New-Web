@@ -423,6 +423,7 @@
 
   function inchToCm(v) { return v * 2.54; }
   function cmToInch(v) { return v * 0.393701; }
+  function round1(v) { return Math.round(v * 10) / 10; }
 
   // -- DOM refs --
   var sizeSelect = document.getElementById('size-select');
@@ -638,6 +639,8 @@
   if (isPetOwner) state.fabric = 'breezeplus'; // Pet Owner fitted/duvet: BreezePlus only
   if (isProtectorPetProof) state.fabric = 'tpu'; // Pet-Proof protector follows 3-layer TPU class
   if (isCushionProtector) state.fabric = 'tpu'; // Custom cushion protector uses TPU cost class
+  if (isEncasement) state.fabric = 'tpu'; // 6-sided / RV encasements: TPU only (white)
+  if (isPillowProtector) state.fabric = 'tpu'; // Pillow protector: TPU only (white)
   if (isMarineShapeProduct) state.fabric = 'cloudsoft'; // Marine shape products: CloudSoft only
   if (isDuvet && path.indexOf('rv') !== -1) state.fabric = 'cloudsoft'; // RV & Truck duvet: CloudSoft only
   if (isDuvet && path.indexOf('marine') !== -1) state.fabric = 'cloudsoft'; // Marine duvet: CloudSoft only
@@ -1648,6 +1651,20 @@
     if (e.target === confirmOverlay) confirmOverlay.classList.remove('open');
   });
 
+  // Resolve the fabric to submit with a quote. The live fabric UI wins over the
+  // startup default: D1 fabric_options may set the select programmatically (no
+  // change event fires) or collapse it to a single-fabric badge, leaving
+  // state.fabric stale on products without an explicit lock above.
+  function resolveQuoteFabric() {
+    var liveSelect = document.getElementById('fabric-select');
+    if (liveSelect && liveSelect.value) return liveSelect.value;
+    var badge = document.querySelector('.fabric-badge');
+    if (badge && badge.textContent && badge.textContent.trim()) {
+      return badge.textContent.trim().toLowerCase();
+    }
+    return state.fabric;
+  }
+
   // -- Form submit ? POST /api/quote --
   document.getElementById('quote-form').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -1666,13 +1683,15 @@
     if (!email || email.indexOf('@') === -1) { errEmail.textContent = 'Please enter a valid email'; errEmail.classList.add('show'); valid = false; }
     if (!valid) return;
 
-    // Collect dimensions
+    // Collect dimensions — keep the customer's entered values alongside converted cm
     var wCm = 0, lCm = 0, dCm = 0, dimDisplay = '';
+    var wRaw = 0, lRaw = 0, dRaw = 0;
     if (dimW && dimL) {
-      wCm = parseFloat(dimW.value) || 0;
-      lCm = parseFloat(dimL.value) || 0;
-      dCm = (isDuvet || isPillowProtector || isPillowcase || !dimD) ? 0 : (parseFloat(dimD.value) || 0);
-      if (state.unit === 'in') { wCm = inchToCm(wCm); lCm = inchToCm(lCm); dCm = inchToCm(dCm); }
+      wRaw = parseFloat(dimW.value) || 0;
+      lRaw = parseFloat(dimL.value) || 0;
+      dRaw = (isDuvet || isPillowProtector || isPillowcase || !dimD) ? 0 : (parseFloat(dimD.value) || 0);
+      wCm = wRaw; lCm = lRaw; dCm = dRaw;
+      if (state.unit === 'in') { wCm = inchToCm(wRaw); lCm = inchToCm(lRaw); dCm = inchToCm(dRaw); }
     }
 
     var dimsValid = (isDuvet || isPillowProtector || isPillowcase) ? (wCm > 0 && lCm > 0) : (wCm > 0 && lCm > 0 && dCm > 0);
@@ -1725,8 +1744,12 @@
         address: (document.getElementById('qf-address') ? document.getElementById('qf-address').value.trim() : '') || undefined,
         telephone: (document.getElementById('qf-phone') ? document.getElementById('qf-phone').value.trim() : '') || undefined,
         product_slug: productSlug,
-        dimensions: { w: wCm, l: lCm, d: dCm, unit: 'cm' },
-        fabric: state.fabric,
+        dimensions: (function () {
+          var dims = { w: round1(wCm), l: round1(lCm), d: round1(dCm), unit: 'cm' };
+          if (state.unit === 'in') dims.entered = { w: wRaw, l: lRaw, d: dRaw, unit: 'in' };
+          return dims;
+        })(),
+        fabric: resolveQuoteFabric(),
         color: selectedQuoteColor,
         marine_shape: (function () {
           if (!isMarineShapeProduct) return undefined;
