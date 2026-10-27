@@ -86,16 +86,24 @@ function toBoolString(v: any): string {
   return (v === true || String(v).toLowerCase() === "true") ? "true" : "false";
 }
 
+// Falsy-OR defaulting would turn legitimate 0 values (cron hour 0 = midnight UTC,
+// $0 basket threshold) into the defaults, so only fall back on missing/non-numeric input.
+function numOr(v: any, def: number): number {
+  if (v === null || v === undefined || v === "") return def;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : def;
+}
+
 function normalizeOffersInput(input: any): Record<string, string> {
-  const basketThreshold = Math.max(0, Math.min(10000, Number(input?.basketThreshold || 150)));
+  const basketThreshold = Math.max(0, Math.min(10000, numOr(input?.basketThreshold, 150)));
   const stage2Enabled = toBoolString(input?.stage2Enabled !== false);
-  const stage2Discount = Math.max(1, Math.min(95, Number(input?.stage2Discount || 10)));
+  const stage2Discount = Math.max(1, Math.min(95, numOr(input?.stage2Discount, 10)));
   const stage3Enabled = toBoolString(input?.stage3Enabled !== false);
-  const stage3Discount = Math.max(1, Math.min(95, Number(input?.stage3Discount || 10)));
-  const expiryDays = Math.max(1, Math.min(3650, Number(input?.expiryDays || 60)));
-  const cronHour = Math.max(0, Math.min(23, Number(input?.cronHour || 10)));
-  const thankyou = Math.max(1, Math.min(95, Number(input?.thankyou || 20)));
-  const thankyouHours = Math.max(0, Math.min(720, Number(input?.thankyouHours || 1)));
+  const stage3Discount = Math.max(1, Math.min(95, numOr(input?.stage3Discount, 10)));
+  const expiryDays = Math.max(1, Math.min(3650, numOr(input?.expiryDays, 60)));
+  const cronHour = Math.max(0, Math.min(23, numOr(input?.cronHour, 10)));
+  const thankyou = Math.max(1, Math.min(95, numOr(input?.thankyou, 20)));
+  const thankyouHours = Math.max(0, Math.min(720, numOr(input?.thankyouHours, 1)));
 
   return {
     [KEY_MAP.basketThreshold]: String(Math.round(basketThreshold)),
@@ -114,15 +122,15 @@ function parseOffersConfig(rows: any[]): any {
   const map: Record<string, string> = {};
   for (const row of rows || []) map[String(row.key)] = String(row.value);
   return {
-    basketThreshold: Number(map[KEY_MAP.basketThreshold] || 150),
+    basketThreshold: numOr(map[KEY_MAP.basketThreshold], 150),
     stage2Enabled: map[KEY_MAP.stage2Enabled] !== "false",
-    stage2Discount: Number(map[KEY_MAP.stage2Discount] || 10),
+    stage2Discount: numOr(map[KEY_MAP.stage2Discount], 10),
     stage3Enabled: map[KEY_MAP.stage3Enabled] !== "false",
-    stage3Discount: Number(map[KEY_MAP.stage3Discount] || 10),
-    expiryDays: Number(map[KEY_MAP.expiryDays] || 60),
-    cronHour: Number(map[KEY_MAP.cronHour] || 10),
-    thankyou: Number(map[KEY_MAP.thankyou] || 20),
-    thankyouHours: Number(map[KEY_MAP.thankyouHours] || 1),
+    stage3Discount: numOr(map[KEY_MAP.stage3Discount], 10),
+    expiryDays: numOr(map[KEY_MAP.expiryDays], 60),
+    cronHour: numOr(map[KEY_MAP.cronHour], 10),
+    thankyou: numOr(map[KEY_MAP.thankyou], 20),
+    thankyouHours: numOr(map[KEY_MAP.thankyouHours], 1),
   };
 }
 

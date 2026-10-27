@@ -78,7 +78,7 @@ function buildCartRows(items: CartItem[]): string {
 function buildStage1Email(items: CartItem[]): string {
   const rows = buildCartRows(items);
   const total = calcCartTotal(items);
-  const checkoutUrl = 'https://mildmate-new.pages.dev/checkout/';
+  const checkoutUrl = 'https://www.mildmate.com/checkout/';
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
@@ -102,7 +102,7 @@ function buildStage2Email(items: CartItem[], discountCode: string, discountPct: 
   const total = calcCartTotal(items);
   const discountUsd = Math.round(total.usd * discountPct / 100);
   const finalUsd = total.usd - discountUsd;
-  const checkoutUrl = 'https://mildmate-new.pages.dev/checkout/?code=' + discountCode;
+  const checkoutUrl = 'https://www.mildmate.com/checkout/?code=' + discountCode;
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
@@ -129,7 +129,7 @@ function buildStage3Email(items: CartItem[], discountCode: string, discountPct: 
   const total = calcCartTotal(items);
   const discountUsd = Math.round(total.usd * discountPct / 100);
   const finalUsd = total.usd - discountUsd;
-  const checkoutUrl = 'https://mildmate-new.pages.dev/checkout/?code=' + discountCode;
+  const checkoutUrl = 'https://www.mildmate.com/checkout/?code=' + discountCode;
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Quicksand',Arial,sans-serif">
@@ -315,7 +315,7 @@ export default {
 <p style="margin:8px 0 0;font-size:14px;color:#0F172A;font-weight:600">${t.discount_pct}% off — valid for 1 year</p>
 </div>
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-<a href="https://mildmate-new.pages.dev/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Shop MildMate</a>
+<a href="https://www.mildmate.com/" style="display:inline-block;background:#2c96f4;color:#fff;font-weight:700;font-size:16px;padding:14px 40px;border-radius:8px;text-decoration:none">Shop MildMate</a>
 </td></tr></table>
 <p style="color:#64748b;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center">Discount applies to your entire order. Not combinable with other offers.<br>Questions? Reply or contact <a href="mailto:contact@mildmate.com" style="color:#2c96f4">contact@mildmate.com</a></p>
 </td></tr>
