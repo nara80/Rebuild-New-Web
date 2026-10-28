@@ -9010,6 +9010,20 @@ function dayRangeWhere(f, col = "order_day") {
   return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
 }
 __name(dayRangeWhere, "dayRangeWhere");
+function createdRangeWhere(f, col = "created_at") {
+  const parts = [];
+  const binds = [];
+  if (f.start) {
+    parts.push(`substr(COALESCE(${col}, datetime('now')), 1, 10) >= ?`);
+    binds.push(f.start);
+  }
+  if (f.end) {
+    parts.push(`substr(COALESCE(${col}, datetime('now')), 1, 10) <= ?`);
+    binds.push(f.end);
+  }
+  return { sql: parts.length ? " AND " + parts.join(" AND ") : "", binds };
+}
+__name(createdRangeWhere, "createdRangeWhere");
 function shiftIsoDate(isoDay, deltaDays) {
   if (!DATE_RE5.test(isoDay)) return null;
   const d = /* @__PURE__ */ new Date(isoDay + "T00:00:00Z");
@@ -9251,6 +9265,121 @@ async function getChannels(env, f) {
   });
 }
 __name(getChannels, "getChannels");
+async function getQuotes(env, f) {
+  const range = createdRangeWhere(f, "q.created_at");
+  const baseSql = `FROM custom_quotes q WHERE 1=1${range.sql}`;
+  const summaryRow = await env.DB.prepare(
+    `SELECT
+       COUNT(*) AS total_quotes,
+       SUM(CASE WHEN q.created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS new_quotes_7d,
+       SUM(CASE WHEN q.created_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS new_quotes_30d,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                 AND (q.expires_at IS NULL OR q.expires_at > datetime('now'))
+                THEN 1 ELSE 0 END) AS active_quotes,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved' THEN 1 ELSE 0 END) AS approved_quotes,
+       SUM(CASE WHEN q.expires_at IS NOT NULL AND q.expires_at <= datetime('now')
+                 AND LOWER(COALESCE(q.status, 'pending')) != 'archived'
+                THEN 1 ELSE 0 END) AS expired_quotes,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                 AND q.expires_at IS NOT NULL
+                 AND q.expires_at > datetime('now')
+                 AND q.expires_at <= datetime('now', '+7 days')
+                THEN 1 ELSE 0 END) AS expiring_7d,
+       SUM(CASE WHEN LOWER(COALESCE(q.status, 'pending')) = 'approved'
+                 AND NOT EXISTS (
+                   SELECT 1 FROM orders o
+                   WHERE o.quote_id = q.quote_id
+                 )
+                THEN 1 ELSE 0 END) AS approved_unconverted
+     ${baseSql}`
+  ).bind(...range.binds).first();
+  const exactRow = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT q.quote_id) AS exact_converted
+     ${baseSql}
+       AND EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )`
+  ).bind(...range.binds).first();
+  const legacyRow = await env.DB.prepare(
+    `SELECT COUNT(DISTINCT q.quote_id) AS legacy_email_matched
+     ${baseSql}
+       AND NOT EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )
+       AND EXISTS (
+         SELECT 1 FROM orders o2
+         WHERE LOWER(COALESCE(o2.email, '')) = LOWER(COALESCE(q.email, ''))
+       )`
+  ).bind(...range.binds).first();
+  const topProducts = await env.DB.prepare(
+    `SELECT
+       q.product_slug,
+       COUNT(*) AS quote_count,
+       SUM(CASE WHEN EXISTS (SELECT 1 FROM orders o WHERE o.quote_id = q.quote_id) THEN 1 ELSE 0 END) AS exact_converted
+     ${baseSql}
+     GROUP BY q.product_slug
+     ORDER BY quote_count DESC, exact_converted DESC, q.product_slug
+     LIMIT 12`
+  ).bind(...range.binds).all();
+  const atRisk = await env.DB.prepare(
+    `SELECT
+       q.quote_id,
+       q.product_slug,
+       q.created_at,
+       q.expires_at,
+       q.quoted_price_usd,
+       q.quoted_price
+     ${baseSql}
+       AND LOWER(COALESCE(q.status, 'pending')) = 'approved'
+       AND q.expires_at IS NOT NULL
+       AND q.expires_at > datetime('now')
+       AND q.expires_at <= datetime('now', '+7 days')
+       AND NOT EXISTS (
+         SELECT 1 FROM orders o
+         WHERE o.quote_id = q.quote_id
+       )
+     ORDER BY q.expires_at ASC, q.created_at ASC
+     LIMIT 25`
+  ).bind(...range.binds).all();
+  const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
+  const exactConverted = Number(exactRow?.exact_converted || 0);
+  return json6({
+    success: true,
+    filters: { start: f.start, end: f.end },
+    summary: {
+      total_quotes: Number(summaryRow?.total_quotes || 0),
+      new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
+      new_quotes_30d: Number(summaryRow?.new_quotes_30d || 0),
+      active_quotes: Number(summaryRow?.active_quotes || 0),
+      approved_quotes: approvedQuotes,
+      approved_unconverted: Number(summaryRow?.approved_unconverted || 0),
+      expiring_7d: Number(summaryRow?.expiring_7d || 0),
+      expired_quotes: Number(summaryRow?.expired_quotes || 0)
+    },
+    conversion: {
+      exact_converted_quotes: exactConverted,
+      exact_conversion_pct: approvedQuotes > 0 ? Math.round(exactConverted / approvedQuotes * 1e3) / 10 : null,
+      legacy_email_matched_quotes: Number(legacyRow?.legacy_email_matched || 0)
+    },
+    top_products: (topProducts.results || []).map((r) => ({
+      product_slug: r.product_slug || "(unknown)",
+      quote_count: Number(r.quote_count || 0),
+      exact_converted: Number(r.exact_converted || 0),
+      exact_conversion_pct: Number(r.quote_count || 0) > 0 ? Math.round(Number(r.exact_converted || 0) / Number(r.quote_count || 0) * 1e3) / 10 : null
+    })),
+    at_risk: (atRisk.results || []).map((r) => ({
+      quote_id: r.quote_id,
+      product_slug: r.product_slug,
+      created_at: r.created_at,
+      expires_at: r.expires_at,
+      quoted_price_usd: r.quoted_price_usd,
+      quoted_price_thb: r.quoted_price
+    }))
+  });
+}
+__name(getQuotes, "getQuotes");
 async function getGsc(env, f) {
   const range = dayRangeWhere(f, "g.report_date");
   const binds = [...range.binds];
@@ -11087,6 +11216,7 @@ async function handleAdminAnalysis(request, env) {
   if (sub === "/ga4") return getGa4(env, f);
   if (sub === "/etsy") return getEtsy(env, f);
   if (sub === "/google-ads") return getGoogleAds(env, f);
+  if (sub === "/quotes") return getQuotes(env, f);
   if (sub === "/growth-signals") return getGrowthSignals(env, f);
   if (sub === "/profitability") return getProfitability(env, f);
   if (sub === "/" || sub === "/summary") return getSummary(env, f);
@@ -15221,7 +15351,12 @@ var KEY_MAP = {
   expiryDays: "discount_expiry_days",
   cronHour: "cron_hour_utc",
   thankyou: "thankyou_discount",
-  thankyouHours: "thankyou_send_after_hours"
+  thankyouHours: "thankyou_send_after_hours",
+  quoteFollowupEnabled: "quote_followup_enabled",
+  quoteFollowupAgeHours: "quote_followup_age_hours",
+  quoteFollowupExpiryWindowDays: "quote_followup_expiry_window_days",
+  quoteFollowupDailyCap: "quote_followup_daily_cap",
+  quoteFollowupEmailCooldownHours: "quote_followup_email_cooldown_hours"
 };
 function toBoolString(v) {
   return v === true || String(v).toLowerCase() === "true" ? "true" : "false";
@@ -15243,6 +15378,11 @@ function normalizeOffersInput(input) {
   const cronHour = Math.max(0, Math.min(23, numOr(input?.cronHour, 10)));
   const thankyou = Math.max(1, Math.min(95, numOr(input?.thankyou, 20)));
   const thankyouHours = Math.max(0, Math.min(720, numOr(input?.thankyouHours, 1)));
+  const quoteFollowupEnabled = toBoolString(input?.quoteFollowupEnabled === true || String(input?.quoteFollowupEnabled).toLowerCase() === "true");
+  const quoteFollowupAgeHours = Math.max(1, Math.min(720, numOr(input?.quoteFollowupAgeHours, 72)));
+  const quoteFollowupExpiryWindowDays = Math.max(1, Math.min(30, numOr(input?.quoteFollowupExpiryWindowDays, 7)));
+  const quoteFollowupDailyCap = Math.max(1, Math.min(200, numOr(input?.quoteFollowupDailyCap, 20)));
+  const quoteFollowupEmailCooldownHours = Math.max(1, Math.min(720, numOr(input?.quoteFollowupEmailCooldownHours, 24)));
   return {
     [KEY_MAP.basketThreshold]: String(Math.round(basketThreshold)),
     [KEY_MAP.stage2Enabled]: stage2Enabled,
@@ -15252,7 +15392,12 @@ function normalizeOffersInput(input) {
     [KEY_MAP.expiryDays]: String(Math.round(expiryDays)),
     [KEY_MAP.cronHour]: String(Math.round(cronHour)),
     [KEY_MAP.thankyou]: String(Math.round(thankyou)),
-    [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours))
+    [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours)),
+    [KEY_MAP.quoteFollowupEnabled]: quoteFollowupEnabled,
+    [KEY_MAP.quoteFollowupAgeHours]: String(Math.round(quoteFollowupAgeHours)),
+    [KEY_MAP.quoteFollowupExpiryWindowDays]: String(Math.round(quoteFollowupExpiryWindowDays)),
+    [KEY_MAP.quoteFollowupDailyCap]: String(Math.round(quoteFollowupDailyCap)),
+    [KEY_MAP.quoteFollowupEmailCooldownHours]: String(Math.round(quoteFollowupEmailCooldownHours))
   };
 }
 __name(normalizeOffersInput, "normalizeOffersInput");
@@ -15268,7 +15413,12 @@ function parseOffersConfig(rows) {
     expiryDays: numOr(map[KEY_MAP.expiryDays], 60),
     cronHour: numOr(map[KEY_MAP.cronHour], 10),
     thankyou: numOr(map[KEY_MAP.thankyou], 20),
-    thankyouHours: numOr(map[KEY_MAP.thankyouHours], 1)
+    thankyouHours: numOr(map[KEY_MAP.thankyouHours], 1),
+    quoteFollowupEnabled: map[KEY_MAP.quoteFollowupEnabled] === "true",
+    quoteFollowupAgeHours: numOr(map[KEY_MAP.quoteFollowupAgeHours], 72),
+    quoteFollowupExpiryWindowDays: numOr(map[KEY_MAP.quoteFollowupExpiryWindowDays], 7),
+    quoteFollowupDailyCap: numOr(map[KEY_MAP.quoteFollowupDailyCap], 20),
+    quoteFollowupEmailCooldownHours: numOr(map[KEY_MAP.quoteFollowupEmailCooldownHours], 24)
   };
 }
 __name(parseOffersConfig, "parseOffersConfig");
@@ -16826,6 +16976,7 @@ async function ensureOrderCustomerNoteSchema(env) {
           (tableInfo.results || []).map((r) => String(r.name || "").toLowerCase())
         );
         const alters = [];
+        if (!existing.has("quote_id")) alters.push("ALTER TABLE orders ADD COLUMN quote_id TEXT");
         if (!existing.has("customer_note_type")) alters.push("ALTER TABLE orders ADD COLUMN customer_note_type TEXT");
         if (!existing.has("customer_note")) alters.push("ALTER TABLE orders ADD COLUMN customer_note TEXT");
         for (const sql of alters) await env.DB.prepare(sql).run();
@@ -17446,9 +17597,9 @@ async function handleStripeWebhook(request, env) {
               stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
               shipping_address, product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-              custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, quote_id,
               customer_note_type, customer_note, status
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, 'confirmed')`
           ).bind(
             session.id,
             session.payment_intent || null,
@@ -17472,6 +17623,7 @@ async function handleStripeWebhook(request, env) {
             sessionCurrency,
             item.qty || 1,
             metadata.discount_code || null,
+            item.quote_id || item.qi || null,
             customerNoteType,
             customerNote
           ).run();
@@ -17481,8 +17633,8 @@ async function handleStripeWebhook(request, env) {
               stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
               shipping_address, product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-              custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, quote_id, status
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, 'confirmed')`
           ).bind(
             session.id,
             session.payment_intent || null,
@@ -17505,7 +17657,8 @@ async function handleStripeWebhook(request, env) {
             priceThb,
             sessionCurrency,
             item.qty || 1,
-            metadata.discount_code || null
+            metadata.discount_code || null,
+            item.quote_id || item.qi || null
           ).run();
         }
         insertedOrderRows++;
@@ -20774,7 +20927,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-SKECmi/functionsRoutes-0.5837496480367685.mjs
+// ../.wrangler/tmp/pages-BjIROQ/functionsRoutes-0.5974230608586554.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",

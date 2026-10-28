@@ -78,6 +78,7 @@ async function ensureOrderCustomerNoteSchema(env: any): Promise<boolean> {
           (tableInfo.results || []).map((r: any) => String(r.name || "").toLowerCase())
         );
         const alters: string[] = [];
+        if (!existing.has("quote_id")) alters.push("ALTER TABLE orders ADD COLUMN quote_id TEXT");
         if (!existing.has("customer_note_type")) alters.push("ALTER TABLE orders ADD COLUMN customer_note_type TEXT");
         if (!existing.has("customer_note")) alters.push("ALTER TABLE orders ADD COLUMN customer_note TEXT");
         for (const sql of alters) await env.DB.prepare(sql).run();
@@ -771,9 +772,9 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
               stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
               shipping_address, product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-              custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, quote_id,
               customer_note_type, customer_note, status
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, 'confirmed')`
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, 'confirmed')`
           ).bind(
             session.id,
             session.payment_intent || null,
@@ -795,6 +796,7 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
             sessionCurrency,
             item.qty || 1,
             metadata.discount_code || null,
+            item.quote_id || item.qi || null,
             customerNoteType,
             customerNote
           ).run();
@@ -804,8 +806,8 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
               stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
               shipping_address, product_slug, product_title_en, fabric, color,
               width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-              custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+              custom_notes, price_usd, price_thb, currency, quantity, discount_code, quote_id, status
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, 'confirmed')`
           ).bind(
             session.id,
             session.payment_intent || null,
@@ -826,7 +828,8 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
             priceThb,
             sessionCurrency,
             item.qty || 1,
-            metadata.discount_code || null
+            metadata.discount_code || null,
+            item.quote_id || item.qi || null
           ).run();
         }
         insertedOrderRows++;

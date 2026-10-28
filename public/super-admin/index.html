@@ -3161,6 +3161,23 @@ async function rOffers(){
     '<div id="thankyou-dispatch-detail" style="font-size:0.72rem;color:var(--c-muted);margin-top:8px;line-height:1.45"></div>'+
   '</div></div>';
 
+  // 🧾 Quote Follow-up
+  h+='<div class="card" style="margin-top:16px"><div class="card-body">';
+  h+=offerCard('quote-followup','🧾 Quote Follow-up (Pre-expiry)','quote');
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+    '<span style="font-size:0.8125rem;color:var(--c-muted)">Automation Status</span>'+
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer">'+
+      '<span style="font-size:0.75rem;color:var(--c-muted)">'+(offers.quoteFollowupEnabled===true?'Enabled':'Disabled')+'</span>'+
+      '<input type="checkbox" id="offer-quote-followup-enabled"'+(offers.quoteFollowupEnabled===true?' checked':'')+' onchange="this.parentElement.querySelector(\'span\').textContent=this.checked?\'Enabled\':\'Disabled\'">'+
+    '</label>'+
+  '</div>';
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Minimum quote age (hours)</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-quote-followup-age-hours" value="'+(offers.quoteFollowupAgeHours||72)+'" min="1" max="720" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>';
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Expiry window (days)</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-quote-followup-window-days" value="'+(offers.quoteFollowupExpiryWindowDays||7)+'" min="1" max="30" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>';
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Daily send cap</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-quote-followup-daily-cap" value="'+(offers.quoteFollowupDailyCap||20)+'" min="1" max="200" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>';
+  h+='<table style="width:100%;margin-bottom:12px"><tr><td style="padding:8px 0;font-size:0.875rem;font-weight:600">Per-email cooldown (hours)</td><td style="padding:8px 0;text-align:right"><input type="number" id="offer-quote-followup-cooldown-hours" value="'+(offers.quoteFollowupEmailCooldownHours||24)+'" min="1" max="720" style="width:80px;padding:6px 10px;border:1px solid var(--c-border);border-radius:4px;text-align:center;font-size:0.875rem"></td></tr></table>'+
+    offerDesc('Sends one reminder to approved quotes close to expiry. Guardrails: exact quote_id conversion check, per-quote idempotency, per-email cooldown, and daily cap.')+
+  '</div></div>';
+
   h+='<button class=\"btn btn-primary\" style=\"margin-top:16px\" onclick=\"saveAllOffers()\">Save Offers</button>';
   h+='<div style=\"margin-top:12px;display:flex;gap:8px;flex-wrap:wrap\">';
   h+='<button class=\"btn btn-outline\" onclick=\"testRecoveryStage(1)\" title=\"24h reminder\">🧪 Stage 1</button>';
@@ -3274,7 +3291,12 @@ async function saveAllOffers(){
     expiryDays:offerIntVal('offer-expiry-days',60),
     cronHour:offerIntVal('offer-cron-hour',10),
     thankyou:offerIntVal('offer-thankyou',20),
-    thankyouHours:offerIntVal('offer-thankyou-hours',1)
+    thankyouHours:offerIntVal('offer-thankyou-hours',1),
+    quoteFollowupEnabled:document.getElementById('offer-quote-followup-enabled').checked,
+    quoteFollowupAgeHours:offerIntVal('offer-quote-followup-age-hours',72),
+    quoteFollowupExpiryWindowDays:offerIntVal('offer-quote-followup-window-days',7),
+    quoteFollowupDailyCap:offerIntVal('offer-quote-followup-daily-cap',20),
+    quoteFollowupEmailCooldownHours:offerIntVal('offer-quote-followup-cooldown-hours',24)
   };
   try {
     var headers = await getAdminAuthHeaders(true);
@@ -3289,7 +3311,7 @@ async function saveAllOffers(){
       return;
     }
     offersConfigCache = data && data.offers ? data.offers : offers;
-    toast('Offers saved to D1: Basket \u2265$'+offers.basketThreshold+' | Stage2 '+(offers.stage2Enabled?offers.stage2Discount+'%':'Off')+' | Stage3 '+(offers.stage3Enabled?offers.stage3Discount+'%':'Off')+' | Expires '+offers.expiryDays+'d');
+    toast('Offers saved to D1: Basket \u2265$'+offers.basketThreshold+' | Stage2 '+(offers.stage2Enabled?offers.stage2Discount+'%':'Off')+' | Stage3 '+(offers.stage3Enabled?offers.stage3Discount+'%':'Off')+' | Quote Follow-up '+(offers.quoteFollowupEnabled?'On':'Off')+' | Expires '+offers.expiryDays+'d');
   } catch(e) {
     toast('Network error: ' + e.message);
   }

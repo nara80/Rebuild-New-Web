@@ -80,6 +80,11 @@ const KEY_MAP: Record<string, string> = {
   cronHour: "cron_hour_utc",
   thankyou: "thankyou_discount",
   thankyouHours: "thankyou_send_after_hours",
+  quoteFollowupEnabled: "quote_followup_enabled",
+  quoteFollowupAgeHours: "quote_followup_age_hours",
+  quoteFollowupExpiryWindowDays: "quote_followup_expiry_window_days",
+  quoteFollowupDailyCap: "quote_followup_daily_cap",
+  quoteFollowupEmailCooldownHours: "quote_followup_email_cooldown_hours",
 };
 
 function toBoolString(v: any): string {
@@ -104,6 +109,11 @@ function normalizeOffersInput(input: any): Record<string, string> {
   const cronHour = Math.max(0, Math.min(23, numOr(input?.cronHour, 10)));
   const thankyou = Math.max(1, Math.min(95, numOr(input?.thankyou, 20)));
   const thankyouHours = Math.max(0, Math.min(720, numOr(input?.thankyouHours, 1)));
+  const quoteFollowupEnabled = toBoolString(input?.quoteFollowupEnabled === true || String(input?.quoteFollowupEnabled).toLowerCase() === "true");
+  const quoteFollowupAgeHours = Math.max(1, Math.min(720, numOr(input?.quoteFollowupAgeHours, 72)));
+  const quoteFollowupExpiryWindowDays = Math.max(1, Math.min(30, numOr(input?.quoteFollowupExpiryWindowDays, 7)));
+  const quoteFollowupDailyCap = Math.max(1, Math.min(200, numOr(input?.quoteFollowupDailyCap, 20)));
+  const quoteFollowupEmailCooldownHours = Math.max(1, Math.min(720, numOr(input?.quoteFollowupEmailCooldownHours, 24)));
 
   return {
     [KEY_MAP.basketThreshold]: String(Math.round(basketThreshold)),
@@ -115,6 +125,11 @@ function normalizeOffersInput(input: any): Record<string, string> {
     [KEY_MAP.cronHour]: String(Math.round(cronHour)),
     [KEY_MAP.thankyou]: String(Math.round(thankyou)),
     [KEY_MAP.thankyouHours]: String(Math.round(thankyouHours)),
+    [KEY_MAP.quoteFollowupEnabled]: quoteFollowupEnabled,
+    [KEY_MAP.quoteFollowupAgeHours]: String(Math.round(quoteFollowupAgeHours)),
+    [KEY_MAP.quoteFollowupExpiryWindowDays]: String(Math.round(quoteFollowupExpiryWindowDays)),
+    [KEY_MAP.quoteFollowupDailyCap]: String(Math.round(quoteFollowupDailyCap)),
+    [KEY_MAP.quoteFollowupEmailCooldownHours]: String(Math.round(quoteFollowupEmailCooldownHours)),
   };
 }
 
@@ -131,6 +146,11 @@ function parseOffersConfig(rows: any[]): any {
     cronHour: numOr(map[KEY_MAP.cronHour], 10),
     thankyou: numOr(map[KEY_MAP.thankyou], 20),
     thankyouHours: numOr(map[KEY_MAP.thankyouHours], 1),
+    quoteFollowupEnabled: map[KEY_MAP.quoteFollowupEnabled] === "true",
+    quoteFollowupAgeHours: numOr(map[KEY_MAP.quoteFollowupAgeHours], 72),
+    quoteFollowupExpiryWindowDays: numOr(map[KEY_MAP.quoteFollowupExpiryWindowDays], 7),
+    quoteFollowupDailyCap: numOr(map[KEY_MAP.quoteFollowupDailyCap], 20),
+    quoteFollowupEmailCooldownHours: numOr(map[KEY_MAP.quoteFollowupEmailCooldownHours], 24),
   };
 }
 

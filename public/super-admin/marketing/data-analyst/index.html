@@ -94,6 +94,17 @@ td.num,th.num{text-align:right}
       <div class="stat-card"><div class="stat-label">Data Quality</div><div class="stat-value" id="kpi-dq">…</div><div class="stat-sub" id="kpi-dq-sub"></div></div>
     </div>
 
+    <div class="card" id="quote-funnel-card">
+      <div class="card-header"><span>Custom Quote Funnel (Tier 1)</span><span class="muted" style="font-size:0.75rem;font-weight:400">demand + conversion + expiry risk</span></div>
+      <div class="card-body">
+        <div id="quote-funnel-summary" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>Top Quoted Products</span><span class="muted" style="font-size:0.75rem;font-weight:400">quote demand and exact conversion by quote_id</span></div>
+      <div class="table-wrap"><div id="quote-top-products-table"><div class="state">Loading…</div></div></div>
+      <div class="card-header" style="border-top:1px solid var(--c-border)"><span>At-Risk Approved Quotes</span><span class="muted" style="font-size:0.75rem;font-weight:400">unconverted quotes expiring in ≤7 days (no PII)</span></div>
+      <div class="table-wrap"><div id="quote-at-risk-table"><div class="state">Loading…</div></div></div>
+    </div>
+
     <div class="card">
       <div class="card-header"><span>Filters</span><span class="muted" style="font-size:0.75rem;font-weight:400">dates apply to source order date (analytics day)</span></div>
       <div class="card-body">
@@ -339,6 +350,66 @@ async function loadSummary(){
   } catch(e) {
     document.getElementById('kpi-orders').textContent = '!';
     document.getElementById('kpi-orders-sub').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadQuoteFunnel(){
+  var summaryEl = document.getElementById('quote-funnel-summary');
+  var topEl = document.getElementById('quote-top-products-table');
+  var riskEl = document.getElementById('quote-at-risk-table');
+  try {
+    var d = await api('/quotes?' + filterQS().slice(1));
+    var s = d.summary || {};
+    var c = d.conversion || {};
+    summaryEl.innerHTML =
+      '<span class="badge badge-blue">Total quotes: ' + fmtNum(s.total_quotes) + '</span>' +
+      '<span class="badge badge-blue">New 7d: ' + fmtNum(s.new_quotes_7d) + '</span>' +
+      '<span class="badge badge-blue">New 30d: ' + fmtNum(s.new_quotes_30d) + '</span>' +
+      '<span class="badge badge-green">Active: ' + fmtNum(s.active_quotes) + '</span>' +
+      '<span class="badge badge-amber">Expiring ≤7d: ' + fmtNum(s.expiring_7d) + '</span>' +
+      '<span class="badge badge-red">Expired: ' + fmtNum(s.expired_quotes) + '</span>' +
+      '<span class="badge badge-grey">Approved: ' + fmtNum(s.approved_quotes) + '</span>' +
+      '<span class="badge badge-amber">Approved unconverted: ' + fmtNum(s.approved_unconverted) + '</span>' +
+      '<span class="badge badge-green">Exact conversion: ' + fmtPct(c.exact_conversion_pct) + '</span>' +
+      '<span class="badge badge-grey">Legacy email-matched: ' + fmtNum(c.legacy_email_matched_quotes) + '</span>';
+
+    var top = d.top_products || [];
+    if (!top.length) {
+      setState('quote-top-products-table', '', 'No quote rows in current filter.');
+    } else {
+      var topHtml = '<table><thead><tr><th>Product Slug</th><th class="num">Quotes</th><th class="num">Exact Converted</th><th class="num">Exact Conversion %</th></tr></thead><tbody>';
+      top.forEach(function(r){
+        topHtml += '<tr>' +
+          '<td>' + esc(r.product_slug || '(unknown)') + '</td>' +
+          '<td class="num">' + fmtNum(r.quote_count) + '</td>' +
+          '<td class="num">' + fmtNum(r.exact_converted) + '</td>' +
+          '<td class="num">' + fmtPct(r.exact_conversion_pct) + '</td>' +
+          '</tr>';
+      });
+      topEl.innerHTML = topHtml + '</tbody></table>';
+    }
+
+    var risk = d.at_risk || [];
+    if (!risk.length) {
+      setState('quote-at-risk-table', '', 'No at-risk approved quotes in current filter.');
+    } else {
+      var riskHtml = '<table><thead><tr><th>Quote ID</th><th>Product Slug</th><th class="num">Price (USD)</th><th class="num">Price (THB)</th><th>Created</th><th>Expires</th></tr></thead><tbody>';
+      risk.forEach(function(r){
+        riskHtml += '<tr>' +
+          '<td class="mono">' + esc(r.quote_id) + '</td>' +
+          '<td>' + esc(r.product_slug || '(unknown)') + '</td>' +
+          '<td class="num">' + (r.quoted_price_usd ? ('$' + fmtNum(r.quoted_price_usd)) : '<span class="muted">—</span>') + '</td>' +
+          '<td class="num">' + (r.quoted_price_thb ? ('฿' + fmtNum(r.quoted_price_thb)) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.created_at ? esc(r.created_at) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + (r.expires_at ? esc(r.expires_at) : '<span class="muted">—</span>') + '</td>' +
+          '</tr>';
+      });
+      riskEl.innerHTML = riskHtml + '</tbody></table>';
+    }
+  } catch(e) {
+    summaryEl.innerHTML = '<span class="badge badge-red">quote funnel unavailable</span><span class="muted" style="font-size:0.75rem">Error: ' + esc(e.message) + '</span>';
+    setState('quote-top-products-table', 'error', 'Could not load quote funnel: ' + e.message);
+    setState('quote-at-risk-table', 'error', 'Could not load quote funnel: ' + e.message);
   }
 }
 
@@ -1402,11 +1473,11 @@ async function recomputeOpportunity(){
 
 function applyFilters(){
   salesOffset = 0;
-  loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability();
+  loadSummary(); loadQuoteFunnel(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability();
 }
 
 function loadAll(){
-  loadDQ(); loadSummary(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability(); loadOpportunity(); populateProductFilter();
+  loadDQ(); loadSummary(); loadQuoteFunnel(); loadSales(); loadProducts(); loadChannels(); loadGsc(); loadGa4(); loadEtsy(); loadGoogleAds(); loadGrowthSignals(); loadProfitability(); loadOpportunity(); populateProductFilter();
 }
 
 async function boot(){
