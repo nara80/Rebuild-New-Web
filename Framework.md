@@ -10,7 +10,7 @@
 - **Admin auth:** Clerk (Google / Facebook / Email login)
 - **Order tracking:** Option A — carrier code + tracking number entered by admin on shipped, URL auto-generated from templates (thaipost, flash, dhl, ups, fedex, usps). No external API needed. Tracking shown inline in `/account` Orders panel.
 
-## Operational Reconciliation Snapshot (updated 2026-10-22)
+## Operational Reconciliation Snapshot (updated 2026-10-28)
 - Checkout/webhook dimension durability is now snapshot-based: `workers/api/checkout.ts` writes full `checkout_session_snapshots`, `workers/api/webhook.ts` reads snapshot first and metadata second.
 - Super Admin orders now include missing-dimension guardrails: API summary (`missing_configurable_rows`, `affected_orders`) + UI warning and per-row **Missing Dims** badges.
 - Production order repair was completed for `#LuQpJi23` using Stripe evidence for configurable items; fixed-size accessories remain without dimensions by design.
@@ -21,10 +21,16 @@
 - Analytics reconciliation (2026-10-22): website GA4 is now tracked via Cloudflare Zaraz (server-side) using Measurement ID `G-0GWVSPJLVJ`; hardcoded client-side `gtag.js` bootstrap snippets were removed from page `<head>` blocks to avoid double counting. GTM remains for non-GA tag use cases.
 - Stripe payment health audit (2026-10-22): production checkout and webhook/order-confirm paths validated as healthy by read-only probes + D1 metadata checks (recent confirmed/shipped paid orders present; sampled webhook failure rows in the last 30 days = 0). Purchase analytics remained UNVERIFIED in that audit.
 - Stripe regression status (2026-10-22): `workers/api/__tests__/stripe-purchase-hardening.test.ts` passes 23/24 tests; the single failure is a stale delayed-GTM string assertion, not a checkout-processing defect.
+- Custom quote team-email fix (deployed 2026-10-26): `workers/api/quote.ts` + `public/js/product-configurator.js` — TPU/protector fabric locks (`FIXED_WHITE_PROTECTOR_SLUGS`), unit-first dimension formatting (entered inch values preserved via `entered` payload; FP noise removed), human product title via D1 lookup. Commit `0df7ce0`, deployment `68e3d23f`.
+- Send Offers / recovery cron remediation (deployed 2026-10-27): cron Worker `mildmate-cron` rebound to `mildmate-db-prod`; zero-valued config no longer silently replaced; recovery test buttons honor stage param and no longer mutate data; UI timing copy drift fixed; email URLs on `www.mildmate.com`. Commit `36f3b53`, deployment `d705e705`, cron version `004d64c1`. Prod cleanup same day: 24 stale carts marked terminal; all 8 due thank-you emails sent. `functions/cron.ts` retained as offline email-safety test fixture only.
+- Tier 1 quote pipeline (deployed 2026-10-28): commit `9e8e87f`, deployment `4aa4a327`, cron version `5baf2a7e`. Migration 059 applied to prod D1 (`orders.quote_id` + index, `quote_followup_events`, config seeds). New `GET /api/admin/analysis/quotes` + Data Analyst "Custom Quote Funnel (Tier 1)" card; Super Admin Quote Follow-up card; pre-expiry follow-up stage in `mildmate-cron` (disabled by default; cap 20/day, 24h per-email cooldown, idempotent `UNIQUE(quote_id, stage)` claim). See "Custom Quote Conversion Pipeline — Tier Plan" section.
+- Stripe regression status (2026-10-28): full offline suite 71/72; sole failure is the stale delayed-GTM assertion (root cause: `public/order-confirmed/index.html` lacks the `startOnce` guardrails entirely — GA/GTM workstream, not checkout).
+- Google Ads / GA4 attribution (2026-10-21 audits): Google Ads campaign `24321425466` live; D1 click/cost rows through 2026-10-19 (collector recovered after 2026-10-08 scheduler failure) — Phase 12 remains OPEN (no genuine purchase conversion validated; GA4↔Ads attribution HOLD). GA4 purchase attribution UNVERIFIED: Oct 18–20 dark window, 6 product pages missing ecommerce producers, blank source/medium rows (incl. one 2026-10-17 purchase), admin contamination via legacy `G-ESL161CNBV`. Remediations planned (RG-1/RA-1/RC-1), none executed.
+- Collector scheduling (supersession): `marketing-sync-worker` runs a single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC) since the 2026-10-08 handoff — older per-source "weekly Monday" schedule wording is historical.
 
 ---
 
-## Marketing Decision System Reconciliation Snapshot (updated 2026-09-26)
+## Marketing Decision System Reconciliation Snapshot (updated 2026-10-28)
 
 Reconciled from:
 - `00_Issue/00_MildMate_Marketing_Decision_System_Roadmap_D1_v5_2026-09-07.md`
@@ -41,11 +47,14 @@ Verified/confirmed:
 - Phase 09 (GSC) base infrastructure is live: migration `046_gsc_analytics.sql` applied on prod D1, `/api/v1/gsc/*` ingestion API live, `/api/admin/analysis/gsc` live, dashboard GSC section deployed.
 - GSC freshness-source reconciliation is applied on prod D1: `analysis_gsc_freshness` now reads `sync_runs` with `source LIKE 'gsc-%'` (verified 2026-09-26).
 - Phase 13/14 foundations are now present in production D1/runtime: migration `053_profitability_layer.sql` tables/views (`cost_model_*`, `analysis_profit_*`) and migration `054_opportunity_engine.sql` tables (`opportunity_score_models`, `opportunity_scores`) are populated; protected admin analysis routes for profitability/growth/opportunity respond from production.
+- Tier 1 quote funnel is deployed (2026-10-28): `GET /api/admin/analysis/quotes` + Data Analyst "Custom Quote Funnel (Tier 1)" card; exact quote→order attribution via `orders.quote_id` (migration 059); pre-expiry quote follow-up automation in `mildmate-cron` deployed disabled. See "Custom Quote Conversion Pipeline — Tier Plan (2026-10-28)".
+- Collector scheduling: `marketing-sync-worker` runs a single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC) since the 2026-10-08 handoff.
 
 Current pending (not yet production-verified end-to-end):
 - Historical product-mapping resolver automation remains design/handoff only.
 - Automatic D1 → Google Product Master synchronization remains pending (`Last_Synced_At` not yet trusted).
-- Google Ads collector is deployed but still awaiting first live campaign data (Meta Ads remains owner-deferred).
+- Google Ads collector is recovered and live-ingesting (campaign `24321425466` active; click/cost rows through 2026-10-19), but Phase 12 remains OPEN — no genuine purchase conversion validated and GA4↔Ads attribution is on HOLD per the 2026-10-21 audits (Meta Ads remains owner-deferred).
+- GA4 purchase attribution remains UNVERIFIED (2026-10-21 audits: Oct 18–20 dark window, 6 product pages missing ecommerce producers, blank source/medium rows including one purchase on 2026-10-17, admin pages contaminating via legacy property `G-ESL161CNBV`).
 - Formal sampled clicks/impressions reconciliation against exported GSC source reports is still not recorded in handoffs.
 
 Reporting guardrail:
@@ -54,6 +63,52 @@ Reporting guardrail:
 Scope clarification:
 - Web storefront template catalog remains **30 core + 1 runtime extension** in this framework section.
 - Marketing Decision System canonical identity is tracked separately at **32 active D1 products**.
+
+---
+
+## Custom Quote Conversion Pipeline — Tier Plan (2026-10-28)
+
+Origin: sustained growth in custom-quote demand with weak conversion. Read-only prod D1 analysis (2026-10-27): 94 quotes from 64 unique emails since June 2026 (26 in October alone); top quoted product `custom-waterproof-cushion-protector` (28 quotes — not in the web catalog); only ~8 of 64 quote emails converted to orders (~12%); status taxonomy is effectively approved (48) vs archived (46) with few explicit rejects.
+
+### Tier 0 — Manual Follow-up Ritual (✅ Complete, 2026-10-27)
+- Worklist generated from prod D1: 38 approved-unconverted quotes (5 still active, 33 expired) → `00_Issue/Quote_Followup_Worklist_2026-10-27.md` (generator: `scripts/build-quote-worklist.mjs`).
+- Manual outreach email templates A + B; recommended twice-weekly follow-up ritual. No automation; human-operated only.
+
+### Tier 1 — Funnel KPIs + Exact Attribution + One Pre-Expiry Reminder (✅ Deployed 2026-10-28)
+Commit `9e8e87f`; Pages production deployment `4aa4a327`; cron Worker `mildmate-cron` version `5baf2a7e`. Migration `059_quote_tier1_pipeline.sql` applied to prod D1 (verified: `orders.quote_id` + `idx_orders_quote_id`, `quote_followup_events` with `UNIQUE(quote_id, stage)`, 5 `recovery_config` seeds).
+
+**1A — Funnel KPIs (analysis layer):**
+- New analysis endpoint: `GET /api/admin/analysis/quotes` (admin-authorized, date-filterable on `custom_quotes.created_at`) returning:
+  - `summary`: total/new-7d/new-30d/active/approved/approved-unconverted/expiring-7d/expired counts
+  - `conversion`: exact quote_id-attributed conversion % + legacy email-matched count (reported separately, never mixed)
+  - `top_products`: quote demand + exact conversion per product slug (LIMIT 12)
+  - `at_risk`: approved unconverted quotes expiring ≤7 days (LIMIT 25, no PII — quote_id, slug, prices, dates only)
+- Data Analyst dashboard: "Custom Quote Funnel (Tier 1)" card at `/super-admin/marketing/data-analyst/` — summary badges, Top Quoted Products table, At-Risk table; wired into `loadAll()` + `applyFilters()`.
+- These KPIs are computed on demand from `custom_quotes` + `orders` (not materialized as `analysis_*` views).
+
+**1B — Pre-expiry follow-up automation (cron):**
+- New stage in the `mildmate-cron` Worker (`cron-worker/index.ts` → `processQuoteFollowups()`), runs after the thank-you loop each pass.
+- Ships DISABLED: `quote_followup_enabled=false` in prod `recovery_config` (kill switch).
+- Guardrails (owner constraint — never over-email a customer):
+  - Exact conversion check: skips any quote that already has an `orders.quote_id` match
+  - Per-quote idempotency: `INSERT OR IGNORE` claim on `UNIQUE(quote_id, stage)` in `quote_followup_events` — a quote can never receive two follow-ups
+  - Per-email cooldown (default 24h) across all follow-up sends in the batch
+  - Daily send cap (default 20)
+  - Minimum quote age (default 72h) so fresh quotes aren't chased early
+- Configurable via Super Admin → Send Offers → 🧾 Quote Follow-up card (enable toggle, age hours, expiry window days, daily cap, cooldown hours) — persisted through `/api/admin/offers` in `recovery_config`.
+- Email: single gentle reminder with the quote magic link — no discount, no pressure copy; schema self-heal (`ensureQuoteFollowupSchema`) is try/catch-wrapped so a heal failure logs and skips without crashing the run.
+
+**1C — Exact attribution (orders):**
+- `orders.quote_id` (migration 059, plus self-heal in both `workers/api/webhook.ts` and `mildmate-cron`).
+- Webhook binds `item.quote_id || item.qi` on every order row (snapshot path + metadata fallback path).
+- Checkout already forwards quote refs through Stripe metadata + `checkout_session_snapshots`; Tier 1 closes the loop by persisting them on the order row.
+- Historical orders (pre-059) attribute via email matching only — reported separately as legacy matches.
+
+**Rollout plan:** verify the funnel card for ~24h → enable follow-up at cap 10/day → raise to 20/day once first sends look clean in `quote_followup_events`.
+
+### Tier 2 — Opportunity Engine Input (⬜ Pending)
+- Feed quote-demand metrics (quote volume by product, exact conversion rate, at-risk expiring value) into the Phase 14 opportunity model as a demand/momentum signal.
+- Blocked until Tier 1 data has matured (quote_id-attributed order rows need time to accumulate).
 
 ---
 
@@ -1123,6 +1178,7 @@ CREATE TABLE blog_posts (
 | POST | /api/admin/campaigns | handleAdminCampaigns | Create/update marketing campaign |
 | DELETE | /api/admin/campaigns?id=N | handleAdminCampaigns | Delete marketing campaign by id |
 | POST | /api/admin/thankyou-dispatch | handleAdminThankyouDispatch | Manually send due thank-you emails and return sent/failed/skipped details |
+| GET | /api/admin/analysis/quotes | handleAdminAnalysis (admin-analysis.ts getQuotes) | Tier 1 custom quote funnel KPIs: summary, exact + legacy conversion, top quoted products, at-risk approved quotes (date-filterable) |
 | GET | /v1/health (and /api/v1/health) | handleSales | Sales sync API health check |
 | GET | /v1/sales/orders/:source_system/:source_order_id (and /api/v1/sales/orders/:source_system/:source_order_id) | handleSales | Sales sync order read |
 | POST | /v1/sales/orders/upsert (and /api/v1/sales/orders/upsert) | handleSales | Sales sync order upsert (Bearer token required) |
@@ -1133,7 +1189,7 @@ CREATE TABLE blog_posts (
 - **Post:** /blogs/{slug}/ — Pages Function (`functions/blogs/[[path]].ts`) SSR from D1
 
 
- 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label
+ 001_initial, 002_add_tags, 002_discount_claims, 003_custom_quotes, 003_quote_fields, 003_seed_products, 004_rate_limits, 005_pricing_params, 006_product_editor, 007_seed_products, 008_seed_image_urls, 009_customer_addresses, 010_discount_expiry, 011_orders_discount_code, 012_contacts, 013_favorites, 014_order_shipping_tracking, 015_shipping_rates, 016_countries_master, 017_recovery_stages, 018_recovery_config, 019_discount_pct, 020_thankyou_queue, 021_promo_codes, 022_promo_min_usd, 023_blog_posts, 024_blog_categories_json, 024_reviews, 024_site_templates, 025_reviews_review_date, 026_product_type_niches, 027_shipping_tiers, 028_shipping_add_rates, 029_seed_tier_rates, 030_fix_product_tiers, 031_marine_mattress_protector, 031_product_faq_fields, 032_product_card_benefits, 033_marine_protector_pricing_params, 034_orders_customer_note, 035_promo_free_shipping, 036_fabric_color_inventory, 037_boat_models, 038_marine_top_sheet, 039_co_sleeping_top_sheet, 039_unified_sales_analytics, 040_boat_model_year_price, 041_boat_model_label, 042_marketing_analysis_layer, 043_product_mapping_aliases, 044_product_mapping_events, 045_marketing_sync_state, 046_gsc_analytics, 047_gsc_freshness_sources, 048_ga4_analytics, 049_etsy_analytics, 050_google_ads_analytics, 053_profitability_layer, 054_opportunity_engine, 055_ga4_multi_property, 056_ga4_property_unique_rebuild, 057_stripe_payment_idempotency, 058_products_seo_tagline_cta_fields, 059_quote_tier1_pipeline
 
 ---
 
@@ -1146,7 +1202,7 @@ CREATE TABLE blog_posts (
 | **3** | Design System + Shared Components | `main.css`, header, footer (with all social/marketplace links), nav | ✅ Complete |
 | **4** | All Content Pages | Homepage EN+TH, About, Contact, Fabric Collections, Policy pages, Reviews, Size Guides, Product pages, Configurator (both modes), `/api/subscribe` endpoint, JSON catalog system (data/products.json), clickable product card tags, USD price prefix, WebP images + critical CSS inlining, rAF scroll throttling, **sequential add-to-cart validation** (Country/Region chip first, then Size, Fabric, Color; US/CA auto-selected on load). **D1-backed dynamic product reviews** on product pages via GET `/api/products/:slug/reviews` (4-tier sort, LIMIT 10). **Taxonomy split reconciled (2026-08):** `product_type` on `products`; specialization in `product_niches`; niche-page visibility in `product_collections`; legacy `products.niches` retained for fallback compatibility. **Homepage taxonomy aligned:** Shop by Product shows 6 cards (5 product types + All Products), and Choose Your Application shows all 6 niche cards. **Homepage readability pass (Option A / Alternative 2)** applied on EN+TH with updated color hierarchy and mobile legibility/tap-target improvements. **Reconciled 2026-08-21:** marketing decision exports refreshed as Products/Niches/Collections tabs. **TH product pages (2026-09-12):** Full bilingual parity achieved via `functions/product/[[path]].ts` server-side patches (TH_BREADCRUMB_CATEGORY_LABELS, TH_MARINE_SHAPE_LABELS, TH_STATIC_HTML_REPLACEMENTS, `applyThaiProductUiLocalization`) + `public/js/product-configurator.js` `isThaiPage()/t()` helper for JS-rendered strings. EN pages verified unchanged. See "TH Product Pages Localization (2026-09-12)" section for the full data model. | ✅ Complete |
 | **5** | Checkout + Stripe + Auth | ✅ Built (code complete; thank-you discount ✅; optional checkout message type + note saved to orders/team email; checkout success/cancel URL now derived from request origin to keep preview sessions on preview domain; runtime worker artifacts reconciled with source) |
-| **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). `functions/cron.ts` multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. Cron trigger remains configured via Cloudflare Dashboard. | ✅ Built |
+| **6** | Abandoned Cart Cron | `abandoned_carts` table (migration 001), webhook marks `recovered=1` on payment (`workers/api/webhook.ts` ✅), cart email capture via `PUT /api/customers/cart` ✅ (Phase 5). Multi-stage recovery handler: Stage 1 (24h gentle reminder), Stage 2 (72h discount for carts >=$150, via `recovery_config` migration 018), Stage 3 (7d last-chance). `thankyou_queue` (migration 020) sends 1-year discount post-purchase. **Manual due-send path also implemented:** `/api/admin/thankyou-dispatch` for on-demand dispatch and diagnostics. **Production cron (reconciled 2026-10-27):** runs on the dedicated Worker `mildmate-cron` (repo `cron-worker/`, hourly `0 * * * *`, gated on `cron_hour_utc` from D1, bound to `mildmate-db-prod`); `functions/cron.ts` is retained in-repo only as the offline email-safety test fixture. **Quote follow-up stage (Tier 1, 2026-10-28):** `mildmate-cron` also runs the pre-expiry quote follow-up (disabled by default; see Tier Plan section). | ✅ Built |
 | **7** | Admin Dashboard | Admin at `/admin/`. Legacy `/admin/sandbox/` routes are retired with redirect compatibility in place. Two dashboards: `/admin/index.html` (Admin) + `/super-admin/index.html` (Super Admin) with full products CRUD, orders table (D1 live + Option A shipping tracking: carrier_code + tracking_number + tracking_url), R2 drag-drop upload, CSV export, customers (D1-grouped by email), subscribers, pricing params, DIY prices, exchange rates, **Shipping Rates** (THB-only with USD preview, D1 country master dropdown), **Marketing centralized in D1**: offers config via `/api/admin/offers` (`recovery_config`) and campaigns via `/api/admin/campaigns` (`marketing_campaigns` table ensured by API). Super Admin includes **Send Due Thank-you Now** (manual dispatch) with sent/failed/skipped email visibility. `functions/admin/_middleware.ts` — Clerk admin-role gate for `/admin/*`. `functions/account/_middleware.ts` protects `/account/*`. New marketing APIs include Clerk + `ADMIN_EMAILS` fallback parity for production auth. **Sales sync API implemented:** `/v1/*` and `/api/v1/*` routes (health + sales order upsert/read) in `workers/api/sales.ts`, secured by `SALES_SYNC_API_TOKEN`. **Setup complete:** Clerk admin roles assigned (super-admin: nara19080@gmail.com + sriprasit9@gmail.com + norrawich.rat@gmail.com, admin: mildmateshop@gmail.com ✅), `ADMIN_EMAILS` updated in Production + Preview ✅, `QUOTE_FROM_EMAIL` + `QUOTE_REPLY_TO` ✅, admin-stats wiring verified ✅. **Cloudflare Access status:** Zero Trust challenge is active on `/super-admin/*`; `/admin/*` currently remains Clerk-gated. | ✅ Built |
 | **8** | Polish + Launch | Mobile QA, Lighthouse 95+, DNS cutover to `www.mildmate.com` | ✅ COMPLETE (Part A DONE: DNS cutover, sitemap, robots.txt, OG tags, GTM + analytics stack, mobile QA, Lighthouse 90+/95+, JSON-LD structured data deployed. ✅ Part B DONE: Stripe live mode keys deployed. **GA4 reconciliation 2026-10-22:** Cloudflare Zaraz server-side GA4 `G-0GWVSPJLVJ`; hardcoded client-side `gtag.js` snippets removed.) |
 | **9** | Testing (Vitest) | Unit tests for Worker API: pricing (V-Berth/fitted), cart, geo-currency, subscribers, quote, products, webhook — `@cloudflare/vitest-pool-workers` | ❌ Out of Scope |
@@ -1956,13 +2012,21 @@ All existing pages remain in `public/`. Product/blog generators rebuild target p
 ## Operational Notes (2026-06)
 
 ### Multi-Stage Abandoned Cart Recovery
-functions/cron.ts runs 3 recovery stages on a daily schedule:
+Production cron runs on the dedicated Worker `mildmate-cron` (repo `cron-worker/`, hourly `0 * * * *`, gated on `cron_hour_utc` from D1; rebound to `mildmate-db-prod` 2026-10-27). It runs 3 recovery stages:
 - Stage 1 (24h): Gentle reminder, always sent.
 - Stage 2 (72h): Discount offer; only for carts >= $basketThresholdUsd (default $150, configurable via D1 recovery_config table).
 - Stage 3 (7d): Last-chance, reuses Stage 2 discount code.
 - Max 50 emails/day overall; 5+3+3 per-stage batching. thankyou_queue sends 1-year discount code post-purchase.
 - All config driven from D1 recovery_config table (migrations 018) - not hardcoded.
-- Cron trigger configured via Cloudflare Dashboard (wrangler.toml [triggers] registered in project triggers panel).
+- `functions/cron.ts` contains the same logic but is retained in-repo ONLY as the offline email-safety vitest fixture — it is NOT deployed.
+
+### Quote Follow-up Automation (Tier 1, deployed 2026-10-28)
+- `mildmate-cron` runs a pre-expiry quote follow-up stage after the thank-you loop (`processQuoteFollowups()` in `cron-worker/index.ts`).
+- Ships DISABLED (`quote_followup_enabled=false` in prod `recovery_config`) — kill switch + config all in Super Admin → Send Offers → 🧾 Quote Follow-up card.
+- Guardrails: exact quote_id conversion check, per-quote idempotency (`UNIQUE(quote_id, stage)` claim in `quote_followup_events`), per-email cooldown (default 24h), daily cap (default 20), minimum quote age (default 72h).
+- Email is a single gentle reminder with the quote magic link — no discount, no pressure copy.
+- Rollout: verify funnel card ~24h → enable at cap 10/day → raise to 20/day once first sends look clean in `quote_followup_events`.
+- Never enable without the daily cap; owner constraint — one order with N items = one email, never N.
 
 ### Thank-you Dispatch and Dedupe (Reconciled 2026-06-26)
 - Manual due-send endpoint is live: `POST /api/admin/thankyou-dispatch` (used by Super Admin "Send Due Thank-you Now").
@@ -1993,8 +2057,8 @@ functions/cron.ts runs 3 recovery stages on a daily schedule:
 ### Sequential Add-to-Cart Validation
 Selections must proceed in order: Country/Region -> Size -> Fabric -> Color (each chip highlighted before next). US/CA region auto-selected on page load. Cart duplicate prevention: case-insensitive + trim on color in public/js/cart.js add() and workers/api/customers.ts loadFromServer().
 
-### Database Migrations (001-041 in repo)
-Repo currently contains migrations through `041_boat_model_label.sql`, including split-number families (`024_*`, `031_*`, `039_*`). Recent additions include: co-sleeping top sheet seed (`039_co_sleeping_top_sheet`), unified sales analytics/sync tables (`039_unified_sales_analytics`), and boat model year/label fields (`040_*`, `041_*`). Note: `custom_quotes.free_shipping` exists in runtime schema and must be preserved in schema reconciliations.
+### Database Migrations (001-059 in repo)
+Repo currently contains migrations through `059_quote_tier1_pipeline.sql`, including split-number families (`024_*`, `031_*`, `039_*`). Later additions include: marketing analysis layer views (`042_*`), mapping memory (`043_*`/`044_*`), Phase 17 sync state (`045_*`), GSC (`046_*`/`047_*`), GA4 (`048_*`, `055_*`, `056_*`), Etsy (`049_*`), Google Ads (`050_*`), profitability layer (`053_*`), opportunity engine (`054_*`), Stripe payment idempotency (`057_*`), products SEO tagline/CTA fields (`058_*`), and the Tier 1 quote pipeline (`059_*`: `orders.quote_id` + index, `quote_followup_events`, quote-followup `recovery_config` seeds). Note: `custom_quotes.free_shipping` exists in runtime schema and must be preserved in schema reconciliations.
 
 ### Fabric Color Inventory System (implemented 2026-07-12)
 - D1 table `fabric_color_inventory` (migration 036): `id, fabric, color, in_stock, updated_at` with UNIQUE(fabric, color).

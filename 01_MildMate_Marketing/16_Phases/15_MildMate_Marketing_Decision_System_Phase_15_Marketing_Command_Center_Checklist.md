@@ -106,3 +106,9 @@ Turn the existing `/super-admin/marketing/` area into the owner/decision view fo
 Status verified: **NOT STARTED** for Phase 15 deliverables (command-center UX, approval workflow, orchestration layer).
 
 Baseline correction: the prior dependency statement is outdated. **Phase 14 is now implemented/operational** (opportunity score model + snapshots + protected analysis routes live). Phase 15 itself still remains pending.
+
+---
+
+## Update Note (2026-10-28)
+
+- Phase 15 remains NOT STARTED. Planning context now available: a "Custom Quote Funnel (Tier 1)" card is already live on the Data Analyst dashboard (deployed 2026-10-28) backed by `GET /api/admin/analysis/quotes` + `orders.quote_id` attribution (migration 059) — the future executive view can surface a quote-funnel summary from the same endpoint. Phase 14 (prerequisite) is implemented/operational.

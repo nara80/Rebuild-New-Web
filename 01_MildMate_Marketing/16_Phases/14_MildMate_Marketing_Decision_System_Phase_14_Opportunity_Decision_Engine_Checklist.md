@@ -117,3 +117,10 @@ Status update: **IMPLEMENTED / OPERATIONAL**.
 - Runtime routes are implemented and deployed (`workers/api/admin-opportunity.ts`, `/api/admin/analysis/opportunity`, `/api/admin/analysis/opportunity/recompute` in `workers/api/admin-analysis.ts`).
 
 Scope note: this checklist is retained as planning/history. The previous **NOT STARTED** statement is superseded by current runtime and production evidence.
+
+---
+
+## Update Note (2026-10-28)
+
+- Implementation status unchanged (model registry + score snapshots in prod D1; protected `/api/admin/analysis/opportunity` + `/opportunity/recompute` routes live). Complementary live facts: a weekly recompute cron runs **Monday 05:00 UTC**, and the Data Analyst dashboard exposes a "Recompute scores" button.
+- **Tier 2 forward-reference:** the Tier 1 quote pipeline (deployed 2026-10-28 — `GET /api/admin/analysis/quotes`, `orders.quote_id` attribution via migration 059, pre-expiry follow-up automation in `mildmate-cron` disabled by default) makes quote-demand metrics (quote volume, exact conversion rate, at-risk expiring value) available as candidate inputs for a future Tier 2 opportunity model revision. No change to the current v1 model or weights until Tier 1 data matures.

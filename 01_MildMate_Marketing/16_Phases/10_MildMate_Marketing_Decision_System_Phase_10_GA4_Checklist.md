@@ -112,3 +112,17 @@ Status update: **DEPLOYED / PRODUCTION VERIFIED**. Live reconciliation completed
 - Directional purchase check passed: 0 GA4 purchases = 0 website commercial orders in unified sales for the same window.
 - **Sessions inflation defect found and fixed (2026-10-01):** the traffic report was dimensioned by `pagePath`, inflating summed sessions ~3x (471 vs 158 `session_start`). Collector now fetches session-scoped metrics without `pagePath` (landing-page attribution preserved for product mapping). `ga4_funnel_daily` was purged and rebuilt with a 90-day backfill (900 rows, 2026-07-02 → 2026-09-29); post-fix window sessions = 173 vs 158 `session_start` (residual gap is GA4's own sessions-vs-session_start definitional difference).
 - Operational note: ingestion upserts cost ~2 D1 statements per row against a ~1000-subrequest ceiling; collector chunk size pinned to 400 (`GA4_UPSERT_CHUNK_SIZE`).
+
+---
+
+## Update Note (2026-10-28)
+
+- Two checklist items pending "first live GA4 ingest" were satisfied by the 2026-10-01 production reconciliation and are considered closed: "Reconcile purchase counts directionally with unified sales" (0 GA4 purchases = 0 website commercial orders in window) and "Known date totals match GA4 reports within documented definitions" (funnel events matched the GA4 Data API exactly for 2026-09-15 → 2026-09-28).
+- Migrations `055_ga4_multi_property.sql` + `056_ga4_property_unique_rebuild.sql` extend the GA4 layer (multi-property support; property-unique rebuild) — applied to prod.
+- **2026-10-21 audits found, still OPEN:**
+  - Oct 18–20 "dark window" from a consent-bridge revert — `ga4_funnel_daily` stops at 2026-10-17; 5 Ads clicks on Oct 18–19 permanently lost.
+  - 6 product pages (`bedbridge-connector`, `duvet-insert`, `mattress-lift-helper`, `marine-fitted-sheet`, `marine-top-sheet`, `marine-mattress-protector`) ship zero ecommerce producers (`view_item`/`add_to_cart`) — purchase funnels structurally incomplete until the RC-1 fix.
+  - Blank source/medium rows in `ga4_funnel_daily`, including one purchase on 2026-10-17 — attribution drift unproven (C1 HOLD).
+  - Admin pages (`public/admin/index.html`, `public/super-admin/index.html`) still bootstrap legacy property `G-ESL161CNBV`, bypassing the consent-gated public bootstrap (contamination FAIL).
+  - Overall verdict: **GA4 purchase/Ads attribution remains UNVERIFIED; broad repair on HOLD** pending owner UI checks. Remediations RG-1 (GTM quote-event trigger), RA-1 (owner UI: auto-tagging/Ads link), RC-1 (producers + `google.co.th` CSP) are planned, none executed. See `09_Handoffs/MildMate_Ads_GA4_Attribution_Verification_2026-10-21.md` and `09_Handoffs/Post_R2_Paid_Ads_And_Event_Audit_2026-10-21.md`.
+- **Scheduling supersession (2026-10-08 handoff):** GA4 collection now runs on the `mildmate-marketing-sync` single daily cron (`0 1 * * *` UTC) with weekday dispatch (Mon GA4) — earlier "weekly Mon 04:00 UTC" wording is historical.

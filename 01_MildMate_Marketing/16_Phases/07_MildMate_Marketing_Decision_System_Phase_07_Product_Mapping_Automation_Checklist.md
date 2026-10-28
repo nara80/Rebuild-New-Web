@@ -120,3 +120,10 @@ What was actually built and verified (2026-09-19):
 - Coverage surfaced: `analysis_data_quality` → Data Analyst dashboard Data Quality section (0 unmapped items across 493 orders).
 - Mapping memory: `migrations/043_product_mapping_aliases.sql` table exists in production with the seeded `1038 -> [20, 26]` verified alias row (migration 043), but no automation consumes it yet.
 - Handoffs: `Phase_07_Handoff_Product_Mapping_Automation_2026-09-10.md`, `Phase_07v2_Handoff_Direct_Notion_Mapper_Offline_Build_2026-09-10.md`, `Phase_07_08_Reconciliation_2026-09-11.md`.
+
+---
+
+## Update Note (2026-10-28)
+
+- The v3 design line "Make.com = mapping authority" is superseded by the **full Make.com retirement (owner decision 2026-10-01)**: humans confirm mappings directly in Notion (`Product_Mapping_Status = Mapped`; the system never maps or guesses), with NO Make.com order-import assist. The Phase 17 Worker `mildmate-marketing-sync` remains the Notion→D1 sync mechanism (operational since 2026-09-19; subrequest-budgeted bounded runs since 2026-10-01).
+- The v1 checklist remains superseded/historical; no open items.

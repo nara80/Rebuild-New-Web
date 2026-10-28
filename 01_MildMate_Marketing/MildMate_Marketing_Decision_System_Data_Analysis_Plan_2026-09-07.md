@@ -2,6 +2,8 @@
 
 > **⚠️ AUTOMATION LAYER SUPERSEDED (2026-10-01).** This plan assigned integration/ETL to Make.com. As built, all automation runs on Cloudflare Worker crons (`mildmate-marketing-sync`) and channel orders are entered into Notion manually by humans. Make.com is fully retired. Read Make.com references below as historical planning. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
 
+> **➕ CUSTOM QUOTE CONVERSION PIPELINE ADDED (2026-10-28).** A Tier 0/1/2 plan converting custom-quote demand into measurable conversion is now part of this decision system — Tier 0 (manual follow-up ritual) complete, Tier 1 (funnel KPIs + exact quote→order attribution + pre-expiry follow-up automation) deployed 2026-10-28, Tier 2 (opportunity-engine input) pending. See `# 23. Custom Quote Conversion Pipeline — Tier Plan (2026-10-28)` at the end of this document.
+
 **Prepared:** 2026-09-07  
 **Purpose:** Practical implementation plan to turn MildMate's existing data infrastructure into a usable marketing analysis and decision system.
 
@@ -197,6 +199,8 @@ Never:
 Do not make dashboards repeatedly calculate everything from raw tables.
 
 Create reusable analytical views or summary tables.
+
+> **Delivered status (2026-10-28):** the first-set views are live in production D1 (migration `042_marketing_analysis_layer.sql`, 10 views) and consumed by the Data Analyst dashboard. GSC/GA4/Etsy/Google Ads analytical tables are also live (migrations 046–050, 055–056). The custom quote funnel (Tier 1, 2026-10-28) is served on demand via `GET /api/admin/analysis/quotes` from `custom_quotes` + `orders.quote_id` rather than a materialized view.
 
 Recommended first set:
 
@@ -1119,3 +1123,37 @@ Once this is working reliably, MildMate is ready to add GSC, GA4, Etsy performan
 # 22. Guiding Principle
 
 > **Do not build a dashboard to show data. Build an analytical system that converts trusted data into a clear next action.**
+
+---
+
+# 23. Custom Quote Conversion Pipeline — Tier Plan (2026-10-28)
+
+**Status legend:** ✅ complete/verified · 🟡 deployed but gated open · ⬜ pending
+
+### Why this exists
+
+Read-only prod D1 analysis (2026-10-27): custom-quote demand is growing while conversion is weak — 94 quotes from 64 unique emails since June 2026 (26 in October alone); top quoted product `custom-waterproof-cushion-protector` (28 quotes — not in the web catalog); only ~8 of 64 quote emails converted to orders (~12%); status taxonomy is effectively approved (48) vs archived (46) with few explicit rejects. This pipeline turns that demand into measurable, improvable conversion within the existing analytical-layer architecture (D1 stays source of truth; no new external systems).
+
+### Tier 0 — Manual Follow-up Ritual (✅ Complete, 2026-10-27)
+
+- Worklist generated from prod D1: 38 approved-unconverted quotes (5 still active, 33 expired) → `00_Issue/Quote_Followup_Worklist_2026-10-27.md` (generator: `scripts/build-quote-worklist.mjs`).
+- Manual outreach email templates A + B; twice-weekly follow-up ritual. Human-operated only — no automation, no new email risk.
+
+### Tier 1 — Funnel KPIs + Exact Attribution + One Pre-Expiry Reminder (✅ Deployed 2026-10-28)
+
+Commit `9e8e87f`; Pages production deployment `4aa4a327`; cron Worker `mildmate-cron` version `5baf2a7e`; migration `059_quote_tier1_pipeline.sql` applied to prod D1.
+
+- **1A — Funnel KPIs (analytical layer):** `GET /api/admin/analysis/quotes` returns summary counts (total / new-7d / new-30d / active / approved / approved-unconverted / expiring-7d / expired), conversion (exact quote_id-attributed % reported separately from legacy email-matched count — never mixed), top quoted products with exact conversion, and at-risk approved quotes expiring ≤7d (no PII). Rendered as the "Custom Quote Funnel (Tier 1)" card on the Data Analyst dashboard, wired into global date filters. Computed on demand from `custom_quotes` + `orders` (not materialized as `analysis_*` views).
+- **1B — Pre-expiry follow-up automation:** one stage in `mildmate-cron`. Ships DISABLED (`quote_followup_enabled=false` in prod `recovery_config`). Guardrails honor the data-quality principle of this plan — the system must never over-email: exact quote_id conversion check (skip converted quotes), per-quote idempotency (`UNIQUE(quote_id, stage)` claim in `quote_followup_events`), per-email cooldown (default 24h), daily cap (default 20), minimum quote age (default 72h). Single gentle reminder with the quote magic link — no discount, no pressure copy. Configurable in Super Admin → Send Offers → Quote Follow-up card.
+- **1C — Exact attribution:** `orders.quote_id` (+ index) persisted by the webhook on every order row (snapshot + metadata paths, schema self-heal). Checkout already forwarded quote refs via Stripe metadata + `checkout_session_snapshots`; Tier 1 closes the loop on the order row. Historical orders attribute via email matching only — reported separately.
+- **Rollout:** verify the funnel card ~24h → enable follow-up at cap 10/day → raise to 20/day once first sends look clean in `quote_followup_events`.
+
+### Tier 2 — Opportunity Engine Input (⬜ Pending)
+
+Feed quote-demand metrics (quote volume by product, exact conversion rate, at-risk expiring value) into the Phase 14 opportunity model as a demand/momentum signal. Blocked until Tier 1 data matures (quote_id-attributed order rows need time to accumulate).
+
+### Fit with this plan's rules
+
+- D1 remains the single source of truth; attribution facts live on `orders` rows, config in `recovery_config`, audit trail in `quote_followup_events`.
+- Revenue rules respected: quote conversion counts orders, never invents line revenue.
+- The funnel endpoint exposes its own data confidence implicitly (exact vs legacy conversion reported separately), consistent with "never hide weak data quality."

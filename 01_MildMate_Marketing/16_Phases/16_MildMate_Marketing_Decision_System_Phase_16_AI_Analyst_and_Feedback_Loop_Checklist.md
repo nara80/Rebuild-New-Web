@@ -112,3 +112,9 @@ Use AI to interpret trusted analytics, record approved actions, and measure whet
 Status verified: **NOT STARTED** for Phase 16 deliverables (AI recommendation layer, `marketing_actions` persistence, closed-loop feedback workflow).
 
 Baseline correction: prerequisites are now partially advanced compared with the prior note. **Phases 13 and 14 are implemented/operational**, while **Phase 15 remains pending**, so Phase 16 remains pending.
+
+---
+
+## Update Note (2026-10-28)
+
+- Phase 16 remains NOT STARTED (Phase 15 pending). For the future AI input contract: quote-funnel metrics (exact quote_id-attributed conversion, quote demand by product, at-risk expiring value) are now available as canonical analytical inputs via `GET /api/admin/analysis/quotes` + `orders.quote_id` (Tier 1, deployed 2026-10-28).

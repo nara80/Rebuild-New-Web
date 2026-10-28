@@ -120,3 +120,9 @@ Every task, deliverable, verification, and handoff item above was completed duri
 - No indexes were added (rule "only if justified by query plans" — none justified to date; views run against tables of ~493 orders / 737 items).
 - Semantics validated end-to-end by the Phase 08 backfill reconciliation (493 orders, ฿1,552,277.63, 0 unmapped items, 737/737 UNALLOCATED — exact product revenue correctly empty).
 - Handoff exists: `09_Handoffs/Phase_03_Handoff_D1_Analytical_Layer_2026-09-07.md`.
+
+---
+
+## Update Note (2026-10-28)
+
+- The migration 042 analytical views (10 views) remain complete and production-verified. Since then the analytical layer gained additional D1 objects: migration `053` (cost-model tables/views), `054` (opportunity models/scores), and `059` (Tier 1 quote pipeline: `orders.quote_id` attribution column + `quote_followup_events` audit table, deployed 2026-10-28). These are additive, not replacements.

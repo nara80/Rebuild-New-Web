@@ -105,3 +105,10 @@ Populate enough historical unified sales data to support meaningful product/chan
 ## Droid Working Instruction
 
 > Work on **Phase 08 only**. Inspect existing code before changing it. Reuse existing MildMate conventions. Do not build later phases early. Stop after this phase is implemented, tested, documented, and ready for review.
+
+---
+
+## Update Note (2026-10-28)
+
+- Two parentheticals are superseded wording: "Make.com Sales Sync still OFF" and "Make.com is the mapping authority" — **Make.com is fully retired (owner decision 2026-10-01)**, not OFF; mapping confirmation is human-in-Notion only, and Notion→D1 sync is the Phase 17 Worker `mildmate-marketing-sync`.
+- Phase 08 remains complete and production-verified (493 orders / 737 items / ฿1,552,277.63 backfilled; 18 held records resolved; Historical Coverage card live on the Data Analyst dashboard); no open items.

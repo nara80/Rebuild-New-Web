@@ -104,3 +104,11 @@ Add organic search demand and search visibility to the analytical system.
 ## Reconciliation Note (2026-09-26)
 
 Status verified: **LIVE / OPERATIONAL**. Phase 09 is fully active in production. Migration `046_gsc_analytics.sql` objects are live, migration `047_gsc_freshness_sources.sql` is applied on production D1, `/api/v1/gsc/*` endpoints are reachable in deployed Pages runtime, and the `marketing-sync-worker` weekly cron collector is deployed with `GSC_REFRESH_TOKEN` configured. Manual production runs succeeded and populated real GSC data (`gsc_search_daily`), while freshness telemetry reports successful sync status.
+
+---
+
+## Update Note (2026-10-28)
+
+- Phase 09 remains LIVE/OPERATIONAL. Run history at last reconciliation: 52+ successful prod runs (latest recorded 2026-09-27); OAuth secrets set.
+- **Still-open caveat:** a formal sampled clicks/impressions reconciliation against exported GSC source reports has NOT been recorded in handoffs (the existing "clicks/impressions are landing" verification covers ingestion, not source reconciliation).
+- **Scheduling supersession (2026-10-08 handoff):** GSC collection now runs on the `mildmate-marketing-sync` single daily cron (`0 1 * * *` UTC) with weekday dispatch (Thu GSC) — earlier "weekly Mon 03:00 UTC" wording is historical.

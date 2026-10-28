@@ -61,7 +61,7 @@ Build a sales-growth analytical layer that identifies demand, momentum, conversi
 - [ ] Growth signal statuses correctly show insufficient/stale/mapping-gap states.
 - [ ] Profitability appears as guardrail metadata only, not as ranking output in this phase.
 - [ ] Existing opportunity model (`v1`) behavior is unchanged.
-- [ ] Existing Friday opportunity recompute behavior is unchanged.
+- [ ] Existing weekly Monday 05:00 UTC opportunity recompute behavior is unchanged.
 
 ## Definition of Done
 
@@ -101,3 +101,11 @@ Status update: **IMPLEMENTED / OPERATIONAL AS FOUNDATION**. Repository and produ
 - Opportunity core/scoring integration is present in runtime bundles and production D1 score snapshots exist (`opportunity_scores` rows present).
 
 Scope note: this checklist remains as planning/history; unchecked implementation boxes above are no longer a reliable indicator of current runtime state.
+
+---
+
+## Update Note (2026-10-28)
+
+- Correction: the opportunity recompute cron is **weekly Monday 05:00 UTC** (not Friday) — the verification item has been corrected in place.
+- Growth-signals UI remediation was completed and deployed 2026-10-12 (commits incl. `a6ef91d`, Pages deployment `5ad60dc6`; 18/18 tests; confidence-NaN and narrow-layout fixes) — see `09_Handoffs/Phase13_Growth_Signals_UI_Remediation_2026-10-12.md`.
+- New demand/conversion signal available for a future contract revision (v2): quote funnel metrics from the Tier 1 pipeline (deployed 2026-10-28) — `GET /api/admin/analysis/quotes`, `orders.quote_id` attribution (migration 059), quote demand/conversion/at-risk-expiring-value per product. No change to current v1 growth-signals behavior.

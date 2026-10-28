@@ -108,3 +108,12 @@ Status update: **DEPLOYED / PRODUCTION VERIFIED**. First live production ingest 
 - Manual `/etsy/run` succeeded (sync_runs 590: 48 rows created, 0 rejected): 39 listings in `etsy_listing_master` (22 active / 17 inactive), 10 receipts in the 2026-09-17 → 2026-09-30 window; freshness healthy (latest report 2026-09-30, 1-day lag as configured, 0 errors in 7d).
 - Receipt reconciliation exact: 10 receipts fetched from the Etsy API = 10 order rows in `analysis_etsy_daily` across 9 order-days (12 units, ~$2,241 revenue in window).
 - Known caveats: (1) listing `views`/`favorites` are lifetime snapshots attributed to the latest sync date, not daily deltas; (2) `revenue_thb` stays 0 unless the optional THB conversion helper is configured — revenue is recorded in USD; (3) unified sales showed 0 Etsy orders in the window because the channel→Notion→D1 order pipeline lags (latest Etsy order in `sales_orders` was 2026-09-03) — an upstream ingestion-lag issue, not an Etsy analytics defect.
+
+---
+
+## Update Note (2026-10-28)
+
+- The item "Revenue/order data reconciles to Etsy source definitions (pending first live ingest)" was satisfied by the 2026-10-01 production reconciliation and is considered closed: receipt reconciliation exact — 10 receipts fetched = 10 order rows, totals matched to source definitions.
+- "Build Make.com Etsy collector" wording is a naming leftover: the collector is a Cloudflare Worker cron (Make.com is fully retired since 2026-10-01).
+- **Scheduling supersession (2026-10-08 handoff):** Etsy collection now runs on the `mildmate-marketing-sync` single daily cron (`0 1 * * *` UTC) with weekday dispatch (Tue Etsy) — earlier "weekly Mon 04:00 UTC" wording is historical.
+- Known gap (owner-accepted): unified-sales Etsy freshness depends on manual Notion entry cadence (latest Etsy order in `sales_orders` was 2026-09-03 at the 2026-10-01 reconciliation).

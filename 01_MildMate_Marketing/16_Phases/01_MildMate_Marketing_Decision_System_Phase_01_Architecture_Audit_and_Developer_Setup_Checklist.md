@@ -112,3 +112,10 @@ Every task, deliverable, verification, and handoff item above was completed duri
 - Branch `feature/marketing-data-analyst` exists locally and on `origin` (final implementation was merged to `master`).
 - Route convention confirmed in practice: `/super-admin/marketing/data-analyst/` is live (returns 302 auth redirect when unauthenticated).
 - Schemas for `products`/`sales_orders`/`sales_order_items`/`sync_runs` verified in production D1 during this reconciliation.
+
+---
+
+## Update Note (2026-10-28)
+
+- The prerequisite "Notion → Make.com → D1 Sales Sync has been technically validated" is historical only: **Make.com is fully retired across MildMate (owner decision 2026-10-01)**. The validated production path is the Phase 17 Worker `mildmate-marketing-sync`, which reads Notion directly. Channel orders are entered into Notion manually by humans. See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+- Phase 01 deliverables (architecture audit, D1 schema foundations, repo/tooling setup) remain complete and production-verified; no open items.

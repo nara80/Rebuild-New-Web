@@ -123,3 +123,15 @@ Every task, deliverable, verification, and handoff item above was completed duri
 - All 7 filters present (date start/end, channel, product, order status, mapping status, revenue status) + Apply; KPI cards, Sales Detail / Product Participation / Channel tables, loading/empty/error states, freshness badge in header.
 - Navigation entry to the Data Analyst page exists in `public/super-admin/index.html`.
 - Handoff exists: `09_Handoffs/Phase_05_Handoff_Data_Analyst_Dashboard_2026-09-07.md`.
+
+---
+
+## Update — Tier 1A Quote Funnel (2026-10-28)
+
+Deployed 2026-10-28 (commit `9e8e87f`, Pages deployment `4aa4a327`):
+
+- New analysis endpoint `GET /api/admin/analysis/quotes` (summary counts, exact quote_id conversion + legacy email-match conversion, top quoted products, at-risk approved quotes expiring ≤7d — no PII).
+- New **"Custom Quote Funnel (Tier 1)"** card on the Data Analyst dashboard (`public/super-admin/marketing/data-analyst/index.html`): summary badge row, Top Quoted Products table, At-Risk Approved Quotes table; wired into `loadAll()` + `applyFilters()` (respects the global date filters).
+- Data foundation: migration `059_quote_tier1_pipeline.sql` applied to prod D1 (`orders.quote_id` + index, `quote_followup_events`, `recovery_config` seeds).
+- Companion automation: cron Worker `mildmate-cron` version `5baf2a7e` ships a pre-expiry quote follow-up stage, DISABLED by default (`quote_followup_enabled=false`; daily cap 20, per-email cooldown 24h, idempotent `UNIQUE(quote_id, stage)` claim). Super Admin Send Offers gained the 🧾 Quote Follow-up config card.
+- This is an additive post-MVP extension; the original MVP deliverables and the 2026-09-19 reconciliation remain accurate.

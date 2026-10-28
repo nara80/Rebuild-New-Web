@@ -743,3 +743,14 @@ Do not implement until the report has been reviewed and approved.
 - [ ] Save summary under `D:/00_Mildmate/Re-build_web/01_MildMate_Marketing/`.
 - [ ] Commit only Phase 07 scoped changes.
 - [ ] Prepare the Phase 08 handoff and stop.
+
+---
+
+## Update Note (2026-10-28)
+
+Multiple statements in this v2 checklist are superseded by later verified state (kept as history):
+
+- **All "existing Make.com Sales Sync" references are obsolete:** Make.com is **fully retired** (owner decision 2026-10-01, including the channel→Notion import scenarios). Notion→D1 sync is owned entirely by the Phase 17 Worker `mildmate-marketing-sync` (operational since 2026-09-19; main run 1st/15th 02:00 UTC + hourly drain; bounded subrequest runs with cursor carry-over since 2026-10-01, `SYNC_MAX_SUBREQUESTS="20"`). See `09_Handoffs/Make_com_Retirement_Systematic_Reconciliation_2026-10-01.md`.
+- "Live batches pending approval" and "live write-back not yet exercised" are long superseded: Phase 08 historical backfill completed 2026-09-12 → 2026-09-20 (493 orders / 737 items / ฿1,552,277.63 in prod `sales_orders`); Notion write-back (`D1_Last_Synced_Signature`) and idempotent re-runs were exercised live during Phase 08 and Phase 17 operations.
+- Migrations 043 (mapping aliases) and 045 (sync state) are applied to prod D1; 044 (mapping events) remains repo-only as far as recorded.
+- The §22 handoff items are complete — handoff docs exist under `09_Handoffs/`.

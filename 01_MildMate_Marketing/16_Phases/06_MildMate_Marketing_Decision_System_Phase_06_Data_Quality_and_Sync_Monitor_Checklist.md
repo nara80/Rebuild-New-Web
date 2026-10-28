@@ -106,3 +106,11 @@ Every task, deliverable, verification, and handoff item above was completed duri
 - Super Admin Orders page carries the Sales Sync health banner (`renderSalesSyncBanner` in `public/super-admin/index.html`; `sales_sync` payload from `workers/api/admin-orders.ts::getLatestSalesSyncRun`) with HEALTHY / DELAYED / FAILED / empty states (commit `d8504d7`).
 - Stale-sync case exists live today: `notion-orderlist` (Make.com) last ran 2026-09-07 (intentionally OFF), so freshness/stale rendering is exercised by real data.
 - Handoff exists: `09_Handoffs/Phase_06_Handoff_Data_Quality_Sync_Monitor_2026-09-10.md`.
+
+---
+
+## Update Note (2026-10-28)
+
+- The 2026-09-19 note's line "Stale-sync case exists live today: notion-orderlist (Make.com) last ran 2026-09-07 (intentionally OFF)" is superseded: **Make.com is fully retired (owner decision 2026-10-01)**, not merely OFF — the `notion-orderlist` source is permanently dead; all ingestion sources are Worker crons (Phase 17 `notion-mapping-sync` plus the GA4/Etsy/Google Ads/GSC collectors on the `mildmate-marketing-sync` daily dispatcher).
+- New sync-adjacent state (Tier 1, 2026-10-28): `quote_followup_events` (migration 059) records quote follow-up sends (quote_id, email, stage, status sent/failed/skipped, sent_at) in prod D1 — an auditable event trail alongside `sync_runs`.
+- The Phase 06 monitor itself (freshness badge, DQ chips, run table, channel freshness, historical coverage) remains complete and production-verified; no open items.

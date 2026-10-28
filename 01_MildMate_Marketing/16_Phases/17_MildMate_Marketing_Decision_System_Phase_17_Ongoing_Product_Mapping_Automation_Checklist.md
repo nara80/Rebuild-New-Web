@@ -180,3 +180,10 @@ Original findings (pre-fix): Verified against Cloudflare + production D1 on 2026
 - **`migrations/045_marketing_sync_state.sql` was never applied to production** — `marketing_sync_state` and `marketing_sync_lock` do not exist in `mildmate-db-prod`. Every scheduled/drain invocation therefore throws at `loadState()`. Failure mode is safe (error is caught, no writes occur), but the Worker does nothing.
 - Confirmed impact: **zero `notion-mapping-sync` rows** in prod `sync_runs` (only `notion-direct-mapper` ×490, latest 2026-09-14; `notion-orderlist` ×12, latest 2026-09-07 — Make.com Sales Sync remains OFF as decided).
 - **Required to go live:** (1) `npx wrangler d1 execute mildmate-db-prod --remote --file migrations\045_marketing_sync_state.sql` (additive: 2 tables + 2 seed rows); (2) controlled test `POST /run?dry=1&limit=5` with bearer `SALES_SYNC_API_TOKEN`; (3) confirm a `notion-mapping-sync` row lands in `sync_runs`; (4) then allow the next scheduled cycle (1st/15th 02:00 UTC main, hourly drain) to run live.
+
+---
+
+## Update Note (2026-10-28)
+
+- The Definition of Done item "Confirmed Mapped orders reach D1 automatically with no human trigger" is satisfied by live evidence: the Worker is operational since 2026-09-19, and on 2026-10-01 five manual passes drained 35 backlogged orders (`sales_orders` 515 → 549) with `D1_Last_Synced_Signature` write-back and idempotent re-runs verified. The remaining unchecked boxes are historical-body artifacts covered by the 2026-10-01 banner.
+- The metadata line "Mapping authority: Make.com" is superseded by the 2026-10-01 full Make.com retirement: humans confirm mappings directly in Notion; the Worker only syncs human-confirmed `Mapped` records (it never maps or guesses).

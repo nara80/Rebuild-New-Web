@@ -119,3 +119,9 @@ Every task, deliverable, verification, and handoff item above was completed duri
 - Filters (start/end/channel/product_id/status/revenue_status) + pagination (limit/offset) implemented on the sales-detail endpoint.
 - Endpoint documentation exists: `04_API/Phase_04_Analysis_API_Reference_2026-09-07.md`.
 - Handoff exists: `09_Handoffs/Phase_04_Handoff_Analysis_API_2026-09-07.md`.
+
+---
+
+## Update Note (2026-10-28)
+
+- The analysis read API now has **7 core read-only endpoints** (the 2026-09-19 note said 6): `GET /api/admin/analysis/quotes` was added with the Tier 1 quote pipeline (commit `9e8e87f`, deployed 2026-10-28, Pages deployment `4aa4a327`). It reads `custom_quotes` + `orders.quote_id` (exact attribution) with a legacy email-match conversion reported separately, returning summary, conversion, top quoted products, and at-risk approved quotes (no PII). The original 6 endpoints are unchanged; later phases also added gsc/ga4/etsy/google-ads/growth-signals/profitability/opportunity routes under the same handler.

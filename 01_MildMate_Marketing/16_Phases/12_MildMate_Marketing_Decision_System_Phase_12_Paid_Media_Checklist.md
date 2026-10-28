@@ -104,3 +104,15 @@ Add spend, acquisition efficiency, and paid-channel performance.
 ## Reconciliation Note (2026-09-29)
 
 Status update: **GOOGLE ADS SLICE DEPLOYED / META ADS DEFERRED BY OWNER DECISION**. Added migration `050_google_ads_analytics.sql` (fact table + analysis/freshness views), token-auth Google Ads ingestion API under `/api/v1/google-ads/*`, Google Ads collector path in `marketing-sync-worker` (`/google-ads/run`, `/google-ads/status`, shared Monday `0 4 * * 1` cron with GA4+Etsy), Google Ads read endpoint `/api/admin/analysis/google-ads`, Data Quality Google Ads freshness wiring, and Data Analyst Google Ads section. Runtime was reconciled to remove the sunset developer-token requirement; OAuth now uses `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN` with required `GOOGLE_ADS_CUSTOMER_ID` and `GOOGLE_ADS_LOGIN_CUSTOMER_ID` (no hyphens). Manual production run succeeded (`ok: true`) and returned zero rows because no active Google Ads campaign data exists yet. Meta Ads work is intentionally deferred and out of current scope unless re-approved.
+
+---
+
+## Update — Collector Incident, Campaign Live, Attribution HOLD (2026-10-28)
+
+Supersedes the "zero rows / no active campaigns" wording in the 2026-09-29 note:
+
+- **2026-10-08 validation failure:** production D1 had 0 Google Ads rows and empty run telemetry despite a live campaign — root-caused as a collector/scheduler execution problem (NOT "no campaigns"). Explicit instruction from that handoff: **DO NOT CLOSE PHASE 12** until closure criteria are met. See `09_Handoffs/MildMate_Marketing_GoogleAds_Validation_Handoff_2026-10-08.md`.
+- **Cron architecture (deployed):** collection moved to a single daily cron `0 1 * * *` UTC with weekday dispatch in `marketing-sync-worker` (Mon GA4 / Tue Etsy / Wed Google Ads / Thu GSC) — supersedes the earlier shared "Monday 04:00" schedule wording.
+- **Collector recovered (2026-10-21):** campaign `24321425466` (5-country demand-discovery test: US/CA/MX/PA/CO) is live; prod D1 has click/cost rows through 2026-10-19 (e.g. Oct 13: 5 clicks / 102 impressions / THB 148.00). Ads collector freshness PASS.
+- **Phase 12 remains OPEN.** Closure criteria (from the 2026-10-08 handoff, still unmet): live rows verified (done), freshness verified (done), source↔D1↔Analyst reconciliation recorded, zero-conversions distinguishable from failure, and the first genuine purchase conversion validated end-to-end. GA4↔Ads attribution is on HOLD per the 2026-10-21 audits (auto-tagging state, Ads link, timezone, final URL/tracking template unverified; 5 Ads clicks Oct 18–19 permanently lost in GA4). Do not trust/scale based on "Purchase - GTM" until the first genuine order reconciles end-to-end.
+- Meta Ads: deferred permanently by owner decision (2026-09-29) — unchanged.

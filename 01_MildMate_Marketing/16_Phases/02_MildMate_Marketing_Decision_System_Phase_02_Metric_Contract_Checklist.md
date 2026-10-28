@@ -123,3 +123,9 @@ Every task, deliverable, verification, and handoff item above was completed duri
 - Automated coverage check confirmed all 25 required concepts are defined in the document (all 19 metrics, status/exclusion matrix incl. `TEST-` policy, `order_date` date basis, timezone rule, canonical identities `products.id` / `(source_system, source_order_id)` / `(sales_order_id, source_item_key)`, EXACT vs UNALLOCATED rules).
 - Walkthrough verification was superseded in practice by the Phase 08 backfill, which exercised single-item, multi-item, UNALLOCATED, and test-exclusion cases against 493 real production orders (`09_Handoffs/Phase_07_08_Reconciliation_2026-09-11.md` §8).
 - Handoff exists: `09_Handoffs/Phase_02_Handoff_Metric_Contract_2026-09-07.md`.
+
+---
+
+## Update Note (2026-10-28)
+
+- Metric contract remains complete and production-verified. New metrics added since: Tier 1 custom-quote funnel KPIs (deployed 2026-10-28) — quote counts by age/status, exact quote_id-attributed conversion %, legacy email-matched conversion (reported separately, never mixed), top quoted products, at-risk expiring quotes. Definitions live in `workers/api/admin-analysis.ts` (`getQuotes`) and surface on the Data Analyst dashboard. Add these to the metric dictionary when it is next revised.
