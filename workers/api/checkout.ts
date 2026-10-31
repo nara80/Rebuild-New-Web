@@ -4,6 +4,11 @@
 // Requires STRIPE_SECRET_KEY set as Cloudflare secret
 
 import { calculateShippingQuote } from "./shipping";
+import {
+  extractUniqueQuoteIdsFromItems,
+  sanitizeAttributionPayload,
+  upsertQuoteAttributionFromCheckout,
+} from "./attribution";
 
 interface CartItem {
   type: string;           // 'product' | 'custom_quote'
@@ -142,9 +147,21 @@ async function ensureCheckoutSnapshotSchema(env: any): Promise<boolean> {
              email TEXT,
              currency TEXT,
              items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
              created_at DATETIME DEFAULT (datetime('now'))
            )`
         ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r: any) => String(r.name || "").toLowerCase())
+          );
+          const alters: string[] = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {}
         checkoutSnapshotSchemaReady = true;
         return true;
       } catch (e: any) {
@@ -192,6 +209,7 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   }
 
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
+  const checkoutAttribution = sanitizeAttributionPayload(body.attribution, "checkout");
   const customerNoteTypeRaw = String(body.customer_note_type || "").trim().toLowerCase();
   const customerNoteRaw = String(body.customer_note || "").trim();
   const allowedNoteTypes = new Set(["delivery", "measurement", "gift", "other"]);
@@ -288,13 +306,22 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       headers: { "Content-Type": "application/json" },
     });
   }
+  const quoteIdsFromCart = extractUniqueQuoteIdsFromItems(items);
 
   // Check for custom-quote items that haven't been approved
   const quoteItems = items.filter((i: CartItem) => !!i.quote_id && (i.type === "custom_quote" || !!i.is_quote));
+  // Authoritative approved prices per quote_id (D1 source of truth; client-sent
+  // prices for quote items are display-only and never charged).
+  const quoteAuthorizedPrices = new Map<string, { thb: number; usd: number }>();
   if (quoteItems.length > 0) {
+    const rateRow = await env.DB.prepare(
+      "SELECT param_value FROM pricing_params WHERE param_key = 'usd_rate'"
+    ).first().catch(() => null as any);
+    let usdRate = parseFloat(String((rateRow as any)?.param_value || ""));
+    if (!Number.isFinite(usdRate) || usdRate <= 0) usdRate = 30;
     for (const qi of quoteItems) {
       const quote = await env.DB.prepare(
-        "SELECT status, quoted_price, free_shipping FROM custom_quotes WHERE quote_id = ?1"
+        "SELECT status, quoted_price, quoted_price_usd, free_shipping FROM custom_quotes WHERE quote_id = ?1"
       ).bind(qi.quote_id).first();
       if (!quote || quote.status !== "approved") {
         return new Response(JSON.stringify({
@@ -307,6 +334,13 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       if (Number((quote as any).free_shipping || 0) === 1) {
         freeShipping = true;
       }
+      const quoteThb = Math.max(0, Number((quote as any).quoted_price || 0));
+      let quoteUsd = Math.max(0, Number((quote as any).quoted_price_usd || 0));
+      if (!quoteUsd && quoteThb > 0) {
+        // Same derivation used at approval time (admin-quotes getUsdRate model).
+        quoteUsd = Math.round(quoteThb / usdRate);
+      }
+      quoteAuthorizedPrices.set(String(qi.quote_id), { thb: quoteThb, usd: quoteUsd });
     }
   }
 
@@ -349,16 +383,21 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
   const lineItems = items.map((item: CartItem) => {
     const itemName = getItemName(item);
     const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
+    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    // Quote items are always charged at the D1-approved quote price.
+    // Client-sent prices for quote items are display-only (trusted-source rule).
+    const authorized = isQuoteItem && item.quote_id
+      ? quoteAuthorizedPrices.get(String(item.quote_id)) || null
+      : null;
     // Base price = pre-sale original when present (client stores the discounted
     // price in price_usd/price_thb for display); legacy items carry the
     // original in price_usd/price_thb directly.
-    const baseThb = Number(item.original_price_thb || item.price_thb || 0);
-    const baseUsd = Number(item.original_price_usd || item.price_usd || 0);
+    const baseThb = authorized ? authorized.thb : Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = authorized ? authorized.usd : Number(item.original_price_usd || item.price_usd || 0);
     const unitAmount = currency === "thb"
       ? Math.round(baseThb * 100)
       : Math.round(baseUsd * 100);
     // Campaign sales never apply to negotiated custom quotes.
-    const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
     const campaignPct = isQuoteItem ? 0 : (campaignDiscounts.get(String(item.product_slug || "").trim()) || 0);
     const promoPct = discountApplied ? discountPct : 0;
     // Non-stacking: apply the better of campaign sale vs discount code.
@@ -534,6 +573,9 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
       params.append("metadata[discount_code]", discountCode);
       params.append("metadata[discount_percent]", String(discountPct));
     }
+    const checkoutTouch = checkoutAttribution.checkout_session;
+    if (checkoutTouch?.source) params.append("metadata[acq_source]", String(checkoutTouch.source));
+    if (checkoutTouch?.medium) params.append("metadata[acq_medium]", String(checkoutTouch.medium));
     const metadataItems = items.map((i: CartItem, idx: number) => ({
       slug: i.product_slug,
       name: getItemName(i),
@@ -638,18 +680,35 @@ export async function handleCheckout(request: Request, env: any): Promise<Respon
           u: lineItems[idx]?.price_data?.unit_amount || 0,
         }));
         await env.DB.prepare(
-          `INSERT OR REPLACE INTO checkout_session_snapshots (stripe_session_id, email, currency, items_json, created_at)
-           VALUES (?1, ?2, ?3, ?4, datetime('now'))`
+          `INSERT OR REPLACE INTO checkout_session_snapshots (
+             stripe_session_id, email, currency, items_json, attribution_json, quote_ids_json, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))`
         ).bind(
           String(stripeData.id),
           normalizedEmail,
           String(currency || "").toLowerCase(),
-          JSON.stringify(snapshotItems)
+          JSON.stringify(snapshotItems),
+          JSON.stringify(checkoutAttribution),
+          JSON.stringify(quoteIdsFromCart)
         ).run();
       }
     } catch (e: any) {
       // Non-blocking: preserve checkout conversion; webhook still has metadata fallback path
       console.error("checkout snapshot persist failed:", e?.message || e);
+    }
+
+    try {
+      if (stripeData?.id) {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsFromCart,
+          normalizedEmail,
+          checkoutAttribution,
+          String(stripeData.id)
+        );
+      }
+    } catch (e: any) {
+      console.error("checkout quote attribution persist failed:", e?.message || e);
     }
 
     return new Response(JSON.stringify({

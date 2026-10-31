@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -62,41 +62,19 @@
   <meta name="twitter:title" content="Order Confirmed — MildMate">
   <meta name="twitter:description" content="Order Confirmed — MildMate">
   <meta name="twitter:image" content="https://www.mildmate.com/images/MildMate_OG.png">
-  <script src="/js/analytics-env.js"></script>
-    <script>
+    <script src="/js/analytics-env.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
     (function () {
-      var resolver = window.__resolveMildMateAnalyticsConfig;
-      var analyticsConfig = resolver ? resolver({ hostname: window.location.hostname }) : null;
-      if (!analyticsConfig || analyticsConfig.enabled !== true) {
-        return;
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-      var GTM_ID = String(analyticsConfig.gtmId || '').trim();
-      if (!GTM_ID) {
-        return;
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
       }
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
-      }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
-        var ns = document.getElementById('gtm-noscript');
-        if (ns && !ns.innerHTML) {
-          ns.innerHTML = '<iframe src="https://www.googletagmanager.com/ns.html?id=' + GTM_ID + '" height="0" width="0" style="display:none;visibility:hidden"></iframe>';
-        }
-      }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-      // Load immediately on all devices so purchase tracking is not delayed on mobile.
-      loadAnalytics();
     })();
   </script>
 </head>
@@ -182,14 +160,38 @@
 
       function sendGa4Event(name, params) {
         try {
+          var payload = params || {};
+          if (typeof window.__mildmateTrackEvent === 'function') {
+            window.__mildmateTrackEvent(name, payload);
+            return;
+          }
           ensureGa4Stub();
-          window.gtag('event', name, params || {});
+          window.gtag('event', name, payload);
         } catch (e) {}
       }
 
       function isPurchaseReportableStatus(status) {
         var s = String(status || '').toLowerCase();
         return s === 'confirmed' || s === 'processing' || s === 'shipped' || s === 'delivered';
+      }
+
+      // Quote IDs are magic-link bearer credentials — purchase items carry the
+      // same 16-hex SHA-256 token scheme used across the quote journey
+      // ('mildmate-quote:' + quote ID, first 16 hex chars).
+      function sha256QuoteToken(rawToken) {
+        try {
+          if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+            return crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+              var hex = '';
+              var bytes = new Uint8Array(buf);
+              for (var i = 0; i < 8 && i < bytes.length; i++) {
+                hex += ('0' + bytes[i].toString(16)).slice(-2);
+              }
+              return hex || 'token-unavailable';
+            });
+          }
+        } catch (e) {}
+        return Promise.resolve('token-unavailable');
       }
 
       function trackPurchaseOnce(data, currencyCode, totalValue) {
@@ -205,29 +207,58 @@
         });
         if (!reportableOrders.length) return;
 
-        var items = reportableOrders.map(function(o) {
-          var qty = Number(o.quantity || 1) || 1;
-          var unitPrice = currencyCode === 'THB'
-            ? Number(o.price_thb || o.price_usd || 0)
-            : Number(o.price_usd || 0);
-          return {
-            item_id: o.product_slug || o.product_title_en || 'product',
-            item_name: o.product_title_en || 'Custom Order',
-            price: Number(unitPrice || 0) || 0,
-            quantity: qty
-          };
-        });
-
-        var payload = {
-          transaction_id: data.session_id,
-          currency: currencyCode,
-          value: Math.round((Number(data.purchase_reportable_value || totalValue || 0) || 0) * 100) / 100,
-          items: items
-        };
-        sendGa4Event('purchase', payload);
+        // Claim the dedupe flag immediately (the page polls while payment
+        // finalizes; token hashing is async and must never allow a second
+        // dispatch for the same session).
         try {
           localStorage.setItem(dedupeKey, '1');
         } catch (e2) {}
+
+        var quoteIds = reportableOrders.map(function(o) { return o && o.quote_id; })
+          .filter(function(v, i, a) { return v && a.indexOf(v) === i; });
+        var tokenJobs = quoteIds.map(function(id) { return sha256QuoteToken(id); });
+
+        function emit(tokenMap) {
+          var items = reportableOrders.map(function(o) {
+            var qty = Number(o.quantity || 1) || 1;
+            var unitPrice = currencyCode === 'THB'
+              ? Number(o.price_thb || o.price_usd || 0)
+              : Number(o.price_usd || 0);
+            var gaItem = {
+              item_id: o.product_slug || o.product_title_en || 'product',
+              item_name: o.product_title_en || 'Custom Order',
+              price: Number(unitPrice || 0) || 0,
+              quantity: qty
+            };
+            if (o.quote_id && tokenMap[o.quote_id]) {
+              gaItem.item_quote_id = tokenMap[o.quote_id];
+            }
+            return gaItem;
+          });
+
+          var payload = {
+            transaction_id: data.session_id,
+            currency: currencyCode,
+            value: Math.round((Number(data.purchase_reportable_value || totalValue || 0) || 0) * 100) / 100,
+            items: items
+          };
+          // Documented model: GA4 purchase value is product revenue EXCLUDING
+          // shipping; shipping is reported separately (gross stays in Stripe).
+          var amountMinor = Number(data.session_amount_total);
+          if (window.isFinite && window.isFinite(amountMinor) && amountMinor > 0) {
+            var shippingValue = Math.round(((amountMinor / 100) - payload.value) * 100) / 100;
+            if (shippingValue > 0) payload.transaction_shipping = shippingValue;
+          }
+          sendGa4Event('purchase', payload);
+        }
+
+        Promise.all(tokenJobs).then(function (tokens) {
+          var tokenMap = {};
+          quoteIds.forEach(function (id, i) { tokenMap[id] = tokens[i] || 'token-unavailable'; });
+          emit(tokenMap);
+        }, function () {
+          emit({});
+        });
       }
 
       if (!sessionId) {

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520" role="img" aria-labelledby="title desc">
+  <title id="title">Cushion measurement diagram</title>
+  <desc id="desc">Diagram showing cushion Length, Width, and Thickness measurement points.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}
+      .shape{fill:#ffffff;stroke:#334155;stroke-width:3}
+      .edge{fill:#e2e8f0;stroke:#334155;stroke-width:3}
+      .dim{stroke:#2c96f4;stroke-width:4;fill:none;marker-start:url(#arrow);marker-end:url(#arrow)}
+      .lbl{font:700 26px Quicksand,Arial,sans-serif;fill:#0f172a}
+      .sub{font:600 19px Quicksand,Arial,sans-serif;fill:#1e293b}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2c96f4"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="900" height="520" rx="20"/>
+
+  <!-- Cushion body -->
+  <rect class="shape" x="160" y="160" width="420" height="220" rx="22"/>
+  <polygon class="edge" points="580,160 690,120 690,340 580,380"/>
+  <polygon class="edge" points="160,160 270,120 690,120 580,160"/>
+
+  <!-- Length -->
+  <line class="dim" x1="170" y1="420" x2="570" y2="420"/>
+  <text class="lbl" x="315" y="454">Length (L)</text>
+
+  <!-- Width -->
+  <line class="dim" x1="605" y1="172" x2="675" y2="146"/>
+  <text class="lbl" x="700" y="170">Width (W)</text>
+
+  <!-- Thickness -->
+  <line class="dim" x1="730" y1="128" x2="730" y2="340"/>
+  <text class="lbl" x="748" y="242">Thickness (T)</text>
+
+  <text class="sub" x="160" y="84">Measure your cushion at its longest, widest, and thickest points.</text>
+</svg>

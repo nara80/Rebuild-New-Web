@@ -4,6 +4,11 @@
 // Requires STRIPE_WEBHOOK_SECRET set as Cloudflare secret
 
 import { sendEmail } from "./email";
+import {
+  extractUniqueQuoteIdsFromItems,
+  sanitizeAttributionPayload,
+  upsertQuoteAttributionFromCheckout,
+} from "./attribution";
 
 async function sha256(text: string): Promise<string> {
   const d = new TextEncoder().encode(text);
@@ -106,9 +111,21 @@ async function ensureCheckoutSnapshotSchema(env: any): Promise<boolean> {
              email TEXT,
              currency TEXT,
              items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
              created_at DATETIME DEFAULT (datetime('now'))
            )`
         ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r: any) => String(r.name || "").toLowerCase())
+          );
+          const alters: string[] = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {}
         checkoutSnapshotSchemaReady = true;
         return true;
       } catch (e: any) {
@@ -593,11 +610,13 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
 
     let items: any[] = [];
     let itemsSource = "metadata";
+    let checkoutAttribution = sanitizeAttributionPayload(null, "checkout");
+    let quoteIdsFromSnapshot: string[] = [];
     try {
       const schemaOk = await ensureCheckoutSnapshotSchema(env);
       if (schemaOk && session.id) {
         const snapshot = await env.DB.prepare(
-          "SELECT items_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+          "SELECT items_json, attribution_json, quote_ids_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
         ).bind(String(session.id)).first() as any;
         if (snapshot?.items_json) {
           const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
@@ -606,6 +625,15 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
             items = mapped;
             itemsSource = "d1_snapshot";
           }
+        }
+        if (snapshot?.attribution_json) {
+          checkoutAttribution = sanitizeAttributionPayload(snapshot.attribution_json, "checkout");
+        }
+        if (snapshot?.quote_ids_json) {
+          try {
+            const parsedIds = JSON.parse(String(snapshot.quote_ids_json || "[]"));
+            quoteIdsFromSnapshot = Array.isArray(parsedIds) ? parsedIds : [];
+          } catch {}
         }
       }
     } catch (e: any) {
@@ -621,6 +649,10 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
       }
     }
     console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
+    const quoteIdsForAttribution = Array.from(new Set([
+      ...extractUniqueQuoteIdsFromItems(items),
+      ...quoteIdsFromSnapshot.map((id) => String(id || "").trim()).filter(Boolean),
+    ]));
 
     const sessionCurrency = String(session.currency || "usd").toLowerCase();
     const totalQty = items.reduce((sum: number, item: any) => sum + (item.qty || 1), 0);
@@ -864,6 +896,20 @@ export async function handleStripeWebhook(request: Request, env: any): Promise<R
     }
 
     const email = metadata.email || session.customer_email;
+    if (insertedOrderRows > 0 && quoteIdsForAttribution.length > 0) {
+      try {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsForAttribution,
+          (email || "").toLowerCase(),
+          checkoutAttribution,
+          String(session.id || "")
+        );
+      } catch (e: any) {
+        console.error("webhook quote attribution persist failed:", e?.message || e);
+      }
+    }
+
     if (insertedOrderRows > 0 && email) {
       try {
         await env.DB.prepare(

@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    MildMate Product Configurator — Phase 4+
    Fitted sheet real pricing formula
    Hybrid: standard size presets + custom W—L—D
@@ -1204,9 +1204,44 @@
 
   function sendGa4Event(name, params) {
     try {
+      var payload = params || {};
+      if (typeof window.__mildmateTrackEvent === 'function') {
+        window.__mildmateTrackEvent(name, payload);
+        return;
+      }
       ensureGa4Stub();
-      window.gtag('event', name, params || {});
+      window.gtag('event', name, payload);
     } catch (e) {}
+  }
+
+  // Quote IDs are magic-link bearer credentials — analytics payloads carry
+  // the same 16-hex SHA-256 token scheme used on the quote page
+  // ('mildmate-quote:' + quote ID, first 16 hex chars).
+  function sendGa4EventTokenized(name, params, tokenField, rawToken) {
+    var payload = params || {};
+    payload[tokenField] = '';
+    var attempted = false;
+    function emit(tokenHash) {
+      if (attempted) return;
+      attempted = true;
+      payload[tokenField] = tokenHash;
+      sendGa4Event(name, payload);
+    }
+    try {
+      if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+        crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
+          var hex = '';
+          var bytes = new Uint8Array(buf);
+          for (var i = 0; i < 8 && i < bytes.length; i++) {
+            hex += ('0' + bytes[i].toString(16)).slice(-2);
+          }
+          emit(hex || 'token-unavailable');
+        }).catch(function () { emit('token-unavailable'); });
+        setTimeout(function () { emit('token-unavailable'); }, 800);
+        return;
+      }
+    } catch (e) {}
+    emit('token-unavailable');
   }
 
   function getGa4Currency() {
@@ -1300,19 +1335,26 @@
     var unitPrice = currency === 'THB'
       ? Number(meta.price_thb || 0)
       : Number(meta.price_usd || 0);
-    var payload = {
-      quote_id: String(meta.quote_id),
-      product_name: meta.product_name || getProductName(),
-      currency: currency,
-      value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
-      items: [{
-        item_id: meta.product_slug || getProductSlug(),
-        item_name: meta.product_name || getProductName(),
-        price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
-        quantity: 1
-      }]
-    };
-    sendGa4Event('quote_request', payload);
+    // One successful submission = one new quote row = one dispatch of each
+    // lead event. `quote_request` is the event the published GTM container
+    // routes today; `generate_lead` is the GA4 standard name (container
+    // change proposed separately, not applied here).
+    function buildPayload() {
+      return {
+        quote_id: '',
+        product_name: meta.product_name || getProductName(),
+        currency: currency,
+        value: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+        items: [{
+          item_id: meta.product_slug || getProductSlug(),
+          item_name: meta.product_name || getProductName(),
+          price: Math.round((Number(unitPrice || 0) || 0) * 100) / 100,
+          quantity: 1
+        }]
+      };
+    }
+    sendGa4EventTokenized('quote_request', buildPayload(), 'quote_id', meta.quote_id);
+    sendGa4EventTokenized('generate_lead', buildPayload(), 'quote_id', meta.quote_id);
   }
 
   function applyDerivedMarkupToResult(result) {
@@ -1759,6 +1801,9 @@
         })(),
         quoted_price_thb: state.quotePriceThb,
         quoted_price_usd: state.quotePriceUsd,
+        attribution: (typeof window.__mildmateGetAttributionSnapshot === 'function')
+          ? window.__mildmateGetAttributionSnapshot('quote')
+          : undefined,
         turnstile_token: turnstileToken,
         _website: (document.querySelector('[name="_website"]') ? document.querySelector('[name="_website"]').value : '') || undefined
       })

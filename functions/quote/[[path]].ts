@@ -1,4 +1,4 @@
-// MildMate Quote Magic Link Page
+﻿// MildMate Quote Magic Link Page
 // Renders /quote/QT-XXXXX/ — shows locked custom quote with "Add to Cart" button
 
 export const onRequest: PagesFunction<{
@@ -120,6 +120,29 @@ export const onRequest: PagesFunction<{
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
+  <script src="/js/analytics-env.js"></script>
+  <script src="/js/cookie-consent.js"></script>
+  <script>
+    (function () {
+      // Sanitize the measured page URL before any analytics loads. The quote
+      // magic-link path segment is a bearer credential and must never reach
+      // measurement endpoints as page_location (GA4/GTM honor a dataLayer
+      // page_location override pushed before container init).
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ page_location: 'https://www.mildmate.com/quote/' });
+      } catch (e) {}
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
+      }
+    })();
+  </script>
   <style>
     :root {
       --color-primary: #2c96f4;
@@ -228,6 +251,7 @@ export const onRequest: PagesFunction<{
   </style>
 </head>
 <body>
+  <noscript id="gtm-noscript"></noscript>
   <main>
     ${quote ? `
       <section class="card quote-hero">
@@ -295,7 +319,7 @@ export const onRequest: PagesFunction<{
           ` : ""}
           <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
           ${isCheckoutReady ? `
-          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.quote_id===item.quote_id||((i.type===item.type)&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions));});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
+          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return String(i.quote_id||'')===String(item.quote_id||'');});if(ex){ex.qty=(ex.qty||1)+1;ex.price_usd=item.price_usd;ex.price_thb=item.price_thb;ex.quote_currency=item.quote_currency;ex.free_shipping=item.free_shipping;ex.dimensions=item.dimensions;ex.fabric=item.fabric;ex.color=item.color;ex.product_slug=item.product_slug;ex.product_name=item.product_name||ex.product_name;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
           ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
@@ -348,7 +372,7 @@ export const onRequest: PagesFunction<{
           crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
             var hex = '';
             var bytes = new Uint8Array(buf);
-            for (var i = 0; i < 16 && i < bytes.length; i++) {
+            for (var i = 0; i < 8 && i < bytes.length; i++) {
               hex += ('0' + bytes[i].toString(16)).slice(-2);
             }
             emit(hex || 'token-unavailable');
@@ -401,7 +425,7 @@ export const onRequest: PagesFunction<{
     var _quoteCartItem = null;
     var _quoteIsAdded = false;
     var _quoteEventMeta = ${JSON.stringify(
-      quote
+      quote && isCheckoutReady
         ? {
             quote_id: String(quoteId),
             product_name: productTitle,
@@ -429,11 +453,30 @@ export const onRequest: PagesFunction<{
           var cart = JSON.parse(raw);
           cart.items = Array.isArray(cart.items) ? cart.items : [];
           var existing = cart.items.find(function(i) {
-            return i.quote_id === _quoteCartItem.quote_id || (i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
-              JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions));
+            // Quote lines are identified by quote_id — never merge a different
+            // quote that happens to share dimensions/fabric/color.
+            if (_quoteCartItem.quote_id) {
+              return String(i.quote_id || '') === String(_quoteCartItem.quote_id);
+            }
+            return i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
+              JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions);
           });
-          if (existing) existing.qty = (existing.qty || 1) + 1;
-          else cart.items.push(_quoteCartItem);
+          if (existing) {
+            existing.qty = (existing.qty || 1) + 1;
+            // Refresh the line with the latest approved quote render (admin may
+            // have re-priced since the line was first added).
+            existing.price_usd = _quoteCartItem.price_usd;
+            existing.price_thb = _quoteCartItem.price_thb;
+            existing.quote_currency = _quoteCartItem.quote_currency;
+            existing.free_shipping = _quoteCartItem.free_shipping;
+            existing.dimensions = _quoteCartItem.dimensions;
+            existing.fabric = _quoteCartItem.fabric;
+            existing.color = _quoteCartItem.color;
+            existing.product_slug = _quoteCartItem.product_slug;
+            existing.product_name = _quoteCartItem.product_name || existing.product_name;
+          } else {
+            cart.items.push(_quoteCartItem);
+          }
           localStorage.setItem(key, JSON.stringify(cart));
         }
         trackQuoteAddToCart(_quoteCartItem);
@@ -453,10 +496,15 @@ export const onRequest: PagesFunction<{
 
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
+      // The double backslash below is REQUIRED: this file is one big template
+      // literal, and a single backslash is cooked away by esbuild, which used
+      // to emit a broken regex into the served page — a syntax error that
+      // killed the ENTIRE inline script block (Add to Cart survived only via
+      // the onclick fallback, and view_quote tracking never ran).
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^\/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^\\/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^\/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^\\/th/, '') || '/';
       }
     };
 

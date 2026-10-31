@@ -4,6 +4,10 @@
 // Anti-spam: honeypot field + IP rate limit (3/hour)
 
 import { sendEmail } from "./email";
+import {
+  sanitizeAttributionPayload,
+  upsertQuoteAttributionFromQuote,
+} from "./attribution";
 
 const QUOTE_RATE_LIMIT = 5; // max per hour per IP
 const QUOTE_RATE_WINDOW = "-1 hour";
@@ -155,7 +159,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
 
   try {
     const body: any = await request.json();
-    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, attribution, _website } = body;
     const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
 
     // ── Honeypot check — bots auto-fill hidden fields ──
@@ -232,6 +236,7 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
     const normalizedColor = normalizeQuoteColor(cleanSlug, color);
     const cleanFabric = normalizedFabric || "—";
     const cleanColor = normalizedColor || "—";
+    const quoteAttribution = sanitizeAttributionPayload(attribution, "quote");
 
     await env.DB.prepare(`
       INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
@@ -243,6 +248,12 @@ export async function handleQuote(request: Request, env: any): Promise<Response>
       quoted_price_thb || null,
       quoted_price_usd || null
     ).run();
+
+    try {
+      await upsertQuoteAttributionFromQuote(env, quoteId, cleanEmail, quoteAttribution);
+    } catch (e: any) {
+      console.error("Quote attribution persist failed:", e?.message || e);
+    }
 
     // Also save email to subscribers (dedup via UNIQUE constraint)
     await env.DB.prepare(

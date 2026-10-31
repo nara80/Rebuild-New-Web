@@ -12,6 +12,11 @@
 // GET /api/admin/analysis/etsy          ?start&end&product_id
 // GET /api/admin/analysis/google-ads    ?start&end&product_id
 // GET /api/admin/analysis/quotes        ?start&end
+//   └ Phase 5 additive block `phase5`: acquisition channels (first-touch +
+//     quote-session, separate), unique customers (PII-free aggregates),
+//     quote→order detail (exact quote_id), paid product revenue (unit×qty,
+//     per currency, ex-shipping), Google Ads cost/efficiency (paid-click-id
+//     attribution only; N/A at zero denominator). Test quotes excluded.
 // GET /api/admin/analysis/growth-signals?start&end&channel&product_id
 // GET /api/admin/analysis/profitability ?start&end&channel
 // GET  /api/admin/analysis/opportunity            — Phase 14 latest score snapshot (read-only)
@@ -556,9 +561,26 @@ async function getQuotes(env: any, f: Filters): Promise<Response> {
   const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
   const exactConverted = Number(exactRow?.exact_converted || 0);
 
+  // ── Phase 5 — Custom Quote Funnel extension (additive-only) ──────────────
+  // Contract (00_Issue/MildMate_Phase5_Quote_Funnel_Dashboard_Audit_2026-10-30.md):
+  // - The legacy summary/conversion/top_products/at_risk blocks above keep their
+  //   original definitions unchanged (they still include test quotes).
+  // - The new `phase5` blocks exclude test quotes and NEVER emit PII (emails are
+  //   aggregated server-side into distinct counts only).
+  // - First-touch and quote-session channels are reported separately, never merged.
+  // - Missing attribution is labelled "unavailable", never Direct.
+  // - Revenue = orders line totals (unit price × quantity) for paid statuses only
+  //   (confirmed/processing/shipped/delivered). Shipping lines are never written
+  //   to orders (webhook/reconcile exclude them). quoted_price is never revenue.
+  // - Google Ads: a quote is Ads-attributable ONLY when a paid click id
+  //   (gclid/gbraid/wbraid) is recorded in its attribution JSON. Direct/Unknown
+  //   quotes are never assigned to Ads. Cost per quote is null (N/A) when the
+  //   attributable denominator is zero. Cost scope + freshness are explicit.
+  const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
   return json({
     success: true,
     filters: { start: f.start, end: f.end },
+    phase5,
     summary: {
       total_quotes: Number(summaryRow?.total_quotes || 0),
       new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
@@ -591,6 +613,344 @@ async function getQuotes(env: any, f: Filters): Promise<Response> {
       quoted_price_thb: r.quoted_price,
     })),
   });
+}
+
+// ── Phase 5 — Quote funnel extension builder (additive, PII-free) ────────
+
+const PHASE5_ATTRIBUTION_COVERAGE_START = "2026-10-30";
+const PHASE5_TEST_QUOTE_DENYLIST = ["QT-261030-001", "QT-261030-002"];
+const PHASE5_PAID_ORDER_STATUSES = new Set(["confirmed", "processing", "shipped", "delivered"]);
+const PHASE5_PAID_CLICK_FIELDS = ["gclid", "gbraid", "wbraid"] as const;
+
+function phase5IsTestQuoteId(quoteId: string): boolean {
+  const id = String(quoteId || "").trim();
+  if (!id) return false;
+  if (PHASE5_TEST_QUOTE_DENYLIST.includes(id)) return true;
+  // Established test-ID pattern (TEST-MAKE-001 convention): TEST- prefix,
+  // case-insensitive.
+  return /^test-/i.test(id);
+}
+
+function phase5ParseAttributionJson(raw: any): any | null {
+  if (!raw || typeof raw !== "string") return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+// Channel key is the verbatim source/medium pair captured at the touch.
+// A quote whose attribution row exists but whose JSON is missing/unparseable
+// counts as "unavailable" (null), never as Direct.
+function phase5ChannelOf(obj: any): string | null {
+  if (!obj) return null;
+  const src = String(obj.source || obj.utm_source || "").trim() || "(none)";
+  const med = String(obj.medium || obj.utm_medium || "").trim() || "(none)";
+  return src + "/" + med;
+}
+
+function phase5HasPaidClick(obj: any): boolean {
+  if (!obj) return false;
+  return PHASE5_PAID_CLICK_FIELDS.some((f) => {
+    const v = obj[f];
+    return typeof v === "string" && v.trim().length > 0;
+  });
+}
+
+interface Phase5ChannelBucket {
+  channel: string;
+  quotes: Set<string>;
+  customers: Set<string>;
+  approved: number;
+  paid_click_quotes: number;
+}
+
+function phase5Bucket(
+  map: Map<string, Phase5ChannelBucket>,
+  channel: string,
+  quoteId: string,
+  customerKey: string,
+  approved: boolean,
+  paidClick: boolean,
+): void {
+  let b = map.get(channel);
+  if (!b) {
+    b = { channel, quotes: new Set(), customers: new Set(), approved: 0, paid_click_quotes: 0 };
+    map.set(channel, b);
+  }
+  b.quotes.add(quoteId);
+  if (customerKey) b.customers.add(customerKey);
+  if (approved) b.approved += 1;
+  if (paidClick) b.paid_click_quotes += 1;
+}
+
+function phase5ChannelRows(map: Map<string, Phase5ChannelBucket>): any[] {
+  return [...map.values()]
+    .map((b) => ({
+      channel: b.channel,
+      quotes: b.quotes.size,
+      unique_customers: b.customers.size,
+      approved: b.approved,
+      paid_click_quotes: b.paid_click_quotes,
+    }))
+    .sort((a, b) => b.quotes - a.quotes || a.channel.localeCompare(b.channel));
+}
+
+async function buildPhase5QuoteFunnel(env: any, f: Filters, baseSql: string, rangeBinds: any[]): Promise<any> {
+  try {
+    // In-range quote rows (email is aggregated server-side only — never output).
+    const quoteRows = await env.DB.prepare(
+      `SELECT q.quote_id,
+              LOWER(TRIM(COALESCE(q.email, ''))) AS email_key,
+              LOWER(COALESCE(q.status, 'pending')) AS status,
+              q.product_slug, q.fabric, q.color
+       ${baseSql}`
+    ).bind(...rangeBinds).all();
+    const quotes: any[] = (quoteRows.results || []).filter((r: any) => !phase5IsTestQuoteId(r.quote_id));
+
+    // Attribution rows (table is small; filter to in-range quote ids in JS).
+    const attrRows = await env.DB.prepare(
+      `SELECT a.quote_id, a.first_touch_json, a.quote_session_json FROM quote_acquisition_attribution a`
+    ).all();
+    const quoteIdSet = new Set(quotes.map((q: any) => String(q.quote_id)));
+    const attrById = new Map<string, any>();
+    for (const r of attrRows.results || []) {
+      const id = String(r.quote_id || "");
+      if (quoteIdSet.has(id) && !attrById.has(id)) attrById.set(id, r);
+    }
+
+    // Order rows for in-range quote ids (exact quote_id attribution only;
+    // email-matching is deliberately NOT used for the new detail blocks).
+    const orderRows = await env.DB.prepare(
+      `SELECT o.quote_id, o.stripe_session_id, o.product_slug, o.product_title_en,
+              o.quantity, o.price_usd, o.price_thb, o.currency, o.status, o.created_at
+       FROM orders o
+       WHERE o.quote_id IS NOT NULL AND COALESCE(o.is_archived, 0) = 0`
+    ).all();
+    const ordersByQuote = new Map<string, any[]>();
+    for (const r of orderRows.results || []) {
+      const id = String(r.quote_id || "");
+      if (!quoteIdSet.has(id)) continue;
+      if (!ordersByQuote.has(id)) ordersByQuote.set(id, []);
+      ordersByQuote.get(id)!.push(r);
+    }
+
+    // Google Ads daily cost + freshness (report_date window follows the filters).
+    let adsCostRows: any[] = [];
+    let adsFreshRow: any = null;
+    try {
+      const adsRange = dayRangeWhere(f, "report_date");
+      const ads = await env.DB.prepare(
+        `SELECT COALESCE(currency, '') AS currency,
+                SUM(cost) AS cost,
+                MAX(report_date) AS latest_report_date
+         FROM google_ads_campaign_daily
+         WHERE 1=1${adsRange.sql}
+         GROUP BY COALESCE(currency, '')`
+      ).bind(...adsRange.binds).all();
+      adsCostRows = ads.results || [];
+      adsFreshRow = await env.DB.prepare(
+        `SELECT MAX(report_date) AS latest_report_date, COUNT(*) AS total_rows FROM google_ads_campaign_daily`
+      ).first();
+    } catch {
+      adsCostRows = [];
+      adsFreshRow = null;
+    }
+
+    // ── Aggregation (JS-side; no PII leaves this function) ──
+    const ftMap = new Map<string, Phase5ChannelBucket>();
+    const qsMap = new Map<string, Phase5ChannelBucket>();
+    const customersAll = new Set<string>();
+    const customersWithAttr = new Set<string>();
+    const customersPaid = new Set<string>();
+    let approvedCount = 0;
+    let paidQuotes = 0;
+    let ftUnavailable = 0;
+    let qsUnavailable = 0;
+    const adsAttributableQuoteIds = new Set<string>();
+
+    for (const q of quotes) {
+      const id = String(q.quote_id);
+      const custKey = String(q.email_key || "");
+      const isApproved = String(q.status) === "approved";
+      if (isApproved) approvedCount += 1;
+      if (custKey) customersAll.add(custKey);
+
+      const attr = attrById.get(id) || null;
+      const ft = attr ? phase5ParseAttributionJson(attr.first_touch_json) : null;
+      const qs = attr ? phase5ParseAttributionJson(attr.quote_session_json) : null;
+      if (ft) customersWithAttr.add(custKey);
+
+      const ftChannel = phase5ChannelOf(ft);
+      const qsChannel = phase5ChannelOf(qs);
+      if (!ftChannel) ftUnavailable += 1;
+      if (!qsChannel) qsUnavailable += 1;
+      const ftPaid = phase5HasPaidClick(ft);
+      const qsPaid = phase5HasPaidClick(qs);
+      if (ftChannel) phase5Bucket(ftMap, ftChannel, id, custKey, isApproved, ftPaid);
+      if (qsChannel) phase5Bucket(qsMap, qsChannel, id, custKey, isApproved, qsPaid);
+      if (ftPaid || qsPaid) adsAttributableQuoteIds.add(id);
+
+      const rows = ordersByQuote.get(id) || [];
+      const hasPaidOrder = rows.some((r: any) => PHASE5_PAID_ORDER_STATUSES.has(String(r.status || "").toLowerCase()));
+      if (hasPaidOrder) {
+        paidQuotes += 1;
+        if (custKey) customersPaid.add(custKey);
+      }
+    }
+
+    // Order detail per quote (PII-free: product/qty/price only).
+    const byQuote = quotes
+      .filter((q: any) => (ordersByQuote.get(String(q.quote_id)) || []).length > 0)
+      .map((q: any) => {
+        const id = String(q.quote_id);
+        const rows = ordersByQuote.get(id) || [];
+        const orderIds = [...new Set(rows.map((r: any) => String(r.stripe_session_id || "")))];
+        return {
+          quote_id: id,
+          quote_status: q.status,
+          order_count: orderIds.length,
+          order_ids: orderIds,
+          paid: rows.some((r: any) => PHASE5_PAID_ORDER_STATUSES.has(String(r.status || "").toLowerCase())),
+          statuses: [...new Set(rows.map((r: any) => String(r.status || "").toLowerCase()))],
+          items: rows.map((r: any) => {
+            const qty = Number(r.quantity || 1) || 1;
+            const cur = String(r.currency || "").toUpperCase();
+            const unitPrice = cur === "USD" ? Number(r.price_usd || 0) : cur === "THB" ? Number(r.price_thb || 0) : 0;
+            return {
+              product_slug: r.product_slug || "(unknown)",
+              product_title: r.product_title_en || r.product_slug || "(unknown)",
+              quantity: qty,
+              currency: cur || null,
+              unit_price: unitPrice,
+              line_revenue: Math.round(unitPrice * qty * 100) / 100,
+              status: String(r.status || "").toLowerCase(),
+            };
+          }),
+        };
+      })
+      .sort((a, b) => String(b.quote_id).localeCompare(String(a.quote_id)));
+
+    // Paid product revenue (ex-shipping; orders rows never contain shipping
+    // lines). Prices are UNIT amounts — multiply by quantity. Currencies are
+    // never blended. cancelled/refunded/pending rows are excluded and counted.
+    const revenueByCur: Record<string, { line_revenue: number; orders: any; items: number; quantity: number }> = {};
+    let excludedNonPaidRows = 0;
+    for (const q of quotes) {
+      for (const r of ordersByQuote.get(String(q.quote_id)) || []) {
+        const st = String(r.status || "").toLowerCase();
+        if (!PHASE5_PAID_ORDER_STATUSES.has(st)) {
+          excludedNonPaidRows += 1;
+          continue;
+        }
+        const cur = String(r.currency || "").toUpperCase();
+        if (cur !== "THB" && cur !== "USD") continue; // unknown currency never blended
+        if (!revenueByCur[cur]) {
+          revenueByCur[cur] = { line_revenue: 0, orders: new Set(), items: 0, quantity: 0 };
+        }
+        const qty = Number(r.quantity || 1) || 1;
+        const unit = cur === "USD" ? Number(r.price_usd || 0) : Number(r.price_thb || 0);
+        revenueByCur[cur].line_revenue = Math.round((revenueByCur[cur].line_revenue + unit * qty) * 100) / 100;
+        revenueByCur[cur].orders.add(String(r.stripe_session_id || ""));
+        revenueByCur[cur].items += 1;
+        revenueByCur[cur].quantity += qty;
+      }
+    }
+    for (const cur of Object.keys(revenueByCur)) {
+      revenueByCur[cur].orders = revenueByCur[cur].orders.size;
+    }
+
+    // Ads cost + freshness.
+    const nowMs = Date.now();
+    let adsDaysSince: number | null = null;
+    if (adsFreshRow && adsFreshRow.latest_report_date) {
+      const t = Date.parse(String(adsFreshRow.latest_report_date) + "T00:00:00Z");
+      if (!isNaN(t)) adsDaysSince = Math.floor((nowMs - t) / 86400000);
+    }
+    const adsCost = adsCostRows.map((r: any) => ({
+      currency: r.currency || null,
+      cost: Number(r.cost || 0),
+      latest_report_date: r.latest_report_date || null,
+    }));
+    const adsAttributable = adsAttributableQuoteIds.size;
+    let costPerQuote: any = null;
+    if (adsAttributable > 0 && adsCost.length > 0) {
+      costPerQuote = adsCost.map((c) => ({
+        currency: c.currency,
+        cost_per_attributable_quote: Math.round((c.cost / adsAttributable) * 100) / 100,
+      }));
+    }
+
+    return {
+      coverage_start: PHASE5_ATTRIBUTION_COVERAGE_START,
+      exclusions: {
+        denylist: [...PHASE5_TEST_QUOTE_DENYLIST],
+        patterns: ["TEST-*"],
+        excluded_note: "Legacy summary/conversion/top_products/at_risk blocks above are computed without exclusions and keep their original definitions.",
+      },
+      status_funnel: {
+        submitted: quotes.length,
+        approved: approvedCount,
+        paid: paidQuotes,
+        unpaid: quotes.length - paidQuotes,
+      },
+      customers: {
+        unique_customers_total: customersAll.size,
+        unique_customers_with_attribution: customersWithAttr.size,
+        unique_customers_paid: customersPaid.size,
+        pii_note: "Unique counts are computed server-side; no customer identifiers are returned.",
+      },
+      acquisition: {
+        first_touch: phase5ChannelRows(ftMap),
+        quote_session: phase5ChannelRows(qsMap),
+        unavailable: {
+          first_touch_quotes: ftUnavailable,
+          quote_session_quotes: qsUnavailable,
+          note:
+            "Quotes submitted before " + PHASE5_ATTRIBUTION_COVERAGE_START +
+            " (Phase 3 deploy) have no attribution capture; they are counted as unavailable, never as Direct.",
+        },
+        paid_click_evidence: "paid_click_quotes = quotes whose captured attribution JSON contains gclid/gbraid/wbraid; observed values only, never inferred from spend.",
+      },
+      orders: {
+        by_quote: byQuote,
+        note: "Orders bind to quotes via exact orders.quote_id. Line grain: unit price × quantity; shipping lines are never stored on order rows.",
+      },
+      revenue: {
+        basis:
+          "orders rows with paid status (confirmed/processing/shipped/delivered), COALESCE(is_archived,0)=0; line revenue = unit price × quantity; per-currency, never blended; quoted_price is never used.",
+        thb: revenueByCur["THB"] ? { line_revenue: revenueByCur["THB"].line_revenue, orders: revenueByCur["THB"].orders, items: revenueByCur["THB"].items, quantity: revenueByCur["THB"].quantity } : { line_revenue: 0, orders: 0, items: 0, quantity: 0 },
+        usd: revenueByCur["USD"] ? { line_revenue: revenueByCur["USD"].line_revenue, orders: revenueByCur["USD"].orders, items: revenueByCur["USD"].items, quantity: revenueByCur["USD"].quantity } : { line_revenue: 0, orders: 0, items: 0, quantity: 0 },
+        excluded_non_paid_rows: excludedNonPaidRows,
+      },
+      google_ads: {
+        ads_attributable_quotes: adsAttributable,
+        attribution_basis: "exact recorded paid click id (gclid/gbraid/wbraid) in quote attribution JSON; Direct/Unknown quotes are never assigned to Ads.",
+        cost_scope: "google_ads_campaign_daily cost summed over the report_date filter window, per source currency; platform-attributed and directional only.",
+        cost: adsCost,
+        cost_per_attributable_quote: costPerQuote,
+        na_reason: adsAttributable === 0 ? "N/A — no Ads-attributable quotes (no recorded paid click ids) in the selected window." : null,
+        freshness: {
+          latest_report_date: adsFreshRow?.latest_report_date || null,
+          total_rows: Number(adsFreshRow?.total_rows || 0),
+          days_since_latest_report: adsDaysSince,
+          status: !adsFreshRow || Number(adsFreshRow.total_rows || 0) === 0
+            ? "empty"
+            : (adsDaysSince !== null && adsDaysSince > 4 ? "warning" : "ok"),
+        },
+      },
+    };
+  } catch (e: any) {
+    // Phase 5 blocks are additive — a failure must never break the legacy
+    // /quotes response.
+    return {
+      available: false,
+      error_code: "PHASE5_FUNNEL_UNAVAILABLE",
+      message: String(e?.message || e).slice(0, 300),
+    };
+  }
 }
 
 async function getGsc(env: any, f: Filters): Promise<Response> {

@@ -733,34 +733,24 @@
   <meta name="twitter:title" content="Custom Bedding & Made-to-Measure Sheets | MildMate Thailand">
   <meta name="twitter:description" content="Shop made-to-measure fitted sheets, duvet covers, and mattress protectors for standard, marine, RV, and family beds. Custom sizes shipped worldwide.">
   <meta name="twitter:image" content="/images/MildMate_OG.png">
-    <script>
+      <script src="/js/analytics-env.js"></script>
+  <script>
     (function () {
-      var GTM_ID = 'GTM-KLJZZM9';
-
-      function loadScript(src, async) {
-        var s = document.createElement('script');
-        s.src = src;
-        if (async) s.async = true;
-        document.head.appendChild(s);
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
       }
-
-      function loadAnalytics() {
-        if (window.__mildmateAnalyticsLoaded) return;
-        window.__mildmateAnalyticsLoaded = true;
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-        loadScript('https://www.googletagmanager.com/gtm.js?id=' + GTM_ID, true);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
       }
-
-      window.__mildmateLoadAnalytics = loadAnalytics;
-      // Load immediately on all devices so homepage page_view is not delayed on mobile.
-      loadAnalytics();
     })();
   </script>
 </head>
 <body class="home-page">
   <!-- Phase 8: GTM (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KLJZZM9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript id="gtm-noscript"></noscript>
 
   <!-- ===== HEADER ===== -->
   <!-- __HEADER__ -->

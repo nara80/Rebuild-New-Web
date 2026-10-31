@@ -1,3 +1,9 @@
+import {
+  extractUniqueQuoteIdsFromItems,
+  sanitizeAttributionPayload,
+  upsertQuoteAttributionFromCheckout,
+} from "./attribution";
+
 // MildMate Order Confirmation API
 // GET /api/order-confirmed?session_id=cs_xxx — returns order summary for confirmation page
 async function sha256(text: string): Promise<string> {
@@ -206,7 +212,7 @@ async function getOrdersBySession(env: any, sessionId: string): Promise<any[]> {
   const { results } = await env.DB.prepare(
     `SELECT id, stripe_session_id, stripe_payment_intent_id, email, shipping_address, product_title_en, fabric, color,
             width_cm, length_cm, depth_cm, price_usd, price_thb,
-            currency, quantity, status, created_at
+            currency, quantity, status, created_at, quote_id
      FROM orders
      WHERE stripe_session_id = ?1
        AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
@@ -215,19 +221,21 @@ async function getOrdersBySession(env: any, sessionId: string): Promise<any[]> {
   return results || [];
 }
 
-async function verifyStripeSessionPaid(sessionId: string, env: any): Promise<boolean> {
+async function fetchStripeSessionForEvidence(sessionId: string, env: any): Promise<{ paid: boolean; amountTotalMinor: number | null }> {
   const stripeKey = String(env.STRIPE_SECRET_KEY || "");
-  if (!stripeKey) return false;
+  if (!stripeKey) return { paid: false, amountTotalMinor: null };
   try {
     const resp = await fetch(
       `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`,
       { headers: { Authorization: `Bearer ${stripeKey}` } }
     );
-    if (!resp.ok) return false;
+    if (!resp.ok) return { paid: false, amountTotalMinor: null };
     const session = await resp.json() as any;
-    return String(session?.payment_status || "").toLowerCase() === "paid";
+    const paid = String(session?.payment_status || "").toLowerCase() === "paid";
+    const amountRaw = Number(session?.amount_total);
+    return { paid, amountTotalMinor: Number.isFinite(amountRaw) ? amountRaw : null };
   } catch {
-    return false;
+    return { paid: false, amountTotalMinor: null };
   }
 }
 
@@ -302,31 +310,131 @@ async function reconcilePaidSessionToOrders(sessionId: string, env: any): Promis
     lineItems = Array.isArray(lineData?.data) ? lineData.data : [];
   }
 
-  if (lineItems.length === 0 && metaItems.length === 0) return false;
+  // Authoritative item sources — same priority as the webhook:
+  //   1) D1 checkout_session_snapshots  2) session metadata  3) Stripe line_items
+  // Product identity is never reconstructed from untrusted Stripe descriptions
+  // when an authoritative record exists, and the Stripe shipping line is always
+  // excluded so a shipping charge never becomes a product order row.
+  const mapItems = (rawItems: any): any[] => (Array.isArray(rawItems) ? rawItems : []).map((item: any) => ({
+    slug: item.slug || item.s || "",
+    name: item.name || item.n || item.slug || item.s || "",
+    quote_id: item.quote_id || item.qi || null,
+    fabric: item.fabric || item.f || null,
+    color: item.color || item.c || null,
+    dims: (typeof item.dims === "object" && item.dims)
+      || (typeof item.d === "object" && item.d)
+      || ((typeof item.d === "string" || typeof item.dt === "string")
+        ? { size_text: (typeof item.d === "string" ? item.d : item.dt) }
+        : {}),
+    qty: item.qty || item.q || 1,
+    unit_amount: Number(item.u || item.unit_amount || 0),
+  }));
 
-  const sourceRows = lineItems.length > 0 ? lineItems : metaItems;
-  const sessionCurrency = String(session.currency || "usd").toLowerCase();
+  const hasUsefulDims = (dims: any): boolean => {
+    if (!dims || typeof dims !== "object") return false;
+    if (toFiniteNumber(dims.w) && toFiniteNumber(dims.l)) return true;
+    if (String(dims.size_text || "").trim()) return true;
+    if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
+    if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
+    if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
+    return false;
+  };
+
+  let items: any[] = [];
+  let itemsSource = "none";
+  let snapshotCurrency: string | null = null;
+  let checkoutAttribution = sanitizeAttributionPayload(null, "checkout");
+  let quoteIdsFromSnapshot: string[] = [];
+  try {
+    const snap = await env.DB.prepare(
+      "SELECT items_json, currency, attribution_json, quote_ids_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+    ).bind(String(session.id)).first() as any;
+    if (snap?.items_json) {
+      const parsedSnap = JSON.parse(String(snap.items_json || "[]"));
+      if (Array.isArray(parsedSnap) && parsedSnap.length > 0) {
+        items = mapItems(parsedSnap);
+        itemsSource = "d1_snapshot";
+        snapshotCurrency = String(snap?.currency || "").toLowerCase() || null;
+      }
+    }
+    if (snap?.attribution_json) {
+      checkoutAttribution = sanitizeAttributionPayload(snap.attribution_json, "checkout");
+    }
+    if (snap?.quote_ids_json) {
+      try {
+        const parsedIds = JSON.parse(String(snap.quote_ids_json || "[]"));
+        quoteIdsFromSnapshot = Array.isArray(parsedIds) ? parsedIds : [];
+      } catch {}
+    }
+  } catch (e: any) {
+    console.error("reconcile snapshot read failed:", e?.message || e);
+  }
+  if (items.length === 0 && metaItems.length > 0) {
+    items = mapItems(metaItems);
+    itemsSource = "metadata";
+  }
+  if (items.length === 0 && lineItems.length > 0) {
+    items = lineItems
+      .filter((li: any) => {
+        const label = String(li?.description || li?.price?.product_data?.name || "");
+        return !/^shipping/i.test(label.trim());
+      })
+      .map((li: any) => {
+        const liQty = Number(li?.quantity || 1) || 1;
+        const liUnitMinor = Number(li?.price?.unit_amount || 0)
+          || (Number(li?.amount_total || 0) && liQty ? Math.round(Number(li.amount_total) / liQty) : 0);
+        return {
+          slug: "",
+          name: String(li?.description || li?.price?.product_data?.name || "Custom Order"),
+          quote_id: null,
+          fabric: null,
+          color: null,
+          dims: {} as any,
+          qty: liQty,
+          unit_amount: liUnitMinor,
+        };
+      });
+    itemsSource = "stripe_line_items";
+  }
+  if (items.length === 0) return false;
+  console.log("reconcile items source:", itemsSource, "session:", session.id, "count:", items.length);
+  const quoteIdsForAttribution = Array.from(new Set([
+    ...extractUniqueQuoteIdsFromItems(items),
+    ...quoteIdsFromSnapshot.map((id) => String(id || "").trim()).filter(Boolean),
+  ]));
+
+  const sessionCurrency = String(snapshotCurrency || session.currency || "usd").toLowerCase();
   let inserted = 0;
 
+  // Quote lines with no useful dims are hydrated from the approved quote row
+  // (same rule as the webhook) so the order keeps the approved option identity.
+  for (const item of items) {
+    if (item.quote_id && !hasUsefulDims(item.dims)) {
+      try {
+        const q = await env.DB.prepare(
+          "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
+        ).bind(String(item.quote_id)).first() as any;
+        if (q?.dimensions) {
+          const qd = JSON.parse(String(q.dimensions || "{}"));
+          if (qd && typeof qd === "object") item.dims = qd;
+        }
+      } catch {}
+    }
+  }
+
   const lineOccurrenceMap = new Map<string, number>();
-  for (let i = 0; i < sourceRows.length; i++) {
-    const li = sourceRows[i] || {};
-    const mi = metaItems[i] || {};
-    const dims = mi.dims || mi.d || {};
-    const qty = Number(li.quantity || mi.qty || mi.q || 1) || 1;
-    const unitMinor =
-      Number(li?.price?.unit_amount || 0) ||
-      Number(mi.u || 0) ||
-      (Number(li.amount_total || 0) && qty ? Math.round(Number(li.amount_total || 0) / qty) : 0);
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] || {};
+    const dims = item.dims || {};
+    const qty = Number(item.qty || 1) || 1;
+    const unitMinor = Number(item.unit_amount || 0) || 0;
     const unitMajor = unitMinor > 0 ? unitMinor / 100 : null;
-    const productTitle = li.description || mi.name || mi.n || mi.slug || mi.s || "Custom Order";
-    const productSlug = mi.slug || mi.s || "";
     const idempotencySource = {
-      slug: productSlug,
-      name: productTitle,
-      quote_id: mi.quote_id || mi.qi || null,
-      fabric: mi.fabric || mi.f || null,
-      color: mi.color || mi.c || null,
+      slug: String(item.slug || ""),
+      name: String(item.name || ""),
+      quote_id: item.quote_id || null,
+      fabric: item.fabric || null,
+      color: item.color || null,
       dims,
       qty,
       unit_amount: unitMinor,
@@ -340,10 +448,10 @@ async function reconcilePaidSessionToOrders(sessionId: string, env: any): Promis
 
     const existingCount = await countExistingConfirmedOrderLines(env, {
       sessionId: session.id,
-      productSlug: String(productSlug || ""),
-      productTitle: String(productTitle || ""),
-      fabric: mi.fabric || mi.f || null,
-      color: mi.color || mi.c || null,
+      productSlug: String(item.slug || ""),
+      productTitle: String(item.name || ""),
+      fabric: item.fabric || null,
+      color: item.color || null,
       widthCm: dims.w || null,
       lengthCm: dims.l || null,
       depthCm: dims.d || null,
@@ -359,8 +467,9 @@ async function reconcilePaidSessionToOrders(sessionId: string, env: any): Promis
         stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
         shipping_address, product_slug, product_title_en, fabric, color,
         width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-        custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+        custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+        quote_id, status
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, 'confirmed')`
     ).bind(
       session.id,
       session.payment_intent || null,
@@ -368,10 +477,10 @@ async function reconcilePaidSessionToOrders(sessionId: string, env: any): Promis
       session?.metadata?.name || session?.customer_details?.name || null,
       session?.metadata?.phone || session?.customer_details?.phone || null,
       session?.metadata?.address || null,
-      productSlug,
-      productTitle,
-      mi.fabric || mi.f || null,
-      mi.color || mi.c || null,
+      String(item.slug || ""),
+      String(item.name || ""),
+      item.fabric || null,
+      item.color || null,
       dims.w || null,
       dims.l || null,
       dims.d || null,
@@ -381,9 +490,24 @@ async function reconcilePaidSessionToOrders(sessionId: string, env: any): Promis
       sessionCurrency === "thb" ? unitMajor : null,
       sessionCurrency,
       qty,
-      session?.metadata?.discount_code || null
+      session?.metadata?.discount_code || null,
+      item.quote_id || null
     ).run();
     inserted++;
+  }
+
+  if (inserted > 0 && quoteIdsForAttribution.length > 0) {
+    try {
+      await upsertQuoteAttributionFromCheckout(
+        env,
+        quoteIdsForAttribution,
+        email,
+        checkoutAttribution,
+        String(session.id || "")
+      );
+    } catch (e: any) {
+      console.error("reconcile quote attribution persist failed:", e?.message || e);
+    }
   }
 
   return inserted > 0;
@@ -422,7 +546,8 @@ export async function handleOrderConfirmed(request: Request, env: any): Promise<
         headers: { "Content-Type": "application/json" },
       });
     }
-    const stripePaidEvidence = (await verifyStripeSessionPaid(sessionId, env)) || (await hasWebhookPaidEvidence(sessionId, env));
+    const stripeSessionEvidence = await fetchStripeSessionForEvidence(sessionId, env);
+    const stripePaidEvidence = stripeSessionEvidence.paid || (await hasWebhookPaidEvidence(sessionId, env));
     const purchaseReportableOrders = results.filter((r: any) => isPurchaseReportableStatus(r?.status));
     const purchaseReportableValue = purchaseReportableOrders.reduce((sum: number, row: any) => {
       const qty = Number(row?.quantity || 1) || 1;
@@ -445,6 +570,7 @@ export async function handleOrderConfirmed(request: Request, env: any): Promise<
       purchase_reportable: stripePaidEvidence && purchaseReportableOrders.length > 0,
       purchase_reportable_count: purchaseReportableOrders.length,
       purchase_reportable_value: Math.round(purchaseReportableValue * 100) / 100,
+      session_amount_total: stripeSessionEvidence.amountTotalMinor,
     }), {
       headers: { "Content-Type": "application/json" },
     });

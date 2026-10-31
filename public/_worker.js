@@ -5818,6 +5818,312 @@ User-Agent: ${request.headers.get("user-agent") || "unknown"}`;
 }
 __name(handleContact, "handleContact");
 
+// ../workers/api/attribution.ts
+var ATTRIBUTION_SCHEMA_VERSION = 1;
+function cleanString(raw, max = 160) {
+  if (raw == null) return null;
+  const v = String(raw).trim();
+  if (!v) return null;
+  return v.slice(0, max);
+}
+__name(cleanString, "cleanString");
+function lowerToken(raw, max = 120) {
+  const clean = cleanString(raw, max);
+  return clean ? clean.toLowerCase() : null;
+}
+__name(lowerToken, "lowerToken");
+function boolish(raw) {
+  return raw === true || raw === 1 || String(raw || "").toLowerCase() === "true";
+}
+__name(boolish, "boolish");
+function toIso(raw) {
+  const d = raw ? new Date(String(raw)) : /* @__PURE__ */ new Date();
+  if (Number.isNaN(d.getTime())) return (/* @__PURE__ */ new Date()).toISOString();
+  return d.toISOString();
+}
+__name(toIso, "toIso");
+function parseHost(raw) {
+  const input = cleanString(raw, 300);
+  if (!input) return null;
+  try {
+    if (/^https?:\/\//i.test(input)) {
+      return new URL(input).hostname.toLowerCase().slice(0, 200);
+    }
+  } catch {
+  }
+  const host = input.replace(/^https?:\/\//i, "").split("/")[0].split("?")[0].split("#")[0].trim().toLowerCase();
+  if (!host) return null;
+  if (!/^[a-z0-9.-]+$/.test(host)) return null;
+  return host.slice(0, 200);
+}
+__name(parseHost, "parseHost");
+function sanitizePath(raw) {
+  const input = cleanString(raw, 500);
+  if (!input) return null;
+  let path = input;
+  try {
+    if (/^https?:\/\//i.test(input)) {
+      path = new URL(input).pathname || "/";
+    }
+  } catch {
+  }
+  path = path.split("?")[0].split("#")[0].trim();
+  if (!path) return null;
+  if (!path.startsWith("/")) path = "/" + path;
+  path = path.replace(/\/{2,}/g, "/");
+  if (/^\/quote\/qt-[^/]+\/?$/i.test(path)) return "/quote/";
+  return path.slice(0, 240);
+}
+__name(sanitizePath, "sanitizePath");
+function sanitizeTouch(raw, consent) {
+  if (!raw || typeof raw !== "object") return null;
+  const utmSource = lowerToken(raw.utm_source || raw.source, 100);
+  const utmMedium = lowerToken(raw.utm_medium || raw.medium, 100);
+  const source = lowerToken(raw.source || raw.utm_source, 100);
+  const medium = lowerToken(raw.medium || raw.utm_medium, 100);
+  const utmCampaign = cleanString(raw.utm_campaign || raw.campaign, 140);
+  const utmTerm = cleanString(raw.utm_term || raw.term, 140);
+  const utmContent = cleanString(raw.utm_content || raw.content, 140);
+  const gclid = consent.marketing ? cleanString(raw.gclid, 120) : null;
+  const gbraid = consent.marketing ? cleanString(raw.gbraid, 120) : null;
+  const wbraid = consent.marketing ? cleanString(raw.wbraid, 120) : null;
+  const referrerDomain = parseHost(raw.referrer_domain || raw.referrer_host || raw.referrer);
+  const referrerPath = sanitizePath(raw.referrer_path);
+  const landingPath = sanitizePath(raw.landing_path || raw.path);
+  const gaClientId = consent.analytics ? cleanString(raw.ga_client_id, 120) : null;
+  const gaSessionId = consent.analytics ? cleanString(raw.ga_session_id, 120) : null;
+  const observed = boolish(raw.observed) || !!(utmSource || utmMedium || gclid || gbraid || wbraid);
+  const inferred = boolish(raw.inferred) || !observed && !!(source || medium || referrerDomain);
+  if (!source && !medium && !utmSource && !utmMedium && !utmCampaign && !utmTerm && !utmContent && !gclid && !gbraid && !wbraid && !referrerDomain && !referrerPath && !landingPath && !gaClientId && !gaSessionId) {
+    return null;
+  }
+  return {
+    source: source || null,
+    medium: medium || null,
+    utm_source: utmSource || null,
+    utm_medium: utmMedium || null,
+    utm_campaign: utmCampaign || null,
+    utm_term: utmTerm || null,
+    utm_content: utmContent || null,
+    gclid,
+    gbraid,
+    wbraid,
+    referrer_domain: referrerDomain || null,
+    referrer_path: referrerPath || null,
+    landing_path: landingPath || null,
+    ga_client_id: gaClientId,
+    ga_session_id: gaSessionId,
+    observed,
+    inferred,
+    captured_at: toIso(raw.captured_at)
+  };
+}
+__name(sanitizeTouch, "sanitizeTouch");
+function sanitizeConsentState(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const analytics = boolish(src.analytics);
+  const marketing = boolish(src.marketing);
+  const timestampNum = Number(src.timestamp);
+  return {
+    essential: true,
+    analytics,
+    marketing,
+    timestamp: Number.isFinite(timestampNum) && timestampNum > 0 ? Math.round(timestampNum) : null,
+    captured_at: toIso(src.captured_at),
+    source: cleanString(src.source, 80)
+  };
+}
+__name(sanitizeConsentState, "sanitizeConsentState");
+function safeParseObject(raw) {
+  if (!raw) return null;
+  if (typeof raw === "object") return raw;
+  if (typeof raw !== "string") return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+__name(safeParseObject, "safeParseObject");
+function toJsonText(value) {
+  if (!value) return null;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return null;
+  }
+}
+__name(toJsonText, "toJsonText");
+function sanitizeAttributionPayload(raw, stage) {
+  const parsed = safeParseObject(raw) || {};
+  const consent = sanitizeConsentState(parsed.consent_state || parsed.consent || {});
+  const firstTouch = sanitizeTouch(parsed.first_touch, consent) || null;
+  const quoteTouch = stage === "quote" ? sanitizeTouch(parsed.quote_session || parsed.session_touch || parsed.latest_touch, consent) : null;
+  const checkoutTouch = stage === "checkout" ? sanitizeTouch(parsed.checkout_session || parsed.session_touch || parsed.latest_touch, consent) : null;
+  return {
+    schema_version: ATTRIBUTION_SCHEMA_VERSION,
+    consent_state: consent,
+    first_touch: firstTouch,
+    quote_session: quoteTouch,
+    checkout_session: checkoutTouch
+  };
+}
+__name(sanitizeAttributionPayload, "sanitizeAttributionPayload");
+var quoteAttributionSchemaReady = false;
+var quoteAttributionSchemaPromise = null;
+async function ensureQuoteAttributionSchema(env) {
+  if (quoteAttributionSchemaReady) return true;
+  if (!quoteAttributionSchemaPromise) {
+    quoteAttributionSchemaPromise = (async () => {
+      try {
+        await env.DB.prepare(
+          `CREATE TABLE IF NOT EXISTS quote_acquisition_attribution (
+             quote_id TEXT PRIMARY KEY,
+             email TEXT,
+             schema_version INTEGER NOT NULL DEFAULT 1,
+             first_touch_json TEXT,
+             quote_session_json TEXT,
+             checkout_session_json TEXT,
+             consent_state_json TEXT,
+             quote_session_captured_at DATETIME,
+             checkout_session_captured_at DATETIME,
+             checkout_stripe_session_id TEXT,
+             created_at DATETIME DEFAULT (datetime('now')),
+             updated_at DATETIME DEFAULT (datetime('now'))
+           )`
+        ).run();
+        await env.DB.prepare(
+          "CREATE INDEX IF NOT EXISTS idx_quote_acquisition_attr_email ON quote_acquisition_attribution(email)"
+        ).run();
+        await env.DB.prepare(
+          "CREATE INDEX IF NOT EXISTS idx_quote_acquisition_attr_checkout_session ON quote_acquisition_attribution(checkout_stripe_session_id)"
+        ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(quote_acquisition_attribution)").all();
+          const existing = new Set((tableInfo?.results || []).map((r) => String(r?.name || "").toLowerCase()));
+          const alters = [];
+          if (!existing.has("schema_version")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 1");
+          if (!existing.has("first_touch_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN first_touch_json TEXT");
+          if (!existing.has("quote_session_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN quote_session_json TEXT");
+          if (!existing.has("checkout_session_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN checkout_session_json TEXT");
+          if (!existing.has("consent_state_json")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN consent_state_json TEXT");
+          if (!existing.has("quote_session_captured_at")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN quote_session_captured_at DATETIME");
+          if (!existing.has("checkout_session_captured_at")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN checkout_session_captured_at DATETIME");
+          if (!existing.has("checkout_stripe_session_id")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN checkout_stripe_session_id TEXT");
+          if (!existing.has("updated_at")) alters.push("ALTER TABLE quote_acquisition_attribution ADD COLUMN updated_at DATETIME");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {
+        }
+        quoteAttributionSchemaReady = true;
+        return true;
+      } catch (e) {
+        console.error("quote attribution schema init failed:", e?.message || e);
+        return false;
+      }
+    })().finally(() => {
+      if (!quoteAttributionSchemaReady) quoteAttributionSchemaPromise = null;
+    });
+  }
+  return await quoteAttributionSchemaPromise;
+}
+__name(ensureQuoteAttributionSchema, "ensureQuoteAttributionSchema");
+function uniqueQuoteIds(rawIds) {
+  const out = /* @__PURE__ */ new Set();
+  for (const raw of rawIds || []) {
+    const id = cleanString(raw, 80);
+    if (id) out.add(id);
+  }
+  return Array.from(out);
+}
+__name(uniqueQuoteIds, "uniqueQuoteIds");
+function extractUniqueQuoteIdsFromItems(items) {
+  const ids = [];
+  for (const item of Array.isArray(items) ? items : []) {
+    ids.push(item?.quote_id);
+    ids.push(item?.qi);
+  }
+  return uniqueQuoteIds(ids);
+}
+__name(extractUniqueQuoteIdsFromItems, "extractUniqueQuoteIdsFromItems");
+async function upsertQuoteAttributionFromQuote(env, quoteIdRaw, emailRaw, payload) {
+  const quoteId = cleanString(quoteIdRaw, 80);
+  if (!quoteId) return false;
+  const schemaOk = await ensureQuoteAttributionSchema(env);
+  if (!schemaOk) return false;
+  const email = lowerToken(emailRaw, 200);
+  const firstTouchJson = toJsonText(payload?.first_touch);
+  const quoteSessionJson = toJsonText(payload?.quote_session);
+  const consentJson = toJsonText(payload?.consent_state);
+  const quoteCapturedAt = payload?.quote_session?.captured_at || null;
+  await env.DB.prepare(
+    `INSERT INTO quote_acquisition_attribution (
+       quote_id, email, schema_version, first_touch_json, quote_session_json, checkout_session_json,
+       consent_state_json, quote_session_captured_at, checkout_session_captured_at, checkout_stripe_session_id,
+       created_at, updated_at
+     ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7, NULL, NULL, datetime('now'), datetime('now'))
+     ON CONFLICT(quote_id) DO UPDATE SET
+       email = COALESCE(excluded.email, quote_acquisition_attribution.email),
+       schema_version = excluded.schema_version,
+       first_touch_json = COALESCE(quote_acquisition_attribution.first_touch_json, excluded.first_touch_json),
+       quote_session_json = COALESCE(excluded.quote_session_json, quote_acquisition_attribution.quote_session_json),
+       consent_state_json = COALESCE(excluded.consent_state_json, quote_acquisition_attribution.consent_state_json),
+       quote_session_captured_at = COALESCE(excluded.quote_session_captured_at, quote_acquisition_attribution.quote_session_captured_at),
+       updated_at = datetime('now')`
+  ).bind(
+    quoteId,
+    email,
+    Number(payload?.schema_version || ATTRIBUTION_SCHEMA_VERSION),
+    firstTouchJson,
+    quoteSessionJson,
+    consentJson,
+    quoteCapturedAt
+  ).run();
+  return true;
+}
+__name(upsertQuoteAttributionFromQuote, "upsertQuoteAttributionFromQuote");
+async function upsertQuoteAttributionFromCheckout(env, quoteIdsRaw, emailRaw, payload, stripeSessionIdRaw) {
+  const quoteIds = uniqueQuoteIds(quoteIdsRaw || []);
+  if (quoteIds.length === 0) return false;
+  const schemaOk = await ensureQuoteAttributionSchema(env);
+  if (!schemaOk) return false;
+  const email = lowerToken(emailRaw, 200);
+  const firstTouchJson = toJsonText(payload?.first_touch);
+  const checkoutSessionJson = toJsonText(payload?.checkout_session);
+  const consentJson = toJsonText(payload?.consent_state);
+  const checkoutCapturedAt = payload?.checkout_session?.captured_at || null;
+  const stripeSessionId = cleanString(stripeSessionIdRaw, 120);
+  for (const quoteId of quoteIds) {
+    await env.DB.prepare(
+      `INSERT INTO quote_acquisition_attribution (
+         quote_id, email, schema_version, first_touch_json, quote_session_json, checkout_session_json,
+         consent_state_json, quote_session_captured_at, checkout_session_captured_at, checkout_stripe_session_id,
+         created_at, updated_at
+       ) VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?6, NULL, ?7, ?8, datetime('now'), datetime('now'))
+       ON CONFLICT(quote_id) DO UPDATE SET
+         email = COALESCE(excluded.email, quote_acquisition_attribution.email),
+         schema_version = excluded.schema_version,
+         first_touch_json = COALESCE(quote_acquisition_attribution.first_touch_json, excluded.first_touch_json),
+         checkout_session_json = COALESCE(excluded.checkout_session_json, quote_acquisition_attribution.checkout_session_json),
+         consent_state_json = COALESCE(excluded.consent_state_json, quote_acquisition_attribution.consent_state_json),
+         checkout_session_captured_at = COALESCE(excluded.checkout_session_captured_at, quote_acquisition_attribution.checkout_session_captured_at),
+         checkout_stripe_session_id = COALESCE(excluded.checkout_stripe_session_id, quote_acquisition_attribution.checkout_stripe_session_id),
+         updated_at = datetime('now')`
+    ).bind(
+      quoteId,
+      email,
+      Number(payload?.schema_version || ATTRIBUTION_SCHEMA_VERSION),
+      firstTouchJson,
+      checkoutSessionJson,
+      consentJson,
+      checkoutCapturedAt,
+      stripeSessionId
+    ).run();
+  }
+  return true;
+}
+__name(upsertQuoteAttributionFromCheckout, "upsertQuoteAttributionFromCheckout");
+
 // ../workers/api/quote.ts
 var QUOTE_RATE_LIMIT = 5;
 var QUOTE_RATE_WINDOW = "-1 hour";
@@ -5956,7 +6262,7 @@ async function handleQuote(request, env) {
   }
   try {
     const body = await request.json();
-    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, _website } = body;
+    const { customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price_thb, quoted_price_usd, attribution, _website } = body;
     const turnstileToken = (body.turnstile_token || body["cf-turnstile-response"] || "").trim();
     if (_website && _website.length > 0) {
       return new Response(JSON.stringify({ success: true, message: "Quote submitted." }), {
@@ -6026,6 +6332,7 @@ async function handleQuote(request, env) {
     const normalizedColor = normalizeQuoteColor(cleanSlug, color);
     const cleanFabric = normalizedFabric || "\u2014";
     const cleanColor = normalizedColor || "\u2014";
+    const quoteAttribution = sanitizeAttributionPayload(attribution, "quote");
     await env.DB.prepare(`
       INSERT INTO custom_quotes (quote_id, customer_name, email, address, telephone, product_slug, dimensions, fabric, color, quoted_price, quoted_price_usd)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -6042,6 +6349,11 @@ async function handleQuote(request, env) {
       quoted_price_thb || null,
       quoted_price_usd || null
     ).run();
+    try {
+      await upsertQuoteAttributionFromQuote(env, quoteId, cleanEmail, quoteAttribution);
+    } catch (e) {
+      console.error("Quote attribution persist failed:", e?.message || e);
+    }
     await env.DB.prepare(
       `INSERT OR IGNORE INTO subscribers (email, source, language) VALUES (?, 'quote', 'en')`
     ).bind(cleanEmail).run();
@@ -9345,9 +9657,11 @@ async function getQuotes(env, f) {
   ).bind(...range.binds).all();
   const approvedQuotes = Number(summaryRow?.approved_quotes || 0);
   const exactConverted = Number(exactRow?.exact_converted || 0);
+  const phase5 = await buildPhase5QuoteFunnel(env, f, baseSql, range.binds);
   return json6({
     success: true,
     filters: { start: f.start, end: f.end },
+    phase5,
     summary: {
       total_quotes: Number(summaryRow?.total_quotes || 0),
       new_quotes_7d: Number(summaryRow?.new_quotes_7d || 0),
@@ -9380,6 +9694,286 @@ async function getQuotes(env, f) {
   });
 }
 __name(getQuotes, "getQuotes");
+var PHASE5_ATTRIBUTION_COVERAGE_START = "2026-10-30";
+var PHASE5_TEST_QUOTE_DENYLIST = ["QT-261030-001", "QT-261030-002"];
+var PHASE5_PAID_ORDER_STATUSES = /* @__PURE__ */ new Set(["confirmed", "processing", "shipped", "delivered"]);
+var PHASE5_PAID_CLICK_FIELDS = ["gclid", "gbraid", "wbraid"];
+function phase5IsTestQuoteId(quoteId) {
+  const id = String(quoteId || "").trim();
+  if (!id) return false;
+  if (PHASE5_TEST_QUOTE_DENYLIST.includes(id)) return true;
+  return /^test-/i.test(id);
+}
+__name(phase5IsTestQuoteId, "phase5IsTestQuoteId");
+function phase5ParseAttributionJson(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+__name(phase5ParseAttributionJson, "phase5ParseAttributionJson");
+function phase5ChannelOf(obj) {
+  if (!obj) return null;
+  const src = String(obj.source || obj.utm_source || "").trim() || "(none)";
+  const med = String(obj.medium || obj.utm_medium || "").trim() || "(none)";
+  return src + "/" + med;
+}
+__name(phase5ChannelOf, "phase5ChannelOf");
+function phase5HasPaidClick(obj) {
+  if (!obj) return false;
+  return PHASE5_PAID_CLICK_FIELDS.some((f) => {
+    const v = obj[f];
+    return typeof v === "string" && v.trim().length > 0;
+  });
+}
+__name(phase5HasPaidClick, "phase5HasPaidClick");
+function phase5Bucket(map, channel, quoteId, customerKey, approved, paidClick) {
+  let b = map.get(channel);
+  if (!b) {
+    b = { channel, quotes: /* @__PURE__ */ new Set(), customers: /* @__PURE__ */ new Set(), approved: 0, paid_click_quotes: 0 };
+    map.set(channel, b);
+  }
+  b.quotes.add(quoteId);
+  if (customerKey) b.customers.add(customerKey);
+  if (approved) b.approved += 1;
+  if (paidClick) b.paid_click_quotes += 1;
+}
+__name(phase5Bucket, "phase5Bucket");
+function phase5ChannelRows(map) {
+  return [...map.values()].map((b) => ({
+    channel: b.channel,
+    quotes: b.quotes.size,
+    unique_customers: b.customers.size,
+    approved: b.approved,
+    paid_click_quotes: b.paid_click_quotes
+  })).sort((a, b) => b.quotes - a.quotes || a.channel.localeCompare(b.channel));
+}
+__name(phase5ChannelRows, "phase5ChannelRows");
+async function buildPhase5QuoteFunnel(env, f, baseSql, rangeBinds) {
+  try {
+    const quoteRows = await env.DB.prepare(
+      `SELECT q.quote_id,
+              LOWER(TRIM(COALESCE(q.email, ''))) AS email_key,
+              LOWER(COALESCE(q.status, 'pending')) AS status,
+              q.product_slug, q.fabric, q.color
+       ${baseSql}`
+    ).bind(...rangeBinds).all();
+    const quotes = (quoteRows.results || []).filter((r) => !phase5IsTestQuoteId(r.quote_id));
+    const attrRows = await env.DB.prepare(
+      `SELECT a.quote_id, a.first_touch_json, a.quote_session_json FROM quote_acquisition_attribution a`
+    ).all();
+    const quoteIdSet = new Set(quotes.map((q) => String(q.quote_id)));
+    const attrById = /* @__PURE__ */ new Map();
+    for (const r of attrRows.results || []) {
+      const id = String(r.quote_id || "");
+      if (quoteIdSet.has(id) && !attrById.has(id)) attrById.set(id, r);
+    }
+    const orderRows = await env.DB.prepare(
+      `SELECT o.quote_id, o.stripe_session_id, o.product_slug, o.product_title_en,
+              o.quantity, o.price_usd, o.price_thb, o.currency, o.status, o.created_at
+       FROM orders o
+       WHERE o.quote_id IS NOT NULL AND COALESCE(o.is_archived, 0) = 0`
+    ).all();
+    const ordersByQuote = /* @__PURE__ */ new Map();
+    for (const r of orderRows.results || []) {
+      const id = String(r.quote_id || "");
+      if (!quoteIdSet.has(id)) continue;
+      if (!ordersByQuote.has(id)) ordersByQuote.set(id, []);
+      ordersByQuote.get(id).push(r);
+    }
+    let adsCostRows = [];
+    let adsFreshRow = null;
+    try {
+      const adsRange = dayRangeWhere(f, "report_date");
+      const ads = await env.DB.prepare(
+        `SELECT COALESCE(currency, '') AS currency,
+                SUM(cost) AS cost,
+                MAX(report_date) AS latest_report_date
+         FROM google_ads_campaign_daily
+         WHERE 1=1${adsRange.sql}
+         GROUP BY COALESCE(currency, '')`
+      ).bind(...adsRange.binds).all();
+      adsCostRows = ads.results || [];
+      adsFreshRow = await env.DB.prepare(
+        `SELECT MAX(report_date) AS latest_report_date, COUNT(*) AS total_rows FROM google_ads_campaign_daily`
+      ).first();
+    } catch {
+      adsCostRows = [];
+      adsFreshRow = null;
+    }
+    const ftMap = /* @__PURE__ */ new Map();
+    const qsMap = /* @__PURE__ */ new Map();
+    const customersAll = /* @__PURE__ */ new Set();
+    const customersWithAttr = /* @__PURE__ */ new Set();
+    const customersPaid = /* @__PURE__ */ new Set();
+    let approvedCount = 0;
+    let paidQuotes = 0;
+    let ftUnavailable = 0;
+    let qsUnavailable = 0;
+    const adsAttributableQuoteIds = /* @__PURE__ */ new Set();
+    for (const q of quotes) {
+      const id = String(q.quote_id);
+      const custKey = String(q.email_key || "");
+      const isApproved = String(q.status) === "approved";
+      if (isApproved) approvedCount += 1;
+      if (custKey) customersAll.add(custKey);
+      const attr = attrById.get(id) || null;
+      const ft = attr ? phase5ParseAttributionJson(attr.first_touch_json) : null;
+      const qs = attr ? phase5ParseAttributionJson(attr.quote_session_json) : null;
+      if (ft) customersWithAttr.add(custKey);
+      const ftChannel = phase5ChannelOf(ft);
+      const qsChannel = phase5ChannelOf(qs);
+      if (!ftChannel) ftUnavailable += 1;
+      if (!qsChannel) qsUnavailable += 1;
+      const ftPaid = phase5HasPaidClick(ft);
+      const qsPaid = phase5HasPaidClick(qs);
+      if (ftChannel) phase5Bucket(ftMap, ftChannel, id, custKey, isApproved, ftPaid);
+      if (qsChannel) phase5Bucket(qsMap, qsChannel, id, custKey, isApproved, qsPaid);
+      if (ftPaid || qsPaid) adsAttributableQuoteIds.add(id);
+      const rows = ordersByQuote.get(id) || [];
+      const hasPaidOrder = rows.some((r) => PHASE5_PAID_ORDER_STATUSES.has(String(r.status || "").toLowerCase()));
+      if (hasPaidOrder) {
+        paidQuotes += 1;
+        if (custKey) customersPaid.add(custKey);
+      }
+    }
+    const byQuote = quotes.filter((q) => (ordersByQuote.get(String(q.quote_id)) || []).length > 0).map((q) => {
+      const id = String(q.quote_id);
+      const rows = ordersByQuote.get(id) || [];
+      const orderIds = [...new Set(rows.map((r) => String(r.stripe_session_id || "")))];
+      return {
+        quote_id: id,
+        quote_status: q.status,
+        order_count: orderIds.length,
+        order_ids: orderIds,
+        paid: rows.some((r) => PHASE5_PAID_ORDER_STATUSES.has(String(r.status || "").toLowerCase())),
+        statuses: [...new Set(rows.map((r) => String(r.status || "").toLowerCase()))],
+        items: rows.map((r) => {
+          const qty = Number(r.quantity || 1) || 1;
+          const cur = String(r.currency || "").toUpperCase();
+          const unitPrice = cur === "USD" ? Number(r.price_usd || 0) : cur === "THB" ? Number(r.price_thb || 0) : 0;
+          return {
+            product_slug: r.product_slug || "(unknown)",
+            product_title: r.product_title_en || r.product_slug || "(unknown)",
+            quantity: qty,
+            currency: cur || null,
+            unit_price: unitPrice,
+            line_revenue: Math.round(unitPrice * qty * 100) / 100,
+            status: String(r.status || "").toLowerCase()
+          };
+        })
+      };
+    }).sort((a, b) => String(b.quote_id).localeCompare(String(a.quote_id)));
+    const revenueByCur = {};
+    let excludedNonPaidRows = 0;
+    for (const q of quotes) {
+      for (const r of ordersByQuote.get(String(q.quote_id)) || []) {
+        const st = String(r.status || "").toLowerCase();
+        if (!PHASE5_PAID_ORDER_STATUSES.has(st)) {
+          excludedNonPaidRows += 1;
+          continue;
+        }
+        const cur = String(r.currency || "").toUpperCase();
+        if (cur !== "THB" && cur !== "USD") continue;
+        if (!revenueByCur[cur]) {
+          revenueByCur[cur] = { line_revenue: 0, orders: /* @__PURE__ */ new Set(), items: 0, quantity: 0 };
+        }
+        const qty = Number(r.quantity || 1) || 1;
+        const unit = cur === "USD" ? Number(r.price_usd || 0) : Number(r.price_thb || 0);
+        revenueByCur[cur].line_revenue = Math.round((revenueByCur[cur].line_revenue + unit * qty) * 100) / 100;
+        revenueByCur[cur].orders.add(String(r.stripe_session_id || ""));
+        revenueByCur[cur].items += 1;
+        revenueByCur[cur].quantity += qty;
+      }
+    }
+    for (const cur of Object.keys(revenueByCur)) {
+      revenueByCur[cur].orders = revenueByCur[cur].orders.size;
+    }
+    const nowMs = Date.now();
+    let adsDaysSince = null;
+    if (adsFreshRow && adsFreshRow.latest_report_date) {
+      const t = Date.parse(String(adsFreshRow.latest_report_date) + "T00:00:00Z");
+      if (!isNaN(t)) adsDaysSince = Math.floor((nowMs - t) / 864e5);
+    }
+    const adsCost = adsCostRows.map((r) => ({
+      currency: r.currency || null,
+      cost: Number(r.cost || 0),
+      latest_report_date: r.latest_report_date || null
+    }));
+    const adsAttributable = adsAttributableQuoteIds.size;
+    let costPerQuote = null;
+    if (adsAttributable > 0 && adsCost.length > 0) {
+      costPerQuote = adsCost.map((c) => ({
+        currency: c.currency,
+        cost_per_attributable_quote: Math.round(c.cost / adsAttributable * 100) / 100
+      }));
+    }
+    return {
+      coverage_start: PHASE5_ATTRIBUTION_COVERAGE_START,
+      exclusions: {
+        denylist: [...PHASE5_TEST_QUOTE_DENYLIST],
+        patterns: ["TEST-*"],
+        excluded_note: "Legacy summary/conversion/top_products/at_risk blocks above are computed without exclusions and keep their original definitions."
+      },
+      status_funnel: {
+        submitted: quotes.length,
+        approved: approvedCount,
+        paid: paidQuotes,
+        unpaid: quotes.length - paidQuotes
+      },
+      customers: {
+        unique_customers_total: customersAll.size,
+        unique_customers_with_attribution: customersWithAttr.size,
+        unique_customers_paid: customersPaid.size,
+        pii_note: "Unique counts are computed server-side; no customer identifiers are returned."
+      },
+      acquisition: {
+        first_touch: phase5ChannelRows(ftMap),
+        quote_session: phase5ChannelRows(qsMap),
+        unavailable: {
+          first_touch_quotes: ftUnavailable,
+          quote_session_quotes: qsUnavailable,
+          note: "Quotes submitted before " + PHASE5_ATTRIBUTION_COVERAGE_START + " (Phase 3 deploy) have no attribution capture; they are counted as unavailable, never as Direct."
+        },
+        paid_click_evidence: "paid_click_quotes = quotes whose captured attribution JSON contains gclid/gbraid/wbraid; observed values only, never inferred from spend."
+      },
+      orders: {
+        by_quote: byQuote,
+        note: "Orders bind to quotes via exact orders.quote_id. Line grain: unit price \xD7 quantity; shipping lines are never stored on order rows."
+      },
+      revenue: {
+        basis: "orders rows with paid status (confirmed/processing/shipped/delivered), COALESCE(is_archived,0)=0; line revenue = unit price \xD7 quantity; per-currency, never blended; quoted_price is never used.",
+        thb: revenueByCur["THB"] ? { line_revenue: revenueByCur["THB"].line_revenue, orders: revenueByCur["THB"].orders, items: revenueByCur["THB"].items, quantity: revenueByCur["THB"].quantity } : { line_revenue: 0, orders: 0, items: 0, quantity: 0 },
+        usd: revenueByCur["USD"] ? { line_revenue: revenueByCur["USD"].line_revenue, orders: revenueByCur["USD"].orders, items: revenueByCur["USD"].items, quantity: revenueByCur["USD"].quantity } : { line_revenue: 0, orders: 0, items: 0, quantity: 0 },
+        excluded_non_paid_rows: excludedNonPaidRows
+      },
+      google_ads: {
+        ads_attributable_quotes: adsAttributable,
+        attribution_basis: "exact recorded paid click id (gclid/gbraid/wbraid) in quote attribution JSON; Direct/Unknown quotes are never assigned to Ads.",
+        cost_scope: "google_ads_campaign_daily cost summed over the report_date filter window, per source currency; platform-attributed and directional only.",
+        cost: adsCost,
+        cost_per_attributable_quote: costPerQuote,
+        na_reason: adsAttributable === 0 ? "N/A \u2014 no Ads-attributable quotes (no recorded paid click ids) in the selected window." : null,
+        freshness: {
+          latest_report_date: adsFreshRow?.latest_report_date || null,
+          total_rows: Number(adsFreshRow?.total_rows || 0),
+          days_since_latest_report: adsDaysSince,
+          status: !adsFreshRow || Number(adsFreshRow.total_rows || 0) === 0 ? "empty" : adsDaysSince !== null && adsDaysSince > 4 ? "warning" : "ok"
+        }
+      }
+    };
+  } catch (e) {
+    return {
+      available: false,
+      error_code: "PHASE5_FUNNEL_UNAVAILABLE",
+      message: String(e?.message || e).slice(0, 300)
+    };
+  }
+}
+__name(buildPhase5QuoteFunnel, "buildPhase5QuoteFunnel");
 async function getGsc(env, f) {
   const range = dayRangeWhere(f, "g.report_date");
   const binds = [...range.binds];
@@ -16421,9 +17015,22 @@ async function ensureCheckoutSnapshotSchema(env) {
              email TEXT,
              currency TEXT,
              items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
              created_at DATETIME DEFAULT (datetime('now'))
            )`
         ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r) => String(r.name || "").toLowerCase())
+          );
+          const alters = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {
+        }
         checkoutSnapshotSchemaReady = true;
         return true;
       } catch (e) {
@@ -16468,6 +17075,7 @@ async function handleCheckout(request, env) {
     });
   }
   const { items, email, name, phone, address, currency: bodyCurrency, cart_total_thb, cart_total_usd } = body;
+  const checkoutAttribution = sanitizeAttributionPayload(body.attribution, "checkout");
   const customerNoteTypeRaw = String(body.customer_note_type || "").trim().toLowerCase();
   const customerNoteRaw = String(body.customer_note || "").trim();
   const allowedNoteTypes = /* @__PURE__ */ new Set(["delivery", "measurement", "gift", "other"]);
@@ -16566,11 +17174,18 @@ async function handleCheckout(request, env) {
       headers: { "Content-Type": "application/json" }
     });
   }
+  const quoteIdsFromCart = extractUniqueQuoteIdsFromItems(items);
   const quoteItems = items.filter((i) => !!i.quote_id && (i.type === "custom_quote" || !!i.is_quote));
+  const quoteAuthorizedPrices = /* @__PURE__ */ new Map();
   if (quoteItems.length > 0) {
+    const rateRow = await env.DB.prepare(
+      "SELECT param_value FROM pricing_params WHERE param_key = 'usd_rate'"
+    ).first().catch(() => null);
+    let usdRate = parseFloat(String(rateRow?.param_value || ""));
+    if (!Number.isFinite(usdRate) || usdRate <= 0) usdRate = 30;
     for (const qi of quoteItems) {
       const quote = await env.DB.prepare(
-        "SELECT status, quoted_price, free_shipping FROM custom_quotes WHERE quote_id = ?1"
+        "SELECT status, quoted_price, quoted_price_usd, free_shipping FROM custom_quotes WHERE quote_id = ?1"
       ).bind(qi.quote_id).first();
       if (!quote || quote.status !== "approved") {
         return new Response(JSON.stringify({
@@ -16583,6 +17198,12 @@ async function handleCheckout(request, env) {
       if (Number(quote.free_shipping || 0) === 1) {
         freeShipping = true;
       }
+      const quoteThb = Math.max(0, Number(quote.quoted_price || 0));
+      let quoteUsd = Math.max(0, Number(quote.quoted_price_usd || 0));
+      if (!quoteUsd && quoteThb > 0) {
+        quoteUsd = Math.round(quoteThb / usdRate);
+      }
+      quoteAuthorizedPrices.set(String(qi.quote_id), { thb: quoteThb, usd: quoteUsd });
     }
   }
   const origin = String(request.headers.get("CF-IPCountry") || "").toUpperCase();
@@ -16619,10 +17240,11 @@ async function handleCheckout(request, env) {
   const lineItems = items.map((item) => {
     const itemName = getItemName(item);
     const normalizedFabric = normalizeFabricForSlug(item.product_slug, item.fabric);
-    const baseThb = Number(item.original_price_thb || item.price_thb || 0);
-    const baseUsd = Number(item.original_price_usd || item.price_usd || 0);
-    const unitAmount = currency === "thb" ? Math.round(baseThb * 100) : Math.round(baseUsd * 100);
     const isQuoteItem = item.type === "custom_quote" || !!item.is_quote;
+    const authorized = isQuoteItem && item.quote_id ? quoteAuthorizedPrices.get(String(item.quote_id)) || null : null;
+    const baseThb = authorized ? authorized.thb : Number(item.original_price_thb || item.price_thb || 0);
+    const baseUsd = authorized ? authorized.usd : Number(item.original_price_usd || item.price_usd || 0);
+    const unitAmount = currency === "thb" ? Math.round(baseThb * 100) : Math.round(baseUsd * 100);
     const campaignPct = isQuoteItem ? 0 : campaignDiscounts.get(String(item.product_slug || "").trim()) || 0;
     const promoPct = discountApplied ? discountPct : 0;
     let finalUnitAmount = unitAmount;
@@ -16779,6 +17401,9 @@ async function handleCheckout(request, env) {
       params.append("metadata[discount_code]", discountCode);
       params.append("metadata[discount_percent]", String(discountPct));
     }
+    const checkoutTouch = checkoutAttribution.checkout_session;
+    if (checkoutTouch?.source) params.append("metadata[acq_source]", String(checkoutTouch.source));
+    if (checkoutTouch?.medium) params.append("metadata[acq_medium]", String(checkoutTouch.medium));
     const metadataItems = items.map((i, idx) => ({
       slug: i.product_slug,
       name: getItemName(i),
@@ -16871,17 +17496,33 @@ async function handleCheckout(request, env) {
           u: lineItems[idx]?.price_data?.unit_amount || 0
         }));
         await env.DB.prepare(
-          `INSERT OR REPLACE INTO checkout_session_snapshots (stripe_session_id, email, currency, items_json, created_at)
-           VALUES (?1, ?2, ?3, ?4, datetime('now'))`
+          `INSERT OR REPLACE INTO checkout_session_snapshots (
+             stripe_session_id, email, currency, items_json, attribution_json, quote_ids_json, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))`
         ).bind(
           String(stripeData.id),
           normalizedEmail,
           String(currency || "").toLowerCase(),
-          JSON.stringify(snapshotItems)
+          JSON.stringify(snapshotItems),
+          JSON.stringify(checkoutAttribution),
+          JSON.stringify(quoteIdsFromCart)
         ).run();
       }
     } catch (e) {
       console.error("checkout snapshot persist failed:", e?.message || e);
+    }
+    try {
+      if (stripeData?.id) {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsFromCart,
+          normalizedEmail,
+          checkoutAttribution,
+          String(stripeData.id)
+        );
+      }
+    } catch (e) {
+      console.error("checkout quote attribution persist failed:", e?.message || e);
     }
     return new Response(JSON.stringify({
       url: stripeData.url,
@@ -17004,9 +17645,22 @@ async function ensureCheckoutSnapshotSchema2(env) {
              email TEXT,
              currency TEXT,
              items_json TEXT NOT NULL,
+             attribution_json TEXT,
+             quote_ids_json TEXT,
              created_at DATETIME DEFAULT (datetime('now'))
            )`
         ).run();
+        try {
+          const tableInfo = await env.DB.prepare("PRAGMA table_info(checkout_session_snapshots)").all();
+          const existing = new Set(
+            (tableInfo.results || []).map((r) => String(r.name || "").toLowerCase())
+          );
+          const alters = [];
+          if (!existing.has("attribution_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN attribution_json TEXT");
+          if (!existing.has("quote_ids_json")) alters.push("ALTER TABLE checkout_session_snapshots ADD COLUMN quote_ids_json TEXT");
+          for (const sql of alters) await env.DB.prepare(sql).run();
+        } catch {
+        }
         checkoutSnapshotSchemaReady2 = true;
         return true;
       } catch (e) {
@@ -17436,11 +18090,13 @@ async function handleStripeWebhook(request, env) {
     }, "mapItems");
     let items = [];
     let itemsSource = "metadata";
+    let checkoutAttribution = sanitizeAttributionPayload(null, "checkout");
+    let quoteIdsFromSnapshot = [];
     try {
       const schemaOk = await ensureCheckoutSnapshotSchema2(env);
       if (schemaOk && session.id) {
         const snapshot = await env.DB.prepare(
-          "SELECT items_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+          "SELECT items_json, attribution_json, quote_ids_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
         ).bind(String(session.id)).first();
         if (snapshot?.items_json) {
           const rawSnapshotItems = JSON.parse(String(snapshot.items_json || "[]"));
@@ -17448,6 +18104,16 @@ async function handleStripeWebhook(request, env) {
           if (mapped.length > 0) {
             items = mapped;
             itemsSource = "d1_snapshot";
+          }
+        }
+        if (snapshot?.attribution_json) {
+          checkoutAttribution = sanitizeAttributionPayload(snapshot.attribution_json, "checkout");
+        }
+        if (snapshot?.quote_ids_json) {
+          try {
+            const parsedIds = JSON.parse(String(snapshot.quote_ids_json || "[]"));
+            quoteIdsFromSnapshot = Array.isArray(parsedIds) ? parsedIds : [];
+          } catch {
           }
         }
       }
@@ -17463,6 +18129,10 @@ async function handleStripeWebhook(request, env) {
       }
     }
     console.log("order items source:", itemsSource, "session:", session.id, "count:", items.length);
+    const quoteIdsForAttribution = Array.from(/* @__PURE__ */ new Set([
+      ...extractUniqueQuoteIdsFromItems(items),
+      ...quoteIdsFromSnapshot.map((id) => String(id || "").trim()).filter(Boolean)
+    ]));
     const sessionCurrency = String(session.currency || "usd").toLowerCase();
     const totalQty = items.reduce((sum, item) => sum + (item.qty || 1), 0);
     const fallbackUnitAmount = totalQty > 0 && session.amount_total ? Math.round(session.amount_total / totalQty) : 0;
@@ -17691,6 +18361,19 @@ async function handleStripeWebhook(request, env) {
       }
     }
     const email = metadata.email || session.customer_email;
+    if (insertedOrderRows > 0 && quoteIdsForAttribution.length > 0) {
+      try {
+        await upsertQuoteAttributionFromCheckout(
+          env,
+          quoteIdsForAttribution,
+          (email || "").toLowerCase(),
+          checkoutAttribution,
+          String(session.id || "")
+        );
+      } catch (e) {
+        console.error("webhook quote attribution persist failed:", e?.message || e);
+      }
+    }
     if (insertedOrderRows > 0 && email) {
       try {
         await env.DB.prepare(
@@ -18471,7 +19154,7 @@ async function getOrdersBySession(env, sessionId) {
   const { results } = await env.DB.prepare(
     `SELECT id, stripe_session_id, stripe_payment_intent_id, email, shipping_address, product_title_en, fabric, color,
             width_cm, length_cm, depth_cm, price_usd, price_thb,
-            currency, quantity, status, created_at
+            currency, quantity, status, created_at, quote_id
      FROM orders
      WHERE stripe_session_id = ?1
        AND LOWER(COALESCE(status, '')) IN (${paidStatusesSql})
@@ -18480,22 +19163,24 @@ async function getOrdersBySession(env, sessionId) {
   return results || [];
 }
 __name(getOrdersBySession, "getOrdersBySession");
-async function verifyStripeSessionPaid(sessionId, env) {
+async function fetchStripeSessionForEvidence(sessionId, env) {
   const stripeKey = String(env.STRIPE_SECRET_KEY || "");
-  if (!stripeKey) return false;
+  if (!stripeKey) return { paid: false, amountTotalMinor: null };
   try {
     const resp = await fetch(
       `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`,
       { headers: { Authorization: `Bearer ${stripeKey}` } }
     );
-    if (!resp.ok) return false;
+    if (!resp.ok) return { paid: false, amountTotalMinor: null };
     const session = await resp.json();
-    return String(session?.payment_status || "").toLowerCase() === "paid";
+    const paid = String(session?.payment_status || "").toLowerCase() === "paid";
+    const amountRaw = Number(session?.amount_total);
+    return { paid, amountTotalMinor: Number.isFinite(amountRaw) ? amountRaw : null };
   } catch {
-    return false;
+    return { paid: false, amountTotalMinor: null };
   }
 }
-__name(verifyStripeSessionPaid, "verifyStripeSessionPaid");
+__name(fetchStripeSessionForEvidence, "fetchStripeSessionForEvidence");
 async function hasWebhookPaidEvidence(sessionId, env) {
   try {
     const row = await env.DB.prepare(
@@ -18557,26 +19242,114 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
     const lineData = await lineResp.json();
     lineItems = Array.isArray(lineData?.data) ? lineData.data : [];
   }
-  if (lineItems.length === 0 && metaItems.length === 0) return false;
-  const sourceRows = lineItems.length > 0 ? lineItems : metaItems;
-  const sessionCurrency = String(session.currency || "usd").toLowerCase();
+  const mapItems = /* @__PURE__ */ __name((rawItems) => (Array.isArray(rawItems) ? rawItems : []).map((item) => ({
+    slug: item.slug || item.s || "",
+    name: item.name || item.n || item.slug || item.s || "",
+    quote_id: item.quote_id || item.qi || null,
+    fabric: item.fabric || item.f || null,
+    color: item.color || item.c || null,
+    dims: typeof item.dims === "object" && item.dims || typeof item.d === "object" && item.d || (typeof item.d === "string" || typeof item.dt === "string" ? { size_text: typeof item.d === "string" ? item.d : item.dt } : {}),
+    qty: item.qty || item.q || 1,
+    unit_amount: Number(item.u || item.unit_amount || 0)
+  })), "mapItems");
+  const hasUsefulDims = /* @__PURE__ */ __name((dims) => {
+    if (!dims || typeof dims !== "object") return false;
+    if (toFiniteNumber(dims.w) && toFiniteNumber(dims.l)) return true;
+    if (String(dims.size_text || "").trim()) return true;
+    if (String(dims.shape_code || dims.shape_name || "").trim()) return true;
+    if (String(dims.boat_model_name || dims.boat_model_key || "").trim()) return true;
+    if (dims.values && typeof dims.values === "object" && Object.keys(dims.values).length > 0) return true;
+    return false;
+  }, "hasUsefulDims");
+  let items = [];
+  let itemsSource = "none";
+  let snapshotCurrency = null;
+  let checkoutAttribution = sanitizeAttributionPayload(null, "checkout");
+  let quoteIdsFromSnapshot = [];
+  try {
+    const snap = await env.DB.prepare(
+      "SELECT items_json, currency, attribution_json, quote_ids_json FROM checkout_session_snapshots WHERE stripe_session_id = ?1 LIMIT 1"
+    ).bind(String(session.id)).first();
+    if (snap?.items_json) {
+      const parsedSnap = JSON.parse(String(snap.items_json || "[]"));
+      if (Array.isArray(parsedSnap) && parsedSnap.length > 0) {
+        items = mapItems(parsedSnap);
+        itemsSource = "d1_snapshot";
+        snapshotCurrency = String(snap?.currency || "").toLowerCase() || null;
+      }
+    }
+    if (snap?.attribution_json) {
+      checkoutAttribution = sanitizeAttributionPayload(snap.attribution_json, "checkout");
+    }
+    if (snap?.quote_ids_json) {
+      try {
+        const parsedIds = JSON.parse(String(snap.quote_ids_json || "[]"));
+        quoteIdsFromSnapshot = Array.isArray(parsedIds) ? parsedIds : [];
+      } catch {
+      }
+    }
+  } catch (e) {
+    console.error("reconcile snapshot read failed:", e?.message || e);
+  }
+  if (items.length === 0 && metaItems.length > 0) {
+    items = mapItems(metaItems);
+    itemsSource = "metadata";
+  }
+  if (items.length === 0 && lineItems.length > 0) {
+    items = lineItems.filter((li) => {
+      const label = String(li?.description || li?.price?.product_data?.name || "");
+      return !/^shipping/i.test(label.trim());
+    }).map((li) => {
+      const liQty = Number(li?.quantity || 1) || 1;
+      const liUnitMinor = Number(li?.price?.unit_amount || 0) || (Number(li?.amount_total || 0) && liQty ? Math.round(Number(li.amount_total) / liQty) : 0);
+      return {
+        slug: "",
+        name: String(li?.description || li?.price?.product_data?.name || "Custom Order"),
+        quote_id: null,
+        fabric: null,
+        color: null,
+        dims: {},
+        qty: liQty,
+        unit_amount: liUnitMinor
+      };
+    });
+    itemsSource = "stripe_line_items";
+  }
+  if (items.length === 0) return false;
+  console.log("reconcile items source:", itemsSource, "session:", session.id, "count:", items.length);
+  const quoteIdsForAttribution = Array.from(/* @__PURE__ */ new Set([
+    ...extractUniqueQuoteIdsFromItems(items),
+    ...quoteIdsFromSnapshot.map((id) => String(id || "").trim()).filter(Boolean)
+  ]));
+  const sessionCurrency = String(snapshotCurrency || session.currency || "usd").toLowerCase();
   let inserted = 0;
+  for (const item of items) {
+    if (item.quote_id && !hasUsefulDims(item.dims)) {
+      try {
+        const q = await env.DB.prepare(
+          "SELECT dimensions FROM custom_quotes WHERE quote_id = ?1 LIMIT 1"
+        ).bind(String(item.quote_id)).first();
+        if (q?.dimensions) {
+          const qd = JSON.parse(String(q.dimensions || "{}"));
+          if (qd && typeof qd === "object") item.dims = qd;
+        }
+      } catch {
+      }
+    }
+  }
   const lineOccurrenceMap = /* @__PURE__ */ new Map();
-  for (let i = 0; i < sourceRows.length; i++) {
-    const li = sourceRows[i] || {};
-    const mi = metaItems[i] || {};
-    const dims = mi.dims || mi.d || {};
-    const qty = Number(li.quantity || mi.qty || mi.q || 1) || 1;
-    const unitMinor = Number(li?.price?.unit_amount || 0) || Number(mi.u || 0) || (Number(li.amount_total || 0) && qty ? Math.round(Number(li.amount_total || 0) / qty) : 0);
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] || {};
+    const dims = item.dims || {};
+    const qty = Number(item.qty || 1) || 1;
+    const unitMinor = Number(item.unit_amount || 0) || 0;
     const unitMajor = unitMinor > 0 ? unitMinor / 100 : null;
-    const productTitle = li.description || mi.name || mi.n || mi.slug || mi.s || "Custom Order";
-    const productSlug = mi.slug || mi.s || "";
     const idempotencySource = {
-      slug: productSlug,
-      name: productTitle,
-      quote_id: mi.quote_id || mi.qi || null,
-      fabric: mi.fabric || mi.f || null,
-      color: mi.color || mi.c || null,
+      slug: String(item.slug || ""),
+      name: String(item.name || ""),
+      quote_id: item.quote_id || null,
+      fabric: item.fabric || null,
+      color: item.color || null,
       dims,
       qty,
       unit_amount: unitMinor
@@ -18589,10 +19362,10 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
     if (!lineClaimed) continue;
     const existingCount = await countExistingConfirmedOrderLines2(env, {
       sessionId: session.id,
-      productSlug: String(productSlug || ""),
-      productTitle: String(productTitle || ""),
-      fabric: mi.fabric || mi.f || null,
-      color: mi.color || mi.c || null,
+      productSlug: String(item.slug || ""),
+      productTitle: String(item.name || ""),
+      fabric: item.fabric || null,
+      color: item.color || null,
       widthCm: dims.w || null,
       lengthCm: dims.l || null,
       depthCm: dims.d || null,
@@ -18607,8 +19380,9 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
         stripe_session_id, stripe_payment_intent_id, email, customer_name, phone,
         shipping_address, product_slug, product_title_en, fabric, color,
         width_cm, length_cm, depth_cm, width_in, length_in, depth_in,
-        custom_notes, price_usd, price_thb, currency, quantity, discount_code, status
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, 'confirmed')`
+        custom_notes, price_usd, price_thb, currency, quantity, discount_code,
+        quote_id, status
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, 'confirmed')`
     ).bind(
       session.id,
       session.payment_intent || null,
@@ -18616,10 +19390,10 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
       session?.metadata?.name || session?.customer_details?.name || null,
       session?.metadata?.phone || session?.customer_details?.phone || null,
       session?.metadata?.address || null,
-      productSlug,
-      productTitle,
-      mi.fabric || mi.f || null,
-      mi.color || mi.c || null,
+      String(item.slug || ""),
+      String(item.name || ""),
+      item.fabric || null,
+      item.color || null,
       dims.w || null,
       dims.l || null,
       dims.d || null,
@@ -18631,9 +19405,23 @@ async function reconcilePaidSessionToOrders(sessionId, env) {
       sessionCurrency === "thb" ? unitMajor : null,
       sessionCurrency,
       qty,
-      session?.metadata?.discount_code || null
+      session?.metadata?.discount_code || null,
+      item.quote_id || null
     ).run();
     inserted++;
+  }
+  if (inserted > 0 && quoteIdsForAttribution.length > 0) {
+    try {
+      await upsertQuoteAttributionFromCheckout(
+        env,
+        quoteIdsForAttribution,
+        email,
+        checkoutAttribution,
+        String(session.id || "")
+      );
+    } catch (e) {
+      console.error("reconcile quote attribution persist failed:", e?.message || e);
+    }
   }
   return inserted > 0;
 }
@@ -18671,7 +19459,8 @@ async function handleOrderConfirmed(request, env) {
         headers: { "Content-Type": "application/json" }
       });
     }
-    const stripePaidEvidence = await verifyStripeSessionPaid(sessionId, env) || await hasWebhookPaidEvidence(sessionId, env);
+    const stripeSessionEvidence = await fetchStripeSessionForEvidence(sessionId, env);
+    const stripePaidEvidence = stripeSessionEvidence.paid || await hasWebhookPaidEvidence(sessionId, env);
     const purchaseReportableOrders = results.filter((r) => isPurchaseReportableStatus(r?.status));
     const purchaseReportableValue = purchaseReportableOrders.reduce((sum, row) => {
       const qty = Number(row?.quantity || 1) || 1;
@@ -18691,7 +19480,8 @@ async function handleOrderConfirmed(request, env) {
       payment_verified: stripePaidEvidence,
       purchase_reportable: stripePaidEvidence && purchaseReportableOrders.length > 0,
       purchase_reportable_count: purchaseReportableOrders.length,
-      purchase_reportable_value: Math.round(purchaseReportableValue * 100) / 100
+      purchase_reportable_value: Math.round(purchaseReportableValue * 100) / 100,
+      session_amount_total: stripeSessionEvidence.amountTotalMinor
     }), {
       headers: { "Content-Type": "application/json" }
     });
@@ -19348,6 +20138,29 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.min.css">
+  <script src="/js/analytics-env.js"><\/script>
+  <script src="/js/cookie-consent.js"><\/script>
+  <script>
+    (function () {
+      // Sanitize the measured page URL before any analytics loads. The quote
+      // magic-link path segment is a bearer credential and must never reach
+      // measurement endpoints as page_location (GA4/GTM honor a dataLayer
+      // page_location override pushed before container init).
+      try {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ page_location: 'https://www.mildmate.com/quote/' });
+      } catch (e) {}
+      function bootMildmateAnalytics() {
+        if (typeof window.__mildmateInitAnalytics !== 'function') return;
+        window.__mildmateInitAnalytics({ noscriptId: 'gtm-noscript', mobileLazy: true });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootMildmateAnalytics);
+      } else {
+        bootMildmateAnalytics();
+      }
+    })();
+  <\/script>
   <style>
     :root {
       --color-primary: #2c96f4;
@@ -19456,6 +20269,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
   </style>
 </head>
 <body>
+  <noscript id="gtm-noscript"></noscript>
   <main>
     ${quote ? `
       <section class="card quote-hero">
@@ -19514,7 +20328,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
           ` : ""}
           <p class="fine-print">Product price only. Shipping and tax are calculated at checkout.</p>
           ${isCheckoutReady ? `
-          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return i.quote_id===item.quote_id||((i.type===item.type)&&i.fabric===item.fabric&&JSON.stringify(i.dimensions)===JSON.stringify(item.dimensions));});if(ex){ex.qty=(ex.qty||1)+1;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
+          <button id="quote-cta" type="button" class="btn btn-primary" onclick="if(window.addQuoteToCart){window.addQuoteToCart();}else{try{var itemEl=document.getElementById('quote-cart-data');var item=itemEl?JSON.parse(itemEl.textContent||'null'):null;if(!item){return false;}var key='mildmate-cart';var cart=JSON.parse(localStorage.getItem(key)||'{&quot;items&quot;:[]}');cart.items=Array.isArray(cart.items)?cart.items:[];var ex=cart.items.find(function(i){return String(i.quote_id||'')===String(item.quote_id||'');});if(ex){ex.qty=(ex.qty||1)+1;ex.price_usd=item.price_usd;ex.price_thb=item.price_thb;ex.quote_currency=item.quote_currency;ex.free_shipping=item.free_shipping;ex.dimensions=item.dimensions;ex.fabric=item.fabric;ex.color=item.color;ex.product_slug=item.product_slug;ex.product_name=item.product_name||ex.product_name;}else{cart.items.push(item);}localStorage.setItem(key,JSON.stringify(cart));this.textContent='Redirecting...';this.style.background='var(--color-success)';this.disabled=true;window.location.href='/checkout/';}catch(e){}}return false;">Add to Cart</button>
           ` : `<div class="transaction-note">${isExpired ? "This quote has expired. Please request a new quote." : "This quote will become checkout-ready once pricing is added."}</div>`}
         </aside>
       </div>
@@ -19567,7 +20381,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
           crypto.subtle.digest('SHA-256', new TextEncoder().encode('mildmate-quote:' + String(rawToken || ''))).then(function (buf) {
             var hex = '';
             var bytes = new Uint8Array(buf);
-            for (var i = 0; i < 16 && i < bytes.length; i++) {
+            for (var i = 0; i < 8 && i < bytes.length; i++) {
               hex += ('0' + bytes[i].toString(16)).slice(-2);
             }
             emit(hex || 'token-unavailable');
@@ -19620,7 +20434,7 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
     var _quoteCartItem = null;
     var _quoteIsAdded = false;
     var _quoteEventMeta = ${JSON.stringify(
-    quote ? {
+    quote && isCheckoutReady ? {
       quote_id: String(quoteId),
       product_name: productTitle,
       currency: isUsdQuoted ? "USD" : "THB",
@@ -19646,11 +20460,30 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
           var cart = JSON.parse(raw);
           cart.items = Array.isArray(cart.items) ? cart.items : [];
           var existing = cart.items.find(function(i) {
-            return i.quote_id === _quoteCartItem.quote_id || (i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
-              JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions));
+            // Quote lines are identified by quote_id \u2014 never merge a different
+            // quote that happens to share dimensions/fabric/color.
+            if (_quoteCartItem.quote_id) {
+              return String(i.quote_id || '') === String(_quoteCartItem.quote_id);
+            }
+            return i.type === _quoteCartItem.type && i.fabric === _quoteCartItem.fabric &&
+              JSON.stringify(i.dimensions) === JSON.stringify(_quoteCartItem.dimensions);
           });
-          if (existing) existing.qty = (existing.qty || 1) + 1;
-          else cart.items.push(_quoteCartItem);
+          if (existing) {
+            existing.qty = (existing.qty || 1) + 1;
+            // Refresh the line with the latest approved quote render (admin may
+            // have re-priced since the line was first added).
+            existing.price_usd = _quoteCartItem.price_usd;
+            existing.price_thb = _quoteCartItem.price_thb;
+            existing.quote_currency = _quoteCartItem.quote_currency;
+            existing.free_shipping = _quoteCartItem.free_shipping;
+            existing.dimensions = _quoteCartItem.dimensions;
+            existing.fabric = _quoteCartItem.fabric;
+            existing.color = _quoteCartItem.color;
+            existing.product_slug = _quoteCartItem.product_slug;
+            existing.product_name = _quoteCartItem.product_name || existing.product_name;
+          } else {
+            cart.items.push(_quoteCartItem);
+          }
           localStorage.setItem(key, JSON.stringify(cart));
         }
         trackQuoteAddToCart(_quoteCartItem);
@@ -19670,10 +20503,15 @@ var onRequest8 = /* @__PURE__ */ __name(async (context) => {
 
     window.switchLang = function switchLang(lang) {
       sessionStorage.setItem('lang', lang);
+      // The double backslash below is REQUIRED: this file is one big template
+      // literal, and a single backslash is cooked away by esbuild, which used
+      // to emit a broken regex into the served page \u2014 a syntax error that
+      // killed the ENTIRE inline script block (Add to Cart survived only via
+      // the onclick fallback, and view_quote tracking never ran).
       if (lang === 'th') {
-        window.location.href = '/th' + window.location.pathname.replace(/^/th/, '');
+        window.location.href = '/th' + window.location.pathname.replace(/^\\/th/, '');
       } else {
-        window.location.href = window.location.pathname.replace(/^/th/, '') || '/';
+        window.location.href = window.location.pathname.replace(/^\\/th/, '') || '/';
       }
     };
 
@@ -20927,7 +21765,7 @@ function allowDevClerkOrigins(csp) {
 }
 __name(allowDevClerkOrigins, "allowDevClerkOrigins");
 
-// ../.wrangler/tmp/pages-BjIROQ/functionsRoutes-0.5974230608586554.mjs
+// ../.wrangler/tmp/pages-UhiMup/functionsRoutes-0.4725330653154183.mjs
 var routes = [
   {
     routePath: "/api/v1/:path*",
